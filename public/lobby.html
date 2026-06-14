@@ -178,6 +178,7 @@
     </div>
 
     <button class="battle-btn" onclick="startBattle()">⚔️ JANG QIDIRISH</button>
+    <button class="battle-btn" onclick="goLeaderboard()" style="margin-top:16px; background:linear-gradient(135deg, #f59e0b, #fbbf24); font-size:18px;">🏆 LEADERBOARD</button>
   </div>
 
   <script>
@@ -202,6 +203,9 @@
 
     function startBattle() {
       window.location.href = "/battle.html";
+    }
+    function goLeaderboard() {
+      window.location.href = "/leaderboard.html";
     }
 
     function logout() {

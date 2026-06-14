@@ -385,6 +385,22 @@ async function finishBattle(roomId) {
   delete battles[roomId];
 }
 
+// ============ LEADERBOARD ============
+app.get("/leaderboard", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, first_name, last_name, cefr_level, rating, xp
+       FROM users
+       ORDER BY rating DESC, xp DESC
+       LIMIT 50`
+    );
+    res.json({ players: result.rows });
+  } catch (err) {
+    console.error("Leaderboard xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // DIQQAT: app.listen emas, server.listen!
 server.listen(PORT, () => {
   console.log("Server ishga tushdi: http://localhost:3000");

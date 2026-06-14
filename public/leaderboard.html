@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Battle — Leaderboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0a1a;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.12), transparent 40%);
+      min-height: 100vh;
+      color: #e2e8f0;
+      padding: 20px;
+    }
+
+    .container { max-width: 700px; margin: 0 auto; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      margin-bottom: 20px;
+    }
+
+    .topbar h1 {
+      font-size: 26px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .back-btn {
+      padding: 8px 16px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 8px;
+      color: #a5b4fc;
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+
+    .back-btn:hover { background: rgba(99, 102, 241, 0.25); }
+
+    .leaderboard {
+      background: rgba(20, 20, 40, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+
+    .row:hover { background: rgba(99, 102, 241, 0.1); }
+
+    .row.me {
+      background: rgba(99, 102, 241, 0.18);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+    }
+
+    .rank {
+      width: 44px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .rank.gold { color: #fbbf24; font-size: 24px; }
+    .rank.silver { color: #cbd5e1; font-size: 22px; }
+    .rank.bronze { color: #d97706; font-size: 20px; }
+
+    .player-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 14px;
+      flex-shrink: 0;
+    }
+
+    .player-info { flex: 1; min-width: 0; }
+    .player-info .name {
+      font-weight: 600;
+      font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .player-info .level {
+      font-size: 12px;
+      color: #818cf8;
+    }
+
+    .player-stats {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .player-stats .rating {
+      font-size: 18px;
+      font-weight: bold;
+      color: #fbbf24;
+    }
+    .player-stats .xp {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .loading, .empty {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+
+    .header-row {
+      display: flex;
+      padding: 8px 16px;
+      color: #64748b;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .header-row .h-rank { width: 44px; text-align: center; }
+    .header-row .h-name { flex: 1; margin-left: 56px; }
+    .header-row .h-rating { }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <h1>🏆 LEADERBOARD</h1>
+      <a href="/lobby.html" class="back-btn">← Lobbyga</a>
+    </div>
+
+    <div class="header-row">
+      <div class="h-rank">#</div>
+      <div class="h-name">O'yinchi</div>
+      <div class="h-rating">Reyting</div>
+    </div>
+
+    <div class="leaderboard" id="leaderboard">
+      <div class="loading">Yuklanmoqda...</div>
+    </div>
+  </div>
+
+  <script>
+    // Login tekshirish
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const me = JSON.parse(userData);
+
+    async function loadLeaderboard() {
+      try {
+        const res = await fetch("/leaderboard");
+        const data = await res.json();
+        renderLeaderboard(data.players);
+      } catch (err) {
+        document.getElementById("leaderboard").innerHTML =
+          '<div class="empty">Yuklab bo\'lmadi. Server ishlayaptimi?</div>';
+      }
+    }
+
+    function renderLeaderboard(players) {
+      const container = document.getElementById("leaderboard");
+
+      if (!players || players.length === 0) {
+        container.innerHTML = '<div class="empty">Hali o\'yinchilar yo\'q</div>';
+        return;
+      }
+
+      container.innerHTML = "";
+
+      players.forEach((p, index) => {
+        const rank = index + 1;
+        const isMe = p.id === me.id;
+
+        // Rank belgisi (1,2,3 uchun medal)
+        let rankDisplay = rank;
+        let rankClass = "rank";
+        if (rank === 1) { rankDisplay = "🥇"; rankClass = "rank gold"; }
+        else if (rank === 2) { rankDisplay = "🥈"; rankClass = "rank silver"; }
+        else if (rank === 3) { rankDisplay = "🥉"; rankClass = "rank bronze"; }
+
+        const row = document.createElement("div");
+        row.className = "row" + (isMe ? " me" : "");
+        row.innerHTML =
+          '<div class="' + rankClass + '">' + rankDisplay + '</div>' +
+          '<div class="player-avatar">' + p.first_name.charAt(0).toUpperCase() + '</div>' +
+          '<div class="player-info">' +
+            '<div class="name">' + p.first_name + ' ' + p.last_name + (isMe ? ' (Siz)' : '') + '</div>' +
+            '<div class="level">' + p.cefr_level + '</div>' +
+          '</div>' +
+          '<div class="player-stats">' +
+            '<div class="rating">' + p.rating + '</div>' +
+            '<div class="xp">' + p.xp + ' XP</div>' +
+          '</div>';
+        container.appendChild(row);
+      });
+    }
+
+    loadLeaderboard();
+  </script>
+</body>
+</html>
