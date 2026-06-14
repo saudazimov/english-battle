@@ -208,7 +208,7 @@ function getRandomBotName() {
 async function startBotBattle(roomId, humanPlayer) {
   try {
     const result = await pool.query(
-      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option
+      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
        FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT 5`,
       [humanPlayer.level]
     );
@@ -301,7 +301,7 @@ async function startBattle(roomId, player1, player2) {
   try {
     // 5 ta tasodifiy savol olish
     const result = await pool.query(
-      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option
+      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
        FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT 5`,
       [player1.level]
     );
@@ -407,12 +407,32 @@ io.on("connection", (socket) => {
     const player = battle.players[socket.id];
     if (player.finished) return;
 
+    // O'yinchining javoblarini saqlash (xatolar tahlili uchun)
+    if (!player.answers) player.answers = [];
+
     // To'g'ri javobni serverda tekshirish
     const question = battle.questions.find((q) => q.id === questionId);
-    if (question && question.correct_option === answer) {
+    const isCorrect = question && question.correct_option === answer;
+    if (isCorrect) {
       player.score++;
     }
     player.answeredCount++;
+
+    // Javobni eslab qolish
+    if (question) {
+      player.answers.push({
+        question_id: questionId,
+        question_text: question.question_text,
+        option_a: question.option_a,
+        option_b: question.option_b,
+        option_c: question.option_c,
+        option_d: question.option_d,
+        your_answer: answer,
+        correct_answer: question.correct_option,
+        is_correct: isCorrect,
+        explanation: question.explanation || "",
+      });
+    }
 
     // Raqibga jonli progress yuborish
     socket.to(roomId).emit("opponentProgress", {
@@ -591,6 +611,7 @@ async function finishBattle(roomId) {
       xp_earned: xpEarned,
       rating_change: ratingDelta,
       updated_user: updatedUser,
+      answers: me.answers || [],
     });
   }
 

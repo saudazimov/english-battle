@@ -317,12 +317,20 @@
         </div>
         <div class="xp-earned" id="xpEarned">+0 XP</div>
         <div class="result-actions">
+          <button class="btn" onclick="showMistakes()">📖 Xatolarni ko'rish</button>
           <button class="btn" onclick="playAgain()">Yana o'ynash</button>
           <button class="btn btn-secondary" onclick="goLobby()">Lobbyga</button>
         </div>
       </div>
     </div>
-
+    <!-- XATOLAR EKRANI -->
+    <div class="screen" id="mistakesScreen">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="font-size:24px; background:linear-gradient(135deg,#818cf8,#c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">📖 Javoblar tahlili</h2>
+        <button class="btn btn-secondary" onclick="backToResult()">← Orqaga</button>
+      </div>
+      <div id="mistakesList"></div>
+    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -449,6 +457,9 @@
 
     socket.on("battleEnd", (data) => {
       clearInterval(timerInterval);
+      
+      // Javoblarni saqlash (xatolar tahlili uchun)
+      window.battleAnswers = data.answers || [];
 
       document.getElementById("finalMyScore").textContent = data.your_score;
       document.getElementById("finalOppScore").textContent = data.opponent_score;
@@ -491,6 +502,114 @@
     function goLobby() {
       window.location.href = "/lobby.html";
     }
+
+    // ===== XATOLAR TAHLILI =====
+    function showScreenById(id) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function showMistakes() {
+      const answers = window.battleAnswers || [];
+      const list = document.getElementById("mistakesList");
+
+      if (answers.length === 0) {
+        list.innerHTML = '<div style="text-align:center; color:#64748b; padding:40px;">Ma\'lumot yo\'q</div>';
+      } else {
+        list.innerHTML = "";
+        answers.forEach((a, index) => {
+          const card = document.createElement("div");
+          const borderColor = a.is_correct ? "#22c55e" : "#ef4444";
+          card.style.cssText = "background:rgba(20,20,40,0.8); border:1px solid rgba(99,102,241,0.3); border-left:4px solid " + borderColor + "; border-radius:14px; padding:18px; margin-bottom:14px;";
+
+          // Har variant uchun rang
+          let optionsHtml = "";
+          ["A", "B", "C", "D"].forEach(letter => {
+            const text = a["option_" + letter.toLowerCase()];
+            let style = "padding:8px 12px; border-radius:8px; margin:4px 0; font-size:14px;";
+            if (letter === a.correct_answer) {
+              style += "background:rgba(34,197,94,0.2); color:#86efac; font-weight:600;"; // to'g'ri javob yashil
+            } else if (letter === a.your_answer && !a.is_correct) {
+              style += "background:rgba(239,68,68,0.2); color:#fca5a5;"; // xato javob qizil
+            } else {
+              style += "color:#94a3b8;";
+            }
+            optionsHtml += '<div style="' + style + '">' + letter + ') ' + text + '</div>';
+          });
+
+          const statusIcon = a.is_correct ? "✅" : "❌";
+          const yourAnswerText = a.your_answer ? a.your_answer : "javob berilmadi";
+
+          card.innerHTML =
+            '<div style="font-weight:600; font-size:16px; margin-bottom:10px;">' + statusIcon + ' Savol ' + (index + 1) + ': ' + a.question_text + '</div>' +
+            optionsHtml +
+            '<div style="font-size:13px; color:#94a3b8; margin-top:8px;">Sizning javobingiz: <b>' + yourAnswerText + '</b> · To\'g\'ri: <b style="color:#86efac;">' + a.correct_answer + '</b></div>' +
+            (a.explanation ? '<div style="font-size:13px; color:#a5b4fc; margin-top:8px; padding:10px; background:rgba(99,102,241,0.1); border-radius:8px;">💡 ' + a.explanation + '</div>' : '');
+
+          list.appendChild(card);
+        });
+      }
+
+      showScreenById("mistakesScreen");
+    }
+
+    function backToResult() {
+      showScreenById("resultScreen");
+    }
+
+    // ===== XATOLAR TAHLILI =====
+    function showScreenById(id) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function showMistakes() {
+      const answers = window.battleAnswers || [];
+      const list = document.getElementById("mistakesList");
+
+      if (answers.length === 0) {
+        list.innerHTML = '<div style="text-align:center; color:#64748b; padding:40px;">Ma\'lumot yo\'q</div>';
+      } else {
+        list.innerHTML = "";
+        answers.forEach((a, index) => {
+          const card = document.createElement("div");
+          const borderColor = a.is_correct ? "#22c55e" : "#ef4444";
+          card.style.cssText = "background:rgba(20,20,40,0.8); border:1px solid rgba(99,102,241,0.3); border-left:4px solid " + borderColor + "; border-radius:14px; padding:18px; margin-bottom:14px;";
+
+          let optionsHtml = "";
+          ["A", "B", "C", "D"].forEach(letter => {
+            const text = a["option_" + letter.toLowerCase()];
+            let style = "padding:8px 12px; border-radius:8px; margin:4px 0; font-size:14px;";
+            if (letter === a.correct_answer) {
+              style += "background:rgba(34,197,94,0.2); color:#86efac; font-weight:600;";
+            } else if (letter === a.your_answer && !a.is_correct) {
+              style += "background:rgba(239,68,68,0.2); color:#fca5a5;";
+            } else {
+              style += "color:#94a3b8;";
+            }
+            optionsHtml += '<div style="' + style + '">' + letter + ') ' + text + '</div>';
+          });
+
+          const statusIcon = a.is_correct ? "✅" : "❌";
+          const yourAnswerText = a.your_answer ? a.your_answer : "javob berilmadi";
+
+          card.innerHTML =
+            '<div style="font-weight:600; font-size:16px; margin-bottom:10px;">' + statusIcon + ' Savol ' + (index + 1) + ': ' + a.question_text + '</div>' +
+            optionsHtml +
+            '<div style="font-size:13px; color:#94a3b8; margin-top:8px;">Sizning javobingiz: <b>' + yourAnswerText + '</b> · To\'g\'ri: <b style="color:#86efac;">' + a.correct_answer + '</b></div>' +
+            (a.explanation ? '<div style="font-size:13px; color:#a5b4fc; margin-top:8px; padding:10px; background:rgba(99,102,241,0.1); border-radius:8px;">💡 ' + a.explanation + '</div>' : '');
+
+          list.appendChild(card);
+        });
+      }
+
+      showScreenById("mistakesScreen");
+    }
+
+    function backToResult() {
+      showScreenById("resultScreen");
+    }
+
   </script>
 </body>
 </html>
