@@ -28,3 +28,17 @@ CREATE TABLE IF NOT EXISTS questions (
   explanation TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Jang tarixi jadvali
+CREATE TABLE IF NOT EXISTS battle_history (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  opponent_name VARCHAR(100),
+  my_score INTEGER NOT NULL,
+  opponent_score INTEGER NOT NULL,
+  outcome VARCHAR(10) NOT NULL,
+  xp_earned INTEGER DEFAULT 0,
+  rating_change INTEGER DEFAULT 0,
+  cefr_level VARCHAR(5),
+  played_at TIMESTAMP DEFAULT NOW()
+);

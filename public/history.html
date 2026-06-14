@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Battle — Jang tarixi</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0a1a;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.12), transparent 40%);
+      min-height: 100vh;
+      color: #e2e8f0;
+      padding: 20px;
+    }
+    .container { max-width: 700px; margin: 0 auto; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      margin-bottom: 20px;
+    }
+    .topbar h1 {
+      font-size: 26px;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .back-btn {
+      padding: 8px 16px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 8px;
+      color: #a5b4fc;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-btn:hover { background: rgba(99, 102, 241, 0.25); }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .summary .box {
+      background: rgba(20, 20, 40, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+    .summary .box .num { font-size: 26px; font-weight: bold; }
+    .summary .box.win .num { color: #86efac; }
+    .summary .box.lose .num { color: #f87171; }
+    .summary .box.total .num { color: #818cf8; }
+    .summary .box .lbl { font-size: 12px; color: #64748b; margin-top: 4px; }
+
+    .history-list {
+      background: rgba(20, 20, 40, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 20px;
+      padding: 16px;
+    }
+    .battle-row {
+      display: flex;
+      align-items: center;
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border-left: 4px solid #64748b;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .battle-row.win { border-left-color: #22c55e; }
+    .battle-row.lose { border-left-color: #ef4444; }
+    .battle-row.draw { border-left-color: #818cf8; }
+
+    .outcome-badge {
+      width: 60px;
+      font-weight: bold;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .battle-row.win .outcome-badge { color: #86efac; }
+    .battle-row.lose .outcome-badge { color: #f87171; }
+    .battle-row.draw .outcome-badge { color: #a5b4fc; }
+
+    .battle-info { flex: 1; }
+    .battle-info .opp { font-weight: 600; font-size: 14px; }
+    .battle-info .date { font-size: 12px; color: #64748b; }
+
+    .battle-score {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .battle-score .score-val { font-size: 18px; font-weight: bold; }
+    .battle-score .changes { font-size: 12px; color: #64748b; }
+    .battle-score .rating-up { color: #86efac; }
+    .battle-score .rating-down { color: #f87171; }
+
+    .empty, .loading { text-align: center; padding: 40px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <h1>📜 Jang tarixi</h1>
+      <a href="/lobby.html" class="back-btn">← Lobbyga</a>
+    </div>
+
+    <div class="summary" id="summary" style="display:none;">
+      <div class="box win"><div class="num" id="winCount">0</div><div class="lbl">G'alaba</div></div>
+      <div class="box lose"><div class="num" id="loseCount">0</div><div class="lbl">Mag'lubiyat</div></div>
+      <div class="box total"><div class="num" id="totalCount">0</div><div class="lbl">Jami</div></div>
+    </div>
+
+    <div class="history-list" id="historyList">
+      <div class="loading">Yuklanmoqda...</div>
+    </div>
+  </div>
+
+  <script>
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = JSON.parse(userData);
+
+    async function loadHistory() {
+      try {
+        const res = await fetch("/history/" + user.id);
+        const data = await res.json();
+        renderHistory(data.history);
+      } catch (err) {
+        document.getElementById("historyList").innerHTML =
+          '<div class="empty">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    function renderHistory(history) {
+      const list = document.getElementById("historyList");
+
+      if (!history || history.length === 0) {
+        list.innerHTML = '<div class="empty">Hali jang qilmagansiz. Birinchi jangingizni boshlang! ⚔️</div>';
+        return;
+      }
+
+      let wins = 0, loses = 0;
+      history.forEach(h => {
+        if (h.outcome === "win") wins++;
+        else if (h.outcome === "lose") loses++;
+      });
+      document.getElementById("winCount").textContent = wins;
+      document.getElementById("loseCount").textContent = loses;
+      document.getElementById("totalCount").textContent = history.length;
+      document.getElementById("summary").style.display = "grid";
+
+      list.innerHTML = "";
+      history.forEach(h => {
+        let outcomeText = "Durrang";
+        if (h.outcome === "win") outcomeText = "G'alaba";
+        if (h.outcome === "lose") outcomeText = "Mag'lub";
+
+        const date = new Date(h.played_at);
+        const dateStr = date.toLocaleDateString("uz") + " " +
+          date.toLocaleTimeString("uz", { hour: '2-digit', minute: '2-digit' });
+
+        let ratingText = "";
+        if (h.rating_change > 0) ratingText = '<span class="rating-up">+' + h.rating_change + '</span>';
+        else if (h.rating_change < 0) ratingText = '<span class="rating-down">' + h.rating_change + '</span>';
+        else ratingText = '0';
+
+        const row = document.createElement("div");
+        row.className = "battle-row " + h.outcome;
+        row.innerHTML =
+          '<div class="outcome-badge">' + outcomeText + '</div>' +
+          '<div class="battle-info">' +
+            '<div class="opp">vs ' + (h.opponent_name || "Raqib") + '</div>' +
+            '<div class="date">' + dateStr + '</div>' +
+          '</div>' +
+          '<div class="battle-score">' +
+            '<div class="score-val">' + h.my_score + ' : ' + h.opponent_score + '</div>' +
+            '<div class="changes">+' + h.xp_earned + ' XP · ' + ratingText + '</div>' +
+          '</div>';
+        list.appendChild(row);
+      });
+    }
+
+    loadHistory();
+  </script>
+</body>
+</html>

@@ -488,6 +488,15 @@ async function finishBattle(roomId) {
         if (result.rows.length > 0) {
           updatedUser = result.rows[0];
         }
+
+        // Jang tarixiga yozish
+        await pool.query(
+          `INSERT INTO battle_history
+           (user_id, opponent_name, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [me.userId, opp.name, me.score, opp.score, outcome, xpEarned, ratingDelta, "A1"]
+        );
+
       } catch (err) {
         console.error("Natijani saqlashda xato:", err.message);
       }
@@ -600,6 +609,25 @@ app.post("/admin/questions/delete", async (req, res) => {
     res.json({ message: "Savol o'chirildi!" });
   } catch (err) {
     console.error("Savol o'chirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============ JANG TARIXI ============
+app.get("/history/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const result = await pool.query(
+      `SELECT opponent_name, my_score, opponent_score, outcome, xp_earned, rating_change, played_at
+       FROM battle_history
+       WHERE user_id = $1
+       ORDER BY played_at DESC
+       LIMIT 50`,
+      [userId]
+    );
+    res.json({ history: result.rows });
+  } catch (err) {
+    console.error("Tarix xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });
