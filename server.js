@@ -525,6 +525,85 @@ app.get("/leaderboard", async (req, res) => {
   }
 });
 
+// ============ ADMIN PANEL ============
+
+// Admin parolni tekshirish (yordamchi)
+function checkAdminPassword(password) {
+  return password === process.env.ADMIN_PASSWORD;
+}
+
+// Barcha savollarni olish (admin uchun, to'g'ri javob bilan)
+app.post("/admin/questions", async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!checkAdminPassword(password)) {
+      return res.status(401).json({ error: "Noto'g'ri parol" });
+    }
+
+    const result = await pool.query(
+      `SELECT id, question_text, option_a, option_b, option_c, option_d,
+              correct_option, cefr_level, skill, difficulty
+       FROM questions ORDER BY id DESC`
+    );
+    res.json({ questions: result.rows });
+  } catch (err) {
+    console.error("Admin savollar xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Yangi savol qo'shish
+app.post("/admin/questions/add", async (req, res) => {
+  try {
+    const { password, question_text, option_a, option_b, option_c, option_d,
+            correct_option, cefr_level, skill, explanation } = req.body;
+
+    if (!checkAdminPassword(password)) {
+      return res.status(401).json({ error: "Noto'g'ri parol" });
+    }
+
+    // Tekshirish
+    if (!question_text || !option_a || !option_b || !option_c || !option_d || !correct_option) {
+      return res.status(400).json({ error: "Barcha maydonlarni to'ldiring" });
+    }
+
+    // To'g'ri javob A/B/C/D bo'lishi kerak
+    if (!["A", "B", "C", "D"].includes(correct_option)) {
+      return res.status(400).json({ error: "To'g'ri javob A, B, C yoki D bo'lishi kerak" });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO questions
+       (question_text, option_a, option_b, option_c, option_d, correct_option, cefr_level, skill, difficulty, explanation)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'easy', $9)
+       RETURNING id`,
+      [question_text, option_a, option_b, option_c, option_d, correct_option,
+       cefr_level || "A1", skill || "grammar", explanation || ""]
+    );
+
+    res.json({ message: "Savol qo'shildi!", id: result.rows[0].id });
+  } catch (err) {
+    console.error("Savol qo'shish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Savolni o'chirish
+app.post("/admin/questions/delete", async (req, res) => {
+  try {
+    const { password, id } = req.body;
+    if (!checkAdminPassword(password)) {
+      return res.status(401).json({ error: "Noto'g'ri parol" });
+    }
+
+    await pool.query("DELETE FROM questions WHERE id = $1", [id]);
+    res.json({ message: "Savol o'chirildi!" });
+  } catch (err) {
+    console.error("Savol o'chirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // DIQQAT: app.listen emas, server.listen!
 server.listen(PORT, () => {
   console.log("Server ishga tushdi: http://localhost:3000");

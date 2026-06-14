@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Battle — Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0f1117;
+      min-height: 100vh;
+      color: #e2e8f0;
+      padding: 20px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { margin-bottom: 20px; color: #818cf8; }
+    h2 { margin: 24px 0 12px; font-size: 18px; }
+
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2d3142;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    label { display: block; margin: 12px 0 6px; font-size: 13px; color: #94a3b8; }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      background: #0f1117;
+      border: 1px solid #2d3142;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1; }
+
+    .row { display: flex; gap: 12px; }
+    .row > div { flex: 1; }
+
+    .btn {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    .btn:hover { opacity: 0.9; }
+
+    .message {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+    .message.error { display: block; background: rgba(239,68,68,0.15); color: #fca5a5; }
+    .message.success { display: block; background: rgba(34,197,94,0.15); color: #86efac; }
+
+    .q-item {
+      background: #0f1117;
+      border: 1px solid #2d3142;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .q-item .q-content { flex: 1; }
+    .q-item .q-text { font-weight: 600; margin-bottom: 6px; }
+    .q-item .q-meta { font-size: 12px; color: #64748b; }
+    .q-item .q-correct { color: #86efac; }
+
+    .delete-btn {
+      padding: 6px 12px;
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.4);
+      border-radius: 6px;
+      color: #fca5a5;
+      cursor: pointer;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .hidden { display: none; }
+    .count { color: #64748b; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛠️ Admin Panel</h1>
+
+    <!-- PAROL EKRANI -->
+    <div class="card" id="loginCard">
+      <h2>Admin kirish</h2>
+      <label>Maxfiy parol</label>
+      <input type="password" id="adminPass" placeholder="••••••">
+      <button class="btn" onclick="enterAdmin()">Kirish</button>
+      <div class="message" id="loginMsg"></div>
+    </div>
+
+    <!-- ADMIN PANEL (parol to'g'ri bo'lsa) -->
+    <div id="adminPanel" class="hidden">
+
+      <!-- SAVOL QO'SHISH -->
+      <div class="card">
+        <h2>➕ Yangi savol qo'shish</h2>
+        <label>Savol matni</label>
+        <textarea id="qText" rows="2" placeholder="She ___ a teacher."></textarea>
+
+        <div class="row">
+          <div><label>Variant A</label><input id="optA" placeholder="am"></div>
+          <div><label>Variant B</label><input id="optB" placeholder="is"></div>
+        </div>
+        <div class="row">
+          <div><label>Variant C</label><input id="optC" placeholder="are"></div>
+          <div><label>Variant D</label><input id="optD" placeholder="be"></div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>To'g'ri javob</label>
+            <select id="correct">
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+            </select>
+          </div>
+          <div>
+            <label>Daraja</label>
+            <select id="level">
+              <option value="A1">A1</option>
+              <option value="A2">A2</option>
+              <option value="B1">B1</option>
+              <option value="B2">B2</option>
+              <option value="C1">C1</option>
+              <option value="C2">C2</option>
+            </select>
+          </div>
+          <div>
+            <label>Ko'nikma</label>
+            <select id="skill">
+              <option value="grammar">Grammar</option>
+              <option value="vocabulary">Vocabulary</option>
+              <option value="reading">Reading</option>
+              <option value="everyday">Everyday</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Tushuntirish (ixtiyoriy)</label>
+        <input id="explanation" placeholder="'She' uchun 'is' ishlatiladi.">
+
+        <button class="btn" onclick="addQuestion()">Savol qo'shish</button>
+        <div class="message" id="addMsg"></div>
+      </div>
+
+      <!-- SAVOLLAR RO'YXATI -->
+      <div class="card">
+        <h2>📋 Mavjud savollar <span class="count" id="qCount"></span></h2>
+        <div id="questionsList">Yuklanmoqda...</div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let adminPassword = "";
+
+    async function enterAdmin() {
+      const pass = document.getElementById("adminPass").value;
+      if (!pass) return showMsg("loginMsg", "Parolni kiriting", "error");
+
+      // Parolni tekshirish uchun savollarni so'raymiz
+      try {
+        const res = await fetch("/admin/questions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: pass }),
+        });
+
+        if (res.status === 401) {
+          return showMsg("loginMsg", "Noto'g'ri parol", "error");
+        }
+
+        const data = await res.json();
+        adminPassword = pass; // parolni saqlash (keyingi so'rovlar uchun)
+
+        document.getElementById("loginCard").classList.add("hidden");
+        document.getElementById("adminPanel").classList.remove("hidden");
+        renderQuestions(data.questions);
+      } catch (err) {
+        showMsg("loginMsg", "Server bilan aloqa yo'q", "error");
+      }
+    }
+
+    async function addQuestion() {
+      const body = {
+        password: adminPassword,
+        question_text: document.getElementById("qText").value,
+        option_a: document.getElementById("optA").value,
+        option_b: document.getElementById("optB").value,
+        option_c: document.getElementById("optC").value,
+        option_d: document.getElementById("optD").value,
+        correct_option: document.getElementById("correct").value,
+        cefr_level: document.getElementById("level").value,
+        skill: document.getElementById("skill").value,
+        explanation: document.getElementById("explanation").value,
+      };
+
+      try {
+        const res = await fetch("/admin/questions/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+
+        if (!res.ok) return showMsg("addMsg", data.error || "Xato", "error");
+
+        showMsg("addMsg", "✅ " + data.message, "success");
+        // Formani tozalash
+        ["qText","optA","optB","optC","optD","explanation"].forEach(id =>
+          document.getElementById(id).value = "");
+        loadQuestions(); // ro'yxatni yangilash
+      } catch (err) {
+        showMsg("addMsg", "Server xatosi", "error");
+      }
+    }
+
+    async function loadQuestions() {
+      const res = await fetch("/admin/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: adminPassword }),
+      });
+      const data = await res.json();
+      renderQuestions(data.questions);
+    }
+
+    function renderQuestions(questions) {
+      document.getElementById("qCount").textContent = "(" + questions.length + " ta)";
+      const list = document.getElementById("questionsList");
+
+      if (questions.length === 0) {
+        list.innerHTML = '<p class="count">Hali savol yo\'q</p>';
+        return;
+      }
+
+      list.innerHTML = "";
+      questions.forEach(q => {
+        const item = document.createElement("div");
+        item.className = "q-item";
+        item.innerHTML =
+          '<div class="q-content">' +
+            '<div class="q-text">' + q.question_text + '</div>' +
+            '<div class="q-meta">' +
+              'A) ' + q.option_a + ' · B) ' + q.option_b + ' · C) ' + q.option_c + ' · D) ' + q.option_d +
+              ' &nbsp;|&nbsp; <span class="q-correct">To\'g\'ri: ' + q.correct_option + '</span>' +
+              ' &nbsp;|&nbsp; ' + q.cefr_level + ' · ' + q.skill +
+            '</div>' +
+          '</div>' +
+          '<button class="delete-btn" onclick="deleteQuestion(' + q.id + ')">O\'chirish</button>';
+        list.appendChild(item);
+      });
+    }
+
+    async function deleteQuestion(id) {
+      if (!confirm("Bu savolni o'chirishni xohlaysizmi?")) return;
+
+      const res = await fetch("/admin/questions/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: adminPassword, id: id }),
+      });
+      if (res.ok) loadQuestions();
+    }
+
+    function showMsg(elId, text, type) {
+      const el = document.getElementById(elId);
+      el.textContent = text;
+      el.className = "message " + type;
+    }
+  </script>
+</body>
+</html>
