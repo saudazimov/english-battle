@@ -1,0 +1,9 @@
+# Parollar va maxfiy ma'lumotlar
+.env
+
+# Node paketlari (katta, kerak emas)
+node_modules/
+
+# Tizim fayllari
+.DS_Store
+Thumbs.db

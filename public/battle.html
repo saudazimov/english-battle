@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Battle — Jang</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0a1a;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.12), transparent 40%);
+      min-height: 100vh;
+      color: #e2e8f0;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container { max-width: 700px; width: 100%; }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ===== QIDIRISH EKRANI ===== */
+    .searching {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .searching h2 {
+      font-size: 28px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .spinner {
+      width: 80px;
+      height: 80px;
+      margin: 30px auto;
+      border: 4px solid rgba(99, 102, 241, 0.2);
+      border-top-color: #818cf8;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .pulse {
+      display: inline-block;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .btn {
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5); }
+
+    .btn-secondary {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+    }
+
+    /* ===== JANG EKRANI ===== */
+    .battle-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .player-box {
+      flex: 1;
+      background: rgba(20, 20, 40, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .player-box.opponent {
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .player-box .pname { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .player-box .pscore {
+      font-size: 24px;
+      font-weight: bold;
+      color: #818cf8;
+    }
+    .player-box.opponent .pscore { color: #f87171; }
+
+    .vs {
+      font-size: 20px;
+      font-weight: bold;
+      color: #64748b;
+    }
+
+    /* Taymer */
+    .timer-bar {
+      height: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .timer-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #a855f7);
+      width: 100%;
+      transition: width 1s linear;
+    }
+
+    .timer-fill.warning {
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+    }
+
+    /* Savol */
+    .question-card {
+      background: rgba(20, 20, 40, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
+    }
+
+    .q-number {
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+    }
+
+    .q-text {
+      font-size: 22px;
+      text-align: center;
+      margin-bottom: 28px;
+      line-height: 1.4;
+    }
+
+    .option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      margin: 12px 0;
+      padding: 18px 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 14px;
+      color: #e2e8f0;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .option:hover {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: #818cf8;
+      transform: translateX(4px);
+    }
+
+    .option .letter {
+      display: inline-block;
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+      text-align: center;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 8px;
+      margin-right: 12px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    /* ===== NATIJA EKRANI ===== */
+    .result {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .result-icon { font-size: 80px; margin-bottom: 16px; }
+
+    .result h1 {
+      font-size: 42px;
+      margin-bottom: 30px;
+    }
+
+    .result h1.win {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .result h1.lose { color: #64748b; }
+    .result h1.draw { color: #818cf8; }
+
+    .result-scores {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 30px;
+    }
+
+    .result-score .num { font-size: 48px; font-weight: bold; }
+    .result-score.you .num { color: #818cf8; }
+    .result-score.opp .num { color: #f87171; }
+    .result-score .lbl { font-size: 13px; color: #64748b; margin-top: 4px; }
+
+    .xp-earned {
+      display: inline-block;
+      padding: 12px 28px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      border-radius: 12px;
+      color: #86efac;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 30px;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .opponent-progress {
+      text-align: center;
+      color: #f87171;
+      font-size: 14px;
+      margin-top: 16px;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- QIDIRISH EKRANI -->
+    <div class="screen active" id="searchScreen">
+      <div class="searching">
+        <h2 id="searchTitle">Raqib qidirilmoqda</h2>
+        <div class="spinner"></div>
+        <p class="pulse" id="searchText">Sizga teng raqib izlanmoqda...</p>
+        <br>
+        <button class="btn btn-secondary" onclick="goLobby()">Bekor qilish</button>
+      </div>
+    </div>
+
+    <!-- JANG EKRANI -->
+    <div class="screen" id="battleScreen">
+      <div class="battle-header">
+        <div class="player-box">
+          <div class="pname" id="myName">Siz</div>
+          <div class="pscore" id="myScore">0</div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="player-box opponent">
+          <div class="pname" id="oppName">Raqib</div>
+          <div class="pscore" id="oppScore">0</div>
+        </div>
+      </div>
+
+      <div class="timer-bar">
+        <div class="timer-fill" id="timerFill"></div>
+      </div>
+
+      <div class="question-card">
+        <div class="q-number" id="qNumber">Savol 1 / 5</div>
+        <div class="q-text" id="qText">...</div>
+        <div id="options"></div>
+      </div>
+
+      <div class="opponent-progress" id="oppProgress"></div>
+    </div>
+
+    <!-- NATIJA EKRANI -->
+    <div class="screen" id="resultScreen">
+      <div class="result">
+        <div class="result-icon" id="resultIcon">🏆</div>
+        <h1 id="resultTitle">G'alaba!</h1>
+        <div class="result-scores">
+          <div class="result-score you">
+            <div class="num" id="finalMyScore">0</div>
+            <div class="lbl">SIZ</div>
+          </div>
+          <div class="result-score opp">
+            <div class="num" id="finalOppScore">0</div>
+            <div class="lbl">RAQIB</div>
+          </div>
+        </div>
+        <div class="xp-earned" id="xpEarned">+0 XP</div>
+        <div class="result-actions">
+          <button class="btn" onclick="playAgain()">Yana o'ynash</button>
+          <button class="btn btn-secondary" onclick="goLobby()">Lobbyga</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Login tekshirish
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = JSON.parse(userData);
+
+    const socket = io();
+    let currentRoom = null;
+    let questions = [];
+    let currentIndex = 0;
+    let myScore = 0;
+    let timerInterval = null;
+
+    // Ekranlarni almashtirish
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    // Sahifa ochilishi bilan jang qidirishni boshlash
+    socket.on("connect", () => {
+      socket.emit("findMatch", {
+        userId: user.id,
+        name: user.first_name,
+        level: user.cefr_level,
+      });
+    });
+
+    socket.on("waiting", (data) => {
+      document.getElementById("searchText").textContent = data.message;
+    });
+
+    socket.on("matchFound", (data) => {
+      currentRoom = data.roomId;
+      document.getElementById("searchTitle").textContent = "Raqib topildi!";
+      document.getElementById("searchText").textContent =
+        data.opponent.name + " bilan jang boshlanmoqda...";
+      document.getElementById("oppName").textContent = data.opponent.name;
+    });
+
+    socket.on("battleStart", (data) => {
+      questions = data.questions;
+      currentIndex = 0;
+      myScore = 0;
+      document.getElementById("myName").textContent = user.first_name;
+      document.getElementById("myScore").textContent = "0";
+      document.getElementById("oppScore").textContent = "0";
+      showScreen("battleScreen");
+      showQuestion();
+    });
+
+    function showQuestion() {
+      if (currentIndex >= questions.length) {
+        clearInterval(timerInterval);
+        document.getElementById("qText").textContent = "Tugatdingiz! Raqib kutilmoqda...";
+        document.getElementById("options").innerHTML = "";
+        document.getElementById("qNumber").textContent = "";
+        return;
+      }
+
+      const q = questions[currentIndex];
+      document.getElementById("qNumber").textContent =
+        "Savol " + (currentIndex + 1) + " / " + questions.length;
+      document.getElementById("qText").textContent = q.question_text;
+
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      ["A", "B", "C", "D"].forEach((letter) => {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.innerHTML = '<span class="letter">' + letter + '</span>' +
+          q["option_" + letter.toLowerCase()];
+        btn.onclick = () => answer(letter);
+        optionsDiv.appendChild(btn);
+      });
+
+      startTimer();
+    }
+
+    // Har savol uchun 15 soniya taymer
+    function startTimer() {
+      clearInterval(timerInterval);
+      let timeLeft = 15;
+      const fill = document.getElementById("timerFill");
+      fill.classList.remove("warning");
+      fill.style.width = "100%";
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        const percent = (timeLeft / 15) * 100;
+        fill.style.width = percent + "%";
+
+        if (timeLeft <= 5) fill.classList.add("warning");
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          // Vaqt tugadi — javobsiz keyingisiga o'tish
+          answer(null);
+        }
+      }, 1000);
+    }
+
+    function answer(letter) {
+      clearInterval(timerInterval);
+      const q = questions[currentIndex];
+
+      socket.emit("submitAnswer", {
+        roomId: currentRoom,
+        questionId: q.id,
+        answer: letter,
+      });
+
+      currentIndex++;
+      showQuestion();
+    }
+
+    socket.on("opponentProgress", (data) => {
+      document.getElementById("oppProgress").textContent =
+        "🔴 Raqib " + data.answeredCount + " ta savolga javob berdi";
+    });
+
+    socket.on("battleEnd", (data) => {
+      clearInterval(timerInterval);
+
+      document.getElementById("finalMyScore").textContent = data.your_score;
+      document.getElementById("finalOppScore").textContent = data.opponent_score;
+      document.getElementById("xpEarned").textContent = "+" + data.xp_earned + " XP";
+      // Yangilangan foydalanuvchini saqlash
+      if (data.updated_user) {
+        localStorage.setItem("user", JSON.stringify(data.updated_user));
+      }
+
+      // Reyting o'zgarishini ko'rsatish
+      const xpEl = document.getElementById("xpEarned");
+      let ratingText = "";
+      if (data.rating_change > 0) ratingText = " · +" + data.rating_change + " reyting";
+      else if (data.rating_change < 0) ratingText = " · " + data.rating_change + " reyting";
+      xpEl.textContent = "+" + data.xp_earned + " XP" + ratingText;
+      const title = document.getElementById("resultTitle");
+      const icon = document.getElementById("resultIcon");
+
+      if (data.outcome === "win") {
+        title.textContent = "G'alaba!";
+        title.className = "win";
+        icon.textContent = "🏆";
+      } else if (data.outcome === "lose") {
+        title.textContent = "Mag'lubiyat";
+        title.className = "lose";
+        icon.textContent = "😔";
+      } else {
+        title.textContent = "Durrang!";
+        title.className = "draw";
+        icon.textContent = "🤝";
+      }
+
+      showScreen("resultScreen");
+    });
+
+    function playAgain() {
+      window.location.reload();
+    }
+
+    function goLobby() {
+      window.location.href = "/lobby.html";
+    }
+  </script>
+</body>
+</html>

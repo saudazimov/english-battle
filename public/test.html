@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>English Battle</title>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: 30px auto; padding: 20px; }
+    button { padding: 12px 24px; font-size: 16px; cursor: pointer; border-radius: 8px; border: none; background: #6366f1; color: white; margin: 4px; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+    .option { display: block; width: 100%; text-align: left; margin: 8px 0; background: #f3f4f6; color: #111; padding: 14px; }
+    .option:hover { background: #e0e7ff; }
+    #status { margin: 16px 0; padding: 14px; background: #f3f4f6; border-radius: 8px; }
+    #progress { color: #6366f1; font-weight: bold; }
+    .hidden { display: none; }
+    h2 { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <h1>⚔️ English Battle</h1>
+  <p>ID: <span id="myId">...</span></p>
+
+  <div id="lobby">
+    <button id="findBtn" onclick="findMatch()">Jang qidirish</button>
+  </div>
+
+  <div id="status">Tugmani bosing</div>
+  <p id="progress"></p>
+
+  <div id="battleArea" class="hidden">
+    <h2 id="qNumber"></h2>
+    <p id="questionText" style="font-size:18px;"></p>
+    <div id="options"></div>
+  </div>
+
+  <div id="resultArea" class="hidden">
+    <h2 id="resultTitle"></h2>
+    <p id="resultDetails"></p>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let currentRoom = null;
+    let questions = [];
+    let currentIndex = 0;
+
+    socket.on("connect", () => {
+      document.getElementById("myId").textContent = socket.id;
+    });
+
+    function findMatch() {
+      document.getElementById("findBtn").disabled = true;
+      document.getElementById("status").textContent = "Qidirilmoqda...";
+      socket.emit("findMatch", { name: "O'yinchi", level: "A1" });
+    }
+
+    socket.on("waiting", (data) => {
+      document.getElementById("status").textContent = "⏳ " + data.message;
+    });
+
+    socket.on("matchFound", (data) => {
+      currentRoom = data.roomId;
+      document.getElementById("status").textContent =
+        "✅ Raqib topildi! Jang boshlanmoqda...";
+    });
+
+    socket.on("battleStart", (data) => {
+      questions = data.questions;
+      currentIndex = 0;
+      document.getElementById("lobby").classList.add("hidden");
+      document.getElementById("status").textContent = "⚔️ Jang ketmoqda!";
+      document.getElementById("battleArea").classList.remove("hidden");
+      showQuestion();
+    });
+
+    function showQuestion() {
+      if (currentIndex >= questions.length) {
+        document.getElementById("battleArea").classList.add("hidden");
+        document.getElementById("status").textContent = "✅ Tugatdingiz! Raqib kutilmoqda...";
+        return;
+      }
+      const q = questions[currentIndex];
+      document.getElementById("qNumber").textContent =
+        "Savol " + (currentIndex + 1) + " / " + questions.length;
+      document.getElementById("questionText").textContent = q.question_text;
+
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      ["A", "B", "C", "D"].forEach((letter) => {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.textContent = letter + ") " + q["option_" + letter.toLowerCase()];
+        btn.onclick = () => answer(letter);
+        optionsDiv.appendChild(btn);
+      });
+    }
+
+    function answer(letter) {
+      const q = questions[currentIndex];
+      socket.emit("submitAnswer", {
+        roomId: currentRoom,
+        questionId: q.id,
+        answer: letter,
+      });
+      currentIndex++;
+      showQuestion();
+    }
+
+    socket.on("opponentProgress", (data) => {
+      document.getElementById("progress").textContent =
+        "🔵 Raqib: " + data.answeredCount + " ta javob berdi";
+    });
+
+    socket.on("battleEnd", (data) => {
+      document.getElementById("battleArea").classList.add("hidden");
+      document.getElementById("status").classList.add("hidden");
+      document.getElementById("progress").textContent = "";
+      document.getElementById("resultArea").classList.remove("hidden");
+
+      let title = "🤝 Durrang!";
+      if (data.outcome === "win") title = "🏆 G'alaba!";
+      if (data.outcome === "lose") title = "😔 Mag'lubiyat";
+
+      document.getElementById("resultTitle").textContent = title;
+      document.getElementById("resultDetails").innerHTML =
+        "Sizning balingiz: <b>" + data.your_score + "/" + data.total + "</b><br>" +
+        "Raqib bali: <b>" + data.opponent_score + "/" + data.total + "</b><br>" +
+        "XP: <b>+" + data.xp_earned + "</b>";
+    });
+  </script>
+</body>
+</html>
