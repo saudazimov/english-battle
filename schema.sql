@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS users (
   xp INTEGER DEFAULT 0,
   rating INTEGER DEFAULT 1000,
   coins INTEGER DEFAULT 0,
+  current_streak INTEGER DEFAULT 0,
+  longest_streak INTEGER DEFAULT 0,
+  last_active_date DATE,
   created_at TIMESTAMP DEFAULT NOW()
 );
 -- Savollar jadvali

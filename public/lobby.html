@@ -161,7 +161,7 @@
         </div>
       </div>
 
-      <div class="stats">
+      <div class="stats" style="grid-template-columns: repeat(4, 1fr);">
         <div class="stat">
           <div class="value" id="ratingValue">1000</div>
           <div class="label">Reyting</div>
@@ -169,6 +169,10 @@
         <div class="stat">
           <div class="value" id="xpValue">0</div>
           <div class="label">XP</div>
+        </div>
+        <div class="stat">
+          <div class="value" id="streakValue" style="color:#fb923c;">🔥 0</div>
+          <div class="label">Streak</div>
         </div>
         <div class="stat">
           <div class="value" id="coinsValue">0</div>
@@ -201,6 +205,23 @@
     document.getElementById("ratingValue").textContent = user.rating;
     document.getElementById("xpValue").textContent = user.xp;
     document.getElementById("coinsValue").textContent = user.coins;
+    // Streak check-in (kunlik kirish)
+    async function checkStreak() {
+      try {
+        const res = await fetch("/streak/checkin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
+        const data = await res.json();
+        if (data.current_streak !== undefined) {
+          document.getElementById("streakValue").textContent = "🔥 " + data.current_streak;
+        }
+      } catch (err) {
+        console.error("Streak yuklab bo'lmadi");
+      }
+    }
+    checkStreak();
 
     function startBattle() {
       window.location.href = "/battle.html";

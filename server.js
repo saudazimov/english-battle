@@ -632,6 +632,77 @@ app.get("/history/:userId", async (req, res) => {
   }
 });
 
+// ============ STREAK ============
+app.post("/streak/checkin", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: "userId kerak" });
+
+    // Foydalanuvchining streak ma'lumotini olish
+    const userResult = await pool.query(
+      "SELECT current_streak, longest_streak, last_active_date FROM users WHERE id = $1",
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
+    }
+
+    const user = userResult.rows[0];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // bugun (vaqtsiz)
+
+    let currentStreak = user.current_streak || 0;
+    let longestStreak = user.longest_streak || 0;
+    const lastActive = user.last_active_date ? new Date(user.last_active_date) : null;
+
+    if (lastActive) {
+      lastActive.setHours(0, 0, 0, 0);
+      const diffDays = Math.round((today - lastActive) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) {
+        // Bugun allaqachon kirgan — o'zgartirmaymiz
+        return res.json({
+          current_streak: currentStreak,
+          longest_streak: longestStreak,
+          already_checked: true,
+        });
+      } else if (diffDays === 1) {
+        // Kecha kirgan, bugun ham keldi — streak +1
+        currentStreak++;
+      } else {
+        // Bir kundan ko'p o'tdi — streak uzildi, qaytadan
+        currentStreak = 1;
+      }
+    } else {
+      // Birinchi marta — streak 1
+      currentStreak = 1;
+    }
+
+    // Eng uzun streakni yangilash
+    if (currentStreak > longestStreak) {
+      longestStreak = currentStreak;
+    }
+
+    // Bazaga saqlash
+    await pool.query(
+      `UPDATE users
+       SET current_streak = $1, longest_streak = $2, last_active_date = CURRENT_DATE
+       WHERE id = $3`,
+      [currentStreak, longestStreak, userId]
+    );
+
+    res.json({
+      current_streak: currentStreak,
+      longest_streak: longestStreak,
+      already_checked: false,
+    });
+  } catch (err) {
+    console.error("Streak xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // DIQQAT: app.listen emas, server.listen!
 server.listen(PORT, () => {
   console.log("Server ishga tushdi: http://localhost:3000");
