@@ -45,3 +45,26 @@ CREATE TABLE IF NOT EXISTS battle_history (
   cefr_level VARCHAR(5),
   played_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Topshiriqlar katalogi (qanday topshiriqlar bor)
+CREATE TABLE IF NOT EXISTS quests (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(150) NOT NULL,
+  description VARCHAR(255),
+  quest_type VARCHAR(50) NOT NULL,
+  target INTEGER NOT NULL,
+  xp_reward INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT true
+);
+
+-- O'yinchining kunlik topshiriqlari
+CREATE TABLE IF NOT EXISTS user_quests (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  quest_id INTEGER NOT NULL REFERENCES quests(id),
+  progress INTEGER DEFAULT 0,
+  is_completed BOOLEAN DEFAULT false,
+  reward_claimed BOOLEAN DEFAULT false,
+  quest_date DATE DEFAULT CURRENT_DATE,
+  UNIQUE(user_id, quest_id, quest_date)
+);

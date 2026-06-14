@@ -255,7 +255,6 @@ function simulateBotAnswers(roomId, botId, questions) {
   function answerNext() {
     const battle = battles[roomId];
     if (!battle || !battle.players[botId]) return; // jang tugagan bo'lsa to'xta
-
     if (qIndex >= questions.length) {
       // Bot hamma savolga javob berdi
       battle.players[botId].finished = true;
@@ -440,6 +439,81 @@ io.on("connection", (socket) => {
   });
 });
 
+// ============ TOPSHIRIQ (QUEST) YORDAMCHILARI ============
+
+// O'yinchining bugungi topshiriqlarini olish (yo'q bo'lsa — yaratish)
+async function getOrCreateDailyQuests(userId) {
+  // Bugungi topshiriqlar bormi?
+  const existing = await pool.query(
+    `SELECT uq.id, uq.quest_id, uq.progress, uq.is_completed, uq.reward_claimed,
+            q.quest_type, q.target, q.xp_reward, q.title, q.description
+     FROM user_quests uq
+     JOIN quests q ON uq.quest_id = q.id
+     WHERE uq.user_id = $1 AND uq.quest_date = CURRENT_DATE`,
+    [userId]
+  );
+
+  if (existing.rows.length > 0) {
+    return existing.rows;
+  }
+
+  // Yo'q — bugun uchun yangi topshiriqlar yaratamiz (3 tasini tasodifiy)
+  const allQuests = await pool.query(
+    "SELECT id FROM quests WHERE is_active = true ORDER BY RANDOM() LIMIT 3"
+  );
+
+  for (const q of allQuests.rows) {
+    await pool.query(
+      `INSERT INTO user_quests (user_id, quest_id, quest_date)
+       VALUES ($1, $2, CURRENT_DATE)
+       ON CONFLICT (user_id, quest_id, quest_date) DO NOTHING`,
+      [userId, q.id]
+    );
+  }
+
+  // Yangi yaratilganlarni qaytarish
+  const created = await pool.query(
+    `SELECT uq.id, uq.quest_id, uq.progress, uq.is_completed, uq.reward_claimed,
+            q.quest_type, q.target, q.xp_reward, q.title, q.description
+     FROM user_quests uq
+     JOIN quests q ON uq.quest_id = q.id
+     WHERE uq.user_id = $1 AND uq.quest_date = CURRENT_DATE`,
+    [userId]
+  );
+  return created.rows;
+}
+
+// Jang natijasiga qarab topshiriq progressini yangilash
+async function updateQuestProgress(userId, { won, correctAnswers, xpEarned }) {
+  try {
+    const quests = await getOrCreateDailyQuests(userId);
+
+    for (const uq of quests) {
+      if (uq.is_completed) continue; // allaqachon bajarilgan
+
+      let increment = 0;
+      if (uq.quest_type === "play_battles") increment = 1;
+      else if (uq.quest_type === "win_battles") increment = won ? 1 : 0;
+      else if (uq.quest_type === "correct_answers") increment = correctAnswers;
+      else if (uq.quest_type === "earn_xp") increment = xpEarned;
+
+      if (increment > 0) {
+        const newProgress = uq.progress + increment;
+        const completed = newProgress >= uq.target;
+
+        await pool.query(
+          `UPDATE user_quests
+           SET progress = $1, is_completed = $2
+           WHERE id = $3`,
+          [Math.min(newProgress, uq.target), completed, uq.id]
+        );
+      }
+    }
+  } catch (err) {
+    console.error("Quest progress xatosi:", err.message);
+  }
+}
+
 // Jangni yakunlash va g'olibni aniqlash
 async function finishBattle(roomId) {
   const battle = battles[roomId];
@@ -496,6 +570,12 @@ async function finishBattle(roomId) {
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
           [me.userId, opp.name, me.score, opp.score, outcome, xpEarned, ratingDelta, "A1"]
         );
+        // Topshiriqlar progressini yangilash
+        await updateQuestProgress(me.userId, {
+          won: outcome === "win",
+          correctAnswers: me.score,
+          xpEarned: xpEarned,
+        });
 
       } catch (err) {
         console.error("Natijani saqlashda xato:", err.message);
@@ -699,6 +779,70 @@ app.post("/streak/checkin", async (req, res) => {
     });
   } catch (err) {
     console.error("Streak xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============ TOPSHIRIQLAR ENDPOINT ============
+
+// O'yinchining bugungi topshiriqlarini olish
+app.post("/quests", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: "userId kerak" });
+
+    const quests = await getOrCreateDailyQuests(userId);
+    res.json({ quests: quests });
+  } catch (err) {
+    console.error("Quests xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Mukofotni olish (bajarilgan topshiriq uchun)
+app.post("/quests/claim", async (req, res) => {
+  try {
+    const { userId, userQuestId } = req.body;
+    if (!userId || !userQuestId) return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
+
+    // Topshiriqni tekshirish
+    const result = await pool.query(
+      `SELECT uq.is_completed, uq.reward_claimed, q.xp_reward
+       FROM user_quests uq
+       JOIN quests q ON uq.quest_id = q.id
+       WHERE uq.id = $1 AND uq.user_id = $2`,
+      [userQuestId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Topshiriq topilmadi" });
+    }
+
+    const quest = result.rows[0];
+
+    if (!quest.is_completed) {
+      return res.status(400).json({ error: "Topshiriq hali bajarilmagan" });
+    }
+    if (quest.reward_claimed) {
+      return res.status(400).json({ error: "Mukofot allaqachon olingan" });
+    }
+
+    // Mukofotni berish: XP qo'shish + claimed belgilash
+    await pool.query("UPDATE user_quests SET reward_claimed = true WHERE id = $1", [userQuestId]);
+
+    const updated = await pool.query(
+      `UPDATE users SET xp = xp + $1 WHERE id = $2
+       RETURNING id, first_name, last_name, email, cefr_level, xp, rating, coins`,
+      [quest.xp_reward, userId]
+    );
+
+    res.json({
+      message: "Mukofot olindi!",
+      xp_reward: quest.xp_reward,
+      updated_user: updated.rows[0],
+    });
+  } catch (err) {
+    console.error("Mukofot xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });

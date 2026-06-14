@@ -184,6 +184,13 @@
     <button class="battle-btn" onclick="startBattle()">⚔️ JANG QIDIRISH</button>
     <button class="battle-btn" onclick="goLeaderboard()" style="margin-top:16px; background:linear-gradient(135deg, #f59e0b, #fbbf24); font-size:18px;">🏆 LEADERBOARD</button>
     <button class="battle-btn" onclick="goHistory()" style="margin-top:16px; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); color:#a5b4fc; font-size:18px;">📜 JANG TARIXI</button>
+    <!-- KUNLIK TOPSHIRIQLAR -->
+    <div style="margin-top:24px;">
+      <h2 style="font-size:20px; margin-bottom:14px; color:#fb923c;">🎯 Kunlik topshiriqlar</h2>
+      <div id="questsList" style="display:flex; flex-direction:column; gap:12px;">
+        <div style="color:#64748b; text-align:center; padding:20px;">Yuklanmoqda...</div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -237,6 +244,81 @@
       localStorage.removeItem("user");
       window.location.href = "/index.html";
     }
+    // ===== KUNLIK TOPSHIRIQLAR =====
+    async function loadQuests() {
+      try {
+        const res = await fetch("/quests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
+        const data = await res.json();
+        renderQuests(data.quests);
+      } catch (err) {
+        document.getElementById("questsList").innerHTML =
+          '<div style="color:#64748b; text-align:center;">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    function renderQuests(quests) {
+      const list = document.getElementById("questsList");
+      if (!quests || quests.length === 0) {
+        list.innerHTML = '<div style="color:#64748b; text-align:center;">Topshiriq yo\'q</div>';
+        return;
+      }
+
+      list.innerHTML = "";
+      quests.forEach(q => {
+        const percent = Math.min(100, Math.round((q.progress / q.target) * 100));
+        const done = q.is_completed;
+        const claimed = q.reward_claimed;
+
+        let buttonHtml = "";
+        if (done && !claimed) {
+          buttonHtml = '<button onclick="claimReward(' + q.id + ')" style="padding:8px 16px; background:linear-gradient(135deg,#22c55e,#16a34a); border:none; border-radius:8px; color:white; font-weight:600; cursor:pointer; white-space:nowrap;">+' + q.xp_reward + ' XP olish</button>';
+        } else if (claimed) {
+          buttonHtml = '<span style="color:#86efac; font-size:14px; white-space:nowrap;">✅ Olindi</span>';
+        } else {
+          buttonHtml = '<span style="color:#64748b; font-size:13px; white-space:nowrap;">' + q.progress + '/' + q.target + '</span>';
+        }
+
+        const card = document.createElement("div");
+        card.style.cssText = "background:rgba(20,20,40,0.8); border:1px solid rgba(99,102,241,0.3); border-radius:14px; padding:16px; display:flex; align-items:center; gap:16px;";
+        card.innerHTML =
+          '<div style="flex:1;">' +
+            '<div style="font-weight:600; margin-bottom:4px;">' + q.title + (done ? ' ✓' : '') + '</div>' +
+            '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">' + q.description + '</div>' +
+            '<div style="height:8px; background:rgba(0,0,0,0.3); border-radius:4px; overflow:hidden;">' +
+              '<div style="height:100%; width:' + percent + '%; background:linear-gradient(90deg,#fb923c,#f59e0b); transition:width 0.3s;"></div>' +
+            '</div>' +
+          '</div>' +
+          buttonHtml;
+        list.appendChild(card);
+      });
+    }
+
+    async function claimReward(userQuestId) {
+      try {
+        const res = await fetch("/quests/claim", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id, userQuestId: userQuestId }),
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.error || "Xato");
+
+        // Yangilangan foydalanuvchini saqlash (XP oshdi)
+        if (data.updated_user) {
+          localStorage.setItem("user", JSON.stringify(data.updated_user));
+          document.getElementById("xpValue").textContent = data.updated_user.xp;
+        }
+        loadQuests(); // topshiriqlarni yangilash
+      } catch (err) {
+        alert("Server xatosi");
+      }
+    }
+
+    loadQuests();
   </script>
 </body>
 </html>
