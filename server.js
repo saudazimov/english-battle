@@ -195,6 +195,105 @@ app.post("/battle/submit", async (req, res) => {
 });
 // ============ SOCKET.IO (REAL-TIME) ============
 
+// ============ BOT RAQIB ============
+
+// Bot uchun tasodifiy ismlar
+const BOT_NAMES = ["Aziz", "Malika", "Bobur", "Nigora", "Sardor", "Dilnoza", "Jahongir", "Zarina"];
+
+function getRandomBotName() {
+  return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+}
+
+// Bot bilan jang boshlash
+async function startBotBattle(roomId, humanPlayer) {
+  try {
+    const result = await pool.query(
+      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option
+       FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT 5`,
+      [humanPlayer.level]
+    );
+
+    const questions = result.rows;
+    const botId = "bot_" + roomId;
+
+    // Jang holatini saqlash (bot ham bor)
+    battles[roomId] = {
+      questions: questions,
+      isBot: true,
+      botId: botId,
+      players: {
+        [humanPlayer.socketId]: { userId: humanPlayer.userId, name: humanPlayer.name, score: 0, finished: false, answeredCount: 0 },
+        [botId]: { userId: null, name: humanPlayer.botName, score: 0, finished: false, answeredCount: 0, isBot: true },
+      },
+    };
+
+    // Savollarni o'yinchiga yuborish (to'g'ri javobsiz)
+    const safeQuestions = questions.map((q) => ({
+      id: q.id, question_text: q.question_text,
+      option_a: q.option_a, option_b: q.option_b,
+      option_c: q.option_c, option_d: q.option_d,
+    }));
+
+    io.to(humanPlayer.socketId).emit("battleStart", {
+      total_questions: safeQuestions.length,
+      questions: safeQuestions,
+    });
+
+    console.log("Bot bilan jang boshlandi:", roomId);
+
+    // Botning javoblarini "simulyatsiya" qilish
+    simulateBotAnswers(roomId, botId, questions);
+  } catch (err) {
+    console.error("Bot jang xatosi:", err.message);
+  }
+}
+
+// Bot javoblarini taqlid qilish
+function simulateBotAnswers(roomId, botId, questions) {
+  let qIndex = 0;
+
+  function answerNext() {
+    const battle = battles[roomId];
+    if (!battle || !battle.players[botId]) return; // jang tugagan bo'lsa to'xta
+
+    if (qIndex >= questions.length) {
+      // Bot hamma savolga javob berdi
+      battle.players[botId].finished = true;
+      const allFinished = Object.values(battle.players).every((p) => p.finished);
+      if (allFinished) finishBattle(roomId);
+      return;
+    }
+
+    const question = questions[qIndex];
+    const bot = battle.players[botId];
+
+    // Bot 65% ehtimol bilan to'g'ri javob beradi
+    const isCorrect = Math.random() < 0.65;
+    if (isCorrect) bot.score++;
+    bot.answeredCount++;
+
+    // O'yinchiga botning progressini ko'rsatish
+    io.to(roomId).emit("opponentProgress", { answeredCount: bot.answeredCount });
+
+    qIndex++;
+
+    // Bot tugatdimi?
+    if (bot.answeredCount >= questions.length) {
+      bot.finished = true;
+      const allFinished = Object.values(battle.players).every((p) => p.finished);
+      if (allFinished) finishBattle(roomId);
+      return;
+    }
+
+    // Keyingi javob uchun tasodifiy vaqt (3-8 soniya) — inson kabi
+    const delay = 3000 + Math.random() * 5000;
+    setTimeout(answerNext, delay);
+  }
+
+  // Birinchi javobni boshlash (2-5 soniyadan keyin)
+  setTimeout(answerNext, 2000 + Math.random() * 3000);
+}
+
 let waitingPlayer = null;
 const battles = {}; // Faol janglar: roomId -> jang ma'lumoti
 
@@ -247,13 +346,38 @@ io.on("connection", (socket) => {
     console.log("Jang qidirilyapti:", socket.id);
 
     if (waitingPlayer === null) {
+      const botName = getRandomBotName();
       waitingPlayer = {
         socketId: socket.id,
         userId: playerData.userId,
         name: playerData.name || "O'yinchi",
         level: playerData.level || "A1",
+        botName: botName,
       };
       socket.emit("waiting", { message: "Raqib qidirilmoqda..." });
+
+      // 10 soniyadan keyin haqiqiy raqib topilmasa, bot qo'shamiz
+      const waitingSocketId = socket.id;
+      setTimeout(() => {
+        // Agar shu o'yinchi hali ham kutayotgan bo'lsa (raqib topilmagan)
+        if (waitingPlayer && waitingPlayer.socketId === waitingSocketId) {
+          const player = waitingPlayer;
+          waitingPlayer = null;
+
+          const roomId = "battle_bot_" + player.socketId;
+          io.sockets.sockets.get(player.socketId)?.join(roomId);
+
+          // O'yinchiga "raqib topildi" (aslida bot)
+          io.to(player.socketId).emit("matchFound", {
+            roomId: roomId,
+            opponent: { name: player.botName },
+            message: "Raqib topildi!",
+          });
+
+          // 2 soniyadan keyin bot bilan jang boshlanadi
+          setTimeout(() => startBotBattle(roomId, player), 2000);
+        }
+      }, 10000); // 10 soniya
     } else {
       const opponent = waitingPlayer;
       waitingPlayer = null;
