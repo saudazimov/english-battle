@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Battle — Do'stlar</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0a1a;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.12), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(168,85,247,0.12), transparent 40%);
+      min-height: 100vh; color: #e2e8f0; padding: 20px;
+    }
+    .container { max-width: 700px; margin: 0 auto; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 10px; }
+    .topbar h1 { font-size: 24px; background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .back-btn { padding: 8px 16px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.4); border-radius: 8px; color: #a5b4fc; cursor: pointer; text-decoration: none; font-size: 14px; }
+    .back-btn:hover { background: rgba(99,102,241,0.25); }
+
+    .tabs { display: flex; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
+    .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-radius: 8px; color: #94a3b8; font-weight: 600; font-size: 14px; transition: all 0.3s; position: relative; }
+    .tab.active { background: linear-gradient(135deg, #6366f1, #a855f7); color: white; }
+    .tab .badge { position: absolute; top: 4px; right: 8px; background: #ef4444; color: white; font-size: 11px; padding: 1px 6px; border-radius: 10px; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+    .search-box input { flex: 1; padding: 13px 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(99,102,241,0.25); border-radius: 10px; color: #e2e8f0; font-size: 14px; }
+    .search-box input:focus { outline: none; border-color: #818cf8; }
+    .search-box button { padding: 13px 20px; background: linear-gradient(135deg, #6366f1, #a855f7); border: none; border-radius: 10px; color: white; font-weight: 600; cursor: pointer; }
+
+    .user-card { background: rgba(20,20,40,0.8); border: 1px solid rgba(99,102,241,0.3); border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; animation: slideIn 0.3s ease both; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+    .user-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; flex-shrink: 0; }
+    .user-info { flex: 1; }
+    .user-name { font-size: 16px; font-weight: 600; }
+    .user-sub { font-size: 13px; color: #94a3b8; }
+    .user-actions { display: flex; gap: 8px; }
+    .btn-sm { padding: 8px 14px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-add { background: linear-gradient(135deg, #6366f1, #a855f7); color: white; }
+    .btn-accept { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+    .btn-reject { background: rgba(239,68,68,0.2); color: #fca5a5; }
+    .btn-battle { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+    .btn-sm:hover { transform: translateY(-1px); }
+    .btn-sm:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+    .empty { text-align: center; padding: 40px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <h1>👥 Do'stlar</h1>
+      <a href="/lobby.html" class="back-btn">← Lobbyga</a>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" id="friendsTab" onclick="switchTab('friends')">Do'stlarim</div>
+      <div class="tab" id="requestsTab" onclick="switchTab('requests')">So'rovlar <span class="badge" id="reqBadge" style="display:none;">0</span></div>
+      <div class="tab" id="searchTab" onclick="switchTab('search')">🔍 Qidirish</div>
+    </div>
+
+    <!-- DO'STLARIM -->
+    <div class="panel active" id="friendsPanel">
+      <div id="friendsList"><div class="empty">Yuklanmoqda...</div></div>
+    </div>
+
+    <!-- SO'ROVLAR -->
+    <div class="panel" id="requestsPanel">
+      <div id="requestsList"><div class="empty">Yuklanmoqda...</div></div>
+    </div>
+
+    <!-- QIDIRISH -->
+    <div class="panel" id="searchPanel">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Ism yoki telefon raqami..." onkeypress="if(event.key==='Enter')doSearch()">
+        <button onclick="doSearch()">Qidirish</button>
+      </div>
+      <div id="searchResults"></div>
+    </div>
+  </div>
+
+  <script>
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = JSON.parse(userData);
+
+    function switchTab(tab) {
+      ["friends", "requests", "search"].forEach(t => {
+        document.getElementById(t + "Tab").classList.toggle("active", t === tab);
+        document.getElementById(t + "Panel").classList.toggle("active", t === tab);
+      });
+      if (tab === "friends") loadFriends();
+      if (tab === "requests") loadRequests();
+    }
+
+    function avatar(name) { return name.charAt(0).toUpperCase(); }
+
+    // DO'STLAR RO'YXATI
+    async function loadFriends() {
+      const list = document.getElementById("friendsList");
+      try {
+        const res = await fetch("/friends/" + user.id);
+        const data = await res.json();
+        if (!data.friends || data.friends.length === 0) {
+          list.innerHTML = '<div class="empty">Hali do\'stlaringiz yo\'q. Qidirib qo\'shing!</div>';
+          return;
+        }
+        list.innerHTML = "";
+        data.friends.forEach(f => {
+          const card = document.createElement("div");
+          card.className = "user-card";
+          card.innerHTML =
+            '<div class="user-avatar">' + avatar(f.first_name) + '</div>' +
+            '<div class="user-info"><div class="user-name">' + f.first_name + ' ' + f.last_name + '</div>' +
+            '<div class="user-sub">' + f.cefr_level + ' · ' + f.rating + ' reyting</div></div>' +
+            '<div class="user-actions"><button class="btn-sm btn-battle" onclick="challengeFriend(' + f.id + ')">⚔️ Jang</button></div>';
+          list.appendChild(card);
+        });
+      } catch (err) {
+        list.innerHTML = '<div class="empty">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    // KELGAN SO'ROVLAR
+    async function loadRequests() {
+      const list = document.getElementById("requestsList");
+      try {
+        const res = await fetch("/friends/requests/" + user.id);
+        const data = await res.json();
+        updateReqBadge(data.requests ? data.requests.length : 0);
+        if (!data.requests || data.requests.length === 0) {
+          list.innerHTML = '<div class="empty">Yangi so\'rovlar yo\'q</div>';
+          return;
+        }
+        list.innerHTML = "";
+        data.requests.forEach(r => {
+          const card = document.createElement("div");
+          card.className = "user-card";
+          card.innerHTML =
+            '<div class="user-avatar">' + avatar(r.first_name) + '</div>' +
+            '<div class="user-info"><div class="user-name">' + r.first_name + ' ' + r.last_name + '</div>' +
+            '<div class="user-sub">' + r.cefr_level + ' · ' + r.rating + ' reyting</div></div>' +
+            '<div class="user-actions">' +
+              '<button class="btn-sm btn-accept" onclick="respond(' + r.friendship_id + ',\'accept\',this)">✓ Qabul</button>' +
+              '<button class="btn-sm btn-reject" onclick="respond(' + r.friendship_id + ',\'reject\',this)">✕ Rad</button>' +
+            '</div>';
+          list.appendChild(card);
+        });
+      } catch (err) {
+        list.innerHTML = '<div class="empty">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    function updateReqBadge(count) {
+      const badge = document.getElementById("reqBadge");
+      if (count > 0) { badge.style.display = "inline"; badge.textContent = count; }
+      else badge.style.display = "none";
+    }
+
+    // QIDIRISH
+    async function doSearch() {
+      const q = document.getElementById("searchInput").value;
+      const results = document.getElementById("searchResults");
+      if (!q.trim()) { results.innerHTML = ""; return; }
+      try {
+        const res = await fetch("/friends/search?q=" + encodeURIComponent(q) + "&userId=" + user.id);
+        const data = await res.json();
+        if (!data.results || data.results.length === 0) {
+          results.innerHTML = '<div class="empty">Hech kim topilmadi</div>';
+          return;
+        }
+        results.innerHTML = "";
+        data.results.forEach(u => {
+          const card = document.createElement("div");
+          card.className = "user-card";
+          card.innerHTML =
+            '<div class="user-avatar">' + avatar(u.first_name) + '</div>' +
+            '<div class="user-info"><div class="user-name">' + u.first_name + ' ' + u.last_name + '</div>' +
+            '<div class="user-sub">' + u.cefr_level + ' · ' + u.rating + ' reyting</div></div>' +
+            '<div class="user-actions"><button class="btn-sm btn-add" onclick="sendRequest(' + u.id + ',this)">+ Qo\'shish</button></div>';
+          results.appendChild(card);
+        });
+      } catch (err) {
+        results.innerHTML = '<div class="empty">Xato yuz berdi</div>';
+      }
+    }
+
+    async function sendRequest(receiverId, btn) {
+      try {
+        const res = await fetch("/friends/request", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ requesterId: user.id, receiverId: receiverId }),
+        });
+        const data = await res.json();
+        btn.disabled = true;
+        btn.textContent = res.ok ? "✓ Yuborildi" : data.error;
+      } catch (err) { alert("Xato"); }
+    }
+
+    async function respond(friendshipId, action, btn) {
+      try {
+        await fetch("/friends/respond", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ friendshipId: friendshipId, action: action }),
+        });
+        btn.closest(".user-card").remove();
+        loadRequests();
+      } catch (err) { alert("Xato"); }
+    }
+
+    function challengeFriend(friendId) {
+      alert("Do'st bilan jang — keyingi bosqichda qo'shamiz!");
+    }
+
+    // Boshlanishida
+    loadFriends();
+    loadRequests(); // badge uchun
+  </script>
+</body>
+</html>

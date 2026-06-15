@@ -1269,6 +1269,138 @@ app.get("/rankings/regions", async (req, res) => {
   }
 });
 
+// ============ DO'STLAR TIZIMI ============
+
+// Foydalanuvchi qidirish (telefon yoki ism bo'yicha)
+app.get("/friends/search", async (req, res) => {
+  try {
+    const { q, userId } = req.query;
+    if (!q || q.trim() === "") {
+      return res.json({ results: [] });
+    }
+
+    const searchTerm = "%" + q.trim() + "%";
+    const result = await pool.query(
+      `SELECT id, first_name, last_name, cefr_level, rating, phone
+       FROM users
+       WHERE (first_name ILIKE $1
+              OR last_name ILIKE $1
+              OR phone ILIKE $1
+              OR (first_name || ' ' || last_name) ILIKE $1
+              OR (last_name || ' ' || first_name) ILIKE $1)
+         AND id != $2
+       LIMIT 20`,
+      [searchTerm, userId || 0]
+    );
+
+    res.json({ results: result.rows });
+  } catch (err) {
+    console.error("Do'st qidirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Do'st so'rovi yuborish
+app.post("/friends/request", async (req, res) => {
+  try {
+    const { requesterId, receiverId } = req.body;
+    if (!requesterId || !receiverId) {
+      return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
+    }
+    if (requesterId === receiverId) {
+      return res.status(400).json({ error: "O'zingizga so'rov yubora olmaysiz" });
+    }
+
+    // Allaqachon so'rov yoki do'stlik bormi (ikki yo'nalishda ham)
+    const existing = await pool.query(
+      `SELECT * FROM friendships
+       WHERE (requester_id = $1 AND receiver_id = $2)
+          OR (requester_id = $2 AND receiver_id = $1)`,
+      [requesterId, receiverId]
+    );
+
+    if (existing.rows.length > 0) {
+      const f = existing.rows[0];
+      if (f.status === "accepted") {
+        return res.status(400).json({ error: "Siz allaqachon do'stsiz" });
+      }
+      return res.status(400).json({ error: "So'rov allaqachon yuborilgan" });
+    }
+
+    await pool.query(
+      `INSERT INTO friendships (requester_id, receiver_id, status)
+       VALUES ($1, $2, 'pending')`,
+      [requesterId, receiverId]
+    );
+
+    res.json({ message: "So'rov yuborildi!" });
+  } catch (err) {
+    console.error("So'rov yuborish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// So'rovni qabul qilish yoki rad etish
+app.post("/friends/respond", async (req, res) => {
+  try {
+    const { friendshipId, action } = req.body; // action: 'accept' yoki 'reject'
+    if (!friendshipId || !action) {
+      return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
+    }
+
+    const newStatus = action === "accept" ? "accepted" : "rejected";
+    await pool.query(
+      "UPDATE friendships SET status = $1 WHERE id = $2",
+      [newStatus, friendshipId]
+    );
+
+    res.json({ message: action === "accept" ? "Do'st qo'shildi!" : "So'rov rad etildi" });
+  } catch (err) {
+    console.error("So'rovga javob xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Kelgan so'rovlar (men qabul qilishim kerak bo'lganlar)
+app.get("/friends/requests/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const result = await pool.query(
+      `SELECT f.id AS friendship_id, u.id, u.first_name, u.last_name, u.cefr_level, u.rating
+       FROM friendships f
+       JOIN users u ON u.id = f.requester_id
+       WHERE f.receiver_id = $1 AND f.status = 'pending'
+       ORDER BY f.created_at DESC`,
+      [userId]
+    );
+    res.json({ requests: result.rows });
+  } catch (err) {
+    console.error("So'rovlar xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Do'stlar ro'yxati (qabul qilingan)
+app.get("/friends/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const result = await pool.query(
+      `SELECT u.id, u.first_name, u.last_name, u.cefr_level, u.rating
+       FROM friendships f
+       JOIN users u ON (u.id = f.requester_id OR u.id = f.receiver_id)
+       WHERE (f.requester_id = $1 OR f.receiver_id = $1)
+         AND f.status = 'accepted'
+         AND u.id != $1
+       ORDER BY u.rating DESC`,
+      [userId]
+    );
+    res.json({ friends: result.rows });
+  } catch (err) {
+    console.error("Do'stlar xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // DIQQAT: app.listen emas, server.listen!
 server.listen(PORT, () => {
   console.log("Server ishga tushdi: http://localhost:3000");
