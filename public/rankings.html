@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Battle — Maktab reytingi</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0a1a;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.12), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(168,85,247,0.12), transparent 40%);
+      min-height: 100vh;
+      color: #e2e8f0;
+      padding: 20px;
+    }
+    .container { max-width: 750px; margin: 0 auto; }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 0; margin-bottom: 10px;
+    }
+    .topbar h1 {
+      font-size: 24px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .back-btn {
+      padding: 8px 16px; background: rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.4); border-radius: 8px;
+      color: #a5b4fc; cursor: pointer; text-decoration: none; font-size: 14px;
+    }
+    .back-btn:hover { background: rgba(99,102,241,0.25); }
+
+    /* Tab */
+    .tabs {
+      display: flex; background: rgba(0,0,0,0.3);
+      border-radius: 12px; padding: 4px; margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1; padding: 12px; text-align: center; cursor: pointer;
+      border-radius: 8px; color: #94a3b8; font-weight: 600; transition: all 0.3s;
+    }
+    .tab.active { background: linear-gradient(135deg, #6366f1, #a855f7); color: white; }
+
+    /* Reyting kartasi */
+    .rank-card {
+      background: rgba(20,20,40,0.8); border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 16px; padding: 18px 20px; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 16px;
+      transition: transform 0.2s ease;
+      animation: slideIn 0.4s ease both;
+    }
+    .rank-card:hover { transform: translateX(4px); }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
+
+    .rank-num {
+      font-size: 22px; font-weight: bold; width: 44px; text-align: center; flex-shrink: 0;
+    }
+    .rank-1 { color: #fbbf24; }
+    .rank-2 { color: #cbd5e1; }
+    .rank-3 { color: #cd7f32; }
+    .rank-other { color: #64748b; }
+
+    .rank-icon {
+      width: 50px; height: 50px; border-radius: 12px; flex-shrink: 0;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      display: flex; align-items: center; justify-content: center; font-size: 24px;
+    }
+    .rank-info { flex: 1; }
+    .rank-name { font-size: 17px; font-weight: 600; }
+    .rank-sub { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+    .rank-stats { text-align: right; }
+    .rank-total { font-size: 20px; font-weight: bold; color: #fbbf24; }
+    .rank-avg { font-size: 12px; color: #64748b; }
+
+    .loading { text-align: center; padding: 40px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <h1>🏫 Reyting</h1>
+      <a href="/lobby.html" class="back-btn">← Lobbyga</a>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" id="schoolTab" onclick="switchTab('school')">🏫 Maktablar</div>
+      <div class="tab" id="regionTab" onclick="switchTab('region')">📍 Viloyatlar</div>
+    </div>
+
+    <div id="content">
+      <div class="loading">Yuklanmoqda...</div>
+    </div>
+  </div>
+
+  <script>
+    if (!localStorage.getItem("user")) window.location.href = "/index.html";
+
+    let currentTab = "school";
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById("schoolTab").classList.toggle("active", tab === "school");
+      document.getElementById("regionTab").classList.toggle("active", tab === "region");
+      loadRankings();
+    }
+
+    async function loadRankings() {
+      const content = document.getElementById("content");
+      content.innerHTML = '<div class="loading">Yuklanmoqda...</div>';
+
+      try {
+        const url = currentTab === "school" ? "/rankings/schools" : "/rankings/regions";
+        const res = await fetch(url);
+        const data = await res.json();
+        const list = currentTab === "school" ? data.schools : data.regions;
+
+        if (!list || list.length === 0) {
+          content.innerHTML = '<div class="loading">Hozircha ma\'lumot yo\'q</div>';
+          return;
+        }
+
+        content.innerHTML = "";
+        list.forEach((item, index) => {
+          const rank = index + 1;
+          let rankClass = "rank-other";
+          let rankDisplay = "#" + rank;
+          if (rank === 1) { rankClass = "rank-1"; rankDisplay = "🥇"; }
+          else if (rank === 2) { rankClass = "rank-2"; rankDisplay = "🥈"; }
+          else if (rank === 3) { rankClass = "rank-3"; rankDisplay = "🥉"; }
+
+          const card = document.createElement("div");
+          card.className = "rank-card";
+          card.style.animationDelay = (index * 0.05) + "s";
+
+          if (currentTab === "school") {
+            card.innerHTML =
+              '<div class="rank-num ' + rankClass + '">' + rankDisplay + '</div>' +
+              '<div class="rank-icon">🏫</div>' +
+              '<div class="rank-info">' +
+                '<div class="rank-name">' + item.school + '</div>' +
+                '<div class="rank-sub">' + (item.region || '') + ' · ' + item.player_count + ' o\'yinchi</div>' +
+              '</div>' +
+              '<div class="rank-stats">' +
+                '<div class="rank-total">' + item.total_rating + '</div>' +
+                '<div class="rank-avg">o\'rtacha ' + item.avg_rating + '</div>' +
+              '</div>';
+          } else {
+            card.innerHTML =
+              '<div class="rank-num ' + rankClass + '">' + rankDisplay + '</div>' +
+              '<div class="rank-icon">📍</div>' +
+              '<div class="rank-info">' +
+                '<div class="rank-name">' + item.region + '</div>' +
+                '<div class="rank-sub">' + item.player_count + ' o\'yinchi</div>' +
+              '</div>' +
+              '<div class="rank-stats">' +
+                '<div class="rank-total">' + item.total_rating + '</div>' +
+                '<div class="rank-avg">o\'rtacha ' + item.avg_rating + '</div>' +
+              '</div>';
+          }
+
+          content.appendChild(card);
+        });
+      } catch (err) {
+        content.innerHTML = '<div class="loading">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    loadRankings();
+  </script>
+</body>
+</html>

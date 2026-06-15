@@ -1196,6 +1196,55 @@ app.post("/exam/submit", async (req, res) => {
   }
 });
 
+// ============ MAKTAB / VILOYAT REYTINGI ============
+
+// Maktab reytingi (jami reyting bo'yicha)
+app.get("/rankings/schools", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+         school,
+         region,
+         COUNT(*) AS player_count,
+         SUM(rating) AS total_rating,
+         ROUND(AVG(rating)) AS avg_rating
+       FROM users
+       WHERE school IS NOT NULL AND school <> ''
+       GROUP BY school, region
+       ORDER BY total_rating DESC
+       LIMIT 50`
+    );
+
+    res.json({ schools: result.rows });
+  } catch (err) {
+    console.error("Maktab reytingi xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Viloyat reytingi
+app.get("/rankings/regions", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+         region,
+         COUNT(*) AS player_count,
+         SUM(rating) AS total_rating,
+         ROUND(AVG(rating)) AS avg_rating
+       FROM users
+       WHERE region IS NOT NULL AND region <> ''
+       GROUP BY region
+       ORDER BY total_rating DESC
+       LIMIT 50`
+    );
+
+    res.json({ regions: result.rows });
+  } catch (err) {
+    console.error("Viloyat reytingi xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // DIQQAT: app.listen emas, server.listen!
 server.listen(PORT, () => {
   console.log("Server ishga tushdi: http://localhost:3000");
