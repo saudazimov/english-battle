@@ -257,6 +257,55 @@
       margin-top: 16px;
       min-height: 20px;
     }
+
+    /* ===== ANIMATSIYALAR ===== */
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes resultPop {
+      0% { opacity: 0; transform: scale(0.7); }
+      60% { transform: scale(1.05); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* Savol kartasi har safar silliq paydo bo'ladi */
+    .question-card { animation: fadeInScale 0.3s ease; }
+
+    /* Variantlar ketma-ket paydo bo'ladi */
+    .option { animation: slideInRight 0.3s ease both; }
+    .option:nth-child(1) { animation-delay: 0.05s; }
+    .option:nth-child(2) { animation-delay: 0.1s; }
+    .option:nth-child(3) { animation-delay: 0.15s; }
+    .option:nth-child(4) { animation-delay: 0.2s; }
+
+    /* Variant bosilganda */
+    .option { transition: transform 0.15s ease, background 0.2s ease; }
+    .option:active { transform: scale(0.98); }
+
+    /* Natija ekrani porlab chiqadi */
+    #resultScreen.active .result { animation: resultPop 0.5s ease; }
+    .result-icon { animation: resultPop 0.6s ease; }
+
+    /* Konfetti */
+    .confetti-piece {
+      position: fixed;
+      top: 0;
+      width: 12px;
+      height: 12px;
+      z-index: 9999;
+      pointer-events: none;
+      animation: confettiFall linear forwards;
+    }
+
   </style>
 </head>
 <body>
@@ -463,8 +512,9 @@
       // Javoblarni saqlash (xatolar tahlili uchun)
       window.battleAnswers = data.answers || [];
 
-      document.getElementById("finalMyScore").textContent = data.your_score;
-      document.getElementById("finalOppScore").textContent = data.opponent_score;
+      // Ballarni sanab o'stirish
+      animateScore("finalMyScore", data.your_score, 800);
+      animateScore("finalOppScore", data.opponent_score, 800);
       document.getElementById("xpEarned").textContent = "+" + data.xp_earned + " XP";
       // Liga o'zgarishi xabari
       if (data.league_change) {
@@ -505,6 +555,8 @@
         title.textContent = "G'alaba!";
         title.className = "win";
         icon.textContent = "🏆";
+        setTimeout(launchConfetti, 300); // g'alabada konfetti!
+
       } else if (data.outcome === "lose") {
         title.textContent = "Mag'lubiyat";
         title.className = "lose";
@@ -633,6 +685,41 @@
       showScreenById("resultScreen");
     }
 
+    // ===== KONFETTI EFFEKTI =====
+    function launchConfetti() {
+      const colors = ["#6366f1", "#a855f7", "#fbbf24", "#22c55e", "#f87171", "#60a5fa"];
+      const count = 80;
+
+      for (let i = 0; i < count; i++) {
+        const piece = document.createElement("div");
+        piece.className = "confetti-piece";
+        piece.style.left = Math.random() * 100 + "vw";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = (2 + Math.random() * 2) + "s";
+        piece.style.animationDelay = Math.random() * 0.5 + "s";
+        // ba'zilari aylana, ba'zilari kvadrat
+        if (Math.random() > 0.5) piece.style.borderRadius = "50%";
+        document.body.appendChild(piece);
+
+        // animatsiya tugagach o'chirish
+        setTimeout(() => piece.remove(), 4500);
+      }
+    }
+
+    // Ballarni 0 dan sanab o'stirish
+    function animateScore(elementId, target, duration) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      const startTime = performance.now();
+      function update(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.round(target * eased);
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+    
   </script>
 </body>
 </html>

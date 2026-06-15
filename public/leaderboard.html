@@ -143,6 +143,28 @@
     .header-row .h-rank { width: 44px; text-align: center; }
     .header-row .h-name { flex: 1; margin-left: 56px; }
     .header-row .h-rating { }
+
+    /* ===== ANIMATSIYALAR ===== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes rowSlideIn {
+      from { opacity: 0; transform: translateX(-15px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Leaderboard kartasi paydo bo'ladi */
+    .leaderboard { animation: fadeInUp 0.4s ease both; }
+
+    /* Har qator ketma-ket sirg'alib chiqadi */
+    .row { animation: rowSlideIn 0.4s ease both; }
+
+    /* Qatorlar hover (allaqachon bor, lekin silliqroq) */
+    .row { transition: background 0.2s ease, transform 0.2s ease; }
+    .row:hover { transform: translateX(4px); }
+
+
   </style>
 </head>
 <body>
@@ -205,6 +227,7 @@
 
         const row = document.createElement("div");
         row.className = "row" + (isMe ? " me" : "");
+        row.style.animationDelay = (index * 0.06) + "s";
         const pLeague = getLeague(p.rating);
         row.innerHTML =
           '<div class="' + rankClass + '">' + rankDisplay + '</div>' +

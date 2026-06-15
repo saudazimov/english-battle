@@ -143,6 +143,42 @@
     }
 
     .battle-btn:active { transform: translateY(0); }
+
+    /* ===== ANIMATSIYALAR ===== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes avatarPulse {
+      0%, 100% { box-shadow: 0 0 25px rgba(99, 102, 241, 0.5); }
+      50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.8); }
+    }
+
+    /* Sahifa elementlari ketma-ket paydo bo'ladi */
+    .profile-card { animation: fadeInUp 0.5s ease both; }
+    .battle-btn:nth-of-type(1) { animation: fadeInUp 0.5s ease 0.1s both; }
+    .battle-btn:nth-of-type(2) { animation: fadeInUp 0.5s ease 0.2s both; }
+    .battle-btn:nth-of-type(3) { animation: fadeInUp 0.5s ease 0.3s both; }
+    .battle-btn:nth-of-type(4) { animation: fadeInUp 0.5s ease 0.4s both; }
+
+    /* Avatar nafas olishi */
+    .avatar { animation: avatarPulse 3s ease-in-out infinite; }
+
+    /* Statistika kartalari hover */
+    .stat {
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+    .stat:hover {
+      transform: translateY(-4px);
+      border-color: rgba(129, 140, 248, 0.6);
+    }
+
+    /* Tugma press effekti */
+    .battle-btn { transition: transform 0.15s ease, box-shadow 0.25s ease; }
+    .battle-btn:active { transform: scale(0.98); }
+
+
   </style>
 </head>
 <body>
@@ -220,8 +256,28 @@
     leagueBadge.textContent = userLeague.emoji + " " + userLeague.name;
     leagueBadge.style.background = userLeague.gradient;
 
-    document.getElementById("ratingValue").textContent = user.rating;
-    document.getElementById("xpValue").textContent = user.xp;
+    // Raqamlar 0 dan haqiqiy songa "sanab" o'sadi
+    function animateNumber(elementId, target, duration) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      const start = 0;
+      const startTime = performance.now();
+
+      function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // silliq sekinlashish (ease-out)
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(start + (target - start) * eased);
+        el.textContent = current;
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    animateNumber("ratingValue", user.rating, 1000);
+    animateNumber("xpValue", user.xp, 1000);
+    
     document.getElementById("coinsValue").textContent = user.coins;
     // Streak check-in (kunlik kirish)
     async function checkStreak() {
@@ -262,7 +318,7 @@
     function goExam() {
       window.location.href = "/exam.html";
     }
-    
+
     // ===== KUNLIK TOPSHIRIQLAR =====
     async function loadQuests() {
       try {
