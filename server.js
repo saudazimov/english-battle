@@ -647,7 +647,7 @@ async function finishBattle(roomId) {
           `INSERT INTO battle_history
            (user_id, opponent_name, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [me.userId, opp.name, me.score, opp.score, outcome, xpEarned, ratingDelta, "A1"]
+          [me.userId, opp.name, me.score, opp.score, outcome, xpEarned, ratingDelta, battle.level || "A1"]
         );
         // Topshiriqlar progressini yangilash
         await updateQuestProgress(me.userId, {
@@ -980,6 +980,214 @@ app.get("/profile/:userId", async (req, res) => {
     });
   } catch (err) {
     console.error("Profil xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============ DARAJA IMTIHONI ============
+
+// Keyingi daraja (A1 -> A2, A2 -> B1, ...)
+const LEVEL_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
+function getNextLevel(current) {
+  const idx = LEVEL_ORDER.indexOf(current);
+  if (idx === -1 || idx === LEVEL_ORDER.length - 1) return null;
+  return LEVEL_ORDER[idx + 1];
+}
+
+// Imtihon ochilish holatini tekshirish
+app.get("/exam/status/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const userResult = await pool.query(
+      "SELECT cefr_level FROM users WHERE id = $1",
+      [userId]
+    );
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
+    }
+
+    const currentLevel = userResult.rows[0].cefr_level;
+    const nextLevel = getNextLevel(currentLevel);
+
+    // Eng yuqori daraja (C2) - imtihon yo'q
+    if (!nextLevel) {
+      return res.json({
+        eligible: false,
+        current_level: currentLevel,
+        next_level: null,
+        reason: "Siz eng yuqori darajadasiz!",
+      });
+    }
+
+    // Shu darajadagi janglar statistikasi
+    const statsResult = await pool.query(
+      `SELECT
+         COUNT(*) AS battles,
+         COALESCE(SUM(my_score), 0) AS total_correct
+       FROM battle_history
+       WHERE user_id = $1 AND cefr_level = $2`,
+      [userId, currentLevel]
+    );
+
+    const battles = parseInt(statsResult.rows[0].battles);
+    const totalCorrect = parseInt(statsResult.rows[0].total_correct);
+    // Har jangda 5 savol bor edi, shuning uchun jami savollar = battles * 5
+    const totalQuestions = battles * 5;
+    const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+
+    // Shartlar
+    const MIN_BATTLES = 10;
+    const MIN_ACCURACY = 70;
+
+    const eligible = battles >= MIN_BATTLES && accuracy >= MIN_ACCURACY;
+
+    res.json({
+      eligible: eligible,
+      current_level: currentLevel,
+      next_level: nextLevel,
+      progress: {
+        battles: battles,
+        battles_required: MIN_BATTLES,
+        accuracy: accuracy,
+        accuracy_required: MIN_ACCURACY,
+      },
+    });
+  } catch (err) {
+    console.error("Imtihon status xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Imtihon savollarini olish
+app.get("/exam/start/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const userResult = await pool.query(
+      "SELECT cefr_level FROM users WHERE id = $1",
+      [userId]
+    );
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
+    }
+
+    const currentLevel = userResult.rows[0].cefr_level;
+
+    // Shu darajadan 20 ta tasodifiy savol (aralash skill)
+    const result = await pool.query(
+      `SELECT id, question_text, option_a, option_b, option_c, option_d, skill
+       FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT 20`,
+      [currentLevel]
+    );
+
+    if (result.rows.length < 10) {
+      return res.status(400).json({
+        error: "Imtihon uchun yetarli savol yo'q (kamida 10 ta kerak)",
+      });
+    }
+
+    res.json({
+      level: currentLevel,
+      total: result.rows.length,
+      questions: result.rows, // to'g'ri javobsiz
+    });
+  } catch (err) {
+    console.error("Imtihon start xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Imtihon javoblarini tekshirish va baholash
+app.post("/exam/submit", async (req, res) => {
+  try {
+    const { userId, answers } = req.body;
+    // answers = [{ question_id, answer }, ...]
+
+    if (!userId || !answers || !Array.isArray(answers)) {
+      return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
+    }
+
+    const userResult = await pool.query(
+      "SELECT cefr_level FROM users WHERE id = $1",
+      [userId]
+    );
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
+    }
+    const currentLevel = userResult.rows[0].cefr_level;
+    const nextLevel = getNextLevel(currentLevel);
+
+    // Har javobni tekshirish + skill bo'yicha sanash
+    let totalCorrect = 0;
+    const skillStats = {}; // { grammar: {correct, total}, ... }
+
+    for (const ans of answers) {
+      const q = await pool.query(
+        "SELECT correct_option, skill FROM questions WHERE id = $1",
+        [ans.question_id]
+      );
+      if (q.rows.length === 0) continue;
+
+      const skill = q.rows[0].skill || "other";
+      if (!skillStats[skill]) skillStats[skill] = { correct: 0, total: 0 };
+      skillStats[skill].total++;
+
+      if (q.rows[0].correct_option === ans.answer) {
+        totalCorrect++;
+        skillStats[skill].correct++;
+      }
+    }
+
+    const total = answers.length;
+    const overallPercent = total > 0 ? Math.round((totalCorrect / total) * 100) : 0;
+
+    // O'tish shartlari
+    const PASS_OVERALL = 75; // umumiy 75%
+    const PASS_SKILL = 60;   // har skill 60%
+
+    // Har skill bo'yicha foiz
+    const skillResults = {};
+    let allSkillsPassed = true;
+    for (const skill in skillStats) {
+      const s = skillStats[skill];
+      const percent = Math.round((s.correct / s.total) * 100);
+      skillResults[skill] = { correct: s.correct, total: s.total, percent: percent };
+      if (percent < PASS_SKILL) allSkillsPassed = false;
+    }
+
+    const passed = overallPercent >= PASS_OVERALL && allSkillsPassed;
+
+    // O'tsa - darajani oshirish
+    let newLevel = currentLevel;
+    if (passed && nextLevel) {
+      await pool.query("UPDATE users SET cefr_level = $1 WHERE id = $2", [nextLevel, userId]);
+      newLevel = nextLevel;
+    }
+
+    // Yangilangan foydalanuvchi
+    const updated = await pool.query(
+      `SELECT id, first_name, last_name, email, cefr_level, xp, rating, coins,
+              current_streak, longest_streak
+       FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    res.json({
+      passed: passed,
+      overall_percent: overallPercent,
+      total_correct: totalCorrect,
+      total: total,
+      pass_overall_required: PASS_OVERALL,
+      pass_skill_required: PASS_SKILL,
+      skill_results: skillResults,
+      old_level: currentLevel,
+      new_level: newLevel,
+      level_changed: passed && nextLevel !== null,
+      updated_user: updated.rows[0],
+    });
+  } catch (err) {
+    console.error("Imtihon submit xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });
