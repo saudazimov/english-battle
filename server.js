@@ -20,35 +20,41 @@ app.get("/", (req, res) => {
 // RO'YXATDAN O'TISH (register)
 app.post("/register", async (req, res) => {
   try {
-    const { first_name, last_name, email, password } = req.body;
+    const {
+      first_name, last_name, phone, password,
+      birth_date, birth_year, region, district, village, school
+    } = req.body;
 
-    // 1. Hamma maydon to'ldirilganmi tekshirish
-    if (!first_name || !last_name || !email || !password) {
-      return res.status(400).json({ error: "Barcha maydonlarni to'ldiring" });
+    // Majburiy maydonlar
+    if (!first_name || !last_name || !phone || !password) {
+      return res.status(400).json({ error: "Ism, familiya, telefon va parol majburiy" });
     }
 
-    // 2. Bu email allaqachon bormi tekshirish
+    // Telefon allaqachon ro'yxatdan o'tganmi
     const existingUser = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
+      "SELECT * FROM users WHERE phone = $1",
+      [phone]
     );
 
     if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: "Bu email allaqachon ro'yxatdan o'tgan" });
+      return res.status(400).json({ error: "Bu telefon raqami allaqachon ro'yxatdan o'tgan" });
     }
 
-    // 3. Parolni shifrlash
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Foydalanuvchini bazaga saqlash
     const newUser = await pool.query(
-      `INSERT INTO users (first_name, last_name, email, password)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, first_name, last_name, email, cefr_level, xp, rating, coins, created_at`,
-      [first_name, last_name, email, hashedPassword]
+      `INSERT INTO users
+       (first_name, last_name, phone, password, birth_date, birth_year, region, district, village, school)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING id, first_name, last_name, phone, cefr_level, xp, rating, coins,
+                 region, district, school, created_at`,
+      [
+        first_name, last_name, phone, hashedPassword,
+        birth_date || null, birth_year || null,
+        region || null, district || null, village || null, school || null
+      ]
     );
 
-    // 5. Javob qaytarish (parolsiz)
     res.status(201).json({
       message: "Ro'yxatdan o'tish muvaffaqiyatli!",
       user: newUser.rows[0],
@@ -58,43 +64,39 @@ app.post("/register", async (req, res) => {
     res.status(500).json({ error: "Server xatosi" });
   }
 });
+
 // TIZIMGA KIRISH (login)
 app.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { phone, password } = req.body;
 
-    // 1. Email va parol kiritilganmi
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email va parolni kiriting" });
+    if (!phone || !password) {
+      return res.status(400).json({ error: "Telefon va parolni kiriting" });
     }
 
-    // 2. Foydalanuvchini email bo'yicha topish
     const result = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
+      "SELECT * FROM users WHERE phone = $1",
+      [phone]
     );
 
     if (result.rows.length === 0) {
-      return res.status(400).json({ error: "Email yoki parol noto'g'ri" });
+      return res.status(400).json({ error: "Telefon yoki parol noto'g'ri" });
     }
 
     const user = result.rows[0];
-
-    // 3. Parolni tekshirish (shifrlangan parol bilan solishtirish)
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
-      return res.status(400).json({ error: "Email yoki parol noto'g'ri" });
+      return res.status(400).json({ error: "Telefon yoki parol noto'g'ri" });
     }
 
-    // 4. Muvaffaqiyatli — foydalanuvchi ma'lumotini qaytarish (parolsiz)
     res.json({
       message: "Tizimga muvaffaqiyatli kirdingiz!",
       user: {
         id: user.id,
         first_name: user.first_name,
         last_name: user.last_name,
-        email: user.email,
+        phone: user.phone,
         cefr_level: user.cefr_level,
         xp: user.xp,
         rating: user.rating,
@@ -106,6 +108,8 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ error: "Server xatosi" });
   }
 });
+
+
 // ============ JANG TIZIMI ============
 
 // 1. JANGNI BOSHLASH - savollarni olish

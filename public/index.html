@@ -3,217 +3,504 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Kirish</title>
+  <title>English Battle — Ro'yxatdan o'tish</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
-      background: #0a0a1a;
+      background: #0a0e1a;
       background-image:
-        radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15), transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.15), transparent 40%);
+        radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.15), transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(168, 85, 247, 0.12), transparent 45%);
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       color: #e2e8f0;
-      padding: 20px;
+      padding: 12px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
     }
 
-    .card {
-      background: rgba(20, 20, 40, 0.8);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      border-radius: 20px;
-      padding: 40px;
+    .wrapper {
+      display: flex;
+      align-items: stretch;
+      max-width: 1000px;
       width: 100%;
-      max-width: 420px;
-      box-shadow: 0 0 40px rgba(99, 102, 241, 0.2);
+      background: rgba(15, 18, 32, 0.6);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(99, 102, 241, 0.15);
     }
 
-    .logo {
-      text-align: center;
-      margin-bottom: 30px;
+    /* ===== CHAP TOMON (BRANDING) ===== */
+    .branding {
+      flex: 1;
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: linear-gradient(160deg, rgba(30, 27, 75, 0.4), rgba(15, 18, 32, 0.2));
     }
 
     .logo h1 {
-      font-size: 32px;
-      background: linear-gradient(135deg, #818cf8, #c084fc);
+      font-size: 34px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .logo .english { color: #fff; }
+    .logo .battle {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 8px;
+    }
+    .logo .slogan { color: #94a3b8; font-size: 14px; margin-top: 8px; }
+
+    .features { margin-top: 28px; }
+    .feature {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 18px;
+      align-items: flex-start;
+    }
+    .feature-icon {
+      width: 46px; height: 46px;
+      flex-shrink: 0;
+      border-radius: 12px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .feature-text h3 { font-size: 15px; margin-bottom: 3px; }
+    .feature-text p { font-size: 13px; color: #94a3b8; line-height: 1.4; }
+
+    .hero-img {
+      margin: 20px 0;
+      text-align: center;
+    }
+    .hero-img img {
+      max-width: 90%;
+      border-radius: 16px;
+      -webkit-mask-image: radial-gradient(ellipse 75% 75% at center, black 55%, transparent 100%);
+      mask-image: radial-gradient(ellipse 75% 75% at center, black 55%, transparent 100%);
     }
 
-    .logo p {
-      color: #64748b;
-      font-size: 14px;
+    .community {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
     }
+    .community-title { text-align: center; font-size: 14px; color: #cbd5e1; margin-bottom: 16px; }
+    .community-stats { display: flex; justify-content: space-around; text-align: center; }
+    .community-stats .num { font-size: 22px; font-weight: bold; color: #818cf8; }
+    .community-stats .lbl { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+    /* ===== O'NG TOMON (FORMA) ===== */
+    .form-side {
+      flex: 1;
+      padding: 28px 32px;
+    }
+
+    .form-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .form-header .fh-icon { font-size: 28px; }
+    .form-header h2 { font-size: 22px; }
+    .form-header p { font-size: 13px; color: #94a3b8; }
 
     .tabs {
       display: flex;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       background: rgba(0, 0, 0, 0.3);
       border-radius: 12px;
       padding: 4px;
     }
-
     .tab {
-      flex: 1;
-      padding: 12px;
-      text-align: center;
-      cursor: pointer;
-      border-radius: 8px;
-      color: #94a3b8;
+      flex: 1; padding: 10px; text-align: center; cursor: pointer;
+      border-radius: 8px; color: #94a3b8; font-weight: 600; font-size: 14px;
       transition: all 0.3s;
-      font-weight: 600;
     }
-
     .tab.active {
       background: linear-gradient(135deg, #6366f1, #a855f7);
       color: white;
-      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
     }
 
     .form { display: none; }
     .form.active { display: block; }
 
-    .input-group { margin-bottom: 16px; }
-
-    .input-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 13px;
-      color: #94a3b8;
+    .field { margin-bottom: 11px; }
+    .field label { display: block; font-size: 13px; color: #cbd5e1; margin-bottom: 6px; font-weight: 500; }
+    .input-icon { position: relative; }
+    .input-icon .icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      font-size: 15px; color: #64748b;
     }
-
-    input {
+    input, select {
       width: 100%;
-      padding: 14px;
+      padding: 11px 14px 11px 40px;
       background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      border: 1px solid rgba(99, 102, 241, 0.25);
       border-radius: 10px;
       color: #e2e8f0;
-      font-size: 15px;
+      font-size: 14px;
+      font-family: inherit;
       transition: all 0.3s;
     }
-
-    input:focus {
+    select { cursor: pointer; }
+    input:focus, select:focus {
       outline: none;
       border-color: #818cf8;
-      box-shadow: 0 0 15px rgba(129, 140, 248, 0.3);
+      box-shadow: 0 0 15px rgba(129, 140, 248, 0.25);
     }
+    select option { background: #1a1d27; }
 
-    .btn {
+    .row { display: flex; gap: 12px; }
+    .row .field { flex: 1; }
+
+    .file-upload {
+      border: 2px dashed rgba(99, 102, 241, 0.3);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .file-upload:hover { border-color: #818cf8; background: rgba(99, 102, 241, 0.05); }
+    .file-upload .fu-icon { font-size: 24px; color: #64748b; }
+    .file-upload .fu-text h4 { font-size: 14px; }
+    .file-upload .fu-text p { font-size: 12px; color: #64748b; }
+
+    .submit-btn {
       width: 100%;
       padding: 15px;
       margin-top: 8px;
       background: linear-gradient(135deg, #6366f1, #a855f7);
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       color: white;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       transition: all 0.3s;
     }
+    .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
-    }
-
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .row { display: flex; gap: 12px; }
-    .row .input-group { flex: 1; }
+    .form-footer { text-align: center; margin-top: 18px; font-size: 13px; color: #94a3b8; }
+    .form-footer a { color: #818cf8; cursor: pointer; text-decoration: none; }
 
     .message {
-      margin-top: 16px;
-      padding: 12px;
-      border-radius: 10px;
+      margin-top: 14px; padding: 12px; border-radius: 10px;
+      font-size: 14px; text-align: center; display: none;
+    }
+    .message.error { display: block; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; }
+    .message.success { display: block; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; }
+
+    /* Mobil uchun */
+    @media (max-width: 800px) {
+      .wrapper { flex-direction: column; }
+      .branding { display: none; }
+    }
+
+    /* Tug'ilgan sana maydoni */
+    input[type="date"] {
+      color: #e2e8f0;
+      font-family: inherit;
       font-size: 14px;
-      text-align: center;
-      display: none;
+    }
+    /* Kalendar ikonasini yorqin (oq) qilish */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      opacity: 0.8;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
+    /* Bo'sh holatda matn rangi */
+    input[type="date"]:invalid {
+      color: #64748b;
     }
 
-    .message.error {
-      display: block;
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: #fca5a5;
-    }
-
-    .message.success {
-      display: block;
-      background: rgba(34, 197, 94, 0.15);
-      border: 1px solid rgba(34, 197, 94, 0.4);
-      color: #86efac;
-    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="logo">
-      <h1>⚔️ ENGLISH BATTLE</h1>
-      <p>Compete. Learn. Become the Best.</p>
-    </div>
+  <div class="wrapper">
 
-    <div class="tabs">
-      <div class="tab active" id="loginTab" onclick="switchTab('login')">Kirish</div>
-      <div class="tab" id="registerTab" onclick="switchTab('register')">Ro'yxatdan o'tish</div>
-    </div>
-
-    <!-- LOGIN FORM -->
-    <div class="form active" id="loginForm">
-      <div class="input-group">
-        <label>Email</label>
-        <input type="email" id="loginEmail" placeholder="ali@test.com">
+    <!-- CHAP: BRANDING -->
+    <div class="branding">
+      <div class="logo">
+        <h1><span class="english">ENGLISH</span> <span class="battle">BATTLE</span></h1>
+        <div class="slogan">Battle. Learn. Become the best!</div>
       </div>
-      <div class="input-group">
-        <label>Parol</label>
-        <input type="password" id="loginPassword" placeholder="••••••">
-      </div>
-      <button class="btn" onclick="login()">Kirish</button>
-    </div>
 
-    <!-- REGISTER FORM -->
-    <div class="form" id="registerForm">
-      <div class="row">
-        <div class="input-group">
-          <label>Ism</label>
-          <input type="text" id="regFirstName" placeholder="Ali">
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">⚔️</div>
+          <div class="feature-text">
+            <h3>Real Battles</h3>
+            <p>Compete with students from across the world.</p>
+          </div>
         </div>
-        <div class="input-group">
-          <label>Familiya</label>
-          <input type="text" id="regLastName" placeholder="Valiyev">
+        <div class="feature">
+          <div class="feature-icon">🎯</div>
+          <div class="feature-text">
+            <h3>Improve Skills</h3>
+            <p>Multiple choice questions. Real progress.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🏆</div>
+          <div class="feature-text">
+            <h3>Climb the Ranking</h3>
+            <p>Win battles, earn points and be the champion!</p>
+          </div>
         </div>
       </div>
-      <div class="input-group">
-        <label>Email</label>
-        <input type="email" id="regEmail" placeholder="ali@test.com">
+
+      <div class="hero-img">
+        <img src="/images/boy.png" alt="Player">
       </div>
-      <div class="input-group">
-        <label>Parol</label>
-        <input type="password" id="regPassword" placeholder="••••••">
+
+      <div class="community">
+        <div class="community-title">Our Community</div>
+        <div class="community-stats">
+          <div>
+            <div class="num">125K+</div>
+            <div class="lbl">Students</div>
+          </div>
+          <div>
+            <div class="num">2,500+</div>
+            <div class="lbl">Schools</div>
+          </div>
+          <div>
+            <div class="num">50K+</div>
+            <div class="lbl">Battles Daily</div>
+          </div>
+        </div>
       </div>
-      <button class="btn" onclick="register()">Ro'yxatdan o'tish</button>
     </div>
 
-    <div class="message" id="message"></div>
+    <!-- O'NG: FORMA -->
+    <div class="form-side">
+      <div class="tabs">
+        <div class="tab active" id="registerTab" onclick="switchTab('register')">Ro'yxatdan o'tish</div>
+        <div class="tab" id="loginTab" onclick="switchTab('login')">Kirish</div>
+      </div>
+
+      <!-- RO'YXATDAN O'TISH FORMASI -->
+      <div class="form active" id="registerForm">
+        <div class="form-header">
+          <span class="fh-icon">👤</span>
+          <div>
+            <h2>Create Your Account</h2>
+            <p>Fill in the details below to get started</p>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Ism</label>
+            <div class="input-icon"><span class="icon">👤</span>
+              <input type="text" id="regFirstName" placeholder="Ismingizni kiriting">
+            </div>
+          </div>
+          <div class="field">
+            <label>Familiya</label>
+            <div class="input-icon"><span class="icon">👤</span>
+              <input type="text" id="regLastName" placeholder="Familiyangizni kiriting">
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Tug'ilgan sana</label>
+          <div class="row" style="gap:8px;">
+            <select id="regDay" style="padding-left:14px;">
+              <option value="">Kun</option>
+            </select>
+            <select id="regMonth" style="padding-left:14px;">
+              <option value="">Oy</option>
+            </select>
+            <select id="regYear" style="padding-left:14px;">
+              <option value="">Yil</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Viloyat</label>
+          <div class="input-icon"><span class="icon">📍</span>
+            <select id="regRegion" onchange="loadDistricts()">
+              <option value="">Viloyatni tanlang</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Tuman</label>
+          <div class="input-icon"><span class="icon">📍</span>
+            <select id="regDistrict">
+              <option value="">Avval viloyatni tanlang</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Qishloq / MFY</label>
+          <div class="input-icon"><span class="icon">🏠</span>
+            <input type="text" id="regVillage" placeholder="Qishloq yoki MFYni kiriting">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Maktab</label>
+          <div class="input-icon"><span class="icon">🏫</span>
+            <input type="text" id="regSchool" placeholder="Maktabingizni kiriting">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Telefon</label>
+            <div class="input-icon"><span class="icon">📞</span>
+              <input type="tel" id="regPhone" placeholder="998901234567">
+            </div>
+          </div>
+          <div class="field">
+            <label>Parol</label>
+            <div class="input-icon"><span class="icon">🔒</span>
+              <input type="password" id="regPassword" placeholder="••••••">
+            </div>
+          </div>
+        </div>
+
+        <button class="submit-btn" onclick="register()">
+          Ro'yxatdan o'tish <span>→</span>
+        </button>
+      </div>
+
+      <!-- KIRISH FORMASI -->
+      <div class="form" id="loginForm">
+        <div class="form-header">
+          <span class="fh-icon">🔑</span>
+          <div>
+            <h2>Xush kelibsiz!</h2>
+            <p>Hisobingizga kiring</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Telefon</label>
+          <div class="input-icon"><span class="icon">📞</span>
+            <input type="tel" id="loginPhone" placeholder="998901234567">
+          </div>
+        </div>
+        <div class="field">
+          <label>Parol</label>
+          <div class="input-icon"><span class="icon">🔒</span>
+            <input type="password" id="loginPassword" placeholder="••••••">
+          </div>
+        </div>
+        <button class="submit-btn" onclick="login()">Kirish <span>→</span></button>
+      </div>
+
+      <div class="message" id="message"></div>
+
+      <div class="form-footer" id="footerText">
+        Allaqachon hisobingiz bormi? <a onclick="switchTab('login')">Kirish</a>
+      </div>
+    </div>
+
   </div>
 
   <script>
+    // O'zbekiston viloyatlari va ba'zi tumanlar
+    const REGIONS = {
+      "Toshkent shahri": ["Bektemir", "Chilonzor", "Mirobod", "Mirzo Ulug'bek", "Sergeli", "Shayxontohur", "Olmazor", "Uchtepa", "Yakkasaroy", "Yashnobod", "Yunusobod"],
+      "Toshkent viloyati": ["Angren", "Bekobod", "Chirchiq", "Ohangaron", "Olmaliq", "Yangiyo'l", "Bo'ka", "Qibray", "Zangiota"],
+      "Andijon": ["Andijon shahri", "Asaka", "Baliqchi", "Bo'ston", "Buloqboshi", "Izboskan", "Jalaquduq", "Marhamat", "Oltinko'l", "Paxtaobod", "Shahrixon", "Xo'jaobod"],
+      "Buxoro": ["Buxoro shahri", "G'ijduvon", "Kogon", "Olot", "Peshku", "Qorako'l", "Romitan", "Shofirkon", "Vobkent"],
+      "Farg'ona": ["Farg'ona shahri", "Beshariq", "Bog'dod", "Buvayda", "Dang'ara", "Furqat", "Quva", "Marg'ilon", "Qo'qon", "Rishton", "So'x", "Toshloq", "Uchko'prik", "O'zbekiston", "Yozyovon"],
+      "Jizzax": ["Jizzax shahri", "Arnasoy", "Baxmal", "Do'stlik", "Forish", "G'allaorol", "Mirzacho'l", "Paxtakor", "Yangiobod", "Zafarobod", "Zarbdor", "Zomin"],
+      "Xorazm": ["Urganch", "Bog'ot", "Gurlan", "Hazorasp", "Xonqa", "Xiva", "Qo'shko'pir", "Shovot", "Yangiariq", "Yangibozor"],
+      "Namangan": ["Namangan shahri", "Chortoq", "Chust", "Kosonsoy", "Mingbuloq", "Norin", "Pop", "To'raqo'rg'on", "Uchqo'rg'on", "Uychi", "Yangiqo'rg'on"],
+      "Navoiy": ["Navoiy shahri", "Karmana", "Konimex", "Navbahor", "Nurota", "Qiziltepa", "Tomdi", "Uchquduq", "Xatirchi", "Zarafshon"],
+      "Qashqadaryo": ["Qarshi", "Chiroqchi", "Dehqonobod", "G'uzor", "Kasbi", "Kitob", "Koson", "Mirishkor", "Muborak", "Nishon", "Qamashi", "Shahrisabz", "Yakkabog'"],
+      "Qoraqalpog'iston": ["Nukus", "Amudaryo", "Beruniy", "Chimboy", "Ellikqal'a", "Kegeyli", "Mo'ynoq", "Nukus tumani", "Qanliko'l", "Qo'ng'irot", "Qorao'zak", "Shumanay", "Taxtako'pir", "To'rtko'l", "Xo'jayli"],
+      "Samarqand": ["Samarqand shahri", "Bulung'ur", "Ishtixon", "Jomboy", "Kattaqo'rg'on", "Narpay", "Nurobod", "Oqdaryo", "Past darg'om", "Paxtachi", "Payariq", "Qo'shrabot", "Toyloq", "Urgut"],
+      "Sirdaryo": ["Guliston", "Boyovut", "Mirzaobod", "Oqoltin", "Sardoba", "Sayxunobod", "Sirdaryo tumani", "Xovos", "Yangiyer"],
+      "Surxondaryo": ["Termiz", "Angor", "Bandixon", "Boysun", "Denov", "Jarqo'rg'on", "Muzrabot", "Oltinsoy", "Qiziriq", "Qumqo'rg'on", "Sariosiyo", "Sherobod", "Sho'rchi", "Termiz tumani", "Uzun"]
+    };
+
+    // Viloyatlarni dropdown'ga yuklash
+    const regionSelect = document.getElementById("regRegion");
+    Object.keys(REGIONS).forEach(region => {
+      const opt = document.createElement("option");
+      opt.value = region;
+      opt.textContent = region;
+      regionSelect.appendChild(opt);
+    });
+    // Tug'ilgan sana dropdown'larini to'ldirish
+    const uzMonths = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
+
+    const daySelect = document.getElementById("regDay");
+    for (let d = 1; d <= 31; d++) {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = d;
+      daySelect.appendChild(opt);
+    }
+
+    const monthSelect = document.getElementById("regMonth");
+    uzMonths.forEach((m, i) => {
+      const opt = document.createElement("option");
+      opt.value = i + 1; // 1-12
+      opt.textContent = m;
+      monthSelect.appendChild(opt);
+    });
+
+    const yearSelect = document.getElementById("regYear");
+    const currentYear = new Date().getFullYear();
+    for (let y = currentYear - 5; y >= currentYear - 70; y--) {
+      const opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = y;
+      yearSelect.appendChild(opt);
+    }
+    
+    // Viloyat tanlanganda tumanlarni yuklash
+    function loadDistricts() {
+      const region = document.getElementById("regRegion").value;
+      const districtSelect = document.getElementById("regDistrict");
+      districtSelect.innerHTML = "";
+
+      if (!region) {
+        districtSelect.innerHTML = '<option value="">Avval viloyatni tanlang</option>';
+        return;
+      }
+
+      districtSelect.innerHTML = '<option value="">Tumanni tanlang</option>';
+      REGIONS[region].forEach(district => {
+        const opt = document.createElement("option");
+        opt.value = district;
+        opt.textContent = district;
+        districtSelect.appendChild(opt);
+      });
+    }
+
     function switchTab(tab) {
-      document.getElementById("loginTab").classList.toggle("active", tab === "login");
       document.getElementById("registerTab").classList.toggle("active", tab === "register");
-      document.getElementById("loginForm").classList.toggle("active", tab === "login");
+      document.getElementById("loginTab").classList.toggle("active", tab === "login");
       document.getElementById("registerForm").classList.toggle("active", tab === "register");
+      document.getElementById("loginForm").classList.toggle("active", tab === "login");
       hideMessage();
     }
 
@@ -222,33 +509,46 @@
       msg.textContent = text;
       msg.className = "message " + type;
     }
-
     function hideMessage() {
       document.getElementById("message").className = "message";
     }
 
-    async function login() {
-      const email = document.getElementById("loginEmail").value;
-      const password = document.getElementById("loginPassword").value;
+    async function register() {
+      // Tug'ilgan sanani yasash (Kun/Oy/Yil dropdown'lardan)
+      const day = document.getElementById("regDay").value;
+      const month = document.getElementById("regMonth").value;
+      const year = document.getElementById("regYear").value;
+      let birthDate = null;
+      if (day && month && year) {
+        birthDate = year + "-" + String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+      }
 
-      if (!email || !password) {
-        return showMessage("Email va parolni kiriting", "error");
+      const data = {
+        first_name: document.getElementById("regFirstName").value,
+        last_name: document.getElementById("regLastName").value,
+        birth_date: birthDate,
+        region: document.getElementById("regRegion").value,
+        district: document.getElementById("regDistrict").value,
+        village: document.getElementById("regVillage").value,
+        school: document.getElementById("regSchool").value,
+        phone: document.getElementById("regPhone").value,
+        password: document.getElementById("regPassword").value,
+      };
+
+      if (!data.first_name || !data.last_name || !data.phone || !data.password) {
+        return showMessage("Ism, familiya, telefon va parol majburiy", "error");
       }
 
       try {
-        const res = await fetch("/login", {
+        const res = await fetch("/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify(data),
         });
-        const data = await res.json();
+        const result = await res.json();
+        if (!res.ok) return showMessage(result.error || "Xato", "error");
 
-        if (!res.ok) {
-          return showMessage(data.error || "Xato yuz berdi", "error");
-        }
-
-        // Foydalanuvchini saqlash va lobbyga o'tish
-        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("user", JSON.stringify(result.user));
         showMessage("Muvaffaqiyatli! Yo'naltirilmoqda...", "success");
         setTimeout(() => { window.location.href = "/lobby.html"; }, 800);
       } catch (err) {
@@ -256,30 +556,23 @@
       }
     }
 
-    async function register() {
-      const first_name = document.getElementById("regFirstName").value;
-      const last_name = document.getElementById("regLastName").value;
-      const email = document.getElementById("regEmail").value;
-      const password = document.getElementById("regPassword").value;
+    async function login() {
+      const phone = document.getElementById("loginPhone").value;
+      const password = document.getElementById("loginPassword").value;
 
-      if (!first_name || !last_name || !email || !password) {
-        return showMessage("Barcha maydonlarni to'ldiring", "error");
-      }
+      if (!phone || !password) return showMessage("Telefon va parolni kiriting", "error");
 
       try {
-        const res = await fetch("/register", {
+        const res = await fetch("/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ first_name, last_name, email, password }),
+          body: JSON.stringify({ phone, password }),
         });
-        const data = await res.json();
+        const result = await res.json();
+        if (!res.ok) return showMessage(result.error || "Xato", "error");
 
-        if (!res.ok) {
-          return showMessage(data.error || "Xato yuz berdi", "error");
-        }
-
-        localStorage.setItem("user", JSON.stringify(data.user));
-        showMessage("Ro'yxatdan o'tdingiz! Yo'naltirilmoqda...", "success");
+        localStorage.setItem("user", JSON.stringify(result.user));
+        showMessage("Muvaffaqiyatli! Yo'naltirilmoqda...", "success");
         setTimeout(() => { window.location.href = "/lobby.html"; }, 800);
       } catch (err) {
         showMessage("Server bilan aloqa yo'q", "error");

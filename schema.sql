@@ -14,6 +14,14 @@ CREATE TABLE IF NOT EXISTS users (
   current_streak INTEGER DEFAULT 0,
   longest_streak INTEGER DEFAULT 0,
   last_active_date DATE,
+  phone VARCHAR(20),
+  birth_date DATE,
+  birth_year INTEGER,
+  region VARCHAR(100),
+  district VARCHAR(100),
+  village VARCHAR(150),
+  school VARCHAR(200),
+  profile_picture VARCHAR(255),
   created_at TIMESTAMP DEFAULT NOW()
 );
 -- Savollar jadvali
