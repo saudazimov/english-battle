@@ -84,10 +84,17 @@
     </div>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script>
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
     const user = JSON.parse(userData);
+
+    // Socket.IO ulanish va o'yinchini ro'yxatga olish
+    const socket = io();
+    socket.on("connect", () => {
+      socket.emit("registerUser", user.id);
+    });
 
     function switchTab(tab) {
       ["friends", "requests", "search"].forEach(t => {
@@ -118,8 +125,7 @@
             '<div class="user-avatar">' + avatar(f.first_name) + '</div>' +
             '<div class="user-info"><div class="user-name">' + f.first_name + ' ' + f.last_name + '</div>' +
             '<div class="user-sub">' + f.cefr_level + ' · ' + f.rating + ' reyting</div></div>' +
-            '<div class="user-actions"><button class="btn-sm btn-battle" onclick="challengeFriend(' + f.id + ')">⚔️ Jang</button></div>';
-          list.appendChild(card);
+            '<div class="user-actions"><button class="btn-sm btn-battle" onclick="challengeFriend(' + f.id + ', \'' + f.first_name + ' ' + f.last_name + '\')">⚔️ Jang</button></div>';          list.appendChild(card);
         });
       } catch (err) {
         list.innerHTML = '<div class="empty">Yuklab bo\'lmadi</div>';
@@ -213,13 +219,99 @@
       } catch (err) { alert("Xato"); }
     }
 
-    function challengeFriend(friendId) {
-      alert("Do'st bilan jang — keyingi bosqichda qo'shamiz!");
+    let challengeTargetName = "";
+
+    function challengeFriend(friendId, friendName) {
+      challengeTargetName = friendName;
+      socket.emit("challengeFriend", {
+        fromUserId: user.id,
+        fromName: user.first_name + " " + user.last_name,
+        toUserId: friendId,
+        level: user.cefr_level || "A1",
+      });
+      showOverlay("⏳ " + friendName + " ga chaqiruv yuborildi, javob kutilmoqda...");
     }
 
     // Boshlanishida
     loadFriends();
     loadRequests(); // badge uchun
+
+    // ===== CHAQIRUV OYNASI =====
+    function showOverlay(text, buttons) {
+      document.getElementById("overlayText").innerHTML = text;
+      document.getElementById("overlayButtons").innerHTML = buttons || "";
+      document.getElementById("overlay").style.display = "flex";
+    }
+    function hideOverlay() {
+      document.getElementById("overlay").style.display = "none";
+    }
+
+    // Chaqiruv natijasi (yuborilдими)
+    socket.on("challengeResult", (data) => {
+      if (!data.success) {
+        showOverlay("❌ " + data.message,
+          '<button class="btn-sm btn-reject" onclick="hideOverlay()">Yopish</button>');
+      }
+      // success bo'lsa - "kutilmoqda" oynasi allaqachon ko'rsatilgan
+    });
+
+    // Chaqiruv keldi (kimdir meni chaqirdi)
+    let incomingChallenge = null;
+    socket.on("challengeReceived", (data) => {
+      incomingChallenge = data;
+      showOverlay(
+        "⚔️ <b>" + data.fromName + "</b> sizni jangga chaqiryapti!",
+        '<button class="btn-sm btn-accept" onclick="acceptChallenge()">✓ Qabul</button>' +
+        '<button class="btn-sm btn-reject" style="margin-left:8px;" onclick="declineChallenge()">✕ Rad</button>'
+      );
+    });
+
+    function acceptChallenge() {
+      if (!incomingChallenge) return;
+      socket.emit("challengeResponse", {
+        accepted: true,
+        fromSocketId: incomingChallenge.fromSocketId,
+        fromUserId: incomingChallenge.fromUserId,
+        fromName: incomingChallenge.fromName,
+        myUserId: user.id,
+        myName: user.first_name + " " + user.last_name,
+        level: incomingChallenge.level,
+      });
+      showOverlay("⚔️ Jang boshlanmoqda...");
+    }
+
+    function declineChallenge() {
+      if (!incomingChallenge) return;
+      socket.emit("challengeResponse", {
+        accepted: false,
+        fromSocketId: incomingChallenge.fromSocketId,
+        myName: user.first_name + " " + user.last_name,
+      });
+      incomingChallenge = null;
+      hideOverlay();
+    }
+
+    // Chaqiruv rad etildi (men yuborgan, raqib rad qildi)
+    socket.on("challengeDeclined", (data) => {
+      showOverlay("😔 " + data.byName + " chaqiruvni rad etdi",
+        '<button class="btn-sm btn-reject" onclick="hideOverlay()">Yopish</button>');
+    });
+
+    // Jang topildi (qabul qilindi) - jang sahifasiga o'tish
+    socket.on("matchFound", (data) => {
+      // Jang ma'lumotini saqlab, battle sahifasiga o'tamiz
+      sessionStorage.setItem("battleData", JSON.stringify(data));
+      window.location.href = "/battle.html?room=" + encodeURIComponent(data.roomId);
+    });
   </script>
+
+  <!-- CHAQIRUV OYNASI -->
+  <div id="overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:rgba(20,20,40,0.95); border:1px solid rgba(99,102,241,0.4); border-radius:20px; padding:30px; max-width:380px; text-align:center; box-shadow:0 0 50px rgba(99,102,241,0.3);">
+      <div id="overlayText" style="font-size:17px; margin-bottom:20px;">...</div>
+      <div id="overlayButtons"></div>
+    </div>
+  </div>
+
 </body>
 </html>

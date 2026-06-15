@@ -341,6 +341,7 @@ function simulateBotAnswers(roomId, botId, questions) {
 
 let waitingPlayer = null;
 const battles = {}; // Faol janglar: roomId -> jang ma'lumoti
+const onlineUsers = {}; // { userId: socketId }
 
 // Jangni boshlash funksiyasi
 async function startBattle(roomId, player1, player2) {
@@ -386,6 +387,68 @@ async function startBattle(roomId, player1, player2) {
 }
 
 io.on("connection", (socket) => {
+  // O'yinchi onlayn bo'ldi - ro'yxatga olish
+  socket.on("registerUser", (userId) => {
+    if (userId) {
+      onlineUsers[userId] = socket.id;
+      socket.userId = userId;
+      console.log("Onlayn:", userId);
+    }
+  });
+
+  // Do'stga jang chaqiruvi yuborish
+  socket.on("challengeFriend", ({ fromUserId, fromName, toUserId, level }) => {
+    console.log("Chaqiruv:", fromUserId, "->", toUserId, "| Onlayn:", Object.keys(onlineUsers));
+    const targetSocketId = onlineUsers[String(toUserId)];
+
+    if (!targetSocketId) {
+      socket.emit("challengeResult", { success: false, message: "Do'stingiz hozir onlayn emas" });
+      return;
+    }
+
+    io.to(targetSocketId).emit("challengeReceived", {
+      fromUserId: fromUserId,
+      fromName: fromName,
+      fromSocketId: socket.id,
+      level: level,
+    });
+
+    socket.emit("challengeResult", { success: true, message: "Chaqiruv yuborildi, javob kutilmoqda..." });
+  });
+
+  // Chaqiruvga javob (qabul yoki rad)
+  socket.on("challengeResponse", ({ accepted, fromSocketId, fromUserId, fromName, myUserId, myName, level }) => {
+    const challengerSocket = io.sockets.sockets.get(fromSocketId);
+
+    if (!accepted) {
+      if (challengerSocket) {
+        challengerSocket.emit("challengeDeclined", { byName: myName });
+      }
+      return;
+    }
+
+    const roomId = "friend_battle_" + fromSocketId + "_" + socket.id;
+    if (challengerSocket) challengerSocket.join(roomId);
+    socket.join(roomId);
+
+    if (challengerSocket) {
+      challengerSocket.emit("matchFound", {
+        roomId: roomId,
+        opponent: { name: myName },
+        message: "Do'stingiz qabul qildi!",
+      });
+    }
+    socket.emit("matchFound", {
+      roomId: roomId,
+      opponent: { name: fromName },
+      message: "Jang boshlanmoqda!",
+    });
+
+    const player1 = { socketId: fromSocketId, userId: fromUserId, name: fromName, level: level || "A1" };
+    const player2 = { socketId: socket.id, userId: myUserId, name: myName, level: level || "A1" };
+    setTimeout(() => startBattle(roomId, player1, player2), 1500);
+  });
+  
   console.log("Yangi o'yinchi ulandi:", socket.id);
 
   socket.on("findMatch", (playerData) => {
@@ -523,6 +586,11 @@ io.on("connection", (socket) => {
     console.log("O'yinchi uzildi:", socket.id);
     if (waitingPlayer && waitingPlayer.socketId === socket.id) {
       waitingPlayer = null;
+    }
+    // Onlayn ro'yxatdan o'chirish
+    if (socket.userId && onlineUsers[socket.userId] === socket.id) {
+      delete onlineUsers[socket.userId];
+      console.log("Offlayn:", socket.userId);
     }
   });
 });
