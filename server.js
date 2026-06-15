@@ -221,6 +221,7 @@ async function startBotBattle(roomId, humanPlayer) {
       questions: questions,
       isBot: true,
       botId: botId,
+      level: humanPlayer.level || "A1",
       players: {
         [humanPlayer.socketId]: { userId: humanPlayer.userId, name: humanPlayer.name, score: 0, finished: false, answeredCount: 0 },
         [botId]: { userId: null, name: humanPlayer.botName, score: 0, finished: false, answeredCount: 0, isBot: true },
@@ -329,6 +330,7 @@ async function startBattle(roomId, player1, player2) {
     // Jang holatini saqlash
     battles[roomId] = {
       questions: questions,
+      level: player1.level || "A1",
       players: {
         [player1.socketId]: { userId: player1.userId, name: player1.name, score: 0, finished: false, answeredCount: 0 },
         [player2.socketId]: { userId: player2.userId, name: player2.name, score: 0, finished: false, answeredCount: 0 },
@@ -396,6 +398,27 @@ io.on("connection", (socket) => {
         }
       }, 10000); // 10 soniya
     } else {
+      // Daraja mosligini tekshirish
+      const myLevel = playerData.level || "A1";
+      if (waitingPlayer.level !== myLevel) {
+        // Daraja mos kelmadi — bu o'yinchi ham navbatga turadi (o'z darajasi bilan)
+        // Eski kutayotgan o'yinchini saqlab qolamiz, yangisini ham qo'shamiz
+        // Sodda yechim: yangi o'yinchini kutishga qo'yamiz (eski o'rniga)
+        // Lekin eski o'yinchi ham kerak — shuning uchun massivga o'tamiz
+        // Hozircha: agar daraja mos kelmasa, yangi o'yinchi botga o'tadi (10s kutmasdan)
+        const botName2 = getRandomBotName();
+        const roomIdBot = "battle_bot_" + socket.id;
+        socket.join(roomIdBot);
+        socket.emit("matchFound", {
+          roomId: roomIdBot,
+          opponent: { name: botName2 },
+          message: "Raqib topildi!",
+        });
+        const botPlayer = { socketId: socket.id, userId: playerData.userId, name: playerData.name || "O'yinchi", level: myLevel, botName: botName2 };
+        setTimeout(() => startBotBattle(roomIdBot, botPlayer), 2000);
+        return;
+      }
+
       const opponent = waitingPlayer;
       waitingPlayer = null;
 
