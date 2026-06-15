@@ -334,6 +334,8 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/leagues.js"></script>
+
   <script>
     // Login tekshirish
     const userData = localStorage.getItem("user");
@@ -464,6 +466,27 @@
       document.getElementById("finalMyScore").textContent = data.your_score;
       document.getElementById("finalOppScore").textContent = data.opponent_score;
       document.getElementById("xpEarned").textContent = "+" + data.xp_earned + " XP";
+      // Liga o'zgarishi xabari
+      if (data.league_change) {
+        const lc = data.league_change;
+        const oldL = getLeagueByName(lc.old);
+        const newL = getLeagueByName(lc.new);
+
+        const banner = document.createElement("div");
+        if (lc.promoted) {
+          banner.style.cssText = "margin:16px auto; padding:16px 24px; background:linear-gradient(135deg, rgba(251,191,36,0.2), rgba(168,85,247,0.2)); border:2px solid #fbbf24; border-radius:14px; text-align:center; max-width:400px;";
+          banner.innerHTML = '<div style="font-size:22px; font-weight:bold; color:#fbbf24; margin-bottom:6px;">🎉 Liga ko\'tarildi!</div>' +
+            '<div style="font-size:16px;"><span style="color:' + oldL.color + ';">' + oldL.emoji + ' ' + oldL.name + '</span> → <span style="color:' + newL.color + '; font-weight:bold;">' + newL.emoji + ' ' + newL.name + '</span></div>';
+        } else {
+          banner.style.cssText = "margin:16px auto; padding:16px 24px; background:rgba(239,68,68,0.15); border:2px solid rgba(239,68,68,0.4); border-radius:14px; text-align:center; max-width:400px;";
+          banner.innerHTML = '<div style="font-size:18px; font-weight:bold; color:#f87171; margin-bottom:6px;">📉 Liga tushdi</div>' +
+            '<div style="font-size:16px;"><span style="color:' + oldL.color + ';">' + oldL.emoji + ' ' + oldL.name + '</span> → <span style="color:' + newL.color + ';">' + newL.emoji + ' ' + newL.name + '</span></div>';
+        }
+
+        // Natija ekraniga qo'shish (xpEarned dan keyin)
+        const xpEl = document.getElementById("xpEarned");
+        xpEl.parentNode.insertBefore(banner, xpEl.nextSibling);
+      }
       // Yangilangan foydalanuvchini saqlash
       if (data.updated_user) {
         localStorage.setItem("user", JSON.stringify(data.updated_user));

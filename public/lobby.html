@@ -158,6 +158,7 @@
         <div class="profile-name">
           <h2 id="playerName">O'yinchi</h2>
           <span class="level-badge" id="levelBadge">A1</span>
+          <span class="level-badge" id="leagueBadge" style="margin-left:6px;">🥈 Silver</span>
         </div>
       </div>
 
@@ -192,7 +193,9 @@
       </div>
     </div>
   </div>
-
+  
+  <script src="/leagues.js"></script>
+  
   <script>
     // Login bo'lganini tekshirish
     const userData = localStorage.getItem("user");
@@ -209,6 +212,13 @@
     document.getElementById("avatar").textContent =
       user.first_name.charAt(0).toUpperCase();
     document.getElementById("levelBadge").textContent = user.cefr_level;
+    
+    // Liga belgisini ko'rsatish
+    const userLeague = getLeague(user.rating);
+    const leagueBadge = document.getElementById("leagueBadge");
+    leagueBadge.textContent = userLeague.emoji + " " + userLeague.name;
+    leagueBadge.style.background = userLeague.gradient;
+
     document.getElementById("ratingValue").textContent = user.rating;
     document.getElementById("xpValue").textContent = user.xp;
     document.getElementById("coinsValue").textContent = user.coins;

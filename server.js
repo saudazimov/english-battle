@@ -248,6 +248,24 @@ async function startBotBattle(roomId, humanPlayer) {
   }
 }
 
+// ============ LIGA (SERVER) ============
+const SERVER_LEAGUES = [
+  { name: "Bronze", min: 0, max: 999 },
+  { name: "Silver", min: 1000, max: 1199 },
+  { name: "Gold", min: 1200, max: 1399 },
+  { name: "Platinum", min: 1400, max: 1599 },
+  { name: "Diamond", min: 1600, max: 1799 },
+  { name: "Master", min: 1800, max: 1999 },
+  { name: "Grandmaster", min: 2000, max: Infinity },
+];
+
+function getLeagueName(rating) {
+  for (const league of SERVER_LEAGUES) {
+    if (rating >= league.min && rating <= league.max) return league.name;
+  }
+  return "Bronze";
+}
+
 // Bot javoblarini taqlid qilish
 function simulateBotAnswers(roomId, botId, questions) {
   let qIndex = 0;
@@ -571,6 +589,13 @@ async function finishBattle(roomId) {
     let updatedUser = null;
     if (me.userId) {
       try {
+        // Eski reytingni eslab qolish (liga o'zgarishini tekshirish uchun)
+        const oldRatingResult = await pool.query(
+          "SELECT rating FROM users WHERE id = $1",
+          [me.userId]
+        );
+        const oldRating = oldRatingResult.rows[0] ? oldRatingResult.rows[0].rating : 1000;
+
         const result = await pool.query(
           `UPDATE users
            SET xp = xp + $1,
@@ -581,6 +606,17 @@ async function finishBattle(roomId) {
         );
         if (result.rows.length > 0) {
           updatedUser = result.rows[0];
+
+          // Liga o'zgardimi?
+          const oldLeague = getLeagueName(oldRating);
+          const newLeague = getLeagueName(updatedUser.rating);
+          if (oldLeague !== newLeague) {
+            me.leagueChange = {
+              old: oldLeague,
+              new: newLeague,
+              promoted: updatedUser.rating > oldRating, // ko'tarildimi yoki tushdimi
+            };
+          }
         }
 
         // Jang tarixiga yozish
@@ -612,6 +648,7 @@ async function finishBattle(roomId) {
       rating_change: ratingDelta,
       updated_user: updatedUser,
       answers: me.answers || [],
+      league_change: me.leagueChange || null,
     });
   }
 

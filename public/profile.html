@@ -142,6 +142,8 @@
     </div>
   </div>
 
+  <script src="/leagues.js"></script>
+
   <script>
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
@@ -158,6 +160,32 @@
       }
     }
 
+    // Liga progress bar yasash
+    function buildLeagueProgress(rating) {
+      const prog = getLeagueProgress(rating);
+      const current = prog.current;
+
+      if (!prog.next) {
+        // Grandmaster - eng yuqori
+        return '<div style="margin-top:20px; padding:16px; background:rgba(0,0,0,0.2); border-radius:14px; text-align:center;">' +
+          '<span style="color:' + current.color + '; font-weight:600;">👑 Eng yuqori liga!</span>' +
+        '</div>';
+      }
+
+      return '<div style="margin-top:20px; padding:16px; background:rgba(0,0,0,0.2); border-radius:14px;">' +
+        '<div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">' +
+          '<span style="color:' + current.color + ';">' + current.emoji + ' ' + current.name + '</span>' +
+          '<span style="color:' + prog.next.color + ';">' + prog.next.emoji + ' ' + prog.next.name + '</span>' +
+        '</div>' +
+        '<div style="height:10px; background:rgba(0,0,0,0.4); border-radius:5px; overflow:hidden;">' +
+          '<div style="height:100%; width:' + prog.percent + '%; background:' + current.gradient + ';"></div>' +
+        '</div>' +
+        '<div style="text-align:center; font-size:12px; color:#94a3b8; margin-top:8px;">' +
+          prog.next.name + ' ligasiga <b style="color:#e2e8f0;">' + prog.pointsToNext + '</b> ball qoldi' +
+        '</div>' +
+      '</div>';
+    }
+
     function renderProfile(user, stats) {
       const content = document.getElementById("content");
       const initial = user.first_name.charAt(0).toUpperCase();
@@ -170,7 +198,10 @@
         '<div class="profile-hero">' +
           '<div class="big-avatar">' + initial + '</div>' +
           '<h2>' + user.first_name + ' ' + user.last_name + '</h2>' +
-          '<span class="level-badge">' + user.cefr_level + ' daraja</span>' +
+          '<div style="margin:8px 0;">' +
+            '<span class="level-badge">' + user.cefr_level + ' daraja</span>' +
+            '<span class="level-badge" style="margin-left:8px; background:' + getLeague(user.rating).gradient + ';">' + getLeague(user.rating).emoji + ' ' + getLeague(user.rating).name + '</span>' +
+          '</div>' +
 
           '<div class="winrate-section">' +
             '<div class="winrate-circle" style="' + circleStyle + '">' +
@@ -186,6 +217,7 @@
               '<div class="wl-row" style="color:#94a3b8;">Jami: <b>' + stats.total_battles + '</b> jang</div>' +
             '</div>' +
           '</div>' +
+          buildLeagueProgress(user.rating) +
         '</div>' +
 
         '<div class="stats-grid">' +

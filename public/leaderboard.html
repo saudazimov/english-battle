@@ -163,6 +163,8 @@
     </div>
   </div>
 
+  <script src="/leagues.js"></script>
+
   <script>
     // Login tekshirish
     const userData = localStorage.getItem("user");
@@ -203,12 +205,13 @@
 
         const row = document.createElement("div");
         row.className = "row" + (isMe ? " me" : "");
+        const pLeague = getLeague(p.rating);
         row.innerHTML =
           '<div class="' + rankClass + '">' + rankDisplay + '</div>' +
           '<div class="player-avatar">' + p.first_name.charAt(0).toUpperCase() + '</div>' +
           '<div class="player-info">' +
             '<div class="name">' + p.first_name + ' ' + p.last_name + (isMe ? ' (Siz)' : '') + '</div>' +
-            '<div class="level">' + p.cefr_level + '</div>' +
+            '<div class="level">' + p.cefr_level + ' · <span style="color:' + pLeague.color + ';">' + pLeague.emoji + ' ' + pLeague.name + '</span></div>' +
           '</div>' +
           '<div class="player-stats">' +
             '<div class="rating">' + p.rating + '</div>' +
