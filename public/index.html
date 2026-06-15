@@ -229,6 +229,19 @@
       color: #64748b;
     }
 
+    /* Bo'sh majburiy maydon - qizil chegara */
+    input.invalid, select.invalid {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.3) !important;
+    }
+    .field-error {
+      font-size: 11px;
+      color: #fca5a5;
+      margin-top: 4px;
+      display: none;
+    }
+    .field-error.show { display: block; }
+
   </style>
 </head>
 <body>
@@ -361,9 +374,9 @@
         </div>
 
         <div class="field">
-          <label>Maktab</label>
+          <label>Maktabingizni kiriting</label>
           <div class="input-icon"><span class="icon">🏫</span>
-            <input type="text" id="regSchool" placeholder="Maktabingizni kiriting">
+            <input type="text" id="regSchool" placeholder="Masalan: 5-maktab">
           </div>
         </div>
 
@@ -535,8 +548,34 @@
         password: document.getElementById("regPassword").value,
       };
 
-      if (!data.first_name || !data.last_name || !data.phone || !data.password) {
-        return showMessage("Ism, familiya, telefon va parol majburiy", "error");
+      // Hamma majburiy maydonlarni tekshirish (qishloq/MFY dan tashqari)
+      const requiredFields = [
+        { id: "regFirstName", value: data.first_name },
+        { id: "regLastName", value: data.last_name },
+        { id: "regDay", value: day },
+        { id: "regMonth", value: month },
+        { id: "regYear", value: year },
+        { id: "regRegion", value: data.region },
+        { id: "regDistrict", value: data.district },
+        { id: "regSchool", value: data.school },
+        { id: "regPhone", value: data.phone },
+        { id: "regPassword", value: data.password },
+      ];
+
+      // Avval hamma qizil belgilarni tozalash
+      document.querySelectorAll(".invalid").forEach(el => el.classList.remove("invalid"));
+
+      let hasError = false;
+      requiredFields.forEach(field => {
+        const el = document.getElementById(field.id);
+        if (!field.value || field.value.trim() === "") {
+          el.classList.add("invalid");
+          hasError = true;
+        }
+      });
+
+      if (hasError) {
+        return showMessage("Iltimos, barcha majburiy maydonlarni to'ldiring", "error");
       }
 
       try {
@@ -578,6 +617,13 @@
         showMessage("Server bilan aloqa yo'q", "error");
       }
     }
+
+    // Maydon to'ldirilganda qizil belgini olib tashlash
+    document.querySelectorAll("#registerForm input, #registerForm select").forEach(el => {
+      el.addEventListener("input", () => el.classList.remove("invalid"));
+      el.addEventListener("change", () => el.classList.remove("invalid"));
+    });
+    
   </script>
 </body>
 </html>

@@ -51,7 +51,7 @@ app.post("/register", async (req, res) => {
       [
         first_name, last_name, phone, hashedPassword,
         birth_date || null, birth_year || null,
-        region || null, district || null, village || null, school || null
+        region || null, district || null, village || null, normalizeSchool(school)
       ]
     );
 
@@ -269,6 +269,29 @@ function getLeagueName(rating) {
     if (rating >= league.min && rating <= league.max) return league.name;
   }
   return "Bronze";
+}
+
+// ============ MAKTAB NOMINI BIR XIL QILISH (normalizatsiya) ============
+function normalizeSchool(school) {
+  if (!school) return null;
+
+  // 1. Bosh va oxirgi bo'shliqlarni olib tashlash + kichik harf
+  let s = school.trim().toLowerCase();
+
+  if (s === "") return null;
+
+  // 2. Raqam bor-yo'qligini tekshirish (masalan "5", "23")
+  const numberMatch = s.match(/\d+/);
+
+  if (numberMatch) {
+    // Raqam topildi -> "RAQAM-maktab" formatiga keltirish
+    const number = numberMatch[0];
+    return number + "-maktab";
+  }
+
+  // 3. Raqam yo'q bo'lsa (masalan nom bilan) - faqat ortiqcha bo'shliqlarni tozalash
+  s = s.replace(/\s+/g, " "); // ko'p bo'shliqni bitta qilish
+  return s;
 }
 
 // Bot javoblarini taqlid qilish
@@ -940,7 +963,8 @@ app.get("/profile/:userId", async (req, res) => {
     // Asosiy foydalanuvchi ma'lumoti
     const userResult = await pool.query(
       `SELECT id, first_name, last_name, cefr_level, rating, xp, coins,
-              current_streak, longest_streak
+              current_streak, longest_streak,
+              region, district, village, school, birth_date, phone
        FROM users WHERE id = $1`,
       [userId]
     );
