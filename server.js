@@ -294,6 +294,18 @@ function normalizeSchool(school) {
   return s;
 }
 
+// ============ BILDIRISHNOMA YARATISH ============
+async function createNotification(userId, type, message) {
+  try {
+    await pool.query(
+      "INSERT INTO notifications (user_id, type, message) VALUES ($1, $2, $3)",
+      [userId, type, message]
+    );
+  } catch (err) {
+    console.error("Bildirishnoma yaratish xatosi:", err.message);
+  }
+}
+
 // Bot javoblarini taqlid qilish
 function simulateBotAnswers(roomId, botId, questions) {
   let qIndex = 0;
@@ -448,7 +460,7 @@ io.on("connection", (socket) => {
     const player2 = { socketId: socket.id, userId: myUserId, name: myName, level: level || "A1" };
     setTimeout(() => startBattle(roomId, player1, player2), 1500);
   });
-  
+
   console.log("Yangi o'yinchi ulandi:", socket.id);
 
   socket.on("findMatch", (playerData) => {
@@ -1401,6 +1413,16 @@ app.post("/friends/request", async (req, res) => {
       [requesterId, receiverId]
     );
 
+    // Qabul qiluvchiga bildirishnoma
+    const requesterInfo = await pool.query(
+      "SELECT first_name, last_name FROM users WHERE id = $1",
+      [requesterId]
+    );
+    if (requesterInfo.rows.length > 0) {
+      const name = requesterInfo.rows[0].first_name + " " + requesterInfo.rows[0].last_name;
+      await createNotification(receiverId, "friend_request", name + " sizga do'st so'rovi yubordi");
+    }
+
     res.json({ message: "So'rov yuborildi!" });
   } catch (err) {
     console.error("So'rov yuborish xatosi:", err.message);
@@ -1421,6 +1443,26 @@ app.post("/friends/respond", async (req, res) => {
       "UPDATE friendships SET status = $1 WHERE id = $2",
       [newStatus, friendshipId]
     );
+
+    // Qabul qilинganда - so'rov yuborganга bildirishnoma
+    if (action === "accept") {
+      const friendship = await pool.query(
+        "SELECT requester_id, receiver_id FROM friendships WHERE id = $1",
+        [friendshipId]
+      );
+      if (friendship.rows.length > 0) {
+        const requesterId = friendship.rows[0].requester_id;
+        const receiverId = friendship.rows[0].receiver_id;
+        const accepterInfo = await pool.query(
+          "SELECT first_name, last_name FROM users WHERE id = $1",
+          [receiverId]
+        );
+        if (accepterInfo.rows.length > 0) {
+          const name = accepterInfo.rows[0].first_name + " " + accepterInfo.rows[0].last_name;
+          await createNotification(requesterId, "friend_accepted", name + " do'st so'rovingizni qabul qildi");
+        }
+      }
+    }
 
     res.json({ message: action === "accept" ? "Do'st qo'shildi!" : "So'rov rad etildi" });
   } catch (err) {
@@ -1465,6 +1507,46 @@ app.get("/friends/:userId", async (req, res) => {
     res.json({ friends: result.rows });
   } catch (err) {
     console.error("Do'stlar xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============ BILDIRISHNOMALAR ============
+
+// Foydalanuvchining bildirishnomalari
+app.get("/notifications/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const result = await pool.query(
+      `SELECT id, type, message, is_read, created_at
+       FROM notifications
+       WHERE user_id = $1
+       ORDER BY created_at DESC
+       LIMIT 30`,
+      [userId]
+    );
+
+    // O'qilmaganlar soni
+    const unread = result.rows.filter(n => !n.is_read).length;
+
+    res.json({ notifications: result.rows, unread: unread });
+  } catch (err) {
+    console.error("Bildirishnoma olish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Hammasini o'qilgan deb belgilash
+app.post("/notifications/read/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    await pool.query(
+      "UPDATE notifications SET is_read = TRUE WHERE user_id = $1 AND is_read = FALSE",
+      [userId]
+    );
+    res.json({ message: "O'qilgan deb belgilandi" });
+  } catch (err) {
+    console.error("Bildirishnoma o'qish xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });

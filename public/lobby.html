@@ -185,7 +185,13 @@
   <div class="container">
     <div class="topbar">
       <h1>⚔️ ENGLISH BATTLE</h1>
-      <button class="logout-btn" onclick="logout()">Chiqish</button>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button onclick="toggleNotifications()" style="position:relative; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); border-radius:10px; padding:8px 12px; cursor:pointer; font-size:18px;">
+          🔔
+          <span id="notifBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#ef4444; color:white; font-size:11px; min-width:18px; height:18px; line-height:18px; text-align:center; border-radius:9px; padding:0 4px;">0</span>
+        </button>
+        <button class="logout-btn" onclick="logout()">Chiqish</button>
+      </div>
     </div>
 
     <div class="profile-card">
@@ -326,7 +332,93 @@
     function goFriends() {
       window.location.href = "/friends.html";
     }
-    
+
+    // ===== BILDIRISHNOMALAR =====
+    let notifOpen = false;
+
+    async function loadNotifications() {
+      try {
+        const res = await fetch("/notifications/" + user.id);
+        const data = await res.json();
+
+        // Badge (o'qilmaganlar soni)
+        const badge = document.getElementById("notifBadge");
+        if (data.unread > 0) {
+          badge.style.display = "block";
+          badge.textContent = data.unread;
+        } else {
+          badge.style.display = "none";
+        }
+
+        // Ro'yxat
+        const list = document.getElementById("notifList");
+        if (!data.notifications || data.notifications.length === 0) {
+          list.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">Bildirishnomalar yo\'q</div>';
+          return;
+        }
+
+        list.innerHTML = "";
+        data.notifications.forEach(n => {
+          const icon = getNotifIcon(n.type);
+          const time = formatTime(n.created_at);
+          const bg = n.is_read ? "rgba(0,0,0,0.2)" : "rgba(99,102,241,0.12)";
+          const item = document.createElement("div");
+          item.style.cssText = "background:" + bg + "; border-radius:10px; padding:12px; margin-bottom:8px; display:flex; gap:10px; align-items:flex-start;";
+          item.innerHTML =
+            '<span style="font-size:20px;">' + icon + '</span>' +
+            '<div style="flex:1;">' +
+              '<div style="font-size:14px; color:#e2e8f0;">' + n.message + '</div>' +
+              '<div style="font-size:11px; color:#64748b; margin-top:3px;">' + time + '</div>' +
+            '</div>';
+          list.appendChild(item);
+        });
+      } catch (err) {
+        console.error("Bildirishnoma xatosi");
+      }
+    }
+
+    function getNotifIcon(type) {
+      const icons = {
+        friend_request: "👤",
+        friend_accepted: "🤝",
+        league_up: "🎉",
+        league_down: "📉",
+      };
+      return icons[type] || "🔔";
+    }
+
+    function formatTime(dateStr) {
+      const d = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now - d;
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1) return "hozir";
+      if (diffMin < 60) return diffMin + " daqiqa oldin";
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return diffHr + " soat oldin";
+      const diffDay = Math.floor(diffHr / 24);
+      return diffDay + " kun oldin";
+    }
+
+    async function toggleNotifications() {
+      const panel = document.getElementById("notifPanel");
+      notifOpen = !notifOpen;
+      panel.style.display = notifOpen ? "block" : "none";
+
+      if (notifOpen) {
+        await loadNotifications();
+        // O'qilgan deb belgilash
+        await fetch("/notifications/read/" + user.id, { method: "POST" });
+        // Badge'ni yangilash (o'qilgandan keyin)
+        setTimeout(() => {
+          document.getElementById("notifBadge").style.display = "none";
+        }, 1000);
+      }
+    }
+
+    // Boshlanishida badge'ni yuklash
+    loadNotifications();
+
     // ===== KUNLIK TOPSHIRIQLAR =====
     async function loadQuests() {
       try {
@@ -403,5 +495,13 @@
 
     loadQuests();
   </script>
+  <!-- BILDIRISHNOMALAR PANELI -->
+  <div id="notifPanel" style="display:none; position:fixed; top:70px; right:20px; width:340px; max-height:450px; overflow-y:auto; background:rgba(20,20,40,0.98); border:1px solid rgba(99,102,241,0.4); border-radius:16px; box-shadow:0 10px 50px rgba(0,0,0,0.5); z-index:1000; padding:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 style="font-size:17px;">🔔 Bildirishnomalar</h3>
+      <span onclick="toggleNotifications()" style="cursor:pointer; color:#94a3b8; font-size:20px;">✕</span>
+    </div>
+    <div id="notifList"><div style="text-align:center; color:#64748b; padding:20px;">Yuklanmoqda...</div></div>
+  </div>
 </body>
 </html>
