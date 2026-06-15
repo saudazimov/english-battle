@@ -868,6 +868,62 @@ app.post("/quests/claim", async (req, res) => {
   }
 });
 
+// ============ PROFIL STATISTIKA ============
+app.get("/profile/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Asosiy foydalanuvchi ma'lumoti
+    const userResult = await pool.query(
+      `SELECT id, first_name, last_name, cefr_level, rating, xp, coins,
+              current_streak, longest_streak
+       FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
+    }
+
+    const user = userResult.rows[0];
+
+    // Jang statistikasi (battle_history dan)
+    const statsResult = await pool.query(
+      `SELECT
+         COUNT(*) AS total_battles,
+         COUNT(*) FILTER (WHERE outcome = 'win') AS wins,
+         COUNT(*) FILTER (WHERE outcome = 'lose') AS loses,
+         COUNT(*) FILTER (WHERE outcome = 'draw') AS draws,
+         COALESCE(SUM(my_score), 0) AS total_correct,
+         COALESCE(SUM(opponent_score), 0) AS opp_total
+       FROM battle_history WHERE user_id = $1`,
+      [userId]
+    );
+
+    const stats = statsResult.rows[0];
+    const totalBattles = parseInt(stats.total_battles);
+    const wins = parseInt(stats.wins);
+
+    // Win rate hisoblash (foiz)
+    const winRate = totalBattles > 0 ? Math.round((wins / totalBattles) * 100) : 0;
+
+    res.json({
+      user: user,
+      stats: {
+        total_battles: totalBattles,
+        wins: wins,
+        loses: parseInt(stats.loses),
+        draws: parseInt(stats.draws),
+        win_rate: winRate,
+        total_correct: parseInt(stats.total_correct),
+      },
+    });
+  } catch (err) {
+    console.error("Profil xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // DIQQAT: app.listen emas, server.listen!
 server.listen(PORT, () => {
   console.log("Server ishga tushdi: http://localhost:3000");

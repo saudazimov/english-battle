@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Battle — Profil</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0a1a;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.12), transparent 40%);
+      min-height: 100vh;
+      color: #e2e8f0;
+      padding: 20px;
+    }
+    .container { max-width: 700px; margin: 0 auto; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      margin-bottom: 10px;
+    }
+    .topbar h1 {
+      font-size: 24px;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .back-btn {
+      padding: 8px 16px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 8px;
+      color: #a5b4fc;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-btn:hover { background: rgba(99, 102, 241, 0.25); }
+
+    /* Profil bosh qismi */
+    .profile-hero {
+      background: rgba(20, 20, 40, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
+    }
+    .big-avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      font-weight: bold;
+      margin: 0 auto 16px;
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+    }
+    .profile-hero h2 { font-size: 26px; margin-bottom: 8px; }
+    .level-badge {
+      display: inline-block;
+      padding: 5px 16px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Win rate doirasi */
+    .winrate-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+    .winrate-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .winrate-circle .wr-num { font-size: 32px; font-weight: bold; color: #86efac; }
+    .winrate-circle .wr-lbl { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+    .wl-stats { text-align: left; }
+    .wl-stats .wl-row { margin: 8px 0; font-size: 15px; }
+    .wl-stats .win-dot { color: #86efac; }
+    .wl-stats .lose-dot { color: #f87171; }
+    .wl-stats .draw-dot { color: #a5b4fc; }
+
+    /* Statistika kartalari */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: rgba(20, 20, 40, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .stat-card .icon { font-size: 32px; }
+    .stat-card .stat-value { font-size: 24px; font-weight: bold; }
+    .stat-card .stat-label { font-size: 13px; color: #64748b; }
+    .stat-card .v-rating { color: #fbbf24; }
+    .stat-card .v-xp { color: #818cf8; }
+    .stat-card .v-streak { color: #fb923c; }
+    .stat-card .v-correct { color: #86efac; }
+
+    .loading { text-align: center; padding: 40px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <h1>👤 Profil</h1>
+      <a href="/lobby.html" class="back-btn">← Lobbyga</a>
+    </div>
+
+    <div id="content">
+      <div class="loading">Yuklanmoqda...</div>
+    </div>
+  </div>
+
+  <script>
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const localUser = JSON.parse(userData);
+
+    async function loadProfile() {
+      try {
+        const res = await fetch("/profile/" + localUser.id);
+        const data = await res.json();
+        renderProfile(data.user, data.stats);
+      } catch (err) {
+        document.getElementById("content").innerHTML =
+          '<div class="loading">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    function renderProfile(user, stats) {
+      const content = document.getElementById("content");
+      const initial = user.first_name.charAt(0).toUpperCase();
+
+      // Win rate doirasi uchun gradient (yashil progress)
+      const wr = stats.win_rate;
+      const circleStyle = "background: conic-gradient(#22c55e 0% " + wr + "%, rgba(0,0,0,0.3) " + wr + "% 100%);";
+
+      content.innerHTML =
+        '<div class="profile-hero">' +
+          '<div class="big-avatar">' + initial + '</div>' +
+          '<h2>' + user.first_name + ' ' + user.last_name + '</h2>' +
+          '<span class="level-badge">' + user.cefr_level + ' daraja</span>' +
+
+          '<div class="winrate-section">' +
+            '<div class="winrate-circle" style="' + circleStyle + '">' +
+              '<div style="width:96px; height:96px; border-radius:50%; background:#0a0a1a; display:flex; flex-direction:column; align-items:center; justify-content:center;">' +
+                '<div class="wr-num">' + wr + '%</div>' +
+                '<div class="wr-lbl">G\'alaba</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="wl-stats">' +
+              '<div class="wl-row"><span class="win-dot">●</span> G\'alaba: <b>' + stats.wins + '</b></div>' +
+              '<div class="wl-row"><span class="lose-dot">●</span> Mag\'lubiyat: <b>' + stats.loses + '</b></div>' +
+              '<div class="wl-row"><span class="draw-dot">●</span> Durrang: <b>' + stats.draws + '</b></div>' +
+              '<div class="wl-row" style="color:#94a3b8;">Jami: <b>' + stats.total_battles + '</b> jang</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="stats-grid">' +
+          '<div class="stat-card"><div class="icon">🏆</div><div><div class="stat-value v-rating">' + user.rating + '</div><div class="stat-label">Reyting</div></div></div>' +
+          '<div class="stat-card"><div class="icon">⭐</div><div><div class="stat-value v-xp">' + user.xp + '</div><div class="stat-label">XP</div></div></div>' +
+          '<div class="stat-card"><div class="icon">🔥</div><div><div class="stat-value v-streak">' + user.current_streak + '</div><div class="stat-label">Hozirgi streak</div></div></div>' +
+          '<div class="stat-card"><div class="icon">🎯</div><div><div class="stat-value v-streak">' + user.longest_streak + '</div><div class="stat-label">Eng uzun streak</div></div></div>' +
+          '<div class="stat-card"><div class="icon">✅</div><div><div class="stat-value v-correct">' + stats.total_correct + '</div><div class="stat-label">To\'g\'ri javoblar</div></div></div>' +
+          '<div class="stat-card"><div class="icon">⚔️</div><div><div class="stat-value">' + stats.total_battles + '</div><div class="stat-label">Jami janglar</div></div></div>' +
+        '</div>';
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>
