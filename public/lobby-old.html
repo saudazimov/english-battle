@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Battle — Lobby</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0a1a;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.12), transparent 40%);
+      min-height: 100vh;
+      color: #e2e8f0;
+      padding: 20px;
+    }
+
+    .container { max-width: 800px; margin: 0 auto; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      margin-bottom: 30px;
+    }
+
+    .topbar h1 {
+      font-size: 24px;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .logout-btn {
+      padding: 8px 16px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 8px;
+      color: #fca5a5;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .logout-btn:hover { background: rgba(239, 68, 68, 0.25); }
+
+    /* Profil kartasi */
+    .profile-card {
+      background: rgba(20, 20, 40, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 24px;
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+      box-shadow: 0 0 25px rgba(99, 102, 241, 0.5);
+    }
+
+    .profile-name h2 { font-size: 22px; margin-bottom: 4px; }
+    .profile-name .level-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Statistika */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .stat {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .stat .value {
+      font-size: 28px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat .label {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Jang tugmasi */
+    .battle-btn {
+      width: 100%;
+      padding: 24px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border: none;
+      border-radius: 20px;
+      color: white;
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+      letter-spacing: 1px;
+    }
+
+    .battle-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 50px rgba(99, 102, 241, 0.6);
+    }
+
+    .battle-btn:active { transform: translateY(0); }
+
+    /* ===== ANIMATSIYALAR ===== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes avatarPulse {
+      0%, 100% { box-shadow: 0 0 25px rgba(99, 102, 241, 0.5); }
+      50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.8); }
+    }
+
+    /* Sahifa elementlari ketma-ket paydo bo'ladi */
+    .profile-card { animation: fadeInUp 0.5s ease both; }
+    .battle-btn:nth-of-type(1) { animation: fadeInUp 0.5s ease 0.1s both; }
+    .battle-btn:nth-of-type(2) { animation: fadeInUp 0.5s ease 0.2s both; }
+    .battle-btn:nth-of-type(3) { animation: fadeInUp 0.5s ease 0.3s both; }
+    .battle-btn:nth-of-type(4) { animation: fadeInUp 0.5s ease 0.4s both; }
+
+    /* Avatar nafas olishi */
+    .avatar { animation: avatarPulse 3s ease-in-out infinite; }
+
+    /* Statistika kartalari hover */
+    .stat {
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+    .stat:hover {
+      transform: translateY(-4px);
+      border-color: rgba(129, 140, 248, 0.6);
+    }
+
+    /* Tugma press effekti */
+    .battle-btn { transition: transform 0.15s ease, box-shadow 0.25s ease; }
+    .battle-btn:active { transform: scale(0.98); }
+
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <h1>⚔️ ENGLISH BATTLE</h1>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button onclick="toggleNotifications()" style="position:relative; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); border-radius:10px; padding:8px 12px; cursor:pointer; font-size:18px;">
+          🔔
+          <span id="notifBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#ef4444; color:white; font-size:11px; min-width:18px; height:18px; line-height:18px; text-align:center; border-radius:9px; padding:0 4px;">0</span>
+        </button>
+        <button class="logout-btn" onclick="logout()">Chiqish</button>
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <div class="profile-header" onclick="goProfile()" style="cursor:pointer;">
+        <div class="avatar" id="avatar">A</div>
+        <div class="profile-name">
+          <h2 id="playerName">O'yinchi</h2>
+          <span class="level-badge" id="levelBadge">A1</span>
+          <span class="level-badge" id="leagueBadge" style="margin-left:6px;">🥈 Silver</span>
+        </div>
+      </div>
+
+      <div class="stats" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="stat">
+          <div class="value" id="ratingValue">1000</div>
+          <div class="label">Reyting</div>
+        </div>
+        <div class="stat">
+          <div class="value" id="xpValue">0</div>
+          <div class="label">XP</div>
+        </div>
+        <div class="stat">
+          <div class="value" id="streakValue" style="color:#fb923c;">🔥 0</div>
+          <div class="label">Streak</div>
+        </div>
+        <div class="stat">
+          <div class="value" id="coinsValue">0</div>
+          <div class="label">Tangalar</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="battle-btn" onclick="startBattle()">⚔️ JANG QIDIRISH</button>
+    <button class="battle-btn" onclick="goExam()" style="margin-top:16px; background:linear-gradient(135deg, #22c55e, #16a34a); font-size:18px;">🎓 DARAJA IMTIHONI</button>
+    <button class="battle-btn" onclick="goLeaderboard()" style="margin-top:16px; background:linear-gradient(135deg, #f59e0b, #fbbf24); font-size:18px;">🏆 LEADERBOARD</button>
+    <button class="battle-btn" onclick="goRankings()" style="margin-top:16px; background:linear-gradient(135deg, #f59e0b, #d97706);">🏫 MAKTAB REYTINGI</button>    <button class="battle-btn" onclick="goHistory()" style="margin-top:16px; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); color:#a5b4fc; font-size:18px;">📜 JANG TARIXI</button>
+    <button class="battle-btn" onclick="goFriends()" style="margin-top:16px; background:linear-gradient(135deg, #ec4899, #db2777);">👥 DO'STLAR</button>
+    
+    <!-- KUNLIK TOPSHIRIQLAR -->
+    <div style="margin-top:24px;">
+      <h2 style="font-size:20px; margin-bottom:14px; color:#fb923c;">🎯 Kunlik topshiriqlar</h2>
+      <div id="questsList" style="display:flex; flex-direction:column; gap:12px;">
+        <div style="color:#64748b; text-align:center; padding:20px;">Yuklanmoqda...</div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/leagues.js"></script>
+  
+  <script>
+    // Login bo'lganini tekshirish
+    const userData = localStorage.getItem("user");
+    if (!userData) {
+      // Login qilmagan — kirish sahifasiga qaytarish
+      window.location.href = "/index.html";
+    }
+
+    const user = JSON.parse(userData);
+
+    // Profilni to'ldirish
+    document.getElementById("playerName").textContent =
+      user.first_name + " " + user.last_name;
+    document.getElementById("avatar").textContent =
+      user.first_name.charAt(0).toUpperCase();
+    document.getElementById("levelBadge").textContent = user.cefr_level;
+    
+    // Liga belgisini ko'rsatish
+    const userLeague = getLeague(user.rating);
+    const leagueBadge = document.getElementById("leagueBadge");
+    leagueBadge.textContent = userLeague.emoji + " " + userLeague.name;
+    leagueBadge.style.background = userLeague.gradient;
+
+    // Raqamlar 0 dan haqiqiy songa "sanab" o'sadi
+    function animateNumber(elementId, target, duration) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      const start = 0;
+      const startTime = performance.now();
+
+      function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // silliq sekinlashish (ease-out)
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(start + (target - start) * eased);
+        el.textContent = current;
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    animateNumber("ratingValue", user.rating, 1000);
+    animateNumber("xpValue", user.xp, 1000);
+
+    document.getElementById("coinsValue").textContent = user.coins;
+    // Streak check-in (kunlik kirish)
+    async function checkStreak() {
+      try {
+        const res = await fetch("/streak/checkin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
+        const data = await res.json();
+        if (data.current_streak !== undefined) {
+          document.getElementById("streakValue").textContent = "🔥 " + data.current_streak;
+        }
+      } catch (err) {
+        console.error("Streak yuklab bo'lmadi");
+      }
+    }
+    checkStreak();
+
+    function startBattle() {
+      window.location.href = "/battle.html";
+    }
+    function goLeaderboard() {
+      window.location.href = "/leaderboard.html";
+    }
+    function goHistory() {
+      window.location.href = "/history.html";
+    }
+    function goProfile() {
+      window.location.href = "/profile.html";
+    }
+
+    function logout() {
+      localStorage.removeItem("user");
+      window.location.href = "/index.html";
+    }
+
+    function goExam() {
+      window.location.href = "/exam.html";
+    }
+    function goRankings() {
+      window.location.href = "/rankings.html";
+    }
+    function goFriends() {
+      window.location.href = "/friends.html";
+    }
+
+    // ===== BILDIRISHNOMALAR =====
+    let notifOpen = false;
+
+    async function loadNotifications() {
+      try {
+        const res = await fetch("/notifications/" + user.id);
+        const data = await res.json();
+
+        // Badge (o'qilmaganlar soni)
+        const badge = document.getElementById("notifBadge");
+        if (data.unread > 0) {
+          badge.style.display = "block";
+          badge.textContent = data.unread;
+        } else {
+          badge.style.display = "none";
+        }
+
+        // Ro'yxat
+        const list = document.getElementById("notifList");
+        if (!data.notifications || data.notifications.length === 0) {
+          list.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">Bildirishnomalar yo\'q</div>';
+          return;
+        }
+
+        list.innerHTML = "";
+        data.notifications.forEach(n => {
+          const icon = getNotifIcon(n.type);
+          const time = formatTime(n.created_at);
+          const bg = n.is_read ? "rgba(0,0,0,0.2)" : "rgba(99,102,241,0.12)";
+          const item = document.createElement("div");
+          item.style.cssText = "background:" + bg + "; border-radius:10px; padding:12px; margin-bottom:8px; display:flex; gap:10px; align-items:flex-start;";
+          item.innerHTML =
+            '<span style="font-size:20px;">' + icon + '</span>' +
+            '<div style="flex:1;">' +
+              '<div style="font-size:14px; color:#e2e8f0;">' + n.message + '</div>' +
+              '<div style="font-size:11px; color:#64748b; margin-top:3px;">' + time + '</div>' +
+            '</div>';
+          list.appendChild(item);
+        });
+      } catch (err) {
+        console.error("Bildirishnoma xatosi");
+      }
+    }
+
+    function getNotifIcon(type) {
+      const icons = {
+        friend_request: "👤",
+        friend_accepted: "🤝",
+        league_up: "🎉",
+        league_down: "📉",
+      };
+      return icons[type] || "🔔";
+    }
+
+    function formatTime(dateStr) {
+      const d = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now - d;
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1) return "hozir";
+      if (diffMin < 60) return diffMin + " daqiqa oldin";
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return diffHr + " soat oldin";
+      const diffDay = Math.floor(diffHr / 24);
+      return diffDay + " kun oldin";
+    }
+
+    async function toggleNotifications() {
+      const panel = document.getElementById("notifPanel");
+      notifOpen = !notifOpen;
+      panel.style.display = notifOpen ? "block" : "none";
+
+      if (notifOpen) {
+        await loadNotifications();
+        // O'qilgan deb belgilash
+        await fetch("/notifications/read/" + user.id, { method: "POST" });
+        // Badge'ni yangilash (o'qilgandan keyin)
+        setTimeout(() => {
+          document.getElementById("notifBadge").style.display = "none";
+        }, 1000);
+      }
+    }
+
+    // Boshlanishida badge'ni yuklash
+    loadNotifications();
+
+    // ===== KUNLIK TOPSHIRIQLAR =====
+    async function loadQuests() {
+      try {
+        const res = await fetch("/quests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
+        const data = await res.json();
+        renderQuests(data.quests);
+      } catch (err) {
+        document.getElementById("questsList").innerHTML =
+          '<div style="color:#64748b; text-align:center;">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    function renderQuests(quests) {
+      const list = document.getElementById("questsList");
+      if (!quests || quests.length === 0) {
+        list.innerHTML = '<div style="color:#64748b; text-align:center;">Topshiriq yo\'q</div>';
+        return;
+      }
+
+      list.innerHTML = "";
+      quests.forEach(q => {
+        const percent = Math.min(100, Math.round((q.progress / q.target) * 100));
+        const done = q.is_completed;
+        const claimed = q.reward_claimed;
+
+        let buttonHtml = "";
+        if (done && !claimed) {
+          buttonHtml = '<button onclick="claimReward(' + q.id + ')" style="padding:8px 16px; background:linear-gradient(135deg,#22c55e,#16a34a); border:none; border-radius:8px; color:white; font-weight:600; cursor:pointer; white-space:nowrap;">+' + q.xp_reward + ' XP olish</button>';
+        } else if (claimed) {
+          buttonHtml = '<span style="color:#86efac; font-size:14px; white-space:nowrap;">✅ Olindi</span>';
+        } else {
+          buttonHtml = '<span style="color:#64748b; font-size:13px; white-space:nowrap;">' + q.progress + '/' + q.target + '</span>';
+        }
+
+        const card = document.createElement("div");
+        card.style.cssText = "background:rgba(20,20,40,0.8); border:1px solid rgba(99,102,241,0.3); border-radius:14px; padding:16px; display:flex; align-items:center; gap:16px;";
+        card.innerHTML =
+          '<div style="flex:1;">' +
+            '<div style="font-weight:600; margin-bottom:4px;">' + q.title + (done ? ' ✓' : '') + '</div>' +
+            '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">' + q.description + '</div>' +
+            '<div style="height:8px; background:rgba(0,0,0,0.3); border-radius:4px; overflow:hidden;">' +
+              '<div style="height:100%; width:' + percent + '%; background:linear-gradient(90deg,#fb923c,#f59e0b); transition:width 0.3s;"></div>' +
+            '</div>' +
+          '</div>' +
+          buttonHtml;
+        list.appendChild(card);
+      });
+    }
+
+    async function claimReward(userQuestId) {
+      try {
+        const res = await fetch("/quests/claim", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id, userQuestId: userQuestId }),
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.error || "Xato");
+
+        // Yangilangan foydalanuvchini saqlash (XP oshdi)
+        if (data.updated_user) {
+          localStorage.setItem("user", JSON.stringify(data.updated_user));
+          document.getElementById("xpValue").textContent = data.updated_user.xp;
+        }
+        loadQuests(); // topshiriqlarni yangilash
+      } catch (err) {
+        alert("Server xatosi");
+      }
+    }
+
+    loadQuests();
+  </script>
+  <!-- BILDIRISHNOMALAR PANELI -->
+  <div id="notifPanel" style="display:none; position:fixed; top:70px; right:20px; width:340px; max-height:450px; overflow-y:auto; background:rgba(20,20,40,0.98); border:1px solid rgba(99,102,241,0.4); border-radius:16px; box-shadow:0 10px 50px rgba(0,0,0,0.5); z-index:1000; padding:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 style="font-size:17px;">🔔 Bildirishnomalar</h3>
+      <span onclick="toggleNotifications()" style="cursor:pointer; color:#94a3b8; font-size:20px;">✕</span>
+    </div>
+    <div id="notifList"><div style="text-align:center; color:#64748b; padding:20px;">Yuklanmoqda...</div></div>
+  </div>
+</body>
+</html>
