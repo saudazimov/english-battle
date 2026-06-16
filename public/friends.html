@@ -3,238 +3,316 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Do'stlar</title>
+  <title>English Battle — Friends</title>
+  <link rel="stylesheet" href="/app.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #0a0a1a;
-      background-image:
-        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.12), transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(168,85,247,0.12), transparent 40%);
-      min-height: 100vh; color: #e2e8f0; padding: 20px;
+    .app { grid-template-columns: 230px 1fr 340px; max-width: 1680px; }
+    .rightbar { display: flex; flex-direction: column; gap: 20px; }
+
+    /* Yuqori panel */
+    .topbar { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+    .currency { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; font-weight: 700; font-size: 15px; }
+    .currency .plus { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: rgba(91,140,255,0.2); color: var(--accent); cursor: pointer; font-weight: 700; }
+    .icon-btn { position: relative; width: 42px; height: 42px; border-radius: 12px; background: var(--panel); border: 1px solid var(--border); display: grid; place-items: center; cursor: pointer; }
+    .icon-btn .badge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; background: #ef4444; color: #fff; font-size: 11px; border-radius: 9px; display: grid; place-items: center; padding: 0 4px; }
+    .user-chip { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 6px 12px 6px 6px; cursor: pointer; }
+    .user-chip .ava { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 15px; }
+    .user-chip .uname { font-size: 14px; font-weight: 600; line-height: 1.1; }
+    .user-chip .ulevel { font-size: 11px; color: var(--text-dim); }
+
+    .placeholder { padding: 24px; color: var(--text-faint); font-size: 13px; border: 1px dashed var(--border); border-radius: 14px; text-align: center; }
+    .skel { padding: 18px; }
+    .skel h4 { font-size: 13px; color: var(--text-dim); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .soon-badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; background: rgba(168,85,247,0.15); color: var(--accent-2); border: 1px solid rgba(168,85,247,0.3); }
+    .card-title { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+    .card-title i { width: 20px; height: 20px; color: var(--accent); }
+
+    /* CHAQIRUV OYNASI (overlay) */
+    #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+    .overlay-box { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border-bright); border-radius: 20px; padding: 30px; max-width: 400px; text-align: center; box-shadow: 0 0 50px rgba(91,140,255,0.3); }
+    #overlayText { font-size: 17px; margin-bottom: 20px; }
+    .ov-btn { padding: 10px 18px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .ov-accept { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
+    .ov-reject { background: rgba(239,68,68,0.2); color: #fca5a5; }
+
+    @media (max-width: 1200px) { .app { grid-template-columns: 200px 1fr; } .rightbar { display: none; } }
+
+    /* ===== TOOLBAR ===== */
+    .fr-toolbar { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .fr-tabs { display: flex; gap: 6px; background: rgba(0,0,0,0.25); border-radius: 12px; padding: 5px; }
+    .fr-tab {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 18px; border-radius: 9px; cursor: pointer; font-size: 14px; font-weight: 600;
+      color: var(--text-dim); transition: all 0.2s; position: relative; white-space: nowrap;
     }
-    .container { max-width: 700px; margin: 0 auto; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 10px; }
-    .topbar h1 { font-size: 24px; background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .back-btn { padding: 8px 16px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.4); border-radius: 8px; color: #a5b4fc; cursor: pointer; text-decoration: none; font-size: 14px; }
-    .back-btn:hover { background: rgba(99,102,241,0.25); }
+    .fr-tab i { width: 16px; height: 16px; }
+    .fr-tab.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; box-shadow: 0 4px 16px rgba(91,140,255,0.3); }
+    .fr-tab-badge { background: #ef4444; color: #fff; font-size: 11px; padding: 1px 7px; border-radius: 10px; }
+    .fr-actions { display: flex; align-items: center; gap: 12px; }
+    .fr-search { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 10px; padding: 0 14px; }
+    .fr-search i { width: 16px; height: 16px; color: var(--text-dim); }
+    .fr-search input { background: none; border: none; outline: none; color: var(--text); padding: 11px 0; font-size: 14px; width: 200px; font-family: inherit; }
+    .fr-add { padding: 11px 18px; font-size: 14px; }
 
-    .tabs { display: flex; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
-    .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-radius: 8px; color: #94a3b8; font-weight: 600; font-size: 14px; transition: all 0.3s; position: relative; }
-    .tab.active { background: linear-gradient(135deg, #6366f1, #a855f7); color: white; }
-    .tab .badge { position: absolute; top: 4px; right: 8px; background: #ef4444; color: white; font-size: 11px; padding: 1px 6px; border-radius: 10px; }
+    @media (max-width: 1100px) {
+      .fr-toolbar { flex-direction: column; align-items: stretch; }
+      .fr-search input { width: 100%; }
+    }
 
-    .panel { display: none; }
-    .panel.active { display: block; }
+    /* ===== DO'STLAR RO'YXATI ===== */
+    .fl-card { padding: 20px 22px; }
+    .fl-cols, .fl-row {
+      display: grid;
+      grid-template-columns: 2.5fr 80px 1.5fr 1.2fr 1.5fr;
+      align-items: center;
+    }
+    .fl-cols {
+      padding: 0 12px 12px; font-size: 12px; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+    }
+    .fl-row { padding: 13px 12px; border-radius: 12px; transition: background 0.2s; }
+    .fl-row:hover { background: var(--panel); }
+    .fl-friend { display: flex; align-items: center; gap: 12px; }
+    .fl-ava {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; position: relative;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center; font-weight: 700; font-size: 16px;
+    }
+    .fl-name { font-weight: 600; font-size: 14px; }
+    .fl-level {
+      font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 8px;
+      background: rgba(91,140,255,0.15); color: var(--accent); display: inline-block;
+    }
+    .fl-league { font-size: 13px; }
+    .fl-league-name { color: var(--cyan); font-weight: 600; }
+    .fl-league-rp { color: var(--text-dim); font-size: 12px; }
+    .fl-status { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; }
+    .fl-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .st-online .fl-dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .st-online { color: var(--green); }
+    .st-offline .fl-dot { background: var(--text-faint); }
+    .st-offline { color: var(--text-faint); }
+    .fl-actions { display: flex; gap: 8px; }
+    .fl-challenge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border: none; border-radius: 9px; cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff; font-size: 13px; font-weight: 600; font-family: inherit; transition: all 0.2s;
+    }
+    .fl-challenge:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(91,140,255,0.4); }
+    .fl-challenge i { width: 15px; height: 15px; }
+    .fl-empty { text-align: center; color: var(--text-faint); padding: 30px; }
 
-    .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
-    .search-box input { flex: 1; padding: 13px 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(99,102,241,0.25); border-radius: 10px; color: #e2e8f0; font-size: 14px; }
-    .search-box input:focus { outline: none; border-color: #818cf8; }
-    .search-box button { padding: 13px 20px; background: linear-gradient(135deg, #6366f1, #a855f7); border: none; border-radius: 10px; color: white; font-weight: 600; cursor: pointer; }
+    /* ===== REQUESTS / SEARCH ===== */
+    .search-hint { color: var(--text-dim); font-size: 13px; margin-bottom: 16px; }
+    .req-row, .srch-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 12px; border-radius: 12px; transition: background 0.2s;
+    }
+    .req-row:hover, .srch-row:hover { background: var(--panel); }
+    .req-ava, .srch-ava {
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center; font-weight: 700; font-size: 16px;
+    }
+    .req-info, .srch-info { flex: 1; }
+    .req-name, .srch-name { font-weight: 600; font-size: 15px; }
+    .req-sub, .srch-sub { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+    .req-actions { display: flex; gap: 8px; }
+    .req-btn { display: flex; align-items: center; gap: 6px; padding: 9px 16px; border: none; border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; }
+    .req-accept { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
+    .req-decline { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+    .req-btn i { width: 15px; height: 15px; }
+    .srch-add { display: flex; align-items: center; gap: 6px; padding: 9px 16px; border: none; border-radius: 9px; cursor: pointer; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; font-size: 13px; font-weight: 600; font-family: inherit; }
+    .srch-add:disabled { opacity: 0.5; cursor: default; }
+    .srch-add i { width: 15px; height: 15px; }
 
-    .user-card { background: rgba(20,20,40,0.8); border: 1px solid rgba(99,102,241,0.3); border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; animation: slideIn 0.3s ease both; }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
-    .user-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; flex-shrink: 0; }
-    .user-info { flex: 1; }
-    .user-name { font-size: 16px; font-weight: 600; }
-    .user-sub { font-size: 13px; color: #94a3b8; }
-    .user-actions { display: flex; gap: 8px; }
-    .btn-sm { padding: 8px 14px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .btn-add { background: linear-gradient(135deg, #6366f1, #a855f7); color: white; }
-    .btn-accept { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
-    .btn-reject { background: rgba(239,68,68,0.2); color: #fca5a5; }
-    .btn-battle { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
-    .btn-sm:hover { transform: translateY(-1px); }
-    .btn-sm:disabled { opacity: 0.5; cursor: default; transform: none; }
+    /* ===== O'NG PANEL ===== */
+    .rb-card { padding: 20px; }
+    .rb-head { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .rb-info { width: 16px; height: 16px; color: var(--text-dim); cursor: pointer; }
 
-    .empty { text-align: center; padding: 40px; color: #64748b; }
+    /* Friends Summary */
+    .fs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .fs-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px; padding: 16px 12px; text-align: center; }
+    .fs-box i { width: 24px; height: 24px; }
+    .fs-val { font-size: 24px; font-weight: 800; margin-top: 6px; }
+    .fs-lbl { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+    /* Top Friends */
+    .tf-row { display: flex; align-items: center; gap: 12px; padding: 10px 6px; }
+    .tf-rank { width: 24px; font-weight: 800; font-size: 15px; text-align: center; }
+    .tf-rank.r1 { color: var(--gold); }
+    .tf-rank.r2 { color: #cbd5e1; }
+    .tf-rank.r3 { color: #d97706; }
+    .tf-ava { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+    .tf-name { flex: 1; font-size: 14px; font-weight: 600; }
+    .tf-name.me { color: var(--accent); }
+    .tf-rating { display: flex; align-items: center; gap: 4px; font-weight: 700; color: var(--gold); font-size: 14px; }
+    .tf-rating i { width: 14px; height: 14px; }
+
+    /* Recent Activity */
+    .ra-note { font-size: 13px; color: var(--text-faint); line-height: 1.5; }
+  /* O'chirish tugmasi */
+    .fl-remove {
+      width: 38px; height: 38px; border-radius: 9px; border: 1px solid rgba(239,68,68,0.3);
+      background: rgba(239,68,68,0.1); color: #fca5a5; cursor: pointer;
+      display: grid; place-items: center; transition: all 0.2s;
+    }
+    .fl-remove:hover { background: rgba(239,68,68,0.25); }
+    .fl-remove i { width: 16px; height: 16px; }
+
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="topbar">
-      <h1>👥 Do'stlar</h1>
-      <a href="/lobby.html" class="back-btn">← Lobbyga</a>
-    </div>
+  <div class="app">
+    <aside class="sidebar"></aside>
 
-    <div class="tabs">
-      <div class="tab active" id="friendsTab" onclick="switchTab('friends')">Do'stlarim</div>
-      <div class="tab" id="requestsTab" onclick="switchTab('requests')">So'rovlar <span class="badge" id="reqBadge" style="display:none;">0</span></div>
-      <div class="tab" id="searchTab" onclick="switchTab('search')">🔍 Qidirish</div>
-    </div>
-
-    <!-- DO'STLARIM -->
-    <div class="panel active" id="friendsPanel">
-      <div id="friendsList"><div class="empty">Yuklanmoqda...</div></div>
-    </div>
-
-    <!-- SO'ROVLAR -->
-    <div class="panel" id="requestsPanel">
-      <div id="requestsList"><div class="empty">Yuklanmoqda...</div></div>
-    </div>
-
-    <!-- QIDIRISH -->
-    <div class="panel" id="searchPanel">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Ism yoki telefon raqami..." onkeypress="if(event.key==='Enter')doSearch()">
-        <button onclick="doSearch()">Qidirish</button>
+    <main class="content">
+      <!-- Yuqori panel -->
+      <div class="topbar">
+        <div class="currency"><i data-lucide="coins" style="color:var(--gold);width:18px;height:18px;"></i> <span id="coins">0</span> <span class="plus">+</span></div>
+        <div class="currency"><i data-lucide="gem" style="color:var(--cyan);width:18px;height:18px;"></i> <span id="gems">0</span> <span class="plus">+</span></div>
+        <div class="icon-btn"><i data-lucide="bell"></i> <span class="badge" id="notifBadge">0</span></div>
+        <div class="user-chip">
+          <div class="ava" id="topAva">J</div>
+          <div><div class="uname" id="topName">O'yinchi</div><div class="ulevel">Level <span id="topLevel">1</span></div></div>
+        </div>
       </div>
-      <div id="searchResults"></div>
+
+      <!-- Sarlavha -->
+      <div class="page-head">
+        <div class="crest-ic"><i data-lucide="users"></i></div>
+        <div><h1>Friends</h1><p>Connect, challenge, and track your friends.</p></div>
+      </div>
+
+      <!-- Filtrlar + Search + Add -->
+      <div class="card fr-toolbar">
+        <div class="fr-tabs">
+          <div class="fr-tab active" data-tab="all" onclick="switchTab('all', this)"><i data-lucide="users"></i> All Friends</div>
+          <div class="fr-tab" data-tab="requests" onclick="switchTab('requests', this)"><i data-lucide="user-plus"></i> So'rovlar <span class="fr-tab-badge" id="reqBadge" style="display:none;">0</span></div>
+          <div class="fr-tab" data-tab="search" onclick="switchTab('search', this)"><i data-lucide="search"></i> Qidirish</div>
+        </div>
+        <div class="fr-actions">
+          <div class="fr-search">
+            <i data-lucide="search"></i>
+            <input type="text" id="searchInput" placeholder="Do'st qidirish..." onkeypress="if(event.key==='Enter')doSearch()">
+          </div>
+          <button class="btn fr-add" onclick="switchTab('search')"><i data-lucide="user-plus" style="width:16px;height:16px;"></i> Add Friend</button>
+        </div>
+      </div>
+      <!-- ALL FRIENDS PANEL -->
+      <div id="allPanel">
+        <div class="card fl-card">
+          <div class="card-title"><i data-lucide="users"></i> Do'stlar ro'yxati <span id="flCount" style="color:var(--text-dim);font-weight:500;"></span></div>
+          <div class="fl-cols">
+            <span>Friend</span>
+            <span>Level</span>
+            <span>League</span>
+            <span>Status</span>
+            <span>Actions</span>
+          </div>
+          <div id="friendsList"><div class="fl-empty">Yuklanmoqda...</div></div>
+        </div>
+      </div>
+
+      <!-- REQUESTS PANEL -->
+      <div id="requestsPanel" style="display:none;">
+        <div class="card fl-card">
+          <div class="card-title"><i data-lucide="user-plus"></i> Do'st so'rovlari</div>
+          <div id="requestsList"><div class="fl-empty">Yuklanmoqda...</div></div>
+        </div>
+      </div>
+
+      <!-- SEARCH PANEL -->
+      <div id="searchPanel" style="display:none;">
+        <div class="card fl-card">
+          <div class="card-title"><i data-lucide="search"></i> Do'st qidirish</div>
+          <div class="search-hint">Yuqoridagi qidiruv maydoniga ism, familiya yoki telefon yozing.</div>
+          <div id="searchResults"></div>
+        </div>
+      </div>
+      <div class="card skel"><h4>Friend Requests + Suggested</h4><div class="placeholder">Bosqich 4</div></div>
+    </main>
+
+    <aside class="rightbar">
+
+      <!-- Friends Summary -->
+      <div class="card rb-card">
+        <div class="rb-head"><span>Friends Summary</span><i data-lucide="info" class="rb-info"></i></div>
+        <div class="fs-grid">
+          <div class="fs-box">
+            <i data-lucide="users" style="color:var(--accent);"></i>
+            <div class="fs-val" id="fsTotal">0</div>
+            <div class="fs-lbl">Total Friends</div>
+          </div>
+          <div class="fs-box">
+            <i data-lucide="circle" style="color:var(--green);fill:var(--green);"></i>
+            <div class="fs-val" id="fsOnline">0</div>
+            <div class="fs-lbl">Online Now</div>
+          </div>
+          <div class="fs-box">
+            <i data-lucide="user-plus" style="color:var(--gold);"></i>
+            <div class="fs-val" id="fsRequests">0</div>
+            <div class="fs-lbl">Pending</div>
+          </div>
+          <div class="fs-box">
+            <i data-lucide="trophy" style="color:var(--cyan);"></i>
+            <div class="fs-val soon-badge" style="font-size:11px;">tez kunda</div>
+            <div class="fs-lbl">Wins vs Friends</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Friends Leaderboard -->
+      <div class="card rb-card">
+        <div class="rb-head"><span>Top Friends</span></div>
+        <div id="topFriends"><div class="fl-empty" style="padding:16px;">Yuklanmoqda...</div></div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="card rb-card">
+        <div class="rb-head"><span>Recent Activity</span><span class="soon-badge">Tez kunda</span></div>
+        <div class="ra-note">Do'stlaringizning so'nggi harakatlari (g'alabalar, liga o'sishi) tez kunda shu yerda ko'rinadi.</div>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- CHAQIRUV OYNASI -->
+  <div id="overlay">
+    <div class="overlay-box">
+      <div id="overlayText">...</div>
+      <div id="overlayButtons"></div>
     </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/sidebar.js"></script>
   <script>
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
     const user = JSON.parse(userData);
 
-    // Socket.IO ulanish va o'yinchini ro'yxatga olish
+    // Yuqori panel
+    document.getElementById("topName").textContent = user.first_name + " " + user.last_name;
+    document.getElementById("topAva").textContent = (user.first_name || "?").charAt(0).toUpperCase();
+    document.getElementById("coins").textContent = user.coins || 0;
+
+    renderSidebar("friends");
+
+    // ===== SOCKET.IO (real-time) =====
     const socket = io();
     socket.on("connect", () => {
       socket.emit("registerUser", user.id);
     });
 
-    function switchTab(tab) {
-      ["friends", "requests", "search"].forEach(t => {
-        document.getElementById(t + "Tab").classList.toggle("active", t === tab);
-        document.getElementById(t + "Panel").classList.toggle("active", t === tab);
-      });
-      if (tab === "friends") loadFriends();
-      if (tab === "requests") loadRequests();
-    }
-
-    function avatar(name) { return name.charAt(0).toUpperCase(); }
-
-    // DO'STLAR RO'YXATI
-    async function loadFriends() {
-      const list = document.getElementById("friendsList");
-      try {
-        const res = await fetch("/friends/" + user.id);
-        const data = await res.json();
-        if (!data.friends || data.friends.length === 0) {
-          list.innerHTML = '<div class="empty">Hali do\'stlaringiz yo\'q. Qidirib qo\'shing!</div>';
-          return;
-        }
-        list.innerHTML = "";
-        data.friends.forEach(f => {
-          const card = document.createElement("div");
-          card.className = "user-card";
-          card.innerHTML =
-            '<div class="user-avatar">' + avatar(f.first_name) + '</div>' +
-            '<div class="user-info"><div class="user-name">' + f.first_name + ' ' + f.last_name + '</div>' +
-            '<div class="user-sub">' + f.cefr_level + ' · ' + f.rating + ' reyting</div></div>' +
-            '<div class="user-actions"><button class="btn-sm btn-battle" onclick="challengeFriend(' + f.id + ', \'' + f.first_name + ' ' + f.last_name + '\')">⚔️ Jang</button></div>';          list.appendChild(card);
-        });
-      } catch (err) {
-        list.innerHTML = '<div class="empty">Yuklab bo\'lmadi</div>';
-      }
-    }
-
-    // KELGAN SO'ROVLAR
-    async function loadRequests() {
-      const list = document.getElementById("requestsList");
-      try {
-        const res = await fetch("/friends/requests/" + user.id);
-        const data = await res.json();
-        updateReqBadge(data.requests ? data.requests.length : 0);
-        if (!data.requests || data.requests.length === 0) {
-          list.innerHTML = '<div class="empty">Yangi so\'rovlar yo\'q</div>';
-          return;
-        }
-        list.innerHTML = "";
-        data.requests.forEach(r => {
-          const card = document.createElement("div");
-          card.className = "user-card";
-          card.innerHTML =
-            '<div class="user-avatar">' + avatar(r.first_name) + '</div>' +
-            '<div class="user-info"><div class="user-name">' + r.first_name + ' ' + r.last_name + '</div>' +
-            '<div class="user-sub">' + r.cefr_level + ' · ' + r.rating + ' reyting</div></div>' +
-            '<div class="user-actions">' +
-              '<button class="btn-sm btn-accept" onclick="respond(' + r.friendship_id + ',\'accept\',this)">✓ Qabul</button>' +
-              '<button class="btn-sm btn-reject" onclick="respond(' + r.friendship_id + ',\'reject\',this)">✕ Rad</button>' +
-            '</div>';
-          list.appendChild(card);
-        });
-      } catch (err) {
-        list.innerHTML = '<div class="empty">Yuklab bo\'lmadi</div>';
-      }
-    }
-
-    function updateReqBadge(count) {
-      const badge = document.getElementById("reqBadge");
-      if (count > 0) { badge.style.display = "inline"; badge.textContent = count; }
-      else badge.style.display = "none";
-    }
-
-    // QIDIRISH
-    async function doSearch() {
-      const q = document.getElementById("searchInput").value;
-      const results = document.getElementById("searchResults");
-      if (!q.trim()) { results.innerHTML = ""; return; }
-      try {
-        const res = await fetch("/friends/search?q=" + encodeURIComponent(q) + "&userId=" + user.id);
-        const data = await res.json();
-        if (!data.results || data.results.length === 0) {
-          results.innerHTML = '<div class="empty">Hech kim topilmadi</div>';
-          return;
-        }
-        results.innerHTML = "";
-        data.results.forEach(u => {
-          const card = document.createElement("div");
-          card.className = "user-card";
-          card.innerHTML =
-            '<div class="user-avatar">' + avatar(u.first_name) + '</div>' +
-            '<div class="user-info"><div class="user-name">' + u.first_name + ' ' + u.last_name + '</div>' +
-            '<div class="user-sub">' + u.cefr_level + ' · ' + u.rating + ' reyting</div></div>' +
-            '<div class="user-actions"><button class="btn-sm btn-add" onclick="sendRequest(' + u.id + ',this)">+ Qo\'shish</button></div>';
-          results.appendChild(card);
-        });
-      } catch (err) {
-        results.innerHTML = '<div class="empty">Xato yuz berdi</div>';
-      }
-    }
-
-    async function sendRequest(receiverId, btn) {
-      try {
-        const res = await fetch("/friends/request", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ requesterId: user.id, receiverId: receiverId }),
-        });
-        const data = await res.json();
-        btn.disabled = true;
-        btn.textContent = res.ok ? "✓ Yuborildi" : data.error;
-      } catch (err) { alert("Xato"); }
-    }
-
-    async function respond(friendshipId, action, btn) {
-      try {
-        await fetch("/friends/respond", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ friendshipId: friendshipId, action: action }),
-        });
-        btn.closest(".user-card").remove();
-        loadRequests();
-      } catch (err) { alert("Xato"); }
-    }
-
-    let challengeTargetName = "";
-
-    function challengeFriend(friendId, friendName) {
-      challengeTargetName = friendName;
-      socket.emit("challengeFriend", {
-        fromUserId: user.id,
-        fromName: user.first_name + " " + user.last_name,
-        toUserId: friendId,
-        level: user.cefr_level || "A1",
-      });
-      showOverlay("⏳ " + friendName + " ga chaqiruv yuborildi, javob kutilmoqda...");
-    }
-
-    // Boshlanishida
-    loadFriends();
-    loadRequests(); // badge uchun
+    // Do'st meni o'chirdi (real-time) - ro'yxatdan olib tashlash
+    socket.on("friendRemoved", (data) => {
+      loadFriends();
+      loadRightbar();
+    });
 
     // ===== CHAQIRUV OYNASI =====
     function showOverlay(text, buttons) {
@@ -246,23 +324,30 @@
       document.getElementById("overlay").style.display = "none";
     }
 
-    // Chaqiruv natijasi (yuborilдими)
+    // Do'st chaqirish
+    function challengeFriend(friendId, friendName) {
+      socket.emit("challengeFriend", {
+        fromUserId: user.id,
+        fromName: user.first_name + " " + user.last_name,
+        toUserId: friendId,
+        level: user.cefr_level || "A1",
+      });
+      showOverlay("⏳ " + friendName + " ga chaqiruv yuborildi, javob kutilmoqda...");
+    }
+
     socket.on("challengeResult", (data) => {
       if (!data.success) {
-        showOverlay("❌ " + data.message,
-          '<button class="btn-sm btn-reject" onclick="hideOverlay()">Yopish</button>');
+        showOverlay("❌ " + data.message, '<button class="ov-btn ov-reject" onclick="hideOverlay()">Yopish</button>');
       }
-      // success bo'lsa - "kutilmoqda" oynasi allaqachon ko'rsatilgan
     });
 
-    // Chaqiruv keldi (kimdir meni chaqirdi)
     let incomingChallenge = null;
     socket.on("challengeReceived", (data) => {
       incomingChallenge = data;
       showOverlay(
         "⚔️ <b>" + data.fromName + "</b> sizni jangga chaqiryapti!",
-        '<button class="btn-sm btn-accept" onclick="acceptChallenge()">✓ Qabul</button>' +
-        '<button class="btn-sm btn-reject" style="margin-left:8px;" onclick="declineChallenge()">✕ Rad</button>'
+        '<button class="ov-btn ov-accept" onclick="acceptChallenge()">✓ Qabul</button>' +
+        '<button class="ov-btn ov-reject" style="margin-left:8px;" onclick="declineChallenge()">✕ Rad</button>'
       );
     });
 
@@ -291,27 +376,285 @@
       hideOverlay();
     }
 
-    // Chaqiruv rad etildi (men yuborgan, raqib rad qildi)
     socket.on("challengeDeclined", (data) => {
       showOverlay("😔 " + data.byName + " chaqiruvni rad etdi",
-        '<button class="btn-sm btn-reject" onclick="hideOverlay()">Yopish</button>');
+        '<button class="ov-btn ov-reject" onclick="hideOverlay()">Yopish</button>');
     });
 
-    // Jang topildi (qabul qilindi) - jang sahifasiga o'tish
     socket.on("matchFound", (data) => {
-      // Jang ma'lumotini saqlab, battle sahifasiga o'tamiz
       sessionStorage.setItem("battleData", JSON.stringify(data));
       window.location.href = "/battle.html?room=" + encodeURIComponent(data.roomId);
     });
+
+    // Yangi do'st so'rovi keldi (real-time) - markazda oyna yo'q, faqat so'rovlar yangilanadi
+    socket.on("newFriendRequest", (data) => {
+      loadRequests();
+      loadPendingCount();
+    });
+    // So'rovga javob keldi (qabul/rad) - tugmani real-time yangilash
+    socket.on("requestResponded", (data) => {
+      const btn = document.getElementById("addBtn-" + data.byUserId);
+      if (btn) {
+        if (data.action === "accept") {
+          btn.disabled = true;
+          btn.innerHTML = '<i data-lucide="check"></i> Do\'st bo\'ldingiz';
+          btn.style.background = "linear-gradient(135deg, #22c55e, #16a34a)";
+        } else {
+          // Rad etildi - qaytadan qo'shish mumkin
+          btn.disabled = false;
+          btn.innerHTML = '<i data-lucide="user-plus"></i> Qo\'shish';
+        }
+        lucide.createIcons();
+      }
+      // Do'stlar ro'yxatini yangilash (qabul bo'lsa yangi do'st qo'shiladi)
+      if (data.action === "accept" && currentTab === "all") loadFriends();
+      loadRightbar();
+    });
+    // ===== TAB ALMASHTIRISH =====
+    let currentTab = "all";
+    function switchTab(tab, el) {
+      currentTab = tab;
+      // Tab tugmalari
+      document.querySelectorAll(".fr-tab").forEach(t => {
+        t.classList.toggle("active", t.getAttribute("data-tab") === tab);
+      });
+      // Panellar (keyingi bosqichda yaratiladi)
+      const panels = { all: "allPanel", requests: "requestsPanel", search: "searchPanel" };
+      Object.values(panels).forEach(pid => {
+        const p = document.getElementById(pid);
+        if (p) p.style.display = "none";
+      });
+      const active = document.getElementById(panels[tab]);
+      if (active) active.style.display = "block";
+
+      if (tab === "all") loadFriends();
+      if (tab === "requests") loadRequests();
+    }
+
+    // ===== DO'STLAR RO'YXATI =====
+    function leagueOf(rating) {
+      if (rating >= 2000) return { name: "Grandmaster", medal: "👑" };
+      if (rating >= 1800) return { name: "Master", medal: "🔱" };
+      if (rating >= 1600) return { name: "Diamond", medal: "💠" };
+      if (rating >= 1400) return { name: "Platinum", medal: "💎" };
+      if (rating >= 1200) return { name: "Gold", medal: "🥇" };
+      if (rating >= 1000) return { name: "Silver", medal: "🥈" };
+      return { name: "Bronze", medal: "🥉" };
+    }
+
+    async function loadFriends() {
+      const list = document.getElementById("friendsList");
+      try {
+        const res = await fetch("/friends/" + user.id);
+        const data = await res.json();
+        const friends = data.friends || [];
+        document.getElementById("flCount").textContent = "(" + friends.length + ")";
+
+        if (friends.length === 0) {
+          list.innerHTML = '<div class="fl-empty">Hali do\'stlaringiz yo\'q. Qidirib qo\'shing!</div>';
+          return;
+        }
+        list.innerHTML = "";
+        friends.forEach(f => {
+          const name = f.first_name + " " + f.last_name;
+          const lg = leagueOf(f.rating);
+          // Status - hozircha hammasi "online" deb ko'rsatamiz (real-time status keyin)
+          const statusHtml = '<div class="fl-status st-online"><span class="fl-dot"></span> Online</div>';
+
+          const row = document.createElement("div");
+          row.className = "fl-row";
+          row.innerHTML =
+            '<div class="fl-friend"><div class="fl-ava">' + f.first_name.charAt(0).toUpperCase() + '</div><div class="fl-name">' + name + '</div></div>' +
+            '<div><span class="fl-level">' + (f.cefr_level || "A1") + '</span></div>' +
+            '<div class="fl-league"><div class="fl-league-name">' + lg.medal + ' ' + lg.name + '</div><div class="fl-league-rp">' + f.rating + ' RP</div></div>' +
+            statusHtml +
+            '<div class="fl-actions">' +
+              '<button class="fl-challenge" onclick="challengeFriend(' + f.id + ', \'' + name.replace(/'/g, "\\'") + '\')"><i data-lucide="swords"></i> Challenge</button>' +
+              '<button class="fl-remove" onclick="removeFriend(' + f.id + ', \'' + name.replace(/'/g, "\\'") + '\')" title="Do\'stlikdan chiqarish"><i data-lucide="user-minus"></i></button>' +
+            '</div>';
+          list.appendChild(row);
+        });
+        lucide.createIcons();
+      } catch (err) {
+        list.innerHTML = '<div class="fl-empty">Yuklab bo\'lmadi</div>';
+      }
+    }
+    loadFriends();
+
+    // ===== SO'ROVLAR =====
+    async function loadRequests() {
+      const list = document.getElementById("requestsList");
+      try {
+        const res = await fetch("/friends/requests/" + user.id);
+        const data = await res.json();
+        const requests = data.requests || [];
+        updateReqBadge(requests.length);
+
+        if (requests.length === 0) {
+          list.innerHTML = '<div class="fl-empty">Yangi so\'rovlar yo\'q</div>';
+          return;
+        }
+        list.innerHTML = "";
+        requests.forEach(r => {
+          const name = r.first_name + " " + r.last_name;
+          const row = document.createElement("div");
+          row.className = "req-row";
+          row.innerHTML =
+            '<div class="req-ava">' + r.first_name.charAt(0).toUpperCase() + '</div>' +
+            '<div class="req-info"><div class="req-name">' + name + '</div><div class="req-sub">' + (r.cefr_level || "A1") + ' · ' + r.rating + ' RP</div></div>' +
+            '<div class="req-actions">' +
+              '<button class="req-btn req-accept" onclick="respond(' + r.friendship_id + ',\'accept\',this)"><i data-lucide="check"></i> Qabul</button>' +
+              '<button class="req-btn req-decline" onclick="respond(' + r.friendship_id + ',\'reject\',this)"><i data-lucide="x"></i> Rad</button>' +
+            '</div>';
+          list.appendChild(row);
+        });
+        lucide.createIcons();
+      } catch (err) {
+        list.innerHTML = '<div class="fl-empty">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    function updateReqBadge(count) {
+      const badge = document.getElementById("reqBadge");
+      if (count > 0) { badge.style.display = "inline"; badge.textContent = count; }
+      else badge.style.display = "none";
+    }
+
+    async function respond(friendshipId, action, btn) {
+      try {
+        await fetch("/friends/respond", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ friendshipId: friendshipId, action: action }),
+        });
+        btn.closest(".req-row").remove();
+        loadRequests();
+      } catch (err) { alert("Xato"); }
+    }
+
+    // ===== QIDIRISH =====
+    async function doSearch() {
+      const q = document.getElementById("searchInput").value;
+      const results = document.getElementById("searchResults");
+      // Qidiruv tab'iga o'tish
+      switchTab("search");
+      if (!q.trim()) { results.innerHTML = ""; return; }
+      results.innerHTML = '<div class="fl-empty">Qidirilyapti...</div>';
+      try {
+        const res = await fetch("/friends/search?q=" + encodeURIComponent(q) + "&userId=" + user.id);
+        const data = await res.json();
+        const found = data.results || [];
+        if (found.length === 0) {
+          results.innerHTML = '<div class="fl-empty">Hech kim topilmadi</div>';
+          return;
+        }
+        results.innerHTML = "";
+        found.forEach(u => {
+          const name = u.first_name + " " + u.last_name;
+          const row = document.createElement("div");
+          row.className = "srch-row";
+          row.innerHTML =
+            '<div class="srch-ava">' + u.first_name.charAt(0).toUpperCase() + '</div>' +
+            '<div class="srch-info"><div class="srch-name">' + name + '</div><div class="srch-sub">' + (u.cefr_level || "A1") + ' · ' + u.rating + ' RP</div></div>' +
+            '<button class="srch-add" id="addBtn-' + u.id + '" onclick="sendRequest(' + u.id + ',this)"><i data-lucide="user-plus"></i> Qo\'shish</button>';
+          results.appendChild(row);
+        });
+        lucide.createIcons();
+      } catch (err) {
+        results.innerHTML = '<div class="fl-empty">Xato yuz berdi</div>';
+      }
+    }
+
+    async function sendRequest(receiverId, btn) {
+      try {
+        const res = await fetch("/friends/request", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ requesterId: user.id, receiverId: receiverId }),
+        });
+        const data = await res.json();
+        btn.disabled = true;
+        btn.innerHTML = res.ok ? '<i data-lucide="check"></i> Yuborildi' : data.error;
+        lucide.createIcons();
+      } catch (err) { alert("Xato"); }
+    }
+
+    // Boshlanishida so'rovlar badge'ini yuklash
+    loadRequests();
+
+    // ===== O'NG PANEL =====
+    async function loadRightbar() {
+      try {
+        const res = await fetch("/friends/" + user.id);
+        const data = await res.json();
+        const friends = data.friends || [];
+
+        // Friends Summary
+        document.getElementById("fsTotal").textContent = friends.length;
+        document.getElementById("fsOnline").textContent = friends.length; // hozircha hammasi online
+
+        // Top Friends Leaderboard (do'stlar + o'zingiz, rating bo'yicha)
+        const all = [...friends, { id: user.id, first_name: user.first_name, last_name: user.last_name, rating: user.rating || 1000, isMe: true }];
+        all.sort((a, b) => b.rating - a.rating);
+
+        const tf = document.getElementById("topFriends");
+        tf.innerHTML = "";
+        all.slice(0, 5).forEach((f, i) => {
+          const rank = i + 1;
+          let rankCls = "";
+          if (rank === 1) rankCls = "r1"; else if (rank === 2) rankCls = "r2"; else if (rank === 3) rankCls = "r3";
+          const name = f.isMe ? (f.first_name + " (Siz)") : (f.first_name + " " + f.last_name);
+          const row = document.createElement("div");
+          row.className = "tf-row";
+          row.innerHTML =
+            '<div class="tf-rank ' + rankCls + '">' + rank + '</div>' +
+            '<div class="tf-ava">' + f.first_name.charAt(0).toUpperCase() + '</div>' +
+            '<div class="tf-name ' + (f.isMe ? "me" : "") + '">' + name + '</div>' +
+            '<div class="tf-rating"><i data-lucide="trophy"></i> ' + f.rating + '</div>';
+          tf.appendChild(row);
+        });
+        lucide.createIcons();
+      } catch (err) {
+        document.getElementById("topFriends").innerHTML = '<div class="fl-empty" style="padding:16px;">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    // Pending so'rovlar soni
+    async function loadPendingCount() {
+      try {
+        const res = await fetch("/friends/requests/" + user.id);
+        const data = await res.json();
+        document.getElementById("fsRequests").textContent = (data.requests || []).length;
+      } catch (err) {}
+    }
+
+    loadRightbar();
+    loadPendingCount();
+    // Do'stni o'chirish - tasdiqlash oynasi
+    function removeFriend(friendId, friendName) {
+      showOverlay(
+        "🗑️ <b>" + friendName + "</b> ni do'stlikdan chiqarmoqchimisiz?",
+        '<button class="ov-btn ov-reject" onclick="confirmRemove(' + friendId + ')">Ha, chiqarish</button>' +
+        '<button class="ov-btn ov-accept" style="margin-left:8px;" onclick="hideOverlay()">Bekor qilish</button>'
+      );
+    }
+
+    async function confirmRemove(friendId) {
+      hideOverlay();
+      try {
+        const res = await fetch("/friends/remove", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id, friendId: friendId }),
+        });
+        if (res.ok) {
+          loadFriends();
+          loadRightbar();
+        } else {
+          showOverlay("❌ O'chirib bo'lmadi", '<button class="ov-btn ov-reject" onclick="hideOverlay()">Yopish</button>');
+        }
+      } catch (err) {
+        showOverlay("❌ Xato yuz berdi", '<button class="ov-btn ov-reject" onclick="hideOverlay()">Yopish</button>');
+      }
+    }
+    lucide.createIcons();
   </script>
-
-  <!-- CHAQIRUV OYNASI -->
-  <div id="overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:rgba(20,20,40,0.95); border:1px solid rgba(99,102,241,0.4); border-radius:20px; padding:30px; max-width:380px; text-align:center; box-shadow:0 0 50px rgba(99,102,241,0.3);">
-      <div id="overlayText" style="font-size:17px; margin-bottom:20px;">...</div>
-      <div id="overlayButtons"></div>
-    </div>
-  </div>
-
 </body>
 </html>

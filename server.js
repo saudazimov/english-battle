@@ -786,16 +786,37 @@ async function finishBattle(roomId) {
   delete battles[roomId];
 }
 
-// ============ LEADERBOARD ============
 app.get("/leaderboard", async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, first_name, last_name, cefr_level, rating, xp
-       FROM users
-       ORDER BY rating DESC, xp DESC
+      `SELECT
+         u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.xp,
+         COUNT(bh.id) FILTER (WHERE bh.outcome = 'win') AS wins,
+         COUNT(bh.id) AS total_battles
+       FROM users u
+       LEFT JOIN battle_history bh ON bh.user_id = u.id
+       GROUP BY u.id
+       ORDER BY u.rating DESC, u.xp DESC
        LIMIT 50`
     );
-    res.json({ players: result.rows });
+
+    // Win rate hisoblash
+    const players = result.rows.map(p => {
+      const total = parseInt(p.total_battles);
+      const wins = parseInt(p.wins);
+      return {
+        id: p.id,
+        first_name: p.first_name,
+        last_name: p.last_name,
+        cefr_level: p.cefr_level,
+        rating: p.rating,
+        xp: p.xp,
+        wins: wins,
+        win_rate: total > 0 ? Math.round((wins / total) * 100) : 0,
+      };
+    });
+
+    res.json({ players: players });
   } catch (err) {
     console.error("Leaderboard xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
@@ -1384,6 +1405,7 @@ app.get("/friends/search", async (req, res) => {
 app.post("/friends/request", async (req, res) => {
   try {
     const { requesterId, receiverId } = req.body;
+    console.log("So'rov keldi:", requesterId, "->", receiverId);
     if (!requesterId || !receiverId) {
       return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
     }
@@ -1413,7 +1435,7 @@ app.post("/friends/request", async (req, res) => {
       [requesterId, receiverId]
     );
 
-    // Qabul qiluvchiga bildirishnoma
+    // Qabul qiluvchiga bildirishnoma + real-time signal
     const requesterInfo = await pool.query(
       "SELECT first_name, last_name FROM users WHERE id = $1",
       [requesterId]
@@ -1421,9 +1443,20 @@ app.post("/friends/request", async (req, res) => {
     if (requesterInfo.rows.length > 0) {
       const name = requesterInfo.rows[0].first_name + " " + requesterInfo.rows[0].last_name;
       await createNotification(receiverId, "friend_request", name + " sizga do'st so'rovi yubordi");
+
+      // Real-time signal (agar qabul qiluvchi onlayn bo'lsa)
+      const targetSocketId = onlineUsers[String(receiverId)];
+      console.log("So'rov signal:", receiverId, "-> socket:", targetSocketId, "| Onlayn:", Object.keys(onlineUsers));
+      if (targetSocketId) {
+        io.to(targetSocketId).emit("newFriendRequest", { fromName: name });
+        console.log("Signal yuborildi!");
+      } else {
+        console.log("Qabul qiluvchi onlayn emas!");
+      }
     }
 
     res.json({ message: "So'rov yuborildi!" });
+
   } catch (err) {
     console.error("So'rov yuborish xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
@@ -1438,35 +1471,84 @@ app.post("/friends/respond", async (req, res) => {
       return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
     }
 
-    const newStatus = action === "accept" ? "accepted" : "rejected";
-    await pool.query(
-      "UPDATE friendships SET status = $1 WHERE id = $2",
-      [newStatus, friendshipId]
+    // So'rovning kimdan-kimga ekanini topamiz
+    const fsInfo = await pool.query(
+      "SELECT requester_id, receiver_id FROM friendships WHERE id = $1",
+      [friendshipId]
     );
+    if (fsInfo.rows.length === 0) {
+      return res.status(404).json({ error: "So'rov topilmadi" });
+    }
+    const requesterId = fsInfo.rows[0].requester_id;
+    const receiverId = fsInfo.rows[0].receiver_id;
 
-    // Qabul qilинganда - so'rov yuborganга bildirishnoma
     if (action === "accept") {
-      const friendship = await pool.query(
-        "SELECT requester_id, receiver_id FROM friendships WHERE id = $1",
+      // Qabul - do'st bo'lishadi
+      await pool.query(
+        "UPDATE friendships SET status = 'accepted' WHERE id = $1",
         [friendshipId]
       );
-      if (friendship.rows.length > 0) {
-        const requesterId = friendship.rows[0].requester_id;
-        const receiverId = friendship.rows[0].receiver_id;
-        const accepterInfo = await pool.query(
-          "SELECT first_name, last_name FROM users WHERE id = $1",
-          [receiverId]
-        );
-        if (accepterInfo.rows.length > 0) {
-          const name = accepterInfo.rows[0].first_name + " " + accepterInfo.rows[0].last_name;
-          await createNotification(requesterId, "friend_accepted", name + " do'st so'rovingizni qabul qildi");
-        }
+
+      // So'rov yuborganga bildirishnoma
+      const accepterInfo = await pool.query(
+        "SELECT first_name, last_name FROM users WHERE id = $1",
+        [receiverId]
+      );
+      if (accepterInfo.rows.length > 0) {
+        const name = accepterInfo.rows[0].first_name + " " + accepterInfo.rows[0].last_name;
+        await createNotification(requesterId, "friend_accepted", name + " do'st so'rovingizni qabul qildi");
       }
+    } else {
+      // Rad - yozuvni o'chirish (keyin yana so'rov yuborsa bo'lsin)
+      await pool.query("DELETE FROM friendships WHERE id = $1", [friendshipId]);
+    }
+
+    // So'rov yuboruvchiga real-time signal (tugmasi o'zgarsin)
+    const requesterSocket = onlineUsers[String(requesterId)];
+    if (requesterSocket) {
+      const responderInfo = await pool.query(
+        "SELECT first_name, last_name FROM users WHERE id = $1",
+        [receiverId]
+      );
+      const responderName = responderInfo.rows.length > 0
+        ? responderInfo.rows[0].first_name + " " + responderInfo.rows[0].last_name : "Foydalanuvchi";
+      io.to(requesterSocket).emit("requestResponded", {
+        action: action,
+        byUserId: receiverId,
+        byName: responderName,
+      });
     }
 
     res.json({ message: action === "accept" ? "Do'st qo'shildi!" : "So'rov rad etildi" });
   } catch (err) {
     console.error("So'rovga javob xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Do'stni o'chirish
+app.post("/friends/remove", async (req, res) => {
+  try {
+    const { userId, friendId } = req.body;
+    if (!userId || !friendId) return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
+
+    // Ikki yo'nalishdagi do'stlikni o'chirish (kim so'rasa ham)
+    await pool.query(
+      `DELETE FROM friendships
+       WHERE (requester_id = $1 AND receiver_id = $2)
+          OR (requester_id = $2 AND receiver_id = $1)`,
+      [userId, friendId]
+    );
+
+    // O'chirilgan do'stga (B) real-time signal (uning ro'yxatidan ham o'chsin)
+    const friendSocket = onlineUsers[String(friendId)];
+    if (friendSocket) {
+      io.to(friendSocket).emit("friendRemoved", { byUserId: userId });
+    }
+
+    res.json({ message: "Do'st o'chirildi" });
+  } catch (err) {
+    console.error("Do'st o'chirish xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });

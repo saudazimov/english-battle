@@ -4,247 +4,402 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>English Battle — Leaderboard</title>
+  <link rel="stylesheet" href="/app.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    .app { grid-template-columns: 230px 1fr 340px; max-width: 1680px; }
+    .rightbar { display: flex; flex-direction: column; gap: 20px; }
 
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #0a0a1a;
-      background-image:
-        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12), transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.12), transparent 40%);
-      min-height: 100vh;
-      color: #e2e8f0;
-      padding: 20px;
+    /* Yuqori panel */
+    .topbar { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+    .currency { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; font-weight: 700; font-size: 15px; }
+    .currency .plus { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: rgba(91,140,255,0.2); color: var(--accent); cursor: pointer; font-weight: 700; }
+    .icon-btn { position: relative; width: 42px; height: 42px; border-radius: 12px; background: var(--panel); border: 1px solid var(--border); display: grid; place-items: center; cursor: pointer; }
+    .icon-btn .badge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; background: #ef4444; color: #fff; font-size: 11px; border-radius: 9px; display: grid; place-items: center; padding: 0 4px; }
+    .user-chip { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 6px 12px 6px 6px; cursor: pointer; }
+    .user-chip .ava { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 15px; }
+    .user-chip .uname { font-size: 14px; font-weight: 600; line-height: 1.1; }
+    .user-chip .ulevel { font-size: 11px; color: var(--text-dim); }
+
+    .placeholder { padding: 24px; color: var(--text-faint); font-size: 13px; border: 1px dashed var(--border); border-radius: 14px; text-align: center; }
+    .skel { padding: 18px; }
+    .skel h4 { font-size: 13px; color: var(--text-dim); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .soon-badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; background: rgba(168,85,247,0.15); color: var(--accent-2); border: 1px solid rgba(168,85,247,0.3); }
+    .card-title { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+    .card-title i { width: 20px; height: 20px; color: var(--accent); }
+
+    @media (max-width: 1200px) { .app { grid-template-columns: 200px 1fr; } .rightbar { display: none; } }
+
+    /* ===== FILTRLAR ===== */
+    .filter-card { padding: 18px 20px; }
+    .filter-tabs {
+      display: flex; gap: 6px; background: rgba(0,0,0,0.25);
+      border-radius: 12px; padding: 5px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .ftab {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 11px 14px; border-radius: 9px; cursor: pointer; font-size: 14px; font-weight: 600;
+      color: var(--text-dim); transition: all 0.2s; position: relative; white-space: nowrap;
+    }
+    .ftab i { width: 16px; height: 16px; }
+    .ftab.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff;
+      box-shadow: 0 4px 16px rgba(91,140,255,0.3);
+    }
+    .ftab.disabled { opacity: 0.55; cursor: pointer; }
+    .ftab.disabled:hover { opacity: 0.8; background: var(--panel); }
+    .soon-dot { color: var(--accent-2); font-size: 18px; line-height: 0; }
+
+    .filter-time { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ttab {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500;
+      color: var(--text-dim); border: 1px solid var(--border); transition: all 0.2s;
+    }
+    .ttab i { width: 14px; height: 14px; }
+    .ttab.active { background: rgba(91,140,255,0.15); border-color: var(--border-bright); color: var(--accent); }
+    .ttab.disabled { opacity: 0.5; }
+    .time-note { margin-left: auto; font-size: 12px; color: var(--text-faint); }
+
+    /* ===== PODIUM ===== */
+    .podium { display: flex; align-items: flex-end; justify-content: center; gap: 20px; padding: 10px 0; }
+    .podium-empty { text-align: center; color: var(--text-faint); padding: 40px; }
+    .podium-place {
+      background: linear-gradient(180deg, var(--panel), var(--bg-2));
+      border: 1px solid var(--border); border-radius: 18px;
+      padding: 24px 20px; text-align: center; width: 240px; position: relative;
+    }
+    .podium-place.first {
+      width: 270px; padding: 30px 22px;
+      border-color: var(--gold);
+      background: linear-gradient(180deg, rgba(251,191,36,0.12), var(--bg-2));
+      box-shadow: 0 0 40px rgba(251,191,36,0.25);
+    }
+    .podium-place.second { border-color: rgba(203,213,225,0.4); }
+    .podium-place.third { border-color: rgba(217,119,6,0.4); }
+    .podium-crown { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 30px; }
+    .podium-rank {
+      width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 14px;
+      display: grid; place-items: center; font-size: 20px; font-weight: 800;
+      border: 2px solid;
+    }
+    .first .podium-rank { background: rgba(251,191,36,0.2); border-color: var(--gold); color: var(--gold); }
+    .second .podium-rank { background: rgba(203,213,225,0.15); border-color: #cbd5e1; color: #cbd5e1; }
+    .third .podium-rank { background: rgba(217,119,6,0.15); border-color: #d97706; color: #d97706; }
+    .podium-ava {
+      width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center; font-size: 28px; font-weight: 800;
+      border: 3px solid rgba(120,150,255,0.3);
+    }
+    .first .podium-ava { width: 88px; height: 88px; font-size: 34px; border-color: var(--gold); }
+    .podium-name { font-size: 16px; font-weight: 700; }
+    .first .podium-name { font-size: 18px; }
+    .podium-league { font-size: 13px; color: var(--cyan); margin-top: 4px; }
+    .podium-rating { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 12px; font-size: 18px; font-weight: 800; color: var(--gold); }
+    .podium-rating i { width: 18px; height: 18px; }
+
+    @media (max-width: 1000px) {
+      .podium { flex-wrap: wrap; }
+      .podium-place, .podium-place.first { width: 100%; max-width: 300px; }
     }
 
-    .container { max-width: 700px; margin: 0 auto; }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
+    /* ===== REYTING JADVALI ===== */
+    .lb-card { padding: 20px 22px; }
+    .lb-cols, .lb-row {
+      display: grid;
+      grid-template-columns: 60px 2.2fr 80px 1.4fr 80px 90px 100px;
       align-items: center;
-      padding: 20px 0;
-      margin-bottom: 20px;
     }
-
-    .topbar h1 {
-      font-size: 26px;
-      background: linear-gradient(135deg, #fbbf24, #f59e0b);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .lb-cols {
+      padding: 0 12px 12px; font-size: 12px; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
     }
-
-    .back-btn {
-      padding: 8px 16px;
-      background: rgba(99, 102, 241, 0.15);
-      border: 1px solid rgba(99, 102, 241, 0.4);
-      border-radius: 8px;
-      color: #a5b4fc;
-      cursor: pointer;
-      font-size: 14px;
-      text-decoration: none;
-      transition: all 0.3s;
+    .lb-row {
+      padding: 13px 12px; border-radius: 12px; transition: background 0.2s;
     }
-
-    .back-btn:hover { background: rgba(99, 102, 241, 0.25); }
-
-    .leaderboard {
-      background: rgba(20, 20, 40, 0.8);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      border-radius: 20px;
-      padding: 16px;
-      box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
+    .lb-row:hover { background: var(--panel); }
+    .lb-row.me {
+      background: linear-gradient(135deg, rgba(91,140,255,0.15), rgba(168,85,247,0.08));
+      border: 1px solid var(--border-bright);
     }
-
-    .row {
-      display: flex;
-      align-items: center;
-      padding: 14px 16px;
-      border-radius: 12px;
-      margin-bottom: 8px;
-      transition: all 0.2s;
+    .lb-rank { font-size: 16px; font-weight: 800; }
+    .lb-rank.top1 { color: var(--gold); }
+    .lb-rank.top2 { color: #cbd5e1; }
+    .lb-rank.top3 { color: #d97706; }
+    .lb-player { display: flex; align-items: center; gap: 12px; }
+    .lb-ava {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center; font-weight: 700; font-size: 15px;
     }
-
-    .row:hover { background: rgba(99, 102, 241, 0.1); }
-
-    .row.me {
-      background: rgba(99, 102, 241, 0.18);
-      border: 1px solid rgba(99, 102, 241, 0.4);
+    .lb-name { font-weight: 600; font-size: 14px; }
+    .lb-level {
+      font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+      background: rgba(91,140,255,0.15); color: var(--accent); display: inline-block;
     }
+    .lb-league { font-size: 13px; color: var(--cyan); }
+    .lb-wins { font-weight: 600; }
+    .lb-winrate { color: var(--green); font-weight: 700; }
+    .lb-rating { display: flex; align-items: center; gap: 5px; font-weight: 800; color: var(--gold); }
+    .lb-rating i { width: 15px; height: 15px; }
+    .lb-empty { text-align: center; color: var(--text-faint); padding: 30px; }
+    .lb-foot { text-align: center; font-size: 12px; color: var(--text-faint); margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
 
-    .rank {
-      width: 44px;
-      font-size: 18px;
-      font-weight: bold;
-      text-align: center;
-      color: #64748b;
-    }
+    /* ===== O'NG PANEL ===== */
+    .rb-card { padding: 20px; }
+    .rb-head { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .rb-info { width: 16px; height: 16px; color: var(--text-dim); cursor: pointer; }
 
-    .rank.gold { color: #fbbf24; font-size: 24px; }
-    .rank.silver { color: #cbd5e1; font-size: 22px; }
-    .rank.bronze { color: #d97706; font-size: 20px; }
+    /* Your Rankings */
+    .yr-top { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+    .yr-medal { font-size: 44px; }
+    .yr-league { font-size: 20px; font-weight: 800; }
+    .yr-points { font-size: 14px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; margin-top: 3px; }
+    .yr-rows { display: flex; flex-direction: column; gap: 12px; }
+    .yr-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--text-dim); }
+    .yr-rank { font-weight: 800; font-size: 16px; color: var(--text); }
 
-    .player-avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      margin-right: 14px;
-      flex-shrink: 0;
-    }
+    /* School Rankings */
+    .sr-school { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+    .sr-btn { width: 100%; justify-content: center; }
 
-    .player-info { flex: 1; min-width: 0; }
-    .player-info .name {
-      font-weight: 600;
-      font-size: 15px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .player-info .level {
-      font-size: 12px;
-      color: #818cf8;
-    }
-
-    .player-stats {
-      text-align: right;
-      flex-shrink: 0;
-    }
-    .player-stats .rating {
-      font-size: 18px;
-      font-weight: bold;
-      color: #fbbf24;
-    }
-    .player-stats .xp {
-      font-size: 12px;
-      color: #64748b;
-    }
-
-    .loading, .empty {
-      text-align: center;
-      padding: 40px;
-      color: #64748b;
-    }
-
-    .header-row {
-      display: flex;
-      padding: 8px 16px;
-      color: #64748b;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .header-row .h-rank { width: 44px; text-align: center; }
-    .header-row .h-name { flex: 1; margin-left: 56px; }
-    .header-row .h-rating { }
-
-    /* ===== ANIMATSIYALAR ===== */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes rowSlideIn {
-      from { opacity: 0; transform: translateX(-15px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    /* Leaderboard kartasi paydo bo'ladi */
-    .leaderboard { animation: fadeInUp 0.4s ease both; }
-
-    /* Har qator ketma-ket sirg'alib chiqadi */
-    .row { animation: rowSlideIn 0.4s ease both; }
-
-    /* Qatorlar hover (allaqachon bor, lekin silliqroq) */
-    .row { transition: background 0.2s ease, transform 0.2s ease; }
-    .row:hover { transform: translateX(4px); }
-
+    /* Rewards */
+    .rw-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .rw-box { text-align: center; padding: 12px 6px; border-radius: 12px; border: 1px solid var(--border); }
+    .rw-box i { width: 22px; height: 22px; }
+    .rw-val { font-size: 14px; font-weight: 800; margin-top: 4px; color: var(--text); }
+    .rw-lbl { font-size: 10px; color: var(--text-dim); }
+    .rw-gold { background: rgba(251,191,36,0.1); color: var(--gold); }
+    .rw-cyan { background: rgba(56,225,255,0.1); color: var(--cyan); }
+    .rw-blue { background: rgba(91,140,255,0.1); color: var(--accent); }
+    .rw-purple { background: rgba(168,85,247,0.1); color: var(--accent-2); }
 
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="topbar">
-      <h1>🏆 LEADERBOARD</h1>
-      <a href="/lobby.html" class="back-btn">← Lobbyga</a>
-    </div>
+  <div class="app">
+    <aside class="sidebar"></aside>
 
-    <div class="header-row">
-      <div class="h-rank">#</div>
-      <div class="h-name">O'yinchi</div>
-      <div class="h-rating">Reyting</div>
-    </div>
+    <main class="content">
+      <!-- Yuqori panel -->
+      <div class="topbar">
+        <div class="currency"><i data-lucide="coins" style="color:var(--gold);width:18px;height:18px;"></i> <span id="coins">0</span> <span class="plus">+</span></div>
+        <div class="currency"><i data-lucide="gem" style="color:var(--cyan);width:18px;height:18px;"></i> <span id="gems">0</span> <span class="plus">+</span></div>
+        <div class="icon-btn" onclick="window.location.href='/friends.html'"><i data-lucide="bell"></i> <span class="badge" id="notifBadge">0</span></div>
+        <div class="user-chip">
+          <div class="ava" id="topAva">J</div>
+          <div><div class="uname" id="topName">O'yinchi</div><div class="ulevel">Level <span id="topLevel">1</span></div></div>
+        </div>
+      </div>
 
-    <div class="leaderboard" id="leaderboard">
-      <div class="loading">Yuklanmoqda...</div>
-    </div>
+      <!-- Sarlavha -->
+      <div class="page-head">
+        <div class="crest-ic"><i data-lucide="trophy"></i></div>
+        <div><h1>Leaderboard</h1><p>See the top players and climb the rankings.</p></div>
+      </div>
+
+      <!-- Filtrlar -->
+      <div class="card filter-card">
+        <div class="filter-tabs">
+          <div class="ftab active"><i data-lucide="globe"></i> Global</div>
+          <div class="ftab disabled"><i data-lucide="flag"></i> National <span class="soon-dot">•</span></div>
+          <div class="ftab disabled"><i data-lucide="map-pin"></i> Region <span class="soon-dot">•</span></div>
+          <div class="ftab disabled"><i data-lucide="building"></i> District <span class="soon-dot">•</span></div>
+          <div class="ftab disabled" onclick="window.location.href='/rankings.html'"><i data-lucide="building-2"></i> School</div>
+          <div class="ftab disabled" onclick="window.location.href='/friends.html'"><i data-lucide="users"></i> Friends</div>
+        </div>
+        <div class="filter-time">
+          <div class="ttab disabled"><i data-lucide="calendar"></i> All Time</div>
+          <div class="ttab active"><i data-lucide="sparkles"></i> Weekly</div>
+          <div class="ttab disabled"><i data-lucide="calendar-days"></i> Monthly</div>
+          <div class="ttab disabled"><i data-lucide="trophy"></i> Season</div>
+          <span class="time-note">Reyting har 10 daqiqada yangilanadi</span>
+        </div>
+      </div>
+      <!-- Podium -->
+      <div class="podium" id="podium">
+        <div class="podium-empty">Yuklanmoqda...</div>
+      </div>
+      <!-- Reyting jadvali -->
+      <div class="card lb-card">
+        <div class="lb-cols">
+          <span>Rank</span>
+          <span>Player</span>
+          <span>Level</span>
+          <span>League</span>
+          <span>Wins</span>
+          <span>Win Rate</span>
+          <span>Rating</span>
+        </div>
+        <div id="lbList"><div class="lb-empty">Yuklanmoqda...</div></div>
+        <div class="lb-foot">Reyting har 10 daqiqada yangilanadi</div>
+      </div>
+    </main>
+
+    <aside class="rightbar">
+
+      <!-- Your Rankings -->
+      <div class="card rb-card">
+        <div class="rb-head"><span>Your Rankings</span><i data-lucide="info" class="rb-info"></i></div>
+        <div class="yr-top">
+          <div class="yr-medal" id="yrMedal">🥈</div>
+          <div>
+            <div class="yr-league" id="yrLeague">Silver</div>
+            <div class="yr-points"><i data-lucide="trophy" style="width:14px;height:14px;color:var(--gold);"></i> <span id="yrPoints">1000</span> ball</div>
+          </div>
+        </div>
+        <div class="yr-rows">
+          <div class="yr-row"><span>Global Rank</span><span class="yr-rank" id="yrGlobal">#—</span></div>
+          <div class="yr-row"><span>National Rank <span class="soon-badge">tez kunda</span></span><span class="yr-rank">#—</span></div>
+          <div class="yr-row"><span>Region Rank <span class="soon-badge">tez kunda</span></span><span class="yr-rank">#—</span></div>
+        </div>
+      </div>
+
+      <!-- School Rankings -->
+      <div class="card rb-card">
+        <div class="rb-head"><span>Maktab reytingi</span></div>
+        <div class="sr-school">
+          <i data-lucide="building-2" style="width:22px;height:22px;color:var(--cyan);"></i>
+          <span id="srName">Maktabingiz</span>
+        </div>
+        <button class="btn btn-ghost sr-btn" onclick="window.location.href='/rankings.html'">
+          Maktab reytingini ko'rish <i data-lucide="chevron-right" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+
+      <!-- Rewards -->
+      <div class="card rb-card">
+        <div class="rb-head"><span>Top o'yinchilar mukofoti</span><span class="soon-badge">Tez kunda</span></div>
+        <div class="rw-grid">
+          <div class="rw-box rw-gold"><i data-lucide="coins"></i><div class="rw-val">10,000</div><div class="rw-lbl">Coins</div></div>
+          <div class="rw-box rw-cyan"><i data-lucide="gem"></i><div class="rw-val">1,000</div><div class="rw-lbl">Gems</div></div>
+          <div class="rw-box rw-blue"><i data-lucide="zap"></i><div class="rw-val">2,000</div><div class="rw-lbl">XP</div></div>
+          <div class="rw-box rw-purple"><i data-lucide="gift"></i><div class="rw-val">?</div><div class="rw-lbl">Skin</div></div>
+        </div>
+      </div>
+
+    </aside>
   </div>
 
-  <script src="/leagues.js"></script>
-
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/sidebar.js"></script>
   <script>
-    // Login tekshirish
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
-    const me = JSON.parse(userData);
+    const user = JSON.parse(userData);
 
+    document.getElementById("topName").textContent = user.first_name + " " + user.last_name;
+    document.getElementById("topAva").textContent = (user.first_name || "?").charAt(0).toUpperCase();
+    document.getElementById("coins").textContent = user.coins || 0;
+
+    renderSidebar("ranking");
+    // ===== LEADERBOARD YUKLASH =====
+    function leagueOf(rating) {
+      if (rating >= 2000) return "👑 Grandmaster";
+      if (rating >= 1800) return "🔱 Master";
+      if (rating >= 1600) return "💠 Diamond";
+      if (rating >= 1400) return "💎 Platinum";
+      if (rating >= 1200) return "🥇 Gold";
+      if (rating >= 1000) return "🥈 Silver";
+      return "🥉 Bronze";
+    }
+
+    let allPlayers = [];
     async function loadLeaderboard() {
       try {
         const res = await fetch("/leaderboard");
         const data = await res.json();
-        renderLeaderboard(data.players);
+        allPlayers = data.players || [];
+        renderPodium();
+        renderTable();
+        setupYourRankings();
       } catch (err) {
-        document.getElementById("leaderboard").innerHTML =
-          '<div class="empty">Yuklab bo\'lmadi. Server ishlayaptimi?</div>';
+        document.getElementById("podium").innerHTML = '<div class="podium-empty">Yuklab bo\'lmadi</div>';
       }
     }
 
-    function renderLeaderboard(players) {
-      const container = document.getElementById("leaderboard");
-
-      if (!players || players.length === 0) {
-        container.innerHTML = '<div class="empty">Hali o\'yinchilar yo\'q</div>';
+    function renderTable() {
+      const list = document.getElementById("lbList");
+      if (allPlayers.length === 0) {
+        list.innerHTML = '<div class="lb-empty">Hali o\'yinchi yo\'q</div>';
         return;
       }
-
-      container.innerHTML = "";
-
-      players.forEach((p, index) => {
-        const rank = index + 1;
-        const isMe = p.id === me.id;
-
-        // Rank belgisi (1,2,3 uchun medal)
-        let rankDisplay = rank;
-        let rankClass = "rank";
-        if (rank === 1) { rankDisplay = "🥇"; rankClass = "rank gold"; }
-        else if (rank === 2) { rankDisplay = "🥈"; rankClass = "rank silver"; }
-        else if (rank === 3) { rankDisplay = "🥉"; rankClass = "rank bronze"; }
+      list.innerHTML = "";
+      allPlayers.forEach((p, i) => {
+        const rank = i + 1;
+        const name = p.first_name + " " + p.last_name;
+        const isMe = p.id === user.id;
+        let rankCls = "";
+        if (rank === 1) rankCls = "top1";
+        else if (rank === 2) rankCls = "top2";
+        else if (rank === 3) rankCls = "top3";
 
         const row = document.createElement("div");
-        row.className = "row" + (isMe ? " me" : "");
-        row.style.animationDelay = (index * 0.06) + "s";
-        const pLeague = getLeague(p.rating);
+        row.className = "lb-row" + (isMe ? " me" : "");
         row.innerHTML =
-          '<div class="' + rankClass + '">' + rankDisplay + '</div>' +
-          '<div class="player-avatar">' + p.first_name.charAt(0).toUpperCase() + '</div>' +
-          '<div class="player-info">' +
-            '<div class="name">' + p.first_name + ' ' + p.last_name + (isMe ? ' (Siz)' : '') + '</div>' +
-            '<div class="level">' + p.cefr_level + ' · <span style="color:' + pLeague.color + ';">' + pLeague.emoji + ' ' + pLeague.name + '</span></div>' +
-          '</div>' +
-          '<div class="player-stats">' +
-            '<div class="rating">' + p.rating + '</div>' +
-            '<div class="xp">' + p.xp + ' XP</div>' +
-          '</div>';
-        container.appendChild(row);
+          '<div class="lb-rank ' + rankCls + '">' + rank + '</div>' +
+          '<div class="lb-player"><div class="lb-ava">' + p.first_name.charAt(0).toUpperCase() + '</div><div class="lb-name">' + name + '</div></div>' +
+          '<div><span class="lb-level">' + (p.cefr_level || "A1") + '</span></div>' +
+          '<div class="lb-league">' + leagueOf(p.rating) + '</div>' +
+          '<div class="lb-wins">' + (p.wins || 0) + '</div>' +
+          '<div class="lb-winrate">' + (p.win_rate || 0) + '%</div>' +
+          '<div class="lb-rating"><i data-lucide="trophy"></i> ' + p.rating + '</div>';
+        list.appendChild(row);
       });
+      lucide.createIcons();
     }
 
+    // Your Rankings (global o'rin)
+    function setupYourRankings() {
+      const myRating = user.rating || 1000;
+      document.getElementById("yrLeague").textContent = leagueOf(myRating).replace(/^\S+\s/, "");
+      document.getElementById("yrMedal").textContent = leagueOf(myRating).split(" ")[0];
+      document.getElementById("yrPoints").textContent = myRating;
+      document.getElementById("srName").textContent = user.school || "Maktabingiz";
+
+      // Global rank - allPlayers ichidan topamiz
+      const myIndex = allPlayers.findIndex(p => p.id === user.id);
+      if (myIndex >= 0) {
+        document.getElementById("yrGlobal").textContent = "#" + (myIndex + 1);
+      } else {
+        document.getElementById("yrGlobal").textContent = "#50+";
+      }
+    }
+
+    function renderPodium() {
+      const podium = document.getElementById("podium");
+      if (allPlayers.length < 3) {
+        podium.innerHTML = '<div class="podium-empty">Top 3 uchun kamida 3 o\'yinchi kerak</div>';
+        return;
+      }
+      const top3 = allPlayers.slice(0, 3);
+      // Tartib: 2-chi (chap), 1-chi (o'rta), 3-chi (o'ng)
+      const order = [
+        { p: top3[1], rank: 2, cls: "second" },
+        { p: top3[0], rank: 1, cls: "first" },
+        { p: top3[2], rank: 3, cls: "third" },
+      ];
+      podium.innerHTML = "";
+      order.forEach(o => {
+        const name = o.p.first_name + " " + o.p.last_name;
+        const crown = o.rank === 1 ? '<div class="podium-crown">👑</div>' : "";
+        const div = document.createElement("div");
+        div.className = "podium-place " + o.cls;
+        div.innerHTML =
+          crown +
+          '<div class="podium-rank">' + o.rank + '</div>' +
+          '<div class="podium-ava">' + o.p.first_name.charAt(0).toUpperCase() + '</div>' +
+          '<div class="podium-name">' + name + '</div>' +
+          '<div class="podium-league">' + leagueOf(o.p.rating) + '</div>' +
+          '<div class="podium-rating"><i data-lucide="trophy"></i> ' + o.p.rating + '</div>';
+        podium.appendChild(div);
+      });
+      lucide.createIcons();
+    }
     loadLeaderboard();
+
+    lucide.createIcons();
   </script>
 </body>
 </html>
