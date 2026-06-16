@@ -1,0 +1,114 @@
+/* ===== ENGLISH BATTLE — UMUMIY USLUBLAR ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #070b16;
+  --bg-2: #0b1020;
+  --panel: #0e1428;
+  --panel-2: #121a33;
+  --border: rgba(99,130,220,0.18);
+  --border-bright: rgba(120,150,255,0.4);
+  --text: #e6ecff;
+  --text-dim: #8b97c0;
+  --text-faint: #5a648c;
+  --accent: #5b8cff;
+  --accent-2: #a855f7;
+  --gold: #fbbf24;
+  --green: #34d399;
+  --cyan: #38e1ff;
+  --red: #f87171;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(91,140,255,0.10), transparent 60%),
+    radial-gradient(1000px 500px at 100% 100%, rgba(168,85,247,0.08), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== APP LAYOUT (sidebar + kontent) ===== */
+.app {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  gap: 20px;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar { display: flex; flex-direction: column; }
+.logo-box { padding: 8px 12px 24px; }
+.logo-box .crest { font-size: 28px; font-weight: 800; letter-spacing: 1px; line-height: 1; }
+.logo-box .crest .e { color: #fff; }
+.logo-box .crest .b {
+  background: linear-gradient(135deg, var(--gold), #d97706);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.nav { display: flex; flex-direction: column; gap: 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 16px; border-radius: 12px;
+  color: var(--text-dim); cursor: pointer; font-size: 15px; font-weight: 500;
+  transition: all 0.2s; border: 1px solid transparent;
+  text-decoration: none;
+}
+.nav-item .ic { width: 20px; height: 20px; }
+.nav-item:hover { background: var(--panel); color: var(--text); }
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(91,140,255,0.18), rgba(168,85,247,0.12));
+  color: #fff; border-color: var(--border-bright);
+  box-shadow: 0 0 24px rgba(91,140,255,0.15) inset;
+}
+.sidebar-foot { margin-top: auto; padding-top: 20px; }
+.sidebar-foot .mascot-box {
+  background: linear-gradient(180deg, rgba(91,140,255,0.08), transparent);
+  border-radius: 16px; padding: 16px; border: 1px solid var(--border);
+  text-align: center; color: var(--text-faint); font-size: 13px;
+}
+
+/* ===== KONTENT ===== */
+.content { display: flex; flex-direction: column; gap: 20px; }
+
+/* Sahifa sarlavhasi */
+.page-head { display: flex; align-items: center; gap: 16px; margin-bottom: 4px; }
+.page-head .crest-ic {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent-2), #6d28d9);
+  display: grid; place-items: center;
+  box-shadow: 0 0 30px rgba(168,85,247,0.35);
+}
+.page-head .crest-ic i { width: 26px; height: 26px; color: #fff; }
+.page-head h1 { font-size: 28px; font-weight: 800; line-height: 1; }
+.page-head p { color: var(--text-dim); font-size: 14px; margin-top: 5px; }
+
+/* Umumiy karta */
+.card {
+  background: linear-gradient(180deg, var(--panel), var(--bg-2));
+  border: 1px solid var(--border); border-radius: 18px;
+}
+
+/* Umumiy tugma */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 22px; border: none; border-radius: 12px; cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff; font-size: 15px; font-weight: 600; transition: all 0.2s;
+  font-family: inherit; text-decoration: none;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(91,140,255,0.4); }
+.btn-ghost {
+  background: rgba(91,140,255,0.12); border: 1px solid var(--border-bright); color: var(--accent);
+}
+.btn-ghost:hover { background: rgba(91,140,255,0.2); box-shadow: none; }
+
+/* Mobil */
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+}

@@ -3,322 +3,646 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Profil</title>
+  <title>English Battle — Profile</title>
+  <link rel="stylesheet" href="/app.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #0a0a1a;
-      background-image:
-        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12), transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.12), transparent 40%);
-      min-height: 100vh;
-      color: #e2e8f0;
-      padding: 20px;
-    }
-    .container { max-width: 700px; margin: 0 auto; }
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 0;
-      margin-bottom: 10px;
-    }
-    .topbar h1 {
-      font-size: 24px;
-      background: linear-gradient(135deg, #818cf8, #c084fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .back-btn {
-      padding: 8px 16px;
-      background: rgba(99, 102, 241, 0.15);
-      border: 1px solid rgba(99, 102, 241, 0.4);
-      border-radius: 8px;
-      color: #a5b4fc;
-      cursor: pointer;
-      text-decoration: none;
-      font-size: 14px;
-    }
-    .back-btn:hover { background: rgba(99, 102, 241, 0.25); }
+    /* Profilga xos uslublar (keyingi bosqichlarda to'ldiriladi) */
+    .app { grid-template-columns: 230px 1fr 340px; max-width: 1680px; }
+    .rightbar { display: flex; flex-direction: column; gap: 20px; }
 
-    /* Profil bosh qismi */
-    .profile-hero {
-      background: rgba(20, 20, 40, 0.8);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      border-radius: 20px;
-      padding: 30px;
-      margin-bottom: 20px;
-      text-align: center;
-      box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
+    /* Yuqori panel */
+    .topbar { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+    .currency {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 12px; padding: 8px 12px; font-weight: 700; font-size: 15px;
     }
-    .big-avatar {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 38px;
-      font-weight: bold;
-      margin: 0 auto 16px;
-      box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+    .currency .plus {
+      width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center;
+      background: rgba(91,140,255,0.2); color: var(--accent); cursor: pointer; font-weight: 700;
     }
-    .profile-hero h2 { font-size: 26px; margin-bottom: 8px; }
-    .level-badge {
-      display: inline-block;
-      padding: 5px 16px;
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
+    .icon-btn {
+      position: relative; width: 42px; height: 42px; border-radius: 12px;
+      background: var(--panel); border: 1px solid var(--border);
+      display: grid; place-items: center; cursor: pointer;
+    }
+    .icon-btn .badge {
+      position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px;
+      background: #ef4444; color: #fff; font-size: 11px; border-radius: 9px;
+      display: grid; place-items: center; padding: 0 4px;
+    }
+    .user-chip {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 12px; padding: 6px 12px 6px 6px; cursor: pointer;
+    }
+    .user-chip .ava {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center; font-weight: 700; font-size: 15px;
+    }
+    .user-chip .uname { font-size: 14px; font-weight: 600; line-height: 1.1; }
+    .user-chip .ulevel { font-size: 11px; color: var(--text-dim); }
+
+    .placeholder {
+      padding: 24px; color: var(--text-faint); font-size: 13px;
+      border: 1px dashed var(--border); border-radius: 14px; text-align: center;
+    }
+    .skel { padding: 18px; }
+    .skel h4 { font-size: 13px; color: var(--text-dim); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* "Tez kunda" belgisi */
+    .soon-badge {
+      display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px;
+      background: rgba(168,85,247,0.15); color: var(--accent-2); border: 1px solid rgba(168,85,247,0.3);
     }
 
-    /* Win rate doirasi */
-    .winrate-section {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 30px;
-      margin-top: 24px;
-      flex-wrap: wrap;
-    }
-    .winrate-circle {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-    .winrate-circle .wr-num { font-size: 32px; font-weight: bold; color: #86efac; }
-    .winrate-circle .wr-lbl { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-    .wl-stats { text-align: left; }
-    .wl-stats .wl-row { margin: 8px 0; font-size: 15px; }
-    .wl-stats .win-dot { color: #86efac; }
-    .wl-stats .lose-dot { color: #f87171; }
-    .wl-stats .draw-dot { color: #a5b4fc; }
-
-    /* Statistika kartalari */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-      margin-bottom: 20px;
-    }
-    .stat-card {
-      background: rgba(20, 20, 40, 0.8);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      border-radius: 16px;
-      padding: 20px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .stat-card .icon { font-size: 32px; }
-    .stat-card .stat-value { font-size: 24px; font-weight: bold; }
-    .stat-card .stat-label { font-size: 13px; color: #64748b; }
-    .stat-card .v-rating { color: #fbbf24; }
-    .stat-card .v-xp { color: #818cf8; }
-    .stat-card .v-streak { color: #fb923c; }
-    .stat-card .v-correct { color: #86efac; }
-
-    .loading { text-align: center; padding: 40px; color: #64748b; }
-
-    /* ===== ANIMATSIYALAR ===== */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes avatarGlow {
-      0%, 100% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.5); }
-      50% { box-shadow: 0 0 45px rgba(99, 102, 241, 0.8); }
+    @media (max-width: 1200px) {
+      .app { grid-template-columns: 200px 1fr; }
+      .rightbar { display: none; }
     }
 
-    /* Profil bo'limlari ketma-ket paydo bo'ladi */
-    .profile-hero { animation: fadeInUp 0.5s ease both; }
-    .stats-grid { animation: fadeInUp 0.5s ease 0.15s both; }
-
-    /* Avatar porlashi */
-    .big-avatar { animation: avatarGlow 3s ease-in-out infinite; }
-
-    /* Statistika kartalari hover */
-    .stat-card {
-      transition: transform 0.25s ease, border-color 0.25s ease;
+    /* ===== PROFIL KARTASI ===== */
+    .profile-card { display: flex; align-items: center; gap: 28px; padding: 26px 30px; }
+    .pc-avatar {
+      width: 96px; height: 96px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center; font-size: 38px; font-weight: 800;
+      box-shadow: 0 0 30px rgba(91,140,255,0.4);
+      border: 3px solid rgba(120,150,255,0.3);
     }
-    .stat-card:hover {
-      transform: translateY(-4px);
-      border-color: rgba(129, 140, 248, 0.6);
+    .pc-info { flex: 1; }
+    .pc-top { display: flex; align-items: center; justify-content: space-between; }
+    .pc-name { font-size: 28px; font-weight: 800; }
+    .pc-edit { padding: 8px 16px; font-size: 14px; }
+    .pc-meta { display: flex; align-items: center; gap: 12px; margin-top: 8px; color: var(--text-dim); font-size: 14px; flex-wrap: wrap; }
+    .pc-cefr b { background: rgba(91,140,255,0.2); color: var(--accent); padding: 2px 8px; border-radius: 6px; }
+    .pc-divider { width: 1px; height: 16px; background: var(--border); }
+    .pc-league { color: var(--cyan); }
+    .pc-stats { display: flex; gap: 40px; margin-top: 20px; flex-wrap: wrap; }
+    .pc-stat { display: flex; align-items: center; gap: 10px; }
+    .pc-stat i { width: 22px; height: 22px; }
+    .pc-stat-l { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+    .pc-stat-v { font-size: 20px; font-weight: 800; }
+    .pc-green { color: var(--green); }
+    .pc-gold { color: var(--gold); }
+
+    /* ===== UMUMIY KARTA SARLAVHASI ===== */
+    .card-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 17px; font-weight: 700; margin-bottom: 18px;
     }
+    .card-title i { width: 20px; height: 20px; color: var(--accent); }
+
+    /* ===== ABOUT ME ===== */
+    .about-card { padding: 22px 24px; }
+    .about-rows { display: flex; flex-direction: column; gap: 14px; }
+    .about-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+    .about-k { color: var(--text-dim); }
+    .about-v { font-weight: 600; }
+    .about-quote {
+      margin-top: 20px; padding: 16px; border-radius: 12px;
+      background: rgba(91,140,255,0.06); border: 1px solid var(--border);
+      display: flex; gap: 12px; align-items: flex-start;
+      font-size: 13px; color: var(--text-dim); font-style: italic;
+    }
+    .quote-ic { width: 18px; height: 18px; color: var(--accent-2); flex-shrink: 0; }
+
+    /* ===== ACHIEVEMENTS ===== */
+    .ach-card { padding: 22px 24px; }
+    .ach-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+    .ach-item { text-align: center; }
+    .ach-ic {
+      width: 72px; height: 72px; border-radius: 18px; margin: 0 auto 10px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, var(--panel-2), var(--bg-2));
+      border: 1px solid var(--border);
+    }
+    .ach-ic i { width: 32px; height: 32px; }
+    .ach-name { font-size: 12px; color: var(--text-dim); font-weight: 600; }
+    .ach-locked .ach-ic { opacity: 0.4; }
+    .ach-locked .ach-ic i { color: var(--text-faint); }
+    .ach-note {
+      margin-top: 18px; text-align: center; font-size: 13px; color: var(--text-faint);
+      padding: 12px; background: rgba(168,85,247,0.05); border-radius: 10px;
+    }
+
+    @media (max-width: 1400px) {
+      .ach-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* ===== BATTLE STATS ===== */
+    .bs-card { padding: 22px 24px; }
+    .bs-grid { display: flex; justify-content: space-around; gap: 20px; flex-wrap: wrap; }
+    .bs-item { text-align: center; flex: 1; min-width: 100px; }
+    .bs-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .bs-val { font-size: 32px; font-weight: 800; }
+    .bs-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+    .bs-green { color: var(--green); }
+    .bs-red { color: var(--red); }
+    .bs-cyan { color: var(--cyan); }
+
+    /* ===== LEARNING PROGRESS ===== */
+    .lp-card { padding: 22px 24px; }
+    .lp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+    .lp-sub-title { font-size: 14px; font-weight: 700; color: var(--text-dim); margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+
+    /* CEFR track */
+    .cefr-track { display: flex; justify-content: space-between; position: relative; padding: 0 4px; }
+    .cefr-track::before {
+      content: ""; position: absolute; top: 11px; left: 20px; right: 20px; height: 2px;
+      background: var(--border);
+    }
+    .cefr-node { position: relative; z-index: 1; text-align: center; }
+    .cefr-dot {
+      width: 24px; height: 24px; border-radius: 50%; margin: 0 auto 8px;
+      background: var(--panel-2); border: 2px solid var(--border);
+      display: grid; place-items: center; font-size: 11px;
+    }
+    .cefr-dot.done { background: var(--green); border-color: var(--green); color: #042; }
+    .cefr-dot.current {
+      background: var(--accent); border-color: var(--accent); color: #fff;
+      box-shadow: 0 0 16px rgba(91,140,255,0.6);
+    }
+    .cefr-lvl { font-size: 13px; font-weight: 700; }
+    .cefr-lbl { font-size: 10px; color: var(--text-dim); }
+    .cefr-node.current .cefr-lvl { color: var(--accent); }
+
+    /* Subject */
+    .subj-list { display: flex; flex-direction: column; gap: 14px; }
+    .subj-row { display: flex; align-items: center; gap: 10px; }
+    .subj-ic { width: 18px; height: 18px; color: var(--text-dim); }
+    .subj-name { font-size: 13px; width: 80px; }
+    .subj-bar { flex: 1; height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; overflow: hidden; }
+    .subj-fill { height: 100%; border-radius: 4px; }
+    .subj-pct { font-size: 12px; color: var(--text-dim); width: 36px; text-align: right; }
+
+    @media (max-width: 1100px) {
+      .lp-cols { grid-template-columns: 1fr; }
+    }
+
+    /* ===== BATTLE HISTORY ===== */
+    .hist-card { padding: 22px 24px; }
+    .view-all-link { margin-left: auto; display: flex; align-items: center; gap: 4px; color: var(--accent); font-size: 13px; cursor: pointer; font-weight: 500; }
+    .hist-cols {
+      display: grid; grid-template-columns: 2fr 1fr 1.2fr 1fr;
+      padding: 0 12px 10px; font-size: 12px; color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+    }
+    .hist-row {
+      display: grid; grid-template-columns: 2fr 1fr 1.2fr 1fr; align-items: center;
+      padding: 13px 12px; border-radius: 12px; transition: background 0.2s;
+    }
+    .hist-row:hover { background: var(--panel); }
+    .hist-opp { display: flex; align-items: center; gap: 12px; }
+    .hist-ava {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center; font-weight: 700; font-size: 15px;
+    }
+    .hist-name { font-weight: 600; font-size: 14px; }
+    .hist-sub { font-size: 12px; color: var(--text-dim); }
+    .hist-result { font-weight: 700; display: flex; align-items: center; gap: 5px; }
+    .hist-result i { width: 16px; height: 16px; }
+    .h-win { color: var(--green); }
+    .h-lose { color: var(--red); }
+    .hist-empty { text-align: center; color: var(--text-faint); padding: 30px; font-size: 14px; }
+
+    /* ===== O'NG PANEL ===== */
+    .rb-card { padding: 20px; }
+    .rb-head {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 16px; font-weight: 700; margin-bottom: 16px;
+    }
+    .rb-info { width: 16px; height: 16px; color: var(--text-dim); cursor: pointer; }
+
+    /* Current Rank */
+    .rank-display { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .rank-medal { font-size: 46px; }
+    .rank-name { font-size: 22px; font-weight: 800; }
+    .rank-rp { font-size: 14px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; margin-top: 3px; }
+    .rank-bar { height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; overflow: hidden; }
+    .rank-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 4px; }
+    .rank-next { font-size: 12px; color: var(--text-dim); margin-top: 10px; }
+    .rank-next span { color: var(--accent); }
+
+    /* Achievements Summary */
+    .as-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .as-box {
+      text-align: center; padding: 12px 6px; border-radius: 12px;
+      background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+    }
+    .as-box i { width: 22px; height: 22px; }
+    .as-val { font-size: 18px; font-weight: 800; margin-top: 4px; }
+    .as-lbl { font-size: 10px; color: var(--text-dim); }
+
+    /* Next Level Progress */
+    .nlp-pct { font-size: 28px; font-weight: 800; color: var(--green); }
+    .nlp-msg { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+    .nlp-btn { width: 100%; justify-content: center; margin-top: 16px; background: linear-gradient(135deg, var(--accent-2), #7c3aed); }
+
+    /* Personal Records */
+    .pr-list { display: flex; flex-direction: column; gap: 14px; }
+    .pr-row { display: flex; align-items: center; gap: 12px; }
+    .pr-row i { width: 20px; height: 20px; }
+    .pr-name { flex: 1; font-size: 14px; }
+    .pr-val { font-weight: 800; font-size: 17px; }
 
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="topbar">
-      <h1>👤 Profil</h1>
-      <a href="/lobby.html" class="back-btn">← Lobbyga</a>
-    </div>
+  <div class="app">
 
-    <div id="content">
-      <div class="loading">Yuklanmoqda...</div>
-    </div>
+    <!-- SIDEBAR (sidebar.js to'ldiradi) -->
+    <aside class="sidebar"></aside>
+
+    <!-- KONTENT -->
+    <main class="content">
+      <!-- Yuqori panel -->
+      <div class="topbar">
+        <div class="currency"><i data-lucide="coins" style="color:var(--gold);width:18px;height:18px;"></i> <span id="coins">0</span> <span class="plus">+</span></div>
+        <div class="currency"><i data-lucide="gem" style="color:var(--cyan);width:18px;height:18px;"></i> <span id="gems">0</span> <span class="plus">+</span></div>
+        <div class="icon-btn" onclick="window.location.href='/friends.html'"><i data-lucide="bell"></i> <span class="badge" id="notifBadge">0</span></div>
+        <div class="user-chip">
+          <div class="ava" id="topAva">J</div>
+          <div><div class="uname" id="topName">O'yinchi</div><div class="ulevel">Level <span id="topLevel">1</span></div></div>
+        </div>
+      </div>
+
+      <!-- Sarlavha -->
+      <div class="page-head">
+        <div class="crest-ic"><i data-lucide="user"></i></div>
+        <div><h1>Profile</h1><p>View your stats, achievements, and progress.</p></div>
+      </div>
+
+      <!-- Profil kartasi -->
+      <div class="card profile-card">
+        <div class="pc-avatar" id="pcAvatar">J</div>
+        <div class="pc-info">
+          <div class="pc-top">
+            <div class="pc-name" id="pcName">O'yinchi</div>
+            <button class="btn btn-ghost pc-edit" onclick="alert('Profil tahrirlash - tez kunda!')"><i data-lucide="pencil" style="width:15px;height:15px;"></i> Edit Profile</button>
+          </div>
+          <div class="pc-meta">
+            <span class="pc-cefr">CEFR <b id="pcCefr">A1</b></span>
+            <span id="pcCefrLabel">Beginner</span>
+            <span class="pc-divider"></span>
+            <span>League <b class="pc-league" id="pcLeague">🥈 Silver</b></span>
+          </div>
+          <div class="pc-stats">
+            <div class="pc-stat"><i data-lucide="trophy" style="color:var(--gold);"></i><div><div class="pc-stat-l">Rating</div><div class="pc-stat-v" id="pcRating">1000</div></div></div>
+            <div class="pc-stat"><i data-lucide="target" style="color:var(--green);"></i><div><div class="pc-stat-l">Win Rate</div><div class="pc-stat-v pc-green" id="pcWinRate">0%</div></div></div>
+            <div class="pc-stat"><i data-lucide="flame" style="color:var(--gold);"></i><div><div class="pc-stat-l">Win Streak</div><div class="pc-stat-v pc-gold" id="pcStreak">0</div></div></div>
+            <div class="pc-stat"><i data-lucide="building-2" style="color:var(--cyan);"></i><div><div class="pc-stat-l">School / Team</div><div class="pc-stat-v" id="pcSchool" style="font-size:15px;">—</div></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- About Me -->
+      <div class="card about-card">
+        <div class="card-title"><i data-lucide="user-circle"></i> About Me</div>
+        <div class="about-rows">
+          <div class="about-row"><span class="about-k">Region</span><span class="about-v" id="abRegion">—</span></div>
+          <div class="about-row"><span class="about-k">School</span><span class="about-v" id="abSchool">—</span></div>
+          <div class="about-row"><span class="about-k">Tuman</span><span class="about-v" id="abDistrict">—</span></div>
+          <div class="about-row"><span class="about-k">Favorite Mode</span><span class="about-v soon-badge">Tez kunda</span></div>
+        </div>
+        <div class="about-quote">
+          <i data-lucide="quote" class="quote-ic"></i>
+          <span>Learning today, leading tomorrow. Let's battle and grow together!</span>
+        </div>
+      </div>
+      <!-- Achievements -->
+      <div class="card ach-card">
+        <div class="card-title">
+          <i data-lucide="award"></i> Achievements
+          <span class="soon-badge" style="margin-left:auto;">Tez kunda</span>
+        </div>
+        <div class="ach-grid">
+          <div class="ach-item ach-locked">
+            <div class="ach-ic"><i data-lucide="trophy"></i></div>
+            <div class="ach-name">100 Wins</div>
+          </div>
+          <div class="ach-item ach-locked">
+            <div class="ach-ic"><i data-lucide="flame"></i></div>
+            <div class="ach-name">Win Streak Master</div>
+          </div>
+          <div class="ach-item ach-locked">
+            <div class="ach-ic"><i data-lucide="target"></i></div>
+            <div class="ach-name">Accuracy Expert</div>
+          </div>
+          <div class="ach-item ach-locked">
+            <div class="ach-ic"><i data-lucide="star"></i></div>
+            <div class="ach-name">Elite Player</div>
+          </div>
+          <div class="ach-item ach-locked">
+            <div class="ach-ic"><i data-lucide="graduation-cap"></i></div>
+            <div class="ach-name">Dedicated Learner</div>
+          </div>
+        </div>
+        <div class="ach-note">Yutuqlar tizimi tez kunda qo'shiladi — janglar va o'rganish orqali yutuqlarni oching!</div>
+      </div>
+      <!-- Battle Stats -->
+      <div class="card bs-card">
+        <div class="card-title"><i data-lucide="swords"></i> Battle Stats</div>
+        <div class="bs-grid">
+          <div class="bs-item">
+            <div class="bs-label">Total Battles</div>
+            <div class="bs-val" id="bsTotal">0</div>
+          </div>
+          <div class="bs-item">
+            <div class="bs-label">Wins</div>
+            <div class="bs-val bs-green" id="bsWins">0</div>
+            <div class="bs-sub" id="bsWinsPct">0%</div>
+          </div>
+          <div class="bs-item">
+            <div class="bs-label">Losses</div>
+            <div class="bs-val bs-red" id="bsLosses">0</div>
+            <div class="bs-sub" id="bsLossesPct">0%</div>
+          </div>
+          <div class="bs-item">
+            <div class="bs-label">Draws</div>
+            <div class="bs-val" id="bsDraws">0</div>
+          </div>
+          <div class="bs-item">
+            <div class="bs-label">Highest Rank</div>
+            <div class="bs-val bs-cyan" id="bsRank" style="font-size:20px;">—</div>
+          </div>
+        </div>
+      </div>
+      <!-- Learning Progress -->
+      <div class="card lp-card">
+        <div class="card-title"><i data-lucide="book-open"></i> Learning Progress</div>
+        <div class="lp-cols">
+          <!-- CEFR Progression -->
+          <div class="lp-left">
+            <div class="lp-sub-title">CEFR Progression</div>
+            <div class="cefr-track" id="cefrTrack"></div>
+          </div>
+          <!-- Subject Progress -->
+          <div class="lp-right">
+            <div class="lp-sub-title">Subject Progress <span class="soon-badge">Tez kunda</span></div>
+            <div class="subj-list">
+              <div class="subj-row"><i data-lucide="book-open" class="subj-ic"></i><span class="subj-name">Grammar</span><div class="subj-bar"><div class="subj-fill" style="width:0%; background:var(--accent);"></div></div><span class="subj-pct">—</span></div>
+              <div class="subj-row"><i data-lucide="book" class="subj-ic"></i><span class="subj-name">Vocabulary</span><div class="subj-bar"><div class="subj-fill" style="width:0%; background:var(--green);"></div></div><span class="subj-pct">—</span></div>
+              <div class="subj-row"><i data-lucide="glasses" class="subj-ic"></i><span class="subj-name">Reading</span><div class="subj-bar"><div class="subj-fill" style="width:0%; background:var(--cyan);"></div></div><span class="subj-pct">—</span></div>
+              <div class="subj-row"><i data-lucide="headphones" class="subj-ic"></i><span class="subj-name">Listening</span><div class="subj-bar"><div class="subj-fill" style="width:0%; background:var(--gold);"></div></div><span class="subj-pct">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Recent Battle History -->
+      <div class="card hist-card">
+        <div class="card-title">
+          <i data-lucide="swords"></i> Recent Battle History
+          <a class="view-all-link" onclick="window.location.href='/history.html'">View All <i data-lucide="chevron-right" style="width:15px;height:15px;"></i></a>
+        </div>
+        <div class="hist-cols">
+          <span>Opponent</span>
+          <span>Result</span>
+          <span>Score</span>
+          <span>Rating</span>
+        </div>
+        <div id="histList"><div class="hist-empty">Yuklanmoqda...</div></div>
+      </div>
+    </main>
+
+    <!-- O'NG PANEL -->
+    <aside class="rightbar">
+
+      <!-- Current Rank -->
+      <div class="card rb-card">
+        <div class="rb-head"><span>Current Rank</span><i data-lucide="info" class="rb-info"></i></div>
+        <div class="rank-display">
+          <div class="rank-medal" id="rankMedal">🥈</div>
+          <div>
+            <div class="rank-name" id="rankName">Silver</div>
+            <div class="rank-rp"><i data-lucide="trophy" style="width:14px;height:14px;color:var(--gold);"></i> <span id="rankRP">1000</span> RP</div>
+          </div>
+        </div>
+        <div class="rank-bar"><div class="rank-bar-fill" id="rankBarFill" style="width:40%;"></div></div>
+        <div class="rank-next">Next Rank: <span id="rankNext">Gold</span></div>
+      </div>
+
+      <!-- Achievements Summary -->
+      <div class="card rb-card">
+        <div class="rb-head"><span>Achievements Summary</span><span class="soon-badge">Tez kunda</span></div>
+        <div class="as-grid">
+          <div class="as-box"><i data-lucide="trophy" style="color:var(--gold);"></i><div class="as-val">—</div><div class="as-lbl">Total</div></div>
+          <div class="as-box"><i data-lucide="medal" style="color:var(--gold);"></i><div class="as-val">—</div><div class="as-lbl">Gold</div></div>
+          <div class="as-box"><i data-lucide="medal" style="color:#cbd5e1;"></i><div class="as-val">—</div><div class="as-lbl">Silver</div></div>
+          <div class="as-box"><i data-lucide="medal" style="color:#d97706;"></i><div class="as-val">—</div><div class="as-lbl">Bronze</div></div>
+        </div>
+      </div>
+
+      <!-- Next Level Progress -->
+      <div class="card rb-card">
+        <div class="rb-head"><span id="nlpTitle">Keyingi daraja</span><i data-lucide="info" class="rb-info"></i></div>
+        <div class="nlp-pct" id="nlpPct">—</div>
+        <div class="nlp-msg">Imtihon topshirib, keyingi darajaga o'ting!</div>
+        <div class="rank-bar" style="margin-top:12px;"><div class="rank-bar-fill" id="nlpBar" style="width:0%; background:linear-gradient(90deg,var(--green),#10b981);"></div></div>
+        <button class="btn nlp-btn" onclick="window.location.href='/exam.html'"><i data-lucide="book-open" style="width:16px;height:16px;"></i> Ultimate Exam</button>
+      </div>
+
+      <!-- Personal Records -->
+      <div class="card rb-card">
+        <div class="rb-head"><span>Personal Records</span></div>
+        <div class="pr-list">
+          <div class="pr-row"><i data-lucide="flame" style="color:var(--gold);"></i><span class="pr-name">Best Win Streak</span><span class="pr-val" id="prStreak">0</span></div>
+          <div class="pr-row"><i data-lucide="target" style="color:var(--green);"></i><span class="pr-name">Total Battles</span><span class="pr-val" id="prBattles">0</span></div>
+          <div class="pr-row"><i data-lucide="trophy" style="color:var(--cyan);"></i><span class="pr-name">Total Wins</span><span class="pr-val" id="prWins">0</span></div>
+        </div>
+      </div>
+
+    </aside>
+
   </div>
 
-  <script src="/leagues.js"></script>
-
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/sidebar.js"></script>
   <script>
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
-    const localUser = JSON.parse(userData);
+    const user = JSON.parse(userData);
 
-    async function loadProfile() {
-      try {
-        const res = await fetch("/profile/" + localUser.id);
-        const data = await res.json();
-        renderProfile(data.user, data.stats);
-      } catch (err) {
-        document.getElementById("content").innerHTML =
-          '<div class="loading">Yuklab bo\'lmadi</div>';
-      }
+    // Yuqori panel
+    document.getElementById("topName").textContent = user.first_name + " " + user.last_name;
+    document.getElementById("topAva").textContent = (user.first_name || "?").charAt(0).toUpperCase();
+    document.getElementById("coins").textContent = user.coins || 0;
+
+    // Sidebar (profile aktiv)
+    renderSidebar("profile");
+    // ===== PROFIL MA'LUMOTI =====
+    const cefrLabels = { A1: "Beginner", A2: "Elementary", B1: "Intermediate", B2: "Upper-Intermediate", C1: "Advanced", C2: "Proficient" };
+    function getLeagueInfo(rating) {
+      if (rating >= 2000) return "👑 Grandmaster";
+      if (rating >= 1800) return "🔱 Master";
+      if (rating >= 1600) return "💠 Diamond";
+      if (rating >= 1400) return "💎 Platinum";
+      if (rating >= 1200) return "🥇 Gold";
+      if (rating >= 1000) return "🥈 Silver";
+      return "🥉 Bronze";
     }
 
-    // Liga progress bar yasash
-    function buildLeagueProgress(rating) {
-      const prog = getLeagueProgress(rating);
-      const current = prog.current;
+    document.getElementById("pcAvatar").textContent = (user.first_name || "?").charAt(0).toUpperCase();
+    document.getElementById("pcName").textContent = user.first_name + " " + user.last_name;
+    document.getElementById("pcCefr").textContent = user.cefr_level || "A1";
+    document.getElementById("pcCefrLabel").textContent = cefrLabels[user.cefr_level] || "Beginner";
+    document.getElementById("pcLeague").textContent = getLeagueInfo(user.rating || 1000);
+    document.getElementById("pcRating").textContent = user.rating || 1000;
 
-      if (!prog.next) {
-        // Grandmaster - eng yuqori
-        return '<div style="margin-top:20px; padding:16px; background:rgba(0,0,0,0.2); border-radius:14px; text-align:center;">' +
-          '<span style="color:' + current.color + '; font-weight:600;">👑 Eng yuqori liga!</span>' +
-        '</div>';
-      }
-
-      return '<div style="margin-top:20px; padding:16px; background:rgba(0,0,0,0.2); border-radius:14px;">' +
-        '<div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">' +
-          '<span style="color:' + current.color + ';">' + current.emoji + ' ' + current.name + '</span>' +
-          '<span style="color:' + prog.next.color + ';">' + prog.next.emoji + ' ' + prog.next.name + '</span>' +
-        '</div>' +
-        '<div style="height:10px; background:rgba(0,0,0,0.4); border-radius:5px; overflow:hidden;">' +
-          '<div style="height:100%; width:' + prog.percent + '%; background:' + current.gradient + ';"></div>' +
-        '</div>' +
-        '<div style="text-align:center; font-size:12px; color:#94a3b8; margin-top:8px;">' +
-          prog.next.name + ' ligasiga <b style="color:#e2e8f0;">' + prog.pointsToNext + '</b> ball qoldi' +
-        '</div>' +
-      '</div>';
-    }
-
-    function renderProfile(user, stats) {
-      const content = document.getElementById("content");
-      const initial = user.first_name.charAt(0).toUpperCase();
-
-      // Win rate doirasi uchun gradient (yashil progress)
-      const wr = stats.win_rate;
-      const circleStyle = "background: conic-gradient(#22c55e 0% " + wr + "%, rgba(0,0,0,0.3) " + wr + "% 100%);";
-
-      content.innerHTML =
-        '<div class="profile-hero">' +
-          '<div class="big-avatar">' + initial + '</div>' +
-          '<h2>' + user.first_name + ' ' + user.last_name + '</h2>' +
-          '<div style="margin:8px 0;">' +
-            '<span class="level-badge">' + user.cefr_level + ' daraja</span>' +
-            '<span class="level-badge" style="margin-left:8px; background:' + getLeague(user.rating).gradient + ';">' + getLeague(user.rating).emoji + ' ' + getLeague(user.rating).name + '</span>' +
-          '</div>' +
-
-          '<div class="winrate-section">' +
-            '<div class="winrate-circle" style="' + circleStyle + '">' +
-              '<div style="width:96px; height:96px; border-radius:50%; background:#0a0a1a; display:flex; flex-direction:column; align-items:center; justify-content:center;">' +
-                '<div class="wr-num">' + wr + '%</div>' +
-                '<div class="wr-lbl">G\'alaba</div>' +
-              '</div>' +
-            '</div>' +
-            '<div class="wl-stats">' +
-              '<div class="wl-row"><span class="win-dot">●</span> G\'alaba: <b>' + stats.wins + '</b></div>' +
-              '<div class="wl-row"><span class="lose-dot">●</span> Mag\'lubiyat: <b>' + stats.loses + '</b></div>' +
-              '<div class="wl-row"><span class="draw-dot">●</span> Durrang: <b>' + stats.draws + '</b></div>' +
-              '<div class="wl-row" style="color:#94a3b8;">Jami: <b>' + stats.total_battles + '</b> jang</div>' +
-            '</div>' +
-          '</div>' +
-          buildLeagueProgress(user.rating) +
-          buildUserDetails(user) +
-        '</div>' +
-
-        
-
-        '<div class="stats-grid">' +
-          '<div class="stat-card"><div class="icon">🏆</div><div><div class="stat-value v-rating">' + user.rating + '</div><div class="stat-label">Reyting</div></div></div>' +
-          '<div class="stat-card"><div class="icon">⭐</div><div><div class="stat-value v-xp">' + user.xp + '</div><div class="stat-label">XP</div></div></div>' +
-          '<div class="stat-card"><div class="icon">🔥</div><div><div class="stat-value v-streak">' + user.current_streak + '</div><div class="stat-label">Hozirgi streak</div></div></div>' +
-          '<div class="stat-card"><div class="icon">🎯</div><div><div class="stat-value v-streak">' + user.longest_streak + '</div><div class="stat-label">Eng uzun streak</div></div></div>' +
-          '<div class="stat-card"><div class="icon">✅</div><div><div class="stat-value v-correct">' + stats.total_correct + '</div><div class="stat-label">To\'g\'ri javoblar</div></div></div>' +
-          '<div class="stat-card"><div class="icon">⚔️</div><div><div class="stat-value">' + stats.total_battles + '</div><div class="stat-label">Jami janglar</div></div></div>' +
-        '</div>';
-
-        // Win rate va statistika raqamlarini sanab o'stirish
-      setTimeout(() => {
-        animateNum(".wr-num", stats.win_rate, "%", 1000);
-      }, 200);
-
-      // Foydalanuvchi ma'lumotlari (viloyat, maktab, sana)
-    function buildUserDetails(user) {
-      const details = [];
-
-      if (user.region) {
-        let location = user.region;
-        if (user.district) location += ", " + user.district;
-        if (user.village) location += ", " + user.village;
-        details.push({ icon: "📍", label: "Manzil", value: location });
-      }
-      if (user.school) {
-        details.push({ icon: "🏫", label: "Maktab", value: user.school });
-      }
-      if (user.birth_date) {
-        // Sanani chiroyli formatga keltirish (YYYY-MM-DD -> DD.MM.YYYY)
-        const d = new Date(user.birth_date);
-        if (!isNaN(d)) {
-          const formatted = String(d.getDate()).padStart(2, "0") + "." +
-                            String(d.getMonth() + 1).padStart(2, "0") + "." +
-                            d.getFullYear();
-          details.push({ icon: "🎂", label: "Tug'ilgan sana", value: formatted });
+    // Profil endpoint'dan to'liq ma'lumot
+    let profileData = null;
+    fetch("/profile/" + user.id)
+      .then(r => r.json())
+      .then(data => {
+        profileData = data;
+        if (data.stats) {
+          document.getElementById("pcWinRate").textContent = data.stats.win_rate + "%";
+          // Battle Stats
+          const s = data.stats;
+          document.getElementById("bsTotal").textContent = s.total_battles;
+          document.getElementById("bsWins").textContent = s.wins;
+          document.getElementById("bsLosses").textContent = s.loses;
+          document.getElementById("bsDraws").textContent = s.draws;
+          if (s.total_battles > 0) {
+            document.getElementById("bsWinsPct").textContent = Math.round((s.wins / s.total_battles) * 100) + "%";
+            document.getElementById("bsLossesPct").textContent = Math.round((s.loses / s.total_battles) * 100) + "%";
+          }
         }
-      }
+        if (data.user) {
+          document.getElementById("pcStreak").textContent = data.user.current_streak || 0;
+          document.getElementById("pcSchool").textContent = data.user.school || "—";
+          // About Me
+          document.getElementById("abRegion").textContent = data.user.region || "—";
+          document.getElementById("abSchool").textContent = data.user.school || "—";
+          document.getElementById("abDistrict").textContent = data.user.district || "—";
+          document.getElementById("abDistrict").textContent = data.user.district || "—";
+          // Highest Rank (joriy liga)
+          document.getElementById("bsRank").textContent = getLeagueInfo(data.user.rating || 1000);
+        }
+      })
+      .catch(() => {});
+    // ===== CEFR PROGRESSION =====
+    function renderCefrTrack() {
+      const levels = [
+        { lvl: "A1", lbl: "Beginner" },
+        { lvl: "A2", lbl: "Elementary" },
+        { lvl: "B1", lbl: "Intermediate" },
+        { lvl: "B2", lbl: "Upper-Int" },
+        { lvl: "C1", lbl: "Advanced" },
+        { lvl: "C2", lbl: "Proficient" },
+      ];
+      const current = user.cefr_level || "A1";
+      const curIdx = levels.findIndex(l => l.lvl === current);
 
-      if (details.length === 0) return "";
-
-      let html = '<div style="margin-top:20px; padding:18px; background:rgba(0,0,0,0.2); border-radius:14px; text-align:left;">';
-      details.forEach((d, i) => {
-        html += '<div style="display:flex; align-items:center; gap:10px; padding:8px 0;' +
-                (i < details.length - 1 ? ' border-bottom:1px solid rgba(99,102,241,0.1);' : '') + '">' +
-          '<span style="font-size:18px;">' + d.icon + '</span>' +
-          '<span style="color:#94a3b8; font-size:14px; min-width:110px;">' + d.label + ':</span>' +
-          '<span style="color:#e2e8f0; font-size:14px; font-weight:500;">' + d.value + '</span>' +
-        '</div>';
+      let html = "";
+      levels.forEach((l, i) => {
+        let cls = "", dotCls = "", inner = "";
+        if (i < curIdx) { cls = "done"; dotCls = "done"; inner = '<i data-lucide="check" style="width:13px;height:13px;"></i>'; }
+        else if (i === curIdx) { cls = "current"; dotCls = "current"; inner = '<i data-lucide="circle" style="width:10px;height:10px;"></i>'; }
+        html += '<div class="cefr-node ' + cls + '">' +
+          '<div class="cefr-dot ' + dotCls + '">' + inner + '</div>' +
+          '<div class="cefr-lvl">' + l.lvl + '</div>' +
+          '<div class="cefr-lbl">' + l.lbl + '</div>' +
+          '</div>';
       });
-      html += '</div>';
-      return html;
+      document.getElementById("cefrTrack").innerHTML = html;
     }
-    
-    }
-    // Raqamni sanab o'stirish (selector bo'yicha)
-    function animateNum(selector, target, suffix, duration) {
-      const el = document.querySelector(selector);
-      if (!el) return;
-      const startTime = performance.now();
-      function update(now) {
-        const progress = Math.min((now - startTime) / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        el.textContent = Math.round(target * eased) + (suffix || "");
-        if (progress < 1) requestAnimationFrame(update);
-      }
-      requestAnimationFrame(update);
-    }
+    renderCefrTrack();
+    // ===== BATTLE HISTORY =====
+    async function loadHistory() {
+      const list = document.getElementById("histList");
+      try {
+        const res = await fetch("/history/" + user.id);
+        const data = await res.json();
+        const battles = data.battles || data.history || [];
 
-    loadProfile();
+        if (battles.length === 0) {
+          list.innerHTML = '<div class="hist-empty">Hali jang qilmadingiz.</div>';
+          lucide.createIcons();
+          return;
+        }
+
+        list.innerHTML = "";
+        battles.slice(0, 5).forEach(b => {
+          const isWin = b.outcome === "win";
+          const isDraw = b.outcome === "draw";
+          const oppName = b.opponent_name || "Raqib";
+          const rc = b.rating_change >= 0 ? "+" + b.rating_change : b.rating_change;
+          const rcColor = b.rating_change >= 0 ? "var(--green)" : "var(--red)";
+
+          const row = document.createElement("div");
+          row.className = "hist-row";
+          row.innerHTML =
+            '<div class="hist-opp">' +
+              '<div class="hist-ava">' + oppName.charAt(0).toUpperCase() + '</div>' +
+              '<div><div class="hist-name">' + oppName + '</div><div class="hist-sub">' + (b.cefr_level || "A1") + '</div></div>' +
+            '</div>' +
+            '<div class="hist-result ' + (isWin ? "h-win" : (isDraw ? "" : "h-lose")) + '">' +
+              (isWin ? '<i data-lucide="trophy"></i> Victory' : (isDraw ? "Draw" : '<i data-lucide="x"></i> Defeat')) +
+            '</div>' +
+            '<div>' + b.my_score + ' - ' + b.opponent_score + '</div>' +
+            '<div style="color:' + rcColor + '; font-weight:700;">' + rc + '</div>';
+          list.appendChild(row);
+        });
+        lucide.createIcons();
+      } catch (err) {
+        list.innerHTML = '<div class="hist-empty">Yuklab bo\'lmadi</div>';
+      }
+    }
+    loadHistory();
+    // ===== O'NG PANEL =====
+    // Current Rank
+    function setupRank() {
+      const r = user.rating || 1000;
+      const leagues = [
+        { name: "Bronze", min: 0, max: 999, medal: "🥉" },
+        { name: "Silver", min: 1000, max: 1199, medal: "🥈" },
+        { name: "Gold", min: 1200, max: 1399, medal: "🥇" },
+        { name: "Platinum", min: 1400, max: 1599, medal: "💎" },
+        { name: "Diamond", min: 1600, max: 1799, medal: "💠" },
+        { name: "Master", min: 1800, max: 1999, medal: "🔱" },
+        { name: "Grandmaster", min: 2000, max: 99999, medal: "👑" },
+      ];
+      let cur = leagues[0], idx = 0;
+      leagues.forEach((l, i) => { if (r >= l.min && r <= l.max) { cur = l; idx = i; } });
+      const next = leagues[idx + 1];
+      document.getElementById("rankMedal").textContent = cur.medal;
+      document.getElementById("rankName").textContent = cur.name;
+      document.getElementById("rankRP").textContent = r;
+      if (next) {
+        const prog = Math.round(((r - cur.min) / (cur.max - cur.min + 1)) * 100);
+        document.getElementById("rankBarFill").style.width = prog + "%";
+        document.getElementById("rankNext").textContent = next.name;
+      } else {
+        document.getElementById("rankBarFill").style.width = "100%";
+        document.getElementById("rankNext").textContent = "Eng yuqori!";
+      }
+    }
+    setupRank();
+
+    // Next Level (CEFR keyingi daraja)
+    const nextCefr = { A1: "A2", A2: "B1", B1: "B2", B2: "C1", C1: "C2", C2: null };
+    const cur = user.cefr_level || "A1";
+    const nxt = nextCefr[cur];
+    document.getElementById("nlpTitle").textContent = nxt ? (cur + " → " + nxt + " Progress") : "Eng yuqori daraja";
+    document.getElementById("nlpPct").textContent = nxt ? "Imtihon" : "C2 🎉";
+    document.getElementById("nlpBar").style.width = nxt ? "30%" : "100%";
+
+    // Personal Records (haqiqiy)
+    fetch("/profile/" + user.id)
+      .then(r => r.json())
+      .then(data => {
+        if (data.user) document.getElementById("prStreak").textContent = data.user.longest_streak || 0;
+        if (data.stats) {
+          document.getElementById("prBattles").textContent = data.stats.total_battles;
+          document.getElementById("prWins").textContent = data.stats.wins;
+        }
+      })
+      .catch(() => {});
+      
+    // Lucide ikonalar
+    lucide.createIcons();
   </script>
 </body>
 </html>
