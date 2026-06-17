@@ -1078,7 +1078,8 @@
 
         // Friends Summary
         document.getElementById("fsTotal").textContent = friends.length;
-        document.getElementById("fsOnline").textContent = friends.length; // hozircha hammasi online
+        const onlineCount = friends.filter(f => f.isOnline).length;
+        document.getElementById("fsOnline").textContent = onlineCount;
 
         // Top Friends Leaderboard (do'stlar + o'zingiz, rating bo'yicha)
         const all = [...friends, { id: user.id, first_name: user.first_name, last_name: user.last_name, rating: user.rating || 1000, isMe: true }];

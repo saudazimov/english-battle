@@ -630,6 +630,18 @@
     // Sidebar (battle aktiv)
     renderSidebar("battle");
 
+    // Do'st online/offline bo'lganda - Friends Online'ni yangilash
+    function setupLobbySocket() {
+      if (window.globalSocket) {
+        window.globalSocket.on("friendStatusChanged", () => {
+          loadFriendsOnline();
+        });
+      } else {
+        setTimeout(setupLobbySocket, 500); // socket hali ulanmagan bo'lsa, kutamiz
+      }
+    }
+    setupLobbySocket();
+
     document.getElementById("userName").textContent = user.first_name + " " + user.last_name;
     document.getElementById("userAva").textContent = (user.first_name || "?").charAt(0).toUpperCase();
 
@@ -827,7 +839,12 @@
           return;
         }
         box.innerHTML = "";
-        friends.slice(0, 4).forEach(f => {
+        const onlineFriends = friends.filter(f => f.isOnline);
+        if (onlineFriends.length === 0) {
+          box.innerHTML = '<div class="rb-empty">Hozir onlayn do\'st yo\'q</div>';
+          return;
+        }
+        onlineFriends.slice(0, 4).forEach(f => {
           const chip = document.createElement("div");
           chip.className = "friend-chip";
           chip.style.cssText = "width:56px; text-align:center;";
@@ -840,10 +857,10 @@
             '<div style="font-size:10px; color:#34d399; text-align:center;">Online</div>';
           box.appendChild(chip);
         });
-        if (friends.length > 4) {
+        if (onlineFriends.length > 4) {
           const more = document.createElement("div");
           more.className = "friend-chip";
-          more.innerHTML = '<div class="fava" style="background:var(--panel-2);">+' + (friends.length - 4) + '</div><div class="fname">More</div>';
+          more.innerHTML = '<div class="fava" style="background:var(--panel-2);">+' + (onlineFriends.length - 4) + '</div><div class="fname">More</div>';
           box.appendChild(more);
         }
       } catch (err) {
