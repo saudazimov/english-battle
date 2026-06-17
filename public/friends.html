@@ -161,6 +161,183 @@
     }
     .fl-remove:hover { background: rgba(239,68,68,0.25); }
     .fl-remove i { width: 16px; height: 16px; }
+  
+    .sug-reason {
+      display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px;
+      background: rgba(168,85,247,0.15); color: var(--accent-2); font-weight: 600;
+    }
+  
+    /* Search form (panel ichida) */
+    .search-form { display: flex; gap: 12px; margin-bottom: 20px; }
+    .search-form .fr-search { flex: 1; }
+    .search-form .fr-search input { width: 100%; }
+    .search-go { padding: 11px 22px; }
+/* Profil va kutilmoqda tugmalari */
+    .srch-profile {
+      display: flex; align-items: center; gap: 6px;
+      padding: 9px 16px; border: 1px solid var(--border-bright); border-radius: 9px;
+      background: rgba(91,140,255,0.12); color: var(--accent);
+      font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .srch-profile:hover { background: rgba(91,140,255,0.2); }
+    .srch-profile i { width: 15px; height: 15px; }
+    .srch-pending {
+      display: flex; align-items: center; gap: 6px;
+      padding: 9px 16px; border: 1px solid var(--border); border-radius: 9px;
+      background: rgba(0,0,0,0.2); color: var(--text-dim);
+      font-size: 13px; font-weight: 600; cursor: default; font-family: inherit;
+    }
+    .srch-pending i { width: 15px; height: 15px; }
+
+    .fl-profile {
+      width: 38px; height: 38px; border-radius: 9px; border: 1px solid var(--border-bright);
+      background: rgba(91,140,255,0.12); color: var(--accent); cursor: pointer;
+      display: grid; place-items: center; transition: all 0.2s;
+    }
+    .fl-profile:hover { background: rgba(91,140,255,0.2); }
+    .fl-profile i { width: 16px; height: 16px; }
+    /* ===== FRIEND PROFILE MODAL ===== */
+    .fp-overlay {
+      display: none; position: fixed; inset: 0; z-index: 2000;
+      background: rgba(3,6,15,0.75); backdrop-filter: blur(5px);
+      padding: 30px; overflow-y: auto;
+    }
+    .fp-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+    .fp-modal {
+      width: 100%; max-width: 1280px; margin: auto;
+      background: linear-gradient(180deg, var(--panel), var(--bg-2));
+      border: 1px solid var(--border-bright); border-radius: 22px;
+      box-shadow: 0 30px 100px rgba(0,0,0,0.6);
+      animation: fpPop 0.25s ease;
+    }
+    @keyframes fpPop { from { opacity: 0; transform: scale(0.96) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .fp-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 26px; border-bottom: 1px solid var(--border);
+    }
+    .fp-header-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
+    .fp-header-title i { width: 20px; height: 20px; color: var(--accent); }
+    .fp-close {
+      width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05); color: var(--text-dim); font-size: 17px; cursor: pointer; transition: all 0.2s;
+    }
+    .fp-close:hover { background: rgba(239,68,68,0.2); color: #fca5a5; border-color: rgba(239,68,68,0.4); }
+    .fp-body { display: grid; grid-template-columns: 1fr 320px; gap: 20px; padding: 24px 26px; }
+    .fp-main { display: flex; flex-direction: column; gap: 18px; }
+    .fp-side { display: flex; flex-direction: column; gap: 18px; }
+    .fp-row2 { display: grid; grid-template-columns: 1fr 1.3fr; gap: 18px; }
+    .fp-skel {
+      padding: 30px; border: 1px dashed var(--border); border-radius: 14px;
+      color: var(--text-faint); font-size: 13px; text-align: center;
+    }
+    @media (max-width: 1000px) {
+      .fp-body { grid-template-columns: 1fr; }
+      .fp-row2 { grid-template-columns: 1fr; }
+    }
+
+    /* ===== FP PROFIL KARTASI ===== */
+    .fp-card {
+      display: flex; align-items: flex-start; gap: 22px; padding: 24px;
+      background: linear-gradient(180deg, rgba(91,140,255,0.06), transparent);
+      border: 1px solid var(--border); border-radius: 16px;
+    }
+    .fpc-avatar {
+      width: 88px; height: 88px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center; font-size: 34px; font-weight: 800;
+      border: 3px solid rgba(120,150,255,0.3); box-shadow: 0 0 30px rgba(91,140,255,0.4);
+    }
+    .fpc-info { flex: 1; }
+    .fpc-name { font-size: 24px; font-weight: 800; }
+    .fpc-meta { display: flex; align-items: center; gap: 10px; margin-top: 6px; color: var(--text-dim); font-size: 13px; flex-wrap: wrap; }
+    .fpc-cefr b { background: rgba(91,140,255,0.2); color: var(--accent); padding: 2px 7px; border-radius: 5px; }
+    .fpc-divider { width: 1px; height: 14px; background: var(--border); }
+    .fpc-stats { display: flex; gap: 28px; margin-top: 18px; flex-wrap: wrap; }
+    .fpc-stat { display: flex; align-items: center; gap: 9px; }
+    .fpc-stat i { width: 20px; height: 20px; }
+    .fpc-sl { font-size: 11px; color: var(--text-dim); text-transform: uppercase; }
+    .fpc-sv { font-size: 18px; font-weight: 800; }
+    .fpc-actions { display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+    .fpc-btn {
+      display: flex; align-items: center; gap: 8px; justify-content: center;
+      padding: 10px 18px; border: none; border-radius: 10px; cursor: pointer;
+      font-size: 14px; font-weight: 600; font-family: inherit; transition: all 0.2s; white-space: nowrap;
+    }
+    .fpc-btn i { width: 16px; height: 16px; }
+    .fpc-challenge { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
+    .fpc-challenge:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(91,140,255,0.4); }
+    .fpc-full { background: rgba(91,140,255,0.12); border: 1px solid var(--border-bright); color: var(--accent); }
+    .fpc-full:hover { background: rgba(91,140,255,0.2); }
+    /* ===== FP UMUMIY BLOK ===== */
+    .fp-block {
+      padding: 20px 22px; background: rgba(0,0,0,0.15);
+      border: 1px solid var(--border); border-radius: 16px;
+    }
+    .fp-block-title {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 16px; font-weight: 700; margin-bottom: 16px;
+    }
+    .fp-block-title i { width: 18px; height: 18px; color: var(--accent); }
+
+    /* About */
+    .fp-about-rows { display: flex; flex-direction: column; gap: 14px; }
+    .fp-ar { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+    .fp-ar i { width: 16px; height: 16px; color: var(--text-dim); flex-shrink: 0; }
+    .fp-ak { color: var(--text-dim); width: 95px; flex-shrink: 0; }
+    .fp-av { font-weight: 600; }
+
+    /* Achievements */
+    .fp-ach-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .fp-ach-item { text-align: center; opacity: 0.45; }
+    .fp-ach-ic {
+      width: 56px; height: 56px; border-radius: 14px; margin: 0 auto 8px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, var(--panel-2), var(--bg-2)); border: 1px solid var(--border);
+    }
+    .fp-ach-ic i { width: 26px; height: 26px; color: var(--text-faint); }
+    .fp-ach-n { font-size: 11px; color: var(--text-dim); font-weight: 600; }
+    @media (max-width: 600px) { .fp-ach-grid { grid-template-columns: repeat(3, 1fr); } }
+
+    /* Battle Stats */
+    .fp-bs-rows { display: flex; flex-direction: column; gap: 13px; }
+    .fp-bs-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+    .fp-bs-k { color: var(--text-dim); }
+    .fp-bs-v { font-weight: 800; font-size: 17px; }
+    .fp-bs-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+    /* Battle History */
+    .fp-hist-head {
+      display: grid; grid-template-columns: 1.6fr 1fr 0.8fr; gap: 8px;
+      font-size: 11px; color: var(--text-dim); text-transform: uppercase;
+      padding: 0 8px 8px; border-bottom: 1px solid var(--border); margin-bottom: 6px;
+    }
+    .fp-hist-row {
+      display: grid; grid-template-columns: 1.6fr 1fr 0.8fr; gap: 8px; align-items: center;
+      padding: 9px 8px; border-radius: 9px; font-size: 13px;
+    }
+    .fp-hist-row:hover { background: var(--panel); }
+    .fp-hist-opp { display: flex; align-items: center; gap: 9px; }
+    .fp-hist-ava {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center; font-weight: 700; font-size: 12px;
+    }
+    /* O'ng panel - Rank */
+    .fp-rank-medal { font-size: 44px; text-align: center; }
+    .fp-rank-name { font-size: 20px; font-weight: 800; text-align: center; margin: 4px 0 14px; }
+    .fp-rank-bar { height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; overflow: hidden; }
+    .fp-rank-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 4px; }
+    .fp-rank-rp { font-size: 13px; color: var(--text-dim); text-align: center; margin-top: 8px; }
+    .fp-rank-next { font-size: 12px; color: var(--accent); text-align: center; margin-top: 2px; }
+
+    /* CEFR */
+    .fp-cefr-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+    .fp-cefr-top b { color: var(--accent); }
+    .fp-cefr-top span { color: var(--text-dim); }
+    .fp-cefr-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 4px; }
+    .fp-cefr-msg { font-size: 12px; color: var(--text-dim); text-align: center; margin-top: 8px; }
+    .st-offline { color: var(--text-dim); }
+    .fl-dot-off { background: var(--text-faint) !important; box-shadow: none !important; }
 
   </style>
 </head>
@@ -191,14 +368,8 @@
         <div class="fr-tabs">
           <div class="fr-tab active" data-tab="all" onclick="switchTab('all', this)"><i data-lucide="users"></i> All Friends</div>
           <div class="fr-tab" data-tab="requests" onclick="switchTab('requests', this)"><i data-lucide="user-plus"></i> So'rovlar <span class="fr-tab-badge" id="reqBadge" style="display:none;">0</span></div>
+          <div class="fr-tab" data-tab="suggested" onclick="switchTab('suggested', this)"><i data-lucide="sparkles"></i> Tavsiya</div>
           <div class="fr-tab" data-tab="search" onclick="switchTab('search', this)"><i data-lucide="search"></i> Qidirish</div>
-        </div>
-        <div class="fr-actions">
-          <div class="fr-search">
-            <i data-lucide="search"></i>
-            <input type="text" id="searchInput" placeholder="Do'st qidirish..." onkeypress="if(event.key==='Enter')doSearch()">
-          </div>
-          <button class="btn fr-add" onclick="switchTab('search')"><i data-lucide="user-plus" style="width:16px;height:16px;"></i> Add Friend</button>
         </div>
       </div>
       <!-- ALL FRIENDS PANEL -->
@@ -224,15 +395,30 @@
         </div>
       </div>
 
+      <!-- SUGGESTED PANEL -->
+      <div id="suggestedPanel" style="display:none;">
+        <div class="card fl-card">
+          <div class="card-title"><i data-lucide="sparkles"></i> Tavsiya etilgan do'stlar</div>
+          <div class="search-hint">Maktab, tuman, viloyat va darajangizga mos o'quvchilar.</div>
+          <div id="suggestedList"><div class="fl-empty">Yuklanmoqda...</div></div>
+        </div>
+      </div>
+
       <!-- SEARCH PANEL -->
       <div id="searchPanel" style="display:none;">
         <div class="card fl-card">
           <div class="card-title"><i data-lucide="search"></i> Do'st qidirish</div>
-          <div class="search-hint">Yuqoridagi qidiruv maydoniga ism, familiya yoki telefon yozing.</div>
+          <div class="search-hint">Ism, familiya yoki telefon raqamini yozib, "Qidirish" tugmasini bosing.</div>
+          <div class="search-form">
+            <div class="fr-search">
+              <i data-lucide="search"></i>
+              <input type="text" id="searchInput" placeholder="Ism, familiya yoki telefon..." onkeypress="if(event.key==='Enter')doSearch()">
+            </div>
+            <button class="btn search-go" onclick="doSearch()"><i data-lucide="search" style="width:16px;height:16px;"></i> Qidirish</button>
+          </div>
           <div id="searchResults"></div>
         </div>
       </div>
-      <div class="card skel"><h4>Friend Requests + Suggested</h4><div class="placeholder">Bosqich 4</div></div>
     </main>
 
     <aside class="rightbar">
@@ -286,6 +472,37 @@
       <div id="overlayButtons"></div>
     </div>
   </div>
+  <!-- FRIEND PROFILE MODAL -->
+  <div id="fpModal" class="fp-overlay">
+    <div class="fp-modal">
+      <div class="fp-header">
+        <div class="fp-header-title"><i data-lucide="users"></i> Friend Profile</div>
+        <button class="fp-close" onclick="closeProfileModal()">✕</button>
+      </div>
+      <div class="fp-body">
+        <!-- Chap (asosiy) -->
+        <div class="fp-main">
+          <div id="fpCard" class="fp-skel">Profil kartasi</div>
+          <div class="fp-row2">
+            <div id="fpAbout" class="fp-skel">About</div>
+            <div id="fpAch" class="fp-skel">Achievements</div>
+          </div>
+          <div class="fp-row2">
+            <div id="fpStats" class="fp-skel">Battle Stats</div>
+            <div id="fpHistory" class="fp-skel">Battle History</div>
+          </div>
+        </div>
+        <!-- O'ng panel -->
+        <div class="fp-side">
+          <div id="fpRank" class="fp-skel">Current Rank</div>
+          <div id="fpCefr" class="fp-skel">CEFR Progression</div>
+          <div id="fpMutual" class="fp-skel">Mutual Friends</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -314,6 +531,13 @@
       loadRightbar();
     });
 
+    // Do'st onlayn/offlayn bo'ldi (real-time)
+    socket.on("friendStatusChanged", (data) => {
+      // Eng oson - ro'yxatni qayta yuklash
+      if (currentTab === "all") loadFriends();
+      loadRightbar();
+    });
+
     // ===== CHAQIRUV OYNASI =====
     function showOverlay(text, buttons) {
       document.getElementById("overlayText").innerHTML = text;
@@ -333,6 +557,229 @@
         level: user.cefr_level || "A1",
       });
       showOverlay("⏳ " + friendName + " ga chaqiruv yuborildi, javob kutilmoqda...");
+    }
+
+    // Friend Profile modal
+    function viewProfile(userId) {
+      openProfileModal(userId);
+    }
+
+    function openProfileModal(userId) {
+      document.getElementById("fpModal").classList.add("open");
+      // Ma'lumotni keyingi bosqichda yuklaymiz
+      lucide.createIcons();
+    }
+
+    function closeProfileModal() {
+      document.getElementById("fpModal").classList.remove("open");
+    }
+
+    let fpUserId = null;
+    function openProfileModal(userId) {
+      fpUserId = userId;
+      document.getElementById("fpModal").classList.add("open");
+      loadProfileModal(userId);
+    }
+
+    function fpLeague(rating) {
+      if (rating >= 2000) return { name: "Grandmaster", medal: "👑" };
+      if (rating >= 1800) return { name: "Master", medal: "🔱" };
+      if (rating >= 1600) return { name: "Diamond", medal: "💠" };
+      if (rating >= 1400) return { name: "Platinum", medal: "💎" };
+      if (rating >= 1200) return { name: "Gold", medal: "🥇" };
+      if (rating >= 1000) return { name: "Silver", medal: "🥈" };
+      return { name: "Bronze", medal: "🥉" };
+    }
+
+    const fpCefrLabels = { A1: "Beginner", A2: "Elementary", B1: "Intermediate", B2: "Upper-Intermediate", C1: "Advanced", C2: "Proficient" };
+
+    async function loadProfileModal(userId) {
+      try {
+        const res = await fetch("/profile/" + userId);
+        const data = await res.json();
+        renderFpCard(data);
+        renderFpAbout(data);
+        renderFpAch();
+        renderFpStats(data);
+        renderFpHistory(userId);
+        renderFpSide(data);
+      } catch (err) {
+        document.getElementById("fpCard").innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-faint);">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    function renderFpCard(data) {
+      const u = data.user || {};
+      const s = data.stats || {};
+      const lg = fpLeague(u.rating || 1000);
+      const name = (u.first_name || "") + " " + (u.last_name || "");
+
+      document.getElementById("fpCard").className = "fp-card";
+      document.getElementById("fpCard").innerHTML =
+        '<div class="fpc-avatar">' + (u.first_name || "?").charAt(0).toUpperCase() + '</div>' +
+        '<div class="fpc-info">' +
+          '<div class="fpc-name">' + name + '</div>' +
+          '<div class="fpc-meta">' +
+            '<span class="fpc-cefr">CEFR <b>' + (u.cefr_level || "A1") + '</b></span> ' +
+            '<span>' + (fpCefrLabels[u.cefr_level] || "Beginner") + '</span>' +
+            '<span class="fpc-divider"></span>' +
+            '<span>League <b style="color:var(--cyan);">' + lg.medal + ' ' + lg.name + '</b></span>' +
+          '</div>' +
+          '<div class="fpc-stats">' +
+            '<div class="fpc-stat"><i data-lucide="trophy" style="color:var(--gold);"></i><div><div class="fpc-sl">Rating</div><div class="fpc-sv">' + (u.rating || 1000) + '</div></div></div>' +
+            '<div class="fpc-stat"><i data-lucide="target" style="color:var(--green);"></i><div><div class="fpc-sl">Win Rate</div><div class="fpc-sv" style="color:var(--green);">' + (s.win_rate || 0) + '%</div></div></div>' +
+            '<div class="fpc-stat"><i data-lucide="flame" style="color:var(--gold);"></i><div><div class="fpc-sl">Win Streak</div><div class="fpc-sv" style="color:var(--gold);">' + (u.current_streak || 0) + '</div></div></div>' +
+            '<div class="fpc-stat"><i data-lucide="swords" style="color:var(--accent-2);"></i><div><div class="fpc-sl">Total Battles</div><div class="fpc-sv">' + (s.total_battles || 0) + '</div></div></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="fpc-actions">' +
+          '<button class="fpc-btn fpc-challenge" onclick="closeProfileModal(); challengeFriend(' + (u.id || 0) + ', \'' + name.replace(/'/g, "\\'") + '\')"><i data-lucide="swords"></i> Challenge</button>' +
+          '<button class="fpc-btn fpc-full" onclick="window.location.href=\'/profile.html?id=' + (u.id || 0) + '\'"><i data-lucide="external-link"></i> To\'liq profil</button>' +
+        '</div>';
+      lucide.createIcons();
+    }
+
+    function renderFpAbout(data) {
+      const u = data.user || {};
+      // Joined sanasini formatlash
+      let joined = "—";
+      if (u.created_at) {
+        const d = new Date(u.created_at);
+        const oylar = ["Yan","Fev","Mar","Apr","May","Iyun","Iyul","Avg","Sen","Okt","Noy","Dek"];
+        joined = oylar[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear();
+      }
+      document.getElementById("fpAbout").className = "fp-block";
+      document.getElementById("fpAbout").innerHTML =
+        '<div class="fp-block-title"><i data-lucide="user-circle"></i> About</div>' +
+        '<div class="fp-about-rows">' +
+          '<div class="fp-ar"><i data-lucide="building-2"></i><span class="fp-ak">School</span><span class="fp-av">' + (u.school || "—") + '</span></div>' +
+          '<div class="fp-ar"><i data-lucide="map-pin"></i><span class="fp-ak">Region</span><span class="fp-av">' + (u.region || "—") + (u.district ? ", " + u.district : "") + '</span></div>' +
+          '<div class="fp-ar"><i data-lucide="calendar"></i><span class="fp-ak">Joined</span><span class="fp-av">' + joined + '</span></div>' +
+          '<div class="fp-ar"><i data-lucide="star"></i><span class="fp-ak">Favorite Mode</span><span class="fp-av soon-badge">Tez kunda</span></div>' +
+        '</div>';
+      lucide.createIcons();
+    }
+
+    function renderFpAch() {
+      document.getElementById("fpAch").className = "fp-block";
+      document.getElementById("fpAch").innerHTML =
+        '<div class="fp-block-title"><i data-lucide="award"></i> Achievements <span class="soon-badge" style="margin-left:auto;">Tez kunda</span></div>' +
+        '<div class="fp-ach-grid">' +
+          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="swords"></i></div><div class="fp-ach-n">Warrior</div></div>' +
+          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="flame"></i></div><div class="fp-ach-n">Streak Master</div></div>' +
+          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="trophy"></i></div><div class="fp-ach-n">Top Performer</div></div>' +
+          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="book-open"></i></div><div class="fp-ach-n">Word Master</div></div>' +
+          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="users"></i></div><div class="fp-ach-n">Social Player</div></div>' +
+        '</div>';
+      lucide.createIcons();
+    }
+
+    function renderFpStats(data) {
+      const u = data.user || {};
+      const s = data.stats || {};
+      const lg = fpLeague(u.rating || 1000);
+      document.getElementById("fpStats").className = "fp-block";
+      document.getElementById("fpStats").innerHTML =
+        '<div class="fp-block-title"><i data-lucide="bar-chart-3"></i> Battle Stats</div>' +
+        '<div class="fp-bs-rows">' +
+          '<div class="fp-bs-row"><span class="fp-bs-k">Wins</span><span class="fp-bs-v" style="color:var(--green);">' + (s.wins || 0) + '</span></div>' +
+          '<div class="fp-bs-row"><span class="fp-bs-k">Losses</span><span class="fp-bs-v" style="color:var(--red);">' + (s.loses || 0) + '</span></div>' +
+          '<div class="fp-bs-divider"></div>' +
+          '<div class="fp-bs-row"><span class="fp-bs-k">Highest Rank</span><span class="fp-bs-v" style="color:var(--cyan);font-size:15px;">' + lg.medal + ' ' + lg.name + '</span></div>' +
+          '<div class="fp-bs-row"><span class="fp-bs-k">Longest Win Streak</span><span class="fp-bs-v">' + (u.longest_streak || 0) + '</span></div>' +
+          '<div class="fp-bs-row"><span class="fp-bs-k">Win Rate</span><span class="fp-bs-v">' + (s.win_rate || 0) + '%</span></div>' +
+        '</div>';
+      lucide.createIcons();
+    }
+
+    async function renderFpHistory(userId) {
+      document.getElementById("fpHistory").className = "fp-block";
+      document.getElementById("fpHistory").innerHTML =
+        '<div class="fp-block-title"><i data-lucide="swords"></i> Recent Battle History</div>' +
+        '<div id="fpHistList"><div style="text-align:center;color:var(--text-faint);padding:20px;font-size:13px;">Yuklanmoqda...</div></div>';
+      try {
+        const res = await fetch("/history/" + userId);
+        const data = await res.json();
+        const battles = data.battles || data.history || [];
+        const list = document.getElementById("fpHistList");
+        if (battles.length === 0) {
+          list.innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:20px;font-size:13px;">Hali jang qilmagan.</div>';
+          return;
+        }
+        list.innerHTML =
+          '<div class="fp-hist-head"><span>Opponent</span><span>Result</span><span>Score</span></div>';
+        battles.slice(0, 5).forEach(b => {
+          const isWin = b.outcome === "win";
+          const isDraw = b.outcome === "draw";
+          const oppName = b.opponent_name || "Raqib";
+          const resCls = isWin ? "var(--green)" : (isDraw ? "var(--text-dim)" : "var(--red)");
+          const resTxt = isWin ? "Win" : (isDraw ? "Draw" : "Loss");
+          list.innerHTML +=
+            '<div class="fp-hist-row">' +
+              '<div class="fp-hist-opp"><div class="fp-hist-ava">' + oppName.charAt(0).toUpperCase() + '</div><span>' + oppName + '</span></div>' +
+              '<span style="color:' + resCls + ';font-weight:700;">' + resTxt + '</span>' +
+              '<span>' + b.my_score + ' - ' + b.opponent_score + '</span>' +
+            '</div>';
+        });
+      } catch (err) {
+        document.getElementById("fpHistList").innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:20px;font-size:13px;">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    function renderFpSide(data) {
+      const u = data.user || {};
+      const rating = u.rating || 1000;
+      const lg = fpLeague(rating);
+
+      // Current Rank (keyingi liga uchun progress)
+      const leagues = [
+        { name: "Bronze", min: 0, max: 999 }, { name: "Silver", min: 1000, max: 1199 },
+        { name: "Gold", min: 1200, max: 1399 }, { name: "Platinum", min: 1400, max: 1599 },
+        { name: "Diamond", min: 1600, max: 1799 }, { name: "Master", min: 1800, max: 1999 },
+        { name: "Grandmaster", min: 2000, max: 99999 },
+      ];
+      let idx = 0;
+      leagues.forEach((l, i) => { if (rating >= l.min && rating <= l.max) idx = i; });
+      const curL = leagues[idx], nextL = leagues[idx + 1];
+      let prog = 100, rpText = "Eng yuqori daraja!", nextText = "Maksimal";
+      if (nextL) {
+        prog = Math.round(((rating - curL.min) / (curL.max - curL.min + 1)) * 100);
+        rpText = (rating - curL.min) + " / " + (curL.max - curL.min + 1) + " RP";
+        nextText = "Next: " + nextL.name;
+      }
+      document.getElementById("fpRank").className = "fp-block";
+      document.getElementById("fpRank").innerHTML =
+        '<div class="fp-block-title"><i data-lucide="shield"></i> Current Rank</div>' +
+        '<div class="fp-rank-medal">' + lg.medal + '</div>' +
+        '<div class="fp-rank-name">' + lg.name + '</div>' +
+        '<div class="fp-rank-bar"><div class="fp-rank-fill" style="width:' + prog + '%;"></div></div>' +
+        '<div class="fp-rank-rp">' + rpText + '</div>' +
+        '<div class="fp-rank-next">' + nextText + '</div>';
+
+      // CEFR Progression
+      const cefrOrder = ["A1", "A2", "B1", "B2", "C1", "C2"];
+      const cur = u.cefr_level || "A1";
+      const cIdx = cefrOrder.indexOf(cur);
+      const cProg = Math.round(((cIdx + 1) / cefrOrder.length) * 100);
+      const nextCefr = cIdx < 5 ? cefrOrder[cIdx + 1] : "C2";
+      document.getElementById("fpCefr").className = "fp-block";
+      document.getElementById("fpCefr").innerHTML =
+        '<div class="fp-block-title"><i data-lucide="book-open"></i> CEFR Progression</div>' +
+        '<div class="fp-cefr-top"><b>' + cur + '</b><span>' + nextCefr + '</span></div>' +
+        '<div class="fp-rank-bar"><div class="fp-cefr-fill" style="width:' + cProg + '%;"></div></div>' +
+        '<div class="fp-cefr-msg">' + cProg + '% — Zo\'r ketyapsiz!</div>';
+
+      // Mutual Friends - tez kunda
+      document.getElementById("fpMutual").className = "fp-block";
+      document.getElementById("fpMutual").innerHTML =
+        '<div class="fp-block-title"><i data-lucide="users"></i> Mutual Friends <span class="soon-badge" style="margin-left:auto;">Tez kunda</span></div>' +
+        '<div style="color:var(--text-faint);font-size:13px;text-align:center;padding:16px;">Umumiy do\'stlar tez kunda shu yerda ko\'rinadi.</div>';
+
+      lucide.createIcons();
+    }
+
+    function closeProfileModal() {
+      document.getElementById("fpModal").classList.remove("open");
     }
 
     socket.on("challengeResult", (data) => {
@@ -414,12 +861,10 @@
     let currentTab = "all";
     function switchTab(tab, el) {
       currentTab = tab;
-      // Tab tugmalari
       document.querySelectorAll(".fr-tab").forEach(t => {
         t.classList.toggle("active", t.getAttribute("data-tab") === tab);
       });
-      // Panellar (keyingi bosqichda yaratiladi)
-      const panels = { all: "allPanel", requests: "requestsPanel", search: "searchPanel" };
+      const panels = { all: "allPanel", requests: "requestsPanel", suggested: "suggestedPanel", search: "searchPanel" };
       Object.values(panels).forEach(pid => {
         const p = document.getElementById(pid);
         if (p) p.style.display = "none";
@@ -429,6 +874,7 @@
 
       if (tab === "all") loadFriends();
       if (tab === "requests") loadRequests();
+      if (tab === "suggested") loadSuggested();
     }
 
     // ===== DO'STLAR RO'YXATI =====
@@ -459,7 +905,9 @@
           const name = f.first_name + " " + f.last_name;
           const lg = leagueOf(f.rating);
           // Status - hozircha hammasi "online" deb ko'rsatamiz (real-time status keyin)
-          const statusHtml = '<div class="fl-status st-online"><span class="fl-dot"></span> Online</div>';
+          const statusHtml = f.isOnline
+            ? '<div class="fl-status st-online"><span class="fl-dot"></span> Online</div>'
+            : '<div class="fl-status st-offline"><span class="fl-dot fl-dot-off"></span> Offline</div>';
 
           const row = document.createElement("div");
           row.className = "fl-row";
@@ -470,6 +918,7 @@
             statusHtml +
             '<div class="fl-actions">' +
               '<button class="fl-challenge" onclick="challengeFriend(' + f.id + ', \'' + name.replace(/'/g, "\\'") + '\')"><i data-lucide="swords"></i> Challenge</button>' +
+              '<button class="fl-profile" onclick="viewProfile(' + f.id + ')" title="Profilni ko\'rish"><i data-lucide="user"></i></button>' +
               '<button class="fl-remove" onclick="removeFriend(' + f.id + ', \'' + name.replace(/'/g, "\\'") + '\')" title="Do\'stlikdan chiqarish"><i data-lucide="user-minus"></i></button>' +
             '</div>';
           list.appendChild(row);
@@ -552,15 +1001,55 @@
           const name = u.first_name + " " + u.last_name;
           const row = document.createElement("div");
           row.className = "srch-row";
+
+          // friendStatus'ga qarab tugma
+          let actionBtn = "";
+          if (u.friendStatus === "friend") {
+            actionBtn = '<button class="srch-profile" onclick="viewProfile(' + u.id + ')"><i data-lucide="user"></i> Profil</button>';
+          } else if (u.friendStatus === "pending") {
+            actionBtn = '<button class="srch-pending" disabled><i data-lucide="clock"></i> Kutilmoqda</button>';
+          } else {
+            actionBtn = '<button class="srch-add" id="addBtn-' + u.id + '" onclick="sendRequest(' + u.id + ',this)"><i data-lucide="user-plus"></i> Qo\'shish</button>';
+          }
+
           row.innerHTML =
             '<div class="srch-ava">' + u.first_name.charAt(0).toUpperCase() + '</div>' +
             '<div class="srch-info"><div class="srch-name">' + name + '</div><div class="srch-sub">' + (u.cefr_level || "A1") + ' · ' + u.rating + ' RP</div></div>' +
-            '<button class="srch-add" id="addBtn-' + u.id + '" onclick="sendRequest(' + u.id + ',this)"><i data-lucide="user-plus"></i> Qo\'shish</button>';
+            actionBtn;
           results.appendChild(row);
         });
         lucide.createIcons();
       } catch (err) {
         results.innerHTML = '<div class="fl-empty">Xato yuz berdi</div>';
+      }
+    }
+
+    // ===== TAVSIYA ETILGAN DO'STLAR =====
+    async function loadSuggested() {
+      const list = document.getElementById("suggestedList");
+      try {
+        const res = await fetch("/friends/suggested/" + user.id);
+        const data = await res.json();
+        const suggested = data.suggested || [];
+        if (suggested.length === 0) {
+          list.innerHTML = '<div class="fl-empty">Hozircha tavsiya yo\'q. Keyinroq qarang!</div>';
+          return;
+        }
+        list.innerHTML = "";
+        suggested.forEach(u => {
+          const name = u.first_name + " " + u.last_name;
+          const row = document.createElement("div");
+          row.className = "srch-row";
+          row.innerHTML =
+            '<div class="srch-ava">' + u.first_name.charAt(0).toUpperCase() + '</div>' +
+            '<div class="srch-info"><div class="srch-name">' + name + '</div>' +
+            '<div class="srch-sub"><span class="sug-reason">' + u.reason + '</span> · ' + (u.cefr_level || "A1") + ' · ' + u.rating + ' RP</div></div>' +
+            '<button class="srch-add" id="addBtn-' + u.id + '" onclick="sendRequest(' + u.id + ',this)"><i data-lucide="user-plus"></i> Qo\'shish</button>';
+          list.appendChild(row);
+        });
+        lucide.createIcons();
+      } catch (err) {
+        list.innerHTML = '<div class="fl-empty">Yuklab bo\'lmadi</div>';
       }
     }
 

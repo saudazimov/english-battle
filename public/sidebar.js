@@ -42,3 +42,35 @@ function sidebarLogout() {
   localStorage.removeItem("user");
   window.location.href = "/index.html";
 }
+
+// ===== GLOBAL SOCKET (online status uchun) =====
+// Har sahifada socket.io ni yuklab, ulanadi va "men onlayn" deb xabar beradi
+(function connectGlobalSocket() {
+  const userData = localStorage.getItem("user");
+  if (!userData) return;
+  const user = JSON.parse(userData);
+
+  function doConnect() {
+    // Agar bu sahifada allaqachon socket bor bo'lsa (friends.html, battle.html), uni ishlatamiz
+    if (window.socket) {
+      window.socket.emit("registerUser", user.id);
+      return;
+    }
+    if (typeof io === "undefined") return;
+    window.globalSocket = io();
+    window.globalSocket.on("connect", () => {
+      window.globalSocket.emit("registerUser", user.id);
+    });
+  }
+
+  // socket.io kutubxonasi bormi?
+  if (typeof io !== "undefined") {
+    doConnect();
+  } else {
+    // Yo'q bo'lsa - dinamik yuklash
+    const s = document.createElement("script");
+    s.src = "/socket.io/socket.io.js";
+    s.onload = doConnect;
+    document.head.appendChild(s);
+  }
+})();

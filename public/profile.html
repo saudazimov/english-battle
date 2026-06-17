@@ -463,6 +463,21 @@
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
     const user = JSON.parse(userData);
+    // URL'da ?id=X bo'lsa - boshqa odamning profili
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewUserId = urlParams.get("id") || user.id; // id bo'lmasa - o'zim
+    const isOwnProfile = String(viewUserId) === String(user.id);
+    // Modal rejimi - sidebar va topbar yashirish
+    const isModal = urlParams.get("modal") === "1";
+    if (isModal) {
+      const style = document.createElement("style");
+      style.textContent = `
+        .app { grid-template-columns: 1fr 340px !important; padding: 16px !important; }
+        .sidebar { display: none !important; }
+        .topbar { display: none !important; }
+      `;
+      document.head.appendChild(style);
+    }
 
     // Yuqori panel
     document.getElementById("topName").textContent = user.first_name + " " + user.last_name;
@@ -483,19 +498,30 @@
       return "🥉 Bronze";
     }
 
-    document.getElementById("pcAvatar").textContent = (user.first_name || "?").charAt(0).toUpperCase();
-    document.getElementById("pcName").textContent = user.first_name + " " + user.last_name;
-    document.getElementById("pcCefr").textContent = user.cefr_level || "A1";
-    document.getElementById("pcCefrLabel").textContent = cefrLabels[user.cefr_level] || "Beginner";
-    document.getElementById("pcLeague").textContent = getLeagueInfo(user.rating || 1000);
-    document.getElementById("pcRating").textContent = user.rating || 1000;
+    // Boshqa odamning profili bo'lsa - Edit tugmasini yashirish + sarlavhani o'zgartirish
+    if (!isOwnProfile) {
+      const editBtn = document.querySelector(".pc-edit");
+      if (editBtn) editBtn.style.display = "none";
+      const pageDesc = document.querySelector(".page-head p");
+      if (pageDesc) pageDesc.textContent = "Foydalanuvchi profili";
+    }
 
-    // Profil endpoint'dan to'liq ma'lumot
+    // Profil endpoint'dan to'liq ma'lumot (viewUserId - o'zim yoki boshqa odam)
     let profileData = null;
-    fetch("/profile/" + user.id)
+    fetch("/profile/" + viewUserId)
       .then(r => r.json())
       .then(data => {
         profileData = data;
+        if (data.user) {
+          // Profil kartasi (endpoint'dan - boshqa odam uchun ham to'g'ri)
+          const u = data.user;
+          document.getElementById("pcAvatar").textContent = (u.first_name || "?").charAt(0).toUpperCase();
+          document.getElementById("pcName").textContent = u.first_name + " " + u.last_name;
+          document.getElementById("pcCefr").textContent = u.cefr_level || "A1";
+          document.getElementById("pcCefrLabel").textContent = cefrLabels[u.cefr_level] || "Beginner";
+          document.getElementById("pcLeague").textContent = getLeagueInfo(u.rating || 1000);
+          document.getElementById("pcRating").textContent = u.rating || 1000;
+        }
         if (data.stats) {
           document.getElementById("pcWinRate").textContent = data.stats.win_rate + "%";
           // Battle Stats
@@ -516,14 +542,18 @@
           document.getElementById("abRegion").textContent = data.user.region || "—";
           document.getElementById("abSchool").textContent = data.user.school || "—";
           document.getElementById("abDistrict").textContent = data.user.district || "—";
-          document.getElementById("abDistrict").textContent = data.user.district || "—";
           // Highest Rank (joriy liga)
           document.getElementById("bsRank").textContent = getLeagueInfo(data.user.rating || 1000);
+          // Rank, CEFR, Next Level - endpoint ma'lumotidan (boshqa odam uchun ham to'g'ri)
+          setupRank(data.user.rating || 1000);
+          renderCefrTrackFor(data.user.cefr_level || "A1");
+          setupNextLevel(data.user.cefr_level || "A1");
+          lucide.createIcons();
         }
       })
       .catch(() => {});
     // ===== CEFR PROGRESSION =====
-    function renderCefrTrack() {
+    function renderCefrTrackFor(current) {
       const levels = [
         { lvl: "A1", lbl: "Beginner" },
         { lvl: "A2", lbl: "Elementary" },
@@ -532,7 +562,6 @@
         { lvl: "C1", lbl: "Advanced" },
         { lvl: "C2", lbl: "Proficient" },
       ];
-      const current = user.cefr_level || "A1";
       const curIdx = levels.findIndex(l => l.lvl === current);
 
       let html = "";
@@ -548,12 +577,12 @@
       });
       document.getElementById("cefrTrack").innerHTML = html;
     }
-    renderCefrTrack();
+
     // ===== BATTLE HISTORY =====
     async function loadHistory() {
       const list = document.getElementById("histList");
       try {
-        const res = await fetch("/history/" + user.id);
+        const res = await fetch("/history/" + viewUserId);
         const data = await res.json();
         const battles = data.battles || data.history || [];
 
@@ -593,8 +622,7 @@
     loadHistory();
     // ===== O'NG PANEL =====
     // Current Rank
-    function setupRank() {
-      const r = user.rating || 1000;
+    function setupRank(r) {
       const leagues = [
         { name: "Bronze", min: 0, max: 999, medal: "🥉" },
         { name: "Silver", min: 1000, max: 1199, medal: "🥈" },
@@ -619,18 +647,18 @@
         document.getElementById("rankNext").textContent = "Eng yuqori!";
       }
     }
-    setupRank();
 
     // Next Level (CEFR keyingi daraja)
-    const nextCefr = { A1: "A2", A2: "B1", B1: "B2", B2: "C1", C1: "C2", C2: null };
-    const cur = user.cefr_level || "A1";
-    const nxt = nextCefr[cur];
-    document.getElementById("nlpTitle").textContent = nxt ? (cur + " → " + nxt + " Progress") : "Eng yuqori daraja";
-    document.getElementById("nlpPct").textContent = nxt ? "Imtihon" : "C2 🎉";
-    document.getElementById("nlpBar").style.width = nxt ? "30%" : "100%";
+    function setupNextLevel(current) {
+      const nextCefr = { A1: "A2", A2: "B1", B1: "B2", B2: "C1", C1: "C2", C2: null };
+      const nxt = nextCefr[current];
+      document.getElementById("nlpTitle").textContent = nxt ? (current + " → " + nxt + " Progress") : "Eng yuqori daraja";
+      document.getElementById("nlpPct").textContent = nxt ? "Imtihon" : "C2 🎉";
+      document.getElementById("nlpBar").style.width = nxt ? "30%" : "100%";
+    }
 
     // Personal Records (haqiqiy)
-    fetch("/profile/" + user.id)
+    fetch("/profile/" + viewUserId)
       .then(r => r.json())
       .then(data => {
         if (data.user) document.getElementById("prStreak").textContent = data.user.longest_streak || 0;

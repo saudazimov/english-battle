@@ -306,6 +306,26 @@ async function createNotification(userId, type, message) {
   }
 }
 
+// Foydalanuvchi onlayn/offlayn bo'lganda, uning do'stlariga xabar berish
+async function notifyFriendsStatus(userId, isOnline) {
+  try {
+    const result = await pool.query(
+      `SELECT requester_id, receiver_id FROM friendships
+       WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
+      [userId]
+    );
+    result.rows.forEach(row => {
+      const friendId = String(row.requester_id) === String(userId) ? row.receiver_id : row.requester_id;
+      const friendSocket = onlineUsers[String(friendId)];
+      if (friendSocket) {
+        io.to(friendSocket).emit("friendStatusChanged", { userId: String(userId), isOnline: isOnline });
+      }
+    });
+  } catch (err) {
+    console.error("notifyFriendsStatus xatosi:", err.message);
+  }
+}
+
 // Bot javoblarini taqlid qilish
 function simulateBotAnswers(roomId, botId, questions) {
   let qIndex = 0;
@@ -400,13 +420,13 @@ async function startBattle(roomId, player1, player2) {
 
 io.on("connection", (socket) => {
   // O'yinchi onlayn bo'ldi - ro'yxatga olish
-  socket.on("registerUser", (userId) => {
-    if (userId) {
-      onlineUsers[userId] = socket.id;
-      socket.userId = userId;
+  socket.on("registerUser", async (userId) => {
+      socket.userId = String(userId);
+      onlineUsers[String(userId)] = socket.id;
       console.log("Onlayn:", userId);
-    }
-  });
+      // Bu odamning do'stlariga "men onlayn bo'ldim" signali
+      notifyFriendsStatus(userId, true);
+    });
 
   // Do'stga jang chaqiruvi yuborish
   socket.on("challengeFriend", ({ fromUserId, fromName, toUserId, level }) => {
@@ -603,6 +623,7 @@ io.on("connection", (socket) => {
     if (socket.userId && onlineUsers[socket.userId] === socket.id) {
       delete onlineUsers[socket.userId];
       console.log("Offlayn:", socket.userId);
+      notifyFriendsStatus(socket.userId, false); // do'stlarga "men offlayn" signali
     }
   });
 });
@@ -1394,9 +1415,110 @@ app.get("/friends/search", async (req, res) => {
       [searchTerm, userId || 0]
     );
 
-    res.json({ results: result.rows });
+    // Har bir natija uchun do'stlik holatini aniqlash
+    const myId = userId || 0;
+    const enriched = [];
+    for (const u of result.rows) {
+      const rel = await pool.query(
+        `SELECT status FROM friendships
+         WHERE (requester_id = $1 AND receiver_id = $2)
+            OR (requester_id = $2 AND receiver_id = $1)`,
+        [myId, u.id]
+      );
+      let friendStatus = "none"; // none, pending, friend
+      if (rel.rows.length > 0) {
+        friendStatus = rel.rows[0].status === "accepted" ? "friend" : "pending";
+      }
+      enriched.push({ ...u, friendStatus: friendStatus });
+    }
+
+    res.json({ results: enriched });
   } catch (err) {
     console.error("Do'st qidirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Tavsiya etilgan do'stlar (maktab + tuman + region + daraja bo'yicha ballash)
+app.get("/friends/suggested/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Joriy foydalanuvchi ma'lumoti
+    const meRes = await pool.query(
+      "SELECT region, district, school, cefr_level, rating FROM users WHERE id = $1",
+      [userId]
+    );
+    if (meRes.rows.length === 0) return res.status(404).json({ error: "Topilmadi" });
+    const me = meRes.rows[0];
+
+    // Allaqachon do'st yoki so'rov bo'lganlarning id'lari
+    const relRes = await pool.query(
+      `SELECT requester_id, receiver_id FROM friendships
+       WHERE requester_id = $1 OR receiver_id = $1`,
+      [userId]
+    );
+    const excludeIds = new Set([parseInt(userId)]);
+    relRes.rows.forEach(r => {
+      excludeIds.add(r.requester_id);
+      excludeIds.add(r.receiver_id);
+    });
+
+    // Boshqa foydalanuvchilar (o'zi va do'stlardan tashqari)
+    const usersRes = await pool.query(
+      `SELECT id, first_name, last_name, cefr_level, rating, region, district, school
+       FROM users WHERE id != $1`,
+      [userId]
+    );
+
+    // Ballash
+    const scored = [];
+    usersRes.rows.forEach(u => {
+      if (excludeIds.has(u.id)) return; // do'st/so'rov borlarni o'tkazib yuborish
+
+      let score = 0;
+      const reasons = [];
+
+      // Bir xil maktab + tuman (haqiqiy maktabdosh)
+      if (u.school && me.school && u.district && me.district &&
+          u.school === me.school && u.district === me.district) {
+        score += 100;
+        reasons.push("Maktabdosh");
+      } else if (u.district && me.district && u.district === me.district) {
+        // Bir xil tuman (boshqa maktab)
+        score += 50;
+        reasons.push("Bir tumandan");
+      } else if (u.region && me.region && u.region === me.region) {
+        // Bir xil region
+        score += 20;
+        reasons.push("Bir viloyatdan");
+      }
+
+      // Bir xil daraja
+      if (u.cefr_level === me.cefr_level) {
+        score += 30;
+        reasons.push(u.cefr_level + " daraja");
+      }
+
+      // Yaqin reyting (±200)
+      if (Math.abs((u.rating || 1000) - (me.rating || 1000)) <= 200) {
+        score += 15;
+      }
+
+      if (score > 0) {
+        scored.push({
+          id: u.id, first_name: u.first_name, last_name: u.last_name,
+          cefr_level: u.cefr_level, rating: u.rating,
+          score: score, reason: reasons[0] || "Tavsiya",
+        });
+      }
+    });
+
+    // Ball bo'yicha tartiblash, top 6
+    scored.sort((a, b) => b.score - a.score);
+    res.json({ suggested: scored.slice(0, 6) });
+  } catch (err) {
+    console.error("Suggested xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });
@@ -1586,7 +1708,13 @@ app.get("/friends/:userId", async (req, res) => {
        ORDER BY u.rating DESC`,
       [userId]
     );
-    res.json({ friends: result.rows });
+    // Har bir do'st onlayn yoki yo'qligini belgilash
+    const friendsWithStatus = result.rows.map(f => ({
+      ...f,
+      isOnline: !!onlineUsers[String(f.id)],
+    }));
+
+    res.json({ friends: friendsWithStatus });
   } catch (err) {
     console.error("Do'stlar xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
