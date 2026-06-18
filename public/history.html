@@ -251,14 +251,18 @@
         else if (h.rating_change < 0) { rpCls = "down"; rpText = "" + h.rating_change; }
 
         const oppName = h.opponent_name || "Raqib";
-        const oppInitial = oppName.charAt(0).toUpperCase();
+        const oppAva = avatarHTML(oppName, h.opponent_picture);
+        const oppLeague = h.opponent_rating ? leagueShort(h.opponent_rating) : null;
+        const oppSub = oppLeague
+          ? (h.cefr_level || "A1") + " · " + oppLeague
+          : (h.cefr_level || "A1") + " daraja";
 
         list.innerHTML +=
           '<div class="battle-row ' + res + '">' +
             '<div class="br-result"><div class="br-icon"><i data-lucide="' + icon + '"></i></div><div class="br-res-text">' + resText + '</div></div>' +
-            '<div class="br-opp"><div class="br-ava">' + oppInitial + '</div>' +
+            '<div class="br-opp"><div class="br-ava">' + oppAva + '</div>' +
               '<div class="br-opp-info"><div class="br-opp-name">' + oppName + '</div>' +
-              '<div class="br-opp-sub">' + (h.cefr_level || "A1") + ' daraja</div></div></div>' +
+              '<div class="br-opp-sub">' + oppSub + '</div></div></div>' +
             '<div class="br-score"><div class="br-score-val">' + h.my_score + ' : ' + h.opponent_score + '</div><div class="br-score-lbl">Hisob</div></div>' +
             '<div class="br-rating"><div class="br-rp ' + rpCls + '">' + rpText + ' RP</div><div class="br-xp">+' + (h.xp_earned || 0) + ' XP</div></div>' +
             '<div class="br-date"><div class="br-date-d">' + dt.d + '</div><div class="br-date-t">' + dt.t + '</div></div>' +

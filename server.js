@@ -933,10 +933,15 @@ app.get("/history/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
     const result = await pool.query(
-      `SELECT opponent_name, my_score, opponent_score, outcome, xp_earned, rating_change, played_at
-       FROM battle_history
-       WHERE user_id = $1
-       ORDER BY played_at DESC
+      `SELECT bh.opponent_name, bh.my_score, bh.opponent_score, bh.outcome,
+              bh.xp_earned, bh.rating_change, bh.played_at, bh.cefr_level,
+              bh.opponent_id,
+              opp.profile_picture AS opponent_picture,
+              opp.rating AS opponent_rating
+       FROM battle_history bh
+       LEFT JOIN users opp ON opp.id = bh.opponent_id
+       WHERE bh.user_id = $1
+       ORDER BY bh.played_at DESC
        LIMIT 50`,
       [userId]
     );
