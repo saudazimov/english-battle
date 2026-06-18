@@ -95,6 +95,19 @@
     .stat-v { font-weight: 700; }
     .lb-back-btn { width: 100%; justify-content: center; }
     .note-txt { font-size: 13px; color: var(--text-faint); line-height: 1.5; }
+
+    /* Maktab/tuman/viloyat ikonlari - rangli */
+    .ent-ic { width: 60% !important; height: 60% !important; }
+    .ent-school { color: #5b8cff; }    /* maktab - ko'k */
+    .ent-district { color: #34d399; }  /* tuman - yashil */
+    .ent-region { color: #fbbf24; }    /* viloyat - oltin */
+
+    /* Ikon fonlari - och, neytral */
+    .podium-ava, .lb-ava, .yr-icon {
+      background: rgba(91,140,255,0.12) !important;
+    }
+
+    
   </style>
 </head>
 <body>
@@ -147,7 +160,7 @@
       <div class="card rb-card">
         <div class="rb-head"><span id="yrTitle">Sizning maktabingiz</span><i data-lucide="info" class="rb-info"></i></div>
         <div class="yr-top">
-          <div class="yr-icon" id="yrIcon">🏫</div>
+          <div class="yr-icon" id="yrIcon"></div>
           <div>
             <div class="yr-name" id="yrName">—</div>
             <div class="yr-sub" id="yrSub">—</div>
@@ -201,7 +214,15 @@
 
     const endpoints = { schools: "/rankings/schools", districts: "/rankings/districts", regions: "/rankings/regions" };
     const dataKeys = { schools: "schools", districts: "districts", regions: "regions" };
-    const icons = { schools: "🏫", districts: "🏙️", regions: "📍" };
+    const iconNames = { schools: "building-2", districts: "map", regions: "map-pin" };
+    function entIconSvg(tab) {
+      return '<i data-lucide="' + (iconNames[tab] || "building-2") + '" style="width:100%;height:100%;"></i>';
+    }
+    const icons = {
+      schools: '<i data-lucide="building-2" class="ent-ic ent-school"></i>',
+      districts: '<i data-lucide="map" class="ent-ic ent-district"></i>',
+      regions: '<i data-lucide="map-pin" class="ent-ic ent-region"></i>',
+    };
     const colNames = { schools: "Maktab", districts: "Tuman", regions: "Viloyat" };
     const titles = { schools: "Sizning maktabingiz", districts: "Sizning tumaningiz", regions: "Sizning viloyatingiz" };
 
@@ -212,7 +233,7 @@
       document.querySelectorAll(".ftab").forEach(t => t.classList.toggle("active", t.getAttribute("data-tab") === tab));
       document.getElementById("colName").textContent = colNames[tab];
       document.getElementById("yrTitle").textContent = titles[tab];
-      document.getElementById("yrIcon").textContent = icons[tab];
+      document.getElementById("yrIcon").innerHTML = icons[tab];
       loadAndRender();
     }
 
