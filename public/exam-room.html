@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Battle — Daraja imtihoni</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0a1a;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.12), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(168,85,247,0.12), transparent 40%);
+      min-height: 100vh;
+      color: #e2e8f0;
+      padding: 20px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .container { max-width: 650px; width: 100%; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .btn {
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border: none; border-radius: 12px; color: white;
+      font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.5); }
+    .btn-secondary { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.4); }
+
+    /* Intro ekrani */
+    .intro {
+      background: rgba(20,20,40,0.8); border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 20px; padding: 40px; text-align: center;
+      box-shadow: 0 0 40px rgba(99,102,241,0.15);
+    }
+    .intro .exam-icon { font-size: 60px; margin-bottom: 16px; }
+    .intro h1 { font-size: 28px; margin-bottom: 12px; background: linear-gradient(135deg,#fbbf24,#f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .intro p { color: #94a3b8; margin-bottom: 8px; }
+    .exam-rules { text-align: left; background: rgba(0,0,0,0.3); border-radius: 14px; padding: 20px; margin: 24px 0; }
+    .exam-rules li { margin: 8px 0; color: #cbd5e1; }
+
+    /* Imtihon ekrani */
+    .exam-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .exam-progress-text { font-size: 14px; color: #94a3b8; }
+    .exam-timer { font-size: 18px; font-weight: bold; color: #fbbf24; }
+    .exam-timer.warning { color: #f87171; }
+    .progress-bar-bg { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; margin-bottom: 20px; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg,#6366f1,#a855f7); transition: width 0.3s; }
+
+    .question-card { background: rgba(20,20,40,0.8); border: 1px solid rgba(99,102,241,0.3); border-radius: 20px; padding: 30px; }
+    .q-skill { display: inline-block; padding: 4px 12px; background: rgba(99,102,241,0.2); border-radius: 12px; font-size: 12px; color: #a5b4fc; margin-bottom: 12px; }
+    .q-text { font-size: 20px; margin-bottom: 24px; }
+    .option { display: block; width: 100%; text-align: left; margin: 10px 0; padding: 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(99,102,241,0.25); border-radius: 12px; color: #e2e8f0; font-size: 15px; cursor: pointer; transition: all 0.2s; }
+    .option:hover { background: rgba(99,102,241,0.2); border-color: #818cf8; }
+    .option.selected { background: rgba(99,102,241,0.3); border-color: #818cf8; }
+    .option .letter { display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center; background: linear-gradient(135deg,#6366f1,#a855f7); border-radius: 6px; margin-right: 10px; font-weight: bold; font-size: 13px; }
+    .exam-nav { display: flex; justify-content: space-between; margin-top: 24px; }
+
+    /* Natija ekrani */
+    .result-box { background: rgba(20,20,40,0.8); border: 1px solid rgba(99,102,241,0.3); border-radius: 20px; padding: 40px; text-align: center; }
+    .result-icon { font-size: 70px; margin-bottom: 16px; }
+    .result-box h1 { font-size: 32px; margin-bottom: 8px; }
+    .result-box h1.pass { background: linear-gradient(135deg,#22c55e,#16a34a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .result-box h1.fail { color: #f87171; }
+    .overall-score { font-size: 48px; font-weight: bold; margin: 16px 0; color: #818cf8; }
+    .skill-breakdown { text-align: left; margin: 24px 0; }
+    .skill-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 10px; margin-bottom: 8px; }
+    .skill-row .s-name { font-weight: 600; text-transform: capitalize; }
+    .skill-row .s-pass { color: #86efac; }
+    .skill-row .s-fail { color: #f87171; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- INTRO EKRANI -->
+    <div class="screen active" id="introScreen">
+      <div class="intro">
+        <div class="exam-icon">🎓</div>
+        <h1 id="examTitle">Daraja imtihoni</h1>
+        <p id="examSubtitle">A1 → A2 ko'tarilish imtihoni</p>
+        <div class="exam-rules">
+          <p style="color:#e2e8f0; font-weight:600; margin-bottom:12px;">📋 Qoidalar:</p>
+          <ul style="list-style:none;">
+            <li>📝 20 ta savol (aralash mavzular)</li>
+            <li>⏱️ Har savolga 30 soniya</li>
+            <li>🎯 O'tish uchun: umumiy 75%+</li>
+            <li>📊 Har mavzu bo'yicha kamida 60%</li>
+            <li>🚫 Raqib yo'q — yolg'iz topshirasiz</li>
+          </ul>
+        </div>
+        <div id="introButtons">
+          <button class="btn" onclick="startExam()">Imtihonni boshlash</button>
+          <button class="btn btn-secondary" onclick="goLobby()" style="margin-left:8px;">Bekor qilish</button>
+        </div>
+        <div id="notEligible" style="display:none; margin-top:20px;"></div>
+      </div>
+    </div>
+
+    <!-- IMTIHON EKRANI -->
+    <div class="screen" id="examScreen">
+      <div class="exam-header">
+        <span class="exam-progress-text" id="progressText">Savol 1 / 20</span>
+        <span class="exam-timer" id="timer">0:30</span>
+      </div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:5%;"></div></div>
+      <div class="question-card">
+        <span class="q-skill" id="qSkill">grammar</span>
+        <div class="q-text" id="qText">...</div>
+        <div id="options"></div>
+        <div class="exam-nav">
+          <span></span>
+          <button class="btn" id="nextBtn" onclick="nextQuestion()">Keyingi →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NATIJA EKRANI -->
+    <div class="screen" id="resultScreen">
+      <div class="result-box">
+        <div class="result-icon" id="resultIcon">🎉</div>
+        <h1 id="resultTitle">Tabriklaymiz!</h1>
+        <p id="resultSubtitle"></p>
+        <div class="overall-score" id="overallScore">0%</div>
+        <div class="skill-breakdown" id="skillBreakdown"></div>
+        <div>
+          <button class="btn" onclick="goLobby()">Lobbyga</button>
+          <button class="btn btn-secondary" id="retryBtn" onclick="location.reload()" style="margin-left:8px; display:none;">Qayta urinish</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = JSON.parse(userData);
+
+    let questions = [];
+    let currentIndex = 0;
+    let userAnswers = {}; // { question_id: "A" }
+    let timerInterval = null;
+
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    // Imtihon holatini tekshirish
+    async function checkStatus() {
+      try {
+        const res = await fetch("/exam/status/" + user.id);
+        const data = await res.json();
+
+        document.getElementById("examTitle").textContent = "Daraja imtihoni";
+        if (data.next_level) {
+          document.getElementById("examSubtitle").textContent =
+            data.current_level + " → " + data.next_level + " ko'tarilish imtihoni";
+        }
+
+        if (!data.eligible) {
+          // Imtihon ochilmagan — sabab ko'rsatish
+          document.getElementById("introButtons").style.display = "none";
+          const notEl = document.getElementById("notEligible");
+          notEl.style.display = "block";
+
+          if (!data.next_level) {
+            notEl.innerHTML = '<div style="padding:20px; background:rgba(99,102,241,0.1); border-radius:12px; color:#a5b4fc;">' + (data.reason || "Imtihon mavjud emas") + '</div>' +
+              '<button class="btn btn-secondary" onclick="goLobby()" style="margin-top:16px;">Lobbyga</button>';
+          } else {
+            const p = data.progress;
+            notEl.innerHTML =
+              '<div style="padding:20px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:12px;">' +
+                '<p style="color:#fca5a5; font-weight:600; margin-bottom:12px;">Imtihon hali ochilmagan</p>' +
+                '<div style="text-align:left; color:#cbd5e1;">' +
+                  '<div style="margin:8px 0;">⚔️ Janglar: <b>' + p.battles + '/' + p.battles_required + '</b> ' + (p.battles >= p.battles_required ? '✅' : '') + '</div>' +
+                  '<div style="margin:8px 0;">🎯 Aniqlik: <b>' + p.accuracy + '%</b> (kerak: ' + p.accuracy_required + '%) ' + (p.accuracy >= p.accuracy_required ? '✅' : '') + '</div>' +
+                '</div>' +
+              '</div>' +
+              '<button class="btn btn-secondary" onclick="goLobby()" style="margin-top:16px;">Lobbyga</button>';
+          }
+        }
+      } catch (err) {
+        console.error("Status xatosi");
+      }
+    }
+
+    async function startExam() {
+      try {
+        const res = await fetch("/exam/start/" + user.id);
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || "Xato"); return; }
+
+        questions = data.questions;
+        currentIndex = 0;
+        userAnswers = {};
+        showScreen("examScreen");
+        showQuestion();
+      } catch (err) {
+        alert("Server xatosi");
+      }
+    }
+
+    function showQuestion() {
+      const q = questions[currentIndex];
+      document.getElementById("progressText").textContent = "Savol " + (currentIndex + 1) + " / " + questions.length;
+      document.getElementById("progressFill").style.width = ((currentIndex + 1) / questions.length * 100) + "%";
+      document.getElementById("qSkill").textContent = q.skill || "savol";
+      document.getElementById("qText").textContent = q.question_text;
+
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      ["A","B","C","D"].forEach(letter => {
+        const btn = document.createElement("button");
+        btn.className = "option" + (userAnswers[q.id] === letter ? " selected" : "");
+        btn.innerHTML = '<span class="letter">' + letter + '</span>' + q["option_" + letter.toLowerCase()];
+        btn.onclick = () => selectAnswer(q.id, letter, btn);
+        optionsDiv.appendChild(btn);
+      });
+
+      // Oxirgi savolda tugma "Yakunlash"
+      document.getElementById("nextBtn").textContent =
+        (currentIndex === questions.length - 1) ? "Yakunlash ✓" : "Keyingi →";
+
+      startTimer();
+    }
+
+    function selectAnswer(qId, letter, btn) {
+      userAnswers[qId] = letter;
+      document.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+      btn.classList.add("selected");
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      let timeLeft = 30;
+      const timerEl = document.getElementById("timer");
+      timerEl.classList.remove("warning");
+      updateTimerDisplay(timeLeft);
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay(timeLeft);
+        if (timeLeft <= 10) timerEl.classList.add("warning");
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          nextQuestion(); // vaqt tugadi
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay(sec) {
+      document.getElementById("timer").textContent = "0:" + (sec < 10 ? "0" + sec : sec);
+    }
+
+    function nextQuestion() {
+      clearInterval(timerInterval);
+      if (currentIndex < questions.length - 1) {
+        currentIndex++;
+        showQuestion();
+      } else {
+        finishExam();
+      }
+    }
+
+    async function finishExam() {
+      clearInterval(timerInterval);
+      // Javoblarni massivga aylantirish
+      const answersArr = questions.map(q => ({
+        question_id: q.id,
+        answer: userAnswers[q.id] || null,
+      }));
+
+      try {
+        const res = await fetch("/exam/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id, answers: answersArr }),
+        });
+        const data = await res.json();
+        showResult(data);
+      } catch (err) {
+        alert("Server xatosi");
+      }
+    }
+
+    function showResult(data) {
+      // Daraja o'zgargan bo'lsa - localStorage yangilash
+      if (data.updated_user) {
+        localStorage.setItem("user", JSON.stringify(data.updated_user));
+      }
+
+      const icon = document.getElementById("resultIcon");
+      const title = document.getElementById("resultTitle");
+      const subtitle = document.getElementById("resultSubtitle");
+
+      if (data.passed) {
+        icon.textContent = "🎉";
+        title.textContent = "Tabriklaymiz!";
+        title.className = "pass";
+        subtitle.innerHTML = "Siz <b>" + data.new_level + "</b> darajasiga ko'tarildingiz! 🚀";
+        document.getElementById("retryBtn").style.display = "none";
+      } else {
+        icon.textContent = "📚";
+        title.textContent = "Yana harakat qiling";
+        title.className = "fail";
+        subtitle.textContent = "Imtihondan o'ta olmadingiz. Quyidagi mavzularni mustahkamlang:";
+        document.getElementById("retryBtn").style.display = "inline-block";
+      }
+
+      document.getElementById("overallScore").textContent =
+        data.overall_percent + "% (" + data.total_correct + "/" + data.total + ")";
+
+      // Skill bo'yicha natija
+      const breakdown = document.getElementById("skillBreakdown");
+      breakdown.innerHTML = "";
+      for (const skill in data.skill_results) {
+        const s = data.skill_results[skill];
+        const passed = s.percent >= data.pass_skill_required;
+        const row = document.createElement("div");
+        row.className = "skill-row";
+        row.innerHTML =
+          '<span class="s-name">' + skill + '</span>' +
+          '<span class="' + (passed ? 's-pass' : 's-fail') + '">' + s.correct + '/' + s.total + ' (' + s.percent + '%) ' + (passed ? '✅' : '❌') + '</span>';
+        breakdown.appendChild(row);
+      }
+
+      showScreen("resultScreen");
+    }
+
+    function goLobby() {
+      window.location.href = "/lobby.html";
+    }
+
+    checkStatus();
+  </script>
+</body>
+</html>
