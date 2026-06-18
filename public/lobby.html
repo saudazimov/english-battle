@@ -340,7 +340,8 @@
 
     /* Current Rank */
     .rank-display { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
-    .rank-medal { font-size: 46px; }
+    .rank-medal { font-size: 46px; width: 56px; height: 56px; display: inline-flex; align-items: center; justify-content: center; }
+    .rank-medal svg, .rank-medal i { width: 44px; height: 44px; }
     .rank-name { font-size: 22px; font-weight: 800; }
     .rank-rp { font-size: 14px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; margin-top: 3px; }
     .rank-bar { height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; overflow: hidden; }
@@ -418,6 +419,8 @@
       text-decoration: none !important;
     }    
     .sidebar a { text-decoration: none !important; }
+
+    
 
   </style>
 
@@ -658,11 +661,35 @@
       return "🥉 Bronze";
     }
 
+    // Liga nomi (faqat matn)
+    function leagueName(rating) {
+      if (rating >= 2000) return "Grandmaster";
+      if (rating >= 1800) return "Master";
+      if (rating >= 1600) return "Diamond";
+      if (rating >= 1400) return "Platinum";
+      if (rating >= 1200) return "Gold";
+      if (rating >= 1000) return "Silver";
+      return "Bronze";
+    }
+
+    // Liga ikon (SVG) + nom
+    function leagueFull(rating) {
+      let name = "shield", color = "#cd7f32";
+      if (rating >= 2000) { name = "crown"; color = "#fbbf24"; }
+      else if (rating >= 1800) { name = "crown"; color = "#a855f7"; }
+      else if (rating >= 1600) { name = "gem"; color = "#38e1ff"; }
+      else if (rating >= 1400) { name = "gem"; color = "#5b8cff"; }
+      else if (rating >= 1200) { name = "medal"; color = "#fbbf24"; }
+      else if (rating >= 1000) { name = "shield"; color = "#cbd5e1"; }
+      const icon = '<i data-lucide="' + name + '" style="width:16px;height:16px;color:' + color + ';vertical-align:-3px;"></i>';
+      return icon + ' ' + leagueName(rating);
+    }
+
     document.getElementById("pcAvatar").textContent = (user.first_name || "?").charAt(0).toUpperCase();
     document.getElementById("pcName").textContent = user.first_name + " " + user.last_name;
     document.getElementById("pcCefr").textContent = user.cefr_level || "A1";
     document.getElementById("pcCefrLabel").textContent = cefrLabels[user.cefr_level] || "Beginner";
-    document.getElementById("pcLeague").textContent = getLeagueInfo(user.rating || 1000);
+    document.getElementById("pcLeague").innerHTML = leagueFull(user.rating || 1000);
     document.getElementById("pcRating").textContent = user.rating || 1000;
 
     // Win rate va streak - profil endpoint'dan
@@ -759,20 +786,21 @@
     // Current Rank
     function setupRank() {
       const r = user.rating || 1000;
+      const ic = (n, c) => '<i data-lucide="' + n + '" style="width:100%;height:100%;color:' + c + ';"></i>';
       const leagues = [
-        { name: "Bronze", min: 0, max: 999, medal: "🥉" },
-        { name: "Silver", min: 1000, max: 1199, medal: "🥈" },
-        { name: "Gold", min: 1200, max: 1399, medal: "🥇" },
-        { name: "Platinum", min: 1400, max: 1599, medal: "💎" },
-        { name: "Diamond", min: 1600, max: 1799, medal: "💠" },
-        { name: "Master", min: 1800, max: 1999, medal: "🔱" },
-        { name: "Grandmaster", min: 2000, max: 99999, medal: "👑" },
+        { name: "Bronze", min: 0, max: 999, icon: ic("shield", "#cd7f32") },
+        { name: "Silver", min: 1000, max: 1199, icon: ic("shield", "#cbd5e1") },
+        { name: "Gold", min: 1200, max: 1399, icon: ic("medal", "#fbbf24") },
+        { name: "Platinum", min: 1400, max: 1599, icon: ic("gem", "#5b8cff") },
+        { name: "Diamond", min: 1600, max: 1799, icon: ic("gem", "#38e1ff") },
+        { name: "Master", min: 1800, max: 1999, icon: ic("crown", "#a855f7") },
+        { name: "Grandmaster", min: 2000, max: 99999, icon: ic("crown", "#fbbf24") },
       ];
       let cur = leagues[0], idx = 0;
       leagues.forEach((l, i) => { if (r >= l.min && r <= l.max) { cur = l; idx = i; } });
       const next = leagues[idx + 1];
 
-      document.getElementById("rankMedal").textContent = cur.medal;
+      document.getElementById("rankMedal").innerHTML = cur.icon;
       document.getElementById("rankName").textContent = cur.name;
       document.getElementById("rankRP").textContent = r;
 
