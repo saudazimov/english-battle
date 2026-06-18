@@ -74,3 +74,26 @@ function sidebarLogout() {
     document.head.appendChild(s);
   }
 })();
+
+// ===== UMUMIY AVATAR (rasm yoki harf) =====
+// firstName — ism, picPath — rasm yo'li (yoki null)
+// Rasm bor bo'lsa <img>, yo'q bo'lsa ismning birinchi harfi
+function avatarHTML(firstName, picPath) {
+  const letter = (firstName || "?").charAt(0).toUpperCase();
+  if (picPath) {
+    return '<img src="' + picPath + '" alt="' + letter + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
+  }
+  return letter;
+}
+
+// ===== TOPBAR AVATAR (hamma sahifada) =====
+document.addEventListener("DOMContentLoaded", function () {
+  try {
+    const u = JSON.parse(localStorage.getItem("user") || "{}");
+    const html = avatarHTML(u.first_name, u.profile_picture);
+    const av1 = document.getElementById("topAva");
+    const av2 = document.getElementById("userAva");
+    if (av1) av1.innerHTML = html;
+    if (av2) av2.innerHTML = html;
+  } catch (e) {}
+});

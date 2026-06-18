@@ -4,6 +4,9 @@ const pool = require("./db");
 const http = require("http");
 const { Server } = require("socket.io");
 
+const multer = require("multer");
+const path = require("path");
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -101,6 +104,7 @@ app.post("/login", async (req, res) => {
         xp: user.xp,
         rating: user.rating,
         coins: user.coins,
+        profile_picture: user.profile_picture,
       },
     });
   } catch (err) {
@@ -811,7 +815,7 @@ app.get("/leaderboard", async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT
-         u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.xp,
+         u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.xp, u.profile_picture,
          COUNT(bh.id) FILTER (WHERE bh.outcome = 'win') AS wins,
          COUNT(bh.id) AS total_battles
        FROM users u
@@ -832,6 +836,7 @@ app.get("/leaderboard", async (req, res) => {
         cefr_level: p.cefr_level,
         rating: p.rating,
         xp: p.xp,
+        profile_picture: p.profile_picture,
         wins: wins,
         win_rate: total > 0 ? Math.round((wins / total) * 100) : 0,
       };
@@ -1086,7 +1091,7 @@ app.get("/profile/:userId", async (req, res) => {
     const userResult = await pool.query(
       `SELECT id, first_name, last_name, cefr_level, rating, xp, coins,
               current_streak, longest_streak,
-              region, district, village, school, birth_date, phone
+              region, district, village, school, birth_date, phone, profile_picture
        FROM users WHERE id = $1`,
       [userId]
     );
@@ -1423,7 +1428,7 @@ app.get("/friends/search", async (req, res) => {
 
     const searchTerm = "%" + q.trim() + "%";
     const result = await pool.query(
-      `SELECT id, first_name, last_name, cefr_level, rating, phone
+      `SELECT id, first_name, last_name, cefr_level, rating, phone, profile_picture
        FROM users
        WHERE (first_name ILIKE $1
               OR last_name ILIKE $1
@@ -1700,7 +1705,7 @@ app.get("/friends/requests/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
     const result = await pool.query(
-      `SELECT f.id AS friendship_id, u.id, u.first_name, u.last_name, u.cefr_level, u.rating
+      `SELECT f.id AS friendship_id, u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.profile_picture
        FROM friendships f
        JOIN users u ON u.id = f.requester_id
        WHERE f.receiver_id = $1 AND f.status = 'pending'
@@ -1719,7 +1724,7 @@ app.get("/friends/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
     const result = await pool.query(
-      `SELECT u.id, u.first_name, u.last_name, u.cefr_level, u.rating
+      `SELECT u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.profile_picture
        FROM friendships f
        JOIN users u ON (u.id = f.requester_id OR u.id = f.receiver_id)
        WHERE (f.requester_id = $1 OR f.receiver_id = $1)
@@ -1780,6 +1785,59 @@ app.get("/friends/wins/:userId", async (req, res) => {
   }
 });
 
+// Do'stlar faoliyati (Recent Activity)
+app.get("/friends/activity/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Do'st id'larini olish
+    const friendsRes = await pool.query(
+      `SELECT requester_id, receiver_id FROM friendships
+       WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
+      [userId]
+    );
+    const friendIds = friendsRes.rows.map(r =>
+      String(r.requester_id) === String(userId) ? r.receiver_id : r.requester_id
+    );
+
+    if (friendIds.length === 0) {
+      return res.json({ activities: [] });
+    }
+
+    // Do'stlarning so'nggi janglari (har do'stning oxirgi 5 jangi)
+    const battlesRes = await pool.query(
+      `SELECT bh.user_id, bh.opponent_name, bh.my_score, bh.opponent_score,
+              bh.outcome, bh.rating_change, bh.played_at,
+              u.first_name, u.last_name, u.rating
+       FROM battle_history bh
+       JOIN users u ON u.id = bh.user_id
+       WHERE bh.user_id = ANY($1)
+       ORDER BY bh.played_at DESC
+       LIMIT 10`,
+      [friendIds]
+    );
+
+    const activities = battlesRes.rows.map(b => ({
+      type: "battle",
+      friendId: b.user_id,
+      friendName: b.first_name + " " + b.last_name,
+      friendFirst: b.first_name,
+      outcome: b.outcome,
+      myScore: b.my_score,
+      oppScore: b.opponent_score,
+      opponentName: b.opponent_name,
+      ratingChange: b.rating_change,
+      rating: b.rating,
+      time: b.played_at,
+    }));
+
+    res.json({ activities: activities });
+  } catch (err) {
+    console.error("Faoliyat xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // ============ BILDIRISHNOMALAR ============
 
 // Foydalanuvchining bildirishnomalari
@@ -1819,6 +1877,46 @@ app.post("/notifications/read/:userId", async (req, res) => {
     res.status(500).json({ error: "Server xatosi" });
   }
 });
+
+// ===== PROFIL RASM YUKLASH =====
+const uploadStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, "public/uploads"));
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, "user_" + req.params.userId + "_" + Date.now() + ext);
+  },
+});
+const upload = multer({
+  storage: uploadStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Faqat rasm fayllari!"));
+  },
+});
+
+// Profil rasm yuklash endpoint
+app.post("/profile/:userId/picture", upload.single("picture"), async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    if (!req.file) return res.status(400).json({ error: "Rasm yuklanmadi" });
+
+    const filePath = "/uploads/" + req.file.filename;
+
+    await pool.query(
+      "UPDATE users SET profile_picture = $1 WHERE id = $2",
+      [filePath, userId]
+    );
+
+    res.json({ message: "Rasm yangilandi", profile_picture: filePath });
+  } catch (err) {
+    console.error("Rasm yuklash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 
 // DIQQAT: app.listen emas, server.listen!
 server.listen(PORT, () => {

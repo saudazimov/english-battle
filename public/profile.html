@@ -247,6 +247,15 @@
     .pr-row i { width: 20px; height: 20px; }
     .pr-name { flex: 1; font-size: 14px; }
     .pr-val { font-weight: 800; font-size: 17px; }
+    /* Avatar rasm yuklash */
+    .pc-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .pc-avatar-overlay {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.55);
+      display: none; align-items: center; justify-content: center;
+      border-radius: 50%; color: #fff;
+    }
+    .pc-avatar:hover .pc-avatar-overlay { display: flex; }
+    .pc-avatar-overlay i { width: 28px; height: 28px; }
 
   </style>
 </head>
@@ -277,7 +286,11 @@
 
       <!-- Profil kartasi -->
       <div class="card profile-card">
-        <div class="pc-avatar" id="pcAvatar">J</div>
+        <div class="pc-avatar" id="pcAvatar" onclick="triggerUpload()" style="cursor:pointer; position:relative; overflow:hidden;">
+          J
+          <div class="pc-avatar-overlay" id="avatarOverlay"><i data-lucide="camera"></i></div>
+        </div>
+        <input type="file" id="picInput" accept="image/*" style="display:none;" onchange="uploadPicture(this)">
         <div class="pc-info">
           <div class="pc-top">
             <div class="pc-name" id="pcName">O'yinchi</div>
@@ -515,7 +528,11 @@
         if (data.user) {
           // Profil kartasi (endpoint'dan - boshqa odam uchun ham to'g'ri)
           const u = data.user;
-          document.getElementById("pcAvatar").textContent = (u.first_name || "?").charAt(0).toUpperCase();
+          if (u.profile_picture) {
+            showAvatar(u.profile_picture);
+          } else {
+            document.getElementById("pcAvatar").textContent = (u.first_name || "?").charAt(0).toUpperCase();
+          }
           document.getElementById("pcName").textContent = u.first_name + " " + u.last_name;
           document.getElementById("pcCefr").textContent = u.cefr_level || "A1";
           document.getElementById("pcCefrLabel").textContent = cefrLabels[u.cefr_level] || "Beginner";
@@ -668,7 +685,45 @@
         }
       })
       .catch(() => {});
-      
+    // ===== PROFIL RASM YUKLASH (faqat o'z profil) =====
+    function triggerUpload() {
+      if (!isOwnProfile) return; // boshqa odam profilida yuklatmaймиз
+      document.getElementById("picInput").click();
+    }
+
+    async function uploadPicture(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+      const formData = new FormData();
+      formData.append("picture", file);
+
+      try {
+        const res = await fetch("/profile/" + user.id + "/picture", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (res.ok && data.profile_picture) {
+          // Avatarni yangilash
+          showAvatar(data.profile_picture);
+          // localStorage'даги user'ni ham yangilash
+          user.profile_picture = data.profile_picture;
+          localStorage.setItem("user", JSON.stringify(user));
+        } else {
+          alert(data.error || "Rasm yuklab bo'lmadi");
+        }
+      } catch (err) {
+        alert("Xato yuz berdi");
+      }
+    }
+
+    // Avatarga rasm qo'yish
+    function showAvatar(picPath) {
+      const av = document.getElementById("pcAvatar");
+      av.innerHTML = '<img src="' + picPath + '" alt="avatar"><div class="pc-avatar-overlay"><i data-lucide="camera"></i></div>';
+      lucide.createIcons();
+    }
+
     // Lucide ikonalar
     lucide.createIcons();
   </script>

@@ -643,7 +643,7 @@
     setupLobbySocket();
 
     document.getElementById("userName").textContent = user.first_name + " " + user.last_name;
-    document.getElementById("userAva").textContent = (user.first_name || "?").charAt(0).toUpperCase();
+    document.getElementById("userAva").innerHTML = avatarHTML(user.first_name, user.profile_picture);
 
     // Profil kartasini to'ldirish
     const cefrLabels = { A1: "Beginner", A2: "Elementary", B1: "Intermediate", B2: "Upper-Intermediate", C1: "Advanced", C2: "Proficient" };

@@ -339,6 +339,37 @@
     .st-offline { color: var(--text-dim); }
     .fl-dot-off { background: var(--text-faint) !important; box-shadow: none !important; }
 
+    /* Recent Activity */
+    .ra-item {
+      display: flex; gap: 11px; padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .ra-item:last-child { border-bottom: none; }
+    .ra-icon {
+      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+      display: grid; place-items: center; font-size: 17px;
+    }
+    .ra-icon.win { background: rgba(52,211,153,0.15); }
+    .ra-icon.lose { background: rgba(248,113,113,0.12); }
+    .ra-icon.online { background: rgba(56,225,255,0.15); }
+    .ra-body { flex: 1; min-width: 0; }
+    .ra-title { font-size: 13px; font-weight: 600; line-height: 1.3; }
+    .ra-title b { color: var(--text); }
+    .ra-desc { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+    .ra-time { font-size: 11px; color: var(--text-faint); margin-top: 3px; }
+    .ra-btn {
+      margin-top: 7px; display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 7px; cursor: pointer; font-size: 12px; font-weight: 600;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border: none; font-family: inherit;
+    }
+    .ra-btn i { width: 13px; height: 13px; }
+    .ra-empty { text-align: center; padding: 16px; }
+    .ra-empty-txt { font-size: 13px; color: var(--text-faint); line-height: 1.5; margin-bottom: 12px; }
+    .ra-empty-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 9px;
+      background: rgba(91,140,255,0.12); border: 1px solid var(--border-bright); color: var(--accent);
+      font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+
   </style>
 </head>
 <body>
@@ -458,8 +489,8 @@
 
       <!-- Recent Activity -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Recent Activity</span><span class="soon-badge">Tez kunda</span></div>
-        <div class="ra-note">Do'stlaringizning so'nggi harakatlari (g'alabalar, liga o'sishi) tez kunda shu yerda ko'rinadi.</div>
+        <div class="rb-head"><span>Recent Activity</span><i data-lucide="activity" class="rb-info"></i></div>
+        <div id="activityList"><div class="ra-note">Yuklanmoqda...</div></div>
       </div>
 
     </aside>
@@ -616,7 +647,7 @@
 
       document.getElementById("fpCard").className = "fp-card";
       document.getElementById("fpCard").innerHTML =
-        '<div class="fpc-avatar">' + (u.first_name || "?").charAt(0).toUpperCase() + '</div>' +
+        '<div class="fpc-avatar">' + avatarHTML(u.first_name, u.profile_picture) + '</div>' +
         '<div class="fpc-info">' +
           '<div class="fpc-name">' + name + '</div>' +
           '<div class="fpc-meta">' +
@@ -912,7 +943,7 @@
           const row = document.createElement("div");
           row.className = "fl-row";
           row.innerHTML =
-            '<div class="fl-friend"><div class="fl-ava">' + f.first_name.charAt(0).toUpperCase() + '</div><div class="fl-name">' + name + '</div></div>' +
+            '<div class="fl-friend"><div class="fl-ava">' + avatarHTML(f.first_name, f.profile_picture) + '</div><div class="fl-name">' + name + '</div></div>' +
             '<div><span class="fl-level">' + (f.cefr_level || "A1") + '</span></div>' +
             '<div class="fl-league"><div class="fl-league-name">' + lg.medal + ' ' + lg.name + '</div><div class="fl-league-rp">' + f.rating + ' RP</div></div>' +
             statusHtml +
@@ -949,7 +980,7 @@
           const row = document.createElement("div");
           row.className = "req-row";
           row.innerHTML =
-            '<div class="req-ava">' + r.first_name.charAt(0).toUpperCase() + '</div>' +
+            '<div class="req-ava">' + avatarHTML(r.first_name, r.profile_picture) + '</div>' +
             '<div class="req-info"><div class="req-name">' + name + '</div><div class="req-sub">' + (r.cefr_level || "A1") + ' · ' + r.rating + ' RP</div></div>' +
             '<div class="req-actions">' +
               '<button class="req-btn req-accept" onclick="respond(' + r.friendship_id + ',\'accept\',this)"><i data-lucide="check"></i> Qabul</button>' +
@@ -1013,7 +1044,7 @@
           }
 
           row.innerHTML =
-            '<div class="srch-ava">' + u.first_name.charAt(0).toUpperCase() + '</div>' +
+            '<div class="srch-ava">' + avatarHTML(u.first_name, u.profile_picture) + '</div>' +
             '<div class="srch-info"><div class="srch-name">' + name + '</div><div class="srch-sub">' + (u.cefr_level || "A1") + ' · ' + u.rating + ' RP</div></div>' +
             actionBtn;
           results.appendChild(row);
@@ -1041,7 +1072,7 @@
           const row = document.createElement("div");
           row.className = "srch-row";
           row.innerHTML =
-            '<div class="srch-ava">' + u.first_name.charAt(0).toUpperCase() + '</div>' +
+            '<div class="srch-ava">' + avatarHTML(u.first_name, u.profile_picture) + '</div>' +
             '<div class="srch-info"><div class="srch-name">' + name + '</div>' +
             '<div class="srch-sub"><span class="sug-reason">' + u.reason + '</span> · ' + (u.cefr_level || "A1") + ' · ' + u.rating + ' RP</div></div>' +
             '<button class="srch-add" id="addBtn-' + u.id + '" onclick="sendRequest(' + u.id + ',this)"><i data-lucide="user-plus"></i> Qo\'shish</button>';
@@ -1103,7 +1134,7 @@
           row.className = "tf-row";
           row.innerHTML =
             '<div class="tf-rank ' + rankCls + '">' + rank + '</div>' +
-            '<div class="tf-ava">' + f.first_name.charAt(0).toUpperCase() + '</div>' +
+            '<div class="tf-ava">' + avatarHTML(f.first_name, f.profile_picture) + '</div>' +
             '<div class="tf-name ' + (f.isMe ? "me" : "") + '">' + name + '</div>' +
             '<div class="tf-rating"><i data-lucide="trophy"></i> ' + f.rating + '</div>';
           tf.appendChild(row);
@@ -1113,6 +1144,57 @@
         document.getElementById("topFriends").innerHTML = '<div class="fl-empty" style="padding:16px;">Yuklab bo\'lmadi</div>';
       }
     }
+
+    // ===== RECENT ACTIVITY =====
+    function timeAgo(dateStr) {
+      const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+      if (diff < 60) return "hozir";
+      if (diff < 3600) return Math.floor(diff / 60) + " daqiqa oldin";
+      if (diff < 86400) return Math.floor(diff / 3600) + " soat oldin";
+      return Math.floor(diff / 86400) + " kun oldin";
+    }
+
+    async function loadActivity() {
+      const box = document.getElementById("activityList");
+      try {
+        const res = await fetch("/friends/activity/" + user.id);
+        const data = await res.json();
+        const acts = data.activities || [];
+        if (acts.length === 0) {
+          box.innerHTML =
+            '<div class="ra-empty">' +
+              '<div class="ra-empty-txt">Hali do\'stlar faoliyati yo\'q. Do\'stlaringizni jangga chaqiring — ularning g\'alabalari shu yerda ko\'rinadi!</div>' +
+              '<button class="ra-empty-btn" onclick="switchTab(\'all\')"><i data-lucide="swords"></i> Do\'stni chaqirish</button>' +
+            '</div>';
+          lucide.createIcons();
+          return;
+        }
+        box.innerHTML = "";
+        acts.slice(0, 5).forEach(a => {
+          const isWin = a.outcome === "win";
+          const isDraw = a.outcome === "draw";
+          const icon = isWin ? "🏆" : (isDraw ? "🤝" : "⚔️");
+          const iconCls = isWin ? "win" : (isDraw ? "online" : "lose");
+          const resWord = isWin ? "g'alaba qozondi" : (isDraw ? "durang o'ynadi" : "mag'lub bo'ldi");
+          const rc = a.ratingChange >= 0 ? "+" + a.ratingChange : a.ratingChange;
+          const item = document.createElement("div");
+          item.className = "ra-item";
+          item.innerHTML =
+            '<div class="ra-icon ' + iconCls + '">' + icon + '</div>' +
+            '<div class="ra-body">' +
+              '<div class="ra-title"><b>' + a.friendName + '</b> ' + resWord + '</div>' +
+              '<div class="ra-desc">' + a.myScore + ' : ' + a.oppScore + ' · ' + rc + ' RP · ' + (a.opponentName || "raqib") + 'ga qarshi</div>' +
+              '<div class="ra-time">' + timeAgo(a.time) + '</div>' +
+              '<button class="ra-btn" onclick="challengeFriend(' + a.friendId + ', \'' + a.friendName.replace(/'/g, "\\'") + '\')"><i data-lucide="swords"></i> Chaqirish</button>' +
+            '</div>';
+          box.appendChild(item);
+        });
+        lucide.createIcons();
+      } catch (err) {
+        box.innerHTML = '<div class="ra-note">Yuklab bo\'lmadi</div>';
+      }
+    }
+    loadActivity();
 
     // Pending so'rovlar soni
     async function loadPendingCount() {
