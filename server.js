@@ -773,9 +773,9 @@ async function finishBattle(roomId) {
         // Jang tarixiga yozish
         await pool.query(
           `INSERT INTO battle_history
-           (user_id, opponent_name, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [me.userId, opp.name, me.score, opp.score, outcome, xpEarned, ratingDelta, battle.level || "A1"]
+           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          [me.userId, opp.name, opp.userId || null, me.score, opp.score, outcome, xpEarned, ratingDelta, battle.level || "A1"]
         );
         // Topshiriqlar progressini yangilash
         await updateQuestProgress(me.userId, {
@@ -1391,6 +1391,26 @@ app.get("/rankings/regions", async (req, res) => {
   }
 });
 
+// Tumanlar reytingi
+app.get("/rankings/districts", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT district, region,
+              COUNT(*) as player_count,
+              SUM(rating) as total_rating,
+              ROUND(AVG(rating)) as avg_rating
+       FROM users
+       WHERE district IS NOT NULL AND district != ''
+       GROUP BY district, region
+       ORDER BY total_rating DESC`
+    );
+    res.json({ districts: result.rows });
+  } catch (err) {
+    console.error("Tuman reyting xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // ============ DO'STLAR TIZIMI ============
 
 // Foydalanuvchi qidirish (telefon yoki ism bo'yicha)
@@ -1717,6 +1737,45 @@ app.get("/friends/:userId", async (req, res) => {
     res.json({ friends: friendsWithStatus });
   } catch (err) {
     console.error("Do'stlar xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Do'stlarga qarshi g'alabalar soni
+app.get("/friends/wins/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Do'st id'larini olish
+    const friendsRes = await pool.query(
+      `SELECT requester_id, receiver_id FROM friendships
+       WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
+      [userId]
+    );
+    const friendIds = friendsRes.rows.map(r =>
+      String(r.requester_id) === String(userId) ? r.receiver_id : r.requester_id
+    );
+
+    if (friendIds.length === 0) {
+      return res.json({ wins: 0, total: 0 });
+    }
+
+    // Do'stlarga qarshi janglar (opponent_id do'stlardan biri bo'lsa)
+    const winsRes = await pool.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE outcome = 'win') AS wins,
+         COUNT(*) AS total
+       FROM battle_history
+       WHERE user_id = $1 AND opponent_id = ANY($2)`,
+      [userId, friendIds]
+    );
+
+    res.json({
+      wins: parseInt(winsRes.rows[0].wins) || 0,
+      total: parseInt(winsRes.rows[0].total) || 0,
+    });
+  } catch (err) {
+    console.error("Wins vs friends xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });

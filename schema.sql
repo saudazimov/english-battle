@@ -76,3 +76,22 @@ CREATE TABLE IF NOT EXISTS user_quests (
   quest_date DATE DEFAULT CURRENT_DATE,
   UNIQUE(user_id, quest_id, quest_date)
 );
+-- Do'stlik jadvali (so'rovlar va do'stliklar)
+CREATE TABLE IF NOT EXISTS friendships (
+  id SERIAL PRIMARY KEY,
+  requester_id INTEGER NOT NULL REFERENCES users(id),
+  receiver_id INTEGER NOT NULL REFERENCES users(id),
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(requester_id, receiver_id)
+);
+
+-- Bildirishnomalar jadvali
+CREATE TABLE IF NOT EXISTS notifications (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  type VARCHAR(50) NOT NULL,
+  message VARCHAR(255) NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT NOW()
+);

@@ -3,172 +3,350 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Maktab reytingi</title>
+  <title>English Battle — Maktablar reytingi</title>
+  <link rel="stylesheet" href="/app.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #0a0a1a;
-      background-image:
-        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.12), transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(168,85,247,0.12), transparent 40%);
-      min-height: 100vh;
-      color: #e2e8f0;
-      padding: 20px;
-    }
-    .container { max-width: 750px; margin: 0 auto; }
-    .topbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 20px 0; margin-bottom: 10px;
-    }
-    .topbar h1 {
-      font-size: 24px;
-      background: linear-gradient(135deg, #fbbf24, #f59e0b);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .back-btn {
-      padding: 8px 16px; background: rgba(99,102,241,0.15);
-      border: 1px solid rgba(99,102,241,0.4); border-radius: 8px;
-      color: #a5b4fc; cursor: pointer; text-decoration: none; font-size: 14px;
-    }
-    .back-btn:hover { background: rgba(99,102,241,0.25); }
+    .app { grid-template-columns: 230px 1fr 340px; max-width: 1680px; }
+    .rightbar { display: flex; flex-direction: column; gap: 20px; }
 
-    /* Tab */
-    .tabs {
-      display: flex; background: rgba(0,0,0,0.3);
-      border-radius: 12px; padding: 4px; margin-bottom: 20px;
-    }
-    .tab {
-      flex: 1; padding: 12px; text-align: center; cursor: pointer;
-      border-radius: 8px; color: #94a3b8; font-weight: 600; transition: all 0.3s;
-    }
-    .tab.active { background: linear-gradient(135deg, #6366f1, #a855f7); color: white; }
+    .topbar { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+    .currency { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; font-weight: 700; font-size: 15px; }
+    .currency .plus { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: rgba(91,140,255,0.2); color: var(--accent); cursor: pointer; font-weight: 700; }
+    .icon-btn { position: relative; width: 42px; height: 42px; border-radius: 12px; background: var(--panel); border: 1px solid var(--border); display: grid; place-items: center; cursor: pointer; }
+    .icon-btn .badge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; background: #ef4444; color: #fff; font-size: 11px; border-radius: 9px; display: grid; place-items: center; padding: 0 4px; }
+    .user-chip { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 6px 12px 6px 6px; cursor: pointer; }
+    .user-chip .ava { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 15px; }
+    .user-chip .uname { font-size: 14px; font-weight: 600; line-height: 1.1; }
+    .user-chip .ulevel { font-size: 11px; color: var(--text-dim); }
 
-    /* Reyting kartasi */
-    .rank-card {
-      background: rgba(20,20,40,0.8); border: 1px solid rgba(99,102,241,0.3);
-      border-radius: 16px; padding: 18px 20px; margin-bottom: 12px;
-      display: flex; align-items: center; gap: 16px;
-      transition: transform 0.2s ease;
-      animation: slideIn 0.4s ease both;
-    }
-    .rank-card:hover { transform: translateX(4px); }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
+    .soon-badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; background: rgba(168,85,247,0.15); color: var(--accent-2); border: 1px solid rgba(168,85,247,0.3); }
+    @media (max-width: 1200px) { .app { grid-template-columns: 200px 1fr; } .rightbar { display: none; } }
 
-    .rank-num {
-      font-size: 22px; font-weight: bold; width: 44px; text-align: center; flex-shrink: 0;
-    }
-    .rank-1 { color: #fbbf24; }
-    .rank-2 { color: #cbd5e1; }
-    .rank-3 { color: #cd7f32; }
-    .rank-other { color: #64748b; }
+    .filter-card { padding: 18px 20px; }
+    .filter-tabs { display: flex; gap: 6px; background: rgba(0,0,0,0.25); border-radius: 12px; padding: 5px; margin-bottom: 14px; flex-wrap: wrap; }
+    .ftab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 14px; border-radius: 9px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-dim); transition: all 0.2s; white-space: nowrap; }
+    .ftab i { width: 16px; height: 16px; }
+    .ftab.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; box-shadow: 0 4px 16px rgba(91,140,255,0.3); }
+    .filter-time { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ttab { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-dim); border: 1px solid var(--border); transition: all 0.2s; }
+    .ttab i { width: 14px; height: 14px; }
+    .ttab.active { background: rgba(91,140,255,0.15); border-color: var(--border-bright); color: var(--accent); }
+    .ttab.disabled { opacity: 0.5; }
+    .time-note { margin-left: auto; font-size: 12px; color: var(--text-faint); }
 
-    .rank-icon {
-      width: 50px; height: 50px; border-radius: 12px; flex-shrink: 0;
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      display: flex; align-items: center; justify-content: center; font-size: 24px;
-    }
-    .rank-info { flex: 1; }
-    .rank-name { font-size: 17px; font-weight: 600; }
-    .rank-sub { font-size: 13px; color: #94a3b8; margin-top: 2px; }
-    .rank-stats { text-align: right; }
-    .rank-total { font-size: 20px; font-weight: bold; color: #fbbf24; }
-    .rank-avg { font-size: 12px; color: #64748b; }
+    .podium { display: flex; align-items: flex-end; justify-content: center; gap: 20px; padding: 10px 0; }
+    .podium-empty { text-align: center; color: var(--text-faint); padding: 40px; }
+    .podium-place { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border); border-radius: 18px; padding: 24px 20px; text-align: center; width: 240px; position: relative; }
+    .podium-place.first { width: 270px; padding: 30px 22px; border-color: var(--gold); background: linear-gradient(180deg, rgba(251,191,36,0.12), var(--bg-2)); box-shadow: 0 0 40px rgba(251,191,36,0.25); }
+    .podium-place.second { border-color: rgba(203,213,225,0.4); }
+    .podium-place.third { border-color: rgba(217,119,6,0.4); }
+    .podium-crown { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 30px; }
+    .podium-rank { width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 14px; display: grid; place-items: center; font-size: 20px; font-weight: 800; border: 2px solid; }
+    .first .podium-rank { background: rgba(251,191,36,0.2); border-color: var(--gold); color: var(--gold); }
+    .second .podium-rank { background: rgba(203,213,225,0.15); border-color: #cbd5e1; color: #cbd5e1; }
+    .third .podium-rank { background: rgba(217,119,6,0.15); border-color: #d97706; color: #d97706; }
+    .podium-ava { width: 72px; height: 72px; border-radius: 18px; margin: 0 auto 14px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-size: 30px; border: 3px solid rgba(120,150,255,0.3); }
+    .first .podium-ava { width: 88px; height: 88px; font-size: 36px; border-color: var(--gold); }
+    .podium-name { font-size: 16px; font-weight: 700; line-height: 1.2; }
+    .first .podium-name { font-size: 18px; }
+    .podium-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+    .podium-rating { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 12px; font-size: 18px; font-weight: 800; color: var(--gold); }
+    .podium-rating i { width: 18px; height: 18px; }
+    .podium-rating-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+    @media (max-width: 1000px) { .podium { flex-wrap: wrap; } .podium-place, .podium-place.first { width: 100%; max-width: 300px; } }
 
-    .loading { text-align: center; padding: 40px; color: #64748b; }
+    .lb-card { padding: 20px 22px; }
+    .lb-cols, .lb-row { display: grid; grid-template-columns: 60px 2.6fr 100px 110px 110px; align-items: center; }
+    .lb-cols { padding: 0 12px 12px; font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+    .lb-cols span:nth-child(n+3), .lb-row > span:nth-child(n+3) { text-align: center; }
+    .lb-row { padding: 13px 12px; border-radius: 12px; transition: background 0.2s; }
+    .lb-row:hover { background: var(--panel); }
+    .lb-row.me { background: linear-gradient(135deg, rgba(91,140,255,0.15), rgba(168,85,247,0.08)); border: 1px solid var(--border-bright); }
+    .lb-rank { font-size: 16px; font-weight: 800; }
+    .lb-rank.top1 { color: var(--gold); }
+    .lb-rank.top2 { color: #cbd5e1; }
+    .lb-rank.top3 { color: #d97706; }
+    .lb-ent { display: flex; align-items: center; gap: 12px; }
+    .lb-ava { width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-size: 18px; }
+    .lb-name { font-weight: 600; font-size: 14px; }
+    .lb-name-sub { font-size: 12px; color: var(--text-dim); }
+    .lb-players { font-weight: 600; }
+    .lb-avg { color: var(--cyan); font-weight: 700; }
+    .lb-rating { display: flex; align-items: center; justify-content: center; gap: 5px; font-weight: 800; color: var(--gold); }
+    .lb-rating i { width: 15px; height: 15px; }
+    .lb-empty { text-align: center; color: var(--text-faint); padding: 30px; }
+    .lb-foot { text-align: center; font-size: 12px; color: var(--text-faint); margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+    .rb-card { padding: 20px; }
+    .rb-head { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .rb-info { width: 16px; height: 16px; color: var(--text-dim); cursor: pointer; }
+    .yr-top { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+    .yr-icon { width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-size: 28px; }
+    .yr-name { font-size: 17px; font-weight: 800; line-height: 1.2; }
+    .yr-sub { font-size: 13px; color: var(--text-dim); margin-top: 3px; }
+    .yr-rows { display: flex; flex-direction: column; gap: 12px; }
+    .yr-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--text-dim); }
+    .yr-rank { font-weight: 800; font-size: 16px; color: var(--text); }
+    .yr-rank.accent { color: var(--accent); }
+    .stat-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; font-size: 14px; border-bottom: 1px solid var(--border); }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-row i { width: 18px; height: 18px; color: var(--accent); }
+    .stat-k { color: var(--text-dim); flex: 1; }
+    .stat-v { font-weight: 700; }
+    .lb-back-btn { width: 100%; justify-content: center; }
+    .note-txt { font-size: 13px; color: var(--text-faint); line-height: 1.5; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="topbar">
-      <h1>🏫 Reyting</h1>
-      <a href="/lobby.html" class="back-btn">← Lobbyga</a>
-    </div>
+  <div class="app">
+    <aside class="sidebar"></aside>
 
-    <div class="tabs">
-      <div class="tab active" id="schoolTab" onclick="switchTab('school')">🏫 Maktablar</div>
-      <div class="tab" id="regionTab" onclick="switchTab('region')">📍 Viloyatlar</div>
-    </div>
+    <main class="content">
+      <div class="topbar">
+        <div class="currency"><i data-lucide="coins" style="color:var(--gold);width:18px;height:18px;"></i> <span id="coins">0</span> <span class="plus">+</span></div>
+        <div class="currency"><i data-lucide="gem" style="color:var(--cyan);width:18px;height:18px;"></i> <span id="gems">0</span> <span class="plus">+</span></div>
+        <div class="icon-btn" onclick="window.location.href='/friends.html'"><i data-lucide="bell"></i> <span class="badge" id="notifBadge">0</span></div>
+        <div class="user-chip">
+          <div class="ava" id="topAva">J</div>
+          <div><div class="uname" id="topName">O'yinchi</div><div class="ulevel">Level <span id="topLevel">1</span></div></div>
+        </div>
+      </div>
 
-    <div id="content">
-      <div class="loading">Yuklanmoqda...</div>
-    </div>
+      <div class="page-head">
+        <div class="crest-ic"><i data-lucide="building-2"></i></div>
+        <div><h1>Maktablar Reytingi</h1><p>Maktab, tuman va viloyatlar bo'yicha eng kuchli jamoalar.</p></div>
+      </div>
+
+      <div class="card filter-card">
+        <div class="filter-tabs">
+          <div class="ftab active" data-tab="schools" onclick="switchTab('schools')"><i data-lucide="building-2"></i> Maktablar</div>
+          <div class="ftab" data-tab="districts" onclick="switchTab('districts')"><i data-lucide="map"></i> Tumanlar</div>
+          <div class="ftab" data-tab="regions" onclick="switchTab('regions')"><i data-lucide="map-pin"></i> Viloyatlar</div>
+        </div>
+        <div class="filter-time">
+          <div class="ttab active"><i data-lucide="calendar"></i> Barcha vaqt</div>
+          <div class="ttab disabled"><i data-lucide="sparkles"></i> Haftalik</div>
+          <div class="ttab disabled"><i data-lucide="calendar-days"></i> Oylik</div>
+          <div class="ttab disabled"><i data-lucide="trophy"></i> Mavsum</div>
+          <span class="time-note">Jami reyting bo'yicha tartiblangan</span>
+        </div>
+      </div>
+
+      <div class="podium" id="podium"><div class="podium-empty">Yuklanmoqda...</div></div>
+
+      <div class="card lb-card">
+        <div class="lb-cols" id="lbCols">
+          <span>O'rin</span><span id="colName">Maktab</span><span>O'yinchi</span><span>O'rtacha</span><span>Jami RP</span>
+        </div>
+        <div id="lbList"><div class="lb-empty">Yuklanmoqda...</div></div>
+        <div class="lb-foot">Jami reyting (RP) bo'yicha tartiblangan</div>
+      </div>
+    </main>
+
+    <aside class="rightbar">
+      <div class="card rb-card">
+        <div class="rb-head"><span id="yrTitle">Sizning maktabingiz</span><i data-lucide="info" class="rb-info"></i></div>
+        <div class="yr-top">
+          <div class="yr-icon" id="yrIcon">🏫</div>
+          <div>
+            <div class="yr-name" id="yrName">—</div>
+            <div class="yr-sub" id="yrSub">—</div>
+          </div>
+        </div>
+        <div class="yr-rows">
+          <div class="yr-row"><span>Reytingdagi o'rni</span><span class="yr-rank accent" id="yrRank">—</span></div>
+          <div class="yr-row"><span>Jami RP</span><span class="yr-rank" id="yrRP">—</span></div>
+          <div class="yr-row"><span>O'yinchilar</span><span class="yr-rank" id="yrPlayers">—</span></div>
+        </div>
+      </div>
+
+      <div class="card rb-card">
+        <div class="rb-head"><span>O'yinchilar reytingi</span></div>
+        <div class="note-txt" style="margin-bottom:14px;">Alohida o'yinchilar reytingini ko'rmoqchimisiz?</div>
+        <button class="btn btn-ghost lb-back-btn" onclick="window.location.href='/leaderboard.html'">
+          <i data-lucide="trophy" style="width:16px;height:16px;"></i> O'yinchilar reytingi
+        </button>
+      </div>
+
+      <div class="card rb-card">
+        <div class="rb-head"><span>Statistika</span></div>
+        <div class="stat-row"><i data-lucide="building-2"></i><span class="stat-k">Jami maktablar</span><span class="stat-v" id="statSchools">—</span></div>
+        <div class="stat-row"><i data-lucide="map"></i><span class="stat-k">Jami tumanlar</span><span class="stat-v" id="statDistricts">—</span></div>
+        <div class="stat-row"><i data-lucide="map-pin"></i><span class="stat-k">Jami viloyatlar</span><span class="stat-v" id="statRegions">—</span></div>
+      </div>
+
+      <div class="card rb-card">
+        <div class="rb-head"><span>Maktab mukofoti</span><span class="soon-badge">Tez kunda</span></div>
+        <div class="note-txt">Eng yuqori maktablar mavsum oxirida maxsus mukofot va nishonlar oladi.</div>
+      </div>
+    </aside>
   </div>
 
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/sidebar.js"></script>
   <script>
-    if (!localStorage.getItem("user")) window.location.href = "/index.html";
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = JSON.parse(userData);
 
-    let currentTab = "school";
+    document.getElementById("topName").textContent = user.first_name + " " + user.last_name;
+    document.getElementById("topAva").textContent = (user.first_name || "?").charAt(0).toUpperCase();
+    document.getElementById("coins").textContent = user.coins || 0;
+
+    renderSidebar("schools");
+
+    let currentTab = "schools";
+    let cache = {};
+
+    const endpoints = { schools: "/rankings/schools", districts: "/rankings/districts", regions: "/rankings/regions" };
+    const dataKeys = { schools: "schools", districts: "districts", regions: "regions" };
+    const icons = { schools: "🏫", districts: "🏙️", regions: "📍" };
+    const colNames = { schools: "Maktab", districts: "Tuman", regions: "Viloyat" };
+    const titles = { schools: "Sizning maktabingiz", districts: "Sizning tumaningiz", regions: "Sizning viloyatingiz" };
+
+    function nameFieldOf(tab) { return tab === "schools" ? "school" : (tab === "districts" ? "district" : "region"); }
 
     function switchTab(tab) {
       currentTab = tab;
-      document.getElementById("schoolTab").classList.toggle("active", tab === "school");
-      document.getElementById("regionTab").classList.toggle("active", tab === "region");
-      loadRankings();
+      document.querySelectorAll(".ftab").forEach(t => t.classList.toggle("active", t.getAttribute("data-tab") === tab));
+      document.getElementById("colName").textContent = colNames[tab];
+      document.getElementById("yrTitle").textContent = titles[tab];
+      document.getElementById("yrIcon").textContent = icons[tab];
+      loadAndRender();
     }
 
-    async function loadRankings() {
-      const content = document.getElementById("content");
-      content.innerHTML = '<div class="loading">Yuklanmoqda...</div>';
-
+    async function loadAndRender() {
+      if (cache[currentTab]) { render(); return; }
+      document.getElementById("lbList").innerHTML = '<div class="lb-empty">Yuklanmoqda...</div>';
+      document.getElementById("podium").innerHTML = '<div class="podium-empty">Yuklanmoqda...</div>';
       try {
-        const url = currentTab === "school" ? "/rankings/schools" : "/rankings/regions";
-        const res = await fetch(url);
+        const res = await fetch(endpoints[currentTab]);
         const data = await res.json();
-        const list = currentTab === "school" ? data.schools : data.regions;
-
-        if (!list || list.length === 0) {
-          content.innerHTML = '<div class="loading">Hozircha ma\'lumot yo\'q</div>';
-          return;
-        }
-
-        content.innerHTML = "";
-        list.forEach((item, index) => {
-          const rank = index + 1;
-          let rankClass = "rank-other";
-          let rankDisplay = "#" + rank;
-          if (rank === 1) { rankClass = "rank-1"; rankDisplay = "🥇"; }
-          else if (rank === 2) { rankClass = "rank-2"; rankDisplay = "🥈"; }
-          else if (rank === 3) { rankClass = "rank-3"; rankDisplay = "🥉"; }
-
-          const card = document.createElement("div");
-          card.className = "rank-card";
-          card.style.animationDelay = (index * 0.05) + "s";
-
-          if (currentTab === "school") {
-            card.innerHTML =
-              '<div class="rank-num ' + rankClass + '">' + rankDisplay + '</div>' +
-              '<div class="rank-icon">🏫</div>' +
-              '<div class="rank-info">' +
-                '<div class="rank-name">' + item.school + '</div>' +
-                '<div class="rank-sub">' + (item.region || '') + ' · ' + item.player_count + ' o\'yinchi</div>' +
-              '</div>' +
-              '<div class="rank-stats">' +
-                '<div class="rank-total">' + item.total_rating + '</div>' +
-                '<div class="rank-avg">o\'rtacha ' + item.avg_rating + '</div>' +
-              '</div>';
-          } else {
-            card.innerHTML =
-              '<div class="rank-num ' + rankClass + '">' + rankDisplay + '</div>' +
-              '<div class="rank-icon">📍</div>' +
-              '<div class="rank-info">' +
-                '<div class="rank-name">' + item.region + '</div>' +
-                '<div class="rank-sub">' + item.player_count + ' o\'yinchi</div>' +
-              '</div>' +
-              '<div class="rank-stats">' +
-                '<div class="rank-total">' + item.total_rating + '</div>' +
-                '<div class="rank-avg">o\'rtacha ' + item.avg_rating + '</div>' +
-              '</div>';
-          }
-
-          content.appendChild(card);
-        });
+        cache[currentTab] = data[dataKeys[currentTab]] || [];
+        render();
       } catch (err) {
-        content.innerHTML = '<div class="loading">Yuklab bo\'lmadi</div>';
+        document.getElementById("lbList").innerHTML = '<div class="lb-empty">Yuklab bo\'lmadi</div>';
       }
     }
 
-    loadRankings();
+    function render() {
+      const list = cache[currentTab] || [];
+      const nameField = nameFieldOf(currentTab);
+      const icon = icons[currentTab];
+      renderPodium(list, nameField, icon);
+      renderTable(list, nameField, icon);
+      updateMyBox(list, nameField);
+      updateStats();
+    }
+
+    function renderPodium(list, nameField, icon) {
+      const podium = document.getElementById("podium");
+      if (list.length < 3) {
+        podium.innerHTML = '<div class="podium-empty">Top 3 uchun kamida 3 ta kerak</div>';
+        return;
+      }
+      const top3 = list.slice(0, 3);
+      const order = [
+        { item: top3[1], rank: 2, cls: "second" },
+        { item: top3[0], rank: 1, cls: "first" },
+        { item: top3[2], rank: 3, cls: "third" },
+      ];
+      podium.innerHTML = "";
+      order.forEach(o => {
+        const name = o.item[nameField] || "—";
+        const sub = currentTab === "schools" ? (o.item.region || "") : (o.item.player_count + " o'yinchi");
+        const crown = o.rank === 1 ? '<div class="podium-crown">👑</div>' : "";
+        podium.innerHTML +=
+          '<div class="podium-place ' + o.cls + '">' + crown +
+            '<div class="podium-rank">' + o.rank + '</div>' +
+            '<div class="podium-ava">' + icon + '</div>' +
+            '<div class="podium-name">' + name + '</div>' +
+            '<div class="podium-sub">' + sub + '</div>' +
+            '<div class="podium-rating"><i data-lucide="trophy"></i> ' + o.item.total_rating + '</div>' +
+            '<div class="podium-rating-sub">o\'rtacha ' + o.item.avg_rating + '</div>' +
+          '</div>';
+      });
+      lucide.createIcons();
+    }
+
+    function renderTable(list, nameField, icon) {
+      const lbList = document.getElementById("lbList");
+      if (list.length === 0) {
+        lbList.innerHTML = '<div class="lb-empty">Hozircha ma\'lumot yo\'q</div>';
+        return;
+      }
+      const myField = currentTab === "schools" ? user.school : (currentTab === "districts" ? user.district : user.region);
+      lbList.innerHTML = "";
+      list.forEach((item, i) => {
+        const rank = i + 1;
+        let rcls = ""; if (rank === 1) rcls = "top1"; else if (rank === 2) rcls = "top2"; else if (rank === 3) rcls = "top3";
+        const name = item[nameField] || "—";
+        const sub = currentTab === "schools" ? (item.region || "—") : (currentTab === "districts" ? (item.region || "—") : "Viloyat");
+        const isMe = myField && name === myField;
+        lbList.innerHTML +=
+          '<div class="lb-row' + (isMe ? " me" : "") + '">' +
+            '<div class="lb-rank ' + rcls + '">' + rank + '</div>' +
+            '<div class="lb-ent"><div class="lb-ava">' + icon + '</div>' +
+              '<div><div class="lb-name">' + name + '</div><div class="lb-name-sub">' + sub + '</div></div></div>' +
+            '<span class="lb-players">' + item.player_count + '</span>' +
+            '<span class="lb-avg">' + item.avg_rating + '</span>' +
+            '<div class="lb-rating"><i data-lucide="trophy"></i> ' + item.total_rating + '</div>' +
+          '</div>';
+      });
+      lucide.createIcons();
+    }
+
+    function updateMyBox(list, nameField) {
+      const myField = currentTab === "schools" ? user.school : (currentTab === "districts" ? user.district : user.region);
+      if (!myField) {
+        document.getElementById("yrName").textContent = "—";
+        document.getElementById("yrSub").textContent = "Ma'lumot yo'q";
+        document.getElementById("yrRank").textContent = "—";
+        document.getElementById("yrRP").textContent = "—";
+        document.getElementById("yrPlayers").textContent = "—";
+        return;
+      }
+      const idx = list.findIndex(it => (it[nameField] || "") === myField);
+      document.getElementById("yrName").textContent = myField;
+      if (idx >= 0) {
+        const item = list[idx];
+        const sub = currentTab === "schools" ? (item.region || "") : "";
+        document.getElementById("yrSub").textContent = sub || (item.player_count + " o'yinchi");
+        document.getElementById("yrRank").textContent = "#" + (idx + 1);
+        document.getElementById("yrRP").textContent = item.total_rating;
+        document.getElementById("yrPlayers").textContent = item.player_count;
+      } else {
+        document.getElementById("yrSub").textContent = "Reytingda yo'q";
+        document.getElementById("yrRank").textContent = "—";
+        document.getElementById("yrRP").textContent = "—";
+        document.getElementById("yrPlayers").textContent = "—";
+      }
+    }
+
+    function updateStats() {
+      if (cache.schools) document.getElementById("statSchools").textContent = cache.schools.length;
+      if (cache.districts) document.getElementById("statDistricts").textContent = cache.districts.length;
+      if (cache.regions) document.getElementById("statRegions").textContent = cache.regions.length;
+    }
+
+    async function preloadStats() {
+      try {
+        const [s, d, r] = await Promise.all([
+          fetch("/rankings/schools").then(x => x.json()),
+          fetch("/rankings/districts").then(x => x.json()),
+          fetch("/rankings/regions").then(x => x.json()),
+        ]);
+        cache.schools = s.schools || [];
+        cache.districts = d.districts || [];
+        cache.regions = r.regions || [];
+        render();
+        updateStats();
+      } catch (err) {}
+    }
+    preloadStats();
+
+    lucide.createIcons();
   </script>
 </body>
 </html>

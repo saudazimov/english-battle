@@ -444,7 +444,7 @@
           </div>
           <div class="fs-box">
             <i data-lucide="trophy" style="color:var(--cyan);"></i>
-            <div class="fs-val soon-badge" style="font-size:11px;">tez kunda</div>
+            <div class="fs-val" id="fsWins">0</div>
             <div class="fs-lbl">Wins vs Friends</div>
           </div>
         </div>
@@ -1081,6 +1081,13 @@
         const onlineCount = friends.filter(f => f.isOnline).length;
         document.getElementById("fsOnline").textContent = onlineCount;
 
+        // Wins vs Friends
+        try {
+          const winsRes = await fetch("/friends/wins/" + user.id);
+          const winsData = await winsRes.json();
+          document.getElementById("fsWins").textContent = winsData.wins || 0;
+        } catch (e) {}
+
         // Top Friends Leaderboard (do'stlar + o'zingiz, rating bo'yicha)
         const all = [...friends, { id: user.id, first_name: user.first_name, last_name: user.last_name, rating: user.rating || 1000, isMe: true }];
         all.sort((a, b) => b.rating - a.rating);
@@ -1115,6 +1122,7 @@
         document.getElementById("fsRequests").textContent = (data.requests || []).length;
       } catch (err) {}
     }
+
 
     loadRightbar();
     loadPendingCount();
