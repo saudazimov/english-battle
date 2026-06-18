@@ -256,7 +256,9 @@
     }
     .pc-avatar:hover .pc-avatar-overlay { display: flex; }
     .pc-avatar-overlay i { width: 28px; height: 28px; }
-
+    #rankMedal { width: 56px; height: 56px; display: inline-flex; align-items: center; justify-content: center; }
+    #rankMedal i, #rankMedal svg { width: 100% !important; height: 100% !important; }
+    
   </style>
 </head>
 <body>
@@ -511,6 +513,30 @@
       return "🥉 Bronze";
     }
 
+    // Liga nomi (faqat matn)
+    function leagueName(rating) {
+      if (rating >= 2000) return "Grandmaster";
+      if (rating >= 1800) return "Master";
+      if (rating >= 1600) return "Diamond";
+      if (rating >= 1400) return "Platinum";
+      if (rating >= 1200) return "Gold";
+      if (rating >= 1000) return "Silver";
+      return "Bronze";
+    }
+
+    // Liga ikon (SVG) + nom
+    function leagueFull(rating) {
+      let name = "shield", color = "#cd7f32";
+      if (rating >= 2000) { name = "crown"; color = "#fbbf24"; }
+      else if (rating >= 1800) { name = "crown"; color = "#a855f7"; }
+      else if (rating >= 1600) { name = "gem"; color = "#38e1ff"; }
+      else if (rating >= 1400) { name = "gem"; color = "#5b8cff"; }
+      else if (rating >= 1200) { name = "medal"; color = "#fbbf24"; }
+      else if (rating >= 1000) { name = "shield"; color = "#cbd5e1"; }
+      const icon = '<i data-lucide="' + name + '" style="width:18px;height:18px;color:' + color + ';vertical-align:-3px;"></i>';
+      return icon + ' ' + leagueName(rating);
+    }
+
     // Boshqa odamning profili bo'lsa - Edit tugmasini yashirish + sarlavhani o'zgartirish
     if (!isOwnProfile) {
       const editBtn = document.querySelector(".pc-edit");
@@ -536,7 +562,7 @@
           document.getElementById("pcName").textContent = u.first_name + " " + u.last_name;
           document.getElementById("pcCefr").textContent = u.cefr_level || "A1";
           document.getElementById("pcCefrLabel").textContent = cefrLabels[u.cefr_level] || "Beginner";
-          document.getElementById("pcLeague").textContent = getLeagueInfo(u.rating || 1000);
+          document.getElementById("pcLeague").innerHTML = leagueFull(u.rating || 1000);
           document.getElementById("pcRating").textContent = u.rating || 1000;
         }
         if (data.stats) {
@@ -560,7 +586,8 @@
           document.getElementById("abSchool").textContent = data.user.school || "—";
           document.getElementById("abDistrict").textContent = data.user.district || "—";
           // Highest Rank (joriy liga)
-          document.getElementById("bsRank").textContent = getLeagueInfo(data.user.rating || 1000);
+            document.getElementById("bsRank").innerHTML = leagueFull(data.user.rating || 1000);
+
           // Rank, CEFR, Next Level - endpoint ma'lumotidan (boshqa odam uchun ham to'g'ri)
           setupRank(data.user.rating || 1000);
           renderCefrTrackFor(data.user.cefr_level || "A1");
@@ -638,21 +665,22 @@
     }
     loadHistory();
     // ===== O'NG PANEL =====
-    // Current Rank
+   // Current Rank
     function setupRank(r) {
+      const ic = (n, c) => '<i data-lucide="' + n + '" style="width:100%;height:100%;color:' + c + ';"></i>';
       const leagues = [
-        { name: "Bronze", min: 0, max: 999, medal: "🥉" },
-        { name: "Silver", min: 1000, max: 1199, medal: "🥈" },
-        { name: "Gold", min: 1200, max: 1399, medal: "🥇" },
-        { name: "Platinum", min: 1400, max: 1599, medal: "💎" },
-        { name: "Diamond", min: 1600, max: 1799, medal: "💠" },
-        { name: "Master", min: 1800, max: 1999, medal: "🔱" },
-        { name: "Grandmaster", min: 2000, max: 99999, medal: "👑" },
+        { name: "Bronze", min: 0, max: 999, icon: ic("shield", "#cd7f32") },
+        { name: "Silver", min: 1000, max: 1199, icon: ic("shield", "#cbd5e1") },
+        { name: "Gold", min: 1200, max: 1399, icon: ic("medal", "#fbbf24") },
+        { name: "Platinum", min: 1400, max: 1599, icon: ic("gem", "#5b8cff") },
+        { name: "Diamond", min: 1600, max: 1799, icon: ic("gem", "#38e1ff") },
+        { name: "Master", min: 1800, max: 1999, icon: ic("crown", "#a855f7") },
+        { name: "Grandmaster", min: 2000, max: 99999, icon: ic("crown", "#fbbf24") },
       ];
       let cur = leagues[0], idx = 0;
       leagues.forEach((l, i) => { if (r >= l.min && r <= l.max) { cur = l; idx = i; } });
       const next = leagues[idx + 1];
-      document.getElementById("rankMedal").textContent = cur.medal;
+      document.getElementById("rankMedal").innerHTML = cur.icon;
       document.getElementById("rankName").textContent = cur.name;
       document.getElementById("rankRP").textContent = r;
       if (next) {
