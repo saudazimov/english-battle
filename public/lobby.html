@@ -850,7 +850,7 @@
           chip.style.cssText = "width:56px; text-align:center;";
           chip.innerHTML =
             '<div style="position:relative; width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,#5b8cff,#a855f7); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; color:#fff; margin:0 auto;">' +
-              f.first_name.charAt(0).toUpperCase() +
+              avatarHTML(f.first_name, f.profile_picture) +
               '<span style="position:absolute; bottom:2px; right:2px; width:12px; height:12px; border-radius:50%; background:#34d399; border:2px solid #070b16;"></span>' +
             '</div>' +
             '<div style="font-size:11px; margin-top:6px; text-align:center;">' + f.first_name + '</div>' +

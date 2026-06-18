@@ -1808,7 +1808,7 @@ app.get("/friends/activity/:userId", async (req, res) => {
     const battlesRes = await pool.query(
       `SELECT bh.user_id, bh.opponent_name, bh.my_score, bh.opponent_score,
               bh.outcome, bh.rating_change, bh.played_at,
-              u.first_name, u.last_name, u.rating
+              u.first_name, u.last_name, u.rating, u.profile_picture
        FROM battle_history bh
        JOIN users u ON u.id = bh.user_id
        WHERE bh.user_id = ANY($1)
@@ -1822,6 +1822,7 @@ app.get("/friends/activity/:userId", async (req, res) => {
       friendId: b.user_id,
       friendName: b.first_name + " " + b.last_name,
       friendFirst: b.first_name,
+      friendPic: b.profile_picture,
       outcome: b.outcome,
       myScore: b.my_score,
       oppScore: b.opponent_score,

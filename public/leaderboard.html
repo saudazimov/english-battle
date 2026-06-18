@@ -175,6 +175,8 @@
     .rw-blue { background: rgba(91,140,255,0.1); color: var(--accent); }
     .rw-purple { background: rgba(168,85,247,0.1); color: var(--accent-2); }
 
+    #yrMedal i, #yrMedal svg { width: 40px !important; height: 40px !important; }
+
   </style>
 </head>
 <body>
@@ -305,6 +307,34 @@
       return "🥉 Bronze";
     }
 
+    // Liga nomi (faqat matn)
+    function leagueName(rating) {
+      if (rating >= 2000) return "Grandmaster";
+      if (rating >= 1800) return "Master";
+      if (rating >= 1600) return "Diamond";
+      if (rating >= 1400) return "Platinum";
+      if (rating >= 1200) return "Gold";
+      if (rating >= 1000) return "Silver";
+      return "Bronze";
+    }
+
+    // Liga ikonkasi (Lucide SVG) + rang
+    function leagueIcon(rating) {
+      let name = "shield", color = "#cd7f32";
+      if (rating >= 2000) { name = "crown"; color = "#fbbf24"; }
+      else if (rating >= 1800) { name = "crown"; color = "#a855f7"; }
+      else if (rating >= 1600) { name = "gem"; color = "#38e1ff"; }
+      else if (rating >= 1400) { name = "gem"; color = "#5b8cff"; }
+      else if (rating >= 1200) { name = "medal"; color = "#fbbf24"; }
+      else if (rating >= 1000) { name = "shield"; color = "#cbd5e1"; }
+      return '<i data-lucide="' + name + '" style="width:15px;height:15px;color:' + color + ';vertical-align:-2px;"></i>';
+    }
+
+    // Liga: ikon + nom birga
+    function leagueFull(rating) {
+      return leagueIcon(rating) + ' ' + leagueName(rating);
+    }
+
     let allPlayers = [];
     async function loadLeaderboard() {
       try {
@@ -341,7 +371,7 @@
           '<div class="lb-rank ' + rankCls + '">' + rank + '</div>' +
           '<div class="lb-player"><div class="lb-ava">' + avatarHTML(p.first_name, p.profile_picture) + '</div><div class="lb-name">' + name + '</div></div>' +
           '<div><span class="lb-level">' + (p.cefr_level || "A1") + '</span></div>' +
-          '<div class="lb-league">' + leagueOf(p.rating) + '</div>' +
+          '<div class="lb-league">' + leagueFull(p.rating) + '</div>' + 
           '<div class="lb-wins">' + (p.wins || 0) + '</div>' +
           '<div class="lb-winrate">' + (p.win_rate || 0) + '%</div>' +
           '<div class="lb-rating"><i data-lucide="trophy"></i> ' + p.rating + '</div>';
@@ -353,8 +383,8 @@
     // Your Rankings (global o'rin)
     function setupYourRankings() {
       const myRating = user.rating || 1000;
-      document.getElementById("yrLeague").textContent = leagueOf(myRating).replace(/^\S+\s/, "");
-      document.getElementById("yrMedal").textContent = leagueOf(myRating).split(" ")[0];
+      document.getElementById("yrLeague").textContent = leagueName(myRating);
+      document.getElementById("yrMedal").innerHTML = leagueIcon(myRating);
       document.getElementById("yrPoints").textContent = myRating;
       document.getElementById("srName").textContent = user.school || "Maktabingiz";
 
@@ -365,6 +395,7 @@
       } else {
         document.getElementById("yrGlobal").textContent = "#50+";
       }
+      lucide.createIcons();
     }
 
     function renderPodium() {
@@ -391,7 +422,7 @@
           '<div class="podium-rank">' + o.rank + '</div>' +
           '<div class="podium-ava">' + avatarHTML(o.p.first_name, o.p.profile_picture) + '</div>' +
           '<div class="podium-name">' + name + '</div>' +
-          '<div class="podium-league">' + leagueOf(o.p.rating) + '</div>' +
+          '<div class="podium-league">' + leagueFull(o.p.rating) + '</div>' +
           '<div class="podium-rating"><i data-lucide="trophy"></i> ' + o.p.rating + '</div>';
         podium.appendChild(div);
       });
