@@ -4,389 +4,168 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>English Battle — Jang</title>
+  <link rel="stylesheet" href="/app.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #0a0a1a;
-      background-image:
-        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12), transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.12), transparent 40%);
-      min-height: 100vh;
-      color: #e2e8f0;
-      padding: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .container { max-width: 700px; width: 100%; }
-
+    body { display: flex; align-items: center; justify-content: center; padding: 30px 20px; min-height: 100vh; }
+    .battle-wrap { max-width: 760px; width: 100%; }
     .screen { display: none; }
-    .screen.active { display: block; }
+    .screen.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ===== QIDIRISH EKRANI ===== */
-    .searching {
-      text-align: center;
-      padding: 60px 20px;
-    }
-
-    .searching h2 {
-      font-size: 28px;
-      margin-bottom: 16px;
-      background: linear-gradient(135deg, #818cf8, #c084fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .spinner {
-      width: 80px;
-      height: 80px;
-      margin: 30px auto;
-      border: 4px solid rgba(99, 102, 241, 0.2);
-      border-top-color: #818cf8;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
+    /* QIDIRISH */
+    .search-card { padding: 60px 40px; text-align: center; }
+    .search-card h2 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+    .search-card .sub { font-size: 15px; color: var(--text-dim); }
+    .spinner { width: 80px; height: 80px; margin: 32px auto; border: 4px solid rgba(91,140,255,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .pulse { animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-    .pulse {
-      display: inline-block;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
+    /* JANG */
+    .battle-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+    .player-box { flex: 1; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 12px; }
+    .player-box.opp { border-color: rgba(248,113,113,0.3); flex-direction: row-reverse; text-align: right; }
+    .pb-ava { width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 800; font-size: 18px; overflow: hidden; }
+    .opp .pb-ava { background: linear-gradient(135deg, #f87171, #a855f7); }
+    .pb-info { flex: 1; min-width: 0; }
+    .pb-name { font-size: 14px; font-weight: 700; }
+    .pb-score { font-size: 26px; font-weight: 800; color: var(--accent); }
+    .opp .pb-score { color: var(--red); }
+    .vs-badge { width: 44px; height: 44px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); display: grid; place-items: center; font-weight: 800; font-size: 14px; color: var(--text-dim); flex-shrink: 0; }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
+    .timer-bar { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; margin-bottom: 22px; }
+    .timer-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); width: 100%; transition: width 1s linear; }
+    .timer-fill.warning { background: linear-gradient(90deg, var(--gold), var(--red)); }
 
-    .btn {
-      padding: 14px 32px;
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      border: none;
-      border-radius: 12px;
-      color: white;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
+    .q-card { padding: 32px; }
+    .q-number { text-align: center; color: var(--text-dim); font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
+    .q-text { font-size: 22px; text-align: center; line-height: 1.4; margin-bottom: 28px; font-weight: 600; }
+    .opt { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; margin: 12px 0; padding: 18px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; color: var(--text); font-size: 16px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+    .opt:hover { border-color: var(--border-bright); transform: translateX(4px); }
+    .opt:active { transform: scale(0.98); }
+    .opt-letter { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 800; font-size: 14px; color: #fff; }
+    .opt { animation: slideIn 0.3s ease both; }
+    .opt:nth-child(1) { animation-delay: 0.05s; } .opt:nth-child(2) { animation-delay: 0.1s; }
+    .opt:nth-child(3) { animation-delay: 0.15s; } .opt:nth-child(4) { animation-delay: 0.2s; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    .opp-progress { text-align: center; color: var(--red); font-size: 14px; margin-top: 16px; min-height: 20px; }
 
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5); }
+    /* NATIJA */
+    .result-card { padding: 40px; text-align: center; }
+    .result-ic { width: 90px; height: 90px; border-radius: 26px; margin: 0 auto 16px; display: grid; place-items: center; animation: pop 0.6s ease; }
+    .result-ic i { width: 46px; height: 46px; }
+    .result-ic.win { background: rgba(251,191,36,0.15); color: var(--gold); box-shadow: 0 0 40px rgba(251,191,36,0.3); }
+    .result-ic.lose { background: var(--panel); color: var(--text-dim); }
+    .result-ic.draw { background: rgba(91,140,255,0.15); color: var(--accent); }
+    @keyframes pop { 0% { opacity: 0; transform: scale(0.7); } 60% { transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
+    .result-card h1 { font-size: 38px; font-weight: 800; margin-bottom: 26px; }
+    .result-card h1.win { color: var(--gold); }
+    .result-card h1.lose { color: var(--text-dim); }
+    .result-card h1.draw { color: var(--accent); }
+    .result-scores { display: flex; justify-content: center; gap: 40px; margin-bottom: 24px; }
+    .rs-num { font-size: 46px; font-weight: 800; }
+    .rs.you .rs-num { color: var(--accent); }
+    .rs.opp .rs-num { color: var(--red); }
+    .rs-lbl { font-size: 12px; color: var(--text-dim); margin-top: 4px; letter-spacing: 1px; }
+    .xp-earned { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3); border-radius: 12px; color: var(--green); font-size: 17px; font-weight: 700; margin-bottom: 26px; }
+    .xp-earned i { width: 18px; height: 18px; }
+    .league-banner { margin: 0 auto 24px; padding: 16px 24px; border-radius: 14px; text-align: center; max-width: 440px; }
+    .league-banner.up { background: linear-gradient(135deg, rgba(251,191,36,0.2), rgba(168,85,247,0.15)); border: 2px solid var(--gold); }
+    .league-banner.down { background: rgba(248,113,113,0.12); border: 2px solid rgba(248,113,113,0.4); }
+    .lb-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .lb-title.up { color: var(--gold); } .lb-title.down { color: var(--red); }
+    .lb-change { font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .result-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-    .btn-secondary {
-      background: rgba(99, 102, 241, 0.15);
-      border: 1px solid rgba(99, 102, 241, 0.4);
-    }
+    /* XATOLAR */
+    .mist-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .mist-head h2 { font-size: 22px; font-weight: 800; }
+    .mist-card { padding: 18px; border-radius: 14px; margin-bottom: 14px; background: var(--panel); border: 1px solid var(--border); }
+    .mist-card.correct { border-left: 4px solid var(--green); }
+    .mist-card.wrong { border-left: 4px solid var(--red); }
+    .mist-q { font-weight: 600; font-size: 15px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 8px; }
+    .mist-q i { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; }
+    .mist-q i.correct { color: var(--green); } .mist-q i.wrong { color: var(--red); }
+    .mist-opt { padding: 9px 13px; border-radius: 8px; margin: 5px 0; font-size: 14px; }
+    .mist-opt.right { background: rgba(52,211,153,0.15); color: var(--green); font-weight: 600; }
+    .mist-opt.your-wrong { background: rgba(248,113,113,0.15); color: var(--red); }
+    .mist-opt.neutral { color: var(--text-dim); }
+    .mist-meta { font-size: 13px; color: var(--text-dim); margin-top: 8px; }
+    .mist-explain { font-size: 13px; color: var(--accent); margin-top: 8px; padding: 10px 12px; background: rgba(91,140,255,0.1); border-radius: 8px; display: flex; align-items: flex-start; gap: 8px; }
+    .mist-explain i { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
 
-    /* ===== JANG EKRANI ===== */
-    .battle-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .player-box {
-      flex: 1;
-      background: rgba(20, 20, 40, 0.8);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      border-radius: 14px;
-      padding: 14px;
-      text-align: center;
-    }
-
-    .player-box.opponent {
-      border-color: rgba(239, 68, 68, 0.3);
-    }
-
-    .player-box .pname { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-    .player-box .pscore {
-      font-size: 24px;
-      font-weight: bold;
-      color: #818cf8;
-    }
-    .player-box.opponent .pscore { color: #f87171; }
-
-    .vs {
-      font-size: 20px;
-      font-weight: bold;
-      color: #64748b;
-    }
-
-    /* Taymer */
-    .timer-bar {
-      height: 8px;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
-
-    .timer-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #6366f1, #a855f7);
-      width: 100%;
-      transition: width 1s linear;
-    }
-
-    .timer-fill.warning {
-      background: linear-gradient(90deg, #f59e0b, #ef4444);
-    }
-
-    /* Savol */
-    .question-card {
-      background: rgba(20, 20, 40, 0.8);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
-    }
-
-    .q-number {
-      text-align: center;
-      color: #64748b;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      margin-bottom: 16px;
-    }
-
-    .q-text {
-      font-size: 22px;
-      text-align: center;
-      margin-bottom: 28px;
-      line-height: 1.4;
-    }
-
-    .option {
-      display: block;
-      width: 100%;
-      text-align: left;
-      margin: 12px 0;
-      padding: 18px 20px;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(99, 102, 241, 0.25);
-      border-radius: 14px;
-      color: #e2e8f0;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .option:hover {
-      background: rgba(99, 102, 241, 0.2);
-      border-color: #818cf8;
-      transform: translateX(4px);
-    }
-
-    .option .letter {
-      display: inline-block;
-      width: 28px;
-      height: 28px;
-      line-height: 28px;
-      text-align: center;
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      border-radius: 8px;
-      margin-right: 12px;
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    /* ===== NATIJA EKRANI ===== */
-    .result {
-      text-align: center;
-      padding: 40px 20px;
-    }
-
-    .result-icon { font-size: 80px; margin-bottom: 16px; }
-
-    .result h1 {
-      font-size: 42px;
-      margin-bottom: 30px;
-    }
-
-    .result h1.win {
-      background: linear-gradient(135deg, #fbbf24, #f59e0b);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .result h1.lose { color: #64748b; }
-    .result h1.draw { color: #818cf8; }
-
-    .result-scores {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin-bottom: 30px;
-    }
-
-    .result-score .num { font-size: 48px; font-weight: bold; }
-    .result-score.you .num { color: #818cf8; }
-    .result-score.opp .num { color: #f87171; }
-    .result-score .lbl { font-size: 13px; color: #64748b; margin-top: 4px; }
-
-    .xp-earned {
-      display: inline-block;
-      padding: 12px 28px;
-      background: rgba(34, 197, 94, 0.15);
-      border: 1px solid rgba(34, 197, 94, 0.4);
-      border-radius: 12px;
-      color: #86efac;
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 30px;
-    }
-
-    .result-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-    }
-
-    .opponent-progress {
-      text-align: center;
-      color: #f87171;
-      font-size: 14px;
-      margin-top: 16px;
-      min-height: 20px;
-    }
-
-    /* ===== ANIMATSIYALAR ===== */
-    @keyframes fadeInScale {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes slideInRight {
-      from { opacity: 0; transform: translateX(20px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes resultPop {
-      0% { opacity: 0; transform: scale(0.7); }
-      60% { transform: scale(1.05); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-    @keyframes confettiFall {
-      0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-    }
-
-    /* Savol kartasi har safar silliq paydo bo'ladi */
-    .question-card { animation: fadeInScale 0.3s ease; }
-
-    /* Variantlar ketma-ket paydo bo'ladi */
-    .option { animation: slideInRight 0.3s ease both; }
-    .option:nth-child(1) { animation-delay: 0.05s; }
-    .option:nth-child(2) { animation-delay: 0.1s; }
-    .option:nth-child(3) { animation-delay: 0.15s; }
-    .option:nth-child(4) { animation-delay: 0.2s; }
-
-    /* Variant bosilganda */
-    .option { transition: transform 0.15s ease, background 0.2s ease; }
-    .option:active { transform: scale(0.98); }
-
-    /* Natija ekrani porlab chiqadi */
-    #resultScreen.active .result { animation: resultPop 0.5s ease; }
-    .result-icon { animation: resultPop 0.6s ease; }
-
-    /* Konfetti */
-    .confetti-piece {
-      position: fixed;
-      top: 0;
-      width: 12px;
-      height: 12px;
-      z-index: 9999;
-      pointer-events: none;
-      animation: confettiFall linear forwards;
-    }
-
+    .confetti-piece { position: fixed; top: 0; width: 12px; height: 12px; z-index: 9999; pointer-events: none; animation: confettiFall linear forwards; }
+    @keyframes confettiFall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="battle-wrap">
 
-    <!-- QIDIRISH EKRANI -->
+    <!-- QIDIRISH -->
     <div class="screen active" id="searchScreen">
-      <div class="searching">
+      <div class="card search-card">
         <h2 id="searchTitle">Raqib qidirilmoqda</h2>
         <div class="spinner"></div>
-        <p class="pulse" id="searchText">Sizga teng raqib izlanmoqda...</p>
-        <br>
-        <button class="btn btn-secondary" onclick="goLobby()">Bekor qilish</button>
+        <p class="sub pulse" id="searchText">Sizga teng raqib izlanmoqda...</p>
+        <button class="btn btn-ghost" style="margin-top:24px;" onclick="goLobby()">Bekor qilish</button>
       </div>
     </div>
 
-    <!-- JANG EKRANI -->
+    <!-- JANG -->
     <div class="screen" id="battleScreen">
       <div class="battle-header">
         <div class="player-box">
-          <div class="pname" id="myName">Siz</div>
-          <div class="pscore" id="myScore">0</div>
+          <div class="pb-ava" id="myAva">S</div>
+          <div class="pb-info"><div class="pb-name" id="myName">Siz</div><div class="pb-score" id="myScore">0</div></div>
         </div>
-        <div class="vs">VS</div>
-        <div class="player-box opponent">
-          <div class="pname" id="oppName">Raqib</div>
-          <div class="pscore" id="oppScore">0</div>
+        <div class="vs-badge">VS</div>
+        <div class="player-box opp">
+          <div class="pb-ava" id="oppAva">R</div>
+          <div class="pb-info"><div class="pb-name" id="oppName">Raqib</div><div class="pb-score" id="oppScore">0</div></div>
         </div>
       </div>
-
-      <div class="timer-bar">
-        <div class="timer-fill" id="timerFill"></div>
-      </div>
-
-      <div class="question-card">
+      <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+      <div class="card q-card">
         <div class="q-number" id="qNumber">Savol 1 / 5</div>
         <div class="q-text" id="qText">...</div>
         <div id="options"></div>
       </div>
-
-      <div class="opponent-progress" id="oppProgress"></div>
+      <div class="opp-progress" id="oppProgress"></div>
     </div>
 
-    <!-- NATIJA EKRANI -->
+    <!-- NATIJA -->
     <div class="screen" id="resultScreen">
-      <div class="result">
-        <div class="result-icon" id="resultIcon">🏆</div>
-        <h1 id="resultTitle">G'alaba!</h1>
+      <div class="card result-card">
+        <div class="result-ic win" id="resultIc"><i data-lucide="trophy"></i></div>
+        <h1 id="resultTitle" class="win">G'alaba!</h1>
         <div class="result-scores">
-          <div class="result-score you">
-            <div class="num" id="finalMyScore">0</div>
-            <div class="lbl">SIZ</div>
-          </div>
-          <div class="result-score opp">
-            <div class="num" id="finalOppScore">0</div>
-            <div class="lbl">RAQIB</div>
-          </div>
+          <div class="rs you"><div class="rs-num" id="finalMyScore">0</div><div class="rs-lbl">SIZ</div></div>
+          <div class="rs opp"><div class="rs-num" id="finalOppScore">0</div><div class="rs-lbl">RAQIB</div></div>
         </div>
-        <div class="xp-earned" id="xpEarned">+0 XP</div>
+        <div id="leagueBannerSlot"></div>
+        <div class="xp-earned" id="xpEarned"><i data-lucide="zap"></i> +0 XP</div>
         <div class="result-actions">
-          <button class="btn" onclick="showMistakes()">📖 Xatolarni ko'rish</button>
-          <button class="btn" onclick="playAgain()">Yana o'ynash</button>
-          <button class="btn btn-secondary" onclick="goLobby()">Lobbyga</button>
+          <button class="btn btn-ghost" onclick="showMistakes()"><i data-lucide="book-open" style="width:16px;height:16px;"></i> Xatolarni ko'rish</button>
+          <button class="btn btn-primary" onclick="playAgain()"><i data-lucide="rotate-ccw" style="width:16px;height:16px;"></i> Yana o'ynash</button>
+          <button class="btn btn-ghost" onclick="goLobby()">Lobbyga</button>
         </div>
       </div>
     </div>
-    <!-- XATOLAR EKRANI -->
+
+    <!-- XATOLAR -->
     <div class="screen" id="mistakesScreen">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="font-size:24px; background:linear-gradient(135deg,#818cf8,#c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">📖 Javoblar tahlili</h2>
-        <button class="btn btn-secondary" onclick="backToResult()">← Orqaga</button>
+      <div class="mist-head">
+        <h2>Javoblar tahlili</h2>
+        <button class="btn btn-ghost" onclick="backToResult()"><i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Orqaga</button>
       </div>
       <div id="mistakesList"></div>
     </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/leagues.js"></script>
-
   <script>
-    // Login tekshirish
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
     const user = JSON.parse(userData);
@@ -395,22 +174,40 @@
     let currentRoom = null;
     let questions = [];
     let currentIndex = 0;
-    let myScore = 0;
     let timerInterval = null;
 
-    // Ekranlarni almashtirish
+    function avatarHTML(firstName, picPath) {
+      const letter = (firstName || "?").charAt(0).toUpperCase();
+      if (picPath) return '<img src="' + picPath + '" alt="' + letter + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
+      return letter;
+    }
+
     function showScreen(id) {
       document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
       document.getElementById(id).classList.add("active");
+      lucide.createIcons();
     }
 
-    // Sahifa ochilishi bilan jang qidirishni boshlash
+    // URL'da room bo'lsa - bu do'st jangi (findMatch chaqirmaymiz)
+    const urlParams = new URLSearchParams(window.location.search);
+    const friendRoom = urlParams.get("room");
+    const savedBattleData = sessionStorage.getItem("battleData");
+
     socket.on("connect", () => {
-      socket.emit("findMatch", {
-        userId: user.id,
-        name: user.first_name,
-        level: user.cefr_level,
-      });
+      if (friendRoom) {
+        // Do'st jangi - findMatch chaqirmaymiz, "tayyorman" deymiz
+        currentRoom = friendRoom;
+        document.getElementById("searchTitle").textContent = "Raqib topildi!";
+        document.getElementById("searchText").textContent = "Jang boshlanmoqda...";
+        if (savedBattleData) {
+          const data = JSON.parse(savedBattleData);
+          document.getElementById("oppName").textContent = data.opponent.name;
+          document.getElementById("oppAva").innerHTML = avatarHTML(data.opponent.name, data.opponent.profile_picture);
+        }
+        socket.emit("joinFriendBattle", { roomId: friendRoom, userId: user.id });
+      } else {
+        socket.emit("findMatch", { userId: user.id, name: user.first_name, level: user.cefr_level });
+      }
     });
 
     socket.on("waiting", (data) => {
@@ -420,16 +217,20 @@
     socket.on("matchFound", (data) => {
       currentRoom = data.roomId;
       document.getElementById("searchTitle").textContent = "Raqib topildi!";
-      document.getElementById("searchText").textContent =
-        data.opponent.name + " bilan jang boshlanmoqda...";
+      document.getElementById("searchText").textContent = data.opponent.name + " bilan jang boshlanmoqda...";
       document.getElementById("oppName").textContent = data.opponent.name;
+      document.getElementById("oppAva").innerHTML = avatarHTML(data.opponent.name, data.opponent.profile_picture);
     });
 
     socket.on("battleStart", (data) => {
       questions = data.questions;
       currentIndex = 0;
-      myScore = 0;
       document.getElementById("myName").textContent = user.first_name;
+      document.getElementById("myAva").innerHTML = avatarHTML(user.first_name, data.myPicture || user.profile_picture);
+      if (data.opponentName) document.getElementById("oppName").textContent = data.opponentName;
+      if (data.opponentPicture !== undefined) {
+        document.getElementById("oppAva").innerHTML = avatarHTML(data.opponentName || "Raqib", data.opponentPicture);
+      }
       document.getElementById("myScore").textContent = "0";
       document.getElementById("oppScore").textContent = "0";
       showScreen("battleScreen");
@@ -444,269 +245,142 @@
         document.getElementById("qNumber").textContent = "";
         return;
       }
-
       const q = questions[currentIndex];
-      document.getElementById("qNumber").textContent =
-        "Savol " + (currentIndex + 1) + " / " + questions.length;
+      document.getElementById("qNumber").textContent = "Savol " + (currentIndex + 1) + " / " + questions.length;
       document.getElementById("qText").textContent = q.question_text;
-
       const optionsDiv = document.getElementById("options");
       optionsDiv.innerHTML = "";
-      ["A", "B", "C", "D"].forEach((letter) => {
+      ["A","B","C","D"].forEach(letter => {
         const btn = document.createElement("button");
-        btn.className = "option";
-        btn.innerHTML = '<span class="letter">' + letter + '</span>' +
-          q["option_" + letter.toLowerCase()];
+        btn.className = "opt";
+        btn.innerHTML = '<span class="opt-letter">' + letter + '</span><span>' + q["option_" + letter.toLowerCase()] + '</span>';
         btn.onclick = () => answer(letter);
         optionsDiv.appendChild(btn);
       });
-
       startTimer();
     }
 
-    // Har savol uchun 15 soniya taymer
     function startTimer() {
       clearInterval(timerInterval);
       let timeLeft = 15;
       const fill = document.getElementById("timerFill");
       fill.classList.remove("warning");
       fill.style.width = "100%";
-
       timerInterval = setInterval(() => {
         timeLeft--;
-        const percent = (timeLeft / 15) * 100;
-        fill.style.width = percent + "%";
-
+        fill.style.width = ((timeLeft / 15) * 100) + "%";
         if (timeLeft <= 5) fill.classList.add("warning");
-
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          // Vaqt tugadi — javobsiz keyingisiga o'tish
-          answer(null);
-        }
+        if (timeLeft <= 0) { clearInterval(timerInterval); answer(null); }
       }, 1000);
     }
 
     function answer(letter) {
       clearInterval(timerInterval);
       const q = questions[currentIndex];
-
-      socket.emit("submitAnswer", {
-        roomId: currentRoom,
-        questionId: q.id,
-        answer: letter,
-      });
-
+      socket.emit("submitAnswer", { roomId: currentRoom, questionId: q.id, answer: letter });
       currentIndex++;
       showQuestion();
     }
 
     socket.on("opponentProgress", (data) => {
-      document.getElementById("oppProgress").textContent =
-        "🔴 Raqib " + data.answeredCount + " ta savolga javob berdi";
+      document.getElementById("oppProgress").textContent = "Raqib " + data.answeredCount + " ta savolga javob berdi";
     });
 
     socket.on("battleEnd", (data) => {
       clearInterval(timerInterval);
-      
-      // Javoblarni saqlash (xatolar tahlili uchun)
       window.battleAnswers = data.answers || [];
-
-      // Ballarni sanab o'stirish
       animateScore("finalMyScore", data.your_score, 800);
       animateScore("finalOppScore", data.opponent_score, 800);
-      document.getElementById("xpEarned").textContent = "+" + data.xp_earned + " XP";
-      // Liga o'zgarishi xabari
+
       if (data.league_change) {
         const lc = data.league_change;
         const oldL = getLeagueByName(lc.old);
         const newL = getLeagueByName(lc.new);
-
         const banner = document.createElement("div");
         if (lc.promoted) {
-          banner.style.cssText = "margin:16px auto; padding:16px 24px; background:linear-gradient(135deg, rgba(251,191,36,0.2), rgba(168,85,247,0.2)); border:2px solid #fbbf24; border-radius:14px; text-align:center; max-width:400px;";
-          banner.innerHTML = '<div style="font-size:22px; font-weight:bold; color:#fbbf24; margin-bottom:6px;">🎉 Liga ko\'tarildi!</div>' +
-            '<div style="font-size:16px;"><span style="color:' + oldL.color + ';">' + oldL.emoji + ' ' + oldL.name + '</span> → <span style="color:' + newL.color + '; font-weight:bold;">' + newL.emoji + ' ' + newL.name + '</span></div>';
+          banner.className = "league-banner up";
+          banner.innerHTML = '<div class="lb-title up"><i data-lucide="trending-up"></i> Liga ko\'tarildi!</div>' +
+            '<div class="lb-change"><span style="color:' + oldL.color + ';">' + oldL.name + '</span> <i data-lucide="arrow-right" style="width:15px;height:15px;"></i> <span style="color:' + newL.color + ';font-weight:700;">' + newL.name + '</span></div>';
         } else {
-          banner.style.cssText = "margin:16px auto; padding:16px 24px; background:rgba(239,68,68,0.15); border:2px solid rgba(239,68,68,0.4); border-radius:14px; text-align:center; max-width:400px;";
-          banner.innerHTML = '<div style="font-size:18px; font-weight:bold; color:#f87171; margin-bottom:6px;">📉 Liga tushdi</div>' +
-            '<div style="font-size:16px;"><span style="color:' + oldL.color + ';">' + oldL.emoji + ' ' + oldL.name + '</span> → <span style="color:' + newL.color + ';">' + newL.emoji + ' ' + newL.name + '</span></div>';
+          banner.className = "league-banner down";
+          banner.innerHTML = '<div class="lb-title down"><i data-lucide="trending-down"></i> Liga tushdi</div>' +
+            '<div class="lb-change"><span style="color:' + oldL.color + ';">' + oldL.name + '</span> <i data-lucide="arrow-right" style="width:15px;height:15px;"></i> <span style="color:' + newL.color + ';">' + newL.name + '</span></div>';
         }
-
-        // Natija ekraniga qo'shish (xpEarned dan keyin)
-        const xpEl = document.getElementById("xpEarned");
-        xpEl.parentNode.insertBefore(banner, xpEl.nextSibling);
-      }
-      // Yangilangan foydalanuvchini saqlash
-      if (data.updated_user) {
-        localStorage.setItem("user", JSON.stringify(data.updated_user));
+        document.getElementById("leagueBannerSlot").appendChild(banner);
       }
 
-      // Reyting o'zgarishini ko'rsatish
-      const xpEl = document.getElementById("xpEarned");
+      if (data.updated_user) localStorage.setItem("user", JSON.stringify(data.updated_user));
+
       let ratingText = "";
       if (data.rating_change > 0) ratingText = " · +" + data.rating_change + " reyting";
       else if (data.rating_change < 0) ratingText = " · " + data.rating_change + " reyting";
-      xpEl.textContent = "+" + data.xp_earned + " XP" + ratingText;
+      document.getElementById("xpEarned").innerHTML = '<i data-lucide="zap"></i> +' + data.xp_earned + " XP" + ratingText;
+
       const title = document.getElementById("resultTitle");
-      const icon = document.getElementById("resultIcon");
-
+      const ic = document.getElementById("resultIc");
       if (data.outcome === "win") {
-        title.textContent = "G'alaba!";
-        title.className = "win";
-        icon.textContent = "🏆";
-        setTimeout(launchConfetti, 300); // g'alabada konfetti!
-
+        title.textContent = "G'alaba!"; title.className = "win";
+        ic.className = "result-ic win"; ic.innerHTML = '<i data-lucide="trophy"></i>';
+        setTimeout(launchConfetti, 300);
       } else if (data.outcome === "lose") {
-        title.textContent = "Mag'lubiyat";
-        title.className = "lose";
-        icon.textContent = "😔";
+        title.textContent = "Mag'lubiyat"; title.className = "lose";
+        ic.className = "result-ic lose"; ic.innerHTML = '<i data-lucide="frown"></i>';
       } else {
-        title.textContent = "Durrang!";
-        title.className = "draw";
-        icon.textContent = "🤝";
+        title.textContent = "Durang!"; title.className = "draw";
+        ic.className = "result-ic draw"; ic.innerHTML = '<i data-lucide="handshake"></i>';
       }
-
       showScreen("resultScreen");
     });
 
-    function playAgain() {
-      window.location.reload();
-    }
-
-    function goLobby() {
-      window.location.href = "/lobby.html";
-    }
-
-    // ===== XATOLAR TAHLILI =====
-    function showScreenById(id) {
-      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-      document.getElementById(id).classList.add("active");
-    }
+    function playAgain() { window.location.reload(); }
+    function goLobby() { window.location.href = "/lobby.html"; }
 
     function showMistakes() {
       const answers = window.battleAnswers || [];
       const list = document.getElementById("mistakesList");
-
       if (answers.length === 0) {
-        list.innerHTML = '<div style="text-align:center; color:#64748b; padding:40px;">Ma\'lumot yo\'q</div>';
+        list.innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:40px;">Ma\'lumot yo\'q</div>';
       } else {
         list.innerHTML = "";
         answers.forEach((a, index) => {
-          const card = document.createElement("div");
-          const borderColor = a.is_correct ? "#22c55e" : "#ef4444";
-          card.style.cssText = "background:rgba(20,20,40,0.8); border:1px solid rgba(99,102,241,0.3); border-left:4px solid " + borderColor + "; border-radius:14px; padding:18px; margin-bottom:14px;";
-
-          // Har variant uchun rang
           let optionsHtml = "";
-          ["A", "B", "C", "D"].forEach(letter => {
+          ["A","B","C","D"].forEach(letter => {
             const text = a["option_" + letter.toLowerCase()];
-            let style = "padding:8px 12px; border-radius:8px; margin:4px 0; font-size:14px;";
-            if (letter === a.correct_answer) {
-              style += "background:rgba(34,197,94,0.2); color:#86efac; font-weight:600;"; // to'g'ri javob yashil
-            } else if (letter === a.your_answer && !a.is_correct) {
-              style += "background:rgba(239,68,68,0.2); color:#fca5a5;"; // xato javob qizil
-            } else {
-              style += "color:#94a3b8;";
-            }
-            optionsHtml += '<div style="' + style + '">' + letter + ') ' + text + '</div>';
+            let cls = "neutral";
+            if (letter === a.correct_answer) cls = "right";
+            else if (letter === a.your_answer && !a.is_correct) cls = "your-wrong";
+            optionsHtml += '<div class="mist-opt ' + cls + '">' + letter + ') ' + text + '</div>';
           });
-
-          const statusIcon = a.is_correct ? "✅" : "❌";
           const yourAnswerText = a.your_answer ? a.your_answer : "javob berilmadi";
-
-          card.innerHTML =
-            '<div style="font-weight:600; font-size:16px; margin-bottom:10px;">' + statusIcon + ' Savol ' + (index + 1) + ': ' + a.question_text + '</div>' +
-            optionsHtml +
-            '<div style="font-size:13px; color:#94a3b8; margin-top:8px;">Sizning javobingiz: <b>' + yourAnswerText + '</b> · To\'g\'ri: <b style="color:#86efac;">' + a.correct_answer + '</b></div>' +
-            (a.explanation ? '<div style="font-size:13px; color:#a5b4fc; margin-top:8px; padding:10px; background:rgba(99,102,241,0.1); border-radius:8px;">💡 ' + a.explanation + '</div>' : '');
-
-          list.appendChild(card);
+          list.innerHTML +=
+            '<div class="mist-card ' + (a.is_correct ? "correct" : "wrong") + '">' +
+              '<div class="mist-q"><i data-lucide="' + (a.is_correct ? "check-circle" : "x-circle") + '" class="' + (a.is_correct ? "correct" : "wrong") + '"></i> Savol ' + (index + 1) + ': ' + a.question_text + '</div>' +
+              optionsHtml +
+              '<div class="mist-meta">Sizning javobingiz: <b>' + yourAnswerText + '</b> · To\'g\'ri: <b style="color:var(--green);">' + a.correct_answer + '</b></div>' +
+              (a.explanation ? '<div class="mist-explain"><i data-lucide="lightbulb"></i> ' + a.explanation + '</div>' : '') +
+            '</div>';
         });
       }
-
-      showScreenById("mistakesScreen");
+      showScreen("mistakesScreen");
     }
 
-    function backToResult() {
-      showScreenById("resultScreen");
-    }
+    function backToResult() { showScreen("resultScreen"); }
 
-    // ===== XATOLAR TAHLILI =====
-    function showScreenById(id) {
-      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-      document.getElementById(id).classList.add("active");
-    }
-
-    function showMistakes() {
-      const answers = window.battleAnswers || [];
-      const list = document.getElementById("mistakesList");
-
-      if (answers.length === 0) {
-        list.innerHTML = '<div style="text-align:center; color:#64748b; padding:40px;">Ma\'lumot yo\'q</div>';
-      } else {
-        list.innerHTML = "";
-        answers.forEach((a, index) => {
-          const card = document.createElement("div");
-          const borderColor = a.is_correct ? "#22c55e" : "#ef4444";
-          card.style.cssText = "background:rgba(20,20,40,0.8); border:1px solid rgba(99,102,241,0.3); border-left:4px solid " + borderColor + "; border-radius:14px; padding:18px; margin-bottom:14px;";
-
-          let optionsHtml = "";
-          ["A", "B", "C", "D"].forEach(letter => {
-            const text = a["option_" + letter.toLowerCase()];
-            let style = "padding:8px 12px; border-radius:8px; margin:4px 0; font-size:14px;";
-            if (letter === a.correct_answer) {
-              style += "background:rgba(34,197,94,0.2); color:#86efac; font-weight:600;";
-            } else if (letter === a.your_answer && !a.is_correct) {
-              style += "background:rgba(239,68,68,0.2); color:#fca5a5;";
-            } else {
-              style += "color:#94a3b8;";
-            }
-            optionsHtml += '<div style="' + style + '">' + letter + ') ' + text + '</div>';
-          });
-
-          const statusIcon = a.is_correct ? "✅" : "❌";
-          const yourAnswerText = a.your_answer ? a.your_answer : "javob berilmadi";
-
-          card.innerHTML =
-            '<div style="font-weight:600; font-size:16px; margin-bottom:10px;">' + statusIcon + ' Savol ' + (index + 1) + ': ' + a.question_text + '</div>' +
-            optionsHtml +
-            '<div style="font-size:13px; color:#94a3b8; margin-top:8px;">Sizning javobingiz: <b>' + yourAnswerText + '</b> · To\'g\'ri: <b style="color:#86efac;">' + a.correct_answer + '</b></div>' +
-            (a.explanation ? '<div style="font-size:13px; color:#a5b4fc; margin-top:8px; padding:10px; background:rgba(99,102,241,0.1); border-radius:8px;">💡 ' + a.explanation + '</div>' : '');
-
-          list.appendChild(card);
-        });
-      }
-
-      showScreenById("mistakesScreen");
-    }
-
-    function backToResult() {
-      showScreenById("resultScreen");
-    }
-
-    // ===== KONFETTI EFFEKTI =====
     function launchConfetti() {
-      const colors = ["#6366f1", "#a855f7", "#fbbf24", "#22c55e", "#f87171", "#60a5fa"];
-      const count = 80;
-
-      for (let i = 0; i < count; i++) {
+      const colors = ["#5b8cff","#a855f7","#fbbf24","#34d399","#f87171","#38e1ff"];
+      for (let i = 0; i < 80; i++) {
         const piece = document.createElement("div");
         piece.className = "confetti-piece";
         piece.style.left = Math.random() * 100 + "vw";
         piece.style.background = colors[Math.floor(Math.random() * colors.length)];
         piece.style.animationDuration = (2 + Math.random() * 2) + "s";
         piece.style.animationDelay = Math.random() * 0.5 + "s";
-        // ba'zilari aylana, ba'zilari kvadrat
         if (Math.random() > 0.5) piece.style.borderRadius = "50%";
         document.body.appendChild(piece);
-
-        // animatsiya tugagach o'chirish
         setTimeout(() => piece.remove(), 4500);
       }
     }
 
-    // Ballarni 0 dan sanab o'stirish
     function animateScore(elementId, target, duration) {
       const el = document.getElementById(elementId);
       if (!el) return;
@@ -719,7 +393,8 @@
       }
       requestAnimationFrame(update);
     }
-    
+
+    lucide.createIcons();
   </script>
 </body>
 </html>

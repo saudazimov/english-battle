@@ -3,138 +3,149 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Daraja imtihoni</title>
+  <title>English Battle — Imtihon</title>
+  <link rel="stylesheet" href="/app.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #0a0a1a;
-      background-image:
-        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.12), transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(168,85,247,0.12), transparent 40%);
-      min-height: 100vh;
-      color: #e2e8f0;
-      padding: 20px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .container { max-width: 650px; width: 100%; }
+    body { display: flex; align-items: flex-start; justify-content: center; padding: 30px 20px; }
+    .exam-wrap { max-width: 820px; width: 100%; }
+
     .screen { display: none; }
-    .screen.active { display: block; }
+    .screen.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    .btn {
-      padding: 14px 28px;
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      border: none; border-radius: 12px; color: white;
-      font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s;
-    }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.5); }
-    .btn-secondary { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.4); }
+    /* ===== INTRO ===== */
+    .intro-card { padding: 0; overflow: hidden; }
+    .intro-top { padding: 32px; text-align: center; background: linear-gradient(135deg, rgba(91,140,255,0.18), rgba(168,85,247,0.12)); }
+    .intro-ic { width: 76px; height: 76px; border-radius: 20px; margin: 0 auto 16px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; box-shadow: 0 0 30px rgba(91,140,255,0.4); }
+    .intro-ic i { width: 38px; height: 38px; color: #fff; }
+    .intro-top h1 { font-size: 26px; font-weight: 800; }
+    .intro-top p { font-size: 14px; color: var(--text-dim); margin-top: 6px; }
+    .intro-body { padding: 28px 32px; }
+    .rules-title { font-size: 14px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+    .rule-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .rule-row:last-child { border-bottom: none; }
+    .rule-row i { width: 20px; height: 20px; color: var(--accent); flex-shrink: 0; }
+    .intro-actions { display: flex; gap: 12px; margin-top: 24px; }
+    .not-eligible { margin-top: 20px; }
+    .ne-box { padding: 20px; border-radius: 14px; background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); }
+    .ne-title { font-weight: 700; color: var(--red); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .ne-req { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 14px; }
+    .ne-req i { width: 16px; height: 16px; }
+    .ne-ok { color: var(--green); }
+    .ne-no { color: var(--text-dim); }
 
-    /* Intro ekrani */
-    .intro {
-      background: rgba(20,20,40,0.8); border: 1px solid rgba(99,102,241,0.3);
-      border-radius: 20px; padding: 40px; text-align: center;
-      box-shadow: 0 0 40px rgba(99,102,241,0.15);
-    }
-    .intro .exam-icon { font-size: 60px; margin-bottom: 16px; }
-    .intro h1 { font-size: 28px; margin-bottom: 12px; background: linear-gradient(135deg,#fbbf24,#f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .intro p { color: #94a3b8; margin-bottom: 8px; }
-    .exam-rules { text-align: left; background: rgba(0,0,0,0.3); border-radius: 14px; padding: 20px; margin: 24px 0; }
-    .exam-rules li { margin: 8px 0; color: #cbd5e1; }
+    /* ===== IMTIHON ===== */
+    .exam-status { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .es-prog-text { font-size: 14px; font-weight: 600; color: var(--text-dim); }
+    .es-timer { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; color: var(--gold); }
+    .es-timer i { width: 18px; height: 18px; }
+    .es-timer.warning { color: var(--red); animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-    /* Imtihon ekrani */
-    .exam-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .exam-progress-text { font-size: 14px; color: #94a3b8; }
-    .exam-timer { font-size: 18px; font-weight: bold; color: #fbbf24; }
-    .exam-timer.warning { color: #f87171; }
-    .progress-bar-bg { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; margin-bottom: 20px; }
-    .progress-bar-fill { height: 100%; background: linear-gradient(90deg,#6366f1,#a855f7); transition: width 0.3s; }
+    .prog-bar { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; margin-bottom: 22px; }
+    .prog-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.3s; }
 
-    .question-card { background: rgba(20,20,40,0.8); border: 1px solid rgba(99,102,241,0.3); border-radius: 20px; padding: 30px; }
-    .q-skill { display: inline-block; padding: 4px 12px; background: rgba(99,102,241,0.2); border-radius: 12px; font-size: 12px; color: #a5b4fc; margin-bottom: 12px; }
-    .q-text { font-size: 20px; margin-bottom: 24px; }
-    .option { display: block; width: 100%; text-align: left; margin: 10px 0; padding: 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(99,102,241,0.25); border-radius: 12px; color: #e2e8f0; font-size: 15px; cursor: pointer; transition: all 0.2s; }
-    .option:hover { background: rgba(99,102,241,0.2); border-color: #818cf8; }
-    .option.selected { background: rgba(99,102,241,0.3); border-color: #818cf8; }
-    .option .letter { display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center; background: linear-gradient(135deg,#6366f1,#a855f7); border-radius: 6px; margin-right: 10px; font-weight: bold; font-size: 13px; }
-    .exam-nav { display: flex; justify-content: space-between; margin-top: 24px; }
+    .q-card { padding: 32px; }
+    .q-skill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; background: rgba(91,140,255,0.15); border-radius: 20px; font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 18px; text-transform: capitalize; }
+    .q-skill i { width: 13px; height: 13px; }
+    .q-text { font-size: 22px; font-weight: 600; line-height: 1.4; margin-bottom: 28px; }
+    .opt { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; margin: 12px 0; padding: 18px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; color: var(--text); font-size: 16px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+    .opt:hover { border-color: var(--border-bright); transform: translateX(4px); }
+    .opt.selected { background: rgba(91,140,255,0.15); border-color: var(--accent); }
+    .opt-radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-bright); flex-shrink: 0; display: grid; place-items: center; transition: all 0.2s; }
+    .opt.selected .opt-radio { border-color: var(--accent); }
+    .opt.selected .opt-radio::after { content: ""; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
+    .opt-letter { font-weight: 800; color: var(--text-dim); width: 20px; flex-shrink: 0; }
+    .opt.selected .opt-letter { color: var(--accent); }
+    .q-nav { display: flex; justify-content: flex-end; margin-top: 24px; }
 
-    /* Natija ekrani */
-    .result-box { background: rgba(20,20,40,0.8); border: 1px solid rgba(99,102,241,0.3); border-radius: 20px; padding: 40px; text-align: center; }
-    .result-icon { font-size: 70px; margin-bottom: 16px; }
-    .result-box h1 { font-size: 32px; margin-bottom: 8px; }
-    .result-box h1.pass { background: linear-gradient(135deg,#22c55e,#16a34a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .result-box h1.fail { color: #f87171; }
-    .overall-score { font-size: 48px; font-weight: bold; margin: 16px 0; color: #818cf8; }
-    .skill-breakdown { text-align: left; margin: 24px 0; }
-    .skill-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 10px; margin-bottom: 8px; }
-    .skill-row .s-name { font-weight: 600; text-transform: capitalize; }
-    .skill-row .s-pass { color: #86efac; }
-    .skill-row .s-fail { color: #f87171; }
+    /* ===== NATIJA ===== */
+    .result-card { padding: 40px; text-align: center; }
+    .result-ic { width: 90px; height: 90px; border-radius: 26px; margin: 0 auto 20px; display: grid; place-items: center; }
+    .result-ic i { width: 46px; height: 46px; }
+    .result-ic.pass { background: rgba(52,211,153,0.15); color: var(--green); box-shadow: 0 0 40px rgba(52,211,153,0.25); }
+    .result-ic.fail { background: rgba(251,191,36,0.12); color: var(--gold); }
+    .result-card h1 { font-size: 30px; font-weight: 800; }
+    .result-sub { font-size: 15px; color: var(--text-dim); margin-top: 8px; }
+    .result-score-big { font-size: 52px; font-weight: 800; margin: 20px 0; }
+    .result-score-big.pass { color: var(--green); }
+    .result-score-big.fail { color: var(--gold); }
+    .skill-bd { text-align: left; margin: 24px 0; }
+    .skill-bd-title { font-size: 13px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+    .skill-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; }
+    .skill-name { font-weight: 600; text-transform: capitalize; display: flex; align-items: center; gap: 8px; }
+    .skill-name i { width: 16px; height: 16px; }
+    .skill-val { font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .skill-val.pass { color: var(--green); }
+    .skill-val.fail { color: var(--red); }
+    .result-actions { display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="exam-wrap">
 
-    <!-- INTRO EKRANI -->
+    <!-- INTRO -->
     <div class="screen active" id="introScreen">
-      <div class="intro">
-        <div class="exam-icon">🎓</div>
-        <h1 id="examTitle">Daraja imtihoni</h1>
-        <p id="examSubtitle">A1 → A2 ko'tarilish imtihoni</p>
-        <div class="exam-rules">
-          <p style="color:#e2e8f0; font-weight:600; margin-bottom:12px;">📋 Qoidalar:</p>
-          <ul style="list-style:none;">
-            <li>📝 20 ta savol (aralash mavzular)</li>
-            <li>⏱️ Har savolga 30 soniya</li>
-            <li>🎯 O'tish uchun: umumiy 75%+</li>
-            <li>📊 Har mavzu bo'yicha kamida 60%</li>
-            <li>🚫 Raqib yo'q — yolg'iz topshirasiz</li>
-          </ul>
+      <div class="card intro-card">
+        <div class="intro-top">
+          <div class="intro-ic"><i data-lucide="graduation-cap"></i></div>
+          <h1 id="examTitle">Daraja imtihoni</h1>
+          <p id="examSubtitle">A1 → A2 ko'tarilish imtihoni</p>
         </div>
-        <div id="introButtons">
-          <button class="btn" onclick="startExam()">Imtihonni boshlash</button>
-          <button class="btn btn-secondary" onclick="goLobby()" style="margin-left:8px;">Bekor qilish</button>
+        <div class="intro-body">
+          <div class="rules-title">Qoidalar</div>
+          <div class="rule-row"><i data-lucide="list-checks"></i> 20 ta savol (aralash mavzular)</div>
+          <div class="rule-row"><i data-lucide="clock"></i> Har savolga 30 soniya</div>
+          <div class="rule-row"><i data-lucide="target"></i> O'tish uchun: umumiy 75%+</div>
+          <div class="rule-row"><i data-lucide="layers"></i> Har mavzu bo'yicha kamida 60%</div>
+          <div class="rule-row"><i data-lucide="user"></i> Raqib yo'q — yolg'iz topshirasiz</div>
+          <div id="introButtons" class="intro-actions">
+            <button class="btn btn-primary" onclick="startExam()"><i data-lucide="play" style="width:18px;height:18px;"></i> Imtihonni boshlash</button>
+            <button class="btn btn-ghost" onclick="goExam()">Bekor qilish</button>
+          </div>
+          <div id="notEligible" class="not-eligible" style="display:none;"></div>
         </div>
-        <div id="notEligible" style="display:none; margin-top:20px;"></div>
       </div>
     </div>
 
-    <!-- IMTIHON EKRANI -->
+    <!-- IMTIHON -->
     <div class="screen" id="examScreen">
-      <div class="exam-header">
-        <span class="exam-progress-text" id="progressText">Savol 1 / 20</span>
-        <span class="exam-timer" id="timer">0:30</span>
+      <div class="exam-status">
+        <span class="es-prog-text" id="progressText">Savol 1 / 20</span>
+        <span class="es-timer" id="timer"><i data-lucide="clock"></i> <span id="timerText">0:30</span></span>
       </div>
-      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:5%;"></div></div>
-      <div class="question-card">
-        <span class="q-skill" id="qSkill">grammar</span>
+      <div class="prog-bar"><div class="prog-fill" id="progressFill" style="width:5%;"></div></div>
+      <div class="card q-card">
+        <span class="q-skill" id="qSkill"><i data-lucide="book-open"></i> <span id="qSkillText">grammar</span></span>
         <div class="q-text" id="qText">...</div>
         <div id="options"></div>
-        <div class="exam-nav">
-          <span></span>
-          <button class="btn" id="nextBtn" onclick="nextQuestion()">Keyingi →</button>
+        <div class="q-nav">
+          <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()">Keyingi <i data-lucide="arrow-right" style="width:16px;height:16px;"></i></button>
         </div>
       </div>
     </div>
 
-    <!-- NATIJA EKRANI -->
+    <!-- NATIJA -->
     <div class="screen" id="resultScreen">
-      <div class="result-box">
-        <div class="result-icon" id="resultIcon">🎉</div>
+      <div class="card result-card">
+        <div class="result-ic" id="resultIc"><i data-lucide="trophy"></i></div>
         <h1 id="resultTitle">Tabriklaymiz!</h1>
-        <p id="resultSubtitle"></p>
-        <div class="overall-score" id="overallScore">0%</div>
-        <div class="skill-breakdown" id="skillBreakdown"></div>
-        <div>
-          <button class="btn" onclick="goLobby()">Lobbyga</button>
-          <button class="btn btn-secondary" id="retryBtn" onclick="location.reload()" style="margin-left:8px; display:none;">Qayta urinish</button>
+        <p class="result-sub" id="resultSubtitle"></p>
+        <div class="result-score-big" id="overallScore">0%</div>
+        <div class="skill-bd">
+          <div class="skill-bd-title">Mavzular bo'yicha natija</div>
+          <div id="skillBreakdown"></div>
+        </div>
+        <div class="result-actions">
+          <button class="btn btn-primary" onclick="goExam()"><i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Imtihon markazi</button>
+          <button class="btn btn-ghost" id="retryBtn" onclick="location.reload()" style="display:none;"><i data-lucide="rotate-ccw" style="width:16px;height:16px;"></i> Qayta urinish</button>
         </div>
       </div>
     </div>
 
   </div>
 
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script>
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
@@ -142,51 +153,44 @@
 
     let questions = [];
     let currentIndex = 0;
-    let userAnswers = {}; // { question_id: "A" }
+    let userAnswers = {};
     let timerInterval = null;
 
     function showScreen(id) {
       document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
       document.getElementById(id).classList.add("active");
+      lucide.createIcons();
     }
 
-    // Imtihon holatini tekshirish
     async function checkStatus() {
       try {
         const res = await fetch("/exam/status/" + user.id);
         const data = await res.json();
-
         document.getElementById("examTitle").textContent = "Daraja imtihoni";
         if (data.next_level) {
-          document.getElementById("examSubtitle").textContent =
-            data.current_level + " → " + data.next_level + " ko'tarilish imtihoni";
+          document.getElementById("examSubtitle").textContent = data.current_level + " → " + data.next_level + " ko'tarilish imtihoni";
         }
-
         if (!data.eligible) {
-          // Imtihon ochilmagan — sabab ko'rsatish
           document.getElementById("introButtons").style.display = "none";
           const notEl = document.getElementById("notEligible");
           notEl.style.display = "block";
-
           if (!data.next_level) {
-            notEl.innerHTML = '<div style="padding:20px; background:rgba(99,102,241,0.1); border-radius:12px; color:#a5b4fc;">' + (data.reason || "Imtihon mavjud emas") + '</div>' +
-              '<button class="btn btn-secondary" onclick="goLobby()" style="margin-top:16px;">Lobbyga</button>';
+            notEl.innerHTML = '<div class="ne-box"><div class="ne-title"><i data-lucide="info"></i> ' + (data.reason || "Imtihon mavjud emas") + '</div></div>' +
+              '<button class="btn btn-ghost" style="margin-top:16px;" onclick="goExam()">Imtihon markazi</button>';
           } else {
             const p = data.progress;
+            const bOk = p.battles >= p.battles_required;
+            const aOk = p.accuracy >= p.accuracy_required;
             notEl.innerHTML =
-              '<div style="padding:20px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:12px;">' +
-                '<p style="color:#fca5a5; font-weight:600; margin-bottom:12px;">Imtihon hali ochilmagan</p>' +
-                '<div style="text-align:left; color:#cbd5e1;">' +
-                  '<div style="margin:8px 0;">⚔️ Janglar: <b>' + p.battles + '/' + p.battles_required + '</b> ' + (p.battles >= p.battles_required ? '✅' : '') + '</div>' +
-                  '<div style="margin:8px 0;">🎯 Aniqlik: <b>' + p.accuracy + '%</b> (kerak: ' + p.accuracy_required + '%) ' + (p.accuracy >= p.accuracy_required ? '✅' : '') + '</div>' +
-                '</div>' +
+              '<div class="ne-box"><div class="ne-title"><i data-lucide="lock"></i> Imtihon hali ochilmagan</div>' +
+                '<div class="ne-req ' + (bOk ? "ne-ok" : "ne-no") + '"><i data-lucide="' + (bOk ? "check-circle" : "circle") + '"></i> Janglar: ' + p.battles + ' / ' + p.battles_required + '</div>' +
+                '<div class="ne-req ' + (aOk ? "ne-ok" : "ne-no") + '"><i data-lucide="' + (aOk ? "check-circle" : "circle") + '"></i> Aniqlik: ' + p.accuracy + '% (kerak: ' + p.accuracy_required + '%)</div>' +
               '</div>' +
-              '<button class="btn btn-secondary" onclick="goLobby()" style="margin-top:16px;">Lobbyga</button>';
+              '<button class="btn btn-ghost" style="margin-top:16px;" onclick="goExam()">Imtihon markazi</button>';
           }
+          lucide.createIcons();
         }
-      } catch (err) {
-        console.error("Status xatosi");
-      }
+      } catch (err) { console.error("Status xatosi"); }
     }
 
     async function startExam() {
@@ -194,44 +198,43 @@
         const res = await fetch("/exam/start/" + user.id);
         const data = await res.json();
         if (!res.ok) { alert(data.error || "Xato"); return; }
-
         questions = data.questions;
         currentIndex = 0;
         userAnswers = {};
         showScreen("examScreen");
         showQuestion();
-      } catch (err) {
-        alert("Server xatosi");
-      }
+      } catch (err) { alert("Server xatosi"); }
     }
 
     function showQuestion() {
       const q = questions[currentIndex];
       document.getElementById("progressText").textContent = "Savol " + (currentIndex + 1) + " / " + questions.length;
       document.getElementById("progressFill").style.width = ((currentIndex + 1) / questions.length * 100) + "%";
-      document.getElementById("qSkill").textContent = q.skill || "savol";
+      document.getElementById("qSkillText").textContent = q.skill || "savol";
       document.getElementById("qText").textContent = q.question_text;
 
       const optionsDiv = document.getElementById("options");
       optionsDiv.innerHTML = "";
       ["A","B","C","D"].forEach(letter => {
         const btn = document.createElement("button");
-        btn.className = "option" + (userAnswers[q.id] === letter ? " selected" : "");
-        btn.innerHTML = '<span class="letter">' + letter + '</span>' + q["option_" + letter.toLowerCase()];
+        btn.className = "opt" + (userAnswers[q.id] === letter ? " selected" : "");
+        btn.innerHTML = '<span class="opt-radio"></span><span class="opt-letter">' + letter + '</span><span>' + q["option_" + letter.toLowerCase()] + '</span>';
         btn.onclick = () => selectAnswer(q.id, letter, btn);
         optionsDiv.appendChild(btn);
       });
 
-      // Oxirgi savolda tugma "Yakunlash"
-      document.getElementById("nextBtn").textContent =
-        (currentIndex === questions.length - 1) ? "Yakunlash ✓" : "Keyingi →";
+      document.getElementById("nextBtn").innerHTML =
+        (currentIndex === questions.length - 1)
+          ? 'Yakunlash <i data-lucide="check" style="width:16px;height:16px;"></i>'
+          : 'Keyingi <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>';
 
+      lucide.createIcons();
       startTimer();
     }
 
     function selectAnswer(qId, letter, btn) {
       userAnswers[qId] = letter;
-      document.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+      document.querySelectorAll(".opt").forEach(o => o.classList.remove("selected"));
       btn.classList.add("selected");
     }
 
@@ -241,40 +244,27 @@
       const timerEl = document.getElementById("timer");
       timerEl.classList.remove("warning");
       updateTimerDisplay(timeLeft);
-
       timerInterval = setInterval(() => {
         timeLeft--;
         updateTimerDisplay(timeLeft);
         if (timeLeft <= 10) timerEl.classList.add("warning");
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          nextQuestion(); // vaqt tugadi
-        }
+        if (timeLeft <= 0) { clearInterval(timerInterval); nextQuestion(); }
       }, 1000);
     }
 
     function updateTimerDisplay(sec) {
-      document.getElementById("timer").textContent = "0:" + (sec < 10 ? "0" + sec : sec);
+      document.getElementById("timerText").textContent = "0:" + (sec < 10 ? "0" + sec : sec);
     }
 
     function nextQuestion() {
       clearInterval(timerInterval);
-      if (currentIndex < questions.length - 1) {
-        currentIndex++;
-        showQuestion();
-      } else {
-        finishExam();
-      }
+      if (currentIndex < questions.length - 1) { currentIndex++; showQuestion(); }
+      else { finishExam(); }
     }
 
     async function finishExam() {
       clearInterval(timerInterval);
-      // Javoblarni massivga aylantirish
-      const answersArr = questions.map(q => ({
-        question_id: q.id,
-        answer: userAnswers[q.id] || null,
-      }));
-
+      const answersArr = questions.map(q => ({ question_id: q.id, answer: userAnswers[q.id] || null }));
       try {
         const res = await fetch("/exam/submit", {
           method: "POST",
@@ -283,60 +273,54 @@
         });
         const data = await res.json();
         showResult(data);
-      } catch (err) {
-        alert("Server xatosi");
-      }
+      } catch (err) { alert("Server xatosi"); }
     }
 
     function showResult(data) {
-      // Daraja o'zgargan bo'lsa - localStorage yangilash
-      if (data.updated_user) {
-        localStorage.setItem("user", JSON.stringify(data.updated_user));
-      }
+      if (data.updated_user) localStorage.setItem("user", JSON.stringify(data.updated_user));
 
-      const icon = document.getElementById("resultIcon");
+      const ic = document.getElementById("resultIc");
       const title = document.getElementById("resultTitle");
       const subtitle = document.getElementById("resultSubtitle");
+      const scoreBig = document.getElementById("overallScore");
 
       if (data.passed) {
-        icon.textContent = "🎉";
+        ic.className = "result-ic pass";
+        ic.innerHTML = '<i data-lucide="party-popper"></i>';
         title.textContent = "Tabriklaymiz!";
-        title.className = "pass";
-        subtitle.innerHTML = "Siz <b>" + data.new_level + "</b> darajasiga ko'tarildingiz! 🚀";
+        subtitle.innerHTML = "Siz <b>" + data.new_level + "</b> darajasiga ko'tarildingiz!";
+        scoreBig.className = "result-score-big pass";
         document.getElementById("retryBtn").style.display = "none";
       } else {
-        icon.textContent = "📚";
+        ic.className = "result-ic fail";
+        ic.innerHTML = '<i data-lucide="book-open"></i>';
         title.textContent = "Yana harakat qiling";
-        title.className = "fail";
         subtitle.textContent = "Imtihondan o'ta olmadingiz. Quyidagi mavzularni mustahkamlang:";
-        document.getElementById("retryBtn").style.display = "inline-block";
+        scoreBig.className = "result-score-big fail";
+        document.getElementById("retryBtn").style.display = "inline-flex";
       }
 
-      document.getElementById("overallScore").textContent =
-        data.overall_percent + "% (" + data.total_correct + "/" + data.total + ")";
+      scoreBig.textContent = data.overall_percent + "% (" + data.total_correct + "/" + data.total + ")";
 
-      // Skill bo'yicha natija
       const breakdown = document.getElementById("skillBreakdown");
       breakdown.innerHTML = "";
       for (const skill in data.skill_results) {
         const s = data.skill_results[skill];
         const passed = s.percent >= data.pass_skill_required;
-        const row = document.createElement("div");
-        row.className = "skill-row";
-        row.innerHTML =
-          '<span class="s-name">' + skill + '</span>' +
-          '<span class="' + (passed ? 's-pass' : 's-fail') + '">' + s.correct + '/' + s.total + ' (' + s.percent + '%) ' + (passed ? '✅' : '❌') + '</span>';
-        breakdown.appendChild(row);
+        breakdown.innerHTML +=
+          '<div class="skill-row">' +
+            '<span class="skill-name"><i data-lucide="' + (passed ? "check-circle" : "x-circle") + '"></i> ' + skill + '</span>' +
+            '<span class="skill-val ' + (passed ? "pass" : "fail") + '">' + s.correct + '/' + s.total + ' (' + s.percent + '%)</span>' +
+          '</div>';
       }
 
       showScreen("resultScreen");
     }
 
-    function goLobby() {
-      window.location.href = "/lobby.html";
-    }
+    function goExam() { window.location.href = "/exam.html"; }
 
     checkStatus();
+    lucide.createIcons();
   </script>
 </body>
 </html>

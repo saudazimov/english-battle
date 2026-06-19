@@ -377,6 +377,7 @@ function simulateBotAnswers(roomId, botId, questions) {
 
 let waitingPlayer = null;
 const battles = {}; // Faol janglar: roomId -> jang ma'lumoti
+const pendingBattles = {}; // Do'st janglari: battle.html'da tayyor bo'lishni kutayotgan
 const onlineUsers = {}; // { userId: socketId }
 
 // Jangni boshlash funksiyasi
@@ -411,9 +412,30 @@ async function startBattle(roomId, player1, player2) {
       option_d: q.option_d,
     }));
 
-    io.to(roomId).emit("battleStart", {
+    // Ikki o'yinchining rasmini bazadan olish
+    let pic1 = null, pic2 = null;
+    try {
+      const picRes = await pool.query("SELECT id, profile_picture FROM users WHERE id = ANY($1)", [[player1.userId, player2.userId]]);
+      picRes.rows.forEach(r => {
+        if (String(r.id) === String(player1.userId)) pic1 = r.profile_picture;
+        if (String(r.id) === String(player2.userId)) pic2 = r.profile_picture;
+      });
+    } catch (e) {}
+
+    // Har o'yinchiga ALOHIDA yuborish: o'z rasmi + raqib rasmi
+    io.to(player1.socketId).emit("battleStart", {
       total_questions: safeQuestions.length,
       questions: safeQuestions,
+      myPicture: pic1,
+      opponentPicture: pic2,
+      opponentName: player2.name,
+    });
+    io.to(player2.socketId).emit("battleStart", {
+      total_questions: safeQuestions.length,
+      questions: safeQuestions,
+      myPicture: pic2,
+      opponentPicture: pic1,
+      opponentName: player1.name,
     });
 
     console.log("Jang boshlandi, xona:", roomId);
@@ -431,6 +453,28 @@ io.on("connection", (socket) => {
       // Bu odamning do'stlariga "men onlayn bo'ldim" signali
       notifyFriendsStatus(userId, true);
     });
+
+    // Do'st jangi: battle.html ochilganda o'yinchi "tayyorman" deydi
+  socket.on("joinFriendBattle", ({ roomId, userId }) => {
+    socket.join(roomId);
+    const pending = pendingBattles[roomId];
+    if (!pending) return;
+
+    if (String(pending.player1.userId) === String(userId)) {
+      pending.player1.ready = true;
+      pending.player1.socketId = socket.id;
+    } else if (String(pending.player2.userId) === String(userId)) {
+      pending.player2.ready = true;
+      pending.player2.socketId = socket.id;
+    }
+
+    if (pending.player1.ready && pending.player2.ready) {
+      const p1 = { socketId: pending.player1.socketId, userId: pending.player1.userId, name: pending.player1.name, level: pending.player1.level };
+      const p2 = { socketId: pending.player2.socketId, userId: pending.player2.userId, name: pending.player2.name, level: pending.player2.level };
+      delete pendingBattles[roomId];
+      startBattle(roomId, p1, p2);
+    }
+  });
 
   // Do'stga jang chaqiruvi yuborish
   socket.on("challengeFriend", ({ fromUserId, fromName, toUserId, level }) => {
@@ -453,7 +497,7 @@ io.on("connection", (socket) => {
   });
 
   // Chaqiruvga javob (qabul yoki rad)
-  socket.on("challengeResponse", ({ accepted, fromSocketId, fromUserId, fromName, myUserId, myName, level }) => {
+  socket.on("challengeResponse", async ({ accepted, fromSocketId, fromUserId, fromName, myUserId, myName, level }) => {
     const challengerSocket = io.sockets.sockets.get(fromSocketId);
 
     if (!accepted) {
@@ -467,27 +511,85 @@ io.on("connection", (socket) => {
     if (challengerSocket) challengerSocket.join(roomId);
     socket.join(roomId);
 
+    // Raqiblarning rasmlarini bazadan olish
+    let fromPic = null, myPic = null;
+    try {
+      const picRes = await pool.query("SELECT id, profile_picture FROM users WHERE id = ANY($1)", [[fromUserId, myUserId]]);
+      picRes.rows.forEach(r => {
+        if (String(r.id) === String(fromUserId)) fromPic = r.profile_picture;
+        if (String(r.id) === String(myUserId)) myPic = r.profile_picture;
+      });
+    } catch (e) {}
+
     if (challengerSocket) {
       challengerSocket.emit("matchFound", {
         roomId: roomId,
-        opponent: { name: myName },
+        opponent: { name: myName, profile_picture: myPic },
         message: "Do'stingiz qabul qildi!",
       });
     }
     socket.emit("matchFound", {
       roomId: roomId,
-      opponent: { name: fromName },
+      opponent: { name: fromName, profile_picture: fromPic },
       message: "Jang boshlanmoqda!",
     });
 
     const player1 = { socketId: fromSocketId, userId: fromUserId, name: fromName, level: level || "A1" };
     const player2 = { socketId: socket.id, userId: myUserId, name: myName, level: level || "A1" };
-    setTimeout(() => startBattle(roomId, player1, player2), 1500);
+
+    // Do'st jangi: darrov boshlamaymiz. Ikki o'yinchi battle.html'ga o'tib "tayyorman" deganda boshlanadi.
+    pendingBattles[roomId] = {
+      player1: { userId: fromUserId, name: fromName, level: level || "A1", ready: false, socketId: null },
+      player2: { userId: myUserId, name: myName, level: level || "A1", ready: false, socketId: null },
+    };
   });
 
   console.log("Yangi o'yinchi ulandi:", socket.id);
 
-  socket.on("findMatch", (playerData) => {
+  // Do'st jangi: battle.html ochilganda yangi socket room'ga qo'shiladi
+  socket.on("joinFriendBattle", ({ roomId, userId, name }) => {
+    socket.join(roomId);
+    // Agar bu room uchun jang holati bor bo'lsa, socket'ni yangilash
+    const battle = battles[roomId];
+    if (battle) {
+      // Eski socketId'ni topib, yangisiga almashtirish (userId bo'yicha)
+      for (const oldSocketId in battle.players) {
+        if (String(battle.players[oldSocketId].userId) === String(userId)) {
+          if (oldSocketId !== socket.id) {
+            battle.players[socket.id] = battle.players[oldSocketId];
+            delete battle.players[oldSocketId];
+          }
+          break;
+        }
+      }
+    }
+  });
+
+  // Do'st jangi: battle.html ochilganda o'yinchi "tayyorman" deydi
+  socket.on("joinFriendBattle", ({ roomId, userId }) => {
+    socket.join(roomId);
+    const pending = pendingBattles[roomId];
+    if (!pending) return;
+
+    // Qaysi o'yinchi ekanini topib, tayyor + yangi socketId belgilash
+    if (String(pending.player1.userId) === String(userId)) {
+      pending.player1.ready = true;
+      pending.player1.socketId = socket.id;
+    } else if (String(pending.player2.userId) === String(userId)) {
+      pending.player2.ready = true;
+      pending.player2.socketId = socket.id;
+    }
+
+    // Ikkalasi ham tayyor bo'lsa - jangni boshlaymiz (yangi socketlar bilan)
+    if (pending.player1.ready && pending.player2.ready) {
+      const p1 = { socketId: pending.player1.socketId, userId: pending.player1.userId, name: pending.player1.name, level: pending.player1.level };
+      const p2 = { socketId: pending.player2.socketId, userId: pending.player2.userId, name: pending.player2.name, level: pending.player2.level };
+      delete pendingBattles[roomId];
+      startBattle(roomId, p1, p2);
+    }
+  });
+
+  socket.on("findMatch", async (playerData) => {
     console.log("Jang qidirilyapti:", socket.id);
 
     if (waitingPlayer === null) {
@@ -554,11 +656,22 @@ io.on("connection", (socket) => {
 
       const player1 = opponent;
       const player2 = { socketId: socket.id, userId: playerData.userId, name: playerData.name || "O'yinchi", level: playerData.level || "A1" };
+
+      // Ikki o'yinchi rasmini bazadan olish
+      let p1Pic = null, p2Pic = null;
+      try {
+        const picRes = await pool.query("SELECT id, profile_picture FROM users WHERE id = ANY($1)", [[player1.userId, player2.userId]]);
+        picRes.rows.forEach(r => {
+          if (String(r.id) === String(player1.userId)) p1Pic = r.profile_picture;
+          if (String(r.id) === String(player2.userId)) p2Pic = r.profile_picture;
+        });
+      } catch (e) {}
+
       io.to(opponent.socketId).emit("matchFound", {
-        roomId, opponent: { name: player2.name }, message: "Raqib topildi!",
+        roomId, opponent: { name: player2.name, profile_picture: p2Pic }, message: "Raqib topildi!",
       });
       socket.emit("matchFound", {
-        roomId, opponent: { name: player1.name }, message: "Raqib topildi!",
+        roomId, opponent: { name: player1.name, profile_picture: p1Pic }, message: "Raqib topildi!",
       });
 
       // 2 soniyadan keyin jangni boshlaymiz
