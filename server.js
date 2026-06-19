@@ -429,6 +429,9 @@ async function startBattle(roomId, player1, player2) {
       myPicture: pic1,
       opponentPicture: pic2,
       opponentName: player2.name,
+      opponentId: player2.userId,
+      myName: player1.name,
+      level: player1.level,
     });
     io.to(player2.socketId).emit("battleStart", {
       total_questions: safeQuestions.length,
@@ -436,6 +439,9 @@ async function startBattle(roomId, player1, player2) {
       myPicture: pic2,
       opponentPicture: pic1,
       opponentName: player1.name,
+      opponentId: player1.userId,
+      myName: player2.name,
+      level: player2.level,
     });
 
     console.log("Jang boshlandi, xona:", roomId);
@@ -474,6 +480,51 @@ io.on("connection", (socket) => {
       delete pendingBattles[roomId];
       startBattle(roomId, p1, p2);
     }
+  });
+
+  // Rematch: bir o'yinchi qayta jang so'raydi
+  socket.on("requestRematch", ({ opponentId, myUserId, myName, level }) => {
+    const targetSocketId = onlineUsers[String(opponentId)];
+    if (!targetSocketId) {
+      socket.emit("rematchUnavailable", { message: "Raqib hozir mavjud emas" });
+      return;
+    }
+    io.to(targetSocketId).emit("rematchRequested", {
+      fromUserId: myUserId,
+      fromName: myName,
+      fromSocketId: socket.id,
+      level: level || "A1",
+    });
+  });
+
+  // Rematch javobi
+  socket.on("rematchResponse", async ({ accepted, fromSocketId, fromUserId, fromName, myUserId, myName, level }) => {
+    const requesterSocket = io.sockets.sockets.get(fromSocketId);
+    if (!accepted) {
+      if (requesterSocket) requesterSocket.emit("rematchDeclined", { byName: myName });
+      return;
+    }
+    const roomId = "friend_battle_" + fromSocketId + "_" + socket.id;
+    if (requesterSocket) requesterSocket.join(roomId);
+    socket.join(roomId);
+
+    let fromPic = null, myPic = null;
+    try {
+      const picRes = await pool.query("SELECT id, profile_picture FROM users WHERE id = ANY($1)", [[fromUserId, myUserId]]);
+      picRes.rows.forEach(r => {
+        if (String(r.id) === String(fromUserId)) fromPic = r.profile_picture;
+        if (String(r.id) === String(myUserId)) myPic = r.profile_picture;
+      });
+    } catch (e) {}
+
+    if (requesterSocket) {
+      requesterSocket.emit("matchFound", { roomId, opponent: { name: myName, profile_picture: myPic }, message: "Rematch qabul qilindi!" });
+    }
+    socket.emit("matchFound", { roomId, opponent: { name: fromName, profile_picture: fromPic }, message: "Rematch boshlanmoqda!" });
+
+    const player1 = { socketId: fromSocketId, userId: fromUserId, name: fromName, level: level || "A1" };
+    const player2 = { socketId: socket.id, userId: myUserId, name: myName, level: level || "A1" };
+    setTimeout(() => startBattle(roomId, player1, player2), 1500);
   });
 
   // Do'stga jang chaqiruvi yuborish

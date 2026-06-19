@@ -67,6 +67,7 @@
     .rs.you .rs-num { color: var(--accent); }
     .rs.opp .rs-num { color: var(--red); }
     .rs-lbl { font-size: 12px; color: var(--text-dim); margin-top: 4px; letter-spacing: 1px; }
+    .rs-lbl { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .xp-earned { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3); border-radius: 12px; color: var(--green); font-size: 17px; font-weight: 700; margin-bottom: 26px; }
     .xp-earned i { width: 18px; height: 18px; }
     .league-banner { margin: 0 auto 24px; padding: 16px 24px; border-radius: 14px; text-align: center; max-width: 440px; }
@@ -96,6 +97,32 @@
 
     .confetti-piece { position: fixed; top: 0; width: 12px; height: 12px; z-index: 9999; pointer-events: none; animation: confettiFall linear forwards; }
     @keyframes confettiFall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+  
+    .rs-ava { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 12px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 800; font-size: 24px; overflow: hidden; border: 3px solid var(--border-bright); }
+    .rs.opp .rs-ava { background: linear-gradient(135deg, #f87171, #a855f7); }
+
+    .rs { position: relative; }
+    .rs-crown { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); color: var(--gold); display: none; }
+    .rs-crown i { width: 24px; height: 24px; }
+    .rs.winner .rs-crown { display: block; animation: crownPop 0.6s ease forwards; }
+    @keyframes crownPop {
+      0% { opacity: 0; transform: translateX(-50%) scale(0.5) translateY(10px); }
+      60% { opacity: 1; transform: translateX(-50%) scale(1.15) translateY(-2px); }
+      100% { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
+    }
+    .rs.winner .rs-ava { border-color: var(--gold); box-shadow: 0 0 20px rgba(251,191,36,0.5); }
+    .rs-correct { font-size: 12px; color: var(--text-dim); margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .rs-correct i { width: 13px; height: 13px; color: var(--green); }
+
+    .league-prog { max-width: 440px; margin: 0 auto 24px; padding: 16px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; }
+    .lp-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .lp-cur { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+    .lp-cur i { width: 18px; height: 18px; }
+    .lp-next { font-size: 13px; color: var(--text-dim); }
+    .lp-bar { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; }
+    .lp-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 4px; transition: width 0.8s ease; width: 0; }
+    .lp-rp { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+
   </style>
 </head>
 <body>
@@ -139,16 +166,38 @@
         <div class="result-ic win" id="resultIc"><i data-lucide="trophy"></i></div>
         <h1 id="resultTitle" class="win">G'alaba!</h1>
         <div class="result-scores">
-          <div class="rs you"><div class="rs-num" id="finalMyScore">0</div><div class="rs-lbl">SIZ</div></div>
-          <div class="rs opp"><div class="rs-num" id="finalOppScore">0</div><div class="rs-lbl">RAQIB</div></div>
+          <div class="rs you" id="rsYou">
+            <div class="rs-crown"><i data-lucide="crown"></i></div>
+            <div class="rs-ava" id="resMyAva">S</div>
+            <div class="rs-num" id="finalMyScore">0</div>
+            <div class="rs-lbl" id="myLbl">SIZ</div>
+            <div class="rs-correct"><i data-lucide="check"></i> <span id="myCorrect">0</span>/5 to'g'ri</div>
+          </div>
+          <div class="rs opp" id="rsOpp">
+            <div class="rs-crown"><i data-lucide="crown"></i></div>
+            <div class="rs-ava" id="resOppAva">R</div>
+            <div class="rs-num" id="finalOppScore">0</div>
+            <div class="rs-lbl" id="oppLbl">RAQIB</div>
+            <div class="rs-correct"><i data-lucide="check"></i> <span id="oppCorrect">0</span>/5 to'g'ri</div>
+          </div>
         </div>
         <div id="leagueBannerSlot"></div>
         <div class="xp-earned" id="xpEarned"><i data-lucide="zap"></i> +0 XP</div>
+        <div class="league-prog" id="leagueProg" style="display:none;">
+          <div class="lp-top">
+            <div class="lp-cur" id="lpCur"></div>
+            <div class="lp-next" id="lpNext"></div>
+          </div>
+          <div class="lp-bar"><div class="lp-fill" id="lpFill"></div></div>
+          <div class="lp-rp" id="lpRp"></div>
+        </div>
         <div class="result-actions">
           <button class="btn btn-ghost" onclick="showMistakes()"><i data-lucide="book-open" style="width:16px;height:16px;"></i> Xatolarni ko'rish</button>
+          <button class="btn btn-primary" id="rematchBtn" onclick="requestRematch()" style="display:none;"><i data-lucide="swords" style="width:16px;height:16px;"></i> Rematch</button>
           <button class="btn btn-primary" onclick="playAgain()"><i data-lucide="rotate-ccw" style="width:16px;height:16px;"></i> Yana o'ynash</button>
           <button class="btn btn-ghost" onclick="goLobby()">Lobbyga</button>
         </div>
+        <div id="rematchStatus" style="margin-top:14px;font-size:14px;color:var(--text-dim);"></div>
       </div>
     </div>
 
@@ -160,6 +209,20 @@
       </div>
       <div id="mistakesList"></div>
     </div>
+  
+    <div id="rematchModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9998; align-items:center; justify-content:center;">
+    <div class="card" style="max-width:380px; width:90%; padding:28px; text-align:center;">
+      <div style="width:60px;height:60px;border-radius:16px;margin:0 auto 16px;background:rgba(91,140,255,0.15);display:grid;place-items:center;">
+        <i data-lucide="swords" style="width:30px;height:30px;color:var(--accent);"></i>
+      </div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px;" id="rematchModalText">Rematch chaqiruvi</div>
+      <div style="font-size:14px;color:var(--text-dim);margin-bottom:20px;">Qayta jang qilasizmi?</div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn btn-primary" onclick="respondRematch(true)"><i data-lucide="check" style="width:16px;height:16px;"></i> Qabul</button>
+        <button class="btn btn-ghost" onclick="respondRematch(false)"><i data-lucide="x" style="width:16px;height:16px;"></i> Rad etish</button>
+      </div>
+    </div>
+  </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -194,6 +257,7 @@
     const savedBattleData = sessionStorage.getItem("battleData");
 
     socket.on("connect", () => {
+      socket.emit("registerUser", user.id);
       if (friendRoom) {
         // Do'st jangi - findMatch chaqirmaymiz, "tayyorman" deymiz
         currentRoom = friendRoom;
@@ -222,9 +286,21 @@
       document.getElementById("oppAva").innerHTML = avatarHTML(data.opponent.name, data.opponent.profile_picture);
     });
 
+    let myPic = null, oppPic = null, oppNameGlobal = "Raqib", oppIdGlobal = null, myNameGlobal = "", levelGlobal = "A1";
     socket.on("battleStart", (data) => {
       questions = data.questions;
       currentIndex = 0;
+      // Rematch statusini tozalash (yangi jang)
+      const rStatus = document.getElementById("rematchStatus");
+      if (rStatus) rStatus.textContent = "";
+      const rBtn = document.getElementById("rematchBtn");
+      if (rBtn) { rBtn.disabled = false; rBtn.style.display = "none"; }
+      myPic = data.myPicture || user.profile_picture;
+      oppPic = data.opponentPicture;
+      if (data.opponentName) oppNameGlobal = data.opponentName;
+      if (data.opponentId) oppIdGlobal = data.opponentId;
+      if (data.myName) myNameGlobal = data.myName;
+      if (data.level) levelGlobal = data.level;
       document.getElementById("myName").textContent = user.first_name;
       document.getElementById("myAva").innerHTML = avatarHTML(user.first_name, data.myPicture || user.profile_picture);
       if (data.opponentName) document.getElementById("oppName").textContent = data.opponentName;
@@ -289,6 +365,18 @@
     socket.on("battleEnd", (data) => {
       clearInterval(timerInterval);
       window.battleAnswers = data.answers || [];
+      document.getElementById("resMyAva").innerHTML = avatarHTML(user.first_name, myPic);
+      document.getElementById("resOppAva").innerHTML = avatarHTML(oppNameGlobal, oppPic);
+      document.getElementById("myCorrect").textContent = data.your_score;
+      document.getElementById("oppCorrect").textContent = data.opponent_score;
+      // Ism-familya (SIZ/RAQIB o'rniga)
+      document.getElementById("myLbl").textContent = myNameGlobal || (user.first_name + " " + (user.last_name || ""));
+      document.getElementById("oppLbl").textContent = oppNameGlobal;
+      // G'olib toji
+      document.getElementById("rsYou").classList.remove("winner");
+      document.getElementById("rsOpp").classList.remove("winner");
+      if (data.outcome === "win") document.getElementById("rsYou").classList.add("winner");
+      else if (data.outcome === "lose") document.getElementById("rsOpp").classList.add("winner");
       animateScore("finalMyScore", data.your_score, 800);
       animateScore("finalOppScore", data.opponent_score, 800);
 
@@ -329,11 +417,86 @@
         title.textContent = "Durang!"; title.className = "draw";
         ic.className = "result-ic draw"; ic.innerHTML = '<i data-lucide="handshake"></i>';
       }
+      renderLeagueProgress(data);
+      renderLeagueProgress(data);
+      // Rematch faqat haqiqiy raqib (do'st) bilan - bot/oddiy emas
+      if (oppIdGlobal) document.getElementById("rematchBtn").style.display = "inline-flex";
       showScreen("resultScreen");
     });
 
     function playAgain() { window.location.reload(); }
+    function renderLeagueProgress(data) {
+      const rating = (data.updated_user && data.updated_user.rating) || user.rating || 1000;
+      const leagues = [
+        { name: "Bronze", min: 0, max: 999, icon: "shield", color: "#cd7f32" },
+        { name: "Silver", min: 1000, max: 1199, icon: "shield", color: "#cbd5e1" },
+        { name: "Gold", min: 1200, max: 1399, icon: "medal", color: "#fbbf24" },
+        { name: "Platinum", min: 1400, max: 1599, icon: "gem", color: "#5b8cff" },
+        { name: "Diamond", min: 1600, max: 1799, icon: "gem", color: "#38e1ff" },
+        { name: "Master", min: 1800, max: 1999, icon: "crown", color: "#a855f7" },
+        { name: "Grandmaster", min: 2000, max: 99999, icon: "crown", color: "#fbbf24" },
+      ];
+      let idx = 0;
+      leagues.forEach((l, i) => { if (rating >= l.min && rating <= l.max) idx = i; });
+      const cur = leagues[idx], next = leagues[idx + 1];
+
+      document.getElementById("lpCur").innerHTML = '<i data-lucide="' + cur.icon + '" style="color:' + cur.color + ';"></i> ' + cur.name;
+      const box = document.getElementById("leagueProg");
+      box.style.display = "block";
+
+      if (next) {
+        const prog = Math.round(((rating - cur.min) / (cur.max - cur.min + 1)) * 100);
+        const remain = (cur.max + 1) - rating;
+        document.getElementById("lpNext").textContent = "Keyingi: " + next.name;
+        document.getElementById("lpRp").textContent = next.name + " ligasiga " + remain + " RP qoldi";
+        setTimeout(() => { document.getElementById("lpFill").style.width = prog + "%"; }, 200);
+      } else {
+        document.getElementById("lpNext").textContent = "Eng yuqori!";
+        document.getElementById("lpRp").textContent = "Siz eng yuqori ligadasiz!";
+        setTimeout(() => { document.getElementById("lpFill").style.width = "100%"; }, 200);
+      }
+      lucide.createIcons();
+    }
     function goLobby() { window.location.href = "/lobby.html"; }
+    function requestRematch() {
+      if (!oppIdGlobal) return;
+      socket.emit("requestRematch", { opponentId: oppIdGlobal, myUserId: user.id, myName: myNameGlobal || user.first_name, level: levelGlobal });
+      document.getElementById("rematchBtn").disabled = true;
+      document.getElementById("rematchStatus").textContent = "Rematch so'rovi yuborildi, javob kutilmoqda...";
+    }
+
+    let pendingRematch = null;
+    socket.on("rematchRequested", (data) => {
+      pendingRematch = data;
+      document.getElementById("rematchModalText").textContent = data.fromName + " sizni rematch'ga chaqirmoqda";
+      document.getElementById("rematchModal").style.display = "flex";
+      lucide.createIcons();
+    });
+
+    function respondRematch(accepted) {
+      document.getElementById("rematchModal").style.display = "none";
+      if (!pendingRematch) return;
+      socket.emit("rematchResponse", {
+        accepted: accepted,
+        fromSocketId: pendingRematch.fromSocketId,
+        fromUserId: pendingRematch.fromUserId,
+        fromName: pendingRematch.fromName,
+        myUserId: user.id,
+        myName: user.first_name,
+        level: pendingRematch.level,
+      });
+      pendingRematch = null;
+    }
+
+    socket.on("rematchDeclined", (data) => {
+      document.getElementById("rematchBtn").disabled = false;
+      document.getElementById("rematchStatus").textContent = (data.byName || "Raqib") + " rematch'ni rad etdi.";
+    });
+
+    socket.on("rematchUnavailable", (data) => {
+      document.getElementById("rematchBtn").disabled = false;
+      document.getElementById("rematchStatus").textContent = data.message || "Raqib mavjud emas.";
+    });
 
     function showMistakes() {
       const answers = window.battleAnswers || [];
