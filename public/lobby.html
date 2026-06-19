@@ -167,7 +167,9 @@
       display: grid; place-items: center; font-size: 34px; font-weight: 800;
       box-shadow: 0 0 30px rgba(91,140,255,0.4);
       border: 3px solid rgba(120,150,255,0.3);
+      overflow: hidden;
     }
+    .pc-avatar img { margin: -3px; width: calc(100% + 6px) !important; height: calc(100% + 6px) !important; }
     .pc-info { flex: 1; }
     .pc-name-row { display: flex; align-items: center; gap: 10px; }
     .pc-name { font-size: 26px; font-weight: 800; }
@@ -316,6 +318,7 @@
       width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       display: grid; place-items: center; font-weight: 700; font-size: 15px;
+      overflow: hidden;
     }
     .recent-opp-name { font-weight: 600; font-size: 14px; }
     .recent-opp-sub { font-size: 12px; color: var(--text-dim); }
@@ -368,8 +371,13 @@
       border: 1px solid var(--border);
     }
     .reward-box i { width: 22px; height: 22px; }
-    .reward-val { font-size:
-    
+    .reward-val { font-size: 16px; font-weight: 800; margin-top: 4px; }
+    .reward-lbl { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+    .reward-gold i { color: var(--gold); }
+    .reward-cyan i { color: var(--cyan); }
+    .reward-blue i { color: var(--accent); }
+    .reward-purple i { color: var(--accent-2); }
+
     /* Friends Online (tuzatilgan) */
     .friends-online {
       display: flex;
@@ -419,7 +427,13 @@
       text-decoration: none !important;
     }    
     .sidebar a { text-decoration: none !important; }
-
+    .pc-avatar img, .recent-ava img, #userAva img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
     
 
   </style>
@@ -435,9 +449,9 @@
     <main class="main">
       <!-- Yuqori panel -->
       <div class="topbar">
-        <div class="currency"><i data-lucide="coins" style="color:var(--gold);width:18px;height:18px;"></i> <span id="coins">12,450</span> <span class="plus">+</span></div>
-        <div class="currency"><i data-lucide="gem" style="color:var(--cyan);width:18px;height:18px;"></i> <span id="gems">1,285</span> <span class="plus">+</span></div>
-          <div class="icon-btn" onclick="window.location.href='/friends.html'" style="cursor:pointer;"><i data-lucide="bell"></i> <span class="badge" id="notifBadge">3</span></div>        <div class="user-chip">
+        <div class="currency"><i data-lucide="coins" style="color:var(--gold);width:18px;height:18px;"></i> <span id="coins">0</span> <span class="plus">+</span></div>
+        <div class="currency"><i data-lucide="gem" style="color:var(--cyan);width:18px;height:18px;"></i> <span id="gems">0</span> <span class="plus">+</span></div>
+          <div class="icon-btn" onclick="window.location.href='/friends.html'" style="cursor:pointer;"><i data-lucide="bell"></i> <span class="badge" id="notifBadge">0</span></div>        <div class="user-chip">
           <div class="ava" id="userAva">J</div>
           <div>
             <div class="uname" id="userName">O'yinchi</div>
@@ -603,10 +617,10 @@
       <div class="card rb-card">
         <div class="rb-head"><span>Possible Rewards</span></div>
         <div class="rewards-grid">
-          <div class="reward-box reward-gold"><i data-lucide="coins"></i><div class="reward-val">100</div><div class="reward-lbl">Coins</div></div>
-          <div class="reward-box reward-cyan"><i data-lucide="gem"></i><div class="reward-val">10</div><div class="reward-lbl">Gems</div></div>
-          <div class="reward-box reward-blue"><i data-lucide="zap"></i><div class="reward-val">200</div><div class="reward-lbl">XP</div></div>
-          <div class="reward-box reward-purple"><i data-lucide="gift"></i><div class="reward-val">?</div><div class="reward-lbl">Skin</div></div>
+          <div class="reward-box"><i data-lucide="coins" style="color:var(--gold);"></i><div class="reward-val">100</div><div class="reward-lbl">Coins</div></div>
+          <div class="reward-box"><i data-lucide="gem" style="color:var(--cyan);"></i><div class="reward-val">10</div><div class="reward-lbl">Gems</div></div>
+          <div class="reward-box"><i data-lucide="zap" style="color:var(--accent);"></i><div class="reward-val">200</div><div class="reward-lbl">XP</div></div>
+          <div class="reward-box"><i data-lucide="gift" style="color:var(--accent-2);"></i><div class="reward-val">?</div><div class="reward-lbl">Skin</div></div>
         </div>
       </div>
 
@@ -647,19 +661,22 @@
 
     document.getElementById("userName").textContent = user.first_name + " " + user.last_name;
     document.getElementById("userAva").innerHTML = avatarHTML(user.first_name, user.profile_picture);
+    document.getElementById("coins").textContent = user.coins || 0;
+    document.getElementById("userLevel").textContent = Math.floor((user.xp || 0) / 100) + 1;
+
+    // Bildirishnoma soni
+    fetch("/notifications/" + user.id)
+      .then(r => r.json())
+      .then(data => {
+        const unread = (data.notifications || []).filter(n => !n.is_read).length;
+        const badge = document.getElementById("notifBadge");
+        if (unread > 0) { badge.textContent = unread; badge.style.display = "grid"; }
+        else { badge.style.display = "none"; }
+      })
+      .catch(() => { document.getElementById("notifBadge").style.display = "none"; });
 
     // Profil kartasini to'ldirish
     const cefrLabels = { A1: "Beginner", A2: "Elementary", B1: "Intermediate", B2: "Upper-Intermediate", C1: "Advanced", C2: "Proficient" };
-
-    function getLeagueInfo(rating) {
-      if (rating >= 2000) return "👑 Grandmaster";
-      if (rating >= 1800) return "🔱 Master";
-      if (rating >= 1600) return "💠 Diamond";
-      if (rating >= 1400) return "💎 Platinum";
-      if (rating >= 1200) return "🥇 Gold";
-      if (rating >= 1000) return "🥈 Silver";
-      return "🥉 Bronze";
-    }
 
     // Liga nomi (faqat matn)
     function leagueName(rating) {
@@ -685,7 +702,7 @@
       return icon + ' ' + leagueName(rating);
     }
 
-    document.getElementById("pcAvatar").textContent = (user.first_name || "?").charAt(0).toUpperCase();
+    document.getElementById("pcAvatar").innerHTML = avatarHTML(user.first_name, user.profile_picture);
     document.getElementById("pcName").textContent = user.first_name + " " + user.last_name;
     document.getElementById("pcCefr").textContent = user.cefr_level || "A1";
     document.getElementById("pcCefrLabel").textContent = cefrLabels[user.cefr_level] || "Beginner";
@@ -765,7 +782,7 @@
           row.className = "recent-row";
           row.innerHTML =
             '<div class="recent-opp">' +
-              '<div class="recent-ava">' + oppName.charAt(0).toUpperCase() + '</div>' +
+              '<div class="recent-ava">' + avatarHTML(oppName, b.opponent_picture) + '</div>' +
               '<div><div class="recent-opp-name">' + oppName + '</div>' +
               '<div class="recent-opp-sub">' + (b.cefr_level || "A1") + '</div></div>' +
             '</div>' +
