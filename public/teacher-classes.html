@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sinflar — Knowledge Arena</title>
+  <style>
+    :root {
+      --bg-main: #070b18;
+      --bg-card: #10172a;
+      --bg-input: #0b1322;
+      --bg-soft: #0e1526;
+      --bg-sidebar: #0a0f1f;
+      --border: #1e2a44;
+      --border-focus: #3b82f6;
+      --primary: #3b82f6;
+      --secondary: #8b5cf6;
+      --accent: #22d3ee;
+      --gold: #facc15;
+      --green: #22c55e;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-main); color: var(--text-main); min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    .layout { display: flex; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 248px; flex: 0 0 248px; background: var(--bg-sidebar);
+      border-right: 1px solid var(--border); display: flex; flex-direction: column;
+      padding: 20px 14px; position: sticky; top: 0; height: 100vh;
+    }
+    .sidebar-logo { display: flex; align-items: center; gap: 11px; padding: 6px 8px 20px; }
+    .logo-mark {
+      width: 40px; height: 40px; border-radius: 11px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; color: #fff; box-shadow: 0 4px 14px rgba(59,130,246,0.4);
+    }
+    .logo-name { font-size: 17px; font-weight: 700; }
+    .nav { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px; padding: 11px 12px;
+      border-radius: var(--radius-sm); color: var(--text-muted);
+      font-size: 14.5px; font-weight: 500; cursor: pointer;
+      transition: background 0.15s, color 0.15s; position: relative;
+    }
+    .nav-item svg { width: 19px; height: 19px; flex: 0 0 auto; }
+    .nav-item:hover { background: var(--bg-soft); color: var(--text-main); }
+    .nav-item.active {
+      background: linear-gradient(95deg, rgba(59,130,246,0.18), rgba(139,92,246,0.12)); color: #fff;
+    }
+    .nav-item.active::before {
+      content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 22px; border-radius: 2px;
+      background: linear-gradient(var(--primary), var(--secondary));
+    }
+    .nav-item.soon { opacity: 0.6; }
+    .nav-soon-tag {
+      margin-left: auto; font-size: 9.5px; font-weight: 600; color: var(--gold);
+      background: var(--bg-soft); padding: 2px 6px; border-radius: 999px; border: 1px solid var(--border);
+    }
+    .sidebar-foot {
+      margin-top: auto; padding: 12px 8px 4px; border-top: 1px solid var(--border);
+      font-size: 12px; color: var(--text-dim);
+    }
+
+    /* MAIN */
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .topbar {
+      display: flex; align-items: center; gap: 18px; padding: 16px 28px;
+      border-bottom: 1px solid var(--border); position: sticky; top: 0;
+      background: rgba(7,11,24,0.85); backdrop-filter: blur(8px); z-index: 10;
+    }
+    .search {
+      flex: 1; max-width: 440px; display: flex; align-items: center; gap: 10px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text-dim);
+    }
+    .search svg { width: 17px; height: 17px; flex: 0 0 auto; }
+    .search input {
+      border: none; background: transparent; outline: none;
+      color: var(--text-main); font-size: 14px; width: 100%;
+    }
+    .search input::placeholder { color: var(--text-dim); }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+    .create-btn {
+      display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: none;
+      border-radius: var(--radius-sm); background: linear-gradient(95deg, var(--primary), var(--secondary));
+      color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 6px 18px rgba(59,130,246,0.3); transition: opacity 0.15s;
+    }
+    .create-btn:hover { opacity: 0.93; }
+    .create-btn svg { width: 17px; height: 17px; }
+    .profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding-left: 4px; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px; color: #fff;
+    }
+    .profile-info { line-height: 1.3; }
+    .profile-name { font-size: 14px; font-weight: 600; }
+    .profile-role { font-size: 12px; color: var(--text-muted); }
+
+    /* CONTENT */
+    .content { padding: 28px; }
+    .page-head { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; }
+    .page-head-left { display: flex; align-items: center; gap: 16px; }
+    .page-icon {
+      width: 56px; height: 56px; border-radius: 15px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center; color: #fff;
+      box-shadow: 0 8px 24px rgba(59,130,246,0.35);
+    }
+    .page-icon svg { width: 28px; height: 28px; }
+    .page-title { font-size: 26px; font-weight: 800; }
+    .page-sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+    .head-create {
+      margin-left: auto; display: flex; align-items: center; gap: 8px;
+      padding: 12px 20px; border: none; border-radius: var(--radius-sm);
+      background: linear-gradient(95deg, var(--primary), var(--secondary));
+      color: #fff; font-size: 14.5px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 6px 18px rgba(59,130,246,0.3); transition: opacity 0.15s;
+    }
+    .head-create:hover { opacity: 0.93; }
+    .head-create svg { width: 17px; height: 17px; }
+
+    /* CLASS GRID */
+    .class-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px;
+    }
+    .class-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px;
+      display: flex; flex-direction: column; transition: border-color 0.15s, transform 0.1s;
+    }
+    .class-card:hover { border-color: var(--border-focus); }
+    .class-card-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+    .class-emblem {
+      width: 50px; height: 50px; border-radius: 13px; flex: 0 0 auto;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 18px; color: #fff;
+    }
+    .class-name { font-size: 17px; font-weight: 700; line-height: 1.3; margin-bottom: 3px; word-break: break-word; }
+    .class-desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; word-break: break-word; }
+    .class-desc.empty { color: var(--text-dim); font-style: italic; }
+
+    .class-meta { display: flex; gap: 20px; margin: 4px 0 16px; padding: 14px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .meta-item { display: flex; flex-direction: column; gap: 3px; }
+    .meta-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.4px; }
+    .meta-value { font-size: 15px; font-weight: 700; }
+
+    .join-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 12px;
+    }
+    .join-label { font-size: 12px; color: var(--text-muted); }
+    .join-code {
+      font-size: 16px; font-weight: 800; letter-spacing: 2px; color: var(--accent);
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    }
+    .copy-btn {
+      margin-left: auto; display: flex; align-items: center; gap: 6px;
+      padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-soft); color: var(--text-muted); font-size: 12.5px; font-weight: 600;
+      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    }
+    .copy-btn:hover { border-color: var(--border-focus); color: var(--text-main); }
+    .copy-btn.copied { color: var(--green); border-color: var(--green); }
+    .copy-btn svg { width: 14px; height: 14px; }
+
+    .class-actions { margin-top: auto; }
+    .open-btn {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px; border: 1px solid var(--border-focus); border-radius: var(--radius-sm);
+      background: rgba(59,130,246,0.1); color: var(--primary);
+      font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s;
+    }
+    .open-btn:hover { background: rgba(59,130,246,0.18); }
+    .open-btn svg { width: 16px; height: 16px; }
+
+    /* EMPTY / LOADING / ERROR */
+    .state-box {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 56px 32px; text-align: center;
+    }
+    .state-icon {
+      width: 84px; height: 84px; margin: 0 auto 22px; border-radius: 24px;
+      background: var(--bg-soft); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+    }
+    .state-icon svg { width: 40px; height: 40px; }
+    .state-icon.error { color: var(--red); }
+    .state-box h2 { font-size: 21px; font-weight: 700; margin-bottom: 8px; }
+    .state-box p { font-size: 14.5px; color: var(--text-muted); max-width: 420px; margin: 0 auto 24px; line-height: 1.6; }
+    .state-btn {
+      display: inline-flex; align-items: center; gap: 9px; padding: 13px 24px; border: none;
+      border-radius: var(--radius-sm); background: linear-gradient(95deg, var(--primary), var(--secondary));
+      color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 8px 22px rgba(59,130,246,0.3); transition: opacity 0.15s;
+    }
+    .state-btn:hover { opacity: 0.93; }
+    .state-btn svg { width: 18px; height: 18px; }
+
+    /* Skeleton loading */
+    .skeleton-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+    .skeleton-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px; height: 230px;
+    }
+    .sk { background: var(--bg-soft); border-radius: 8px; position: relative; overflow: hidden; }
+    .sk::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { to { transform: translateX(100%); } }
+    .sk-row { height: 14px; margin-bottom: 12px; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(3,6,15,0.7); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      width: 100%; max-width: 460px; box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+      transform: scale(0.96); animation: pop 0.18s ease forwards;
+    }
+    @keyframes pop { to { transform: scale(1); } }
+    .modal-head { padding: 24px 26px 0; }
+    .modal-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .modal-subtitle { font-size: 13.5px; color: var(--text-muted); }
+    .modal-body { padding: 22px 26px; }
+    .modal-body label {
+      display: block; font-size: 13px; color: var(--text-muted);
+      margin-bottom: 7px; margin-top: 16px; font-weight: 500;
+    }
+    .modal-body label:first-child { margin-top: 0; }
+    .modal-body input, .modal-body textarea {
+      width: 100%; padding: 13px; background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text-main); font-size: 14.5px;
+      font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .modal-body input::placeholder, .modal-body textarea::placeholder { color: var(--text-dim); }
+    .modal-body input:focus, .modal-body textarea:focus {
+      outline: none; border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .modal-body input.invalid { border-color: var(--red); }
+    .modal-body textarea { resize: vertical; min-height: 80px; }
+    .modal-err { color: var(--red); font-size: 13px; margin-top: 10px; display: none; }
+    .modal-foot {
+      padding: 0 26px 24px; display: flex; gap: 12px;
+    }
+    .btn-cancel {
+      flex: 1; padding: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--bg-soft); color: var(--text-muted); font-size: 14.5px; font-weight: 600;
+      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-cancel:hover { border-color: var(--border-focus); color: var(--text-main); }
+    .btn-submit {
+      flex: 1.4; padding: 13px; border: none; border-radius: var(--radius-sm);
+      background: linear-gradient(95deg, var(--primary), var(--secondary));
+      color: #fff; font-size: 14.5px; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-submit:hover { opacity: 0.93; }
+    .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 13px 20px; font-size: 14px; color: var(--text-main);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5); opacity: 0; pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s; z-index: 1100;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast svg { width: 18px; height: 18px; color: var(--green); }
+
+    @media (max-width: 860px) {
+      .sidebar { display: none; }
+      .search { max-width: none; }
+      .create-btn span { display: none; }
+    }
+    @media (max-width: 560px) {
+      .content { padding: 18px; }
+      .profile-info { display: none; }
+      .head-create span { display: none; }
+      .class-grid, .skeleton-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">KA</div>
+        <div class="logo-name">Knowledge Arena</div>
+      </div>
+      <nav class="nav">
+        <a class="nav-item" href="/teacher.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Boshqaruv paneli
+        </a>
+        <div class="nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Sinflar
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('O\'quvchilar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          O'quvchilar <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Topshiriqlar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Topshiriqlar <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Testlar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          Testlar <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Savollar banki')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Savollar banki <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Hisobotlar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Hisobotlar <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Sozlamalar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Sozlamalar
+        </div>
+      </nav>
+      <div class="sidebar-foot">© 2025 Knowledge Arena</div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="topbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Sinf qidirish..." oninput="filterClasses(this.value)" />
+        </div>
+        <div class="topbar-right">
+          <button class="create-btn" onclick="openModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Sinf yaratish</span>
+          </button>
+          <div class="profile">
+            <div class="avatar" id="avatar">T</div>
+            <div class="profile-info">
+              <div class="profile-name" id="profileName">O'qituvchi</div>
+              <div class="profile-role">O'qituvchi</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="page-head">
+          <div class="page-head-left">
+            <div class="page-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div>
+              <div class="page-title">Sinflar</div>
+              <div class="page-sub">Sinflaringizni yarating va boshqaring.</div>
+            </div>
+          </div>
+          <button class="head-create" onclick="openModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Sinf yaratish</span>
+          </button>
+        </div>
+
+        <!-- LOADING (skeleton) -->
+        <div class="skeleton-grid" id="loadingState">
+          <div class="skeleton-card"><div class="sk sk-row" style="width:60%"></div><div class="sk sk-row" style="width:90%"></div><div class="sk sk-row" style="width:40%;height:40px;margin-top:20px"></div><div class="sk sk-row" style="width:100%;height:44px;margin-top:30px"></div></div>
+          <div class="skeleton-card"><div class="sk sk-row" style="width:60%"></div><div class="sk sk-row" style="width:90%"></div><div class="sk sk-row" style="width:40%;height:40px;margin-top:20px"></div><div class="sk sk-row" style="width:100%;height:44px;margin-top:30px"></div></div>
+          <div class="skeleton-card"><div class="sk sk-row" style="width:60%"></div><div class="sk sk-row" style="width:90%"></div><div class="sk sk-row" style="width:40%;height:40px;margin-top:20px"></div><div class="sk sk-row" style="width:100%;height:44px;margin-top:30px"></div></div>
+        </div>
+
+        <!-- CLASS GRID -->
+        <div class="class-grid" id="classGrid" style="display:none;"></div>
+
+        <!-- EMPTY -->
+        <div class="state-box" id="emptyState" style="display:none;">
+          <div class="state-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          </div>
+          <h2>Hali sinf yaratilmagan</h2>
+          <p>Birinchi sinfingizni yarating, o'quvchilarni qo'shing va ularning natijalarini kuzatishni boshlang.</p>
+          <button class="state-btn" onclick="openModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Birinchi sinfni yaratish
+          </button>
+        </div>
+
+        <!-- ERROR -->
+        <div class="state-box" id="errorState" style="display:none;">
+          <div class="state-icon error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h2>Xatolik yuz berdi</h2>
+          <p>Sinflarni yuklashda xatolik yuz berdi. Internet aloqangizni tekshirib, qayta urinib ko'ring.</p>
+          <button class="state-btn" onclick="loadClasses()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Qayta urinish
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Sinf yaratish -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">Yangi sinf yaratish</div>
+        <div class="modal-subtitle">Sinf nomini kiriting. Qo'shilish kodi avtomatik yaratiladi.</div>
+      </div>
+      <div class="modal-body">
+        <label>Sinf nomi *</label>
+        <input type="text" id="className" placeholder="Masalan: 7-A sinf" maxlength="120" />
+        <label>Tavsif (ixtiyoriy)</label>
+        <textarea id="classDesc" placeholder="Masalan: Ingliz tili A2 guruhi" maxlength="500"></textarea>
+        <div class="modal-err" id="modalErr"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-cancel" onclick="closeModal()">Bekor qilish</button>
+        <button class="btn-submit" id="submitBtn" onclick="createClass()">Sinf yaratish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="toastText">Bajarildi</span>
+  </div>
+
+  <script src="/api.js"></script>
+  <script>
+    // Himoya
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = userData ? JSON.parse(userData) : {};
+    if (user.role && user.role !== "teacher" && user.role !== "school_admin") {
+      window.location.href = "/lobby.html";
+    }
+    const fname = user.first_name || "O'qituvchi";
+    document.getElementById("profileName").textContent = fname;
+    document.getElementById("avatar").textContent = (fname[0] || "T").toUpperCase();
+
+    let allClasses = [];
+
+    // Toast
+    let toastTimer = null;
+    function showToast(text) {
+      const t = document.getElementById("toast");
+      document.getElementById("toastText").textContent = text;
+      t.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+    }
+    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada"); }
+
+    // Holatlarni boshqarish
+    function showState(state) {
+      document.getElementById("loadingState").style.display = state === "loading" ? "grid" : "none";
+      document.getElementById("classGrid").style.display = state === "list" ? "grid" : "none";
+      document.getElementById("emptyState").style.display = state === "empty" ? "block" : "none";
+      document.getElementById("errorState").style.display = state === "error" ? "block" : "none";
+    }
+
+    // Sana formatlash
+    function formatDate(iso) {
+      if (!iso) return "—";
+      const d = new Date(iso);
+      return d.toLocaleDateString("uz-UZ", { day: "numeric", month: "short", year: "numeric" });
+    }
+
+    // HTML xavfsizligi (XSS oldini olish)
+    function esc(s) {
+      return String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+    }
+
+    // Sinflarni yuklash
+    async function loadClasses() {
+      showState("loading");
+      try {
+        const res = await authFetch("/teacher/classes");
+        if (!res.ok) {
+          if (res.status === 403) { window.location.href = "/lobby.html"; return; }
+          throw new Error("xato");
+        }
+        const data = await res.json();
+        allClasses = data.classes || [];
+        renderClasses(allClasses);
+      } catch (err) {
+        showState("error");
+      }
+    }
+
+    // Sinflarni chizish
+    function renderClasses(list) {
+      if (!list || list.length === 0) {
+        showState("empty");
+        return;
+      }
+      const grid = document.getElementById("classGrid");
+      grid.innerHTML = list.map(c => {
+        const initials = esc((c.name || "S").trim().substring(0, 2).toUpperCase());
+        const descHtml = c.description
+          ? '<div class="class-desc">' + esc(c.description) + '</div>'
+          : '<div class="class-desc empty">Tavsif kiritilmagan</div>';
+        const studentCount = (c.student_count != null) ? c.student_count : 0;
+        return `
+          <div class="class-card">
+            <div class="class-card-top">
+              <div class="class-emblem">${initials}</div>
+              <div style="min-width:0">
+                <div class="class-name">${esc(c.name)}</div>
+                ${descHtml}
+              </div>
+            </div>
+            <div class="class-meta">
+              <div class="meta-item">
+                <span class="meta-label">O'quvchilar</span>
+                <span class="meta-value">${studentCount}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Yaratilgan</span>
+                <span class="meta-value" style="font-size:13px">${formatDate(c.created_at)}</span>
+              </div>
+            </div>
+            <div class="join-row">
+              <div>
+                <div class="join-label">Qo'shilish kodi</div>
+                <div class="join-code">${esc(c.join_code)}</div>
+              </div>
+              <button class="copy-btn" onclick="copyCode('${esc(c.join_code)}', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Nusxalash
+              </button>
+            </div>
+            <div class="class-actions">
+              <button class="open-btn" onclick="openClass(${c.id})">
+                Sinfni ochish
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            </div>
+          </div>`;
+      }).join("");
+      showState("list");
+    }
+
+    // Qidiruv filtri
+    function filterClasses(q) {
+      q = q.trim().toLowerCase();
+      if (!q) { renderClasses(allClasses); return; }
+      const filtered = allClasses.filter(c =>
+        (c.name || "").toLowerCase().includes(q) ||
+        (c.description || "").toLowerCase().includes(q) ||
+        (c.join_code || "").toLowerCase().includes(q)
+      );
+      // Filtrlanganda bo'sh bo'lsa ham grid ko'rsatamiz (empty state emas)
+      if (filtered.length === 0) {
+        document.getElementById("classGrid").innerHTML =
+          '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px">Hech narsa topilmadi</div>';
+        showState("list");
+      } else {
+        renderClasses(filtered);
+      }
+    }
+
+    // Kod nusxalash
+    function copyCode(code, btn) {
+      navigator.clipboard.writeText(code).then(() => {
+        btn.classList.add("copied");
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Nusxalandi';
+        showToast("Kod nusxalandi: " + code);
+        setTimeout(() => { btn.classList.remove("copied"); btn.innerHTML = orig; }, 1800);
+      }).catch(() => showToast("Nusxalab bo'lmadi"));
+    }
+
+    // Sinfni ochish (Phase 2D — detail sahifa)
+    function openClass(id) {
+      window.location.href = "/teacher-class-detail.html?id=" + id;
+    }
+
+    // MODAL
+    function openModal() {
+      document.getElementById("modalOverlay").classList.add("show");
+      document.getElementById("className").value = "";
+      document.getElementById("classDesc").value = "";
+      document.getElementById("className").classList.remove("invalid");
+      document.getElementById("modalErr").style.display = "none";
+      setTimeout(() => document.getElementById("className").focus(), 50);
+    }
+    function closeModal() {
+      document.getElementById("modalOverlay").classList.remove("show");
+    }
+    document.getElementById("modalOverlay").addEventListener("click", (e) => {
+      if (e.target.id === "modalOverlay") closeModal();
+    });
+
+    // Sinf yaratish
+    async function createClass() {
+      const nameEl = document.getElementById("className");
+      const name = nameEl.value.trim();
+      const description = document.getElementById("classDesc").value.trim();
+      const errEl = document.getElementById("modalErr");
+
+      nameEl.classList.remove("invalid");
+      errEl.style.display = "none";
+
+      if (!name) {
+        nameEl.classList.add("invalid");
+        errEl.textContent = "Sinf nomini kiriting";
+        errEl.style.display = "block";
+        nameEl.focus();
+        return;
+      }
+
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.textContent = "Yaratilmoqda...";
+
+      try {
+        const res = await authFetch("/teacher/classes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, description })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errEl.textContent = data.error || "Xatolik yuz berdi";
+          errEl.style.display = "block";
+          return;
+        }
+        closeModal();
+        showToast("Sinf yaratildi: " + name);
+        await loadClasses(); // ro'yxatni yangilash
+      } catch (err) {
+        errEl.textContent = "Server bilan aloqa yo'q. Qayta urinib ko'ring.";
+        errEl.style.display = "block";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Sinf yaratish";
+      }
+    }
+
+    // Enter bilan yaratish (nom maydonida)
+    document.getElementById("className").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") createClass();
+    });
+
+    // Boshlash
+    loadClasses();
+  </script>
+</body>
+</html>

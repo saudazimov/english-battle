@@ -6,6 +6,7 @@ const { Server } = require("socket.io");
 
 const multer = require("multer");
 const path = require("path");
+const { signToken, authMiddleware, requireTeacher, requireStudent } = require("./auth");
 
 const app = express();
 const server = http.createServer(app);
@@ -20,18 +21,134 @@ app.get("/", (req, res) => {
   res.send("English Battle serveri ishlayapti!");
 });
 
+
+// ============ OTP (TELEFON TASDIQLASH) ============
+
+// Mock SMS yuborish funksiyasi.
+// HOZIR: kodni terminalga chiqaradi.
+// KEYIN: bu yerga Eskiz yoki Play Mobile SMS kodini qo'shamiz.
+async function sendSms(phone, code) {
+  console.log("========================================");
+  console.log("📱 SMS YUBORILDI (mock rejim)");
+  console.log("   Telefon: " + phone);
+  console.log("   Kod: " + code);
+  console.log("   (5 daqiqa amal qiladi)");
+  console.log("========================================");
+  // KELAJAKDA: bu yerda real SMS API chaqiriladi. Masalan:
+  // await eskizApi.send(phone, "Sizning kodingiz: " + code);
+}
+
+// 6 xonali tasodifiy kod yaratish
+function generateOtpCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+// KOD YUBORISH endpoint
+app.post("/otp/send", async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    // Telefon tekshiruvi
+    if (!phone || phone.trim().length < 9) {
+      return res.status(400).json({ error: "To'g'ri telefon raqamini kiriting" });
+    }
+
+    // Bu telefon allaqachon ro'yxatdan o'tganmi?
+    const existingUser = await pool.query(
+      "SELECT id FROM users WHERE phone = $1",
+      [phone]
+    );
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: "Bu telefon raqami allaqachon ro'yxatdan o'tgan" });
+    }
+
+    // 6 xonali kod yaratish
+    const code = generateOtpCode();
+
+    // Kodni hashlash (xavfsizlik uchun, parol kabi)
+    const hashedCode = await bcrypt.hash(code, 10);
+
+    // Muddati: hozirdan 5 daqiqa keyin
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    // Eski kodlarni shu telefon uchun o'chiramiz (faqat oxirgisi amal qilsin)
+    await pool.query("DELETE FROM otp_codes WHERE phone = $1", [phone]);
+
+    // Yangi kodni saqlash
+    await pool.query(
+      "INSERT INTO otp_codes (phone, code, expires_at) VALUES ($1, $2, $3)",
+      [phone, hashedCode, expiresAt]
+    );
+
+    // SMS yuborish (hozir: terminalga)
+    await sendSms(phone, code);
+
+    // Javob — kodning O'ZINI yubormaymiz, faqat "yuborildi" deymiz
+    res.json({ message: "Tasdiqlash kodi yuborildi" });
+  } catch (err) {
+    console.error("OTP yuborish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// KOD TEKSHIRISH endpoint (2-bosqich: "Tasdiqlash" bosilganda)
+app.post("/otp/verify", async (req, res) => {
+  try {
+    const { phone, code } = req.body;
+
+    // Ma'lumot tekshiruvi
+    if (!phone || !code) {
+      return res.status(400).json({ error: "Telefon va kod kiritilishi shart" });
+    }
+
+    // Shu telefon uchun eng oxirgi kodni topamiz
+    const otpResult = await pool.query(
+      "SELECT * FROM otp_codes WHERE phone = $1 ORDER BY created_at DESC LIMIT 1",
+      [phone]
+    );
+
+    if (otpResult.rows.length === 0) {
+      return res.status(400).json({ error: "Avval tasdiqlash kodini oling" });
+    }
+
+    const otpRecord = otpResult.rows[0];
+
+    // Muddati o'tganmi?
+    if (new Date() > new Date(otpRecord.expires_at)) {
+      return res.status(400).json({ error: "Kod muddati tugagan, yangi kod oling" });
+    }
+
+    // Kod to'g'rimi? (hashlangan kod bilan solishtirish)
+    const codeValid = await bcrypt.compare(String(code), otpRecord.code);
+    if (!codeValid) {
+      return res.status(400).json({ error: "Kod noto'g'ri" });
+    }
+
+    // To'g'ri! Lekin kodni O'CHIRMAYMIZ — u /register'da yana kerak bo'ladi.
+    res.json({ verified: true, message: "Telefon tasdiqlandi" });
+  } catch (err) {
+    console.error("OTP tekshirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // RO'YXATDAN O'TISH (register)
 app.post("/register", async (req, res) => {
   try {
     const {
       first_name, last_name, phone, password,
-      birth_date, birth_year, region, district, village, school
+      birth_date, birth_year, region, district, village, school,
+      code, role
     } = req.body;
 
     // Majburiy maydonlar
     if (!first_name || !last_name || !phone || !password) {
       return res.status(400).json({ error: "Ism, familiya, telefon va parol majburiy" });
     }
+
+    // Rolni tekshirish (faqat ruxsat etilgan rollar)
+    const allowedRoles = ["student", "teacher", "parent", "school_admin"];
+    const userRole = allowedRoles.includes(role) ? role : "student";
 
     // Telefon allaqachon ro'yxatdan o'tganmi
     const existingUser = await pool.query(
@@ -42,24 +159,60 @@ app.post("/register", async (req, res) => {
     if (existingUser.rows.length > 0) {
       return res.status(400).json({ error: "Bu telefon raqami allaqachon ro'yxatdan o'tgan" });
     }
+    // ============ OTP TEKSHIRUVI ============
+    // Kod yuborilganmi?
+    if (!code) {
+      return res.status(400).json({ error: "Tasdiqlash kodi kiritilmadi" });
+    }
+
+    // Shu telefon uchun eng oxirgi kodni topamiz
+    const otpResult = await pool.query(
+      "SELECT * FROM otp_codes WHERE phone = $1 ORDER BY created_at DESC LIMIT 1",
+      [phone]
+    );
+
+    if (otpResult.rows.length === 0) {
+      return res.status(400).json({ error: "Avval tasdiqlash kodini oling" });
+    }
+
+    const otpRecord = otpResult.rows[0];
+
+    // Muddati o'tganmi?
+    if (new Date() > new Date(otpRecord.expires_at)) {
+      return res.status(400).json({ error: "Kod muddati tugagan, yangi kod oling" });
+    }
+
+    // Yuborilgan kod to'g'rimi? (hashlangan kod bilan solishtirish)
+    const codeValid = await bcrypt.compare(String(code), otpRecord.code);
+    if (!codeValid) {
+      return res.status(400).json({ error: "Kod noto'g'ri" });
+    }
+    // ============ OTP TEKSHIRUVI TUGADI ============
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await pool.query(
       `INSERT INTO users
-       (first_name, last_name, phone, password, birth_date, birth_year, region, district, village, school)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       (first_name, last_name, phone, password, birth_date, birth_year, region, district, village, school, role)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING id, first_name, last_name, phone, cefr_level, xp, rating, coins,
-                 region, district, school, created_at`,
+                 region, district, school, role, created_at`,
       [
         first_name, last_name, phone, hashedPassword,
         birth_date || null, birth_year || null,
-        region || null, district || null, village || null, normalizeSchool(school)
+        region || null, district || null, village || null, normalizeSchool(school),
+        userRole
       ]
     );
 
+    // Ishlatilgan OTP kodni o'chiramiz
+    await pool.query("DELETE FROM otp_codes WHERE phone = $1", [phone]);
+
+    const token = signToken(newUser.rows[0]);
+
     res.status(201).json({
       message: "Ro'yxatdan o'tish muvaffaqiyatli!",
+      token: token,
       user: newUser.rows[0],
     });
   } catch (err) {
@@ -93,8 +246,11 @@ app.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Telefon yoki parol noto'g'ri" });
     }
 
+    const token = signToken(user);
+
     res.json({
       message: "Tizimga muvaffaqiyatli kirdingiz!",
+      token: token,
       user: {
         id: user.id,
         first_name: user.first_name,
@@ -105,6 +261,7 @@ app.post("/login", async (req, res) => {
         rating: user.rating,
         coins: user.coins,
         profile_picture: user.profile_picture,
+        role: user.role,
       },
     });
   } catch (err) {
@@ -380,6 +537,31 @@ const battles = {}; // Faol janglar: roomId -> jang ma'lumoti
 const pendingBattles = {}; // Do'st janglari: battle.html'da tayyor bo'lishni kutayotgan
 const onlineUsers = {}; // { userId: socketId }
 
+
+// Raqib kartasi uchun: rating + win rate olish (matchmaking overlay'da ko'rsatish uchun)
+async function getOpponentCardInfo(userId) {
+  if (!userId) return { rating: 1000, win_rate: 0 };
+  try {
+    const r = await pool.query("SELECT rating FROM users WHERE id = $1", [userId]);
+    const rating = r.rows[0] ? r.rows[0].rating : 1000;
+
+    const s = await pool.query(
+      `SELECT COUNT(*) AS total,
+              COUNT(*) FILTER (WHERE outcome = 'win') AS wins
+       FROM battle_history WHERE user_id = $1`,
+      [userId]
+    );
+    const total = parseInt(s.rows[0].total) || 0;
+    const wins = parseInt(s.rows[0].wins) || 0;
+    const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+
+    return { rating: rating, win_rate: winRate };
+  } catch (e) {
+    return { rating: 1000, win_rate: 0 };
+  }
+}
+
+
 // Jangni boshlash funksiyasi
 async function startBattle(roomId, player1, player2) {
   try {
@@ -451,35 +633,127 @@ async function startBattle(roomId, player1, player2) {
 }
 
 io.on("connection", (socket) => {
-  // O'yinchi onlayn bo'ldi - ro'yxatga olish
+  console.log("Socket connected:", socket.id);
+
+  // User online registration
   socket.on("registerUser", async (userId) => {
-      socket.userId = String(userId);
-      onlineUsers[String(userId)] = socket.id;
-      console.log("Onlayn:", userId);
-      // Bu odamning do'stlariga "men onlayn bo'ldim" signali
-      notifyFriendsStatus(userId, true);
+    if (!userId) {
+      socket.emit("errorMessage", {
+        message: "User ID is required.",
+      });
+      return;
+    }
+
+    const normalizedUserId = String(userId);
+
+    socket.userId = normalizedUserId;
+
+    // If you only allow one active socket per user:
+    onlineUsers[normalizedUserId] = socket.id;
+
+    console.log("User online:", normalizedUserId);
+
+    // Notify user's friends that this user is online
+    notifyFriendsStatus(normalizedUserId, true);
+
+    socket.emit("userRegistered", {
+      success: true,
+      userId: normalizedUserId,
+      socketId: socket.id,
     });
+  });
 
-    // Do'st jangi: battle.html ochilganda o'yinchi "tayyorman" deydi
+  // Friend battle room join
   socket.on("joinFriendBattle", ({ roomId, userId }) => {
-    socket.join(roomId);
-    const pending = pendingBattles[roomId];
-    if (!pending) return;
+    if (!roomId || !userId) {
+      socket.emit("battleError", {
+        message: "Room ID and User ID are required.",
+      });
+      return;
+    }
 
-    if (String(pending.player1.userId) === String(userId)) {
+    const normalizedUserId = String(userId);
+    const pending = pendingBattles[roomId];
+
+    if (!pending) {
+      socket.emit("battleError", {
+        message: "Battle room not found or already expired.",
+      });
+      return;
+    }
+
+    const isPlayer1 = String(pending.player1.userId) === normalizedUserId;
+    const isPlayer2 = String(pending.player2.userId) === normalizedUserId;
+
+    if (!isPlayer1 && !isPlayer2) {
+      socket.emit("battleError", {
+        message: "You are not allowed to join this battle.",
+      });
+      return;
+    }
+
+    socket.join(roomId);
+
+    if (isPlayer1) {
       pending.player1.ready = true;
       pending.player1.socketId = socket.id;
-    } else if (String(pending.player2.userId) === String(userId)) {
+    }
+
+    if (isPlayer2) {
       pending.player2.ready = true;
       pending.player2.socketId = socket.id;
     }
 
+    console.log(`User ${normalizedUserId} joined friend battle room: ${roomId}`);
+
+    io.to(roomId).emit("battleWaiting", {
+      roomId,
+      player1Ready: pending.player1.ready,
+      player2Ready: pending.player2.ready,
+      message: "Waiting for both players to be ready...",
+    });
+
     if (pending.player1.ready && pending.player2.ready) {
-      const p1 = { socketId: pending.player1.socketId, userId: pending.player1.userId, name: pending.player1.name, level: pending.player1.level };
-      const p2 = { socketId: pending.player2.socketId, userId: pending.player2.userId, name: pending.player2.name, level: pending.player2.level };
+      const p1 = {
+        socketId: pending.player1.socketId,
+        userId: pending.player1.userId,
+        name: pending.player1.name,
+        level: pending.player1.level,
+      };
+
+      const p2 = {
+        socketId: pending.player2.socketId,
+        userId: pending.player2.userId,
+        name: pending.player2.name,
+        level: pending.player2.level,
+      };
+
       delete pendingBattles[roomId];
+
+      io.to(roomId).emit("battleStarting", {
+        roomId,
+        players: [p1, p2],
+        countdown: 3,
+        message: "Both players are ready. Battle is starting...",
+      });
+
       startBattle(roomId, p1, p2);
     }
+  });
+
+  // User disconnect
+  socket.on("disconnect", () => {
+    const userId = socket.userId;
+
+    if (userId && onlineUsers[userId] === socket.id) {
+      delete onlineUsers[userId];
+
+      console.log("User offline:", userId);
+
+      notifyFriendsStatus(userId, false);
+    }
+
+    console.log("Socket disconnected:", socket.id);
   });
 
   // Rematch: bir o'yinchi qayta jang so'raydi
@@ -665,10 +939,10 @@ io.on("connection", (socket) => {
           const roomId = "battle_bot_" + player.socketId;
           io.sockets.sockets.get(player.socketId)?.join(roomId);
 
-          // O'yinchiga "raqib topildi" (aslida bot)
+          // O'yinchiga "raqib topildi" (aslida bot — botга taxminiy karta)
           io.to(player.socketId).emit("matchFound", {
             roomId: roomId,
-            opponent: { name: player.botName },
+            opponent: { name: player.botName, rating: player.rating || 1000, win_rate: 50 + Math.floor(Math.random() * 20), level: player.level },
             message: "Raqib topildi!",
           });
 
@@ -690,7 +964,7 @@ io.on("connection", (socket) => {
         socket.join(roomIdBot);
         socket.emit("matchFound", {
           roomId: roomIdBot,
-          opponent: { name: botName2 },
+          opponent: { name: botName2, rating: playerData.rating || 1000, win_rate: 50 + Math.floor(Math.random() * 20), level: myLevel },
           message: "Raqib topildi!",
         });
         const botPlayer = { socketId: socket.id, userId: playerData.userId, name: playerData.name || "O'yinchi", level: myLevel, botName: botName2 };
@@ -718,11 +992,21 @@ io.on("connection", (socket) => {
         });
       } catch (e) {}
 
+      // Raqib kartasi uchun rating + win rate
+      const p1Card = await getOpponentCardInfo(player1.userId);
+      const p2Card = await getOpponentCardInfo(player2.userId);
+
+      // player1'ga player2 raqib sifatida ko'rinadi
       io.to(opponent.socketId).emit("matchFound", {
-        roomId, opponent: { name: player2.name, profile_picture: p2Pic }, message: "Raqib topildi!",
+        roomId,
+        opponent: { name: player2.name, profile_picture: p2Pic, rating: p2Card.rating, win_rate: p2Card.win_rate, level: player2.level },
+        message: "Raqib topildi!",
       });
+      // player2 (socket)'ga player1 raqib sifatida ko'rinadi
       socket.emit("matchFound", {
-        roomId, opponent: { name: player1.name, profile_picture: p1Pic }, message: "Raqib topildi!",
+        roomId,
+        opponent: { name: player1.name, profile_picture: p1Pic, rating: p1Card.rating, win_rate: p1Card.win_rate, level: player1.level },
+        message: "Raqib topildi!",
       });
 
       // 2 soniyadan keyin jangni boshlaymiz
@@ -795,6 +1079,7 @@ io.on("connection", (socket) => {
     }
   });
 });
+
 
 // ============ TOPSHIRIQ (QUEST) YORDAMCHILARI ============
 
@@ -1093,9 +1378,9 @@ app.post("/admin/questions/delete", async (req, res) => {
 });
 
 // ============ JANG TARIXI ============
-app.get("/history/:userId", async (req, res) => {
+app.get("/history/:userId", authMiddleware, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.id;
     const result = await pool.query(
       `SELECT bh.opponent_name, bh.my_score, bh.opponent_score, bh.outcome,
               bh.xp_earned, bh.rating_change, bh.played_at, bh.cefr_level,
@@ -1117,10 +1402,9 @@ app.get("/history/:userId", async (req, res) => {
 });
 
 // ============ STREAK ============
-app.post("/streak/checkin", async (req, res) => {
+app.post("/streak/checkin", authMiddleware, async (req, res) => {
   try {
-    const { userId } = req.body;
-    if (!userId) return res.status(400).json({ error: "userId kerak" });
+    const userId = req.user.id;
 
     // Foydalanuvchining streak ma'lumotini olish
     const userResult = await pool.query(
@@ -1190,10 +1474,9 @@ app.post("/streak/checkin", async (req, res) => {
 // ============ TOPSHIRIQLAR ENDPOINT ============
 
 // O'yinchining bugungi topshiriqlarini olish
-app.post("/quests", async (req, res) => {
+app.post("/quests", authMiddleware, async (req, res) => {
   try {
-    const { userId } = req.body;
-    if (!userId) return res.status(400).json({ error: "userId kerak" });
+    const userId = req.user.id;
 
     const quests = await getOrCreateDailyQuests(userId);
     res.json({ quests: quests });
@@ -1204,10 +1487,11 @@ app.post("/quests", async (req, res) => {
 });
 
 // Mukofotni olish (bajarilgan topshiriq uchun)
-app.post("/quests/claim", async (req, res) => {
+app.post("/quests/claim", authMiddleware, async (req, res) => {
   try {
-    const { userId, userQuestId } = req.body;
-    if (!userId || !userQuestId) return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
+    const userId = req.user.id;
+    const { userQuestId } = req.body;
+    if (!userQuestId) return res.status(400).json({ error: "userQuestId kerak" });
 
     // Topshiriqni tekshirish
     const result = await pool.query(
@@ -1252,9 +1536,9 @@ app.post("/quests/claim", async (req, res) => {
 });
 
 // ============ PROFIL STATISTIKA ============
-app.get("/profile/:userId", async (req, res) => {
+app.get("/profile/:userId", authMiddleware, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.id;
 
     // Asosiy foydalanuvchi ma'lumoti
     const userResult = await pool.query(
@@ -1319,9 +1603,9 @@ function getNextLevel(current) {
 }
 
 // Imtihon ochilish holatini tekshirish
-app.get("/exam/status/:userId", async (req, res) => {
+app.get("/exam/status/:userId", authMiddleware, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.id;
 
     const userResult = await pool.query(
       "SELECT cefr_level FROM users WHERE id = $1",
@@ -1384,9 +1668,9 @@ app.get("/exam/status/:userId", async (req, res) => {
 });
 
 // Imtihon savollarini olish
-app.get("/exam/start/:userId", async (req, res) => {
+app.get("/exam/start/:userId", authMiddleware, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.id;
 
     const userResult = await pool.query(
       "SELECT cefr_level FROM users WHERE id = $1",
@@ -1423,13 +1707,14 @@ app.get("/exam/start/:userId", async (req, res) => {
 });
 
 // Imtihon javoblarini tekshirish va baholash
-app.post("/exam/submit", async (req, res) => {
+app.post("/exam/submit", authMiddleware, async (req, res) => {
   try {
-    const { userId, answers } = req.body;
+    const userId = req.user.id;
+    const { answers } = req.body;
     // answers = [{ question_id, answer }, ...]
 
-    if (!userId || !answers || !Array.isArray(answers)) {
-      return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
+    if (!answers || !Array.isArray(answers)) {
+      return res.status(400).json({ error: "Javoblar yuborilmadi" });
     }
 
     const userResult = await pool.query(
@@ -1588,9 +1873,10 @@ app.get("/rankings/districts", async (req, res) => {
 // ============ DO'STLAR TIZIMI ============
 
 // Foydalanuvchi qidirish (telefon yoki ism bo'yicha)
-app.get("/friends/search", async (req, res) => {
+app.get("/friends/search", authMiddleware, async (req, res) => {
   try {
-    const { q, userId } = req.query;
+    const { q } = req.query;
+    const userId = req.user.id;
     if (!q || q.trim() === "") {
       return res.json({ results: [] });
     }
@@ -1634,9 +1920,9 @@ app.get("/friends/search", async (req, res) => {
 });
 
 // Tavsiya etilgan do'stlar (maktab + tuman + region + daraja bo'yicha ballash)
-app.get("/friends/suggested/:userId", async (req, res) => {
+app.get("/friends/suggested/:userId", authMiddleware, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.id;
 
     // Joriy foydalanuvchi ma'lumoti
     const meRes = await pool.query(
@@ -1718,14 +2004,15 @@ app.get("/friends/suggested/:userId", async (req, res) => {
 });
 
 // Do'st so'rovi yuborish
-app.post("/friends/request", async (req, res) => {
+app.post("/friends/request", authMiddleware, async (req, res) => {
   try {
-    const { requesterId, receiverId } = req.body;
+    const requesterId = req.user.id;
+    const { receiverId } = req.body;
     console.log("So'rov keldi:", requesterId, "->", receiverId);
-    if (!requesterId || !receiverId) {
-      return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
+    if (!receiverId) {
+      return res.status(400).json({ error: "receiverId kerak" });
     }
-    if (requesterId === receiverId) {
+    if (String(requesterId) === String(receiverId)) {
       return res.status(400).json({ error: "O'zingizga so'rov yubora olmaysiz" });
     }
 
@@ -1780,8 +2067,9 @@ app.post("/friends/request", async (req, res) => {
 });
 
 // So'rovni qabul qilish yoki rad etish
-app.post("/friends/respond", async (req, res) => {
+app.post("/friends/respond", authMiddleware, async (req, res) => {
   try {
+    const myId = req.user.id;
     const { friendshipId, action } = req.body; // action: 'accept' yoki 'reject'
     if (!friendshipId || !action) {
       return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
@@ -1797,6 +2085,11 @@ app.post("/friends/respond", async (req, res) => {
     }
     const requesterId = fsInfo.rows[0].requester_id;
     const receiverId = fsInfo.rows[0].receiver_id;
+
+    // XAVFSIZLIK: faqat O'ZIMGA kelgan so'rovga javob bera olaman
+    if (String(receiverId) !== String(myId)) {
+      return res.status(403).json({ error: "Bu so'rov sizga tegishli emas" });
+    }
 
     if (action === "accept") {
       // Qabul - do'st bo'lishadi
@@ -1843,10 +2136,11 @@ app.post("/friends/respond", async (req, res) => {
 });
 
 // Do'stni o'chirish
-app.post("/friends/remove", async (req, res) => {
+app.post("/friends/remove", authMiddleware, async (req, res) => {
   try {
-    const { userId, friendId } = req.body;
-    if (!userId || !friendId) return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
+    const userId = req.user.id;
+    const { friendId } = req.body;
+    if (!friendId) return res.status(400).json({ error: "friendId kerak" });
 
     // Ikki yo'nalishdagi do'stlikni o'chirish (kim so'rasa ham)
     await pool.query(
@@ -1870,9 +2164,9 @@ app.post("/friends/remove", async (req, res) => {
 });
 
 // Kelgan so'rovlar (men qabul qilishim kerak bo'lganlar)
-app.get("/friends/requests/:userId", async (req, res) => {
+app.get("/friends/requests/:userId", authMiddleware, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.id;
     const result = await pool.query(
       `SELECT f.id AS friendship_id, u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.profile_picture
        FROM friendships f
@@ -1889,9 +2183,9 @@ app.get("/friends/requests/:userId", async (req, res) => {
 });
 
 // Do'stlar ro'yxati (qabul qilingan)
-app.get("/friends/:userId", async (req, res) => {
+app.get("/friends/:userId", authMiddleware, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.id;
     const result = await pool.query(
       `SELECT u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.profile_picture
        FROM friendships f
@@ -1916,9 +2210,9 @@ app.get("/friends/:userId", async (req, res) => {
 });
 
 // Do'stlarga qarshi g'alabalar soni
-app.get("/friends/wins/:userId", async (req, res) => {
+app.get("/friends/wins/:userId", authMiddleware, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.id;
 
     // Do'st id'larini olish
     const friendsRes = await pool.query(
@@ -1955,9 +2249,9 @@ app.get("/friends/wins/:userId", async (req, res) => {
 });
 
 // Do'stlar faoliyati (Recent Activity)
-app.get("/friends/activity/:userId", async (req, res) => {
+app.get("/friends/activity/:userId", authMiddleware, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.id;
 
     // Do'st id'larini olish
     const friendsRes = await pool.query(
@@ -2011,9 +2305,9 @@ app.get("/friends/activity/:userId", async (req, res) => {
 // ============ BILDIRISHNOMALAR ============
 
 // Foydalanuvchining bildirishnomalari
-app.get("/notifications/:userId", async (req, res) => {
+app.get("/notifications/:userId", authMiddleware, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.id;
     const result = await pool.query(
       `SELECT id, type, message, is_read, created_at
        FROM notifications
@@ -2034,9 +2328,9 @@ app.get("/notifications/:userId", async (req, res) => {
 });
 
 // Hammasini o'qilgan deb belgilash
-app.post("/notifications/read/:userId", async (req, res) => {
+app.post("/notifications/read/:userId", authMiddleware, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.id;
     await pool.query(
       "UPDATE notifications SET is_read = TRUE WHERE user_id = $1 AND is_read = FALSE",
       [userId]
@@ -2068,9 +2362,9 @@ const upload = multer({
 });
 
 // Profil rasm yuklash endpoint
-app.post("/profile/:userId/picture", upload.single("picture"), async (req, res) => {
+app.post("/profile/:userId/picture", authMiddleware, upload.single("picture"), async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.id;
     if (!req.file) return res.status(400).json({ error: "Rasm yuklanmadi" });
 
     const filePath = "/uploads/" + req.file.filename;
@@ -2087,6 +2381,249 @@ app.post("/profile/:userId/picture", upload.single("picture"), async (req, res) 
   }
 });
 
+
+// ============================================================
+// O'QITUVCHI PANELI (TEACHER) ENDPOINTLARI
+// Barcha teacher endpointlari: authMiddleware + requireTeacher
+// (avval token tekshiriladi, keyin rol bazadan tekshiriladi)
+// ============================================================
+
+// Dashboard asosiy ma'lumotlari (Phase 1 — hozircha bo'sh/boshlang'ich holat)
+app.get("/teacher/dashboard", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+
+    // O'qituvchi ma'lumotlari
+    const teacher = await pool.query(
+      "SELECT id, first_name, last_name, school, profile_picture FROM users WHERE id = $1",
+      [teacherId]
+    );
+
+    // Sinflar soni (haqiqiy — classes jadvalidan)
+    const classCount = await pool.query(
+      "SELECT COUNT(*) AS count FROM classes WHERE teacher_id = $1 AND archived_at IS NULL",
+      [teacherId]
+    );
+
+    // O'quvchilar soni (haqiqiy — shu o'qituvchining sinflaridagi faol o'quvchilar, takrorlanmas)
+    const studentCount = await pool.query(
+      `SELECT COUNT(DISTINCT cs.student_id) AS count
+       FROM class_students cs
+       JOIN classes c ON c.id = cs.class_id
+       WHERE c.teacher_id = $1 AND c.archived_at IS NULL AND cs.status = 'active'`,
+      [teacherId]
+    );
+
+    // Phase 2: topshiriqlar jadvali hali yo'q, shuning uchun 0.
+    const stats = {
+      totalClasses: parseInt(classCount.rows[0].count, 10),
+      totalStudents: parseInt(studentCount.rows[0].count, 10),
+      activeAssignments: 0,
+      averagePerformance: 0
+    };
+
+    res.json({
+      teacher: teacher.rows[0] || null,
+      stats: stats
+    });
+  } catch (err) {
+    console.error("Teacher dashboard xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============================================================
+// SINF BOSHQARUVI (Teacher Panel Phase 2B)
+// ============================================================
+
+// join_code generator: 6 belgili (katta harf + raqam), unique
+// Adashtiruvchi belgilar (0/O, 1/I) chiqarib tashlangan — o'qish oson bo'lsin.
+function generateClassCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+// Unique join_code yaratish (bazada bormi tekshiradi, yo'q topilguncha urinadi)
+async function generateUniqueClassCode() {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const code = generateClassCode();
+    const existing = await pool.query("SELECT id FROM classes WHERE join_code = $1", [code]);
+    if (existing.rows.length === 0) {
+      return code;
+    }
+  }
+  // Juda kam ehtimol — 10 urinishda ham topilmasa, xato
+  throw new Error("Join code yaratib bo'lmadi, qayta urinib ko'ring");
+}
+
+// YANGI SINF YARATISH
+app.post("/teacher/classes", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const { name, description } = req.body;
+
+    // name majburiy
+    if (!name || name.trim() === "") {
+      return res.status(400).json({ error: "Sinf nomi majburiy" });
+    }
+    if (name.trim().length > 120) {
+      return res.status(400).json({ error: "Sinf nomi juda uzun (120 belgidan oshmasin)" });
+    }
+
+    // school_id — o'qituvchining maktabidan (hozircha matn, FK yo'q, shuning uchun null)
+    // Maktab tizimi qurilganda bu yerda haqiqiy school_id qo'yiladi.
+    const schoolId = null;
+
+    // Unique join_code yaratamiz
+    const joinCode = await generateUniqueClassCode();
+
+    const newClass = await pool.query(
+      `INSERT INTO classes (teacher_id, school_id, name, description, join_code)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, teacher_id, school_id, name, description, join_code, created_at, archived_at`,
+      [teacherId, schoolId, name.trim(), (description || "").trim() || null, joinCode]
+    );
+
+    res.status(201).json({
+      message: "Sinf yaratildi",
+      class: newClass.rows[0]
+    });
+  } catch (err) {
+    console.error("Sinf yaratish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// O'QITUVCHINING SINFLARI RO'YXATI
+app.get("/teacher/classes", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+
+    // Faqat shu o'qituvchining arxivlanmagan sinflari
+    // (xavfsizlik: boshqa o'qituvchining sinflarini ko'ra olmaydi)
+    const classes = await pool.query(
+      `SELECT c.id, c.name, c.description, c.join_code, c.created_at,
+              COUNT(cs.id) FILTER (WHERE cs.status = 'active') AS student_count
+       FROM classes c
+       LEFT JOIN class_students cs ON cs.class_id = c.id
+       WHERE c.teacher_id = $1 AND c.archived_at IS NULL
+       GROUP BY c.id
+       ORDER BY c.created_at DESC`,
+      [teacherId]
+    );
+
+    res.json({ classes: classes.rows });
+  } catch (err) {
+    console.error("Sinflar ro'yxati xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// O'QUVCHI SINFGA QO'SHILADI (join_code orqali)
+app.post("/student/join-class", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    let { join_code } = req.body;
+
+    // Kod tekshiruvi
+    if (!join_code || typeof join_code !== "string") {
+      return res.status(400).json({ error: "Qo'shilish kodini kiriting" });
+    }
+    join_code = join_code.trim().toUpperCase();
+    if (join_code.length !== 6) {
+      return res.status(400).json({ error: "Kod 6 belgidan iborat bo'lishi kerak" });
+    }
+
+    // Sinfni topamiz (arxivlanmagan)
+    const classResult = await pool.query(
+      "SELECT id, name, teacher_id, archived_at FROM classes WHERE join_code = $1",
+      [join_code]
+    );
+    if (classResult.rows.length === 0) {
+      return res.status(404).json({ error: "Bunday kodli sinf topilmadi" });
+    }
+    const cls = classResult.rows[0];
+    if (cls.archived_at !== null) {
+      return res.status(400).json({ error: "Bu sinf endi faol emas" });
+    }
+
+    // Allaqachon a'zomi tekshiramiz
+    const existing = await pool.query(
+      "SELECT id, status FROM class_students WHERE class_id = $1 AND student_id = $2",
+      [cls.id, studentId]
+    );
+    if (existing.rows.length > 0) {
+      // Agar avval chiqib ketgan bo'lsa (removed/left) — qayta faollashtirish
+      if (existing.rows[0].status !== "active") {
+        await pool.query(
+          "UPDATE class_students SET status = 'active', joined_at = NOW() WHERE id = $1",
+          [existing.rows[0].id]
+        );
+        return res.json({ message: "Sinfga qayta qo'shildingiz", class: { id: cls.id, name: cls.name } });
+      }
+      return res.status(409).json({ error: "Siz allaqachon bu sinf a'zosisiz" });
+    }
+
+    // Qo'shamiz
+    await pool.query(
+      "INSERT INTO class_students (class_id, student_id, status) VALUES ($1, $2, 'active')",
+      [cls.id, studentId]
+    );
+
+    res.status(201).json({
+      message: "Sinfga muvaffaqiyatli qo'shildingiz",
+      class: { id: cls.id, name: cls.name }
+    });
+  } catch (err) {
+    console.error("Sinfga qo'shilish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// SINF O'QUVCHILARI RO'YXATI (o'qituvchi ko'radi)
+app.get("/teacher/classes/:classId/students", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const classId = parseInt(req.params.classId, 10);
+
+    if (isNaN(classId)) {
+      return res.status(400).json({ error: "Noto'g'ri sinf ID" });
+    }
+
+    // XAVFSIZLIK: sinf shu o'qituvchiniki ekanini tekshiramiz
+    const classCheck = await pool.query(
+      "SELECT id, name, description, join_code, created_at FROM classes WHERE id = $1 AND teacher_id = $2",
+      [classId, teacherId]
+    );
+    if (classCheck.rows.length === 0) {
+      // Sinf yo'q yoki boshqa o'qituvchiniki — har holda rad etamiz
+      return res.status(404).json({ error: "Sinf topilmadi" });
+    }
+
+    // O'quvchilar ro'yxati (faol)
+    const students = await pool.query(
+      `SELECT u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.profile_picture,
+              cs.joined_at, cs.status
+       FROM class_students cs
+       JOIN users u ON u.id = cs.student_id
+       WHERE cs.class_id = $1 AND cs.status = 'active'
+       ORDER BY cs.joined_at DESC`,
+      [classId]
+    );
+
+    res.json({
+      class: classCheck.rows[0],
+      students: students.rows
+    });
+  } catch (err) {
+    console.error("Sinf o'quvchilari xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
 
 // DIQQAT: app.listen emas, server.listen!
 server.listen(PORT, () => {

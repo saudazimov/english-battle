@@ -195,6 +195,7 @@
     </aside>
   </div>
 
+  <script src="/api.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/sidebar.js"></script>
@@ -242,7 +243,7 @@
       document.getElementById("lbList").innerHTML = '<div class="lb-empty">Yuklanmoqda...</div>';
       document.getElementById("podium").innerHTML = '<div class="podium-empty">Yuklanmoqda...</div>';
       try {
-        const res = await fetch(endpoints[currentTab]);
+        const res = await authFetch(endpoints[currentTab]);
         const data = await res.json();
         cache[currentTab] = data[dataKeys[currentTab]] || [];
         render();
@@ -354,9 +355,9 @@
     async function preloadStats() {
       try {
         const [s, d, r] = await Promise.all([
-          fetch("/rankings/schools").then(x => x.json()),
-          fetch("/rankings/districts").then(x => x.json()),
-          fetch("/rankings/regions").then(x => x.json()),
+          authFetch("/rankings/schools").then(x => x.json()),
+          authFetch("/rankings/districts").then(x => x.json()),
+          authFetch("/rankings/regions").then(x => x.json()),
         ]);
         cache.schools = s.schools || [];
         cache.districts = d.districts || [];

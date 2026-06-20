@@ -95,3 +95,47 @@ CREATE TABLE IF NOT EXISTS notifications (
   is_read BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- OTP kodlar (telefon tasdiqlash uchun, vaqtincha saqlanadi)
+CREATE TABLE IF NOT EXISTS otp_codes (
+  id SERIAL PRIMARY KEY,
+  phone VARCHAR(20) NOT NULL,
+  code VARCHAR(255) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Sinflar (o'qituvchi yaratadigan sinflar — Teacher Panel Phase 2)
+-- Har bir sinf bitta o'qituvchiga tegishli. join_code orqali o'quvchilar qo'shiladi.
+CREATE TABLE IF NOT EXISTS classes (
+  id SERIAL PRIMARY KEY,
+  teacher_id INTEGER NOT NULL REFERENCES users(id),
+  school_id INTEGER,
+  name VARCHAR(120) NOT NULL,
+  description TEXT,
+  join_code VARCHAR(6) NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  archived_at TIMESTAMP
+);
+
+-- join_code bo'yicha tez qidirish uchun indeks (o'quvchi kod orqali qo'shilganda)
+CREATE INDEX IF NOT EXISTS idx_classes_join_code ON classes(join_code);
+-- O'qituvchining sinflarini tez topish uchun indeks
+CREATE INDEX IF NOT EXISTS idx_classes_teacher_id ON classes(teacher_id);
+
+-- Sinf o'quvchilari (qaysi o'quvchi qaysi sinfda — Teacher Panel Phase 2D)
+-- O'quvchi join_code orqali sinfga qo'shiladi.
+-- UNIQUE(class_id, student_id): bir o'quvchi bir sinfga 2 marta qo'shila olmaydi.
+CREATE TABLE IF NOT EXISTS class_students (
+  id SERIAL PRIMARY KEY,
+  class_id INTEGER NOT NULL REFERENCES classes(id),
+  student_id INTEGER NOT NULL REFERENCES users(id),
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  joined_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (class_id, student_id)
+);
+
+-- Sinf o'quvchilarini tez topish uchun indeks
+CREATE INDEX IF NOT EXISTS idx_class_students_class_id ON class_students(class_id);
+-- O'quvchi qaysi sinflarda ekanini tez topish uchun indeks
+CREATE INDEX IF NOT EXISTS idx_class_students_student_id ON class_students(student_id);

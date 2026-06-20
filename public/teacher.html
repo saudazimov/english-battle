@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>O'qituvchi paneli — Knowledge Arena</title>
+  <style>
+    :root {
+      --bg-main: #070b18;
+      --bg-card: #10172a;
+      --bg-input: #0b1322;
+      --bg-soft: #0e1526;
+      --bg-sidebar: #0a0f1f;
+      --border: #1e2a44;
+      --border-focus: #3b82f6;
+      --primary: #3b82f6;
+      --secondary: #8b5cf6;
+      --accent: #22d3ee;
+      --gold: #facc15;
+      --green: #22c55e;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* ===== LAYOUT: sidebar + main ===== */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 248px; flex: 0 0 248px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      padding: 20px 14px;
+      position: sticky; top: 0; height: 100vh;
+    }
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 11px;
+      padding: 6px 8px 20px;
+    }
+    .logo-mark {
+      width: 40px; height: 40px; border-radius: 11px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; color: #fff;
+      box-shadow: 0 4px 14px rgba(59,130,246,0.4);
+    }
+    .logo-name { font-size: 17px; font-weight: 700; }
+    .nav { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 12px; border-radius: var(--radius-sm);
+      color: var(--text-muted); font-size: 14.5px; font-weight: 500;
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+      position: relative;
+    }
+    .nav-item svg { width: 19px; height: 19px; flex: 0 0 auto; }
+    .nav-item:hover { background: var(--bg-soft); color: var(--text-main); }
+    .nav-item.active {
+      background: linear-gradient(95deg, rgba(59,130,246,0.18), rgba(139,92,246,0.12));
+      color: #fff;
+    }
+    .nav-item.active::before {
+      content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 22px; border-radius: 2px;
+      background: linear-gradient(var(--primary), var(--secondary));
+    }
+    .nav-item.soon { opacity: 0.6; }
+    .nav-badge {
+      margin-left: auto; font-size: 11px; font-weight: 700;
+      background: var(--red); color: #fff;
+      min-width: 18px; height: 18px; padding: 0 5px;
+      border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    }
+    .nav-soon-tag {
+      margin-left: auto; font-size: 9.5px; font-weight: 600;
+      color: var(--gold); background: var(--bg-soft);
+      padding: 2px 6px; border-radius: 999px; border: 1px solid var(--border);
+    }
+    .sidebar-foot {
+      margin-top: auto; padding: 12px 8px 4px;
+      border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim);
+    }
+
+    /* ===== MAIN ===== */
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+    /* ===== TOPBAR ===== */
+    .topbar {
+      display: flex; align-items: center; gap: 18px;
+      padding: 16px 28px; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: rgba(7,11,24,0.85);
+      backdrop-filter: blur(8px); z-index: 10;
+    }
+    .search {
+      flex: 1; max-width: 440px;
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      color: var(--text-dim);
+    }
+    .search svg { width: 17px; height: 17px; flex: 0 0 auto; }
+    .search input {
+      border: none; background: transparent; outline: none;
+      color: var(--text-main); font-size: 14px; width: 100%;
+    }
+    .search input::placeholder { color: var(--text-dim); }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+    .create-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 18px; border: none; border-radius: var(--radius-sm);
+      background: linear-gradient(95deg, var(--primary), var(--secondary));
+      color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 6px 18px rgba(59,130,246,0.3); transition: opacity 0.15s;
+    }
+    .create-btn:hover { opacity: 0.93; }
+    .create-btn svg { width: 17px; height: 17px; }
+    .icon-btn {
+      position: relative; width: 42px; height: 42px; border-radius: var(--radius-sm);
+      background: var(--bg-card); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    }
+    .icon-btn:hover { border-color: var(--border-focus); color: var(--text-main); }
+    .icon-btn svg { width: 19px; height: 19px; }
+    .icon-btn .dot {
+      position: absolute; top: 8px; right: 9px;
+      width: 8px; height: 8px; border-radius: 50%; background: var(--red);
+      border: 2px solid var(--bg-card);
+    }
+    .profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding-left: 4px; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px; color: #fff;
+    }
+    .profile-info { line-height: 1.3; }
+    .profile-name { font-size: 14px; font-weight: 600; }
+    .profile-role { font-size: 12px; color: var(--text-muted); }
+
+    /* ===== CONTENT ===== */
+    .content { padding: 28px; }
+    .page-head { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; }
+    .page-icon {
+      width: 56px; height: 56px; border-radius: 15px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center; color: #fff;
+      box-shadow: 0 8px 24px rgba(59,130,246,0.35);
+    }
+    .page-icon svg { width: 28px; height: 28px; }
+    .page-title { font-size: 26px; font-weight: 800; }
+    .page-sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ===== STAT CARDS ===== */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px;
+      display: flex; align-items: flex-start; gap: 16px;
+    }
+    .stat-icon {
+      width: 52px; height: 52px; border-radius: 14px; flex: 0 0 auto;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .stat-icon svg { width: 26px; height: 26px; }
+    .stat-icon.blue { background: rgba(59,130,246,0.14); color: var(--primary); }
+    .stat-icon.purple { background: rgba(139,92,246,0.14); color: var(--secondary); }
+    .stat-icon.orange { background: rgba(245,158,11,0.14); color: var(--orange); }
+    .stat-icon.green { background: rgba(34,197,94,0.14); color: var(--green); }
+    .stat-label { font-size: 13.5px; color: var(--text-muted); margin-bottom: 6px; }
+    .stat-value { font-size: 30px; font-weight: 800; line-height: 1; }
+    .stat-foot { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+
+    /* ===== EMPTY STATE ===== */
+    .empty {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 56px 32px; text-align: center;
+    }
+    .empty-icon {
+      width: 84px; height: 84px; margin: 0 auto 22px; border-radius: 24px;
+      background: var(--bg-soft); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+    }
+    .empty-icon svg { width: 40px; height: 40px; }
+    .empty h2 { font-size: 21px; font-weight: 700; margin-bottom: 8px; }
+    .empty p { font-size: 14.5px; color: var(--text-muted); max-width: 420px; margin: 0 auto 24px; line-height: 1.6; }
+    .empty-btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 13px 24px; border: none; border-radius: var(--radius-sm);
+      background: linear-gradient(95deg, var(--primary), var(--secondary));
+      color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 8px 22px rgba(59,130,246,0.3); transition: opacity 0.15s;
+    }
+    .empty-btn:hover { opacity: 0.93; }
+    .empty-btn svg { width: 18px; height: 18px; }
+
+    /* ===== LOADING ===== */
+    .loading {
+      display: flex; align-items: center; justify-content: center;
+      padding: 80px; color: var(--text-muted); font-size: 15px; gap: 12px;
+    }
+    .spinner {
+      width: 22px; height: 22px; border: 3px solid var(--border);
+      border-top-color: var(--primary); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== TOAST (soon) ===== */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 13px 20px;
+      font-size: 14px; color: var(--text-main); box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 100;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast svg { width: 18px; height: 18px; color: var(--gold); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1100px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 860px) {
+      .sidebar { display: none; }
+      .search { max-width: none; }
+      .create-btn span { display: none; }
+    }
+    @media (max-width: 560px) {
+      .stat-grid { grid-template-columns: 1fr; }
+      .content { padding: 18px; }
+      .profile-info { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">KA</div>
+        <div class="logo-name">Knowledge Arena</div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Boshqaruv paneli
+        </div>
+        <a class="nav-item" href="/teacher-classes.html" style="text-decoration:none;color:inherit;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Sinflar
+        </a>
+        <div class="nav-item soon" onclick="comingSoon('O\'quvchilar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          O'quvchilar <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Topshiriqlar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Topshiriqlar <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Testlar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          Testlar <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Savollar banki')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Savollar banki <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Hisobotlar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Hisobotlar <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Bildirishnomalar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Bildirishnomalar
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Sozlamalar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Sozlamalar
+        </div>
+      </nav>
+      <div class="sidebar-foot">© 2025 Knowledge Arena</div>
+    </aside>
+
+    <!-- ===== MAIN ===== -->
+    <div class="main">
+
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="O'quvchi, sinf, topshiriq qidirish..." onfocus="comingSoon('Qidiruv')" />
+        </div>
+        <div class="topbar-right">
+          <button class="create-btn" onclick="window.location.href='/teacher-classes.html'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Yaratish</span>
+          </button>
+          <div class="icon-btn" onclick="comingSoon('Bildirishnomalar')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="dot"></span>
+          </div>
+          <div class="profile">
+            <div class="avatar" id="avatar">T</div>
+            <div class="profile-info">
+              <div class="profile-name" id="profileName">O'qituvchi</div>
+              <div class="profile-role">O'qituvchi</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="content">
+        <div class="page-head">
+          <div class="page-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <div>
+            <div class="page-title">O'qituvchi paneli</div>
+            <div class="page-sub">Sinflar, o'quvchilar, topshiriqlar va natijalarni boshqaring.</div>
+          </div>
+        </div>
+
+        <!-- Yuklanmoqda -->
+        <div class="loading" id="loadingBox">
+          <div class="spinner"></div> Yuklanmoqda...
+        </div>
+
+        <!-- Asosiy kontent (yuklangач ko'rinadi) -->
+        <div id="dashboardContent" style="display:none;">
+          <!-- STAT CARDS -->
+          <div class="stat-grid">
+            <div class="stat-card" onclick="window.location.href='/teacher-classes.html'" style="cursor:pointer;">
+              <div class="stat-icon blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              </div>
+              <div>
+                <div class="stat-label">Mening sinflarim</div>
+                <div class="stat-value" id="statClasses">0</div>
+                <div class="stat-foot">Faol sinflar</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div>
+                <div class="stat-label">O'quvchilarim</div>
+                <div class="stat-value" id="statStudents">0</div>
+                <div class="stat-foot">Jami o'quvchilar</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon orange">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <div>
+                <div class="stat-label">Faol topshiriqlar</div>
+                <div class="stat-value" id="statAssignments">0</div>
+                <div class="stat-foot">Joriy topshiriqlar</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              </div>
+              <div>
+                <div class="stat-label">O'rtacha ko'rsatkich</div>
+                <div class="stat-value" id="statPerformance">—</div>
+                <div class="stat-foot">O'rtacha ball</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- EMPTY STATE (sinf yo'q) -->
+          <div class="empty" id="emptyState">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            </div>
+            <h2>Birinchi sinfingizni yarating</h2>
+            <p>Hozircha sinfingiz yo'q. Sinf yarating, o'quvchilarni qo'shing va ularning natijalarini kuzatishni boshlang.</p>
+            <button class="empty-btn" onclick="window.location.href='/teacher-classes.html'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Sinf yaratish
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span id="toastText">Bu bo'lim tez orada tayyor bo'ladi</span>
+  </div>
+
+  <script src="/api.js"></script>
+  <script>
+    // Foydalanuvchi (himoya: tizimga kirmagan bo'lsa login'ga)
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = userData ? JSON.parse(userData) : {};
+
+    // Agar teacher/admin bo'lmasa — bu sahifa unга emas
+    if (user.role && user.role !== "teacher" && user.role !== "school_admin") {
+      window.location.href = "/lobby.html";
+    }
+
+    // Profil ko'rsatish
+    const fname = user.first_name || "O'qituvchi";
+    document.getElementById("profileName").textContent = fname;
+    document.getElementById("avatar").textContent = (fname[0] || "T").toUpperCase();
+
+    // "Tez orada" toast
+    let toastTimer = null;
+    function comingSoon(name) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toastText").textContent = (name ? name + ": " : "") + "bu bo'lim tez orada tayyor bo'ladi";
+      toast.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
+    // Dashboard ma'lumotini yuklash (himoyalangan endpoint)
+    async function loadDashboard() {
+      try {
+        const res = await authFetch("/teacher/dashboard");
+        if (!res.ok) {
+          // 403 = teacher emas, 401 = token muammosi (authFetch o'zi login'ga yuboradi)
+          if (res.status === 403) { window.location.href = "/lobby.html"; return; }
+          throw new Error("Yuklab bo'lmadi");
+        }
+        const data = await res.json();
+        const s = data.stats || {};
+
+        document.getElementById("statClasses").textContent = s.totalClasses || 0;
+        document.getElementById("statStudents").textContent = s.totalStudents || 0;
+        document.getElementById("statAssignments").textContent = s.activeAssignments || 0;
+        document.getElementById("statPerformance").textContent =
+          s.totalStudents > 0 ? (s.averagePerformance || 0) + "%" : "—";
+
+        // Bo'sh holatni ko'rsatish (sinf yo'q bo'lsa)
+        document.getElementById("emptyState").style.display =
+          (s.totalClasses > 0) ? "none" : "block";
+
+        // Yuklanish tugadi
+        document.getElementById("loadingBox").style.display = "none";
+        document.getElementById("dashboardContent").style.display = "block";
+      } catch (err) {
+        document.getElementById("loadingBox").innerHTML =
+          "<span style='color:var(--red)'>Ma'lumotni yuklab bo'lmadi. Sahifani yangilang.</span>";
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

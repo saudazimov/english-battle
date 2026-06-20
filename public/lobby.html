@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>English Battle — Battle Lobby</title>
+  <link rel="stylesheet" href="/app.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -43,45 +44,9 @@
       min-height: 100vh;
     }
 
-    /* ===== CHAP SIDEBAR ===== */
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-    }
-    .logo-box { padding: 8px 12px 24px; }
-    .logo-box .crest {
-      font-size: 30px; font-weight: 800; letter-spacing: 1px; line-height: 1;
-    }
-    .logo-box .crest .e { color: #fff; }
-    .logo-box .crest .b {
-      background: linear-gradient(135deg, var(--gold), #d97706);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .nav { display: flex; flex-direction: column; gap: 4px; }
-    .nav-item {
-      display: flex; align-items: center; gap: 14px;
-      padding: 12px 16px; border-radius: 12px;
-      color: var(--text-dim); cursor: pointer; font-size: 15px; font-weight: 500;
-      transition: all 0.2s; border: 1px solid transparent;
-      text-decoration: none;
-    }
-    .nav-item .ic { font-size: 18px; width: 22px; text-align: center; }
-    .nav-item:hover { background: var(--panel); color: var(--text); }
-    .nav-item.active {
-      background: linear-gradient(135deg, rgba(91,140,255,0.18), rgba(168,85,247,0.12));
-      color: #fff; border-color: var(--border-bright);
-      box-shadow: 0 0 24px rgba(91,140,255,0.15) inset;
-    }
+    /* ===== CHAP SIDEBAR — app.css dan keladi (bu yerda takror yozilmaydi) ===== */
+    /* lobby'ga xos: nav-item ichidagi qizil nuqta (bildirishnoma belgisi) */
     .nav-item .dot { margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
-
-    .mascot {
-      margin-top: auto; padding-top: 20px;
-      text-align: center; color: var(--text-faint); font-size: 13px;
-    }
-    .mascot-box {
-      background: linear-gradient(180deg, rgba(91,140,255,0.08), transparent);
-      border-radius: 16px; padding: 16px; border: 1px solid var(--border);
-    }
 
     /* ===== O'RTA KONTENT ===== */
     .main { display: flex; flex-direction: column; gap: 20px; }
@@ -304,12 +269,12 @@
     .view-all { display: flex; align-items: center; gap: 4px; color: var(--accent); font-size: 13px; cursor: pointer; text-decoration: none; }
     .view-all i { width: 15px; height: 15px; }
     .recent-cols {
-      display: grid; grid-template-columns: 2fr 1fr 1.2fr 1fr;
+      display: grid; grid-template-columns: 2fr 1fr 1.2fr 1fr 0.9fr;
       padding: 0 12px 10px; font-size: 12px; color: var(--text-dim);
       border-bottom: 1px solid var(--border);
     }
     .recent-row {
-      display: grid; grid-template-columns: 2fr 1fr 1.2fr 1fr; align-items: center;
+      display: grid; grid-template-columns: 2fr 1fr 1.2fr 1fr 0.9fr; align-items: center;
       padding: 14px 12px; border-radius: 12px; transition: background 0.2s;
     }
     .recent-row:hover { background: var(--panel); }
@@ -326,6 +291,16 @@
     .recent-result i { width: 16px; height: 16px; }
     .res-win { color: var(--green); }
     .res-lose { color: #f87171; }
+    .res-draw { color: var(--gold); }
+    .rematch-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 7px 12px; border-radius: 9px; cursor: pointer;
+      background: rgba(91,140,255,0.12); border: 1px solid var(--border-bright);
+      color: var(--accent); font-size: 12px; font-weight: 600;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .rematch-btn:hover { background: rgba(91,140,255,0.22); }
+    .rematch-btn i { width: 13px; height: 13px; }
     .recent-score { font-size: 14px; }
     .recent-rating { font-weight: 700; }
     .recent-empty { text-align: center; color: var(--text-faint); padding: 30px; font-size: 14px; }
@@ -435,6 +410,65 @@
       display: block;
     }
     
+    /* ===== SKELETON LOADING (miltillovchi placeholder) ===== */
+    @keyframes shimmer {
+      0% { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    .skel-line {
+      background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.04) 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite linear;
+      border-radius: 6px;
+    }
+    .skel-circle {
+      background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.04) 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite linear;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Recent Opponents skeleton qatori */
+    .skel-recent-row {
+      display: grid; grid-template-columns: 2fr 1fr 1.2fr 1fr 0.9fr;
+      align-items: center; padding: 14px 12px;
+    }
+    .skel-recent-opp { display: flex; align-items: center; gap: 12px; }
+
+    /* Quest skeleton */
+    .skel-quest { margin-bottom: 16px; }
+
+    /* Friends skeleton */
+    .skel-friends { display: flex; gap: 14px; }
+    .skel-friend { text-align: center; }
+
+    /* ===== EMPTY / ERROR HOLATLARI ===== */
+    .state-box {
+      text-align: center; padding: 28px 16px;
+    }
+    .state-ic {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: grid; place-items: center; margin: 0 auto 12px;
+    }
+    .state-ic i { width: 24px; height: 24px; }
+    .state-ic.blue { background: rgba(91,140,255,0.12); }
+    .state-ic.blue i { color: var(--accent); }
+    .state-ic.red { background: rgba(248,113,113,0.12); }
+    .state-ic.red i { color: var(--red); }
+    .state-title { font-size: 15px; font-weight: 700; margin-bottom: 5px; }
+    .state-text { font-size: 13px; color: var(--text-dim); margin-bottom: 16px; line-height: 1.4; }
+    .state-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: 10px; cursor: pointer;
+      background: rgba(91,140,255,0.12); border: 1px solid var(--border-bright);
+      color: var(--accent); font-size: 13px; font-weight: 600;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .state-btn:hover { background: rgba(91,140,255,0.22); }
+    .state-btn i { width: 14px; height: 14px; }
+
+   
 
   </style>
 
@@ -451,6 +485,7 @@
       <div class="topbar">
         <div class="currency"><i data-lucide="coins" style="color:var(--gold);width:18px;height:18px;"></i> <span id="coins">0</span> <span class="plus">+</span></div>
         <div class="currency"><i data-lucide="gem" style="color:var(--cyan);width:18px;height:18px;"></i> <span id="gems">0</span> <span class="plus">+</span></div>
+          <div class="jc-trigger" onclick="openJoinModal()" title="Sinfga qo'shilish"><i data-lucide="user-plus"></i> <span class="join-class-label">Sinfga qo'shilish</span></div>
           <div class="icon-btn" onclick="window.location.href='/friends.html'" style="cursor:pointer;"><i data-lucide="bell"></i> <span class="badge" id="notifBadge">0</span></div>        <div class="user-chip">
           <div class="ava" id="userAva">J</div>
           <div>
@@ -566,7 +601,7 @@
         </div>
         <button class="find-btn" onclick="findOpponent()">
           <i data-lucide="chevron-right"></i>
-          <span>FIND OPPONENT</span>
+          <span id="findBtnText">FIND OPPONENT</span>
           <i data-lucide="chevron-right"></i>
         </button>
         <div class="find-note">You can cancel matchmaking at any time.</div>
@@ -583,6 +618,7 @@
           <span>Result</span>
           <span>Score</span>
           <span>Rating</span>
+          <span></span>
         </div>
         <div id="recentList">
           <div class="recent-empty">Yuklanmoqda...</div>
@@ -616,11 +652,11 @@
       <!-- Possible Rewards -->
       <div class="card rb-card">
         <div class="rb-head"><span>Possible Rewards</span></div>
-        <div class="rewards-grid">
-          <div class="reward-box"><i data-lucide="coins" style="color:var(--gold);"></i><div class="reward-val">100</div><div class="reward-lbl">Coins</div></div>
-          <div class="reward-box"><i data-lucide="gem" style="color:var(--cyan);"></i><div class="reward-val">10</div><div class="reward-lbl">Gems</div></div>
-          <div class="reward-box"><i data-lucide="zap" style="color:var(--accent);"></i><div class="reward-val">200</div><div class="reward-lbl">XP</div></div>
-          <div class="reward-box"><i data-lucide="gift" style="color:var(--accent-2);"></i><div class="reward-val">?</div><div class="reward-lbl">Skin</div></div>
+        <div class="rewards-grid" id="rewardsGrid">
+          <div class="reward-box"><i data-lucide="coins" style="color:var(--gold);"></i><div class="reward-val" id="rwCoins">100</div><div class="reward-lbl">Coins</div></div>
+          <div class="reward-box"><i data-lucide="gem" style="color:var(--cyan);"></i><div class="reward-val" id="rwGems">10</div><div class="reward-lbl">Gems</div></div>
+          <div class="reward-box"><i data-lucide="zap" style="color:var(--accent);"></i><div class="reward-val" id="rwXp">200</div><div class="reward-lbl">XP</div></div>
+          <div class="reward-box" id="rwLastBox"><i data-lucide="gift" style="color:var(--accent-2);" id="rwLastIcon"></i><div class="reward-val" id="rwLast">?</div><div class="reward-lbl" id="rwLastLbl">Skin</div></div>
         </div>
       </div>
 
@@ -631,10 +667,10 @@
           <div class="rb-empty">Yuklanmoqda...</div>
         </div>
       </div>
-
     </aside>
-
   </div>
+
+  <script src="/api.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/sidebar.js"></script>
@@ -665,7 +701,7 @@
     document.getElementById("userLevel").textContent = Math.floor((user.xp || 0) / 100) + 1;
 
     // Bildirishnoma soni
-    fetch("/notifications/" + user.id)
+    authFetch("/notifications/" + user.id)
       .then(r => r.json())
       .then(data => {
         const unread = (data.notifications || []).filter(n => !n.is_read).length;
@@ -710,7 +746,7 @@
     document.getElementById("pcRating").textContent = user.rating || 1000;
 
     // Win rate va streak - profil endpoint'dan
-    fetch("/profile/" + user.id)
+    authFetch("/profile/" + user.id)
       .then(r => r.json())
       .then(data => {
         if (data.stats) document.getElementById("pcWinRate").textContent = data.stats.win_rate + "%";
@@ -727,49 +763,185 @@
       updateFindPanel();
     }
 
-    // Find Opponent panelini to'ldirish
-    const modeNames = {
-      ranked: "1v1 Ranked", casual: "1v1 Casual", "4player": "4-Player Battle",
-      practice: "Practice Mode", friend: "Friend Challenge", school: "School Battle"
+    // ===== HAR REJIM UCHUN SOZLAMALAR =====
+    // name: panelda ko'rinadigan nom
+    // btn: tugma matni
+    // rating: shu rejim ratingga ta'sir qiladimi (Rating Range ko'rsatiladimi)
+    // rewards: o'ngdagi Possible Rewards qiymatlari
+    //   last: oxirgi quti (icon = lucide nomi, color, val, lbl)
+    const modeConfig = {
+      ranked: {
+        name: "1v1 Ranked", btn: "FIND OPPONENT", rating: true,
+        rewards: { coins: 100, gems: 10, xp: 200, last: { icon: "gift", color: "var(--accent-2)", val: "?", lbl: "Skin" } }
+      },
+      casual: {
+        name: "1v1 Casual", btn: "FIND OPPONENT", rating: false,
+        rewards: { coins: 50, gems: 5, xp: 100, last: { icon: "gift", color: "var(--accent-2)", val: "?", lbl: "Skin" } }
+      },
+      "4player": {
+        name: "4-Player Battle", btn: "FIND OPPONENT", rating: true,
+        rewards: { coins: 150, gems: 15, xp: 300, last: { icon: "trophy", color: "var(--gold)", val: "1st", lbl: "Bonus" } }
+      },
+      practice: {
+        name: "Practice Mode", btn: "START PRACTICE", rating: false,
+        rewards: { coins: 10, gems: 0, xp: 50, last: { icon: "book-open", color: "var(--green)", val: "+", lbl: "Skill" } }
+      },
+      friend: {
+        name: "Friend Challenge", btn: "CHALLENGE FRIEND", rating: false,
+        rewards: { coins: 30, gems: 3, xp: 80, last: { icon: "heart", color: "var(--red)", val: "+", lbl: "Friend" } }
+      },
+      school: {
+        name: "School Battle", btn: "FIND OPPONENT", rating: true,
+        rewards: { coins: 80, gems: 8, xp: 150, last: { icon: "building-2", color: "var(--cyan)", val: "+", lbl: "School" } }
+      }
     };
+
+    // Find Opponent panelini va Possible Rewards'ni rejimga qarab yangilash
     function updateFindPanel() {
-      document.getElementById("fiMode").textContent = modeNames[selectedMode] || "1v1 Ranked";
+      const cfg = modeConfig[selectedMode] || modeConfig.ranked;
+
+      // --- Find panel ---
+      document.getElementById("fiMode").textContent = cfg.name;
       document.getElementById("fiLevel").textContent = user.cefr_level || "A1";
+
+      // Rating Range: faqat ratingli rejimlarda ko'rsatamiz
       const r = user.rating || 1000;
-      document.getElementById("fiRange").textContent = (r - 100) + " - " + (r + 100);
+      const rangeEl = document.getElementById("fiRange");
+      if (cfg.rating) {
+        rangeEl.textContent = (r - 100) + " - " + (r + 100);
+        rangeEl.style.color = "var(--cyan)";
+      } else {
+        rangeEl.textContent = "—";
+        rangeEl.style.color = "var(--text-dim)";
+      }
+
+      // Tugma matni
+      document.getElementById("findBtnText").textContent = cfg.btn;
+
+      // --- Possible Rewards ---
+      document.getElementById("rwCoins").textContent = cfg.rewards.coins;
+      document.getElementById("rwGems").textContent = cfg.rewards.gems;
+      document.getElementById("rwXp").textContent = cfg.rewards.xp;
+
+      const last = cfg.rewards.last;
+      document.getElementById("rwLast").textContent = last.val;
+      document.getElementById("rwLastLbl").textContent = last.lbl;
+      const lastIcon = document.getElementById("rwLastIcon");
+      lastIcon.setAttribute("data-lucide", last.icon);
+      lastIcon.style.color = last.color;
+
+      // Lucide ikonkani qayta chizish (icon o'zgargani uchun)
+      if (window.lucide) lucide.createIcons();
     }
     updateFindPanel();
 
     function findOpponent() {
+      // Friend Challenge — do'stlar sahifasiga
       if (selectedMode === "friend") {
-        // Do'st chaqirish - do'stlar sahifasiga
         window.location.href = "/friends.html";
-      } else if (selectedMode === "school") {
-        // Maktab jang - hozircha oddiy jang (keyin maxsus qilamiz)
-        window.location.href = "/battle.html";
-      } else if (selectedMode === "practice") {
-        // Mashq - oddiy jang (reytingsiz, keyin ajratamiz)
-        window.location.href = "/battle.html";
-      } else {
-        // 1v1 Ranked, Casual, 4-Player - oddiy jang
-        window.location.href = "/battle.html";
+        return;
       }
+      // Qolgan rejimlar — battle sahifasiga. Qidirish o'sha yerda.
+      window.location.href = "/battle.html";
+    }
+
+
+
+    // ===== YORDAMCHI: SKELETON VA HOLAT HTML'LARI =====
+
+    // Recent Opponents uchun skeleton (n ta qator)
+    function recentSkeleton(n) {
+      let html = "";
+      for (let i = 0; i < n; i++) {
+        html +=
+          '<div class="skel-recent-row">' +
+            '<div class="skel-recent-opp">' +
+              '<div class="skel-circle" style="width:38px;height:38px;"></div>' +
+              '<div style="flex:1;">' +
+                '<div class="skel-line" style="width:60%;height:13px;margin-bottom:6px;"></div>' +
+                '<div class="skel-line" style="width:35%;height:11px;"></div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="skel-line" style="width:60%;height:13px;"></div>' +
+            '<div class="skel-line" style="width:45%;height:13px;"></div>' +
+            '<div class="skel-line" style="width:40%;height:13px;"></div>' +
+            '<div class="skel-line" style="width:70%;height:28px;border-radius:9px;"></div>' +
+          '</div>';
+      }
+      return html;
+    }
+
+    // Quests uchun skeleton (n ta)
+    function questsSkeleton(n) {
+      let html = "";
+      for (let i = 0; i < n; i++) {
+        html +=
+          '<div class="skel-quest">' +
+            '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+              '<div class="skel-circle" style="width:18px;height:18px;"></div>' +
+              '<div class="skel-line" style="flex:1;height:12px;"></div>' +
+              '<div class="skel-line" style="width:40px;height:12px;"></div>' +
+            '</div>' +
+            '<div class="skel-line" style="width:100%;height:6px;border-radius:3px;"></div>' +
+          '</div>';
+      }
+      return html;
+    }
+
+    // Friends uchun skeleton (n ta)
+    function friendsSkeleton(n) {
+      let html = '<div class="skel-friends">';
+      for (let i = 0; i < n; i++) {
+        html +=
+          '<div class="skel-friend">' +
+            '<div class="skel-circle" style="width:48px;height:48px;margin:0 auto;"></div>' +
+            '<div class="skel-line" style="width:40px;height:10px;margin:8px auto 0;"></div>' +
+          '</div>';
+      }
+      return html + '</div>';
+    }
+
+    // Umumiy holat qutisi (empty yoki error)
+    // color: "blue" yoki "red"; icon: lucide nomi; title, text: matnlar
+    // btnText, btnAction: tugma (ixtiyoriy)
+    function stateBox(color, icon, title, text, btnText, btnAction) {
+      let btn = "";
+      if (btnText && btnAction) {
+        btn = '<button class="state-btn" onclick="' + btnAction + '"><i data-lucide="' + (color === "red" ? "rotate-cw" : "plus") + '"></i> ' + btnText + '</button>';
+      }
+      return '<div class="state-box">' +
+        '<div class="state-ic ' + color + '"><i data-lucide="' + icon + '"></i></div>' +
+        '<div class="state-title">' + title + '</div>' +
+        '<div class="state-text">' + text + '</div>' +
+        btn +
+      '</div>';
     }
 
     // Recent Opponents - jang tarixi
     async function loadRecent() {
       const list = document.getElementById("recentList");
+
+      // 1) LOADING: skeleton ko'rsatamiz
+      list.innerHTML = recentSkeleton(4);
+
       try {
-        const res = await fetch("/history/" + user.id);
+        const res = await authFetch("/history/" + user.id);
         const data = await res.json();
         const battles = data.battles || data.history || [];
 
+        // 2) EMPTY: jang yo'q
         if (battles.length === 0) {
-          list.innerHTML = '<div class="recent-empty">Hali jang qilmadingiz. Birinchi jangingizni boshlang!</div>';
+          list.innerHTML = stateBox(
+            "blue", "swords",
+            "Hali battle tarixi yo'q",
+            "Birinchi battle'ingizni boshlang va raqiblaringiz shu yerda ko'rinadi.",
+            "Find Opponent", "scrollToFind()"
+          );
           lucide.createIcons();
           return;
         }
 
+        // 3) MA'LUMOT BOR: qatorlarni chizamiz
         list.innerHTML = "";
         battles.slice(0, 4).forEach(b => {
           const isWin = b.outcome === "win";
@@ -777,6 +949,13 @@
           const oppName = b.opponent_name || "Raqib";
           const ratingChange = b.rating_change >= 0 ? "+" + b.rating_change : b.rating_change;
           const ratingColor = b.rating_change >= 0 ? "var(--green)" : "#f87171";
+
+          const resClass = isWin ? "res-win" : (isDraw ? "res-draw" : "res-lose");
+          const resHtml = isWin
+            ? '<i data-lucide="trophy"></i> Victory'
+            : (isDraw ? '<i data-lucide="minus"></i> Draw' : '<i data-lucide="x"></i> Defeat');
+
+          const oppId = b.opponent_id || "";
 
           const row = document.createElement("div");
           row.className = "recent-row";
@@ -786,19 +965,47 @@
               '<div><div class="recent-opp-name">' + oppName + '</div>' +
               '<div class="recent-opp-sub">' + (b.cefr_level || "A1") + '</div></div>' +
             '</div>' +
-            '<div class="recent-result ' + (isWin ? "res-win" : (isDraw ? "" : "res-lose")) + '">' +
-              (isWin ? '<i data-lucide="trophy"></i> Victory' : (isDraw ? "Draw" : '<i data-lucide="x"></i> Defeat')) +
-            '</div>' +
+            '<div class="recent-result ' + resClass + '">' + resHtml + '</div>' +
             '<div class="recent-score">' + b.my_score + ' - ' + b.opponent_score + '</div>' +
-            '<div class="recent-rating" style="color:' + ratingColor + ';">' + ratingChange + '</div>';
+            '<div class="recent-rating" style="color:' + ratingColor + ';">' + ratingChange + '</div>' +
+            '<div>' +
+              '<button class="rematch-btn" onclick="rematch(\'' + oppId + '\', \'' + oppName.replace(/'/g, "") + '\')">' +
+                '<i data-lucide="rotate-ccw"></i> Rematch' +
+              '</button>' +
+            '</div>';
           list.appendChild(row);
         });
         lucide.createIcons();
       } catch (err) {
-        list.innerHTML = '<div class="recent-empty">Yuklab bo\'lmadi</div>';
+        // 4) ERROR: yuklab bo'lmadi
+        list.innerHTML = stateBox(
+          "red", "alert-triangle",
+          "Ma'lumotlarni yuklashda xatolik",
+          "Battle tarixini yuklab bo'lmadi.",
+          "Qayta urinish", "loadRecent()"
+        );
+        lucide.createIcons();
       }
     }
+
+    // "Find Opponent" empty tugmasi — Find panelga silliq scroll
+    function scrollToFind() {
+      const el = document.querySelector(".find-panel");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
     loadRecent();
+    // Rematch tugmasi bosilganda — hozircha frontend xabari
+    // (haqiqiy rematch backend bosqichida ulanadi)
+    function rematch(opponentId, opponentName) {
+      // Hozircha oddiy tasdiq. Keyingi bosqichda haqiqiy so'rov yuboramiz.
+      const ok = confirm(opponentName + " bilan qayta o'ynaysizmi?");
+      if (ok) {
+        // Keyingi bosqichda: serverga rematch so'rovi yuboriladi
+        // Hozircha shunchaki battle sahifasiga o'tamiz
+        window.location.href = "/battle.html";
+      }
+    }
     // ===== O'NG PANEL =====
     // Current Rank
     function setupRank() {
@@ -836,19 +1043,32 @@
     // Daily Quests
     async function loadQuests() {
       const list = document.getElementById("questList");
+
+      // LOADING
+      list.innerHTML = questsSkeleton(3);
+
       try {
-        const res = await fetch("/quests", {
+        const res = await authFetch("/quests", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: user.id }),
         });
         const data = await res.json();
         const quests = data.quests || [];
+
+        // EMPTY
         if (quests.length === 0) {
-          list.innerHTML = '<div class="rb-empty">Topshiriqlar yo\'q</div>';
+          list.innerHTML = stateBox(
+            "blue", "clipboard-list",
+            "Vazifalar tayyorlanmoqda",
+            "Bugungi vazifalar tez orada shu yerda paydo bo'ladi.",
+            null, null
+          );
           lucide.createIcons();
           return;
         }
+
+        // MA'LUMOT BOR
         list.innerHTML = "";
         quests.slice(0, 3).forEach(q => {
           const pct = Math.min(Math.round((q.progress / q.target) * 100), 100);
@@ -867,7 +1087,14 @@
         });
         lucide.createIcons();
       } catch (err) {
-        list.innerHTML = '<div class="rb-empty">Yuklab bo\'lmadi</div>';
+        // ERROR
+        list.innerHTML = stateBox(
+          "red", "alert-triangle",
+          "Yuklashda xatolik",
+          "Vazifalarni yuklab bo'lmadi.",
+          "Qayta urinish", "loadQuests()"
+        );
+        lucide.createIcons();
       }
     }
     loadQuests();
@@ -875,18 +1102,39 @@
     // Friends Online
     async function loadFriendsOnline() {
       const box = document.getElementById("friendsOnline");
+
+      // LOADING
+      box.innerHTML = friendsSkeleton(4);
+
       try {
-        const res = await fetch("/friends/" + user.id);
+        const res = await authFetch("/friends/" + user.id);
         const data = await res.json();
         const friends = data.friends || [];
+
+        // EMPTY: umuman do'st yo'q
         if (friends.length === 0) {
-          box.innerHTML = '<div class="rb-empty">Hali do\'st yo\'q</div>';
+          box.innerHTML = stateBox(
+            "blue", "user-plus",
+            "Hali do'st yo'q",
+            "Do'st qo'shing va ular bilan battle qiling.",
+            "Do'st qo'shish", "window.location.href='/friends.html'"
+          );
+          lucide.createIcons();
           return;
         }
+
         box.innerHTML = "";
         const onlineFriends = friends.filter(f => f.isOnline);
+
+        // EMPTY: do'st bor, lekin online yo'q
         if (onlineFriends.length === 0) {
-          box.innerHTML = '<div class="rb-empty">Hozir onlayn do\'st yo\'q</div>';
+          box.innerHTML = stateBox(
+            "blue", "users",
+            "Hozir onlayn do'st yo'q",
+            "Do'stlaringiz onlayn bo'lganda shu yerda ko'rinadi.",
+            "Do'st qo'shish", "window.location.href='/friends.html'"
+          );
+          lucide.createIcons();
           return;
         }
         onlineFriends.slice(0, 4).forEach(f => {
@@ -909,7 +1157,13 @@
           box.appendChild(more);
         }
       } catch (err) {
-        box.innerHTML = '<div class="rb-empty">Yuklab bo\'lmadi</div>';
+        box.innerHTML = stateBox(
+          "red", "alert-triangle",
+          "Yuklashda xatolik",
+          "Do'stlar ro'yxatini yuklab bo'lmadi.",
+          "Qayta urinish", "loadFriendsOnline()"
+        );
+        lucide.createIcons();
       }
     }
     loadFriendsOnline();
@@ -923,5 +1177,163 @@
     lucide.createIcons();
 
   </script>
+<!-- ===== SINFGA QO'SHILISH MODAL (qo'shildi) ===== -->
+<style>
+  .jc-label { display: inline; }
+  /* === Variant B: nozik, uyg'un tugma === */
+  .jc-trigger {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 15px; border-radius: 10px; cursor: pointer;
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.35);
+    color: #93c5fd; font-size: 13.5px; font-weight: 600; white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .jc-trigger:hover { background: rgba(59,130,246,0.18); border-color: #3b82f6; color: #fff; }
+  .jc-trigger:active { transform: translateY(1px); }
+  .jc-trigger i { width: 17px; height: 17px; }
+  @media (max-width: 720px) { .join-class-label { display: none; } }
+  .jc-overlay {
+    position: fixed; inset: 0; background: rgba(3,6,15,0.7);
+    backdrop-filter: blur(4px); display: none;
+    align-items: center; justify-content: center; z-index: 5000; padding: 20px;
+  }
+  .jc-overlay.show { display: flex; }
+  .jc-modal {
+    background: #10172a; border: 1px solid #1e2a44; border-radius: 16px;
+    width: 100%; max-width: 420px; box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    transform: scale(0.96); animation: jcPop 0.18s ease forwards;
+  }
+  @keyframes jcPop { to { transform: scale(1); } }
+  .jc-head { padding: 26px 26px 0; text-align: center; }
+  .jc-icon {
+    width: 60px; height: 60px; margin: 0 auto 16px; border-radius: 16px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    display: flex; align-items: center; justify-content: center; color: #fff;
+  }
+  .jc-icon svg, .jc-icon i { width: 28px; height: 28px; }
+  .jc-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; color: #f8fafc; }
+  .jc-sub { font-size: 13.5px; color: #94a3b8; line-height: 1.5; }
+  .jc-body { padding: 22px 26px; }
+  .jc-input {
+    width: 100%; padding: 16px; text-align: center;
+    background: #0b1322; border: 1.5px solid #1e2a44; border-radius: 10px;
+    color: #f8fafc; font-size: 26px; font-weight: 800; letter-spacing: 8px;
+    text-transform: uppercase; font-family: ui-monospace, Menlo, monospace;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .jc-input::placeholder { color: #475569; letter-spacing: 6px; }
+  .jc-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+  .jc-input.invalid { border-color: #ef4444; }
+  .jc-msg { font-size: 13px; margin-top: 12px; text-align: center; display: none; }
+  .jc-msg.error { color: #ff9a9a; display: block; }
+  .jc-msg.success { color: #86efac; display: block; }
+  .jc-foot { padding: 0 26px 24px; display: flex; gap: 12px; }
+  .jc-cancel {
+    flex: 1; padding: 13px; border: 1px solid #1e2a44; border-radius: 10px;
+    background: #0e1526; color: #94a3b8; font-size: 14.5px; font-weight: 600; cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .jc-cancel:hover { border-color: #3b82f6; color: #f8fafc; }
+  .jc-submit {
+    flex: 1.4; padding: 13px; border: none; border-radius: 10px;
+    background: linear-gradient(95deg, #3b82f6, #8b5cf6);
+    color: #fff; font-size: 14.5px; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+  }
+  .jc-submit:hover { opacity: 0.93; }
+  .jc-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+</style>
+
+<div class="jc-overlay" id="jcOverlay">
+  <div class="jc-modal">
+    <div class="jc-head">
+      <div class="jc-icon"><i data-lucide="users"></i></div>
+      <div class="jc-title">Sinfga qo'shilish</div>
+      <div class="jc-sub">O'qituvchingiz bergan 6 belgili kodni kiriting.</div>
+    </div>
+    <div class="jc-body">
+      <input type="text" class="jc-input" id="jcCode" maxlength="6" placeholder="KOD" autocomplete="off" />
+      <div class="jc-msg" id="jcMsg"></div>
+    </div>
+    <div class="jc-foot">
+      <button class="jc-cancel" onclick="closeJoinModal()">Bekor qilish</button>
+      <button class="jc-submit" id="jcSubmit" onclick="submitJoinCode()">Qo'shilish</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openJoinModal() {
+    document.getElementById("jcOverlay").classList.add("show");
+    var inp = document.getElementById("jcCode");
+    inp.value = ""; inp.classList.remove("invalid");
+    document.getElementById("jcMsg").className = "jc-msg";
+    document.getElementById("jcMsg").textContent = "";
+    setTimeout(function(){ inp.focus(); }, 50);
+    if (window.lucide) lucide.createIcons();
+  }
+  function closeJoinModal() {
+    document.getElementById("jcOverlay").classList.remove("show");
+  }
+  document.getElementById("jcOverlay").addEventListener("click", function(e){
+    if (e.target.id === "jcOverlay") closeJoinModal();
+  });
+  // Faqat harf/raqam, katta harf
+  document.getElementById("jcCode").addEventListener("input", function(){
+    this.value = this.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    this.classList.remove("invalid");
+  });
+  document.getElementById("jcCode").addEventListener("keydown", function(e){
+    if (e.key === "Enter") submitJoinCode();
+  });
+
+  async function submitJoinCode() {
+    var inp = document.getElementById("jcCode");
+    var msg = document.getElementById("jcMsg");
+    var code = inp.value.trim().toUpperCase();
+
+    inp.classList.remove("invalid");
+    msg.className = "jc-msg";
+
+    if (code.length !== 6) {
+      inp.classList.add("invalid");
+      msg.className = "jc-msg error";
+      msg.textContent = "Kod 6 belgidan iborat bo'lishi kerak";
+      inp.focus();
+      return;
+    }
+
+    var btn = document.getElementById("jcSubmit");
+    btn.disabled = true;
+    btn.textContent = "Qo'shilmoqda...";
+
+    try {
+      var res = await authFetch("/student/join-class", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ join_code: code })
+      });
+      var data = await res.json();
+      if (!res.ok) {
+        inp.classList.add("invalid");
+        msg.className = "jc-msg error";
+        msg.textContent = data.error || "Xatolik yuz berdi";
+        return;
+      }
+      // Muvaffaqiyat
+      msg.className = "jc-msg success";
+      var className = (data.class && data.class.name) ? data.class.name : "sinf";
+      msg.textContent = "✓ \"" + className + "\" sinfiga qo'shildingiz!";
+      setTimeout(function(){ closeJoinModal(); }, 1600);
+    } catch (err) {
+      msg.className = "jc-msg error";
+      msg.textContent = "Server bilan aloqa yo'q. Qayta urinib ko'ring.";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Qo'shilish";
+    }
+  }
+</script>
+
 </body>
 </html>

@@ -145,6 +145,7 @@
 
   </div>
 
+  <script src="/api.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
     const userData = localStorage.getItem("user");
@@ -164,7 +165,7 @@
 
     async function checkStatus() {
       try {
-        const res = await fetch("/exam/status/" + user.id);
+        const res = await authFetch("/exam/status/" + user.id);
         const data = await res.json();
         document.getElementById("examTitle").textContent = "Daraja imtihoni";
         if (data.next_level) {
@@ -195,7 +196,7 @@
 
     async function startExam() {
       try {
-        const res = await fetch("/exam/start/" + user.id);
+        const res = await authFetch("/exam/start/" + user.id);
         const data = await res.json();
         if (!res.ok) { alert(data.error || "Xato"); return; }
         questions = data.questions;
@@ -266,7 +267,7 @@
       clearInterval(timerInterval);
       const answersArr = questions.map(q => ({ question_id: q.id, answer: userAnswers[q.id] || null }));
       try {
-        const res = await fetch("/exam/submit", {
+        const res = await authFetch("/exam/submit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: user.id, answers: answersArr }),

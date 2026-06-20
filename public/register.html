@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ro'yxatdan o'tish — Knowledge Arena</title>
+  <style>
+    :root {
+      --bg-main: #070b18;
+      --bg-card: #10172a;
+      --bg-input: #0b1322;
+      --bg-soft: #0e1526;
+      --border: #1e2a44;
+      --border-focus: #3b82f6;
+      --primary: #3b82f6;
+      --secondary: #8b5cf6;
+      --accent: #22d3ee;
+      --gold: #facc15;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --error-bg: #3a1d22;
+      --error-text: #ff9a9a;
+      --error-border: #6e2a2a;
+      --success-bg: #14321f;
+      --success-text: #86efac;
+      --success-border: #2a6e44;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background-image:
+        radial-gradient(circle at 12% 40%, rgba(59,130,246,0.14), transparent 38%),
+        radial-gradient(circle at 88% 25%, rgba(139,92,246,0.14), transparent 38%),
+        radial-gradient(circle at 50% 95%, rgba(34,211,238,0.06), transparent 45%);
+    }
+    .site-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 32px; position: relative; z-index: 5;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-mark {
+      width: 40px; height: 40px; border-radius: 11px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; color: #fff;
+      box-shadow: 0 4px 14px rgba(59,130,246,0.4);
+    }
+    .logo-name { font-size: 19px; font-weight: 700; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .header-btn {
+      display: flex; align-items: center; gap: 7px; padding: 9px 14px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text-muted);
+      font-size: 14px; cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    }
+    .header-btn:hover { border-color: var(--border-focus); color: var(--text-main); }
+    .header-btn svg { display: block; flex: 0 0 auto; }
+    .auth-layout {
+      flex: 1; display: flex; align-items: center;
+      padding: 20px 32px; gap: 32px; min-height: 0;
+    }
+    .brand-side {
+      flex: 1.1; display: flex; flex-direction: column; justify-content: center;
+      padding: 24px 24px 24px 60px; max-width: 680px;
+    }
+    .brand-title {
+      font-size: 60px; font-weight: 800; line-height: 1.05; letter-spacing: -1.5px;
+      margin-bottom: 14px;
+      background: linear-gradient(100deg, #ffffff 0%, #ffffff 30%, var(--primary) 70%, var(--secondary) 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .brand-slogan { font-size: 20px; color: var(--text-muted); margin-bottom: 20px; }
+    .brand-slogan b { color: var(--accent); font-weight: 700; }
+    .mascot {
+      height: 280px; border-radius: var(--radius);
+      background:
+        radial-gradient(circle at 30% 30%, rgba(59,130,246,0.2), transparent 55%),
+        radial-gradient(circle at 70% 70%, rgba(139,92,246,0.2), transparent 55%),
+        linear-gradient(135deg, #0a0f24, #0d1428);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden; margin-bottom: 14px;
+    }
+    .mascot-badge {
+      width: 130px; height: 130px; border-radius: 34px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 54px; font-weight: 800; color: #fff;
+      box-shadow: 0 10px 40px rgba(59,130,246,0.5);
+    }
+    .mascot-hint { position: absolute; bottom: 14px; font-size: 12px; color: var(--text-dim); }
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .feature-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 13px;
+    }
+    .feature-icon { margin-bottom: 8px; color: var(--accent); }
+    .feature-icon svg { width: 26px; height: 26px; }
+    .feature-card h3 { font-size: 14px; margin-bottom: 5px; }
+    .feature-card p { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+    .auth-side { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 44px;
+      width: 100%; max-width: 620px; box-shadow: 0 24px 70px rgba(0,0,0,0.45);
+      max-height: calc(100vh - 170px);
+      overflow-y: auto;
+    }
+    /* Karta ichidagi scroll chizig'ini chiroyli qilamiz */
+    .card::-webkit-scrollbar { width: 8px; }
+    .card::-webkit-scrollbar-track { background: transparent; }
+    .card::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+    .card::-webkit-scrollbar-thumb:hover { background: var(--border-focus); }
+    .steps { display: flex; align-items: flex-start; justify-content: center; margin-bottom: 28px; }
+    .step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 auto; }
+    .step-dot {
+      width: 46px; height: 46px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg-input); color: var(--text-muted);
+      font-weight: 700; font-size: 15px; border: 2px solid var(--border); transition: all 0.2s;
+    }
+    .step-label { font-size: 12px; color: var(--text-muted); }
+    .step.active .step-dot {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.18);
+    }
+    .step.active .step-label { color: var(--primary); font-weight: 600; }
+    .step.done .step-dot { background: #16794d; color: #fff; border-color: #16794d; }
+    .step-line { height: 2px; width: 64px; background: var(--border); margin: 22px 8px 0; flex: 0 0 auto; }
+    .step-line.filled { background: var(--primary); }
+    h2.card-title { font-size: 30px; text-align: center; margin-bottom: 8px; font-weight: 800; }
+    .subtitle { text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 26px; line-height: 1.5; }
+    label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 7px; margin-top: 16px; font-weight: 500; }
+    input, select {
+      width: 100%; padding: 14px; background: var(--bg-input);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      color: var(--text-main); font-size: 15px; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input::placeholder { color: var(--text-dim); }
+    input:focus, select:focus {
+      outline: none; border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    input.invalid, select.invalid { border-color: #e05a5a; }
+    .phone-input {
+      display: flex; align-items: stretch; background: var(--bg-input);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .phone-input:focus-within { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+    .phone-prefix {
+      display: flex; align-items: center; gap: 8px; padding: 0 14px;
+      background: var(--bg-soft); border-right: 1px solid var(--border);
+      font-size: 15px; font-weight: 600; white-space: nowrap;
+    }
+    .flag {
+      width: 24px; height: 17px; border-radius: 3px;
+      background: linear-gradient(180deg, #1eb53a 33%, #fff 33%, #fff 66%, #0099b5 66%);
+      display: inline-block;
+    }
+    .phone-input input { border: none; border-radius: 0; background: transparent; flex: 1; }
+    .phone-input input:focus { box-shadow: none; }
+    .btn {
+      width: 100%; padding: 15px; margin-top: 22px;
+      background: linear-gradient(95deg, var(--primary), var(--secondary));
+      border: none; border-radius: var(--radius-sm);
+      color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 8px 24px rgba(59,130,246,0.32);
+      transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    .btn:hover { opacity: 0.94; box-shadow: 0 10px 30px rgba(59,130,246,0.4); }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+    .row { display: flex; gap: 12px; }
+    .row > * { flex: 1; }
+    .divider {
+      display: flex; align-items: center; gap: 12px; margin: 20px 0;
+      color: var(--text-dim); font-size: 13px;
+    }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+    .login-hint { text-align: center; color: var(--text-muted); font-size: 14px; }
+    .safety-banner {
+      display: flex; align-items: flex-start; gap: 12px; margin-top: 20px; padding: 14px;
+      background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    }
+    .safety-icon {
+      flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px;
+      background: var(--bg-input); display: flex; align-items: center; justify-content: center;
+      color: var(--accent);
+    }
+    .safety-icon svg { width: 19px; height: 19px; }
+    .safety-text { font-size: 13px; line-height: 1.45; }
+    .safety-text b { display: block; margin-bottom: 3px; color: var(--text-main); }
+    .safety-text span { color: var(--text-muted); }
+    .otp-boxes { display: flex; gap: 10px; justify-content: center; margin: 26px 0; }
+    .otp-boxes input {
+      width: 52px; height: 62px; text-align: center; font-size: 24px; font-weight: 700;
+      padding: 0; background: var(--bg-input); border: 1.5px solid var(--border); border-radius: 12px;
+    }
+    .otp-boxes input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+    .resend-box {
+      width: 100%; padding: 13px; margin-top: 8px; background: var(--bg-soft);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      color: var(--text-muted); font-size: 14px; text-align: center;
+    }
+    .resend-box .link { color: var(--accent); }
+    .resend-box.disabled { opacity: 0.55; }
+    .back-link { text-align: center; margin-top: 16px; }
+    .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 24px 0 8px; }
+    .role-card {
+      position: relative; background: var(--bg-input); border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); padding: 20px 16px; text-align: center; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    }
+    .role-card:hover { border-color: var(--border-focus); background: var(--bg-soft); }
+    .role-card:active { transform: translateY(1px); }
+    .role-card.selected {
+      border-color: var(--primary); background: rgba(59,130,246,0.08);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .role-icon {
+      width: 52px; height: 52px; margin: 0 auto 12px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center; color: #fff;
+    }
+    .role-icon svg { width: 26px; height: 26px; }
+    .role-card h3 { font-size: 15px; margin-bottom: 4px; }
+    .role-card p { font-size: 12px; color: var(--text-muted); line-height: 1.35; }
+    .role-soon {
+      position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 600;
+      background: var(--bg-soft); color: var(--gold); padding: 3px 7px; border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+    .phone-badge {
+      display: inline-flex; align-items: center; gap: 8px; margin: 0 auto 6px; padding: 9px 16px;
+      background: var(--bg-soft); border: 1px solid var(--border); border-radius: 999px; font-size: 14px;
+    }
+    .phone-badge .verified { color: #5ad17e; font-weight: 600; }
+    .badge-wrap { text-align: center; }
+    .terms-note { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 14px; line-height: 1.5; }
+    .terms-note a { color: var(--accent); text-decoration: none; }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(3, 6, 15, 0.65); backdrop-filter: blur(3px);
+      display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 28px; width: 100%; max-width: 380px; text-align: center;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6); transform: scale(0.95); animation: modalPop 0.18s ease forwards;
+    }
+    @keyframes modalPop { to { transform: scale(1); } }
+    .modal-icon {
+      width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center; font-size: 28px;
+    }
+    .modal-icon.error { background: rgba(239,68,68,0.15); }
+    .modal-icon.success { background: rgba(34,197,94,0.15); }
+    .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .modal-text { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 22px; }
+    .modal-btn {
+      width: 100%; padding: 13px; background: linear-gradient(95deg, var(--primary), var(--secondary));
+      border: none; border-radius: var(--radius-sm); color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .modal-btn:hover { opacity: 0.92; }
+    .link { color: var(--accent); cursor: pointer; text-decoration: none; }
+    .link:hover { text-decoration: underline; }
+    .center { text-align: center; }
+    .muted { color: var(--text-muted); font-size: 14px; }
+    .mt { margin-top: 16px; }
+    .stage { display: none; }
+    .stage.active { display: block; }
+    .site-footer {
+      display: flex; align-items: center; justify-content: space-between; padding: 14px 32px;
+      border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted);
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: var(--text-muted); text-decoration: none; }
+    .footer-links a:hover { color: var(--text-main); }
+    .footer-social { display: flex; gap: 10px; }
+    .footer-social span svg { display: block; }
+    .footer-social span:hover { color: var(--accent); border-color: var(--border-focus); }
+    .footer-social span {
+      width: 34px; height: 34px; border-radius: 9px; background: var(--bg-card);
+      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text-muted); transition: color 0.15s, border-color 0.15s;
+    }
+    @media (max-width: 980px) {
+      .auth-layout { flex-direction: column; padding: 0 16px 24px; }
+      .brand-side { flex: none; max-width: 100%; text-align: center; padding: 16px 8px; }
+      .brand-title { font-size: 38px; }
+      .mascot { height: 200px; }
+      .features { grid-template-columns: 1fr; }
+      .auth-side { flex: none; width: 100%; }
+      .card { padding: 28px 20px; }
+    }
+    @media (max-width: 520px) {
+      .site-header { padding: 14px 16px; }
+      .logo-name { font-size: 17px; }
+      .footer-links { gap: 14px; }
+      .otp-boxes input { width: 44px; height: 54px; font-size: 20px; }
+      .step-line { width: 28px; }
+      .features { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo">
+      <div class="logo-mark" id="logoMark">KA</div>
+      <div class="logo-name" id="logoName">Knowledge Arena</div>
+    </div>
+    <div class="header-right">
+      <button class="header-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Uz <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg></button>
+      <button class="header-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Yordam</button>
+    </div>
+  </header>
+  <div class="auth-layout">
+    <div class="brand-side">
+      <div class="brand-title" id="brandName">Knowledge Arena</div>
+      <div class="brand-slogan" id="brandSlogan">Learn. Battle. Rise.</div>
+      <div class="mascot">
+        <div class="mascot-badge" id="mascotBadge">KA</div>
+        <div class="mascot-hint">Mascot (vaqtincha) — keyin haqiqiy rasm qo'yiladi</div>
+      </div>
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/></svg></div>
+          <h3>Real-time battles</h3>
+          <p>Dunyo bo'ylab o'quvchilar bilan real vaqtda bellashing.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <h3>Secure signup</h3>
+          <p>Ma'lumotlaringiz xavfsiz va maxfiy saqlanadi.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></div>
+          <h3>School rankings</h3>
+          <p>Maktabingiz uchun ochko yig'ing va reytingda yuqoriga ko'taring.</p>
+        </div>
+      </div>
+    </div>
+    <div class="auth-side">
+      <div class="card">
+        <div class="stage active" id="stage0">
+          <h2 class="card-title">Kim sifatida qo'shilasiz?</h2>
+          <p class="subtitle">Hisob turini tanlang. Bu sizning imkoniyatlaringizni belgilaydi.</p>
+          <div class="role-grid">
+            <div class="role-card" data-role="student" onclick="selectRole(this)">
+              <div class="role-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+              <h3>O'quvchi</h3>
+              <p>Bellash, imtihon top va reyting yig'</p>
+            </div>
+            <div class="role-card" data-role="teacher" onclick="selectRole(this)">
+              <div class="role-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+              <h3>O'qituvchi</h3>
+              <p>Sinflar yarat, natijalarni kuzat</p>
+            </div>
+            <div class="role-card" data-role="parent" onclick="selectRole(this)">
+              <span class="role-soon">Tez orada</span>
+              <div class="role-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <h3>Ota-ona</h3>
+              <p>Farzandingiz natijasini kuzating</p>
+            </div>
+            <div class="role-card" data-role="school_admin" onclick="selectRole(this)">
+              <span class="role-soon">Tez orada</span>
+              <div class="role-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/><path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/></svg></div>
+              <h3>Maktab admini</h3>
+              <p>Maktab statistikasini boshqaring</p>
+            </div>
+          </div>
+          <button class="btn" id="roleNextBtn" onclick="roleNext()" disabled>Davom etish</button>
+          <div class="divider">yoki</div>
+          <p class="login-hint">Allaqachon hisobingiz bormi? <a class="link" href="/index.html">Kirish</a></p>
+        </div>
+        <div class="steps" id="progressSteps" style="display:none;">
+          <div class="step active" id="step1">
+            <div class="step-dot" id="dot1">1</div>
+            <div class="step-label">Telefon</div>
+          </div>
+          <div class="step-line" id="line1"></div>
+          <div class="step" id="step2">
+            <div class="step-dot" id="dot2">2</div>
+            <div class="step-label">Tasdiqlash</div>
+          </div>
+          <div class="step-line" id="line2"></div>
+          <div class="step" id="step3">
+            <div class="step-dot" id="dot3">3</div>
+            <div class="step-label">Profil</div>
+          </div>
+        </div>
+        <div class="stage" id="stage1">
+          <h2 class="card-title">Ro'yxatdan o'tish</h2>
+          <p class="subtitle">Telefon raqamingizni kiriting. Tasdiqlash kodi yuboriladi.</p>
+          <label>Telefon raqami</label>
+          <div class="phone-input">
+            <div class="phone-prefix"><span class="flag"></span> +998</div>
+            <input type="tel" id="phone" placeholder="90 123 45 67" />
+          </div>
+          <button class="btn" id="sendBtn" onclick="sendCode()">Kod yuborish ✈</button>
+          <div class="back-link">
+            <a class="link" onclick="backToRole()">← Rolni o'zgartirish</a>
+          </div>
+          <div class="divider">yoki</div>
+          <p class="login-hint">Allaqachon hisobingiz bormi? <a class="link" href="/index.html">Kirish</a></p>
+          <div class="safety-banner">
+            <div class="safety-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div class="safety-text">
+              <b>Telefon raqamingiz xavfsiz saqlanadi</b>
+              <span>Biz spam yubormaymiz va raqamingizni uchinchi shaxslarga bermaymiz.</span>
+            </div>
+          </div>
+        </div>
+        <div class="stage" id="stage2">
+          <h2 class="card-title">Tasdiqlash kodi</h2>
+          <p class="subtitle"><span id="phoneDisplay"></span> raqamiga yuborilgan 6 xonali kodni kiriting.</p>
+          <div class="otp-boxes">
+            <input type="text" maxlength="1" inputmode="numeric" class="otp" />
+            <input type="text" maxlength="1" inputmode="numeric" class="otp" />
+            <input type="text" maxlength="1" inputmode="numeric" class="otp" />
+            <input type="text" maxlength="1" inputmode="numeric" class="otp" />
+            <input type="text" maxlength="1" inputmode="numeric" class="otp" />
+            <input type="text" maxlength="1" inputmode="numeric" class="otp" />
+          </div>
+          <button class="btn" id="verifyBtn" onclick="verifyCode()">Tasdiqlash</button>
+          <div class="resend-box" id="resendBox">
+            Kod kelmadimi?
+            <a class="link" id="resendLink" onclick="resendCode()">Qayta yuborish</a>
+            <span id="resendTimer" class="muted"></span>
+          </div>
+          <div class="back-link">
+            <a class="link" onclick="goToStage(1)">← Telefonni o'zgartirish</a>
+          </div>
+        </div>
+        <div class="stage" id="stage3">
+          <h2 class="card-title">Profil ma'lumotlari</h2>
+          <p class="subtitle">Akkauntingizni yaratish uchun ma'lumotlarni to'ldiring.</p>
+          <div class="badge-wrap">
+            <div class="phone-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="vertical-align:middle"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> <span id="phoneConfirmed"></span> <span class="verified">✓ Tasdiqlangan</span>
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Ism</label>
+              <input type="text" id="firstName" placeholder="Ismingiz" />
+            </div>
+            <div>
+              <label>Familiya</label>
+              <input type="text" id="lastName" placeholder="Familiyangiz" />
+            </div>
+          </div>
+          <label>Tug'ilgan sana</label>
+          <div class="row">
+            <select id="bDay"><option value="">Kun</option></select>
+            <select id="bMonth"><option value="">Oy</option></select>
+            <select id="bYear"><option value="">Yil</option></select>
+          </div>
+          <label>Viloyat</label>
+          <select id="region" onchange="loadDistricts()"><option value="">Viloyatni tanlang</option></select>
+          <label>Tuman</label>
+          <select id="district"><option value="">Avval viloyatni tanlang</option></select>
+          <label>Maktab</label>
+          <select id="school" onchange="toggleCustomSchool()">
+            <option value="">Maktabni tanlang</option>
+          </select>
+
+          <div id="customSchoolBox" style="display:none;">
+            <label>Xususiy maktab nomi</label>
+            <input type="text" id="customSchool" placeholder="Maktab to'liq nomini yozing" />
+            <p class="terms-note" style="text-align:left; margin-top:8px;">
+              Bu maktab adminga tekshirish uchun yuboriladi.
+            </p>
+          </div>
+          <label>Parol</label>
+          <input type="password" id="password" placeholder="Parol yarating" />
+          <button class="btn" id="registerBtn" onclick="doRegister()">Ro'yxatdan o'tish ✈</button>
+          <p class="terms-note">
+            Ro'yxatdan o'tish orqali siz <a href="#">Maxfiylik siyosati</a> va
+            <a href="#">Foydalanish shartlariga</a> rozilik bildirgan bo'lasiz.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="site-footer">
+    <div id="copyright">© 2025 Knowledge Arena. Barcha huquqlar himoyalangan.</div>
+    <div class="footer-links">
+      <a href="#">Maxfiylik siyosati</a>
+      <a href="#">Foydalanish shartlari</a>
+    </div>
+    <div class="footer-social">
+      <span title="Telegram"><svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M21.94 4.66a1.5 1.5 0 0 0-1.56-.22L3.4 11.67c-1.18.5-1.13 2.2.08 2.62l4.3 1.48 1.62 5.05a1 1 0 0 0 1.64.4l2.32-2.18 4.3 3.16a1.5 1.5 0 0 0 2.36-.93l3-15a1.5 1.5 0 0 0-.58-1.6zM9.7 14.4l8.3-5.1-6.5 6a1 1 0 0 0-.3.6l-.3 2.2-1.2-3.7z"/></svg></span>
+      <span title="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></span>
+      <span title="YouTube"><svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M23 9.71a8.5 8.5 0 0 0-.91-4.13 2.92 2.92 0 0 0-1.72-1A78.36 78.36 0 0 0 12 4.27a78.45 78.45 0 0 0-8.34.3 2.87 2.87 0 0 0-1.46.74c-.9.83-1 2.25-1.1 3.45a48.29 48.29 0 0 0 0 6.48 9.55 9.55 0 0 0 .3 2 3.14 3.14 0 0 0 .71 1.36 2.86 2.86 0 0 0 1.49.78 45.18 45.18 0 0 0 6.5.33c3.5.05 6.57 0 10.2-.28a2.88 2.88 0 0 0 1.53-.78 2.49 2.49 0 0 0 .61-1 10.58 10.58 0 0 0 .52-3.4c.04-.56.04-3.94.04-4.94zM9.74 14.85V8.66l5.92 3.11c-1.66.92-3.85 1.96-5.92 3.08z"/></svg></span>
+    </div>
+  </footer>
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <div class="modal-icon error" id="modalIcon">⚠️</div>
+      <div class="modal-title" id="modalTitle">Xatolik</div>
+      <div class="modal-text" id="modalText"></div>
+      <button class="modal-btn" onclick="closeModal()">Tushunarli</button>
+    </div>
+  </div>
+  <script src="/api.js"></script>
+  <script>
+    const BRAND = {
+      brandName: "Knowledge Arena",
+      brandSlogan: "Learn. Battle. Rise.",
+      logoText: "KA",
+      logoPath: "images/logo-placeholder.png",
+      mascotPath: "images/mascot-placeholder.png"
+    };
+    document.getElementById("brandName").textContent = BRAND.brandName;
+    document.getElementById("brandSlogan").innerHTML = BRAND.brandSlogan;
+    document.getElementById("logoName").textContent = BRAND.brandName;
+    document.getElementById("logoMark").textContent = BRAND.logoText;
+    document.getElementById("mascotBadge").textContent = BRAND.logoText;
+    document.getElementById("copyright").textContent = "© 2025 " + BRAND.brandName + ". Barcha huquqlar himoyalangan.";
+
+    function showModal(text, type) {
+      const overlay = document.getElementById("modalOverlay");
+      const icon = document.getElementById("modalIcon");
+      const title = document.getElementById("modalTitle");
+      const textEl = document.getElementById("modalText");
+      if (type === "success") {
+        icon.className = "modal-icon success"; icon.textContent = "✓"; title.textContent = "Muvaffaqiyatli";
+      } else {
+        icon.className = "modal-icon error"; icon.textContent = "⚠️"; title.textContent = "Xatolik";
+      }
+      textEl.textContent = text;
+      overlay.classList.add("show");
+    }
+    function closeModal() { document.getElementById("modalOverlay").classList.remove("show"); }
+    document.getElementById("modalOverlay").addEventListener("click", (e) => {
+      if (e.target.id === "modalOverlay") closeModal();
+    });
+
+    let verifiedPhone = "";
+    let verifiedCode = "";
+    let selectedRole = "";
+    let resendInterval = null;
+
+    const REGIONS = {
+      "Toshkent shahri": ["Bektemir", "Chilonzor", "Mirobod", "Mirzo Ulug'bek", "Sergeli", "Shayxontohur", "Olmazor", "Uchtepa", "Yakkasaroy", "Yashnobod", "Yunusobod"],
+      "Toshkent viloyati": ["Angren", "Bekobod", "Chirchiq", "Ohangaron", "Olmaliq", "Yangiyo'l", "Bo'ka", "Qibray", "Zangiota"],
+      "Andijon": ["Andijon shahri", "Asaka", "Baliqchi", "Bo'ston", "Buloqboshi", "Izboskan", "Jalaquduq", "Marhamat", "Oltinko'l", "Paxtaobod", "Shahrixon", "Xo'jaobod"],
+      "Buxoro": ["Buxoro shahri", "G'ijduvon", "Kogon", "Olot", "Peshku", "Qorako'l", "Romitan", "Shofirkon", "Vobkent"],
+      "Farg'ona": ["Farg'ona shahri", "Beshariq", "Bog'dod", "Buvayda", "Dang'ara", "Furqat", "Quva", "Marg'ilon", "Qo'qon", "Rishton", "So'x", "Toshloq", "Uchko'prik", "O'zbekiston", "Yozyovon"],
+      "Jizzax": ["Jizzax shahri", "Arnasoy", "Baxmal", "Do'stlik", "Forish", "G'allaorol", "Mirzacho'l", "Paxtakor", "Yangiobod", "Zafarobod", "Zarbdor", "Zomin"],
+      "Xorazm": ["Urganch", "Bog'ot", "Gurlan", "Hazorasp", "Xonqa", "Xiva", "Qo'shko'pir", "Shovot", "Yangiariq", "Yangibozor"],
+      "Namangan": ["Namangan shahri", "Chortoq", "Chust", "Kosonsoy", "Mingbuloq", "Norin", "Pop", "To'raqo'rg'on", "Uchqo'rg'on", "Uychi", "Yangiqo'rg'on"],
+      "Navoiy": ["Navoiy shahri", "Karmana", "Konimex", "Navbahor", "Nurota", "Qiziltepa", "Tomdi", "Uchquduq", "Xatirchi", "Zarafshon"],
+      "Qashqadaryo": ["Qarshi", "Chiroqchi", "Dehqonobod", "G'uzor", "Kasbi", "Kitob", "Koson", "Mirishkor", "Muborak", "Nishon", "Qamashi", "Shahrisabz", "Yakkabog'"],
+      "Qoraqalpog'iston": ["Nukus", "Amudaryo", "Beruniy", "Chimboy", "Ellikqal'a", "Kegeyli", "Mo'ynoq", "Nukus tumani", "Qanliko'l", "Qo'ng'irot", "Qorao'zak", "Shumanay", "Taxtako'pir", "To'rtko'l", "Xo'jayli"],
+      "Samarqand": ["Samarqand shahri", "Bulung'ur", "Ishtixon", "Jomboy", "Kattaqo'rg'on", "Narpay", "Nurobod", "Oqdaryo", "Past darg'om", "Paxtachi", "Payariq", "Qo'shrabot", "Toyloq", "Urgut"],
+      "Sirdaryo": ["Guliston", "Boyovut", "Mirzaobod", "Oqoltin", "Sardoba", "Sayxunobod", "Sirdaryo tumani", "Xovos", "Yangiyer"],
+      "Surxondaryo": ["Termiz", "Angor", "Bandixon", "Boysun", "Denov", "Jarqo'rg'on", "Muzrabot", "Oltinsoy", "Qiziriq", "Qumqo'rg'on", "Sariosiyo", "Sherobod", "Sho'rchi", "Termiz tumani", "Uzun"]
+    };
+
+    (function fillDropdowns() {
+      const regionSel = document.getElementById("region");
+      Object.keys(REGIONS).forEach(r => {
+        const o = document.createElement("option"); o.value = r; o.textContent = r; regionSel.appendChild(o);
+      });
+      const daySel = document.getElementById("bDay");
+      for (let d = 1; d <= 31; d++) {
+        const o = document.createElement("option"); o.value = d; o.textContent = d; daySel.appendChild(o);
+      }
+      const months = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
+      const monthSel = document.getElementById("bMonth");
+      months.forEach((m, i) => {
+        const o = document.createElement("option"); o.value = i + 1; o.textContent = m; monthSel.appendChild(o);
+      });
+      const yearSel = document.getElementById("bYear");
+      const cy = new Date().getFullYear();
+      for (let y = cy - 5; y >= cy - 70; y--) {
+        const o = document.createElement("option"); o.value = y; o.textContent = y; yearSel.appendChild(o);
+      }
+
+      // Maktab raqamlari (1-350) + Boshqa
+      const schoolSel = document.getElementById("school");
+      for (let s = 1; s <= 350; s++) {
+        const o = document.createElement("option");
+        o.value = s + "-maktab";
+        o.textContent = s + "-maktab";
+        schoolSel.appendChild(o);
+      }
+      const otherOpt = document.createElement("option");
+      otherOpt.value = "__other__";
+      otherOpt.textContent = "Boshqa / Xususiy maktab";
+      schoolSel.appendChild(otherOpt);
+    })();
+
+    // "Boshqa" tanlanganda matn maydonini ko'rsatish/yashirish
+    function toggleCustomSchool() {
+      const sel = document.getElementById("school").value;
+      const box = document.getElementById("customSchoolBox");
+      box.style.display = (sel === "__other__") ? "block" : "none";
+    }
+
+    function loadDistricts() {
+      const region = document.getElementById("region").value;
+      const ds = document.getElementById("district");
+      ds.innerHTML = "";
+      if (!region) { ds.innerHTML = '<option value="">Avval viloyatni tanlang</option>'; return; }
+      ds.innerHTML = '<option value="">Tumanni tanlang</option>';
+      REGIONS[region].forEach(d => {
+        const o = document.createElement("option"); o.value = d; o.textContent = d; ds.appendChild(o);
+      });
+    }
+
+    function selectRole(card) {
+      document.querySelectorAll(".role-card").forEach(c => c.classList.remove("selected"));
+      card.classList.add("selected");
+      selectedRole = card.getAttribute("data-role");
+      document.getElementById("roleNextBtn").disabled = false;
+    }
+
+    function roleNext() {
+      if (!selectedRole) return;
+      document.getElementById("stage0").classList.remove("active");
+      document.getElementById("progressSteps").style.display = "flex";
+      goToStage(1);
+    }
+
+    function backToRole() {
+      document.querySelectorAll(".stage").forEach(s => s.classList.remove("active"));
+      document.getElementById("stage0").classList.add("active");
+      document.getElementById("progressSteps").style.display = "none";
+    }
+
+    function goToStage(n) {
+      document.querySelectorAll(".stage").forEach(s => s.classList.remove("active"));
+      document.getElementById("stage" + n).classList.add("active");
+      const step1 = document.getElementById("step1");
+      const step2 = document.getElementById("step2");
+      const step3 = document.getElementById("step3");
+      const line1 = document.getElementById("line1");
+      const line2 = document.getElementById("line2");
+      const dot1 = document.getElementById("dot1");
+      const dot2 = document.getElementById("dot2");
+      const dot3 = document.getElementById("dot3");
+      step1.className = "step"; step2.className = "step"; step3.className = "step";
+      line1.className = "step-line"; line2.className = "step-line";
+      dot1.textContent = "1"; dot2.textContent = "2"; dot3.textContent = "3";
+      if (n === 1) { step1.className = "step active"; }
+      if (n === 2) {
+        step1.className = "step done"; dot1.textContent = "✓"; line1.className = "step-line filled";
+        step2.className = "step active";
+      }
+      if (n === 3) {
+        step1.className = "step done"; dot1.textContent = "✓"; line1.className = "step-line filled";
+        step2.className = "step done"; dot2.textContent = "✓"; line2.className = "step-line filled";
+        step3.className = "step active";
+      }
+    }
+
+    async function sendCode() {
+      const phone = document.getElementById("phone").value.trim();
+      if (!phone || phone.length < 9) { return showModal("To'g'ri telefon raqamini kiriting", "error"); }
+      const btn = document.getElementById("sendBtn");
+      btn.disabled = true;
+      btn.textContent = "Yuborilmoqda...";
+      try {
+        const res = await fetch("/otp/send", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone })
+        });
+        const data = await res.json();
+        if (!res.ok) { showModal(data.error || "Xato", "error"); return; }
+        verifiedPhone = phone;
+        document.getElementById("phoneDisplay").textContent = phone;
+        document.getElementById("phoneConfirmed").textContent = phone;
+        goToStage(2);
+        startResendTimer();
+        document.querySelector(".otp").focus();
+      } catch (err) {
+        showModal("Server bilan aloqa yo'q. Internet aloqangizni tekshiring.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Kod yuborish ✈";
+      }
+    }
+
+    const otpInputs = document.querySelectorAll(".otp");
+    otpInputs.forEach((input, idx) => {
+      input.addEventListener("input", () => {
+        input.value = input.value.replace(/[^0-9]/g, "");
+        if (input.value && idx < otpInputs.length - 1) { otpInputs[idx + 1].focus(); }
+      });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Backspace" && !input.value && idx > 0) { otpInputs[idx - 1].focus(); }
+      });
+    });
+
+    function getOtpCode() {
+      let code = "";
+      otpInputs.forEach(i => code += i.value);
+      return code;
+    }
+
+    async function verifyCode() {
+      const code = getOtpCode();
+      if (code.length !== 6) { return showModal("6 xonali kodni to'liq kiriting", "error"); }
+      const btn = document.getElementById("verifyBtn");
+      btn.disabled = true;
+      btn.textContent = "Tekshirilmoqda...";
+      try {
+        const res = await fetch("/otp/verify", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: verifiedPhone, code })
+        });
+        const data = await res.json();
+        if (!res.ok) { showModal(data.error || "Kod noto'g'ri. Qayta urinib ko'ring.", "error"); return; }
+        verifiedCode = code;
+        goToStage(3);
+      } catch (err) {
+        showModal("Server bilan aloqa yo'q. Internet aloqangizni tekshiring.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Tasdiqlash";
+      }
+    }
+
+    function startResendTimer() {
+      let seconds = 60;
+      const link = document.getElementById("resendLink");
+      const timerSpan = document.getElementById("resendTimer");
+      const box = document.getElementById("resendBox");
+      link.style.pointerEvents = "none";
+      box.classList.add("disabled");
+      if (resendInterval) clearInterval(resendInterval);
+      timerSpan.textContent = " (" + seconds + "s)";
+      resendInterval = setInterval(() => {
+        seconds--;
+        timerSpan.textContent = " (" + seconds + "s)";
+        if (seconds <= 0) {
+          clearInterval(resendInterval);
+          timerSpan.textContent = "";
+          link.style.pointerEvents = "auto";
+          box.classList.remove("disabled");
+        }
+      }, 1000);
+    }
+
+    async function resendCode() {
+      try {
+        const res = await fetch("/otp/send", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: verifiedPhone })
+        });
+        const data = await res.json();
+        if (!res.ok) { showModal(data.error || "Xato", "error"); return; }
+        showModal("Yangi kod yuborildi", "success");
+        startResendTimer();
+      } catch (err) {
+        showModal("Server bilan aloqa yo'q. Internet aloqangizni tekshiring.", "error");
+      }
+    }
+
+    // Maktab qiymati: dropdown yoki xususiy matn
+    function getSchoolValue() {
+      const sel = document.getElementById("school").value;
+      if (sel === "__other__") {
+        return document.getElementById("customSchool").value.trim();
+      }
+      return sel;
+    }
+
+    async function doRegister() {
+      const day = document.getElementById("bDay").value;
+      const month = document.getElementById("bMonth").value;
+      const year = document.getElementById("bYear").value;
+      let birthDate = null;
+      if (day && month && year) {
+        birthDate = year + "-" + String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+      }
+      const data = {
+        first_name: document.getElementById("firstName").value,
+        last_name: document.getElementById("lastName").value,
+        birth_date: birthDate,
+        region: document.getElementById("region").value,
+        district: document.getElementById("district").value,
+        school: getSchoolValue(),
+        password: document.getElementById("password").value,
+        phone: verifiedPhone,
+        code: verifiedCode,
+        role: selectedRole
+      };
+      const required = [
+        { id: "firstName", val: data.first_name },
+        { id: "lastName", val: data.last_name },
+        { id: "bDay", val: day },
+        { id: "bMonth", val: month },
+        { id: "bYear", val: year },
+        { id: "region", val: data.region },
+        { id: "district", val: data.district },
+        { id: "school", val: data.school },
+        { id: "password", val: data.password }
+      ];
+      document.querySelectorAll(".invalid").forEach(el => el.classList.remove("invalid"));
+      let hasError = false;
+      required.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (!f.val || String(f.val).trim() === "") { el.classList.add("invalid"); hasError = true; }
+      });
+      if (hasError) { return showModal("Iltimos, barcha majburiy maydonlarni to'ldiring", "error"); }
+      const btn = document.getElementById("registerBtn");
+      btn.disabled = true;
+      btn.textContent = "Yaratilmoqda...";
+      try {
+        const res = await fetch("/register", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (!res.ok) { showModal(result.error || "Xato", "error"); return; }
+        localStorage.setItem("user", JSON.stringify(result.user));
+        if (result.token) localStorage.setItem("token", result.token);
+        // Rol bo'yicha yo'naltirish
+        if (result.user.role === "student") {
+          window.location.href = "/lobby.html";
+        } else {
+          window.location.href = "/dashboard.html";
+        }
+      } catch (err) {
+        showModal("Server bilan aloqa yo'q. Internet aloqangizni tekshiring.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Ro'yxatdan o'tish ✈";
+      }
+    }
+
+    document.querySelectorAll("#stage3 input, #stage3 select").forEach(el => {
+      el.addEventListener("input", () => el.classList.remove("invalid"));
+      el.addEventListener("change", () => el.classList.remove("invalid"));
+    });
+  </script>
+</body>
+</html>

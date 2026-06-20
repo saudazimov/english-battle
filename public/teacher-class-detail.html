@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sinf tafsiloti — Knowledge Arena</title>
+  <style>
+    :root {
+      --bg-main: #070b18;
+      --bg-card: #10172a;
+      --bg-input: #0b1322;
+      --bg-soft: #0e1526;
+      --bg-sidebar: #0a0f1f;
+      --border: #1e2a44;
+      --border-focus: #3b82f6;
+      --primary: #3b82f6;
+      --secondary: #8b5cf6;
+      --accent: #22d3ee;
+      --gold: #facc15;
+      --green: #22c55e;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-main); color: var(--text-main); min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+    .layout { display: flex; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 248px; flex: 0 0 248px; background: var(--bg-sidebar);
+      border-right: 1px solid var(--border); display: flex; flex-direction: column;
+      padding: 20px 14px; position: sticky; top: 0; height: 100vh;
+    }
+    .sidebar-logo { display: flex; align-items: center; gap: 11px; padding: 6px 8px 20px; }
+    .logo-mark {
+      width: 40px; height: 40px; border-radius: 11px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; color: #fff; box-shadow: 0 4px 14px rgba(59,130,246,0.4);
+    }
+    .logo-name { font-size: 17px; font-weight: 700; }
+    .nav { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px; padding: 11px 12px;
+      border-radius: var(--radius-sm); color: var(--text-muted);
+      font-size: 14.5px; font-weight: 500; cursor: pointer;
+      transition: background 0.15s, color 0.15s; position: relative;
+    }
+    .nav-item svg { width: 19px; height: 19px; flex: 0 0 auto; }
+    .nav-item:hover { background: var(--bg-soft); color: var(--text-main); }
+    .nav-item.active {
+      background: linear-gradient(95deg, rgba(59,130,246,0.18), rgba(139,92,246,0.12)); color: #fff;
+    }
+    .nav-item.active::before {
+      content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 22px; border-radius: 2px;
+      background: linear-gradient(var(--primary), var(--secondary));
+    }
+    .nav-item.soon { opacity: 0.6; }
+    .nav-soon-tag {
+      margin-left: auto; font-size: 9.5px; font-weight: 600; color: var(--gold);
+      background: var(--bg-soft); padding: 2px 6px; border-radius: 999px; border: 1px solid var(--border);
+    }
+    .sidebar-foot {
+      margin-top: auto; padding: 12px 8px 4px; border-top: 1px solid var(--border);
+      font-size: 12px; color: var(--text-dim);
+    }
+
+    /* MAIN */
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .topbar {
+      display: flex; align-items: center; gap: 18px; padding: 16px 28px;
+      border-bottom: 1px solid var(--border); position: sticky; top: 0;
+      background: rgba(7,11,24,0.85); backdrop-filter: blur(8px); z-index: 10;
+    }
+    .back-link {
+      display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      color: var(--text-muted); font-size: 14px; font-weight: 500; cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .back-link:hover { border-color: var(--border-focus); color: var(--text-main); }
+    .back-link svg { width: 16px; height: 16px; }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+    .profile { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px; color: #fff;
+    }
+    .profile-info { line-height: 1.3; }
+    .profile-name { font-size: 14px; font-weight: 600; }
+    .profile-role { font-size: 12px; color: var(--text-muted); }
+
+    .content { padding: 28px; }
+
+    /* SINF SARLAVHA + JOIN CODE (yonma-yon) */
+    .detail-top { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-bottom: 22px; }
+    @media (max-width: 920px) { .detail-top { grid-template-columns: 1fr; } }
+
+    .glass-card {
+      background: linear-gradient(160deg, rgba(16,23,42,0.95), rgba(14,21,38,0.85));
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 26px; backdrop-filter: blur(10px);
+    }
+    .class-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
+    .class-emblem {
+      width: 60px; height: 60px; border-radius: 16px; flex: 0 0 auto;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 22px; color: #fff;
+      box-shadow: 0 8px 24px rgba(59,130,246,0.4);
+    }
+    .class-title { font-size: 24px; font-weight: 800; line-height: 1.2; margin-bottom: 5px; word-break: break-word; }
+    .class-description { font-size: 14px; color: var(--text-muted); line-height: 1.5; word-break: break-word; }
+    .class-description.empty { color: var(--text-dim); font-style: italic; }
+    .class-stats { display: flex; gap: 28px; padding-top: 18px; border-top: 1px solid var(--border); }
+    .stat-block { display: flex; flex-direction: column; gap: 4px; }
+    .stat-block-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.4px; }
+    .stat-block-value { font-size: 22px; font-weight: 800; }
+    .stat-block-value svg { width: 18px; height: 18px; vertical-align: -2px; margin-right: 4px; color: var(--accent); }
+
+    /* JOIN CODE card */
+    .joincode-card {
+      background: linear-gradient(160deg, rgba(59,130,246,0.12), rgba(139,92,246,0.1));
+      border: 1px solid var(--border-focus); border-radius: var(--radius);
+      padding: 26px; display: flex; flex-direction: column; justify-content: center; text-align: center;
+    }
+    .joincode-label { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; }
+    .joincode-value {
+      font-size: 42px; font-weight: 800; letter-spacing: 8px; color: #fff;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace; margin-bottom: 18px;
+      text-shadow: 0 4px 20px rgba(59,130,246,0.5);
+    }
+    .joincode-copy {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      padding: 12px 24px; border: none; border-radius: var(--radius-sm);
+      background: linear-gradient(95deg, var(--primary), var(--secondary));
+      color: #fff; font-size: 14.5px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 8px 22px rgba(59,130,246,0.35); transition: opacity 0.15s;
+    }
+    .joincode-copy:hover { opacity: 0.93; }
+    .joincode-copy.copied { background: var(--green); }
+    .joincode-copy svg { width: 17px; height: 17px; }
+    .joincode-hint { font-size: 12px; color: var(--text-dim); margin-top: 12px; }
+
+    /* O'QUVCHILAR jadvali */
+    .section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .section-title { font-size: 18px; font-weight: 700; }
+    .section-count {
+      font-size: 13px; font-weight: 700; color: var(--accent);
+      background: rgba(34,211,238,0.1); padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border);
+    }
+
+    .table-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align: left; font-size: 12px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+      padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--bg-soft);
+    }
+    tbody td { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 14px; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--bg-soft); }
+    .student-cell { display: flex; align-items: center; gap: 12px; }
+    .student-avatar {
+      width: 38px; height: 38px; border-radius: 50%; flex: 0 0 auto;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; color: #fff;
+    }
+    .student-name { font-weight: 600; }
+    .level-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 7px;
+      background: rgba(139,92,246,0.15); color: #c4b5fd;
+      font-size: 12.5px; font-weight: 700; border: 1px solid var(--border);
+    }
+    .rating-val { font-weight: 700; color: var(--gold); }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px;
+      font-size: 12.5px; font-weight: 600;
+    }
+    .status-badge.active { background: rgba(34,197,94,0.12); color: #86efac; }
+    .status-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .muted-cell { color: var(--text-muted); }
+
+    /* HOLATLAR */
+    .state-box {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 56px 32px; text-align: center;
+    }
+    .state-icon {
+      width: 84px; height: 84px; margin: 0 auto 22px; border-radius: 24px;
+      background: var(--bg-soft); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+    }
+    .state-icon svg { width: 40px; height: 40px; }
+    .state-icon.error { color: var(--red); }
+    .state-box h2 { font-size: 21px; font-weight: 700; margin-bottom: 8px; }
+    .state-box p { font-size: 14.5px; color: var(--text-muted); max-width: 440px; margin: 0 auto 24px; line-height: 1.6; }
+    .state-btn {
+      display: inline-flex; align-items: center; gap: 9px; padding: 13px 24px; border: none;
+      border-radius: var(--radius-sm); background: linear-gradient(95deg, var(--primary), var(--secondary));
+      color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 8px 22px rgba(59,130,246,0.3); transition: opacity 0.15s;
+    }
+    .state-btn:hover { opacity: 0.93; }
+    .state-btn svg { width: 18px; height: 18px; }
+    .state-btn.ghost { background: var(--bg-soft); border: 1px solid var(--border); color: var(--text-main); box-shadow: none; }
+
+    /* skeleton */
+    .sk { background: var(--bg-soft); border-radius: 8px; position: relative; overflow: hidden; }
+    .sk::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { to { transform: translateX(100%); } }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 13px 20px; font-size: 14px; color: var(--text-main);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5); opacity: 0; pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s; z-index: 1100;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast svg { width: 18px; height: 18px; color: var(--green); }
+
+    @media (max-width: 860px) {
+      .sidebar { display: none; }
+      .profile-info { display: none; }
+    }
+    @media (max-width: 560px) {
+      .content { padding: 18px; }
+      .class-stats { gap: 18px; }
+      .joincode-value { font-size: 32px; letter-spacing: 5px; }
+      thead { display: none; }
+      tbody td { display: block; padding: 8px 16px; border: none; }
+      tbody tr { display: block; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">KA</div>
+        <div class="logo-name">Knowledge Arena</div>
+      </div>
+      <nav class="nav">
+        <a class="nav-item" href="/teacher.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Boshqaruv paneli
+        </a>
+        <a class="nav-item active" href="/teacher-classes.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Sinflar
+        </a>
+        <div class="nav-item soon" onclick="comingSoon('O\'quvchilar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          O'quvchilar <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Topshiriqlar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Topshiriqlar <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Testlar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          Testlar <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Savollar banki')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Savollar banki <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Hisobotlar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Hisobotlar <span class="nav-soon-tag">tez orada</span>
+        </div>
+        <div class="nav-item soon" onclick="comingSoon('Sozlamalar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Sozlamalar
+        </div>
+      </nav>
+      <div class="sidebar-foot">© 2025 Knowledge Arena</div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="topbar">
+        <a class="back-link" href="/teacher-classes.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Sinflarga qaytish
+        </a>
+        <div class="topbar-right">
+          <div class="profile">
+            <div class="avatar" id="avatar">T</div>
+            <div class="profile-info">
+              <div class="profile-name" id="profileName">O'qituvchi</div>
+              <div class="profile-role">O'qituvchi</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- LOADING -->
+        <div id="loadingState">
+          <div class="detail-top">
+            <div class="glass-card">
+              <div class="class-head">
+                <div class="sk" style="width:60px;height:60px;border-radius:16px"></div>
+                <div style="flex:1">
+                  <div class="sk" style="width:50%;height:22px;margin-bottom:10px"></div>
+                  <div class="sk" style="width:80%;height:14px"></div>
+                </div>
+              </div>
+              <div class="sk" style="width:100%;height:50px;margin-top:18px"></div>
+            </div>
+            <div class="glass-card"><div class="sk" style="width:100%;height:120px"></div></div>
+          </div>
+          <div class="sk" style="width:100%;height:200px;border-radius:16px"></div>
+        </div>
+
+        <!-- ASOSIY KONTENT -->
+        <div id="detailContent" style="display:none;">
+          <div class="detail-top">
+            <!-- Sinf ma'lumoti -->
+            <div class="glass-card">
+              <div class="class-head">
+                <div class="class-emblem" id="classEmblem">S</div>
+                <div style="min-width:0">
+                  <div class="class-title" id="className">—</div>
+                  <div class="class-description" id="classDesc">—</div>
+                </div>
+              </div>
+              <div class="class-stats">
+                <div class="stat-block">
+                  <span class="stat-block-label">O'quvchilar</span>
+                  <span class="stat-block-value">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span id="studentCount">0</span>
+                  </span>
+                </div>
+                <div class="stat-block">
+                  <span class="stat-block-label">Yaratilgan</span>
+                  <span class="stat-block-value" id="createdDate" style="font-size:16px">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Join code -->
+            <div class="joincode-card">
+              <div class="joincode-label">Qo'shilish kodi</div>
+              <div class="joincode-value" id="joinCode">——————</div>
+              <button class="joincode-copy" id="copyBtn" onclick="copyCode()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Kodni nusxalash
+              </button>
+              <div class="joincode-hint">Bu kodni o'quvchilarga yuboring</div>
+            </div>
+          </div>
+
+          <!-- O'quvchilar -->
+          <div class="section-head">
+            <span class="section-title">O'quvchilar</span>
+            <span class="section-count" id="sectionCount">0</span>
+          </div>
+
+          <!-- Jadval (o'quvchi bor bo'lsa) -->
+          <div class="table-card" id="studentsTable" style="display:none;">
+            <table>
+              <thead>
+                <tr>
+                  <th>O'quvchi</th>
+                  <th>Daraja</th>
+                  <th>Reyting</th>
+                  <th>Qo'shilgan</th>
+                  <th>Holat</th>
+                </tr>
+              </thead>
+              <tbody id="studentsBody"></tbody>
+            </table>
+          </div>
+
+          <!-- Bo'sh holat (o'quvchi yo'q) -->
+          <div class="state-box" id="emptyStudents" style="display:none;">
+            <div class="state-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            </div>
+            <h2>Hali o'quvchi qo'shilmagan</h2>
+            <p>Yuqoridagi qo'shilish kodini o'quvchilarga yuboring. Ular kod orqali sinfingizga qo'shiladi.</p>
+            <button class="state-btn" onclick="copyCode()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Kodni nusxalash
+            </button>
+          </div>
+        </div>
+
+        <!-- ERROR -->
+        <div class="state-box" id="errorState" style="display:none;">
+          <div class="state-icon error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h2 id="errorTitle">Xatolik yuz berdi</h2>
+          <p id="errorMsg">Sinf ma'lumotlarini yuklashda xatolik yuz berdi. Qayta urinib ko'ring.</p>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <button class="state-btn" onclick="loadDetail()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Qayta urinish
+            </button>
+            <button class="state-btn ghost" onclick="window.location.href='/teacher-classes.html'">
+              Sinflarga qaytish
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="toastText">Bajarildi</span>
+  </div>
+
+  <script src="/api.js"></script>
+  <script>
+    // Himoya
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = userData ? JSON.parse(userData) : {};
+    if (user.role && user.role !== "teacher" && user.role !== "school_admin") {
+      window.location.href = "/lobby.html";
+    }
+    const fname = user.first_name || "O'qituvchi";
+    document.getElementById("profileName").textContent = fname;
+    document.getElementById("avatar").textContent = (fname[0] || "T").toUpperCase();
+
+    let currentJoinCode = "";
+
+    // URL'dan id olamiz
+    const params = new URLSearchParams(window.location.search);
+    const classId = params.get("id");
+
+    // Toast
+    let toastTimer = null;
+    function showToast(text) {
+      const t = document.getElementById("toast");
+      document.getElementById("toastText").textContent = text;
+      t.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+    }
+    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada"); }
+
+    function showState(state) {
+      document.getElementById("loadingState").style.display = state === "loading" ? "block" : "none";
+      document.getElementById("detailContent").style.display = state === "content" ? "block" : "none";
+      document.getElementById("errorState").style.display = state === "error" ? "block" : "none";
+    }
+
+    function showError(title, msg) {
+      document.getElementById("errorTitle").textContent = title || "Xatolik yuz berdi";
+      document.getElementById("errorMsg").textContent = msg || "Sinf ma'lumotlarini yuklashda xatolik yuz berdi.";
+      showState("error");
+    }
+
+    function formatDate(iso) {
+      if (!iso) return "—";
+      const d = new Date(iso);
+      return d.toLocaleDateString("uz-UZ", { day: "numeric", month: "short", year: "numeric" });
+    }
+    function esc(s) {
+      return String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+    }
+
+    // Kod nusxalash
+    function copyCode() {
+      if (!currentJoinCode) return;
+      navigator.clipboard.writeText(currentJoinCode).then(() => {
+        const btn = document.getElementById("copyBtn");
+        btn.classList.add("copied");
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Nusxalandi';
+        showToast("Kod nusxalandi: " + currentJoinCode);
+        setTimeout(() => { btn.classList.remove("copied"); btn.innerHTML = orig; }, 1800);
+      }).catch(() => showToast("Nusxalab bo'lmadi"));
+    }
+
+    // Ma'lumotni yuklash
+    async function loadDetail() {
+      // id yo'q bo'lsa — xato
+      if (!classId) {
+        showError("Sinf topilmadi", "Sinf ID ko'rsatilmagan. Sinflar ro'yxatidan sinfni tanlang.");
+        return;
+      }
+
+      showState("loading");
+      try {
+        const res = await authFetch("/teacher/classes/" + encodeURIComponent(classId) + "/students");
+        if (!res.ok) {
+          if (res.status === 403) { window.location.href = "/lobby.html"; return; }
+          if (res.status === 404) {
+            showError("Sinf topilmadi", "Bu sinf mavjud emas yoki sizga tegishli emas.");
+            return;
+          }
+          throw new Error("xato");
+        }
+        const data = await res.json();
+        renderDetail(data);
+      } catch (err) {
+        showError("Xatolik yuz berdi", "Sinf ma'lumotlarini yuklashda xatolik yuz berdi. Internet aloqangizni tekshiring.");
+      }
+    }
+
+    function renderDetail(data) {
+      const cls = data.class || {};
+      const students = data.students || [];
+
+      // Sinf ma'lumoti
+      const name = cls.name || "Sinf";
+      document.getElementById("className").textContent = name;
+      document.getElementById("classEmblem").textContent = name.trim().substring(0, 2).toUpperCase();
+
+      const descEl = document.getElementById("classDesc");
+      if (cls.description) {
+        descEl.textContent = cls.description;
+        descEl.classList.remove("empty");
+      } else {
+        descEl.textContent = "Tavsif kiritilmagan";
+        descEl.classList.add("empty");
+      }
+
+      document.getElementById("createdDate").textContent = formatDate(cls.created_at);
+      document.getElementById("studentCount").textContent = students.length;
+      document.getElementById("sectionCount").textContent = students.length;
+
+      // Join code
+      currentJoinCode = cls.join_code || "";
+      document.getElementById("joinCode").textContent = currentJoinCode || "——————";
+
+      // O'quvchilar
+      if (students.length === 0) {
+        document.getElementById("studentsTable").style.display = "none";
+        document.getElementById("emptyStudents").style.display = "block";
+      } else {
+        document.getElementById("emptyStudents").style.display = "none";
+        document.getElementById("studentsTable").style.display = "block";
+        const body = document.getElementById("studentsBody");
+        body.innerHTML = students.map(s => {
+          const fullName = esc((s.first_name || "") + " " + (s.last_name || "")).trim() || "Noma'lum";
+          const initials = esc(((s.first_name || "S")[0] || "S")).toUpperCase();
+          const level = esc(s.cefr_level || "A1");
+          const rating = (s.rating != null) ? s.rating : "—";
+          return `
+            <tr>
+              <td>
+                <div class="student-cell">
+                  <div class="student-avatar">${initials}</div>
+                  <span class="student-name">${fullName}</span>
+                </div>
+              </td>
+              <td><span class="level-badge">${level}</span></td>
+              <td><span class="rating-val">${rating}</span></td>
+              <td class="muted-cell">${formatDate(s.joined_at)}</td>
+              <td><span class="status-badge active"><span class="dot"></span>Faol</span></td>
+            </tr>`;
+        }).join("");
+      }
+
+      showState("content");
+    }
+
+    loadDetail();
+  </script>
+</body>
+</html>

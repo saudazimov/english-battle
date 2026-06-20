@@ -27,7 +27,8 @@ body {
     var(--bg);
   color: var(--text);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
+  height: 100vh;
 }
 
 /* ===== APP LAYOUT (sidebar + kontent) ===== */
@@ -38,7 +39,8 @@ body {
   max-width: 1500px;
   margin: 0 auto;
   padding: 20px;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* ===== SIDEBAR ===== */
@@ -111,4 +113,118 @@ body {
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; }
   .sidebar { display: none; }
+}
+
+/* ===== STICKY LAYOUT — chekka panellar qotadi, faqat o'rta scroll ===== */
+/* Chap sidebar: joyida qotadi, kerak bo'lsa o'zi ichida scroll */
+.sidebar {
+  height: 100%;
+  overflow-y: auto;
+}
+/* O'ng panel: joyida qotadi, kerak bo'lsa o'zi ichida scroll */
+.rightbar {
+  height: 100%;
+  overflow-y: auto;
+}
+/* O'rta kontent ustunlari: faqat shular scroll bo'ladi */
+.main,
+.content {
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* ===== SCROLLBAR'NI YASHIRISH (scroll ishlайveradi) ===== */
+.sidebar::-webkit-scrollbar,
+.rightbar::-webkit-scrollbar,
+.main::-webkit-scrollbar,
+.content::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.sidebar,
+.rightbar,
+.main,
+.content {
+  scrollbar-width: none;        /* Firefox uchun */
+  -ms-overflow-style: none;     /* Eski Edge uchun */
+}
+
+/* ===== LOGOUT TASDIQ MODALI ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 6, 15, 0.7);
+  backdrop-filter: blur(4px);
+  display: none;            /* odatda yashirin */
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-overlay.show {
+  display: flex;            /* .show qo'shilganda ko'rinadi */
+}
+.modal-box {
+  background: linear-gradient(180deg, var(--panel), var(--bg-2));
+  border: 1px solid var(--border-bright);
+  border-radius: 18px;
+  padding: 28px;
+  width: 90%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(248, 113, 113, 0.15);
+  display: grid;
+  place-items: center;
+  margin: 0 auto 16px;
+}
+.modal-icon i {
+  width: 28px;
+  height: 28px;
+  color: var(--red);
+}
+.modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.modal-text {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 24px;
+}
+.modal-actions {
+  display: flex;
+  gap: 12px;
+}
+.modal-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.modal-btn-cancel {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.modal-btn-cancel:hover {
+  background: var(--panel);
+}
+.modal-btn-confirm {
+  background: linear-gradient(135deg, var(--red), #dc2626);
+  color: #fff;
+}
+.modal-btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(248, 113, 113, 0.4);
 }

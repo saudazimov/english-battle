@@ -471,7 +471,8 @@
     </aside>
 
   </div>
-
+  
+  <script src="/api.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/sidebar.js"></script>
   <script>
@@ -547,7 +548,7 @@
 
     // Profil endpoint'dan to'liq ma'lumot (viewUserId - o'zim yoki boshqa odam)
     let profileData = null;
-    fetch("/profile/" + viewUserId)
+    authFetch("/profile/" + viewUserId)
       .then(r => r.json())
       .then(data => {
         profileData = data;
@@ -626,7 +627,7 @@
     async function loadHistory() {
       const list = document.getElementById("histList");
       try {
-        const res = await fetch("/history/" + viewUserId);
+        const res = await authFetch("/history/" + viewUserId);
         const data = await res.json();
         const battles = data.battles || data.history || [];
 
@@ -703,7 +704,7 @@
     }
 
     // Personal Records (haqiqiy)
-    fetch("/profile/" + viewUserId)
+    authFetch("/profile/" + viewUserId)
       .then(r => r.json())
       .then(data => {
         if (data.user) document.getElementById("prStreak").textContent = data.user.longest_streak || 0;
@@ -726,7 +727,7 @@
       formData.append("picture", file);
 
       try {
-        const res = await fetch("/profile/" + user.id + "/picture", {
+        const res = await authFetch("/profile/" + user.id + "/picture", {
           method: "POST",
           body: formData,
         });
@@ -737,6 +738,7 @@
           // localStorage'даги user'ni ham yangilash
           user.profile_picture = data.profile_picture;
           localStorage.setItem("user", JSON.stringify(user));
+          location.reload();
         } else {
           alert(data.error || "Rasm yuklab bo'lmadi");
         }

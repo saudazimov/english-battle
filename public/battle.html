@@ -123,18 +123,175 @@
     .lp-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 4px; transition: width 0.8s ease; width: 0; }
     .lp-rp { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 8px; }
 
+    /* ===== MATCHMAKING DIZAYNI ===== */
+    .mm-card { padding: 48px 40px; text-align: center; }
+
+    /* Radar (qidirilmoqda) */
+    .mm-radar {
+      position: relative; width: 150px; height: 150px;
+      margin: 0 auto 26px; display: grid; place-items: center;
+    }
+    .mm-radar-ring {
+      position: absolute; inset: 0;
+      border: 2px solid var(--accent); border-radius: 50%;
+      animation: mmPulse 2s ease-out infinite;
+    }
+    .mm-radar-ring.r2 { animation-delay: 1s; }
+    @keyframes mmPulse {
+      0% { transform: scale(0.4); opacity: 0.8; }
+      100% { transform: scale(1); opacity: 0; }
+    }
+    .mm-radar-core {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center;
+      box-shadow: 0 0 40px rgba(91,140,255,0.6); z-index: 1;
+    }
+    .mm-radar-core i { width: 34px; height: 34px; color: #fff; }
+
+    .mm-title {
+      font-size: 26px; font-weight: 800; margin-bottom: 8px;
+      background: linear-gradient(135deg, #fff, #a5b4fc);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .mm-sub { font-size: 14px; color: var(--text-dim); margin-bottom: 22px; }
+
+    /* Mode / Level / Rating qutilari */
+    .mm-info {
+      display: flex; justify-content: center; gap: 12px; margin-bottom: 22px;
+    }
+    .mm-info-item {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 18px; min-width: 90px;
+    }
+    .mm-info-lbl {
+      font-size: 11px; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;
+    }
+    .mm-info-val { font-size: 15px; font-weight: 700; color: var(--cyan); }
+
+    .mm-timer {
+      font-size: 22px; font-weight: 700; color: var(--cyan);
+      font-variant-numeric: tabular-nums; margin-bottom: 24px;
+    }
+    .mm-cancel {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 28px; border-radius: 12px; cursor: pointer;
+      background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.4);
+      color: var(--red); font-size: 15px; font-weight: 600; font-family: inherit;
+      transition: all 0.2s;
+    }
+    .mm-cancel:hover { background: rgba(248,113,113,0.22); }
+    .mm-cancel i { width: 16px; height: 16px; }
+
+    /* Raqib topildi */
+    .mm-found-title {
+      font-size: 28px; font-weight: 800; margin-bottom: 28px; color: var(--green);
+      animation: mmPop 0.4s ease-out;
+    }
+    @keyframes mmPop {
+      0% { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .mm-vs {
+      display: flex; align-items: center; justify-content: center; gap: 24px;
+      margin-bottom: 28px;
+    }
+    .mm-player { text-align: center; }
+    .mm-ava {
+      width: 90px; height: 90px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center; font-size: 36px; font-weight: 800; color: #fff;
+      margin: 0 auto 12px; overflow: hidden;
+      border: 3px solid rgba(120,150,255,0.4);
+      box-shadow: 0 0 30px rgba(91,140,255,0.4);
+    }
+    .mm-ava img { width: 100%; height: 100%; object-fit: cover; }
+    .mm-ava-opp {
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      border-color: rgba(248,113,113,0.4);
+      box-shadow: 0 0 30px rgba(248,113,113,0.4);
+      animation: mmSlideIn 0.5s ease-out;
+    }
+    @keyframes mmSlideIn {
+      0% { transform: translateX(40px); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+    .mm-pname { font-size: 17px; font-weight: 700; }
+    .mm-plevel { font-size: 13px; color: var(--text-dim); margin-top: 3px; }
+    .mm-opp-meta { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+    .mm-league { font-size: 13px; color: var(--cyan); font-weight: 600; }
+    .mm-rating { font-size: 12px; color: var(--text-dim); }
+    .mm-vs-badge {
+      font-size: 24px; font-weight: 900; color: var(--gold);
+      text-shadow: 0 0 20px rgba(251,191,36,0.6);
+    }
+    .mm-countdown {
+      font-size: 64px; font-weight: 900; line-height: 1;
+      color: var(--cyan); margin-bottom: 8px;
+      text-shadow:
+
   </style>
 </head>
 <body>
   <div class="battle-wrap">
 
-    <!-- QIDIRISH -->
+    <!-- QIDIRISH / RAQIB TOPILDI -->
     <div class="screen active" id="searchScreen">
-      <div class="card search-card">
-        <h2 id="searchTitle">Raqib qidirilmoqda</h2>
-        <div class="spinner"></div>
-        <p class="sub pulse" id="searchText">Sizga teng raqib izlanmoqda...</p>
-        <button class="btn btn-ghost" style="margin-top:24px;" onclick="goLobby()">Bekor qilish</button>
+      <div class="card mm-card">
+
+        <!-- HOLAT 1: QIDIRILMOQDA -->
+        <div id="mmSearching">
+          <div class="mm-radar">
+            <div class="mm-radar-ring"></div>
+            <div class="mm-radar-ring r2"></div>
+            <div class="mm-radar-core"><i data-lucide="swords"></i></div>
+          </div>
+          <h2 class="mm-title">Raqib qidirilmoqda...</h2>
+          <p class="mm-sub" id="searchText">Sizga mos level va ratingdagi o'yinchi qidirilyapti.</p>
+          <div class="mm-info">
+            <div class="mm-info-item">
+              <div class="mm-info-lbl">Rejim</div>
+              <div class="mm-info-val">1v1 Ranked</div>
+            </div>
+            <div class="mm-info-item">
+              <div class="mm-info-lbl">Level</div>
+              <div class="mm-info-val" id="mmMyLevel">A1</div>
+            </div>
+            <div class="mm-info-item">
+              <div class="mm-info-lbl">Rating</div>
+              <div class="mm-info-val" id="mmRange">900-1100</div>
+            </div>
+          </div>
+          <div class="mm-timer" id="mmTimer">00:00</div>
+          <button class="mm-cancel" onclick="goLobby()">
+            <i data-lucide="x"></i> Cancel Search
+          </button>
+        </div>
+
+        <!-- HOLAT 2: RAQIB TOPILDI -->
+        <div id="mmFound" style="display:none;">
+          <div class="mm-found-title">Raqib topildi!</div>
+          <div class="mm-vs">
+            <div class="mm-player">
+              <div class="mm-ava" id="mmMyAva">S</div>
+              <div class="mm-pname" id="mmMyName">Siz</div>
+              <div class="mm-plevel" id="mmMyLevel2">A1</div>
+            </div>
+            <div class="mm-vs-badge">VS</div>
+            <div class="mm-player">
+              <div class="mm-ava mm-ava-opp" id="mmOppAva">R</div>
+              <div class="mm-pname" id="mmOppName">Raqib</div>
+              <div class="mm-opp-meta">
+                <span class="mm-league" id="mmOppLeague">Silver</span>
+                <span class="mm-rating" id="mmOppRating">1000 RP</span>
+              </div>
+            </div>
+          </div>
+          <div class="mm-countdown" id="mmCountdown">3</div>
+          <div class="mm-sub">Jang boshlanmoqda...</div>
+        </div>
+
       </div>
     </div>
 
@@ -251,6 +408,34 @@
       lucide.createIcons();
     }
 
+    // Qidirish sekundomeri
+    let mmTimerInterval = null;
+    function startMmTimer() {
+      let sec = 0;
+      const el = document.getElementById("mmTimer");
+      if (mmTimerInterval) clearInterval(mmTimerInterval);
+      mmTimerInterval = setInterval(() => {
+        sec++;
+        const m = String(Math.floor(sec / 60)).padStart(2, "0");
+        const s = String(sec % 60).padStart(2, "0");
+        if (el) el.textContent = m + ":" + s;
+      }, 1000);
+    }
+    function stopMmTimer() {
+      if (mmTimerInterval) clearInterval(mmTimerInterval);
+    }
+
+    // Reytingdan liga nomini aniqlash (taxminiy ko'rsatish uchun)
+    function leagueFromRating(r) {
+      if (r >= 2000) return "Grandmaster";
+      if (r >= 1800) return "Master";
+      if (r >= 1600) return "Diamond";
+      if (r >= 1400) return "Platinum";
+      if (r >= 1200) return "Gold";
+      if (r >= 1000) return "Silver";
+      return "Bronze";
+    }
+
     // URL'da room bo'lsa - bu do'st jangi (findMatch chaqirmaymiz)
     const urlParams = new URLSearchParams(window.location.search);
     const friendRoom = urlParams.get("room");
@@ -258,6 +443,18 @@
 
     socket.on("connect", () => {
       socket.emit("registerUser", user.id);
+
+      // Qidirish ekranidagi level va rating oralig'ini to'ldiramiz
+      const myLevel = user.cefr_level || "A1";
+      const myRating = user.rating || 1000;
+      const elLvl = document.getElementById("mmMyLevel");
+      const elRange = document.getElementById("mmRange");
+      if (elLvl) elLvl.textContent = myLevel;
+      if (elRange) elRange.textContent = (myRating - 100) + "-" + (myRating + 100);
+
+      // Sekundomerni boshlaymiz
+      startMmTimer();
+
       if (friendRoom) {
         // Do'st jangi - findMatch chaqirmaymiz, "tayyorman" deymiz
         currentRoom = friendRoom;
@@ -280,10 +477,44 @@
 
     socket.on("matchFound", (data) => {
       currentRoom = data.roomId;
-      document.getElementById("searchTitle").textContent = "Raqib topildi!";
-      document.getElementById("searchText").textContent = data.opponent.name + " bilan jang boshlanmoqda...";
-      document.getElementById("oppName").textContent = data.opponent.name;
-      document.getElementById("oppAva").innerHTML = avatarHTML(data.opponent.name, data.opponent.profile_picture);
+      stopMmTimer();
+
+      const oppName = data.opponent.name || "Raqib";
+      const oppPicture = data.opponent.profile_picture || null;
+      // Raqib reytingi serverda yo'q — taxminiy o'zimizникига yaqin ko'rsatamiz
+      const oppRating = data.opponent.rating || (user.rating || 1000);
+
+      // Jang ekrani uchun ham raqib ma'lumotini oldindan to'ldiramiz
+      document.getElementById("oppName").textContent = oppName;
+      document.getElementById("oppAva").innerHTML = avatarHTML(oppName, oppPicture);
+
+      // "Raqib topildi" kartasini to'ldiramiz
+      document.getElementById("mmMyAva").innerHTML = avatarHTML(user.first_name, user.profile_picture);
+      document.getElementById("mmMyName").textContent = user.first_name || "Siz";
+      document.getElementById("mmMyLevel2").textContent = user.cefr_level || "A1";
+
+      document.getElementById("mmOppAva").innerHTML = avatarHTML(oppName, oppPicture);
+      document.getElementById("mmOppName").textContent = oppName;
+      document.getElementById("mmOppLeague").textContent = leagueFromRating(oppRating);
+      document.getElementById("mmOppRating").textContent = oppRating + " RP";
+
+      // Searching → Found
+      document.getElementById("mmSearching").style.display = "none";
+      document.getElementById("mmFound").style.display = "block";
+      lucide.createIcons();
+
+      // Countdown 3..2..1 (battleStart kelguncha vizual)
+      let count = 3;
+      document.getElementById("mmCountdown").textContent = count;
+      const cd = setInterval(() => {
+        count--;
+        if (count >= 1) {
+          document.getElementById("mmCountdown").textContent = count;
+        } else {
+          clearInterval(cd);
+          document.getElementById("mmCountdown").textContent = "GO!";
+        }
+      }, 1000);
     });
 
     let myPic = null, oppPic = null, oppNameGlobal = "Raqib", oppIdGlobal = null, myNameGlobal = "", levelGlobal = "A1";

@@ -156,6 +156,7 @@
     </aside>
   </div>
 
+  <script src="/api.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/sidebar.js"></script>
@@ -177,7 +178,7 @@
     async function loadExamHub() {
       let status = null;
       try {
-        const res = await fetch("/exam/status/" + user.id);
+        const res = await authFetch("/exam/status/" + user.id);
         status = await res.json();
       } catch (err) {}
 

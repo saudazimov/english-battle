@@ -564,6 +564,7 @@
 
   </div>
 
+  <script src="/api.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/sidebar.js"></script>
@@ -656,7 +657,7 @@
 
     async function loadProfileModal(userId) {
       try {
-        const res = await fetch("/profile/" + userId);
+        const res = await authFetch("/profile/" + userId);
         const data = await res.json();
         renderFpCard(data);
         renderFpAbout(data);
@@ -760,7 +761,7 @@
         '<div class="fp-block-title"><i data-lucide="swords"></i> Recent Battle History</div>' +
         '<div id="fpHistList"><div style="text-align:center;color:var(--text-faint);padding:20px;font-size:13px;">Yuklanmoqda...</div></div>';
       try {
-        const res = await fetch("/history/" + userId);
+        const res = await authFetch("/history/" + userId);
         const data = await res.json();
         const battles = data.battles || data.history || [];
         const list = document.getElementById("fpHistList");
@@ -953,7 +954,7 @@
     async function loadFriends() {
       const list = document.getElementById("friendsList");
       try {
-        const res = await fetch("/friends/" + user.id);
+        const res = await authFetch("/friends/" + user.id);
         const data = await res.json();
         const friends = data.friends || [];
         document.getElementById("flCount").textContent = "(" + friends.length + ")";
@@ -996,7 +997,7 @@
     async function loadRequests() {
       const list = document.getElementById("requestsList");
       try {
-        const res = await fetch("/friends/requests/" + user.id);
+        const res = await authFetch("/friends/requests/" + user.id);
         const data = await res.json();
         const requests = data.requests || [];
         updateReqBadge(requests.length);
@@ -1033,7 +1034,7 @@
 
     async function respond(friendshipId, action, btn) {
       try {
-        await fetch("/friends/respond", {
+        await authFetch("/friends/respond", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ friendshipId: friendshipId, action: action }),
         });
@@ -1051,7 +1052,7 @@
       if (!q.trim()) { results.innerHTML = ""; return; }
       results.innerHTML = '<div class="fl-empty">Qidirilyapti...</div>';
       try {
-        const res = await fetch("/friends/search?q=" + encodeURIComponent(q) + "&userId=" + user.id);
+        const res = await authFetch("/friends/search?q=" + encodeURIComponent(q) + "&userId=" + user.id);
         const data = await res.json();
         const found = data.results || [];
         if (found.length === 0) {
@@ -1090,7 +1091,7 @@
     async function loadSuggested() {
       const list = document.getElementById("suggestedList");
       try {
-        const res = await fetch("/friends/suggested/" + user.id);
+        const res = await authFetch("/friends/suggested/" + user.id);
         const data = await res.json();
         const suggested = data.suggested || [];
         if (suggested.length === 0) {
@@ -1117,7 +1118,7 @@
 
     async function sendRequest(receiverId, btn) {
       try {
-        const res = await fetch("/friends/request", {
+        const res = await authFetch("/friends/request", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ requesterId: user.id, receiverId: receiverId }),
         });
@@ -1134,7 +1135,7 @@
     // ===== O'NG PANEL =====
     async function loadRightbar() {
       try {
-        const res = await fetch("/friends/" + user.id);
+        const res = await authFetch("/friends/" + user.id);
         const data = await res.json();
         const friends = data.friends || [];
 
@@ -1145,7 +1146,7 @@
 
         // Wins vs Friends
         try {
-          const winsRes = await fetch("/friends/wins/" + user.id);
+          const winsRes = await authFetch("/friends/wins/" + user.id);
           const winsData = await winsRes.json();
           document.getElementById("fsWins").textContent = winsData.wins || 0;
         } catch (e) {}
@@ -1188,7 +1189,7 @@
     async function loadActivity() {
       const box = document.getElementById("activityList");
       try {
-        const res = await fetch("/friends/activity/" + user.id);
+        const res = await authFetch("/friends/activity/" + user.id);
         const data = await res.json();
         const acts = data.activities || [];
         if (acts.length === 0) {
@@ -1231,7 +1232,7 @@
     // Pending so'rovlar soni
     async function loadPendingCount() {
       try {
-        const res = await fetch("/friends/requests/" + user.id);
+        const res = await authFetch("/friends/requests/" + user.id);
         const data = await res.json();
         document.getElementById("fsRequests").textContent = (data.requests || []).length;
       } catch (err) {}
@@ -1252,7 +1253,7 @@
     async function confirmRemove(friendId) {
       hideOverlay();
       try {
-        const res = await fetch("/friends/remove", {
+        const res = await authFetch("/friends/remove", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: user.id, friendId: friendId }),
         });

@@ -38,7 +38,51 @@ function renderSidebar(activePage) {
   }
 }
 
+// Chiqish tugmasi bosilganda — to'g'ridan-to'g'ri chiqarmaymiz, modal ko'rsatamiz
 function sidebarLogout() {
+  showLogoutModal();
+}
+
+// Tasdiq modalini ko'rsatish (agar hali sahifada bo'lmasa, yaratamiz)
+function showLogoutModal() {
+  let overlay = document.getElementById("logoutModal");
+
+  // Modal hali yaratilmagan bo'lsa — bir marta yaratamiz
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "logoutModal";
+    overlay.className = "modal-overlay";
+    overlay.innerHTML =
+      '<div class="modal-box">' +
+        '<div class="modal-icon"><i data-lucide="log-out"></i></div>' +
+        '<div class="modal-title">Hisobdan chiqmoqchimisiz?</div>' +
+        '<div class="modal-text">Qaytadan kirish uchun login va parolingiz kerak bo\'ladi.</div>' +
+        '<div class="modal-actions">' +
+          '<button class="modal-btn modal-btn-cancel" onclick="closeLogoutModal()">Bekor qilish</button>' +
+          '<button class="modal-btn modal-btn-confirm" onclick="doLogout()">Chiqish</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    // Tashqi qora joyga bosilsa ham yopilsin
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) closeLogoutModal();
+    });
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  overlay.classList.add("show");
+}
+
+// Modalni yopish (bekor qilish)
+function closeLogoutModal() {
+  const overlay = document.getElementById("logoutModal");
+  if (overlay) overlay.classList.remove("show");
+}
+
+// Haqiqiy chiqish
+function doLogout() {
   localStorage.removeItem("user");
   window.location.href = "/index.html";
 }
