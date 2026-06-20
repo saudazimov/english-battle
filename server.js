@@ -635,6 +635,21 @@ async function startBattle(roomId, player1, player2) {
 io.on("connection", (socket) => {
   console.log("Socket connected:", socket.id);
 
+  // === SINF KUZATUVI (o'qituvchi class detail sahifasini ochganda) ===
+  // O'qituvchi sinfni "kuzatishni" boshlaydi — shu sinf room'iga qo'shiladi.
+  // Yangi o'quvchi qo'shilganda, faqat shu room'dagilar darhol xabar oladi.
+  socket.on("watchClass", (classId) => {
+    if (classId == null) return;
+    const room = "class_" + String(classId);
+    socket.join(room);
+  });
+  // Sahifadan chiqqanda kuzatishni to'xtatadi
+  socket.on("unwatchClass", (classId) => {
+    if (classId == null) return;
+    const room = "class_" + String(classId);
+    socket.leave(room);
+  });
+
   // User online registration
   socket.on("registerUser", async (userId) => {
     if (!userId) {
@@ -2563,6 +2578,8 @@ app.post("/student/join-class", authMiddleware, requireStudent, async (req, res)
           "UPDATE class_students SET status = 'active', joined_at = NOW() WHERE id = $1",
           [existing.rows[0].id]
         );
+        // Real-time: qayta qo'shilish ham o'qituvchiga ko'rinadi
+        io.to("class_" + String(cls.id)).emit("classStudentJoined", { classId: cls.id });
         return res.json({ message: "Sinfga qayta qo'shildingiz", class: { id: cls.id, name: cls.name } });
       }
       return res.status(409).json({ error: "Siz allaqachon bu sinf a'zosisiz" });
@@ -2573,6 +2590,9 @@ app.post("/student/join-class", authMiddleware, requireStudent, async (req, res)
       "INSERT INTO class_students (class_id, student_id, status) VALUES ($1, $2, 'active')",
       [cls.id, studentId]
     );
+
+    // Real-time: shu sinfni kuzatayotgan o'qituvchiga darhol xabar
+    io.to("class_" + String(cls.id)).emit("classStudentJoined", { classId: cls.id });
 
     res.status(201).json({
       message: "Sinfga muvaffaqiyatli qo'shildingiz",
@@ -2621,6 +2641,49 @@ app.get("/teacher/classes/:classId/students", authMiddleware, requireTeacher, as
     });
   } catch (err) {
     console.error("Sinf o'quvchilari xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// O'QUVCHINI SINFDAN OLIB TASHLASH (yumshoq: status='removed')
+app.delete("/teacher/classes/:classId/students/:studentId", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const classId = parseInt(req.params.classId, 10);
+    const studentId = parseInt(req.params.studentId, 10);
+
+    if (isNaN(classId) || isNaN(studentId)) {
+      return res.status(400).json({ error: "Noto'g'ri ID" });
+    }
+
+    // XAVFSIZLIK: sinf shu o'qituvchiniki ekanini tekshiramiz
+    const classCheck = await pool.query(
+      "SELECT id FROM classes WHERE id = $1 AND teacher_id = $2",
+      [classId, teacherId]
+    );
+    if (classCheck.rows.length === 0) {
+      // Sinf yo'q yoki boshqa o'qituvchiniki
+      return res.status(404).json({ error: "Sinf topilmadi" });
+    }
+
+    // O'quvchi shu sinfda faolmi tekshiramiz
+    const membership = await pool.query(
+      "SELECT id FROM class_students WHERE class_id = $1 AND student_id = $2 AND status = 'active'",
+      [classId, studentId]
+    );
+    if (membership.rows.length === 0) {
+      return res.status(404).json({ error: "O'quvchi bu sinfda topilmadi" });
+    }
+
+    // Yumshoq o'chirish: status='removed' (yozuv saqlanadi, tarix yo'qolmaydi)
+    await pool.query(
+      "UPDATE class_students SET status = 'removed' WHERE class_id = $1 AND student_id = $2",
+      [classId, studentId]
+    );
+
+    res.json({ message: "O'quvchi sinfdan olib tashlandi" });
+  } catch (err) {
+    console.error("O'quvchini olib tashlash xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });

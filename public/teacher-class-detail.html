@@ -230,6 +230,53 @@
     }
     @keyframes shimmer { to { transform: translateX(100%); } }
 
+    /* Olib tashlash tugmasi */
+    .remove-btn {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: var(--bg-soft); border: 1px solid var(--border);
+      color: var(--text-muted); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .remove-btn:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,0.08); }
+    .remove-btn svg { width: 16px; height: 16px; }
+
+    /* Tasdiqlash modal */
+    .confirm-overlay {
+      position: fixed; inset: 0; background: rgba(3,6,15,0.7); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px;
+    }
+    .confirm-overlay.show { display: flex; }
+    .confirm-box {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      width: 100%; max-width: 400px; padding: 28px; text-align: center;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6); transform: scale(0.96); animation: shimmer-pop 0.18s ease forwards;
+    }
+    @keyframes shimmer-pop { to { transform: scale(1); } }
+    .confirm-icon {
+      width: 60px; height: 60px; margin: 0 auto 18px; border-radius: 16px;
+      background: rgba(239,68,68,0.12); color: var(--red);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .confirm-icon svg { width: 28px; height: 28px; }
+    .confirm-title { font-size: 19px; font-weight: 800; margin-bottom: 8px; }
+    .confirm-text { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 24px; }
+    .confirm-text b { color: var(--text-main); }
+    .confirm-foot { display: flex; gap: 12px; }
+    .confirm-cancel {
+      flex: 1; padding: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--bg-soft); color: var(--text-muted); font-size: 14.5px; font-weight: 600; cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .confirm-cancel:hover { border-color: var(--border-focus); color: var(--text-main); }
+    .confirm-delete {
+      flex: 1.3; padding: 13px; border: none; border-radius: var(--radius-sm);
+      background: var(--red); color: #fff; font-size: 14.5px; font-weight: 700; cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .confirm-delete:hover { opacity: 0.9; }
+    .confirm-delete:disabled { opacity: 0.55; cursor: not-allowed; }
+
     /* TOAST */
     .toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -394,6 +441,7 @@
                   <th>Reyting</th>
                   <th>Qo'shilgan</th>
                   <th>Holat</th>
+                  <th style="text-align:right">Amal</th>
                 </tr>
               </thead>
               <tbody id="studentsBody"></tbody>
@@ -436,12 +484,28 @@
     </div>
   </div>
 
+  <!-- TASDIQLASH MODAL: o'quvchini olib tashlash -->
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-box">
+      <div class="confirm-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </div>
+      <div class="confirm-title">O'quvchini olib tashlash</div>
+      <div class="confirm-text"><b id="confirmName">Bu o'quvchi</b>ni sinfdan olib tashlamoqchimisiz? Keyinroq u kod orqali qayta qo'shilishi mumkin.</div>
+      <div class="confirm-foot">
+        <button class="confirm-cancel" onclick="closeConfirm()">Bekor qilish</button>
+        <button class="confirm-delete" id="confirmDeleteBtn" onclick="confirmRemove()">Olib tashlash</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div class="toast" id="toast">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
     <span id="toastText">Bajarildi</span>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script src="/api.js"></script>
   <script>
     // Himoya
@@ -583,6 +647,7 @@
               <td><span class="rating-val">${rating}</span></td>
               <td class="muted-cell">${formatDate(s.joined_at)}</td>
               <td><span class="status-badge active"><span class="dot"></span>Faol</span></td>
+              <td style="text-align:right"><button class="remove-btn" onclick="askRemove(${s.id}, '${esc(fullName).replace(/'/g, "\\'")}')" title="Sinfdan olib tashlash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button></td>
             </tr>`;
         }).join("");
       }
@@ -590,7 +655,92 @@
       showState("content");
     }
 
+    // === O'quvchini olib tashlash ===
+    let removeStudentId = null;
+
+    function askRemove(studentId, studentName) {
+      removeStudentId = studentId;
+      document.getElementById("confirmName").textContent = studentName || "Bu o'quvchi";
+      document.getElementById("confirmOverlay").classList.add("show");
+    }
+    function closeConfirm() {
+      document.getElementById("confirmOverlay").classList.remove("show");
+      removeStudentId = null;
+    }
+    document.getElementById("confirmOverlay").addEventListener("click", function(e){
+      if (e.target.id === "confirmOverlay") closeConfirm();
+    });
+
+    async function confirmRemove() {
+      if (!removeStudentId) return;
+      const btn = document.getElementById("confirmDeleteBtn");
+      btn.disabled = true;
+      btn.textContent = "Olib tashlanmoqda...";
+      try {
+        const res = await authFetch(
+          "/teacher/classes/" + encodeURIComponent(classId) + "/students/" + encodeURIComponent(removeStudentId),
+          { method: "DELETE" }
+        );
+        const data = await res.json();
+        if (!res.ok) {
+          showToast(data.error || "Xatolik yuz berdi");
+          closeConfirm();
+          return;
+        }
+        closeConfirm();
+        showToast("O'quvchi olib tashlandi");
+        await loadDetail(); // ro'yxatni yangilash
+      } catch (err) {
+        showToast("Server bilan aloqa yo'q");
+        closeConfirm();
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Olib tashlash";
+      }
+    }
+
     loadDetail();
+
+    // === REAL-TIME (Socket.IO) — yangi o'quvchi qo'shilganda darhol yangilash ===
+    let classSocket = null;
+    function setupRealtime() {
+      if (!classId || typeof io === "undefined") return;
+      try {
+        classSocket = io();
+        classSocket.on("connect", function () {
+          // Shu sinfni kuzatishni boshlaymiz
+          classSocket.emit("watchClass", classId);
+        });
+        // Yangi o'quvchi qo'shilgani haqida signal — ro'yxatni jimgina yangilaymiz
+        classSocket.on("classStudentJoined", function (data) {
+          if (data && String(data.classId) === String(classId)) {
+            refreshStudentsQuiet();
+          }
+        });
+      } catch (e) {
+        // Socket ishlamasa, sahifa baribir oddiy ishlaydi (F5 bilan)
+      }
+    }
+
+    // Ro'yxatni "jimgina" yangilash (loading ekranisiz, faqat jadval)
+    async function refreshStudentsQuiet() {
+      try {
+        const res = await authFetch("/teacher/classes/" + encodeURIComponent(classId) + "/students");
+        if (!res.ok) return;
+        const data = await res.json();
+        renderDetail(data);
+        showToast("Yangi o'quvchi qo'shildi");
+      } catch (e) { /* jim */ }
+    }
+
+    // Sahifadan chiqqanda kuzatishni to'xtatamiz
+    window.addEventListener("beforeunload", function () {
+      if (classSocket && classId) {
+        classSocket.emit("unwatchClass", classId);
+      }
+    });
+
+    setupRealtime();
   </script>
 </body>
 </html>
