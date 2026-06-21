@@ -883,15 +883,77 @@
       startMmTimer();
 
       if (friendRoom) {
-        // Do'st jangi - findMatch chaqirmaymiz, "tayyorman" deymiz
+        // Do'st jangi — to'liq "topildi" ekranini ko'rsatamiz (1v1 kabi, lekin do'st matni)
         currentRoom = friendRoom;
-        document.getElementById("searchTitle").textContent = "Raqib topildi!";
-        document.getElementById("searchText").textContent = "Jang boshlanmoqda...";
-        if (savedBattleData) {
-          const data = JSON.parse(savedBattleData);
-          document.getElementById("oppName").textContent = data.opponent.name;
-          document.getElementById("oppAva").innerHTML = avatarHTML(data.opponent.name, data.opponent.profile_picture);
-        }
+        stopMmTimer();
+
+        var fData = savedBattleData ? JSON.parse(savedBattleData) : null;
+        var fOppName = fData && fData.opponent ? (fData.opponent.name || "Do'st") : "Do'st";
+        var fOppPic = fData && fData.opponent ? fData.opponent.profile_picture : null;
+        var fOppRating = fData && fData.opponent ? (fData.opponent.rating || (user.rating || 1000)) : (user.rating || 1000);
+        var fOppLevel = fData && fData.opponent ? (fData.opponent.level || user.cefr_level || "A1") : (user.cefr_level || "A1");
+        // A odam: "Do'stingiz qabul qildi!" / B odam: "Jang boshlanmoqda!"
+        var fMsg = fData ? (fData.message || "") : "";
+        var isChallenger = fMsg.indexOf("qabul qildi") !== -1; // A (chaqiruvchi)
+
+        // Sarlavha + subtitle (do'st jangi uchun)
+        document.getElementById("searchTitle").textContent = "Jang boshlanmoqda!";
+        document.getElementById("searchText").textContent = isChallenger
+          ? "Chaqiruvingiz qabul qilindi. Tayyorlaning!"
+          : "Siz chaqiruvni qabul qildingiz. Tayyorlaning!";
+
+        // Scanner success
+        var fScanner = document.querySelector("#mmSearching .mm-scanner");
+        if (fScanner) fScanner.classList.add("found");
+
+        // Battle ekrani uchun raqib oldindan
+        document.getElementById("oppName").textContent = fOppName;
+        document.getElementById("oppAva").innerHTML = avatarHTML(fOppName, fOppPic);
+
+        // Do'st kartasini to'ldiramiz
+        document.getElementById("mmOppAvaSearch").innerHTML = avatarHTML(fOppName, fOppPic);
+        document.getElementById("mmOppNameSearch").textContent = fOppName;
+        document.getElementById("mmOppHandleSearch").textContent = (window.leagueFromRating ? leagueFromRating(fOppRating) : "Bronze");
+        document.getElementById("mmOppRatingSearch").textContent = "RATING: " + fOppRating;
+        document.getElementById("mmOppOnline").style.display = "block";
+        var fOppCard = document.getElementById("mmOppCard");
+        if (fOppCard) fOppCard.classList.add("found");
+
+        // Markaz: timer → countdown
+        document.getElementById("mmCenterSearch").style.display = "none";
+        document.getElementById("mmCenterFound").style.display = "block";
+
+        // Cancel → status tugma
+        document.getElementById("mmActionSearch").style.display = "none";
+        document.getElementById("mmActionFound").style.display = "block";
+
+        if (window.lucide) lucide.createIcons();
+
+        // Countdown 7..1
+        countdownDone = false;
+        let fcount = 7;
+        var fcdNum = document.getElementById("mmCountdown");
+        var fcdText = document.getElementById("mmCdText");
+        fcdNum.textContent = fcount;
+        fcdText.textContent = "Battle " + fcount + " soniyada boshlanadi";
+        const fcd = setInterval(() => {
+          fcount--;
+          if (fcount >= 1) {
+            fcdNum.textContent = fcount;
+            fcdNum.style.animation = "none"; void fcdNum.offsetWidth; fcdNum.style.animation = "";
+            fcdText.textContent = "Battle " + fcount + " soniyada boshlanadi";
+          } else {
+            clearInterval(fcd);
+            fcdNum.textContent = "GO!";
+            fcdText.textContent = "Battle boshlanmoqda...";
+            countdownDone = true;
+            if (pendingBattleStart) {
+              var d = pendingBattleStart; pendingBattleStart = null;
+              setTimeout(() => reallyStartBattle(d), 400);
+            }
+          }
+        }, 1000);
+
         socket.emit("joinFriendBattle", { roomId: friendRoom, userId: user.id });
       } else {
         socket.emit("findMatch", { userId: user.id, name: user.first_name, level: user.cefr_level, lengthKey: battleLengthKey });

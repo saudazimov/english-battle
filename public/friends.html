@@ -16,7 +16,7 @@
     .icon-btn { position: relative; width: 42px; height: 42px; border-radius: 12px; background: var(--panel); border: 1px solid var(--border); display: grid; place-items: center; cursor: pointer; }
     .icon-btn .badge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; background: #ef4444; color: #fff; font-size: 11px; border-radius: 9px; display: grid; place-items: center; padding: 0 4px; }
     .user-chip { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 6px 12px 6px 6px; cursor: pointer; }
-    .user-chip .ava { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 15px; }
+    .user-chip .ava { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; position: relative; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 15px; }
     .user-chip .uname { font-size: 14px; font-weight: 600; line-height: 1.1; }
     .user-chip .ulevel { font-size: 11px; color: var(--text-dim); }
 
@@ -74,7 +74,7 @@
     .fl-row:hover { background: var(--panel); }
     .fl-friend { display: flex; align-items: center; gap: 12px; }
     .fl-ava {
-      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; position: relative;
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; position: relative; overflow: hidden;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       display: grid; place-items: center; font-weight: 700; font-size: 16px;
     }
@@ -111,7 +111,7 @@
     }
     .req-row:hover, .srch-row:hover { background: var(--panel); }
     .req-ava, .srch-ava {
-      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; overflow: hidden; position: relative;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       display: grid; place-items: center; font-weight: 700; font-size: 16px;
     }
@@ -145,7 +145,7 @@
     .tf-rank.r1 { color: var(--gold); }
     .tf-rank.r2 { color: #cbd5e1; }
     .tf-rank.r3 { color: #d97706; }
-    .tf-ava { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+    .tf-ava { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; position: relative; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
     .tf-name { flex: 1; font-size: 14px; font-weight: 600; }
     .tf-name.me { color: var(--accent); }
     .tf-rating { display: flex; align-items: center; gap: 4px; font-weight: 700; color: var(--gold); font-size: 14px; }
@@ -202,6 +202,12 @@
       background: rgba(3,6,15,0.75); backdrop-filter: blur(5px);
       padding: 30px; overflow-y: auto;
     }
+    /* Modal scroll dizayni */
+    .fp-overlay::-webkit-scrollbar { width: 10px; }
+    .fp-overlay::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 999px; }
+    .fp-overlay::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--accent), var(--accent-2)); border-radius: 999px; border: 2px solid rgba(3,6,15,0.5); }
+    .fp-overlay::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, var(--accent-2), var(--accent)); }
+    .fp-overlay { scrollbar-width: thin; scrollbar-color: var(--accent) rgba(255,255,255,0.03); }
     .fp-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
     .fp-modal {
       width: 100%; max-width: 1280px; margin: auto;
@@ -242,11 +248,14 @@
       border: 1px solid var(--border); border-radius: 16px;
     }
     .fpc-avatar {
-      width: 88px; height: 88px; border-radius: 50%; flex-shrink: 0;
+      width: 88px; height: 88px; border-radius: 50%; flex-shrink: 0; overflow: hidden; position: relative;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       display: grid; place-items: center; font-size: 34px; font-weight: 800;
       border: 3px solid rgba(120,150,255,0.3); box-shadow: 0 0 30px rgba(91,140,255,0.4);
     }
+    .fpc-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+    /* Oltin qoida: barcha avatar konteynerlaridagi rasm to'liq dumaloq sig'sin */
+    .fl-ava img, .req-ava img, .srch-ava img, .tf-ava img, .ra-pic img, .user-chip .ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
     .fpc-info { flex: 1; }
     .fpc-name { font-size: 24px; font-weight: 800; }
     .fpc-meta { display: flex; align-items: center; gap: 10px; margin-top: 6px; color: var(--text-dim); font-size: 13px; flex-wrap: wrap; }
@@ -373,7 +382,7 @@
     /* Recent Activity - rasm + emoji */
     .ra-avatar { position: relative; width: 40px; height: 40px; flex-shrink: 0; }
     .ra-pic {
-      width: 40px; height: 40px; border-radius: 50%; overflow: hidden;
+      width: 40px; height: 40px; border-radius: 50%; overflow: hidden; position: relative;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       display: grid; place-items: center; font-weight: 700; font-size: 16px; color: #fff;
     }
@@ -399,6 +408,39 @@
       vertical-align: middle !important;
     }
 
+    /* ===== BATTLE FORMAT MODAL (do'st chaqirish) ===== */
+    .length-overlay { position: fixed; inset: 0; background: rgba(3,6,15,0.75); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1200; padding: 20px; }
+    .length-overlay.show { display: flex; }
+    .length-modal { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border-bright); border-radius: 18px; width: 100%; max-width: 720px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); transform: scale(0.97); animation: lmPop 0.18s ease forwards; }
+    @keyframes lmPop { to { transform: scale(1); } }
+    .length-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 24px 26px 18px; border-bottom: 1px solid var(--border); }
+    .length-title { font-size: 20px; font-weight: 800; }
+    .length-sub { font-size: 13.5px; color: var(--text-dim); margin-top: 4px; }
+    .length-close { width: 22px; height: 22px; color: var(--text-dim); cursor: pointer; transition: color 0.15s; flex-shrink: 0; }
+    .length-close:hover { color: var(--text); }
+    .length-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 22px 26px; }
+    @media (max-width: 680px) { .length-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 380px) { .length-grid { grid-template-columns: 1fr; } }
+    .length-card { position: relative; background: rgba(255,255,255,0.02); border: 1.5px solid var(--border); border-radius: 14px; padding: 18px 14px; cursor: pointer; transition: border-color 0.15s, transform 0.12s, background 0.15s; text-align: center; }
+    .length-card:hover { border-color: var(--border-bright); transform: translateY(-3px); }
+    .length-card.active { border-color: var(--accent); background: linear-gradient(180deg, rgba(91,140,255,0.12), rgba(255,255,255,0.02)); box-shadow: 0 0 24px rgba(91,140,255,0.2); }
+    .lf-check { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(91,140,255,0.5); }
+    .lf-check i { width: 15px; height: 15px; color: #fff; stroke-width: 3; }
+    .length-card.active .lf-check { display: flex; }
+    .lf-name { font-size: 17px; font-weight: 800; }
+    .lf-uz { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; }
+    .lf-rows { display: flex; flex-direction: column; gap: 8px; }
+    .lf-row { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 13px; color: var(--text-dim); }
+    .lf-row i { width: 15px; height: 15px; }
+    .lf-row.lf-xp { color: var(--gold); font-weight: 700; }
+    .lf-row.lf-xp i { color: var(--gold); }
+    .length-card.active .lf-name { color: var(--accent); }
+    .length-foot { display: flex; gap: 12px; padding: 0 26px 24px; }
+    .length-cancel { flex: 1; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel-2); color: var(--text-dim); font-size: 15px; font-weight: 600; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+    .length-cancel:hover { border-color: var(--border-bright); color: var(--text); }
+    .length-start { flex: 2; display: flex; align-items: center; justify-content: center; gap: 9px; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(95deg, var(--accent), var(--accent-2)); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 22px rgba(91,140,255,0.3); transition: opacity 0.15s; }
+    .length-start:hover { opacity: 0.93; }
+    .length-start i { width: 18px; height: 18px; }
   </style>
 </head>
 <body>
@@ -556,6 +598,24 @@
 
   </div>
 
+  <!-- BATTLE FORMAT MODAL (do'st chaqirish) -->
+  <div class="length-overlay" id="lengthModal">
+    <div class="length-modal">
+      <div class="length-head">
+        <div>
+          <div class="length-title">Battle formatini tanlang</div>
+          <div class="length-sub" id="lengthSubName">Savollar soni, vaqt va mukofotni tanlang</div>
+        </div>
+        <i data-lucide="x" class="length-close" onclick="closeLengthModal()"></i>
+      </div>
+      <div class="length-grid" id="lengthGrid"></div>
+      <div class="length-foot">
+        <button class="length-cancel" onclick="closeLengthModal()">Bekor qilish</button>
+        <button class="length-start" onclick="sendChallenge()"><i data-lucide="swords"></i> Chaqirish</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/api.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -600,14 +660,81 @@
     }
 
     // Do'st chaqirish
+    // ===== BATTLE FORMAT (do'st chaqirish) =====
+    const battleLengths = {
+      quick:    { label: "Quick",    uzLabel: "Tezkor",       questions: 10, totalSeconds: 150, xp: 4 },
+      standard: { label: "Standard", uzLabel: "Standart",     questions: 20, totalSeconds: 300, xp: 8, recommended: true },
+      extended: { label: "Extended", uzLabel: "Uzaytirilgan", questions: 30, totalSeconds: 450, xp: 12 },
+      marathon: { label: "Marathon", uzLabel: "Marafon",      questions: 40, totalSeconds: 600, xp: 16 },
+    };
+    let selectedLength = "standard";
+    let challengeTarget = null; // { id, name }
+
+    function fmtTime(sec) {
+      const m = Math.floor(sec / 60), s = sec % 60;
+      return m + ":" + (s < 10 ? "0" : "") + s;
+    }
+
+    // Challenge bosilganda — avval format modal ochiladi
     function challengeFriend(friendId, friendName) {
+      challengeTarget = { id: friendId, name: friendName };
+      openLengthModal();
+    }
+
+    function openLengthModal() {
+      const grid = document.getElementById("lengthGrid");
+      grid.innerHTML = Object.keys(battleLengths).map(key => {
+        const L = battleLengths[key];
+        const active = key === selectedLength ? " active" : "";
+        return '<div class="length-card' + active + '" data-key="' + key + '" onclick="selectLength(\'' + key + '\')">' +
+            '<div class="lf-check"><i data-lucide="check"></i></div>' +
+            '<div class="lf-name">' + L.label + '</div>' +
+            '<div class="lf-uz">' + L.uzLabel + '</div>' +
+            '<div class="lf-rows">' +
+              '<div class="lf-row"><i data-lucide="list-checks"></i> ' + L.questions + ' savol</div>' +
+              '<div class="lf-row"><i data-lucide="clock"></i> ' + fmtTime(L.totalSeconds) + '</div>' +
+              '<div class="lf-row lf-xp"><i data-lucide="zap"></i> +' + L.xp + ' XP</div>' +
+            '</div>' +
+          '</div>';
+      }).join("");
+      // Sarlavhada do'st ismini ko'rsatamiz
+      var sub = document.getElementById("lengthSubName");
+      if (sub && challengeTarget) sub.textContent = challengeTarget.name + " ni jangga chaqirasiz";
+      document.getElementById("lengthModal").classList.add("show");
+      if (window.lucide) lucide.createIcons();
+    }
+    function closeLengthModal() {
+      document.getElementById("lengthModal").classList.remove("show");
+    }
+    function selectLength(key) {
+      selectedLength = key;
+      document.querySelectorAll(".length-card").forEach(c => c.classList.toggle("active", c.getAttribute("data-key") === key));
+    }
+
+    // Format tanlangach — chaqiruvni formati bilan yuboramiz
+    function sendChallenge() {
+      if (!challengeTarget) return;
+      closeLengthModal();
       socket.emit("challengeFriend", {
         fromUserId: user.id,
         fromName: user.first_name + " " + user.last_name,
-        toUserId: friendId,
+        toUserId: challengeTarget.id,
         level: user.cefr_level || "A1",
+        lengthKey: selectedLength,
       });
-      showOverlay("⏳ " + friendName + " ga chaqiruv yuborildi, javob kutilmoqda...");
+      showOverlay(
+        "⏳ " + challengeTarget.name + " ga chaqiruv yuborildi, javob kutilmoqda...",
+        '<button class="ov-btn ov-reject" onclick="cancelChallenge()">Chaqiruvni bekor qilish</button>'
+      );
+    }
+
+    // Chaqiruvni bekor qilish (yuboruvchi tomonidan)
+    function cancelChallenge() {
+      if (challengeTarget) {
+        socket.emit("cancelChallenge", { fromUserId: user.id, toUserId: challengeTarget.id });
+      }
+      challengeTarget = null;
+      hideOverlay();
     }
 
     // Friend Profile modal
@@ -615,20 +742,14 @@
       openProfileModal(userId);
     }
 
-    function openProfileModal(userId) {
-      document.getElementById("fpModal").classList.add("open");
-      // Ma'lumotni keyingi bosqichda yuklaymiz
-      lucide.createIcons();
-    }
-
     function closeProfileModal() {
-      document.getElementById("fpModal").classList.remove("open");
+      document.getElementById("fpModal").classList.remove("open"); document.body.style.overflow = "";
     }
 
     let fpUserId = null;
     function openProfileModal(userId) {
       fpUserId = userId;
-      document.getElementById("fpModal").classList.add("open");
+      document.getElementById("fpModal").classList.add("open"); document.body.style.overflow = "hidden";
       loadProfileModal(userId);
     }
 
@@ -832,7 +953,7 @@
     }
 
     function closeProfileModal() {
-      document.getElementById("fpModal").classList.remove("open");
+      document.getElementById("fpModal").classList.remove("open"); document.body.style.overflow = "";
     }
 
     socket.on("challengeResult", (data) => {
@@ -851,6 +972,14 @@
       );
     });
 
+    // Chaqiruvchi bekor qildi — taklifni yopamiz
+    socket.on("challengeCancelled", (data) => {
+      if (incomingChallenge && String(incomingChallenge.fromUserId) === String(data.fromUserId)) {
+        incomingChallenge = null;
+        hideOverlay();
+      }
+    });
+
     function acceptChallenge() {
       if (!incomingChallenge) return;
       socket.emit("challengeResponse", {
@@ -861,6 +990,7 @@
         myUserId: user.id,
         myName: user.first_name + " " + user.last_name,
         level: incomingChallenge.level,
+        lengthKey: incomingChallenge.lengthKey || "standard",
       });
       showOverlay("⚔️ Jang boshlanmoqda...");
     }

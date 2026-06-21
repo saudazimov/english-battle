@@ -908,7 +908,7 @@ io.on("connection", (socket) => {
   });
 
   // Do'stga jang chaqiruvi yuborish
-  socket.on("challengeFriend", ({ fromUserId, fromName, toUserId, level }) => {
+  socket.on("challengeFriend", ({ fromUserId, fromName, toUserId, level, lengthKey }) => {
     console.log("Chaqiruv:", fromUserId, "->", toUserId, "| Onlayn:", Object.keys(onlineUsers));
     const targetSocketId = onlineUsers[String(toUserId)];
 
@@ -922,13 +922,22 @@ io.on("connection", (socket) => {
       fromName: fromName,
       fromSocketId: socket.id,
       level: level,
+      lengthKey: lengthKey || "standard",
     });
 
     socket.emit("challengeResult", { success: true, message: "Chaqiruv yuborildi, javob kutilmoqda..." });
   });
 
+  // Chaqiruvni bekor qilish (yuboruvchi) — do'stdagi taklifni yo'qotamiz
+  socket.on("cancelChallenge", ({ fromUserId, toUserId }) => {
+    const targetSocketId = onlineUsers[String(toUserId)];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("challengeCancelled", { fromUserId });
+    }
+  });
+
   // Chaqiruvga javob (qabul yoki rad)
-  socket.on("challengeResponse", async ({ accepted, fromSocketId, fromUserId, fromName, myUserId, myName, level }) => {
+  socket.on("challengeResponse", async ({ accepted, fromSocketId, fromUserId, fromName, myUserId, myName, level, lengthKey }) => {
     const challengerSocket = io.sockets.sockets.get(fromSocketId);
 
     if (!accepted) {
@@ -938,6 +947,7 @@ io.on("connection", (socket) => {
       return;
     }
 
+    const lk = lengthKey || "standard";
     const roomId = "friend_battle_" + fromSocketId + "_" + socket.id;
     if (challengerSocket) challengerSocket.join(roomId);
     socket.join(roomId);
@@ -952,26 +962,28 @@ io.on("connection", (socket) => {
       });
     } catch (e) {}
 
+    // Reyting + win rate (1v1 kabi to'liq karta)
+    const fromCard = await getOpponentCardInfo(fromUserId);
+    const myCard = await getOpponentCardInfo(myUserId);
+
     if (challengerSocket) {
       challengerSocket.emit("matchFound", {
         roomId: roomId,
-        opponent: { name: myName, profile_picture: myPic },
+        opponent: { name: myName, profile_picture: myPic, rating: myCard.rating, win_rate: myCard.win_rate, level: level || "A1" },
         message: "Do'stingiz qabul qildi!",
       });
     }
     socket.emit("matchFound", {
       roomId: roomId,
-      opponent: { name: fromName, profile_picture: fromPic },
+      opponent: { name: fromName, profile_picture: fromPic, rating: fromCard.rating, win_rate: fromCard.win_rate, level: level || "A1" },
       message: "Jang boshlanmoqda!",
     });
 
-    const player1 = { socketId: fromSocketId, userId: fromUserId, name: fromName, level: level || "A1" };
-    const player2 = { socketId: socket.id, userId: myUserId, name: myName, level: level || "A1" };
-
     // Do'st jangi: darrov boshlamaymiz. Ikki o'yinchi battle.html'ga o'tib "tayyorman" deganda boshlanadi.
     pendingBattles[roomId] = {
-      player1: { userId: fromUserId, name: fromName, level: level || "A1", ready: false, socketId: null },
-      player2: { userId: myUserId, name: myName, level: level || "A1", ready: false, socketId: null },
+      lengthKey: lk,
+      player1: { userId: fromUserId, name: fromName, level: level || "A1", lengthKey: lk, ready: false, socketId: null },
+      player2: { userId: myUserId, name: myName, level: level || "A1", lengthKey: lk, ready: false, socketId: null },
     };
   });
 
@@ -1013,8 +1025,9 @@ io.on("connection", (socket) => {
 
     // Ikkalasi ham tayyor bo'lsa - jangni boshlaymiz (yangi socketlar bilan)
     if (pending.player1.ready && pending.player2.ready) {
-      const p1 = { socketId: pending.player1.socketId, userId: pending.player1.userId, name: pending.player1.name, level: pending.player1.level };
-      const p2 = { socketId: pending.player2.socketId, userId: pending.player2.userId, name: pending.player2.name, level: pending.player2.level };
+      const lk = pending.lengthKey || pending.player1.lengthKey || "standard";
+      const p1 = { socketId: pending.player1.socketId, userId: pending.player1.userId, name: pending.player1.name, level: pending.player1.level, lengthKey: lk };
+      const p2 = { socketId: pending.player2.socketId, userId: pending.player2.userId, name: pending.player2.name, level: pending.player2.level, lengthKey: lk };
       delete pendingBattles[roomId];
       startBattle(roomId, p1, p2);
     }
@@ -1650,7 +1663,7 @@ app.post("/quests/claim", authMiddleware, async (req, res) => {
 // ============ PROFIL STATISTIKA ============
 app.get("/profile/:userId", authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.params.userId;
 
     // Asosiy foydalanuvchi ma'lumoti
     const userResult = await pool.query(
