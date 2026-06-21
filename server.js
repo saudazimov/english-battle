@@ -2604,6 +2604,32 @@ app.post("/student/join-class", authMiddleware, requireStudent, async (req, res)
   }
 });
 
+// O'QUVCHINING SINFLARI RO'YXATI (o'quvchi o'zi ko'radi)
+app.get("/student/classes", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+
+    // Faqat shu o'quvchi a'zo bo'lgan faol sinflar.
+    // O'qituvchi nomi ham qo'shiladi (classes.teacher_id -> users).
+    const classes = await pool.query(
+      `SELECT c.id, c.name, c.description, c.join_code,
+              cs.joined_at, cs.status,
+              t.first_name AS teacher_first_name, t.last_name AS teacher_last_name
+       FROM class_students cs
+       JOIN classes c ON c.id = cs.class_id
+       JOIN users t ON t.id = c.teacher_id
+       WHERE cs.student_id = $1 AND cs.status = 'active' AND c.archived_at IS NULL
+       ORDER BY cs.joined_at DESC`,
+      [studentId]
+    );
+
+    res.json({ classes: classes.rows });
+  } catch (err) {
+    console.error("O'quvchi sinflari xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // SINF O'QUVCHILARI RO'YXATI (o'qituvchi ko'radi)
 app.get("/teacher/classes/:classId/students", authMiddleware, requireTeacher, async (req, res) => {
   try {

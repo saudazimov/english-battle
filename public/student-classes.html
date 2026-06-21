@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sinflarim — Knowledge Arena</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* ===== FAQAT SHU SAHIFAGA XOS (sidebar/layout app.css dan) ===== */
+    /* Layout lobby bilan bir xil: sidebar 230px, kontent o'ng tomonda 340px bo'sh joy
+       qoldiradi (lobby'da rightbar bo'lgan joy) — shunda sidebar/kontent bir xil o'lchamda */
+    .app { max-width: 1680px; grid-template-columns: 230px 1fr 340px; }
+    .main { padding-right: 6px; grid-column: 2 / 3; }
+    @media (max-width: 1100px) { .app { grid-template-columns: 200px 1fr; } .main { grid-column: 2 / 3; } }
+    @media (max-width: 760px) { .app { grid-template-columns: 1fr; } .main { grid-column: 1; } }
+
+    .top-actions { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 4px; }
+    .join-btn {
+      display: flex; align-items: center; gap: 8px; padding: 11px 18px;
+      background: linear-gradient(95deg, var(--accent), var(--accent-2));
+      border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700;
+      cursor: pointer; box-shadow: 0 8px 22px rgba(91,140,255,0.32);
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .join-btn:hover { opacity: 0.93; }
+    .join-btn:active { transform: translateY(1px); }
+    .join-btn i { width: 17px; height: 17px; }
+
+    /* Kontent layout: kartalar + summary */
+    .content-layout { display: grid; grid-template-columns: 1fr 290px; gap: 20px; align-items: start; }
+    @media (max-width: 1000px) { .content-layout { grid-template-columns: 1fr; } }
+
+    .class-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .class-card {
+      background: linear-gradient(180deg, var(--panel), var(--bg-2));
+      border: 1px solid var(--border); border-radius: 16px; padding: 20px;
+      display: flex; flex-direction: column; transition: border-color 0.15s, transform 0.12s;
+    }
+    .class-card:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+    .cc-top { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 15px; }
+    .cc-shield {
+      width: 50px; height: 50px; border-radius: 13px; flex: 0 0 auto;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 17px; color: #fff;
+      box-shadow: 0 6px 18px rgba(91,140,255,0.35);
+    }
+    .cc-name { font-size: 16px; font-weight: 700; line-height: 1.3; margin-bottom: 3px; word-break: break-word; }
+    .cc-desc { font-size: 12.5px; color: var(--text-dim); line-height: 1.4; word-break: break-word; }
+    .cc-desc.empty { color: var(--text-faint); font-style: italic; }
+    .cc-info { display: flex; flex-direction: column; gap: 9px; margin: 2px 0 15px; padding: 13px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .cc-row { display: flex; align-items: center; gap: 9px; font-size: 13px; }
+    .cc-row > i { width: 15px; height: 15px; color: var(--accent); flex: 0 0 auto; }
+    .cc-row .cc-label { color: var(--text-faint); }
+    .cc-row .cc-val { color: var(--text); font-weight: 600; margin-left: auto; }
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-left: auto; }
+    .status-badge.active { background: rgba(52,211,153,0.12); color: var(--green); }
+    .status-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .cc-action { margin-top: auto; }
+    .cc-btn {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 11px; border: 1px solid var(--border); border-radius: 11px;
+      background: var(--panel-2); color: var(--text-faint);
+      font-size: 13px; font-weight: 700; cursor: not-allowed;
+    }
+    .cc-btn i { width: 15px; height: 15px; }
+
+    /* Summary */
+    .summary { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+    .summary-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .summary-title i { width: 16px; height: 16px; color: var(--accent); }
+    .sum-stat { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .sum-stat:last-child { border-bottom: none; }
+    .sum-ic { width: 38px; height: 38px; border-radius: 10px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+    .sum-ic.blue { background: rgba(91,140,255,0.14); color: var(--accent); }
+    .sum-ic.green { background: rgba(52,211,153,0.14); color: var(--green); }
+    .sum-ic.gold { background: rgba(251,191,36,0.14); color: var(--gold); }
+    .sum-ic i { width: 18px; height: 18px; }
+    .sum-label { font-size: 12px; color: var(--text-dim); }
+    .sum-value { font-size: 17px; font-weight: 800; }
+    .sum-value.small { font-size: 13.5px; }
+
+    /* Holatlar */
+    .state-box { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border); border-radius: 16px; padding: 50px 28px; text-align: center; }
+    .state-ic { width: 80px; height: 80px; margin: 0 auto 20px; border-radius: 22px; background: var(--panel-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-dim); }
+    .state-ic.err { color: var(--red); }
+    .state-ic i { width: 38px; height: 38px; }
+    .state-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .state-box p { font-size: 14px; color: var(--text-dim); max-width: 410px; margin: 0 auto 22px; line-height: 1.6; }
+    .state-btn { display: inline-flex; align-items: center; gap: 9px; padding: 13px 24px; border: none; border-radius: 12px; background: linear-gradient(95deg, var(--accent), var(--accent-2)); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 22px rgba(91,140,255,0.3); transition: opacity 0.15s; }
+    .state-btn:hover { opacity: 0.93; }
+    .state-btn i { width: 18px; height: 18px; }
+
+    /* Skeleton */
+    .sk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .sk-card { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border); border-radius: 16px; padding: 20px; height: 230px; }
+    .sk { background: var(--panel-2); border-radius: 8px; position: relative; overflow: hidden; }
+    .sk::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); animation: shimmer 1.4s infinite; }
+    @keyframes shimmer { to { transform: translateX(100%); } }
+
+    /* Join modal (logout modal app.css'da; bu alohida) */
+    .jm-overlay { position: fixed; inset: 0; background: rgba(3,6,15,0.72); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .jm-overlay.show { display: flex; }
+    .jm-modal { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border-bright); border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); transform: scale(0.96); animation: jmPop 0.18s ease forwards; }
+    @keyframes jmPop { to { transform: scale(1); } }
+    .jm-head { padding: 26px 26px 0; text-align: center; }
+    .jm-ic { width: 60px; height: 60px; margin: 0 auto 16px; border-radius: 16px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: flex; align-items: center; justify-content: center; color: #fff; }
+    .jm-ic i { width: 28px; height: 28px; }
+    .jm-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .jm-sub { font-size: 13.5px; color: var(--text-dim); line-height: 1.5; }
+    .jm-body { padding: 22px 26px; }
+    .code-input { width: 100%; padding: 16px; text-align: center; background: var(--bg-2); border: 1.5px solid var(--border); border-radius: 12px; color: var(--text); font-size: 26px; font-weight: 800; letter-spacing: 8px; text-transform: uppercase; font-family: ui-monospace, Menlo, monospace; transition: border-color 0.15s, box-shadow 0.15s; }
+    .code-input::placeholder { color: var(--text-faint); letter-spacing: 6px; }
+    .code-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,140,255,0.15); }
+    .code-input.invalid { border-color: var(--red); }
+    .jm-msg { font-size: 13px; margin-top: 12px; text-align: center; display: none; }
+    .jm-msg.error { color: var(--red); display: block; }
+    .jm-msg.success { color: var(--green); display: block; }
+    .jm-foot { padding: 0 26px 24px; display: flex; gap: 12px; }
+    .jm-cancel { flex: 1; padding: 13px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel-2); color: var(--text-dim); font-size: 14.5px; font-weight: 600; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+    .jm-cancel:hover { border-color: var(--border-bright); color: var(--text); }
+    .jm-submit { flex: 1.4; padding: 13px; border: none; border-radius: 12px; background: linear-gradient(95deg, var(--accent), var(--accent-2)); color: #fff; font-size: 14.5px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; }
+    .jm-submit:hover { opacity: 0.93; }
+    .jm-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--panel); border: 1px solid var(--border-bright); border-radius: 12px; padding: 13px 20px; font-size: 14px; color: var(--text); box-shadow: 0 12px 40px rgba(0,0,0,0.5); opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 1100; display: flex; align-items: center; gap: 10px; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast i { width: 18px; height: 18px; color: var(--green); }
+
+    @media (max-width: 560px) { .join-btn span { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ===== CHAP SIDEBAR (sidebar.js to'ldiradi) ===== -->
+    <aside class="sidebar"></aside>
+
+    <!-- ===== O'RTA KONTENT ===== -->
+    <main class="main">
+
+      <!-- Yuqori: Sinfga qo'shilish tugmasi -->
+      <div class="top-actions">
+        <button class="join-btn" onclick="openModal()">
+          <i data-lucide="user-plus"></i> <span>Sinfga qo'shilish</span>
+        </button>
+      </div>
+
+      <!-- Sarlavha (app.css page-head) -->
+      <div class="page-head">
+        <div class="crest-ic"><i data-lucide="book-open"></i></div>
+        <div>
+          <h1>Sinflarim</h1>
+          <p>O'qituvchingiz bergan kod orqali sinfga qo'shiling va topshiriqlarni kuzating.</p>
+        </div>
+      </div>
+
+      <!-- LOADING -->
+      <div id="loadingState">
+        <div class="sk-grid">
+          <div class="sk-card"><div class="sk" style="width:55%;height:18px;margin-bottom:14px"></div><div class="sk" style="width:85%;height:13px;margin-bottom:24px"></div><div class="sk" style="width:100%;height:60px;margin-bottom:20px"></div><div class="sk" style="width:100%;height:40px"></div></div>
+          <div class="sk-card"><div class="sk" style="width:55%;height:18px;margin-bottom:14px"></div><div class="sk" style="width:85%;height:13px;margin-bottom:24px"></div><div class="sk" style="width:100%;height:60px;margin-bottom:20px"></div><div class="sk" style="width:100%;height:40px"></div></div>
+        </div>
+      </div>
+
+      <!-- ASOSIY -->
+      <div class="content-layout" id="mainLayout" style="display:none;">
+        <div class="class-grid" id="classGrid"></div>
+        <div class="summary" id="summaryCard">
+          <div class="summary-title"><i data-lucide="bar-chart-2"></i> Umumiy</div>
+          <div class="sum-stat">
+            <div class="sum-ic blue"><i data-lucide="layers"></i></div>
+            <div><div class="sum-label">Jami sinflar</div><div class="sum-value" id="sumTotal">0</div></div>
+          </div>
+          <div class="sum-stat">
+            <div class="sum-ic green"><i data-lucide="check-circle"></i></div>
+            <div><div class="sum-label">Faol sinflar</div><div class="sum-value" id="sumActive">0</div></div>
+          </div>
+          <div class="sum-stat">
+            <div class="sum-ic gold"><i data-lucide="clock"></i></div>
+            <div><div class="sum-label">Oxirgi qo'shilgan</div><div class="sum-value small" id="sumLatest">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMPTY -->
+      <div class="state-box" id="emptyState" style="display:none;">
+        <div class="state-ic"><i data-lucide="graduation-cap"></i></div>
+        <h2>Siz hali hech qanday sinfga qo'shilmagansiz</h2>
+        <p>O'qituvchingiz bergan join code orqali sinfga qo'shiling.</p>
+        <button class="state-btn" onclick="openModal()"><i data-lucide="user-plus"></i> Sinfga qo'shilish</button>
+      </div>
+
+      <!-- ERROR -->
+      <div class="state-box" id="errorState" style="display:none;">
+        <div class="state-ic err"><i data-lucide="alert-circle"></i></div>
+        <h2>Xatolik yuz berdi</h2>
+        <p>Sinflarni yuklashda xatolik yuz berdi. Internet aloqangizni tekshirib, qayta urinib ko'ring.</p>
+        <button class="state-btn" onclick="loadClasses()"><i data-lucide="rotate-cw"></i> Qayta urinish</button>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- JOIN MODAL -->
+  <div class="jm-overlay" id="modalOverlay">
+    <div class="jm-modal">
+      <div class="jm-head">
+        <div class="jm-ic"><i data-lucide="users"></i></div>
+        <div class="jm-title">Sinfga qo'shilish</div>
+        <div class="jm-sub">O'qituvchingiz bergan 6 belgili kodni kiriting.</div>
+      </div>
+      <div class="jm-body">
+        <input type="text" class="code-input" id="codeInput" maxlength="6" placeholder="KOD" autocomplete="off" />
+        <div class="jm-msg" id="modalMsg"></div>
+      </div>
+      <div class="jm-foot">
+        <button class="jm-cancel" onclick="closeModal()">Bekor qilish</button>
+        <button class="jm-submit" id="submitBtn" onclick="submitCode()">Qo'shilish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <i data-lucide="check"></i> <span id="toastText">Bajarildi</span>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/api.js"></script>
+  <script src="/sidebar.js"></script>
+  <script>
+    // Sidebar chizish (Sinflarim aktiv)
+    if (typeof renderSidebar === "function") renderSidebar("myclasses");
+
+    // Himoya
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = userData ? JSON.parse(userData) : {};
+    if (user.role && user.role !== "student") {
+      window.location.href = (user.role === "teacher" || user.role === "school_admin") ? "/teacher.html" : "/lobby.html";
+    }
+
+    let allClasses = [];
+    let toastTimer = null;
+    function showToast(text) {
+      const t = document.getElementById("toast");
+      document.getElementById("toastText").textContent = text;
+      t.classList.add("show");
+      if (window.lucide) lucide.createIcons();
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2400);
+    }
+    function showState(state) {
+      document.getElementById("loadingState").style.display = state === "loading" ? "block" : "none";
+      document.getElementById("mainLayout").style.display = state === "list" ? "grid" : "none";
+      document.getElementById("emptyState").style.display = state === "empty" ? "block" : "none";
+      document.getElementById("errorState").style.display = state === "error" ? "block" : "none";
+    }
+    function formatDate(iso) {
+      if (!iso) return "—";
+      var d = new Date(iso);
+      return d.toLocaleDateString("uz-UZ", { day: "numeric", month: "short", year: "numeric" });
+    }
+    function esc(s) {
+      return String(s || "").replace(/[&<>"']/g, function(c){ return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]; });
+    }
+
+    async function loadClasses() {
+      showState("loading");
+      try {
+        var res = await authFetch("/student/classes");
+        if (!res.ok) {
+          if (res.status === 403) { window.location.href = "/lobby.html"; return; }
+          throw new Error("xato");
+        }
+        var data = await res.json();
+        allClasses = data.classes || [];
+        renderClasses();
+      } catch (err) { showState("error"); }
+    }
+
+    function renderClasses() {
+      if (!allClasses || allClasses.length === 0) { showState("empty"); return; }
+      var grid = document.getElementById("classGrid");
+      grid.innerHTML = allClasses.map(function(c){
+        var initials = esc((c.name || "S").trim().substring(0, 2).toUpperCase());
+        var descHtml = c.description ? '<div class="cc-desc">' + esc(c.description) + '</div>' : '<div class="cc-desc empty">Tavsif kiritilmagan</div>';
+        var teacher = esc(((c.teacher_first_name || "") + " " + (c.teacher_last_name || "")).trim() || "O'qituvchi");
+        return '' +
+          '<div class="class-card">' +
+            '<div class="cc-top">' +
+              '<div class="cc-shield">' + initials + '</div>' +
+              '<div style="min-width:0">' +
+                '<div class="cc-name">' + esc(c.name) + '</div>' + descHtml +
+              '</div>' +
+            '</div>' +
+            '<div class="cc-info">' +
+              '<div class="cc-row"><i data-lucide="user"></i><span class="cc-label">O\'qituvchi</span><span class="cc-val">' + teacher + '</span></div>' +
+              '<div class="cc-row"><i data-lucide="calendar"></i><span class="cc-label">Qo\'shilgan</span><span class="cc-val">' + formatDate(c.joined_at) + '</span></div>' +
+              '<div class="cc-row"><i data-lucide="activity"></i><span class="cc-label">Holat</span><span class="status-badge active"><span class="dot"></span>Faol</span></div>' +
+            '</div>' +
+            '<div class="cc-action">' +
+              '<button class="cc-btn" onclick="showToast(\'Topshiriqlar keyingi bosqichda qo\\\'shiladi\')"><i data-lucide="clipboard-list"></i> Topshiriqlar</button>' +
+            '</div>' +
+          '</div>';
+      }).join("");
+      document.getElementById("sumTotal").textContent = allClasses.length;
+      document.getElementById("sumActive").textContent = allClasses.length;
+      document.getElementById("sumLatest").textContent = formatDate(allClasses[0].joined_at);
+      showState("list");
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function openModal() {
+      document.getElementById("modalOverlay").classList.add("show");
+      var inp = document.getElementById("codeInput");
+      inp.value = ""; inp.classList.remove("invalid");
+      document.getElementById("modalMsg").className = "jm-msg";
+      document.getElementById("modalMsg").textContent = "";
+      setTimeout(function(){ inp.focus(); }, 50);
+      if (window.lucide) lucide.createIcons();
+    }
+    function closeModal() { document.getElementById("modalOverlay").classList.remove("show"); }
+    document.getElementById("modalOverlay").addEventListener("click", function(e){ if (e.target.id === "modalOverlay") closeModal(); });
+    document.getElementById("codeInput").addEventListener("input", function(){ this.value = this.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase(); this.classList.remove("invalid"); });
+    document.getElementById("codeInput").addEventListener("keydown", function(e){ if (e.key === "Enter") submitCode(); });
+
+    async function submitCode() {
+      var inp = document.getElementById("codeInput");
+      var msg = document.getElementById("modalMsg");
+      var code = inp.value.trim().toUpperCase();
+      inp.classList.remove("invalid"); msg.className = "jm-msg";
+      if (code.length !== 6) {
+        inp.classList.add("invalid"); msg.className = "jm-msg error"; msg.textContent = "Kod 6 belgidan iborat bo'lishi kerak"; inp.focus(); return;
+      }
+      var btn = document.getElementById("submitBtn");
+      btn.disabled = true; btn.textContent = "Qo'shilmoqda...";
+      try {
+        var res = await authFetch("/student/join-class", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ join_code: code })
+        });
+        var data = await res.json();
+        if (!res.ok) {
+          inp.classList.add("invalid"); msg.className = "jm-msg error"; msg.textContent = data.error || "Xatolik yuz berdi"; return;
+        }
+        closeModal();
+        showToast("Sinfga muvaffaqiyatli qo'shildingiz");
+        await loadClasses();
+      } catch (err) {
+        msg.className = "jm-msg error"; msg.textContent = "Server bilan aloqa yo'q. Qayta urinib ko'ring.";
+      } finally {
+        btn.disabled = false; btn.textContent = "Qo'shilish";
+      }
+    }
+
+    if (window.lucide) lucide.createIcons();
+    loadClasses();
+  </script>
+</body>
+</html>

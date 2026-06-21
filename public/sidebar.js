@@ -8,6 +8,7 @@ function renderSidebar(activePage) {
     { id: "schools", icon: "building-2", label: "Maktablar", href: "/rankings.html" },
     { id: "friends", icon: "users", label: "Friends", href: "/friends.html" },
     { id: "exam", icon: "graduation-cap", label: "Imtihon", href: "/exam.html" },
+    { id: "myclasses", icon: "book-open", label: "Sinflarim", href: "/student-classes.html" },
     { id: "history", icon: "scroll-text", label: "Tarix", href: "/history.html" },
     { id: "profile", icon: "user", label: "Profile", href: "/profile.html" },
   ];
