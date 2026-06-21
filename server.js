@@ -372,13 +372,29 @@ function getRandomBotName() {
 // Bot bilan jang boshlash
 async function startBotBattle(roomId, humanPlayer) {
   try {
-    const result = await pool.query(
+    let result = await pool.query(
       `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
        FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT 5`,
       [humanPlayer.level]
     );
 
+    // Zaxira: o'yinchi darajasi uchun savol bo'lmasa, har qanday darajadan olamiz
+    if (result.rows.length === 0) {
+      console.log("'" + humanPlayer.level + "' uchun savol yo'q — zaxira savollar olinmoqda");
+      result = await pool.query(
+        `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
+         FROM questions ORDER BY RANDOM() LIMIT 5`
+      );
+    }
+
     const questions = result.rows;
+
+    // Hech qanday savol topilmasa — jangni boshlamaymiz (xato xabari)
+    if (questions.length === 0) {
+      io.to(humanPlayer.socketId).emit("battleError", { message: "Hozircha savollar mavjud emas. Keyinroq urinib ko'ring." });
+      console.error("Bazada umuman savol yo'q!");
+      return;
+    }
     const botId = "bot_" + roomId;
 
     // Jang holatini saqlash (bot ham bor)
@@ -2610,11 +2626,12 @@ app.get("/student/classes", authMiddleware, requireStudent, async (req, res) => 
     const studentId = req.user.id;
 
     // Faqat shu o'quvchi a'zo bo'lgan faol sinflar.
-    // O'qituvchi nomi ham qo'shiladi (classes.teacher_id -> users).
+    // O'qituvchi nomi + sinfdagi jami faol o'quvchilar soni (kartada ko'rsatish uchun).
     const classes = await pool.query(
       `SELECT c.id, c.name, c.description, c.join_code,
               cs.joined_at, cs.status,
-              t.first_name AS teacher_first_name, t.last_name AS teacher_last_name
+              t.first_name AS teacher_first_name, t.last_name AS teacher_last_name,
+              (SELECT COUNT(*) FROM class_students m WHERE m.class_id = c.id AND m.status = 'active') AS student_count
        FROM class_students cs
        JOIN classes c ON c.id = cs.class_id
        JOIN users t ON t.id = c.teacher_id

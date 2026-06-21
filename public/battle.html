@@ -234,6 +234,20 @@
   </style>
 </head>
 <body>
+  <!-- FAOL BATTLE YO'Q (to'g'ridan kirilganda) -->
+  <div id="noBattleState" style="display:none;position:fixed;inset:0;z-index:9999;background:#070b16;display:none;align-items:center;justify-content:center;padding:20px;">
+    <div style="max-width:440px;text-align:center;background:linear-gradient(180deg,#0e1428,#0b1020);border:1px solid rgba(99,130,220,0.18);border-radius:18px;padding:48px 32px;">
+      <div style="width:84px;height:84px;margin:0 auto 22px;border-radius:22px;background:#121a33;border:1px solid rgba(99,130,220,0.18);display:flex;align-items:center;justify-content:center;color:#8b97c0;">
+        <i data-lucide="swords" style="width:40px;height:40px;"></i>
+      </div>
+      <h2 style="font-size:22px;font-weight:800;color:#e6ecff;margin:0 0 8px;">Faol battle topilmadi</h2>
+      <p style="font-size:14.5px;color:#8b97c0;line-height:1.6;margin:0 0 24px;">Battle xonasi faqat raqib topilganda ochiladi. Battle boshlash uchun Battle markaziga qayting va rejimni tanlang.</p>
+      <a href="/lobby.html" style="display:inline-flex;align-items:center;gap:9px;padding:13px 24px;border-radius:12px;background:linear-gradient(95deg,#5b8cff,#a855f7);color:#fff;font-size:15px;font-weight:700;text-decoration:none;box-shadow:0 8px 22px rgba(91,140,255,0.3);">
+        <i data-lucide="arrow-left" style="width:18px;height:18px;"></i> Battle markaziga qaytish
+      </a>
+    </div>
+  </div>
+
   <div class="battle-wrap">
 
     <!-- QIDIRISH / RAQIB TOPILDI -->
@@ -389,6 +403,35 @@
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
     const user = JSON.parse(userData);
+
+    // === FAOL BATTLE HIMOYASI (spec) ===
+    // battle.html oddiy menyu sahifasi emas. Faqat quyidagilardan biri bo'lsa ochiladi:
+    //  - lobby'dan kelgan (sessionStorage.battleIntent), YOKI
+    //  - do'st jangi havolasi (?room=...)
+    // Aks holda — professional empty state ko'rsatamiz va to'xtaymiz.
+    (function guardBattle() {
+      var hasRoom = new URLSearchParams(window.location.search).get("room");
+      var intentRaw = sessionStorage.getItem("battleIntent");
+      var validIntent = false;
+      if (intentRaw) {
+        try {
+          var intent = JSON.parse(intentRaw);
+          // 5 daqiqadan eski belgi yaroqsiz (eski tab qayta ochilishidan himoya)
+          if (intent && intent.ts && (Date.now() - intent.ts) < 5 * 60 * 1000) validIntent = true;
+        } catch (e) {}
+      }
+      if (!hasRoom && !validIntent) {
+        var box = document.getElementById("noBattleState");
+        if (box) { box.style.display = "flex"; }
+        document.querySelector(".battle-wrap").style.display = "none";
+        if (window.lucide) lucide.createIcons();
+        // Skriptning qolganini to'xtatamiz
+        throw new Error("no-active-battle");
+      }
+      // Belgi ishlatildi — tozalaymiz (qayta yuklashda yana tekshirilsin)
+      // (do'st jangida room URL'da qoladi, shuning uchun faqat intent'ni o'chiramiz)
+      sessionStorage.removeItem("battleIntent");
+    })();
 
     const socket = io();
     let currentRoom = null;

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sinf topshiriqlari — Knowledge Arena</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .app { max-width: 1680px; grid-template-columns: 230px 1fr 340px; }
+    .main { padding-right: 6px; grid-column: 2 / 3; }
+    @media (max-width: 1100px) { .app { grid-template-columns: 200px 1fr; } .main { grid-column: 2 / 3; } }
+    @media (max-width: 760px) { .app { grid-template-columns: 1fr; } .main { grid-column: 1; } }
+
+    .top-actions { display: flex; align-items: center; margin-bottom: 4px; }
+    .back-link { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; color: var(--text-dim); font-size: 14px; font-weight: 600; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+    .back-link:hover { border-color: var(--border-bright); color: var(--text); }
+    .back-link i { width: 16px; height: 16px; }
+
+    /* Sinf header card */
+    .class-banner {
+      display: flex; align-items: center; gap: 16px; padding: 22px;
+      background: linear-gradient(165deg, rgba(20,28,56,0.95), rgba(12,17,33,0.92));
+      border: 1px solid var(--border); border-radius: 18px; margin-bottom: 22px; position: relative; overflow: hidden;
+    }
+    .class-banner::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+    .cb-shield { width: 58px; height: 58px; border-radius: 15px; flex: 0 0 auto; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #fff; box-shadow: 0 6px 18px rgba(91,140,255,0.4); }
+    .cb-name { font-size: 21px; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
+    .cb-meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--text-dim); }
+    .cb-meta span { display: flex; align-items: center; gap: 6px; }
+    .cb-meta i { width: 14px; height: 14px; color: var(--accent); }
+
+    /* Filtrlar (ko'rinish uchun, disabled hozircha) */
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+    .filter-chip { padding: 8px 16px; border-radius: 999px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 600; }
+    .filter-chip.active { background: rgba(91,140,255,0.14); border-color: rgba(91,140,255,0.4); color: #a9c1ff; }
+
+    .state-box { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border); border-radius: 16px; padding: 56px 32px; text-align: center; }
+    .state-ic { width: 86px; height: 86px; margin: 0 auto 22px; border-radius: 24px; background: var(--panel-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--accent-2); }
+    .state-ic.err { color: var(--red); }
+    .state-ic i { width: 42px; height: 42px; }
+    .state-box h2 { font-size: 21px; font-weight: 700; margin-bottom: 8px; }
+    .state-box p { font-size: 14.5px; color: var(--text-dim); max-width: 440px; margin: 0 auto 24px; line-height: 1.6; }
+    .state-btn { display: inline-flex; align-items: center; gap: 9px; padding: 13px 24px; border: none; border-radius: 12px; background: linear-gradient(95deg, var(--accent), var(--accent-2)); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 22px rgba(91,140,255,0.3); transition: opacity 0.15s; }
+    .state-btn:hover { opacity: 0.93; }
+    .state-btn.ghost { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); box-shadow: none; }
+    .state-btn i { width: 18px; height: 18px; }
+
+    .sk { background: var(--panel-2); border-radius: 8px; position: relative; overflow: hidden; }
+    .sk::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); animation: shimmer 1.4s infinite; }
+    @keyframes shimmer { to { transform: translateX(100%); } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar"></aside>
+    <main class="main">
+
+      <div class="top-actions">
+        <a class="back-link" href="/student-classes.html"><i data-lucide="arrow-left"></i> Sinflarimga qaytish</a>
+      </div>
+
+      <!-- LOADING -->
+      <div id="loadingState">
+        <div class="class-banner">
+          <div class="sk" style="width:58px;height:58px;border-radius:15px"></div>
+          <div style="flex:1"><div class="sk" style="width:40%;height:20px;margin-bottom:10px"></div><div class="sk" style="width:65%;height:13px"></div></div>
+        </div>
+        <div class="sk" style="width:100%;height:240px;border-radius:16px"></div>
+      </div>
+
+      <!-- KONTENT -->
+      <div id="content" style="display:none;">
+        <div class="class-banner">
+          <div class="cb-shield" id="cbShield">S</div>
+          <div style="min-width:0">
+            <div class="cb-name" id="cbName">Sinf</div>
+            <div class="cb-meta">
+              <span><i data-lucide="user"></i> <span id="cbTeacher">O'qituvchi</span></span>
+              <span><i data-lucide="activity"></i> Faol</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filters">
+          <div class="filter-chip active">Hammasi</div>
+          <div class="filter-chip">Boshlanmagan</div>
+          <div class="filter-chip">Jarayonda</div>
+          <div class="filter-chip">Bajarilgan</div>
+          <div class="filter-chip">Muddati o'tgan</div>
+        </div>
+
+        <!-- Professional empty state (assignment tizimi hali yo'q) -->
+        <div class="state-box">
+          <div class="state-ic"><i data-lucide="clipboard-list"></i></div>
+          <h2>Bu sinf uchun hali topshiriqlar berilmagan</h2>
+          <p>O'qituvchingiz topshiriq berishni boshlaganda, ular shu yerda paydo bo'ladi. Hozircha sinfingizdagi yangiliklarni kuzatib boring.</p>
+          <a class="state-btn ghost" href="/student-classes.html"><i data-lucide="arrow-left"></i> Sinflarimga qaytish</a>
+        </div>
+      </div>
+
+      <!-- ERROR -->
+      <div class="state-box" id="errorState" style="display:none;">
+        <div class="state-ic err"><i data-lucide="alert-circle"></i></div>
+        <h2>Sinf topilmadi</h2>
+        <p id="errMsg">Bu sinf mavjud emas yoki siz unga a'zo emassiz.</p>
+        <a class="state-btn" href="/student-classes.html"><i data-lucide="arrow-left"></i> Sinflarimga qaytish</a>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/api.js"></script>
+  <script src="/sidebar.js"></script>
+  <script>
+    if (typeof renderSidebar === "function") renderSidebar("myclasses");
+
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = userData ? JSON.parse(userData) : {};
+    if (user.role && user.role !== "student") {
+      window.location.href = (user.role === "teacher" || user.role === "school_admin") ? "/teacher.html" : "/lobby.html";
+    }
+
+    function esc(s){ return String(s||"").replace(/[&<>"']/g, function(c){ return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]; }); }
+    function showState(s) {
+      document.getElementById("loadingState").style.display = s === "loading" ? "block" : "none";
+      document.getElementById("content").style.display = s === "content" ? "block" : "none";
+      document.getElementById("errorState").style.display = s === "error" ? "block" : "none";
+    }
+
+    var params = new URLSearchParams(window.location.search);
+    var classId = params.get("classId");
+
+    async function load() {
+      if (!classId) {
+        document.getElementById("errMsg").textContent = "Sinf ko'rsatilmagan. Sinflar ro'yxatidan sinfni tanlang.";
+        showState("error"); return;
+      }
+      showState("loading");
+      try {
+        // O'quvchining sinflari ichidan shu classId ni topamiz (alohida endpoint shart emas)
+        var res = await authFetch("/student/classes");
+        if (!res.ok) {
+          if (res.status === 403) { window.location.href = "/lobby.html"; return; }
+          throw new Error("xato");
+        }
+        var data = await res.json();
+        var cls = (data.classes || []).find(function(c){ return String(c.id) === String(classId); });
+        if (!cls) { showState("error"); return; }
+        render(cls);
+      } catch (e) {
+        document.getElementById("errMsg").textContent = "Ma'lumotlarni yuklashda xatolik yuz berdi.";
+        showState("error");
+      }
+    }
+
+    function render(cls) {
+      var name = cls.name || "Sinf";
+      document.getElementById("cbName").textContent = name;
+      document.getElementById("cbShield").textContent = name.trim().substring(0,2).toUpperCase();
+      var teacher = ((cls.teacher_first_name || "") + " " + (cls.teacher_last_name || "")).trim() || "O'qituvchi";
+      document.getElementById("cbTeacher").textContent = teacher;
+      showState("content");
+      if (window.lucide) lucide.createIcons();
+    }
+
+    if (window.lucide) lucide.createIcons();
+    load();
+  </script>
+</body>
+</html>

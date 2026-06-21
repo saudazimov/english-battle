@@ -841,6 +841,7 @@
         return;
       }
       // Qolgan rejimlar — battle sahifasiga. Qidirish o'sha yerda.
+      sessionStorage.setItem("battleIntent", JSON.stringify({ mode: selectedMode, ts: Date.now() }));
       window.location.href = "/battle.html";
     }
 
@@ -1002,6 +1003,7 @@
       if (ok) {
         // Keyingi bosqichda: serverga rematch so'rovi yuboriladi
         // Hozircha shunchaki battle sahifasiga o'tamiz
+        sessionStorage.setItem("battleIntent", JSON.stringify({ mode: "rematch", ts: Date.now() }));
         window.location.href = "/battle.html";
       }
     }
