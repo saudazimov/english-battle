@@ -15,7 +15,8 @@
     .icon-btn { position: relative; width: 42px; height: 42px; border-radius: 12px; background: var(--panel); border: 1px solid var(--border); display: grid; place-items: center; cursor: pointer; }
     .icon-btn .badge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; background: #ef4444; color: #fff; font-size: 11px; border-radius: 9px; display: grid; place-items: center; padding: 0 4px; }
     .user-chip { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 6px 12px 6px 6px; cursor: pointer; }
-    .user-chip .ava { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 15px; overflow: hidden; }
+    .user-chip .ava { position: relative; width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 15px; overflow: hidden; flex-shrink: 0; }
+    .user-chip .ava img { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
     .user-chip .uname { font-size: 14px; font-weight: 600; line-height: 1.1; }
     .user-chip .ulevel { font-size: 11px; color: var(--text-dim); }
 
@@ -166,7 +167,7 @@
     const user = JSON.parse(userData);
 
     document.getElementById("topName").textContent = user.first_name + " " + user.last_name;
-    document.getElementById("topAva").textContent = (user.first_name || "?").charAt(0).toUpperCase();
+    document.getElementById("topAva").innerHTML = avatarHTML(user.first_name, user.profile_picture);
     document.getElementById("coins").textContent = user.coins || 0;
 
     renderSidebar("exam");

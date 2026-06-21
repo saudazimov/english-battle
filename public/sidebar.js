@@ -158,7 +158,11 @@ function doLogout() {
 function avatarHTML(firstName, picPath) {
   const letter = (firstName || "?").charAt(0).toUpperCase();
   if (picPath) {
-    return '<img src="' + picPath + '" alt="' + letter + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
+    // Xavfsiz usul: position:absolute ISHLATILMAYDI (u butun sahifani egallashi mumkin).
+    // object-fit:cover + to'liq o'lcham => konteynerni to'ldiradi, chekkada bo'shliq qolmaydi.
+    return '<img src="' + picPath + '" alt="' + letter + '" ' +
+      'style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;" ' +
+      'onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + letter + '\';">';
   }
   return letter;
 }

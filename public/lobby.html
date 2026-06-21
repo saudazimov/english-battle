@@ -81,10 +81,12 @@
       border-radius: 12px; padding: 6px 12px 6px 6px; cursor: pointer;
     }
     .user-chip .ava {
-      width: 34px; height: 34px; border-radius: 50%;
+      position: relative;
+      width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       display: grid; place-items: center; font-weight: 700; font-size: 15px;
     }
+    .user-chip .ava img { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
     .user-chip .uname { font-size: 14px; font-weight: 600; line-height: 1.1; }
     .user-chip .ulevel { font-size: 11px; color: var(--text-dim); }
 
@@ -127,14 +129,14 @@
       display: flex; align-items: center; gap: 24px; padding: 24px 28px;
     }
     .pc-avatar {
+      position: relative;
       width: 84px; height: 84px; border-radius: 50%; flex-shrink: 0;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       display: grid; place-items: center; font-size: 34px; font-weight: 800;
-      box-shadow: 0 0 30px rgba(91,140,255,0.4);
-      border: 3px solid rgba(120,150,255,0.3);
+      box-shadow: 0 0 30px rgba(91,140,255,0.4), 0 0 0 3px rgba(120,150,255,0.3);
       overflow: hidden;
     }
-    .pc-avatar img { margin: -3px; width: calc(100% + 6px) !important; height: calc(100% + 6px) !important; }
+    .pc-avatar img { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
     .pc-info { flex: 1; }
     .pc-name-row { display: flex; align-items: center; gap: 10px; }
     .pc-name { font-size: 26px; font-weight: 800; }
@@ -280,6 +282,7 @@
     .recent-row:hover { background: var(--panel); }
     .recent-opp { display: flex; align-items: center; gap: 12px; }
     .recent-ava {
+      position: relative;
       width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       display: grid; place-items: center; font-weight: 700; font-size: 15px;
@@ -402,12 +405,14 @@
       text-decoration: none !important;
     }    
     .sidebar a { text-decoration: none !important; }
-    .pc-avatar img, .recent-ava img, #userAva img {
+    .recent-ava img {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
       width: 100% !important;
       height: 100% !important;
-      object-fit: cover;
-      border-radius: 50%;
-      display: block;
+      object-fit: cover !important;
+      display: block !important;
     }
     
     /* ===== SKELETON LOADING (miltillovchi placeholder) ===== */
@@ -750,6 +755,20 @@
       .then(data => {
         if (data.stats) document.getElementById("pcWinRate").textContent = data.stats.win_rate + "%";
         if (data.user) document.getElementById("pcStreak").textContent = data.user.current_streak || 0;
+        // Profil rasmini bazadan eng yangi holatda olamiz (localStorage eski bo'lsa ham)
+        if (data.user) {
+          var freshPic = data.user.profile_picture;
+          // Avatarlarni yangilaymiz (hero + topbar)
+          var heroAva = document.getElementById("pcAvatar");
+          var topAva = document.getElementById("userAva");
+          if (heroAva) heroAva.innerHTML = avatarHTML(data.user.first_name || user.first_name, freshPic);
+          if (topAva) topAva.innerHTML = avatarHTML(data.user.first_name || user.first_name, freshPic);
+          // localStorage'ni ham yangilab qo'yamiz (keyingi sahifalar uchun)
+          if (freshPic && freshPic !== user.profile_picture) {
+            user.profile_picture = freshPic;
+            localStorage.setItem("user", JSON.stringify(user));
+          }
+        }
       })
       .catch(() => {});
 
