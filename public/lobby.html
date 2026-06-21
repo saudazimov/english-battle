@@ -72,9 +72,60 @@
     }
     .icon-btn .badge {
       position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px;
-      background: #ef4444; color: #fff; font-size: 11px; border-radius: 9px;
-      display: grid; place-items: center; padding: 0 4px;
+      background: var(--green); color: #fff; font-size: 11px; font-weight: 700; border-radius: 9px;
+      display: grid; place-items: center; padding: 0 4px; border: 2px solid var(--bg);
     }
+    .icon-btn .badge.has-unread { background: #ef4444; }
+
+    /* ===== NOTIFICATIONS BAR ===== */
+    .notif-wrap { position: relative; }
+    .notif-bar {
+      position: absolute; top: calc(100% + 10px); right: 0;
+      width: 360px; max-height: 460px; display: none; flex-direction: column;
+      background: var(--panel); border: 1px solid var(--border-bright);
+      border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+      z-index: 100; overflow: hidden;
+    }
+    .notif-wrap.open .notif-bar { display: flex; }
+    .notif-bar-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px; border-bottom: 1px solid var(--border);
+      font-size: 15px; font-weight: 700; flex-shrink: 0;
+    }
+    .notif-close { width: 18px; height: 18px; color: var(--text-dim); cursor: pointer; transition: color 0.15s; }
+    .notif-close:hover { color: var(--text); }
+    .notif-list { overflow-y: auto; padding: 6px; }
+    .notif-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 13px 12px; border-radius: 12px; cursor: pointer;
+      transition: background 0.15s; position: relative;
+    }
+    .notif-item:hover { background: var(--panel-2); }
+    .notif-item.unread { background: rgba(91,140,255,0.07); }
+    .notif-item.unread:hover { background: rgba(91,140,255,0.12); }
+    .notif-ic {
+      width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+      display: grid; place-items: center; background: rgba(91,140,255,0.14); color: var(--accent);
+    }
+    .notif-ic i { width: 19px; height: 19px; }
+    .notif-body { flex: 1; min-width: 0; padding-right: 18px; }
+    .notif-msg { font-size: 13.5px; line-height: 1.4; color: var(--text); word-break: break-word; }
+    .notif-time { font-size: 11.5px; color: var(--text-faint); margin-top: 4px; }
+    .notif-x {
+      position: absolute; top: 10px; right: 8px;
+      width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+      display: grid; place-items: center; color: var(--text-faint);
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+    }
+    .notif-x:hover { background: rgba(248,113,113,0.15); color: var(--red); }
+    .notif-x i { width: 14px; height: 14px; }
+    .notif-empty { text-align: center; padding: 40px 20px; color: var(--text-faint); }
+    .notif-empty i { width: 40px; height: 40px; margin-bottom: 12px; opacity: 0.5; }
+    .notif-empty-text { font-size: 14px; }
+    @media (max-width: 560px) {
+      .notif-bar { width: calc(100vw - 32px); right: -60px; }
+    }
+
     .user-chip {
       display: flex; align-items: center; gap: 10px;
       background: var(--panel); border: 1px solid var(--border);
@@ -475,6 +526,39 @@
 
    
 
+    /* ===== BATTLE FORMAT MODAL ===== */
+    .length-overlay { position: fixed; inset: 0; background: rgba(3,6,15,0.75); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1200; padding: 20px; }
+    .length-overlay.show { display: flex; }
+    .length-modal { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border-bright); border-radius: 18px; width: 100%; max-width: 720px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); transform: scale(0.97); animation: lmPop 0.18s ease forwards; }
+    @keyframes lmPop { to { transform: scale(1); } }
+    .length-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 24px 26px 18px; border-bottom: 1px solid var(--border); }
+    .length-title { font-size: 20px; font-weight: 800; }
+    .length-sub { font-size: 13.5px; color: var(--text-dim); margin-top: 4px; }
+    .length-close { width: 22px; height: 22px; color: var(--text-dim); cursor: pointer; transition: color 0.15s; flex-shrink: 0; }
+    .length-close:hover { color: var(--text); }
+    .length-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 22px 26px; }
+    @media (max-width: 680px) { .length-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 380px) { .length-grid { grid-template-columns: 1fr; } }
+    .length-card { position: relative; background: rgba(255,255,255,0.02); border: 1.5px solid var(--border); border-radius: 14px; padding: 18px 14px; cursor: pointer; transition: border-color 0.15s, transform 0.12s, background 0.15s; text-align: center; }
+    .length-card:hover { border-color: var(--border-bright); transform: translateY(-3px); }
+    .length-card.active { border-color: var(--accent); background: linear-gradient(180deg, rgba(91,140,255,0.12), rgba(255,255,255,0.02)); box-shadow: 0 0 24px rgba(91,140,255,0.2); }
+    .lf-check { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(91,140,255,0.5); }
+    .lf-check i { width: 15px; height: 15px; color: #fff; stroke-width: 3; }
+    .length-card.active .lf-check { display: flex; }
+    .lf-name { font-size: 17px; font-weight: 800; }
+    .lf-uz { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; }
+    .lf-rows { display: flex; flex-direction: column; gap: 8px; }
+    .lf-row { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 13px; color: var(--text-dim); }
+    .lf-row i { width: 15px; height: 15px; }
+    .lf-row.lf-xp { color: var(--gold); font-weight: 700; }
+    .lf-row.lf-xp i { color: var(--gold); }
+    .length-card.active .lf-name { color: var(--accent); }
+    .length-foot { display: flex; gap: 12px; padding: 0 26px 24px; }
+    .length-cancel { flex: 1; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel-2); color: var(--text-dim); font-size: 15px; font-weight: 600; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+    .length-cancel:hover { border-color: var(--border-bright); color: var(--text); }
+    .length-start { flex: 2; display: flex; align-items: center; justify-content: center; gap: 9px; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(95deg, var(--accent), var(--accent-2)); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 22px rgba(91,140,255,0.3); transition: opacity 0.15s; }
+    .length-start:hover { opacity: 0.93; }
+    .length-start i { width: 18px; height: 18px; }
   </style>
 
 </head>
@@ -487,17 +571,7 @@
     <!-- ===== O'RTA KONTENT ===== -->
     <main class="main">
       <!-- Yuqori panel -->
-      <div class="topbar">
-        <div class="currency"><i data-lucide="coins" style="color:var(--gold);width:18px;height:18px;"></i> <span id="coins">0</span> <span class="plus">+</span></div>
-        <div class="currency"><i data-lucide="gem" style="color:var(--cyan);width:18px;height:18px;"></i> <span id="gems">0</span> <span class="plus">+</span></div>
-          <div class="icon-btn" onclick="window.location.href='/friends.html'" style="cursor:pointer;"><i data-lucide="bell"></i> <span class="badge" id="notifBadge">0</span></div>        <div class="user-chip">
-          <div class="ava" id="userAva">J</div>
-          <div>
-            <div class="uname" id="userName">O'yinchi</div>
-            <div class="ulevel">Level <span id="userLevel">1</span></div>
-          </div>
-        </div>
-      </div>
+      <div class="topbar"></div>
 
       <!-- Sarlavha -->
       <div class="page-head">
@@ -674,6 +748,24 @@
     </aside>
   </div>
 
+  <!-- BATTLE FORMAT (savol soni) MODALI -->
+  <div class="length-overlay" id="lengthModal">
+    <div class="length-modal">
+      <div class="length-head">
+        <div>
+          <div class="length-title">Battle formatini tanlang</div>
+          <div class="length-sub">Savollar soni, vaqt va mukofotni tanlang</div>
+        </div>
+        <i data-lucide="x" class="length-close" onclick="closeLengthModal()"></i>
+      </div>
+      <div class="length-grid" id="lengthGrid"></div>
+      <div class="length-foot">
+        <button class="length-cancel" onclick="closeLengthModal()">Bekor qilish</button>
+        <button class="length-start" onclick="startBattleWithLength()"><i data-lucide="swords"></i> Raqib topish</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/api.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/socket.io/socket.io.js"></script>
@@ -699,21 +791,8 @@
     }
     setupLobbySocket();
 
-    document.getElementById("userName").textContent = user.first_name + " " + user.last_name;
-    document.getElementById("userAva").innerHTML = avatarHTML(user.first_name, user.profile_picture);
-    document.getElementById("coins").textContent = user.coins || 0;
-    document.getElementById("userLevel").textContent = Math.floor((user.xp || 0) / 100) + 1;
-
-    // Bildirishnoma soni
-    authFetch("/notifications/" + user.id)
-      .then(r => r.json())
-      .then(data => {
-        const unread = (data.notifications || []).filter(n => !n.is_read).length;
-        const badge = document.getElementById("notifBadge");
-        if (unread > 0) { badge.textContent = unread; badge.style.display = "grid"; }
-        else { badge.style.display = "none"; }
-      })
-      .catch(() => { document.getElementById("notifBadge").style.display = "none"; });
+    // Umumiy topbar (coins, gems, bell+notifications, avatar) — sidebar.js'dan
+    renderTopbar();
 
     // Profil kartasini to'ldirish
     const cefrLabels = { A1: "Beginner", A2: "Elementary", B1: "Intermediate", B2: "Upper-Intermediate", C1: "Advanced", C2: "Proficient" };
@@ -749,18 +828,29 @@
     document.getElementById("pcLeague").innerHTML = leagueFull(user.rating || 1000);
     document.getElementById("pcRating").textContent = user.rating || 1000;
 
-    // Win rate va streak - profil endpoint'dan
+    // Win rate, streak, rating - profil endpoint'dan (eng yangi, bazadan)
     authFetch("/profile/" + user.id)
       .then(r => r.json())
       .then(data => {
         if (data.stats) document.getElementById("pcWinRate").textContent = data.stats.win_rate + "%";
-        if (data.user) document.getElementById("pcStreak").textContent = data.user.current_streak || 0;
+        if (data.user) {
+          // Rating va liga — bazadagi eng yangi qiymat (battle'dan keyin ham to'g'ri)
+          const freshRating = data.user.rating != null ? data.user.rating : (user.rating || 1000);
+          document.getElementById("pcRating").textContent = freshRating;
+          document.getElementById("pcLeague").innerHTML = leagueFull(freshRating);
+          document.getElementById("pcStreak").textContent = data.user.current_streak || 0;
+          // localStorage rating ham yangilanadi
+          if (data.user.rating != null && data.user.rating !== user.rating) {
+            user.rating = data.user.rating;
+            localStorage.setItem("user", JSON.stringify(user));
+          }
+        }
         // Profil rasmini bazadan eng yangi holatda olamiz (localStorage eski bo'lsa ham)
         if (data.user) {
           var freshPic = data.user.profile_picture;
           // Avatarlarni yangilaymiz (hero + topbar)
           var heroAva = document.getElementById("pcAvatar");
-          var topAva = document.getElementById("userAva");
+          var topAva = document.getElementById("topAva");
           if (heroAva) heroAva.innerHTML = avatarHTML(data.user.first_name || user.first_name, freshPic);
           if (topAva) topAva.innerHTML = avatarHTML(data.user.first_name || user.first_name, freshPic);
           // localStorage'ni ham yangilab qo'yamiz (keyingi sahifalar uchun)
@@ -859,8 +949,52 @@
         window.location.href = "/friends.html";
         return;
       }
-      // Qolgan rejimlar — battle sahifasiga. Qidirish o'sha yerda.
-      sessionStorage.setItem("battleIntent", JSON.stringify({ mode: selectedMode, ts: Date.now() }));
+      // Format tanlash modalini ochamiz (savol soni / vaqt / XP)
+      openLengthModal();
+    }
+
+    // ===== BATTLE FORMAT (savol soni) MODALI =====
+    const battleLengths = {
+      quick:    { label: "Quick",    uzLabel: "Tezkor",       questions: 10, totalSeconds: 150, xp: 4 },
+      standard: { label: "Standard", uzLabel: "Standart",     questions: 20, totalSeconds: 300, xp: 8, recommended: true },
+      extended: { label: "Extended", uzLabel: "Uzaytirilgan", questions: 30, totalSeconds: 450, xp: 12 },
+      marathon: { label: "Marathon", uzLabel: "Marafon",      questions: 40, totalSeconds: 600, xp: 16 },
+    };
+    let selectedLength = "standard"; // recommended default
+
+    function fmtTime(sec) {
+      const m = Math.floor(sec / 60), s = sec % 60;
+      return m + ":" + (s < 10 ? "0" : "") + s;
+    }
+
+    function openLengthModal() {
+      const grid = document.getElementById("lengthGrid");
+      grid.innerHTML = Object.keys(battleLengths).map(key => {
+        const L = battleLengths[key];
+        const active = key === selectedLength ? " active" : "";
+        return '<div class="length-card' + active + '" data-key="' + key + '" onclick="selectLength(\'' + key + '\')">' +
+            '<div class="lf-check"><i data-lucide="check"></i></div>' +
+            '<div class="lf-name">' + L.label + '</div>' +
+            '<div class="lf-uz">' + L.uzLabel + '</div>' +
+            '<div class="lf-rows">' +
+              '<div class="lf-row"><i data-lucide="list-checks"></i> ' + L.questions + ' savol</div>' +
+              '<div class="lf-row"><i data-lucide="clock"></i> ' + fmtTime(L.totalSeconds) + '</div>' +
+              '<div class="lf-row lf-xp"><i data-lucide="zap"></i> +' + L.xp + ' XP</div>' +
+            '</div>' +
+          '</div>';
+      }).join("");
+      document.getElementById("lengthModal").classList.add("show");
+      if (window.lucide) lucide.createIcons();
+    }
+    function closeLengthModal() {
+      document.getElementById("lengthModal").classList.remove("show");
+    }
+    function selectLength(key) {
+      selectedLength = key;
+      document.querySelectorAll(".length-card").forEach(c => c.classList.toggle("active", c.getAttribute("data-key") === key));
+    }
+    function startBattleWithLength() {
+      sessionStorage.setItem("battleIntent", JSON.stringify({ mode: selectedMode, lengthKey: selectedLength, ts: Date.now() }));
       window.location.href = "/battle.html";
     }
 

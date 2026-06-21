@@ -7,7 +7,17 @@
   <link rel="stylesheet" href="/app.css">
   <style>
     body { display: flex; align-items: center; justify-content: center; padding: 30px 20px; min-height: 100vh; }
+    /* Matchmaking: markazda turadi, lekin balandroq bo'lsa scroll bo'ladi (kesilmaydi) */
+    body:has(#searchScreen.active) { display: block; padding: 0; }
+    body:has(#searchScreen.active) .battle-wrap { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 24px 20px; box-sizing: border-box; }
+    /* Battle arena: bitta ekranga sig'sin (ixcham) */
+    body:has(#battleScreen.active) { display: block; padding: 0; }
+    body:has(#battleScreen.active) .battle-wrap { min-height: 100vh; padding: 16px 20px; box-sizing: border-box; }
     .battle-wrap { max-width: 760px; width: 100%; }
+    /* Matchmaking ekrani faol bo'lsa konteyner kengroq (card keng, past bo'lsin) */
+    .battle-wrap:has(#searchScreen.active) { max-width: 1120px; margin: 0 auto; }
+    /* Battle arena faol bo'lsa keng */
+    .battle-wrap:has(#battleScreen.active) { max-width: 1200px; margin: 0 auto; }
     .screen { display: none; }
     .screen.active { display: block; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -22,33 +32,124 @@
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
     /* JANG */
-    .battle-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
-    .player-box { flex: 1; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 12px; }
-    .player-box.opp { border-color: rgba(248,113,113,0.3); flex-direction: row-reverse; text-align: right; }
-    .pb-ava { width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 800; font-size: 18px; overflow: hidden; }
-    .opp .pb-ava { background: linear-gradient(135deg, #f87171, #a855f7); }
-    .pb-info { flex: 1; min-width: 0; }
-    .pb-name { font-size: 14px; font-weight: 700; }
-    .pb-score { font-size: 26px; font-weight: 800; color: var(--accent); }
-    .opp .pb-score { color: var(--red); }
-    .vs-badge { width: 44px; height: 44px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); display: grid; place-items: center; font-weight: 800; font-size: 14px; color: var(--text-dim); flex-shrink: 0; }
+    /* ===== BATTLE ROOM ARENA ===== */
+    /* Top header */
+    .br-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .br-brand { display: flex; align-items: center; gap: 12px; }
+    .br-logo { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; box-shadow: 0 0 20px rgba(91,140,255,0.4); }
+    .br-logo i { width: 22px; height: 22px; color: #fff; }
+    .br-title { font-size: 18px; font-weight: 800; color: var(--accent); letter-spacing: 0.5px; }
+    .br-subtitle { font-size: 12.5px; color: var(--text-dim); }
+    .br-top-right { display: flex; align-items: center; gap: 16px; }
+    .br-live { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--green); letter-spacing: 1px; }
+    .br-live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: scanPulse 2s ease-in-out infinite; }
+    .br-live.reconnecting { color: var(--gold); }
+    .br-live.reconnecting .br-live-dot { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+    .br-leave { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 11px; background: rgba(120,35,55,0.4); border: 1px solid rgba(255,90,110,0.5); color: #ff7b8a; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
+    .br-leave:hover { background: rgba(150,45,70,0.55); box-shadow: 0 0 18px rgba(255,90,110,0.25); }
+    .br-leave i { width: 16px; height: 16px; }
 
-    .timer-bar { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; margin-bottom: 22px; }
-    .timer-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); width: 100%; transition: width 1s linear; }
-    .timer-fill.warning { background: linear-gradient(90deg, var(--gold), var(--red)); }
+    /* Player VS area */
+    .br-versus { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: start; margin-bottom: 14px; }
+    .br-pcard { border-radius: 16px; padding: 14px 18px; position: relative; overflow: hidden; }
+    .br-pcard.me { background: rgba(10,22,50,0.7); border: 1.5px solid rgba(56,225,255,0.4); box-shadow: 0 0 30px rgba(56,225,255,0.12); }
+    .br-pcard.opp { background: rgba(28,15,55,0.7); border: 1.5px solid rgba(168,85,247,0.5); box-shadow: 0 0 30px rgba(168,85,247,0.14); }
+    .br-pcard-row { display: flex; align-items: center; gap: 16px; }
+    .br-pcard.opp .br-pcard-row { flex-direction: row; justify-content: flex-end; text-align: right; }
+    .br-pava { position: relative; width: 58px; height: 58px; flex-shrink: 0; }
+    .br-pava-img { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 800; font-size: 22px; color: #fff; border: 2px solid rgba(56,225,255,0.5); box-shadow: 0 0 22px rgba(56,225,255,0.35); }
+    .br-pava-img img { width: 100%; height: 100%; object-fit: cover; }
+    .br-pava.opp .br-pava-img { background: linear-gradient(135deg, #c026d3, #f472b6); border-color: rgba(244,114,182,0.6); box-shadow: 0 0 22px rgba(244,114,182,0.4); }
+    .br-pava-dot { position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--green); border: 2.5px solid #0a142d; z-index: 2; }
+    .br-pcard-info { flex: 1; min-width: 0; }
+    .br-pname { font-size: 19px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .br-pscore-row { display: flex; align-items: center; gap: 14px; }
+    .br-pcard.opp .br-pscore-row { justify-content: flex-end; }
+    .br-pscore { font-size: 30px; font-weight: 900; line-height: 1; transition: transform 0.25s; }
+    .br-pscore.me { color: var(--cyan); }
+    .br-pscore.opp { color: #f472b6; }
+    .br-pscore.pulse { animation: scorePulse 0.4s ease; }
+    @keyframes scorePulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+    .br-prating { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 9px; background: rgba(255,255,255,0.05); font-size: 13px; font-weight: 700; color: var(--text-dim); }
+    .br-prating i { width: 13px; height: 13px; color: var(--gold); }
 
-    .q-card { padding: 32px; }
-    .q-number { text-align: center; color: var(--text-dim); font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
-    .q-text { font-size: 22px; text-align: center; line-height: 1.4; margin-bottom: 28px; font-weight: 600; }
-    .opt { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; margin: 12px 0; padding: 18px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; color: var(--text); font-size: 16px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-    .opt:hover { border-color: var(--border-bright); transform: translateX(4px); }
-    .opt:active { transform: scale(0.98); }
-    .opt-letter { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 800; font-size: 14px; color: #fff; }
+    /* VS badge */
+    .br-vs { position: relative; width: 64px; height: 64px; border-radius: 50%; background: rgba(15,20,45,0.9); display: grid; place-items: center; align-self: center; flex-shrink: 0; }
+    .br-vs span { font-size: 18px; font-weight: 900; color: var(--text-dim); z-index: 1; }
+    .br-vs-ring { position: absolute; inset: -3px; border-radius: 50%; border: 2px solid transparent; border-top-color: var(--accent); border-right-color: var(--accent-2); animation: scanSpin 4s linear infinite; }
+
+    /* Progress (har player ostida) */
+    .br-progress { margin-top: 12px; }
+    .br-progress-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+    .br-progress-rail { position: relative; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.08); }
+    .br-progress-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px; width: 0%; transition: width 0.35s ease; }
+    .br-progress-fill.me { background: linear-gradient(90deg, var(--accent), var(--cyan)); }
+    .br-progress-fill.opp { background: linear-gradient(90deg, var(--accent-2), #f472b6); }
+    .br-progress-marker { position: absolute; top: 50%; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; transition: left 0.35s ease; left: 0; transform: translate(-50%,-50%); }
+    .br-progress-marker.me { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+    .br-progress-marker.opp { background: #f472b6; box-shadow: 0 0 10px #f472b6; }
+
+    /* Question card */
+    .br-qcard { padding: 26px 34px; margin-bottom: 16px; }
+    .br-q-inforow { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+    .br-q-left { display: flex; align-items: center; gap: 12px; }
+    .br-q-num { font-size: 13px; font-weight: 700; color: var(--text-dim); letter-spacing: 1px; }
+    .br-q-level { padding: 3px 10px; border-radius: 7px; background: rgba(168,85,247,0.18); color: var(--accent-2); font-size: 12px; font-weight: 800; }
+    .br-q-meta { display: flex; align-items: center; gap: 24px; }
+    .br-q-mode, .br-q-tpq { display: inline-flex; align-items: center; gap: 9px; }
+    .br-q-meta i { width: 18px; height: 18px; color: var(--accent-2); }
+    .brm-lbl { display: block; font-size: 11px; color: var(--text-faint); }
+    .brm-val { display: block; font-size: 14px; font-weight: 700; color: var(--text); }
+    .br-q-timer { display: inline-flex; align-items: center; gap: 8px; font-size: 23px; font-weight: 800; color: var(--cyan); font-variant-numeric: tabular-nums; }
+    .br-q-timer i { width: 22px; height: 22px; }
+    .br-q-timer.warning { color: var(--gold); }
+    .br-q-timer.warning i { color: var(--gold); }
+    .br-q-timer.danger { color: var(--red); animation: scanPulse 0.6s ease-in-out infinite; }
+    .br-q-timer.danger i { color: var(--red); }
+    .br-q-text { font-size: 28px; font-weight: 800; text-align: center; line-height: 1.32; color: #e6ecff; margin-bottom: 24px; }
+
+    /* Options */
+    .br-options { display: flex; flex-direction: column; gap: 11px; }
+    .opt { display: flex; align-items: center; gap: 15px; width: 100%; text-align: left; padding: 16px 20px; background: rgba(12,18,40,0.75); border: 1px solid rgba(100,120,255,0.22); border-radius: 13px; color: var(--text); font-size: 16px; cursor: pointer; transition: border-color 0.18s, background 0.18s, transform 0.18s; font-family: inherit; }
+    .opt:hover:not(:disabled) { border-color: var(--accent); background: rgba(91,140,255,0.08); transform: translateX(3px); }
+    .opt:disabled { cursor: default; opacity: 0.85; }
+    .opt-letter { width: 37px; height: 37px; border-radius: 10px; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 800; font-size: 15px; color: #fff; }
+    .opt.selected { border-color: var(--cyan); background: rgba(56,225,255,0.1); }
+    .opt.correct { border-color: var(--green); background: rgba(52,211,153,0.12); }
+    .opt.correct .opt-letter { background: var(--green); }
+    .opt.wrong { border-color: var(--red); background: rgba(248,113,113,0.12); }
+    .opt.wrong .opt-letter { background: var(--red); }
+    .opt-mark { margin-left: auto; width: 22px; height: 22px; }
     .opt { animation: slideIn 0.3s ease both; }
     .opt:nth-child(1) { animation-delay: 0.05s; } .opt:nth-child(2) { animation-delay: 0.1s; }
     .opt:nth-child(3) { animation-delay: 0.15s; } .opt:nth-child(4) { animation-delay: 0.2s; }
     @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+    /* Stats cards */
+    .br-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .br-stat { background: rgba(10,15,35,0.7); border: 1px solid var(--border); border-radius: 13px; padding: 12px 16px; }
+    .br-stat-top { display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.5px; margin-bottom: 7px; }
+    .br-stat-top i { width: 16px; height: 16px; }
+    .br-stat-val { font-size: 24px; font-weight: 900; color: var(--text); line-height: 1; }
+    .br-stat-val.gold { color: var(--gold); }
+    .br-stat-val.accent { color: var(--accent); }
+    .br-stat-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 6px; }
+    .br-stat-bar { height: 5px; border-radius: 999px; background: rgba(255,255,255,0.08); margin-top: 7px; overflow: hidden; }
+    .br-stat-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--cyan)); border-radius: 999px; transition: width 0.4s ease; }
+
+    /* eski timer/score (yashirin, logika) */
+    .timer-bar { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; }
+    .timer-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); width: 100%; transition: width 1s linear; }
+    .timer-fill.warning { background: linear-gradient(90deg, var(--gold), var(--red)); }
     .opp-progress { text-align: center; color: var(--red); font-size: 14px; margin-top: 16px; min-height: 20px; }
+
+    @media (max-width: 860px) {
+      .br-versus { grid-template-columns: 1fr; }
+      .br-vs { display: none; }
+      .br-q-text { font-size: 23px; }
+      .br-q-meta { display: none; }
+      .br-stats { grid-template-columns: repeat(2, 1fr); }
+    }
 
     /* NATIJA */
     .result-card { padding: 40px; text-align: center; }
@@ -124,65 +225,92 @@
     .lp-rp { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 8px; }
 
     /* ===== MATCHMAKING DIZAYNI ===== */
-    .mm-card { padding: 48px 40px; text-align: center; }
+    .mm-card { padding: 32px 44px; text-align: center; max-width: 1080px; margin: 0 auto; }
 
-    /* Radar (qidirilmoqda) */
-    .mm-radar {
-      position: relative; width: 150px; height: 150px;
-      margin: 0 auto 26px; display: grid; place-items: center;
-    }
-    .mm-radar-ring {
-      position: absolute; inset: 0;
-      border: 2px solid var(--accent); border-radius: 50%;
-      animation: mmPulse 2s ease-out infinite;
-    }
-    .mm-radar-ring.r2 { animation-delay: 1s; }
-    @keyframes mmPulse {
-      0% { transform: scale(0.4); opacity: 0.8; }
-      100% { transform: scale(1); opacity: 0; }
-    }
-    .mm-radar-core {
-      width: 76px; height: 76px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      display: grid; place-items: center;
-      box-shadow: 0 0 40px rgba(91,140,255,0.6); z-index: 1;
-    }
-    .mm-radar-core i { width: 34px; height: 34px; color: #fff; }
+    /* Scanner animatsiya (spec 3) */
+    .mm-scanner { position: relative; width: 120px; height: 120px; margin: 0 auto 18px; display: grid; place-items: center; }
+    .scanner-ring { position: absolute; border-radius: 50%; }
+    .scanner-ring.r1 { inset: 0; border: 2px solid rgba(91,140,255,0.5); border-top-color: var(--accent); border-right-color: var(--accent-2); animation: scanSpin 5s linear infinite; }
+    .scanner-ring.r2 { inset: 14px; border: 2px solid rgba(168,85,247,0.4); border-bottom-color: var(--accent-2); border-left-color: var(--cyan); animation: scanSpinRev 4s linear infinite; }
+    .scanner-ring.r3 { inset: 28px; border: 1.5px solid rgba(56,225,255,0.3); border-top-color: var(--cyan); animation: scanSpin 7s linear infinite; }
+    @keyframes scanSpin { to { transform: rotate(360deg); } }
+    @keyframes scanSpinRev { to { transform: rotate(-360deg); } }
+    .scanner-core { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; box-shadow: 0 0 40px rgba(91,140,255,0.55); z-index: 1; animation: scanPulse 2.2s ease-in-out infinite; }
+    .scanner-core i { width: 28px; height: 28px; color: #fff; }
+    @keyframes scanPulse { 0%,100% { box-shadow: 0 0 30px rgba(91,140,255,0.4); } 50% { box-shadow: 0 0 50px rgba(168,85,247,0.7); } }
 
-    .mm-title {
-      font-size: 26px; font-weight: 800; margin-bottom: 8px;
-      background: linear-gradient(135deg, #fff, #a5b4fc);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .mm-sub { font-size: 14px; color: var(--text-dim); margin-bottom: 22px; }
+    .mm-title { font-size: 28px; font-weight: 800; margin-bottom: 6px; color: #e6ecff; }
+    .mm-sub { font-size: 15px; color: var(--text-dim); margin-bottom: 22px; }
 
-    /* Mode / Level / Rating qutilari */
-    .mm-info {
-      display: flex; justify-content: center; gap: 12px; margin-bottom: 22px;
-    }
-    .mm-info-item {
-      background: var(--panel); border: 1px solid var(--border);
-      border-radius: 12px; padding: 10px 18px; min-width: 90px;
-    }
-    .mm-info-lbl {
-      font-size: 11px; color: var(--text-dim);
-      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;
-    }
-    .mm-info-val { font-size: 15px; font-weight: 700; color: var(--cyan); }
+    /* 5 ta info chip — bitta qatorda (spec 5) */
+    .mm-chips { display: flex; justify-content: center; flex-wrap: nowrap; gap: 12px; margin-bottom: 24px; }
+    .mm-chip { display: flex; align-items: center; gap: 11px; background: rgba(12,18,40,0.75); border: 1px solid rgba(100,120,255,0.25); border-radius: 14px; padding: 12px 18px; white-space: nowrap; }
+    .mm-chip > i { width: 19px; height: 19px; color: var(--accent-2); flex-shrink: 0; }
+    .mc-lbl { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 1px; }
+    .mc-val { font-size: 15px; font-weight: 700; color: var(--cyan); margin-top: 2px; }
+    .mm-chip.unrated .mc-val { color: var(--text-dim); }
 
-    .mm-timer {
-      font-size: 22px; font-weight: 700; color: var(--cyan);
-      font-variant-numeric: tabular-nums; margin-bottom: 24px;
+    /* Siz / Timer / Raqib (spec 6,7) */
+    .mm-versus { display: grid; grid-template-columns: 1fr 240px 1fr; gap: 18px; align-items: stretch; margin-bottom: 18px; }
+    .mm-pcard { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 16px; }
+    .mm-pcard.me { background: rgba(10,20,45,0.7); border: 1px solid rgba(56,225,255,0.35); box-shadow: 0 0 24px rgba(56,225,255,0.1); justify-content: flex-start; text-align: left; }
+    .mm-pcard.opp { background: rgba(25,15,50,0.65); border: 1px solid rgba(168,85,247,0.4); box-shadow: 0 0 24px rgba(168,85,247,0.12); justify-content: flex-end; text-align: right; }
+    .mm-pava { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
+    .mm-pava-img { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-size: 24px; font-weight: 800; color: #fff; border: 2px solid rgba(56,225,255,0.5); box-shadow: 0 0 20px rgba(56,225,255,0.3); }
+    .mm-pava-img img { width: 100%; height: 100%; object-fit: cover; }
+    .mm-pava.opp .mm-pava-img { background: rgba(40,25,70,0.8); border-color: rgba(168,85,247,0.6); box-shadow: 0 0 20px rgba(168,85,247,0.3); }
+    .mm-pava.opp .mm-pava-img i { width: 28px; height: 28px; color: rgba(200,180,255,0.7); animation: scanPulse 2s ease-in-out infinite; }
+    .mm-online { position: absolute; bottom: 1px; right: 1px; width: 14px; height: 14px; border-radius: 50%; background: var(--green); border: 2.5px solid #0a142d; z-index: 2; }
+    .mm-pcard.opp .mm-pinfo { order: -1; }
+    .mm-pname { font-size: 16px; font-weight: 700; color: var(--text); }
+    .mm-phandle { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
+    .mm-prating { font-size: 12.5px; color: var(--text-faint); margin-top: 5px; font-weight: 600; }
+
+    .mm-center { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .mm-timer { font-size: 46px; font-weight: 800; color: var(--cyan); font-variant-numeric: tabular-nums; text-shadow: 0 0 24px rgba(56,225,255,0.5); line-height: 1; }
+    .mm-wait-note { font-size: 12.5px; color: var(--text-faint); margin-top: 8px; }
+    .mm-progress { position: relative; width: 100%; max-width: 220px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 999px; margin-top: 14px; overflow: hidden; }
+    .mm-progress-dot { position: absolute; top: 50%; left: 0; width: 50px; height: 3px; transform: translateY(-50%); background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent); border-radius: 999px; animation: mmScan 1.8s ease-in-out infinite; }
+    @keyframes mmScan { 0% { left: -50px; } 100% { left: 100%; } }
+
+    /* Trust signallar (spec 8) */
+    .mm-trust { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--text-dim); margin-bottom: 18px; }
+    .mm-trust span { display: inline-flex; align-items: center; gap: 6px; }
+    .mm-trust i { width: 14px; height: 14px; color: var(--cyan); }
+    .mm-dot { color: var(--text-faint); }
+
+    /* Mukofotlar (spec 9) */
+    .mm-rewards { padding-top: 4px; margin-bottom: 20px; }
+    .mm-rewards-title { font-size: 14px; color: var(--text-dim); margin-bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 16px; }
+    .mm-rewards-title::before, .mm-rewards-title::after { content: ""; height: 1px; flex: 1; max-width: 220px; background: linear-gradient(90deg, transparent, var(--border)); }
+    .mm-rewards-title::after { background: linear-gradient(90deg, var(--border), transparent); }
+    .mm-rewards-row { display: flex; justify-content: center; gap: 36px; flex-wrap: wrap; }
+    .mm-reward { display: flex; align-items: center; gap: 11px; }
+    .mr-ic { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+    .mr-ic.rp { background: rgba(91,140,255,0.15); color: var(--accent); }
+    .mr-ic.xp { background: rgba(168,85,247,0.15); color: var(--accent-2); }
+    .mr-ic.coin { background: rgba(251,191,36,0.15); color: var(--gold); }
+    .mr-ic.coin i { width: 20px; height: 20px; }
+    .mr-val { font-size: 17px; font-weight: 800; color: var(--text); text-align: left; }
+    .mr-lbl { font-size: 12px; color: var(--text-dim); text-align: left; }
+
+    /* Cancel (spec 10) */
+    .mm-cancel-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 56px; min-width: 280px; padding: 0 32px; border-radius: 14px; cursor: pointer; background: rgba(120,35,55,0.45); border: 1px solid rgba(255,90,110,0.6); color: #ff7b8a; font-size: 16px; font-weight: 700; font-family: inherit; transition: background 0.2s; }
+    .mm-cancel-btn:hover { background: rgba(150,45,70,0.6); }
+    .mm-cancel-btn i { width: 18px; height: 18px; }
+    .mm-cancel-note { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--text-faint); margin-top: 14px; }
+    .mm-cancel-note i { width: 14px; height: 14px; }
+
+    @media (max-width: 820px) {
+      .mm-card { padding: 32px 18px; }
+      .mm-chips { flex-wrap: wrap; }
+      .mm-versus { grid-template-columns: 1fr; gap: 14px; }
+      .mm-pcard.opp { justify-content: flex-start; text-align: left; }
+      .mm-pcard.opp .mm-pinfo { order: 0; }
+      .mm-title { font-size: 25px; }
+      .mm-rewards-row { gap: 20px; }
+      .mm-cancel-btn { width: 100%; min-width: 0; }
     }
-    .mm-cancel {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 12px 28px; border-radius: 12px; cursor: pointer;
-      background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.4);
-      color: var(--red); font-size: 15px; font-weight: 600; font-family: inherit;
-      transition: all 0.2s;
-    }
-    .mm-cancel:hover { background: rgba(248,113,113,0.22); }
-    .mm-cancel i { width: 16px; height: 16px; }
 
     /* Raqib topildi */
     .mm-found-title {
@@ -229,7 +357,93 @@
     .mm-countdown {
       font-size: 64px; font-weight: 900; line-height: 1;
       color: var(--cyan); margin-bottom: 8px;
-      text-shadow:
+      text-shadow: 0 0 30px rgba(56,225,255,0.6);
+      animation: mmPop 0.4s ease-out;
+    }
+    /* ===== RAQIB TOPILDI (found) HOLATI ===== */
+    /* Scanner success ranglari */
+    .mm-scanner.found .scanner-ring.r1 { border-top-color: var(--cyan); border-right-color: var(--green); }
+    .mm-scanner.found .scanner-ring.r2 { border-bottom-color: var(--green); border-left-color: var(--cyan); }
+    .mm-scanner.found .scanner-core { background: linear-gradient(135deg, var(--cyan), var(--green)); box-shadow: 0 0 45px rgba(52,211,153,0.6); animation: foundBurst 0.6s ease-out; }
+    @keyframes foundBurst { 0% { transform: scale(1); } 40% { transform: scale(1.14); box-shadow: 0 0 60px rgba(52,211,153,0.9); } 100% { transform: scale(1); } }
+
+    /* Raqib karta — topilganda binafsha glow + scale */
+    .mm-pcard.opp.found { animation: oppReveal 0.5s ease-out; }
+    @keyframes oppReveal { 0% { transform: scale(0.96); opacity: 0.5; } 50% { transform: scale(1.04); } 100% { transform: scale(1); opacity: 1; } }
+
+    /* Countdown circle (markazda, timer o'rniga) */
+    .mm-cd-circle { position: relative; width: 96px; height: 96px; margin: 0 auto; border-radius: 50%; background: rgba(20,30,70,0.75); border: 1px solid rgba(100,120,255,0.4); display: grid; place-items: center; box-shadow: 0 0 30px rgba(91,140,255,0.4); }
+    .mm-cd-circle span { font-size: 46px; font-weight: 900; color: var(--cyan); line-height: 1; text-shadow: 0 0 20px rgba(56,225,255,0.6); animation: cdPop 0.4s ease-out; }
+    @keyframes cdPop { 0% { transform: scale(0.8); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+    .mm-cd-ring { position: absolute; inset: -4px; border-radius: 50%; border: 2px solid transparent; border-top-color: var(--accent); border-right-color: var(--accent-2); animation: scanSpin 3s linear infinite; }
+    .mm-cd-text { font-size: 13px; color: var(--text-dim); margin-top: 12px; }
+
+    /* Connection line (Siz ↔ Raqib) */
+    .mm-versus.found .mm-center { position: relative; }
+
+    /* Status tugma (Tayyor! Battle boshlanmoqda) */
+    .mm-status-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 420px; height: 56px; padding: 0 32px; border-radius: 14px; background: linear-gradient(90deg, #2563eb, #9333ea); color: #fff; font-size: 16px; font-weight: 800; box-shadow: 0 0 30px rgba(91,140,255,0.4); position: relative; overflow: hidden; }
+    .mm-status-btn i { width: 19px; height: 19px; }
+    .mm-status-btn::after { content: ""; position: absolute; top: 0; left: -60%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent); animation: btnShine 2.5s ease-in-out infinite; }
+    @keyframes btnShine { 0% { left: -60%; } 100% { left: 120%; } }
+    @media (max-width: 820px) { .mm-status-btn { min-width: 0; width: 100%; } }
+
+    /* ===== BATTLE CHAT ===== */
+    .br-chat { position: fixed; bottom: 18px; right: 18px; width: 320px; max-height: 60vh; background: rgba(10,15,35,0.92); border: 1px solid rgba(100,120,255,0.28); border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 30px rgba(60,90,255,0.1); display: flex; flex-direction: column; z-index: 50; overflow: hidden; backdrop-filter: blur(12px); }
+    .br-chat-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid rgba(100,120,255,0.18); flex-shrink: 0; }
+    .br-chat-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--text); }
+    .br-chat-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .br-chat-toggle { width: 18px; height: 18px; color: var(--text-dim); cursor: pointer; transition: transform 0.2s; }
+    .br-chat.collapsed .br-chat-toggle { transform: rotate(180deg); }
+    .br-chat-body { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+    .br-chat.collapsed { max-height: none; }
+    .br-chat.collapsed .br-chat-body { display: none; }
+    .br-chat-emotes { display: flex; gap: 6px; padding: 10px 12px; border-bottom: 1px solid rgba(100,120,255,0.12); flex-shrink: 0; flex-wrap: wrap; }
+    .br-emote { width: 38px; height: 36px; border-radius: 9px; background: rgba(255,255,255,0.05); border: 1px solid rgba(100,120,255,0.15); font-size: 18px; cursor: pointer; transition: background 0.15s, transform 0.15s; display: grid; place-items: center; }
+    .br-emote:hover { background: rgba(91,140,255,0.18); transform: scale(1.1); }
+    .br-chat-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; }
+    .br-chat-list::-webkit-scrollbar { width: 6px; }
+    .br-chat-list::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent-2)); border-radius: 999px; }
+    .br-msg { max-width: 82%; padding: 8px 12px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; word-wrap: break-word; animation: msgIn 0.25s ease; }
+    @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .br-msg .br-msg-name { font-size: 11px; font-weight: 700; margin-bottom: 2px; opacity: 0.8; }
+    .br-msg.me { align-self: flex-end; background: linear-gradient(135deg, rgba(56,225,255,0.18), rgba(91,140,255,0.18)); border: 1px solid rgba(56,225,255,0.3); color: #e6ecff; }
+    .br-msg.opp { align-self: flex-start; background: rgba(168,85,247,0.14); border: 1px solid rgba(168,85,247,0.3); color: #e6ecff; }
+    .br-msg.opp .br-msg-name { color: #c4a5f7; }
+    .br-msg.system { align-self: center; background: transparent; color: var(--text-faint); font-size: 12px; text-align: center; }
+    .br-chat-input-row { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid rgba(100,120,255,0.12); flex-shrink: 0; }
+    .br-chat-input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(100,120,255,0.2); border-radius: 10px; padding: 9px 12px; color: var(--text); font-size: 13.5px; font-family: inherit; outline: none; transition: border-color 0.18s; }
+    .br-chat-input:focus { border-color: var(--accent-2); }
+    .br-chat-input:disabled { opacity: 0.5; cursor: not-allowed; }
+    .br-chat-send { width: 38px; height: 38px; flex-shrink: 0; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; cursor: pointer; display: grid; place-items: center; transition: transform 0.15s, box-shadow 0.15s; }
+    .br-chat-send:hover { transform: scale(1.05); box-shadow: 0 0 14px rgba(91,140,255,0.4); }
+    .br-chat-send i { width: 17px; height: 17px; color: #fff; }
+    .br-chat-fab { position: fixed; bottom: 18px; right: 18px; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; cursor: pointer; display: grid; place-items: center; box-shadow: 0 4px 20px rgba(91,140,255,0.4); z-index: 50; }
+    .br-chat-fab i { width: 24px; height: 24px; color: #fff; }
+    .br-chat-badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--red); color: #fff; font-size: 11px; font-weight: 800; display: grid; place-items: center; border: 2px solid #0a142d; box-shadow: 0 0 8px rgba(248,113,113,0.6); }
+    .br-chat-err { align-self: center; color: var(--gold); font-size: 12px; text-align: center; padding: 2px 0; }
+    @media (max-width: 860px) {
+      .br-chat { width: calc(100vw - 24px); right: 12px; bottom: 12px; max-height: 50vh; }
+      .br-chat-fab { right: 12px; bottom: 12px; }
+    }
+
+    /* ===== LEAVE BATTLE MODAL ===== */
+    .br-modal-overlay { position: fixed; inset: 0; background: rgba(5,8,20,0.8); backdrop-filter: blur(6px); display: grid; place-items: center; z-index: 200; animation: ovFade 0.2s ease; }
+    @keyframes ovFade { from { opacity: 0; } to { opacity: 1; } }
+    .br-modal { width: 420px; max-width: calc(100vw - 40px); background: linear-gradient(180deg, rgba(20,26,50,0.98), rgba(14,20,40,0.98)); border: 1px solid rgba(255,90,110,0.3); border-radius: 20px; padding: 32px 28px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(255,90,110,0.12); animation: modalPop 0.25s ease; }
+    @keyframes modalPop { from { opacity: 0; transform: scale(0.92) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .br-modal-icon { width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%; background: rgba(255,90,110,0.15); display: grid; place-items: center; }
+    .br-modal-icon i { width: 32px; height: 32px; color: #ff7b8a; }
+    .br-modal-title { font-size: 21px; font-weight: 800; color: var(--text); margin-bottom: 10px; }
+    .br-modal-text { font-size: 14.5px; color: var(--text-dim); line-height: 1.5; margin-bottom: 26px; }
+    .br-modal-actions { display: flex; gap: 12px; }
+    .br-modal-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; border-radius: 12px; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background 0.18s, box-shadow 0.18s, transform 0.1s; border: none; }
+    .br-modal-btn:active { transform: scale(0.97); }
+    .br-modal-btn.stay { background: rgba(255,255,255,0.08); color: var(--text); border: 1px solid rgba(100,120,255,0.25); }
+    .br-modal-btn.stay:hover { background: rgba(91,140,255,0.15); border-color: var(--accent); }
+    .br-modal-btn.leave { background: linear-gradient(135deg, #e23d52, #b8293c); color: #fff; box-shadow: 0 4px 16px rgba(226,61,82,0.3); }
+    .br-modal-btn.leave:hover { box-shadow: 0 4px 22px rgba(226,61,82,0.5); }
+    .br-modal-btn.leave i { width: 17px; height: 17px; }
 
   </style>
 </head>
@@ -256,79 +470,230 @@
 
         <!-- HOLAT 1: QIDIRILMOQDA -->
         <div id="mmSearching">
-          <div class="mm-radar">
-            <div class="mm-radar-ring"></div>
-            <div class="mm-radar-ring r2"></div>
-            <div class="mm-radar-core"><i data-lucide="swords"></i></div>
+          <!-- Scanner animatsiya -->
+          <div class="mm-scanner">
+            <div class="scanner-ring r1"></div>
+            <div class="scanner-ring r2"></div>
+            <div class="scanner-ring r3"></div>
+            <div class="scanner-core"><i data-lucide="swords"></i></div>
           </div>
-          <h2 class="mm-title">Raqib qidirilmoqda...</h2>
-          <p class="mm-sub" id="searchText">Sizga mos level va ratingdagi o'yinchi qidirilyapti.</p>
-          <div class="mm-info">
-            <div class="mm-info-item">
-              <div class="mm-info-lbl">Rejim</div>
-              <div class="mm-info-val">1v1 Ranked</div>
-            </div>
-            <div class="mm-info-item">
-              <div class="mm-info-lbl">Level</div>
-              <div class="mm-info-val" id="mmMyLevel">A1</div>
-            </div>
-            <div class="mm-info-item">
-              <div class="mm-info-lbl">Rating</div>
-              <div class="mm-info-val" id="mmRange">900-1100</div>
-            </div>
-          </div>
-          <div class="mm-timer" id="mmTimer">00:00</div>
-          <button class="mm-cancel" onclick="goLobby()">
-            <i data-lucide="x"></i> Cancel Search
-          </button>
-        </div>
 
-        <!-- HOLAT 2: RAQIB TOPILDI -->
-        <div id="mmFound" style="display:none;">
-          <div class="mm-found-title">Raqib topildi!</div>
-          <div class="mm-vs">
-            <div class="mm-player">
-              <div class="mm-ava" id="mmMyAva">S</div>
-              <div class="mm-pname" id="mmMyName">Siz</div>
-              <div class="mm-plevel" id="mmMyLevel2">A1</div>
+          <h2 class="mm-title" id="searchTitle">Raqib qidirilmoqda...</h2>
+          <p class="mm-sub" id="searchText">Mos raqib topilmoqda, iltimos kuting.</p>
+
+          <!-- 5 ta info chip -->
+          <div class="mm-chips">
+            <div class="mm-chip"><i data-lucide="swords"></i><div><div class="mc-lbl">REJIM</div><div class="mc-val" id="mmMode">1v1 Ranked</div></div></div>
+            <div class="mm-chip"><i data-lucide="shield"></i><div><div class="mc-lbl">LEVEL</div><div class="mc-val" id="mmMyLevel">B1</div></div></div>
+            <div class="mm-chip"><i data-lucide="book-open"></i><div><div class="mc-lbl">SAVOLLAR</div><div class="mc-val" id="mmQCount">20</div></div></div>
+            <div class="mm-chip"><i data-lucide="clock"></i><div><div class="mc-lbl">VAQT</div><div class="mc-val" id="mmTime">5:00</div></div></div>
+            <div class="mm-chip"><i data-lucide="star"></i><div><div class="mc-lbl">RATING</div><div class="mc-val" id="mmRange">1440–1640</div></div></div>
+          </div>
+
+          <!-- Siz / Timer / Raqib -->
+          <div class="mm-versus">
+            <!-- Siz -->
+            <div class="mm-pcard me">
+              <div class="mm-pava">
+                <div class="mm-pava-img" id="mmMeAvaSearch">S</div>
+                <span class="mm-online"></span>
+              </div>
+              <div class="mm-pinfo">
+                <div class="mm-pname" id="mmMeNameSearch">Siz</div>
+                <div class="mm-phandle" id="mmMeHandleSearch">Bronze</div>
+                <div class="mm-prating">RATING: <span id="mmMeRatingSearch">1523</span></div>
+              </div>
             </div>
-            <div class="mm-vs-badge">VS</div>
-            <div class="mm-player">
-              <div class="mm-ava mm-ava-opp" id="mmOppAva">R</div>
-              <div class="mm-pname" id="mmOppName">Raqib</div>
-              <div class="mm-opp-meta">
-                <span class="mm-league" id="mmOppLeague">Silver</span>
-                <span class="mm-rating" id="mmOppRating">1000 RP</span>
+
+            <!-- Timer + progress (qidiruv) / Countdown (topildi) -->
+            <div class="mm-center">
+              <!-- Qidiruv: timer -->
+              <div id="mmCenterSearch">
+                <div class="mm-timer" id="mmTimer">00:00</div>
+                <div class="mm-wait-note">O'rtacha kutish vaqti: 10–20 soniya</div>
+                <div class="mm-progress"><div class="mm-progress-dot"></div></div>
+              </div>
+              <!-- Topildi: countdown circle -->
+              <div id="mmCenterFound" style="display:none;">
+                <div class="mm-cd-circle"><div class="mm-cd-ring"></div><span id="mmCountdown">3</span></div>
+                <div class="mm-cd-text" id="mmCdText">Battle 3 soniyada boshlanadi</div>
+              </div>
+            </div>
+
+            <!-- Raqib (qidirilmoqda / topildi) -->
+            <div class="mm-pcard opp" id="mmOppCard">
+              <div class="mm-pava opp">
+                <div class="mm-pava-img" id="mmOppAvaSearch"><i data-lucide="user"></i></div>
+                <span class="mm-online" id="mmOppOnline" style="display:none;"></span>
+              </div>
+              <div class="mm-pinfo">
+                <div class="mm-pname" id="mmOppNameSearch">Raqib qidirilmoqda</div>
+                <div class="mm-phandle" id="mmOppHandleSearch">Mos raqib topilmoqda...</div>
+                <div class="mm-prating" id="mmOppRatingSearch">RATING: ...</div>
               </div>
             </div>
           </div>
-          <div class="mm-countdown" id="mmCountdown">3</div>
-          <div class="mm-sub">Jang boshlanmoqda...</div>
+
+          <!-- Trust signallar -->
+          <div class="mm-trust">
+            <span><i data-lucide="scale"></i> Fair matchmaking</span>
+            <span class="mm-dot">•</span>
+            <span><i data-lucide="shield-check"></i> Similar rating</span>
+            <span class="mm-dot">•</span>
+            <span><i data-lucide="git-compare"></i> Same level</span>
+          </div>
+
+          <!-- Mukofotlar -->
+          <div class="mm-rewards">
+            <div class="mm-rewards-title">Potensial mukofotlar</div>
+            <div class="mm-rewards-row">
+              <div class="mm-reward" id="mmRewardRp"><div class="mr-ic rp">RP</div><div><div class="mr-val" id="mmRpVal">±10</div><div class="mr-lbl">Reyting ochkolari</div></div></div>
+              <div class="mm-reward"><div class="mr-ic xp">XP</div><div><div class="mr-val" id="mmXpVal">+8</div><div class="mr-lbl">XP ochkolari</div></div></div>
+              <div class="mm-reward"><div class="mr-ic coin"><i data-lucide="circle-dollar-sign"></i></div><div><div class="mr-val" id="mmCoinVal">+2</div><div class="mr-lbl">EduCoin</div></div></div>
+            </div>
+          </div>
+
+          <!-- Cancel (qidiruv) / Status (topildi) -->
+          <div id="mmActionSearch">
+            <button class="mm-cancel-btn" onclick="goLobby()"><i data-lucide="x"></i> Qidiruvni bekor qilish</button>
+            <div class="mm-cancel-note"><i data-lucide="shield"></i> Qidiruv bekor qilinsa hech qanday jarima bo'lmaydi.</div>
+          </div>
+          <div id="mmActionFound" style="display:none;">
+            <div class="mm-status-btn"><i data-lucide="check"></i> Tayyor! Battle boshlanmoqda...</div>
+            <div class="mm-cancel-note"><i data-lucide="shield"></i> Battle avtomatik ravishda boshlanadi.</div>
+          </div>
         </div>
+
 
       </div>
     </div>
 
     <!-- JANG -->
     <div class="screen" id="battleScreen">
-      <div class="battle-header">
-        <div class="player-box">
-          <div class="pb-ava" id="myAva">S</div>
-          <div class="pb-info"><div class="pb-name" id="myName">Siz</div><div class="pb-score" id="myScore">0</div></div>
+      <!-- TOP HEADER -->
+      <div class="br-topbar">
+        <div class="br-brand">
+          <div class="br-logo"><i data-lucide="shield"></i></div>
+          <div><div class="br-title">BATTLE ROOM</div><div class="br-subtitle">1v1 English Battle</div></div>
         </div>
-        <div class="vs-badge">VS</div>
-        <div class="player-box opp">
-          <div class="pb-ava" id="oppAva">R</div>
-          <div class="pb-info"><div class="pb-name" id="oppName">Raqib</div><div class="pb-score" id="oppScore">0</div></div>
+        <div class="br-top-right">
+          <div class="br-live"><span class="br-live-dot"></span> LIVE</div>
+          <button class="br-leave" onclick="confirmLeave()"><i data-lucide="log-out"></i> Leave Battle</button>
         </div>
       </div>
-      <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
-      <div class="card q-card">
-        <div class="q-number" id="qNumber">Savol 1 / 5</div>
-        <div class="q-text" id="qText">...</div>
-        <div id="options"></div>
+
+      <!-- PLAYER VS AREA -->
+      <div class="br-versus">
+        <!-- User card -->
+        <div class="br-pcard me">
+          <div class="br-pcard-row">
+            <div class="br-pava"><div class="br-pava-img" id="myAva">S</div><span class="br-pava-dot"></span></div>
+            <div class="br-pcard-info">
+              <div class="br-pname" id="myName">Siz</div>
+              <div class="br-pscore-row">
+                <span class="br-pscore me" id="myScore">0</span>
+                <span class="br-prating"><i data-lucide="zap"></i> <span id="myRatingBr">1000</span></span>
+              </div>
+            </div>
+          </div>
+          <!-- User progress -->
+          <div class="br-progress">
+            <div class="br-progress-head"><span>Savol Progress</span><span id="myProgLabel">1 / 10</span></div>
+            <div class="br-progress-rail"><div class="br-progress-fill me" id="myProgFill"></div><div class="br-progress-marker me" id="myProgMarker">1</div></div>
+          </div>
+        </div>
+
+        <!-- VS badge -->
+        <div class="br-vs"><div class="br-vs-ring"></div><span>VS</span></div>
+
+        <!-- Opponent card -->
+        <div class="br-pcard opp">
+          <div class="br-pcard-row">
+            <div class="br-pcard-info">
+              <div class="br-pname" id="oppName">Raqib</div>
+              <div class="br-pscore-row">
+                <span class="br-prating"><i data-lucide="zap"></i> <span id="oppRatingBr">1000</span></span>
+                <span class="br-pscore opp" id="oppScore">0</span>
+              </div>
+            </div>
+            <div class="br-pava opp"><div class="br-pava-img" id="oppAva">R</div><span class="br-pava-dot"></span></div>
+          </div>
+          <!-- Opponent progress -->
+          <div class="br-progress">
+            <div class="br-progress-head"><span>Savol Progress</span><span id="oppProgLabel">1 / 10</span></div>
+            <div class="br-progress-rail"><div class="br-progress-fill opp" id="oppProgFill"></div><div class="br-progress-marker opp" id="oppProgMarker">1</div></div>
+          </div>
+        </div>
       </div>
-      <div class="opp-progress" id="oppProgress"></div>
+
+      <!-- QUESTION CARD -->
+      <div class="card br-qcard">
+        <div class="br-q-inforow">
+          <div class="br-q-left">
+            <span class="br-q-num" id="qNumber">SAVOL 1 / 10</span>
+            <span class="br-q-level" id="qLevel">B1</span>
+          </div>
+          <div class="br-q-meta">
+            <span class="br-q-mode"><i data-lucide="target"></i> <span><span class="brm-lbl">Battle Mode</span><span class="brm-val" id="qMode">Grammar</span></span></span>
+            <span class="br-q-tpq"><i data-lucide="clock"></i> <span><span class="brm-lbl">Time per question</span><span class="brm-val">15s</span></span></span>
+          </div>
+          <div class="br-q-timer" id="brTimerWrap"><i data-lucide="timer"></i> <span id="brTimer">15s</span></div>
+        </div>
+        <div class="br-q-text" id="qText">...</div>
+        <div id="options" class="br-options"></div>
+        <!-- eski timer bar (logika uchun yashirin) -->
+        <div class="timer-bar" style="display:none;"><div class="timer-fill" id="timerFill"></div></div>
+      </div>
+
+      <!-- STATS CARDS -->
+      <div class="br-stats">
+        <div class="br-stat"><div class="br-stat-top"><i data-lucide="target" style="color:var(--cyan)"></i> ACCURACY</div><div class="br-stat-val" id="brAccuracy">0%</div><div class="br-stat-bar"><div class="br-stat-bar-fill" id="brAccBar" style="width:0%"></div></div></div>
+        <div class="br-stat"><div class="br-stat-top"><i data-lucide="flame" style="color:var(--accent-2)"></i> STREAK</div><div class="br-stat-val" id="brStreak">0</div><div class="br-stat-sub" id="brBestStreak">Best: 0</div></div>
+        <div class="br-stat"><div class="br-stat-top"><i data-lucide="zap" style="color:var(--gold)"></i> XP REWARD</div><div class="br-stat-val gold" id="brXpReward">+8</div><div class="br-stat-sub">Battle oxirida</div></div>
+        <div class="br-stat"><div class="br-stat-top"><i data-lucide="trophy" style="color:var(--accent)"></i> WIN REWARD</div><div class="br-stat-val accent" id="brWinReward">+2 coin</div><div class="br-stat-sub" id="brRpReward">±10 RP</div></div>
+      </div>
+
+      <!-- eski raqib progress (logika uchun yashirin) -->
+      <div class="opp-progress" id="oppProgress" style="display:none;"></div>
+
+      <!-- BATTLE CHAT (o'ng pastda) -->
+      <div class="br-chat" id="brChat" style="display:none;">
+        <div class="br-chat-head">
+          <div class="br-chat-title"><span class="br-chat-dot"></span> Battle Chat</div>
+          <i data-lucide="chevron-down" class="br-chat-toggle" id="brChatToggle" onclick="toggleChat()"></i>
+        </div>
+        <div class="br-chat-body" id="brChatBody">
+          <div class="br-chat-emotes">
+            <button class="br-emote" onclick="sendEmote('🔥')">🔥</button>
+            <button class="br-emote" onclick="sendEmote('👍')">👍</button>
+            <button class="br-emote" onclick="sendEmote('💪')">💪</button>
+            <button class="br-emote" onclick="sendEmote('🎉')">🎉</button>
+            <button class="br-emote" onclick="sendEmote('😮')">😮</button>
+            <button class="br-emote" onclick="sendEmote('👏')">👏</button>
+          </div>
+          <div class="br-chat-list" id="brChatList"></div>
+          <div class="br-chat-input-row">
+            <input type="text" class="br-chat-input" id="brChatInput" placeholder="Xabar yozing..." maxlength="120" onkeydown="chatKeyDown(event)" />
+            <button class="br-chat-send" onclick="sendChatMessage()"><i data-lucide="send"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat ochish tugmasi (yopilganda) -->
+      <button class="br-chat-fab" id="brChatFab" onclick="toggleChat()"><i data-lucide="message-circle"></i><span class="br-chat-badge" id="brChatBadge" style="display:none;">0</span></button>
+
+      <!-- LEAVE BATTLE MODAL -->
+      <div class="br-modal-overlay" id="leaveModal" style="display:none;">
+        <div class="br-modal">
+          <div class="br-modal-icon"><i data-lucide="alert-triangle"></i></div>
+          <div class="br-modal-title">Battle'dan chiqmoqchimisiz?</div>
+          <div class="br-modal-text">Agar hozir chiqsangiz, bu battle yutqazilgan deb hisoblanishi mumkin.</div>
+          <div class="br-modal-actions">
+            <button class="br-modal-btn stay" onclick="closeLeaveModal()">Battle'da qolish</button>
+            <button class="br-modal-btn leave" onclick="doLeaveBattle()"><i data-lucide="log-out"></i> Chiqish</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- NATIJA -->
@@ -409,6 +774,7 @@
     //  - lobby'dan kelgan (sessionStorage.battleIntent), YOKI
     //  - do'st jangi havolasi (?room=...)
     // Aks holda — professional empty state ko'rsatamiz va to'xtaymiz.
+    var battleLengthKey = "standard"; // tanlangan format (lobby'dan)
     (function guardBattle() {
       var hasRoom = new URLSearchParams(window.location.search).get("room");
       var intentRaw = sessionStorage.getItem("battleIntent");
@@ -417,7 +783,10 @@
         try {
           var intent = JSON.parse(intentRaw);
           // 5 daqiqadan eski belgi yaroqsiz (eski tab qayta ochilishidan himoya)
-          if (intent && intent.ts && (Date.now() - intent.ts) < 5 * 60 * 1000) validIntent = true;
+          if (intent && intent.ts && (Date.now() - intent.ts) < 5 * 60 * 1000) {
+            validIntent = true;
+            if (intent.lengthKey) battleLengthKey = intent.lengthKey; // formatni saqlaymiz
+          }
         } catch (e) {}
       }
       if (!hasRoom && !validIntent) {
@@ -444,6 +813,21 @@
       if (picPath) return '<img src="' + picPath + '" alt="' + letter + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
       return letter;
     }
+
+    // "Siz" kartasini real ma'lumot bilan to'ldirish (ism, rasm, rating)
+    (function fillMyCard() {
+      var nameEl = document.getElementById("mmMeNameSearch");
+      var avaEl = document.getElementById("mmMeAvaSearch");
+      var ratingEl = document.getElementById("mmMeRatingSearch");
+      var handleEl = document.getElementById("mmMeHandleSearch");
+      var fullName = ((user.first_name || "") + " " + (user.last_name || "")).trim() || "Siz";
+      var myRating = user.rating || 1000;
+      if (nameEl) nameEl.textContent = fullName;
+      if (avaEl) avaEl.innerHTML = avatarHTML(user.first_name, user.profile_picture);
+      if (ratingEl) ratingEl.textContent = myRating;
+      // "EduPlayer" o'rniga — o'yinchining rank/ligasi (Bronze, Silver, ... Grandmaster)
+      if (handleEl) handleEl.textContent = leagueFromRating(myRating);
+    })();
 
     function showScreen(id) {
       document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
@@ -510,12 +894,13 @@
         }
         socket.emit("joinFriendBattle", { roomId: friendRoom, userId: user.id });
       } else {
-        socket.emit("findMatch", { userId: user.id, name: user.first_name, level: user.cefr_level });
+        socket.emit("findMatch", { userId: user.id, name: user.first_name, level: user.cefr_level, lengthKey: battleLengthKey });
       }
     });
 
     socket.on("waiting", (data) => {
-      document.getElementById("searchText").textContent = data.message;
+      // Subtitle statik qoladi (title bilan takrorlanmasligi uchun)
+      document.getElementById("searchText").textContent = "Mos raqib topilmoqda, iltimos kuting.";
     });
 
     socket.on("matchFound", (data) => {
@@ -524,44 +909,98 @@
 
       const oppName = data.opponent.name || "Raqib";
       const oppPicture = data.opponent.profile_picture || null;
-      // Raqib reytingi serverda yo'q — taxminiy o'zimizникига yaqin ko'rsatamiz
       const oppRating = data.opponent.rating || (user.rating || 1000);
+      const oppLevel = data.opponent.level || user.cefr_level || "A1";
 
       // Jang ekrani uchun ham raqib ma'lumotini oldindan to'ldiramiz
       document.getElementById("oppName").textContent = oppName;
       document.getElementById("oppAva").innerHTML = avatarHTML(oppName, oppPicture);
 
-      // "Raqib topildi" kartasini to'ldiramiz
-      document.getElementById("mmMyAva").innerHTML = avatarHTML(user.first_name, user.profile_picture);
-      document.getElementById("mmMyName").textContent = user.first_name || "Siz";
-      document.getElementById("mmMyLevel2").textContent = user.cefr_level || "A1";
+      // === SEARCHING → FOUND (bir xil ekran, holat o'zgaradi) ===
+      // 1. Sarlavha
+      document.getElementById("searchTitle").textContent = "Raqib topildi!";
+      document.getElementById("searchText").textContent = "Mos raqib topildi. Battle boshlanishiga tayyorlaning.";
 
-      document.getElementById("mmOppAva").innerHTML = avatarHTML(oppName, oppPicture);
-      document.getElementById("mmOppName").textContent = oppName;
-      document.getElementById("mmOppLeague").textContent = leagueFromRating(oppRating);
-      document.getElementById("mmOppRating").textContent = oppRating + " RP";
+      // 2. Scanner success holati
+      var scanner = document.querySelector("#mmSearching .mm-scanner");
+      if (scanner) scanner.classList.add("found");
 
-      // Searching → Found
-      document.getElementById("mmSearching").style.display = "none";
-      document.getElementById("mmFound").style.display = "block";
+      // 3. Raqib kartasini real ma'lumot bilan to'ldiramiz
+      document.getElementById("mmOppAvaSearch").innerHTML = avatarHTML(oppName, oppPicture);
+      document.getElementById("mmOppNameSearch").textContent = oppName;
+      document.getElementById("mmOppHandleSearch").textContent = (window.leagueFromRating ? leagueFromRating(oppRating) : "Bronze");
+      document.getElementById("mmOppRatingSearch").textContent = "RATING: " + oppRating;
+      document.getElementById("mmOppOnline").style.display = "block";
+      var oppCard = document.getElementById("mmOppCard");
+      if (oppCard) oppCard.classList.add("found");
+
+      // 4. Markaz: timer → countdown
+      document.getElementById("mmCenterSearch").style.display = "none";
+      document.getElementById("mmCenterFound").style.display = "block";
+
+      // 5. Cancel → status tugma
+      document.getElementById("mmActionSearch").style.display = "none";
+      document.getElementById("mmActionFound").style.display = "block";
+
       lucide.createIcons();
 
-      // Countdown 3..2..1 (battleStart kelguncha vizual)
-      let count = 3;
-      document.getElementById("mmCountdown").textContent = count;
+      // 6. Countdown 7..6..1 (battleStart kelguncha vizual, server bilan mos)
+      countdownDone = false;
+      let count = 7;
+      var cdNum = document.getElementById("mmCountdown");
+      var cdText = document.getElementById("mmCdText");
+      cdNum.textContent = count;
+      cdText.textContent = "Battle " + count + " soniyada boshlanadi";
       const cd = setInterval(() => {
         count--;
         if (count >= 1) {
-          document.getElementById("mmCountdown").textContent = count;
+          cdNum.textContent = count;
+          // qayta animatsiya uchun
+          cdNum.style.animation = "none"; void cdNum.offsetWidth; cdNum.style.animation = "";
+          cdText.textContent = "Battle " + count + " soniyada boshlanadi";
         } else {
           clearInterval(cd);
-          document.getElementById("mmCountdown").textContent = "GO!";
+          cdNum.textContent = "GO!";
+          cdText.textContent = "Battle boshlanmoqda...";
+          countdownDone = true;
+          // Agar server battle ma'lumotini allaqachon yuborgan bo'lsa — boshlaymiz
+          if (pendingBattleStart) {
+            var d = pendingBattleStart; pendingBattleStart = null;
+            setTimeout(() => reallyStartBattle(d), 400); // "GO!" ko'rinishi uchun qisqa pauza
+          }
         }
       }, 1000);
     });
 
     let myPic = null, oppPic = null, oppNameGlobal = "Raqib", oppIdGlobal = null, myNameGlobal = "", levelGlobal = "A1";
-    socket.on("battleStart", (data) => {
+
+    // Server savol topa olmasa yoki boshqa xato — chiroyli xabar (qotib qolmasin)
+    socket.on("battleError", (data) => {
+      stopMmTimer();
+      if (timerInterval) clearInterval(timerInterval);
+      var msg = (data && data.message) ? data.message : "Jangni boshlashda xatolik yuz berdi.";
+      var st = document.getElementById("searchScreen");
+      if (st) {
+        showScreen("searchScreen");
+        var searching = document.getElementById("mmSearching");
+        if (searching) {
+          searching.innerHTML =
+            '<div style="text-align:center;padding:20px;">' +
+              '<div style="width:80px;height:80px;margin:0 auto 20px;border-radius:22px;background:#121a33;border:1px solid rgba(99,130,220,0.18);display:flex;align-items:center;justify-content:center;color:#f87171;"><i data-lucide="alert-circle" style="width:38px;height:38px;"></i></div>' +
+              '<h2 style="font-size:20px;font-weight:800;color:#e6ecff;margin-bottom:8px;">Xatolik</h2>' +
+              '<p style="font-size:14.5px;color:#8b97c0;line-height:1.6;margin-bottom:24px;">' + msg + '</p>' +
+              '<a href="/lobby.html" style="display:inline-flex;align-items:center;gap:9px;padding:13px 24px;border-radius:12px;background:linear-gradient(95deg,#5b8cff,#a855f7);color:#fff;font-size:15px;font-weight:700;text-decoration:none;"><i data-lucide="arrow-left" style="width:18px;height:18px;"></i> Battle markaziga qaytish</a>' +
+            '</div>';
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+    });
+
+    // battleStart ma'lumoti (countdown tugagandan keyin ishlatamiz)
+    let pendingBattleStart = null;
+    let countdownDone = false;
+
+    function reallyStartBattle(data) {
       questions = data.questions;
       currentIndex = 0;
       // Rematch statusini tozalash (yangi jang)
@@ -577,7 +1016,9 @@
       if (data.level) levelGlobal = data.level;
       document.getElementById("myName").textContent = user.first_name;
       document.getElementById("myAva").innerHTML = avatarHTML(user.first_name, data.myPicture || user.profile_picture);
+      var myRb = document.getElementById("myRatingBr"); if (myRb) myRb.textContent = user.rating || 1000;
       if (data.opponentName) document.getElementById("oppName").textContent = data.opponentName;
+      var oppRb = document.getElementById("oppRatingBr"); if (oppRb) oppRb.textContent = data.opponentRating || (user.rating || 1000);
       if (data.opponentPicture !== undefined) {
         document.getElementById("oppAva").innerHTML = avatarHTML(data.opponentName || "Raqib", data.opponentPicture);
       }
@@ -585,7 +1026,19 @@
       document.getElementById("oppScore").textContent = "0";
       showScreen("battleScreen");
       showQuestion();
+    }
+
+    socket.on("battleStart", (data) => {
+      // Agar countdown tugagan bo'lsa — darrov boshlaymiz; aks holda saqlaymiz
+      if (countdownDone) {
+        reallyStartBattle(data);
+      } else {
+        pendingBattleStart = data;
+      }
     });
+
+    let answerLocked = false;
+    let myStreak = 0, myBestStreak = 0, myCorrect = 0, myAnswered = 0;
 
     function showQuestion() {
       if (currentIndex >= questions.length) {
@@ -595,32 +1048,66 @@
         document.getElementById("qNumber").textContent = "";
         return;
       }
+      answerLocked = false;
       const q = questions[currentIndex];
-      document.getElementById("qNumber").textContent = "Savol " + (currentIndex + 1) + " / " + questions.length;
+      const total = questions.length;
+      document.getElementById("qNumber").textContent = "SAVOL " + (currentIndex + 1) + " / " + total;
+      var lvlEl = document.getElementById("qLevel"); if (lvlEl) lvlEl.textContent = q.cefr_level || levelGlobal || "A1";
+      var modeEl = document.getElementById("qMode"); if (modeEl) modeEl.textContent = q.category || "Grammar";
       document.getElementById("qText").textContent = q.question_text;
+
+      // Mening progressim
+      updateMyProgress(currentIndex, total);
+
       const optionsDiv = document.getElementById("options");
       optionsDiv.innerHTML = "";
       ["A","B","C","D"].forEach(letter => {
         const btn = document.createElement("button");
         btn.className = "opt";
+        btn.setAttribute("data-letter", letter);
         btn.innerHTML = '<span class="opt-letter">' + letter + '</span><span>' + q["option_" + letter.toLowerCase()] + '</span>';
         btn.onclick = () => answer(letter);
         optionsDiv.appendChild(btn);
       });
+      if (window.lucide) lucide.createIcons();
       startTimer();
+    }
+
+    // Mening progress barim
+    function updateMyProgress(idx, total) {
+      // Marker joriy savolda: 1-savol chapda (0%), oxirgi savol o'ngda (100%)
+      var pct = total > 1 ? (idx / (total - 1)) * 100 : 0;
+      pct = Math.max(0, Math.min(100, pct));
+      var lbl = document.getElementById("myProgLabel");
+      var fill = document.getElementById("myProgFill");
+      var marker = document.getElementById("myProgMarker");
+      if (lbl) lbl.textContent = (idx + 1) + " / " + total;
+      if (fill) fill.style.width = pct + "%";
+      if (marker) { marker.style.left = pct + "%"; marker.textContent = (idx + 1); }
     }
 
     function startTimer() {
       clearInterval(timerInterval);
       let timeLeft = 15;
       const fill = document.getElementById("timerFill");
-      fill.classList.remove("warning");
-      fill.style.width = "100%";
+      const tEl = document.getElementById("brTimer");
+      const tWrap = document.getElementById("brTimerWrap");
+      if (fill) { fill.classList.remove("warning"); fill.style.width = "100%"; }
+      if (tEl) tEl.textContent = "15s";
+      if (tWrap) tWrap.classList.remove("warning", "danger");
       timerInterval = setInterval(() => {
         timeLeft--;
-        fill.style.width = ((timeLeft / 15) * 100) + "%";
-        if (timeLeft <= 5) fill.classList.add("warning");
-        if (timeLeft <= 0) { clearInterval(timerInterval); answer(null); }
+        if (fill) {
+          fill.style.width = ((timeLeft / 15) * 100) + "%";
+          if (timeLeft <= 5) fill.classList.add("warning");
+        }
+        if (tEl) tEl.textContent = timeLeft + "s";
+        if (tWrap) {
+          tWrap.classList.remove("warning", "danger");
+          if (timeLeft <= 3) tWrap.classList.add("danger");
+          else if (timeLeft <= 7) tWrap.classList.add("warning");
+        }
+        if (timeLeft <= 0) { clearInterval(timerInterval); if (!answerLocked) answer(null); }
       }, 1000);
     }
 
@@ -633,7 +1120,24 @@
     }
 
     socket.on("opponentProgress", (data) => {
-      document.getElementById("oppProgress").textContent = "Raqib " + data.answeredCount + " ta savolga javob berdi";
+      var count = data.answeredCount || 0;
+      var total = questions.length || 10;
+      // Raqib qaysi savolda: javob bergan soni = keyingi savol indeksi
+      var curIdx = Math.min(count, total - 1);
+      var pct = total > 1 ? (curIdx / (total - 1)) * 100 : 0;
+      pct = Math.max(0, Math.min(100, pct));
+      var shown = Math.min(count + 1, total);
+      var lbl = document.getElementById("oppProgLabel");
+      var fill = document.getElementById("oppProgFill");
+      var marker = document.getElementById("oppProgMarker");
+      if (lbl) lbl.textContent = shown + " / " + total;
+      if (fill) fill.style.width = pct + "%";
+      if (marker) { marker.style.left = pct + "%"; marker.textContent = shown; }
+      // Raqib kartasi flash
+      var oppCard = document.querySelector(".br-pcard.opp");
+      if (oppCard) { oppCard.style.boxShadow = "0 0 40px rgba(244,114,182,0.4)"; setTimeout(() => { oppCard.style.boxShadow = ""; }, 700); }
+      var op = document.getElementById("oppProgress");
+      if (op) op.textContent = "Raqib " + count + " ta savolga javob berdi";
     });
 
     socket.on("battleEnd", (data) => {
@@ -732,6 +1236,119 @@
       lucide.createIcons();
     }
     function goLobby() { window.location.href = "/lobby.html"; }
+
+    // Leave Battle — hozircha oddiy tasdiq (keyingi bosqichda chiroyli modal)
+    // Leave Battle — chiroyli modal
+    function confirmLeave() {
+      var m = document.getElementById("leaveModal");
+      if (m) { m.style.display = "grid"; if (window.lucide) lucide.createIcons(); }
+    }
+    function closeLeaveModal() {
+      var m = document.getElementById("leaveModal");
+      if (m) m.style.display = "none";
+    }
+    function doLeaveBattle() {
+      closeLeaveModal();
+      goLobby();
+    }
+
+    // ===== BATTLE CHAT (V1) =====
+    var chatUnread = 0;
+
+    function clearChatBadge() {
+      chatUnread = 0;
+      var badge = document.getElementById("brChatBadge");
+      if (badge) badge.style.display = "none";
+    }
+
+    function bumpChatBadge() {
+      chatUnread++;
+      var badge = document.getElementById("brChatBadge");
+      if (badge) { badge.textContent = chatUnread > 99 ? "99+" : chatUnread; badge.style.display = "grid"; }
+    }
+
+    function chatIsOpen() {
+      var chat = document.getElementById("brChat");
+      return chat && chat.style.display !== "none" && !chat.classList.contains("collapsed");
+    }
+
+    function toggleChat() {
+      var chat = document.getElementById("brChat");
+      var fab = document.getElementById("brChatFab");
+      if (!chat) return;
+      if (chat.style.display === "none") {
+        // FAB dan ochish
+        chat.style.display = "flex";
+        chat.classList.remove("collapsed");
+        if (fab) fab.style.display = "none";
+        clearChatBadge();
+        if (window.lucide) lucide.createIcons();
+      } else if (chat.classList.contains("collapsed")) {
+        chat.classList.remove("collapsed");
+        clearChatBadge();
+      } else {
+        // Yopish → FAB ko'rsatish
+        chat.style.display = "none";
+        if (fab) fab.style.display = "grid";
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    function sendEmote(emoji) {
+      doSendChat(emoji);
+    }
+
+    function sendChatMessage() {
+      var input = document.getElementById("brChatInput");
+      if (!input) return;
+      var text = input.value.trim();
+      if (!text) return;
+      doSendChat(text);
+      input.value = "";
+    }
+
+    function doSendChat(text) {
+      if (!currentRoom) return;
+      socket.emit("battleChatSend", { roomId: currentRoom, message: text });
+    }
+
+    function chatKeyDown(e) {
+      if (e.key === "Enter") { e.preventDefault(); sendChatMessage(); }
+    }
+
+    // Xabar kelganda
+    socket.on("battleChatMessage", function (data) {
+      var list = document.getElementById("brChatList");
+      if (!list) return;
+      var mine = data.senderId && user && String(data.senderId) === String(user.id);
+      var div = document.createElement("div");
+      div.className = "br-msg " + (mine ? "me" : "opp");
+      var nameHtml = mine ? "" : '<div class="br-msg-name">' + escapeHtml(data.senderName || "Raqib") + '</div>';
+      div.innerHTML = nameHtml + '<div>' + escapeHtml(data.message) + '</div>';
+      list.appendChild(div);
+      list.scrollTop = list.scrollHeight;
+      // Chat yopiq bo'lsa — FAB'da qizil badge (xabar soni)
+      if (!chatIsOpen()) bumpChatBadge();
+    });
+
+    // Spam/xato xabari
+    socket.on("battleChatError", function (data) {
+      var list = document.getElementById("brChatList");
+      if (!list) return;
+      var div = document.createElement("div");
+      div.className = "br-chat-err";
+      div.textContent = (data && data.message) ? data.message : "Xatolik";
+      list.appendChild(div);
+      list.scrollTop = list.scrollHeight;
+      setTimeout(function () { if (div.parentNode) div.parentNode.removeChild(div); }, 4000);
+    });
+
+    // XSS oldini olish (xabar matnini xavfsiz ko'rsatish)
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
     function requestRematch() {
       if (!oppIdGlobal) return;
       socket.emit("requestRematch", { opponentId: oppIdGlobal, myUserId: user.id, myName: myNameGlobal || user.first_name, level: levelGlobal });

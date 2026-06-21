@@ -407,15 +407,7 @@
 
     <main class="content">
       <!-- Yuqori panel -->
-      <div class="topbar">
-        <div class="currency"><i data-lucide="coins" style="color:var(--gold);width:18px;height:18px;"></i> <span id="coins">0</span> <span class="plus">+</span></div>
-        <div class="currency"><i data-lucide="gem" style="color:var(--cyan);width:18px;height:18px;"></i> <span id="gems">0</span> <span class="plus">+</span></div>
-        <div class="icon-btn"><i data-lucide="bell"></i> <span class="badge" id="notifBadge">0</span></div>
-        <div class="user-chip">
-          <div class="ava" id="topAva">J</div>
-          <div><div class="uname" id="topName">O'yinchi</div><div class="ulevel">Level <span id="topLevel">1</span></div></div>
-        </div>
-      </div>
+      <div class="topbar"></div>
 
       <!-- Sarlavha -->
       <div class="page-head">
@@ -574,9 +566,7 @@
     const user = JSON.parse(userData);
 
     // Yuqori panel
-    document.getElementById("topName").textContent = user.first_name + " " + user.last_name;
-    document.getElementById("topAva").textContent = (user.first_name || "?").charAt(0).toUpperCase();
-    document.getElementById("coins").textContent = user.coins || 0;
+    renderTopbar();
 
     renderSidebar("friends");
 

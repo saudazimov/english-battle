@@ -7,40 +7,14 @@
   <link rel="stylesheet" href="/app.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    .app { max-width: 1640px; grid-template-columns: 230px 1fr; gap: 0; padding: 0; }
+    .app { max-width: 1680px; grid-template-columns: 230px 1fr 340px; gap: 20px; padding: 20px; margin: 0 auto; }
+    @media (max-width: 1200px) { .app { grid-template-columns: 200px 1fr; } .rightbar { display: none; } }
+    .rightbar { display: flex; flex-direction: column; gap: 20px; }
     .main { padding: 0; display: block; }
 
-    /* TOPBAR */
-    .topbar { display: flex; align-items: center; gap: 16px; padding: 18px 30px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 40; background: rgba(7,11,22,0.85); backdrop-filter: blur(10px); }
-    .back-link { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; color: var(--text-dim); font-size: 14px; font-weight: 600; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
-    .back-link:hover { border-color: var(--border-bright); color: var(--text); }
-    .back-link i { width: 16px; height: 16px; }
-    .tb-spacer { flex: 1; }
-    .currency { display: flex; align-items: center; gap: 8px; padding: 9px 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; font-weight: 700; font-size: 14px; }
-    .currency i { width: 18px; height: 18px; }
-    .tb-bell { position: relative; width: 42px; height: 42px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.15s; }
-    .tb-bell:hover { border-color: var(--border-bright); }
-    .tb-bell i { width: 19px; height: 19px; color: var(--text-dim); }
-    .tb-bell .nbadge { position: absolute; top: -3px; right: -3px; min-width: 18px; height: 18px; border-radius: 999px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 2px solid var(--bg); }
-    .tb-user-wrap { position: relative; }
-    .tb-user { display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; transition: border-color 0.15s; }
-    .tb-user:hover { border-color: var(--border-bright); }
-    .tb-ava { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #fff; overflow: hidden; }
-    .tb-uname { font-size: 14px; font-weight: 700; line-height: 1.2; }
-    .tb-ulevel { font-size: 11.5px; color: var(--text-dim); }
-    .tb-user > i { width: 16px; height: 16px; color: var(--text-dim); transition: transform 0.15s; }
-    .tb-user-wrap.open .tb-user > i { transform: rotate(180deg); }
-    /* Profile dropdown */
-    .tb-dropdown { position: absolute; top: calc(100% + 8px); right: 0; min-width: 200px; background: var(--panel); border: 1px solid var(--border-bright); border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 7px; display: none; z-index: 50; }
-    .tb-user-wrap.open .tb-dropdown { display: block; }
-    .tb-dd-item { display: flex; align-items: center; gap: 11px; padding: 11px 13px; border-radius: 10px; color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
-    .tb-dd-item:hover { background: var(--panel-2); }
-    .tb-dd-item i { width: 17px; height: 17px; color: var(--text-dim); }
-    .tb-dd-item.danger { color: var(--red); }
-    .tb-dd-item.danger i { color: var(--red); }
     .tb-dd-sep { height: 1px; background: var(--border); margin: 5px 8px; }
 
-    .page-wrap { padding: 26px 30px 50px; }
+    .page-wrap { padding: 0; }
 
     .page-head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
     .ph-ic { width: 50px; height: 50px; border-radius: 14px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 8px 22px rgba(91,140,255,0.4); }
@@ -220,7 +194,7 @@
     .toast .tclose { margin-left: 6px; cursor: pointer; color: var(--text-faint); width: 16px; height: 16px; flex: 0 0 auto; }
     .toast .tclose:hover { color: var(--text); }
 
-    @media (max-width: 600px) { .tb-uname, .tb-ulevel, .currency .plus { display: none; } .topbar { padding: 14px 16px; gap: 10px; } .page-wrap { padding: 18px 16px 40px; } .back-link span { display: none; } }
+    @media (max-width: 600px) { .tb-uname, .tb-ulevel, .currency .plus { display: none; } .topbar { gap: 10px; } .back-link span { display: none; } }
   </style>
 </head>
 <body>
@@ -229,29 +203,7 @@
 
     <main class="main">
       <!-- TOPBAR -->
-      <div class="topbar">
-        <a class="back-link" href="/lobby.html"><i data-lucide="arrow-left"></i> <span>Lobbyga qaytish</span></a>
-        <div class="tb-spacer"></div>
-        <div class="currency"><i data-lucide="coins" style="color:var(--gold)"></i> <span id="tbCoins">0</span></div>
-        <div class="currency"><i data-lucide="gem" style="color:var(--cyan)"></i> <span id="tbGems">0</span></div>
-        <div class="tb-bell" onclick="window.location.href='/friends.html'"><i data-lucide="bell"></i><span class="nbadge" id="tbNotif" style="display:none">0</span></div>
-        <div class="tb-user-wrap" id="userWrap">
-          <div class="tb-user" onclick="toggleUserMenu(event)">
-            <div class="tb-ava" id="tbAva">A</div>
-            <div>
-              <div class="tb-uname" id="tbName">O'quvchi</div>
-              <div class="tb-ulevel">Level <span id="tbLevel">1</span></div>
-            </div>
-            <i data-lucide="chevron-down"></i>
-          </div>
-          <div class="tb-dropdown">
-            <div class="tb-dd-item" onclick="window.location.href='/profile.html'"><i data-lucide="user"></i> Profil</div>
-            <div class="tb-dd-item" onclick="showToast('Sozlamalar tez orada qo\'shiladi','info')"><i data-lucide="settings"></i> Sozlamalar</div>
-            <div class="tb-dd-sep"></div>
-            <div class="tb-dd-item danger" onclick="logout()"><i data-lucide="log-out"></i> Chiqish</div>
-          </div>
-        </div>
-      </div>
+      <div class="topbar"></div>
 
       <div class="page-wrap">
         <div class="page-head">
@@ -281,52 +233,23 @@
 
         <!-- ASOSIY -->
         <div id="mainContent" style="display:none;">
-          <div class="layout">
-            <div>
-              <div class="section-bar">
-                <h2>Mening sinflarim</h2>
-                <div class="sort-box" id="sortBox">
-                  <span>Tartiblash:</span>
-                  <div class="sort-select" onclick="toggleSortMenu(event)">
-                    <span id="sortLabel">Oxirgi qo'shilgan</span> <i data-lucide="chevron-down"></i>
-                  </div>
-                  <div class="sort-menu" id="sortMenu">
-                    <div class="sort-opt active" data-sort="recent" onclick="setSort('recent')"><i data-lucide="check"></i> Oxirgi qo'shilgan</div>
-                    <div class="sort-opt" data-sort="oldest" onclick="setSort('oldest')"><i data-lucide="check"></i> Eski qo'shilgan</div>
-                    <div class="sort-opt" data-sort="name" onclick="setSort('name')"><i data-lucide="check"></i> Nomi bo'yicha</div>
-                    <div class="sort-opt" data-sort="active" onclick="setSort('active')"><i data-lucide="check"></i> Faol sinflar</div>
-                    <div class="sort-opt" data-sort="archived" onclick="setSort('archived')"><i data-lucide="check"></i> Arxivlangan sinflar</div>
-                  </div>
-                </div>
+          <div class="section-bar">
+            <h2>Mening sinflarim</h2>
+            <div class="sort-box" id="sortBox">
+              <span>Tartiblash:</span>
+              <div class="sort-select" onclick="toggleSortMenu(event)">
+                <span id="sortLabel">Oxirgi qo'shilgan</span> <i data-lucide="chevron-down"></i>
               </div>
-              <div class="class-grid" id="classGrid"></div>
-            </div>
-
-            <div>
-              <div class="side-panel">
-                <div class="sp-head"><div class="sp-ic"><i data-lucide="user-plus"></i></div><div class="sp-title">Sinfga qo'shilish</div></div>
-                <div class="sp-sub">O'qituvchingiz bergan 6 belgili kodni kiriting va sinfga qo'shiling.</div>
-                <div class="sp-field-label">6 belgili kod</div>
-                <div class="code-wrap">
-                  <input type="text" class="code-input" id="codeInput" maxlength="6" placeholder="Masalan: ABC123" autocomplete="off" />
-                  <i data-lucide="scan-line" class="code-scan"></i>
-                </div>
-                <div class="sp-msg" id="spMsg"></div>
-                <button class="sp-btn" id="submitBtn" onclick="submitCode()">Qo'shilish</button>
-                <div class="sp-help">Sinfga qo'shilish bo'yicha yordam kerakmi? O'qituvchingiz bilan bog'laning.</div>
-              </div>
-
-              <div class="side-panel">
-                <div class="sp-head"><div class="sp-ic q"><i data-lucide="help-circle"></i></div><div class="sp-title">Qanday ishlaydi?</div></div>
-                <div class="qa-list">
-                  <div class="qa-item"><div class="qa-num">1</div><div class="qa-text">O'qituvchingizdan 6 belgili kod oling</div></div>
-                  <div class="qa-item"><div class="qa-num">2</div><div class="qa-text">Kodni yuqoridagi maydonga kiriting</div></div>
-                  <div class="qa-item"><div class="qa-num">3</div><div class="qa-text">Sinfga qo'shiling va topshiriqlarni bajarishni boshlang</div></div>
-                  <div class="qa-item"><div class="qa-num">4</div><div class="qa-text">Natijangizni kuzatib boring va o'sishda davom eting 🚀</div></div>
-                </div>
+              <div class="sort-menu" id="sortMenu">
+                <div class="sort-opt active" data-sort="recent" onclick="setSort('recent')"><i data-lucide="check"></i> Oxirgi qo'shilgan</div>
+                <div class="sort-opt" data-sort="oldest" onclick="setSort('oldest')"><i data-lucide="check"></i> Eski qo'shilgan</div>
+                <div class="sort-opt" data-sort="name" onclick="setSort('name')"><i data-lucide="check"></i> Nomi bo'yicha</div>
+                <div class="sort-opt" data-sort="active" onclick="setSort('active')"><i data-lucide="check"></i> Faol sinflar</div>
+                <div class="sort-opt" data-sort="archived" onclick="setSort('archived')"><i data-lucide="check"></i> Arxivlangan sinflar</div>
               </div>
             </div>
           </div>
+          <div class="class-grid" id="classGrid"></div>
 
           <div class="cta-banner">
             <div class="cta-text">
@@ -356,6 +279,32 @@
 
       </div>
     </main>
+
+    <!-- O'NG PANEL (rightbar) -->
+    <aside class="rightbar">
+      <div class="side-panel">
+        <div class="sp-head"><div class="sp-ic"><i data-lucide="user-plus"></i></div><div class="sp-title">Sinfga qo'shilish</div></div>
+        <div class="sp-sub">O'qituvchingiz bergan 6 belgili kodni kiriting va sinfga qo'shiling.</div>
+        <div class="sp-field-label">6 belgili kod</div>
+        <div class="code-wrap">
+          <input type="text" class="code-input" id="codeInput" maxlength="6" placeholder="Masalan: ABC123" autocomplete="off" />
+          <i data-lucide="scan-line" class="code-scan"></i>
+        </div>
+        <div class="sp-msg" id="spMsg"></div>
+        <button class="sp-btn" id="submitBtn" onclick="submitCode()">Qo'shilish</button>
+        <div class="sp-help">Sinfga qo'shilish bo'yicha yordam kerakmi? O'qituvchingiz bilan bog'laning.</div>
+      </div>
+
+      <div class="side-panel">
+        <div class="sp-head"><div class="sp-ic q"><i data-lucide="help-circle"></i></div><div class="sp-title">Qanday ishlaydi?</div></div>
+        <div class="qa-list">
+          <div class="qa-item"><div class="qa-num">1</div><div class="qa-text">O'qituvchingizdan 6 belgili kod oling</div></div>
+          <div class="qa-item"><div class="qa-num">2</div><div class="qa-text">Kodni yuqoridagi maydonga kiriting</div></div>
+          <div class="qa-item"><div class="qa-num">3</div><div class="qa-text">Sinfga qo'shiling va topshiriqlarni bajarishni boshlang</div></div>
+          <div class="qa-item"><div class="qa-num">4</div><div class="qa-text">Natijangizni kuzatib boring va o'sishda davom eting 🚀</div></div>
+        </div>
+      </div>
+    </aside>
   </div>
 
   <!-- JOIN MODAL (empty holat uchun professional) -->
@@ -398,13 +347,8 @@
       window.location.href = (user.role === "teacher" || user.role === "school_admin") ? "/teacher.html" : "/lobby.html";
     }
 
-    // Topbar real ma'lumot (user obyektidan; yo'q bo'lsa 0 — fake emas)
-    var fullName = ((user.first_name || "") + " " + (user.last_name || "")).trim() || "O'quvchi";
-    document.getElementById("tbName").textContent = fullName;
-    document.getElementById("tbAva").textContent = (fullName[0] || "A").toUpperCase();
-    document.getElementById("tbLevel").textContent = user.level || 1;
-    document.getElementById("tbCoins").textContent = user.coins || 0;
-    document.getElementById("tbGems").textContent = user.gems || 0;
+    // Umumiy topbar (coins, gems, notifications, profil dropdown) — "Lobbyga qaytish" bilan
+    renderTopbar({ back: "/lobby.html", backText: "Lobbyga qaytish" });
 
     let allClasses = [];
     let sortMode = "recent";
@@ -578,7 +522,6 @@
     }
 
     // === Profile dropdown ===
-    function toggleUserMenu(e) { e.stopPropagation(); var w = document.getElementById("userWrap"); var was = w.classList.contains("open"); closeAllMenus(); if (!was) w.classList.add("open"); }
     function logout() {
       if (typeof doLogout === "function") { doLogout(); return; }
       localStorage.removeItem("user"); window.location.href = "/index.html";

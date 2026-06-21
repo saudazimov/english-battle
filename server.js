@@ -369,13 +369,29 @@ function getRandomBotName() {
   return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
 }
 
+// ============ BATTLE FORMATLARI (savol soni / vaqt / XP) ============
+const BATTLE_LENGTHS = {
+  quick:    { label: "Quick",    questions: 10, secondsPerQuestion: 15, totalSeconds: 150, xp: 4 },
+  standard: { label: "Standard", questions: 20, secondsPerQuestion: 15, totalSeconds: 300, xp: 8 },
+  extended: { label: "Extended", questions: 30, secondsPerQuestion: 15, totalSeconds: 450, xp: 12 },
+  marathon: { label: "Marathon", questions: 40, secondsPerQuestion: 15, totalSeconds: 600, xp: 16 },
+};
+// Format kalitidan savol sonini olamiz (noto'g'ri bo'lsa — standard)
+function lengthConfig(key) {
+  return BATTLE_LENGTHS[key] || BATTLE_LENGTHS.standard;
+}
+
 // Bot bilan jang boshlash
 async function startBotBattle(roomId, humanPlayer) {
   try {
+    // Tanlangan format bo'yicha savol soni (yo'q bo'lsa — standard)
+    const cfg = lengthConfig(humanPlayer.lengthKey);
+    const qCount = cfg.questions;
+
     let result = await pool.query(
       `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
-       FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT 5`,
-      [humanPlayer.level]
+       FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
+      [humanPlayer.level, qCount]
     );
 
     // Zaxira: o'yinchi darajasi uchun savol bo'lmasa, har qanday darajadan olamiz
@@ -383,13 +399,14 @@ async function startBotBattle(roomId, humanPlayer) {
       console.log("'" + humanPlayer.level + "' uchun savol yo'q — zaxira savollar olinmoqda");
       result = await pool.query(
         `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
-         FROM questions ORDER BY RANDOM() LIMIT 5`
+         FROM questions ORDER BY RANDOM() LIMIT $1`,
+        [qCount]
       );
     }
 
     const questions = result.rows;
 
-    // Hech qanday savol topilmasa — jangni boshlamaymiz (xato xabari)
+    // Hech qanday savol topilmasa — jangni boshlamaymiz
     if (questions.length === 0) {
       io.to(humanPlayer.socketId).emit("battleError", { message: "Hozircha savollar mavjud emas. Keyinroq urinib ko'ring." });
       console.error("Bazada umuman savol yo'q!");
@@ -403,6 +420,7 @@ async function startBotBattle(roomId, humanPlayer) {
       isBot: true,
       botId: botId,
       level: humanPlayer.level || "A1",
+      lengthKey: humanPlayer.lengthKey || "standard",
       players: {
         [humanPlayer.socketId]: { userId: humanPlayer.userId, name: humanPlayer.name, score: 0, finished: false, answeredCount: 0 },
         [botId]: { userId: null, name: humanPlayer.botName, score: 0, finished: false, answeredCount: 0, isBot: true },
@@ -581,19 +599,41 @@ async function getOpponentCardInfo(userId) {
 // Jangni boshlash funksiyasi
 async function startBattle(roomId, player1, player2) {
   try {
-    // 5 ta tasodifiy savol olish
-    const result = await pool.query(
+    // Tanlangan format bo'yicha savol soni (player1 tanlovi)
+    const cfg = lengthConfig(player1.lengthKey);
+    const qCount = cfg.questions;
+
+    let result = await pool.query(
       `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
-       FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT 5`,
-      [player1.level]
+       FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
+      [player1.level, qCount]
     );
 
+    // Zaxira: bu daraja uchun savol bo'lmasa, har qanday darajadan olamiz
+    if (result.rows.length === 0) {
+      console.log("'" + player1.level + "' uchun savol yo'q — zaxira savollar olinmoqda");
+      result = await pool.query(
+        `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
+         FROM questions ORDER BY RANDOM() LIMIT $1`,
+        [qCount]
+      );
+    }
+
     const questions = result.rows;
+
+    // Hech qanday savol topilmasa — ikkala o'yinchiga xato yuboramiz
+    if (questions.length === 0) {
+      io.to(player1.socketId).emit("battleError", { message: "Hozircha savollar mavjud emas. Keyinroq urinib ko'ring." });
+      io.to(player2.socketId).emit("battleError", { message: "Hozircha savollar mavjud emas. Keyinroq urinib ko'ring." });
+      console.error("Bazada umuman savol yo'q!");
+      return;
+    }
 
     // Jang holatini saqlash
     battles[roomId] = {
       questions: questions,
       level: player1.level || "A1",
+      lengthKey: player1.lengthKey || "standard",
       players: {
         [player1.socketId]: { userId: player1.userId, name: player1.name, score: 0, finished: false, answeredCount: 0 },
         [player2.socketId]: { userId: player2.userId, name: player2.name, score: 0, finished: false, answeredCount: 0 },
@@ -770,6 +810,41 @@ io.on("connection", (socket) => {
 
       startBattle(roomId, p1, p2);
     }
+  });
+
+  // ===== BATTLE CHAT (V1: emotes + free chat + spam cooldown) =====
+  socket.chatLast = 0;
+  socket.chatTimes = [];
+  socket.on("battleChatSend", ({ roomId, message }) => {
+    const battle = battles[roomId];
+    if (!battle || !battle.players[socket.id]) return; // bu battle ichidagi o'yinchi emas
+    if (!message || typeof message !== "string") return;
+
+    let text = message.trim().slice(0, 120); // uzunlik 120 belgi
+    if (!text) return;
+
+    // Spam cooldown: 2 soniyada bir marta
+    const now = Date.now();
+    if (now - socket.chatLast < 2000) {
+      socket.emit("battleChatError", { message: "Juda tez yozyapsiz. Biroz kuting." });
+      return;
+    }
+    // 10 soniyada maksimum 5 xabar
+    socket.chatTimes = socket.chatTimes.filter(t => now - t < 10000);
+    if (socket.chatTimes.length >= 5) {
+      socket.emit("battleChatError", { message: "Juda ko'p xabar yubordingiz. Biroz kuting." });
+      return;
+    }
+    socket.chatLast = now;
+    socket.chatTimes.push(now);
+
+    const sender = battle.players[socket.id];
+    io.to(roomId).emit("battleChatMessage", {
+      senderId: sender.userId || null,
+      senderName: sender.name || "O'yinchi",
+      message: text,
+      createdAt: new Date().toISOString(),
+    });
   });
 
   // User disconnect
@@ -955,6 +1030,7 @@ io.on("connection", (socket) => {
         userId: playerData.userId,
         name: playerData.name || "O'yinchi",
         level: playerData.level || "A1",
+        lengthKey: playerData.lengthKey || "standard",
         botName: botName,
       };
       socket.emit("waiting", { message: "Raqib qidirilmoqda..." });
@@ -977,8 +1053,8 @@ io.on("connection", (socket) => {
             message: "Raqib topildi!",
           });
 
-          // 2 soniyadan keyin bot bilan jang boshlanadi
-          setTimeout(() => startBotBattle(roomId, player), 2000);
+          // 7 soniyadan keyin bot bilan jang boshlanadi (countdown bilan mos)
+          setTimeout(() => startBotBattle(roomId, player), 6000);
         }
       }, 10000); // 10 soniya
     } else {
@@ -998,8 +1074,8 @@ io.on("connection", (socket) => {
           opponent: { name: botName2, rating: playerData.rating || 1000, win_rate: 50 + Math.floor(Math.random() * 20), level: myLevel },
           message: "Raqib topildi!",
         });
-        const botPlayer = { socketId: socket.id, userId: playerData.userId, name: playerData.name || "O'yinchi", level: myLevel, botName: botName2 };
-        setTimeout(() => startBotBattle(roomIdBot, botPlayer), 2000);
+        const botPlayer = { socketId: socket.id, userId: playerData.userId, name: playerData.name || "O'yinchi", level: myLevel, lengthKey: playerData.lengthKey || "standard", botName: botName2 };
+        setTimeout(() => startBotBattle(roomIdBot, botPlayer), 6000);
         return;
       }
 
@@ -1011,7 +1087,7 @@ io.on("connection", (socket) => {
       io.sockets.sockets.get(opponent.socketId)?.join(roomId);
 
       const player1 = opponent;
-      const player2 = { socketId: socket.id, userId: playerData.userId, name: playerData.name || "O'yinchi", level: playerData.level || "A1" };
+      const player2 = { socketId: socket.id, userId: playerData.userId, name: playerData.name || "O'yinchi", level: playerData.level || "A1", lengthKey: playerData.lengthKey || "standard" };
 
       // Ikki o'yinchi rasmini bazadan olish
       let p1Pic = null, p2Pic = null;
@@ -1040,8 +1116,8 @@ io.on("connection", (socket) => {
         message: "Raqib topildi!",
       });
 
-      // 2 soniyadan keyin jangni boshlaymiz
-      setTimeout(() => startBattle(roomId, player1, player2), 2000);
+      // 6 soniyadan keyin jangni boshlaymiz (countdown bilan mos)
+      setTimeout(() => startBattle(roomId, player1, player2), 6000);
     }
   });
 
@@ -1218,7 +1294,12 @@ async function finishBattle(roomId) {
       ratingDelta = -RATING_CHANGE;
     }
 
-    const xpEarned = me.score * 10 + (outcome === "win" ? 20 : 0);
+    // Tanlangan format bo'yicha XP (Quick=4, Standard=8, Extended=12, Marathon=16)
+    const fmtXp = lengthConfig(battle.lengthKey).xp;
+    let xpEarned;
+    if (outcome === "win") xpEarned = fmtXp;              // g'alaba — to'liq format XP
+    else if (outcome === "draw") xpEarned = Math.round(fmtXp / 2); // durang — yarmi
+    else xpEarned = Math.max(1, Math.round(fmtXp / 4));   // mag'lubiyat — ishtirok uchun ozroq
 
     // BAZAGA SAQLASH (agar userId bor bo'lsa)
     let updatedUser = null;
@@ -2369,6 +2450,37 @@ app.post("/notifications/read/:userId", authMiddleware, async (req, res) => {
     res.json({ message: "O'qilgan deb belgilandi" });
   } catch (err) {
     console.error("Bildirishnoma o'qish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Barcha bildirishnomalarni o'chirish (bar yopilganda — eski xabarlarni tozalash)
+app.post("/notifications/clear/:userId", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    await pool.query("DELETE FROM notifications WHERE user_id = $1", [userId]);
+    res.json({ message: "Barcha xabarlar o'chirildi" });
+  } catch (err) {
+    console.error("Bildirishnomalarni tozalash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Bitta bildirishnomani o'chirish (X tugmasi uchun)
+app.delete("/notifications/:notifId", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const notifId = parseInt(req.params.notifId, 10);
+    if (isNaN(notifId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+    // Faqat o'ziniki bo'lgan xabarni o'chira oladi
+    const result = await pool.query(
+      "DELETE FROM notifications WHERE id = $1 AND user_id = $2 RETURNING id",
+      [notifId, userId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: "Topilmadi" });
+    res.json({ message: "O'chirildi", id: notifId });
+  } catch (err) {
+    console.error("Bildirishnoma o'chirish xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });
