@@ -602,6 +602,7 @@ async function startBattle(roomId, player1, player2) {
     // Tanlangan format bo'yicha savol soni (player1 tanlovi)
     const cfg = lengthConfig(player1.lengthKey);
     const qCount = cfg.questions;
+    console.log("[BATTLE DEBUG] startBattle. player1.lengthKey:", player1.lengthKey, "| qCount (kerakli):", qCount, "| level:", player1.level);
 
     let result = await pool.query(
       `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
@@ -620,6 +621,7 @@ async function startBattle(roomId, player1, player2) {
     }
 
     const questions = result.rows;
+    console.log("[BATTLE DEBUG] Bazadan olingan savollar soni:", questions.length, "(kerakli:", qCount, ")");
 
     // Hech qanday savol topilmasa — ikkala o'yinchiga xato yuboramiz
     if (questions.length === 0) {
@@ -735,82 +737,6 @@ io.on("connection", (socket) => {
   });
 
   // Friend battle room join
-  socket.on("joinFriendBattle", ({ roomId, userId }) => {
-    if (!roomId || !userId) {
-      socket.emit("battleError", {
-        message: "Room ID and User ID are required.",
-      });
-      return;
-    }
-
-    const normalizedUserId = String(userId);
-    const pending = pendingBattles[roomId];
-
-    if (!pending) {
-      socket.emit("battleError", {
-        message: "Battle room not found or already expired.",
-      });
-      return;
-    }
-
-    const isPlayer1 = String(pending.player1.userId) === normalizedUserId;
-    const isPlayer2 = String(pending.player2.userId) === normalizedUserId;
-
-    if (!isPlayer1 && !isPlayer2) {
-      socket.emit("battleError", {
-        message: "You are not allowed to join this battle.",
-      });
-      return;
-    }
-
-    socket.join(roomId);
-
-    if (isPlayer1) {
-      pending.player1.ready = true;
-      pending.player1.socketId = socket.id;
-    }
-
-    if (isPlayer2) {
-      pending.player2.ready = true;
-      pending.player2.socketId = socket.id;
-    }
-
-    console.log(`User ${normalizedUserId} joined friend battle room: ${roomId}`);
-
-    io.to(roomId).emit("battleWaiting", {
-      roomId,
-      player1Ready: pending.player1.ready,
-      player2Ready: pending.player2.ready,
-      message: "Waiting for both players to be ready...",
-    });
-
-    if (pending.player1.ready && pending.player2.ready) {
-      const p1 = {
-        socketId: pending.player1.socketId,
-        userId: pending.player1.userId,
-        name: pending.player1.name,
-        level: pending.player1.level,
-      };
-
-      const p2 = {
-        socketId: pending.player2.socketId,
-        userId: pending.player2.userId,
-        name: pending.player2.name,
-        level: pending.player2.level,
-      };
-
-      delete pendingBattles[roomId];
-
-      io.to(roomId).emit("battleStarting", {
-        roomId,
-        players: [p1, p2],
-        countdown: 3,
-        message: "Both players are ready. Battle is starting...",
-      });
-
-      startBattle(roomId, p1, p2);
-    }
-  });
 
   // ===== BATTLE CHAT (V1: emotes + free chat + spam cooldown) =====
   socket.chatLast = 0;
@@ -863,7 +789,7 @@ io.on("connection", (socket) => {
   });
 
   // Rematch: bir o'yinchi qayta jang so'raydi
-  socket.on("requestRematch", ({ opponentId, myUserId, myName, level }) => {
+  socket.on("requestRematch", ({ opponentId, myUserId, myName, level, lengthKey }) => {
     const targetSocketId = onlineUsers[String(opponentId)];
     if (!targetSocketId) {
       socket.emit("rematchUnavailable", { message: "Raqib hozir mavjud emas" });
@@ -874,19 +800,19 @@ io.on("connection", (socket) => {
       fromName: myName,
       fromSocketId: socket.id,
       level: level || "A1",
+      lengthKey: lengthKey || "standard",
     });
   });
 
   // Rematch javobi
-  socket.on("rematchResponse", async ({ accepted, fromSocketId, fromUserId, fromName, myUserId, myName, level }) => {
+  socket.on("rematchResponse", async ({ accepted, fromSocketId, fromUserId, fromName, myUserId, myName, level, lengthKey }) => {
     const requesterSocket = io.sockets.sockets.get(fromSocketId);
     if (!accepted) {
       if (requesterSocket) requesterSocket.emit("rematchDeclined", { byName: myName });
       return;
     }
-    const roomId = "friend_battle_" + fromSocketId + "_" + socket.id;
-    if (requesterSocket) requesterSocket.join(roomId);
-    socket.join(roomId);
+    const lk = lengthKey || "standard";
+    const roomId = "friend_battle_rematch_" + fromSocketId + "_" + socket.id + "_" + Date.now();
 
     let fromPic = null, myPic = null;
     try {
@@ -897,14 +823,20 @@ io.on("connection", (socket) => {
       });
     } catch (e) {}
 
-    if (requesterSocket) {
-      requesterSocket.emit("matchFound", { roomId, opponent: { name: myName, profile_picture: myPic }, message: "Rematch qabul qilindi!" });
-    }
-    socket.emit("matchFound", { roomId, opponent: { name: fromName, profile_picture: fromPic }, message: "Rematch boshlanmoqda!" });
+    const fromCard = await getOpponentCardInfo(fromUserId);
+    const myCard = await getOpponentCardInfo(myUserId);
 
-    const player1 = { socketId: fromSocketId, userId: fromUserId, name: fromName, level: level || "A1" };
-    const player2 = { socketId: socket.id, userId: myUserId, name: myName, level: level || "A1" };
-    setTimeout(() => startBattle(roomId, player1, player2), 1500);
+    // Do'st jangi kabi: ikki o'yinchi battle.html'ga qayta o'tadi (found ekran + countdown)
+    pendingBattles[roomId] = {
+      lengthKey: lk,
+      player1: { userId: fromUserId, name: fromName, level: level || "A1", lengthKey: lk, ready: false, socketId: null },
+      player2: { userId: myUserId, name: myName, level: level || "A1", lengthKey: lk, ready: false, socketId: null },
+    };
+
+    if (requesterSocket) {
+      requesterSocket.emit("matchFound", { roomId, opponent: { name: myName, profile_picture: myPic, rating: myCard.rating, level: level || "A1" }, lengthKey: lk, redirect: true, message: "Rematch qabul qilindi!" });
+    }
+    socket.emit("matchFound", { roomId, opponent: { name: fromName, profile_picture: fromPic, rating: fromCard.rating, level: level || "A1" }, lengthKey: lk, redirect: true, message: "Siz rematchni qabul qildingiz!" });
   });
 
   // Do'stga jang chaqiruvi yuborish
@@ -970,12 +902,14 @@ io.on("connection", (socket) => {
       challengerSocket.emit("matchFound", {
         roomId: roomId,
         opponent: { name: myName, profile_picture: myPic, rating: myCard.rating, win_rate: myCard.win_rate, level: level || "A1" },
+        lengthKey: lk,
         message: "Do'stingiz qabul qildi!",
       });
     }
     socket.emit("matchFound", {
       roomId: roomId,
       opponent: { name: fromName, profile_picture: fromPic, rating: fromCard.rating, win_rate: fromCard.win_rate, level: level || "A1" },
+      lengthKey: lk,
       message: "Jang boshlanmoqda!",
     });
 
@@ -990,23 +924,6 @@ io.on("connection", (socket) => {
   console.log("Yangi o'yinchi ulandi:", socket.id);
 
   // Do'st jangi: battle.html ochilganda yangi socket room'ga qo'shiladi
-  socket.on("joinFriendBattle", ({ roomId, userId, name }) => {
-    socket.join(roomId);
-    // Agar bu room uchun jang holati bor bo'lsa, socket'ni yangilash
-    const battle = battles[roomId];
-    if (battle) {
-      // Eski socketId'ni topib, yangisiga almashtirish (userId bo'yicha)
-      for (const oldSocketId in battle.players) {
-        if (String(battle.players[oldSocketId].userId) === String(userId)) {
-          if (oldSocketId !== socket.id) {
-            battle.players[socket.id] = battle.players[oldSocketId];
-            delete battle.players[oldSocketId];
-          }
-          break;
-        }
-      }
-    }
-  });
 
   // Do'st jangi: battle.html ochilganda o'yinchi "tayyorman" deydi
   socket.on("joinFriendBattle", ({ roomId, userId }) => {
@@ -1373,6 +1290,7 @@ async function finishBattle(roomId) {
       your_score: me.score,
       opponent_score: opp.score,
       total: battle.questions.length,
+      lengthKey: battle.lengthKey || "standard",
       xp_earned: xpEarned,
       rating_change: ratingDelta,
       updated_user: updatedUser,

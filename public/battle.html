@@ -707,14 +707,14 @@
             <div class="rs-ava" id="resMyAva">S</div>
             <div class="rs-num" id="finalMyScore">0</div>
             <div class="rs-lbl" id="myLbl">SIZ</div>
-            <div class="rs-correct"><i data-lucide="check"></i> <span id="myCorrect">0</span>/5 to'g'ri</div>
+            <div class="rs-correct"><i data-lucide="check"></i> <span id="myCorrect">0</span>/<span id="myTotal">0</span> to'g'ri</div>
           </div>
           <div class="rs opp" id="rsOpp">
             <div class="rs-crown"><i data-lucide="crown"></i></div>
             <div class="rs-ava" id="resOppAva">R</div>
             <div class="rs-num" id="finalOppScore">0</div>
             <div class="rs-lbl" id="oppLbl">RAQIB</div>
-            <div class="rs-correct"><i data-lucide="check"></i> <span id="oppCorrect">0</span>/5 to'g'ri</div>
+            <div class="rs-correct"><i data-lucide="check"></i> <span id="oppCorrect">0</span>/<span id="oppTotal">0</span> to'g'ri</div>
           </div>
         </div>
         <div id="leagueBannerSlot"></div>
@@ -775,6 +775,29 @@
     //  - do'st jangi havolasi (?room=...)
     // Aks holda — professional empty state ko'rsatamiz va to'xtaymiz.
     var battleLengthKey = "standard"; // tanlangan format (lobby'dan)
+
+    // Format jadvali (chips uchun — haqiqiy savol soni/vaqt)
+    var battleLengthsCfg = {
+      quick:    { questions: 10, totalSeconds: 150 },
+      standard: { questions: 20, totalSeconds: 300 },
+      extended: { questions: 30, totalSeconds: 450 },
+      marathon: { questions: 40, totalSeconds: 600 },
+    };
+    function fmtMMSS(sec) {
+      var m = Math.floor(sec / 60), s = sec % 60;
+      return m + ":" + (s < 10 ? "0" : "") + s;
+    }
+    // Found ekrani chiplarini HAQIQIY format bilan to'ldiradi (1v1 va do'st jangida bir xil)
+    function fillBattleChips(lengthKey, level, myRating, mode) {
+      var cfg = battleLengthsCfg[lengthKey] || battleLengthsCfg.standard;
+      var qEl = document.getElementById("mmQCount"); if (qEl) qEl.textContent = cfg.questions;
+      var tEl = document.getElementById("mmTime"); if (tEl) tEl.textContent = fmtMMSS(cfg.totalSeconds);
+      var lEl = document.getElementById("mmMyLevel"); if (lEl) lEl.textContent = level || user.cefr_level || "A1";
+      var mEl = document.getElementById("mmMode"); if (mEl) mEl.textContent = mode || "1v1 Ranked";
+      // Rating oralig'i (±100)
+      var r = myRating || user.rating || 1000;
+      var rEl = document.getElementById("mmRange"); if (rEl) rEl.textContent = (r - 100) + "–" + (r + 100);
+    }
     (function guardBattle() {
       var hasRoom = new URLSearchParams(window.location.search).get("room");
       var intentRaw = sessionStorage.getItem("battleIntent");
@@ -895,6 +918,10 @@
         // A odam: "Do'stingiz qabul qildi!" / B odam: "Jang boshlanmoqda!"
         var fMsg = fData ? (fData.message || "") : "";
         var isChallenger = fMsg.indexOf("qabul qildi") !== -1; // A (chaqiruvchi)
+        var fLengthKey = fData ? (fData.lengthKey || "standard") : "standard";
+
+        // Chiplarni haqiqiy format bilan to'ldiramiz (do'st jangi)
+        fillBattleChips(fLengthKey, fOppLevel, user.rating, "Do'st jangi");
 
         // Sarlavha + subtitle (do'st jangi uchun)
         document.getElementById("searchTitle").textContent = "Jang boshlanmoqda!";
@@ -956,6 +983,8 @@
 
         socket.emit("joinFriendBattle", { roomId: friendRoom, userId: user.id });
       } else {
+        // 1v1: chiplarni tanlangan format bilan to'ldiramiz
+        fillBattleChips(battleLengthKey, user.cefr_level, user.rating, "1v1 Ranked");
         socket.emit("findMatch", { userId: user.id, name: user.first_name, level: user.cefr_level, lengthKey: battleLengthKey });
       }
     });
@@ -966,6 +995,15 @@
     });
 
     socket.on("matchFound", (data) => {
+      // Rematch: natija oynasidan yangi jangga o'tamiz (found ekran + countdown)
+      if (data.redirect) {
+        try {
+          sessionStorage.setItem("battleData", JSON.stringify(data));
+          if (data.lengthKey) sessionStorage.setItem("battleIntent", JSON.stringify({ mode: "friend", lengthKey: data.lengthKey, ts: Date.now() }));
+        } catch (e) {}
+        window.location.href = "/battle.html?room=" + encodeURIComponent(data.roomId);
+        return;
+      }
       currentRoom = data.roomId;
       stopMmTimer();
 
@@ -1205,10 +1243,16 @@
     socket.on("battleEnd", (data) => {
       clearInterval(timerInterval);
       window.battleAnswers = data.answers || [];
+      // Joriy o'yin formatini saqlaymiz (rematch uchun)
+      if (data.lengthKey) battleLengthKey = data.lengthKey;
       document.getElementById("resMyAva").innerHTML = avatarHTML(user.first_name, myPic);
       document.getElementById("resOppAva").innerHTML = avatarHTML(oppNameGlobal, oppPic);
       document.getElementById("myCorrect").textContent = data.your_score;
       document.getElementById("oppCorrect").textContent = data.opponent_score;
+      // Jami savol soni (formatdan) — ikki o'yinchida bir xil
+      var totalQ = data.total || questions.length || 0;
+      var myT = document.getElementById("myTotal"); if (myT) myT.textContent = totalQ;
+      var oppT = document.getElementById("oppTotal"); if (oppT) oppT.textContent = totalQ;
       // Ism-familya (SIZ/RAQIB o'rniga)
       document.getElementById("myLbl").textContent = myNameGlobal || (user.first_name + " " + (user.last_name || ""));
       document.getElementById("oppLbl").textContent = oppNameGlobal;
@@ -1413,7 +1457,7 @@
     }
     function requestRematch() {
       if (!oppIdGlobal) return;
-      socket.emit("requestRematch", { opponentId: oppIdGlobal, myUserId: user.id, myName: myNameGlobal || user.first_name, level: levelGlobal });
+      socket.emit("requestRematch", { opponentId: oppIdGlobal, myUserId: user.id, myName: myNameGlobal || user.first_name, level: levelGlobal, lengthKey: battleLengthKey });
       document.getElementById("rematchBtn").disabled = true;
       document.getElementById("rematchStatus").textContent = "Rematch so'rovi yuborildi, javob kutilmoqda...";
     }
@@ -1437,6 +1481,7 @@
         myUserId: user.id,
         myName: user.first_name,
         level: pendingRematch.level,
+        lengthKey: pendingRematch.lengthKey || "standard",
       });
       pendingRematch = null;
     }
