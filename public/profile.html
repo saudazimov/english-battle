@@ -261,6 +261,10 @@
     #rankMedal { width: 56px; height: 56px; display: inline-flex; align-items: center; justify-content: center; }
     #rankMedal i, #rankMedal svg { width: 100% !important; height: 100% !important; }
     
+    .profile-back-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; margin-right: 14px; border-radius: 10px; background: rgba(91,140,255,0.12); border: 1px solid var(--border-bright); color: var(--accent); font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background 0.18s, transform 0.1s; flex-shrink: 0; }
+    .profile-back-btn:hover { background: rgba(91,140,255,0.2); }
+    .profile-back-btn:active { transform: scale(0.97); }
+    .profile-back-btn i { width: 16px; height: 16px; }
   </style>
 </head>
 <body>
@@ -276,6 +280,7 @@
 
       <!-- Sarlavha -->
       <div class="page-head">
+        <button class="profile-back-btn" id="profileBackBtn" onclick="profileGoBack()" style="display:none;"><i data-lucide="arrow-left"></i> Ortga</button>
         <div class="crest-ic"><i data-lucide="user"></i></div>
         <div><h1>Profile</h1><p>View your stats, achievements, and progress.</p></div>
       </div>
@@ -536,7 +541,17 @@
       if (editBtn) editBtn.style.display = "none";
       const pageDesc = document.querySelector(".page-head p");
       if (pageDesc) pageDesc.textContent = "Foydalanuvchi profili";
+      // Ortga tugmasini ko'rsatamiz (faqat boshqa odam profilida)
+      const backBtn = document.getElementById("profileBackBtn");
+      if (backBtn) backBtn.style.display = "inline-flex";
     }
+
+    // Ortga — oldingi sahifaga qaytadi
+    function profileGoBack() {
+      if (history.length > 1) history.back();
+      else window.location.href = "/lobby.html";
+    }
+    window.profileGoBack = profileGoBack;
 
     // Profil endpoint'dan to'liq ma'lumot (viewUserId - o'zim yoki boshqa odam)
     let profileData = null;

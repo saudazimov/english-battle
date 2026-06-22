@@ -347,8 +347,8 @@
     .res-lose { color: #f87171; }
     .res-draw { color: var(--gold); }
     .rematch-btn {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 7px 12px; border-radius: 9px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 7px 20px; border-radius: 9px; cursor: pointer; min-width: 100px;
       background: rgba(91,140,255,0.12); border: 1px solid var(--border-bright);
       color: var(--accent); font-size: 12px; font-weight: 600;
       font-family: inherit; transition: all 0.2s;
@@ -770,6 +770,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/sidebar.js"></script>
+  <script src="/profile-modal.js"></script>
   
   <script>
     // Foydalanuvchi ma'lumotini yuklash
@@ -1122,8 +1123,8 @@
             '<div class="recent-score">' + b.my_score + ' - ' + b.opponent_score + '</div>' +
             '<div class="recent-rating" style="color:' + ratingColor + ';">' + ratingChange + '</div>' +
             '<div>' +
-              '<button class="rematch-btn" onclick="rematch(\'' + oppId + '\', \'' + oppName.replace(/'/g, "") + '\')">' +
-                '<i data-lucide="rotate-ccw"></i> Rematch' +
+              '<button class="rematch-btn" onclick="viewOppProfile(\'' + oppId + '\')">' +
+                '<i data-lucide="user"></i> Profil' +
               '</button>' +
             '</div>';
           list.appendChild(row);
@@ -1150,14 +1151,13 @@
     loadRecent();
     // Rematch tugmasi bosilganda — hozircha frontend xabari
     // (haqiqiy rematch backend bosqichida ulanadi)
-    function rematch(opponentId, opponentName) {
-      // Hozircha oddiy tasdiq. Keyingi bosqichda haqiqiy so'rov yuboramiz.
-      const ok = confirm(opponentName + " bilan qayta o'ynaysizmi?");
-      if (ok) {
-        // Keyingi bosqichda: serverga rematch so'rovi yuboriladi
-        // Hozircha shunchaki battle sahifasiga o'tamiz
-        sessionStorage.setItem("battleIntent", JSON.stringify({ mode: "rematch", ts: Date.now() }));
-        window.location.href = "/battle.html";
+    // Raqib profilini ko'rish (o'sha sahifada modal'da ochiladi)
+    function viewOppProfile(opponentId) {
+      if (!opponentId) return;
+      if (typeof window.openProfileModal === "function") {
+        window.openProfileModal(opponentId);
+      } else {
+        window.location.href = "/profile.html?id=" + encodeURIComponent(opponentId);
       }
     }
     // ===== O'NG PANEL =====

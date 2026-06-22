@@ -1626,8 +1626,32 @@ app.get("/profile/:userId", authMiddleware, async (req, res) => {
     // Win rate hisoblash (foiz)
     const winRate = totalBattles > 0 ? Math.round((wins / totalBattles) * 100) : 0;
 
+    // Do'stlik holati (joriy foydalanuvchi bilan ko'rilayotgan profil orasida)
+    let friendStatus = "none"; // none | friends | pending_sent | pending_received | self
+    const viewerId = req.user.id;
+    if (String(viewerId) === String(userId)) {
+      friendStatus = "self";
+    } else {
+      try {
+        const fr = await pool.query(
+          `SELECT requester_id, receiver_id, status FROM friendships
+           WHERE (requester_id = $1 AND receiver_id = $2) OR (requester_id = $2 AND receiver_id = $1)
+           LIMIT 1`,
+          [viewerId, userId]
+        );
+        if (fr.rows.length > 0) {
+          const f = fr.rows[0];
+          if (f.status === "accepted") friendStatus = "friends";
+          else if (f.status === "pending") {
+            friendStatus = String(f.requester_id) === String(viewerId) ? "pending_sent" : "pending_received";
+          }
+        }
+      } catch (e) {}
+    }
+
     res.json({
       user: user,
+      friendStatus: friendStatus,
       stats: {
         total_battles: totalBattles,
         wins: wins,
