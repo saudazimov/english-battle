@@ -840,7 +840,7 @@ io.on("connection", (socket) => {
   });
 
   // Do'stga jang chaqiruvi yuborish
-  socket.on("challengeFriend", ({ fromUserId, fromName, toUserId, level, lengthKey }) => {
+  socket.on("challengeFriend", async ({ fromUserId, fromName, toUserId, level, lengthKey }) => {
     console.log("Chaqiruv:", fromUserId, "->", toUserId, "| Onlayn:", Object.keys(onlineUsers));
     const targetSocketId = onlineUsers[String(toUserId)];
 
@@ -849,10 +849,18 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // Chaqiruvchining rasmini olamiz (modal uchun)
+    let fromPic = null;
+    try {
+      const r = await pool.query("SELECT profile_picture FROM users WHERE id = $1", [fromUserId]);
+      if (r.rows[0]) fromPic = r.rows[0].profile_picture;
+    } catch (e) {}
+
     io.to(targetSocketId).emit("challengeReceived", {
       fromUserId: fromUserId,
       fromName: fromName,
       fromSocketId: socket.id,
+      fromPic: fromPic,
       level: level,
       lengthKey: lengthKey || "standard",
     });

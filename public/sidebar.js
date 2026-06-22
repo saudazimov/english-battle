@@ -359,3 +359,130 @@ document.addEventListener("click", function (e) {
     chip.classList.remove("open");
   }
 });
+
+// ===== GLOBAL DO'ST CHAQIRUVI (har sahifada ishlaydi) =====
+// A odam challenge bosganda, B qaysi sahifada bo'lsa ham so'rov modali ko'rinadi.
+(function globalChallengeSystem() {
+  const userData = localStorage.getItem("user");
+  if (!userData) return;
+  const me = JSON.parse(userData);
+
+  // Battle sahifasida (o'yin paytida) chaqiruv kerak emas — u o'z socketini ishlatadi
+  const path = window.location.pathname;
+  if (path.indexOf("battle.html") !== -1 || path.indexOf("friends.html") !== -1) return;
+
+  let incoming = null;
+
+  // Modal CSS (bir marta)
+  if (!document.getElementById("gChallengeStyle")) {
+    const st = document.createElement("style");
+    st.id = "gChallengeStyle";
+    st.textContent =
+      '.gch-overlay{position:fixed;inset:0;z-index:9000;background:rgba(3,6,15,0.78);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;}' +
+      '.gch-overlay.show{display:flex;}' +
+      '.gch-box{background:linear-gradient(180deg,#0e1428,#0b1020);border:1px solid rgba(91,140,255,0.4);border-radius:20px;padding:32px 28px;max-width:420px;width:100%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 40px rgba(91,140,255,0.15);animation:gchPop 0.25s ease;}' +
+      '@keyframes gchPop{from{opacity:0;transform:scale(0.92) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}' +
+      '.gch-ava{width:74px;height:74px;border-radius:50%;overflow:hidden;position:relative;margin:0 auto 16px;background:linear-gradient(135deg,#5b8cff,#a855f7);display:grid;place-items:center;font-size:30px;font-weight:800;color:#fff;border:2px solid rgba(91,140,255,0.5);}' +
+      '.gch-ava img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}' +
+      '.gch-title{font-size:21px;font-weight:800;color:#e6ecff;margin-bottom:8px;}' +
+      '.gch-sub{font-size:14.5px;color:#9aa7d9;line-height:1.5;margin-bottom:24px;}' +
+      '.gch-fmt{display:inline-block;font-size:13px;font-weight:700;color:#5b8cff;background:rgba(91,140,255,0.12);border:1px solid rgba(91,140,255,0.3);border-radius:8px;padding:5px 12px;margin-bottom:22px;}' +
+      '.gch-actions{display:flex;gap:12px;}' +
+      '.gch-btn{flex:1;height:48px;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;border:none;transition:transform 0.1s,box-shadow 0.15s,background 0.15s;}' +
+      '.gch-btn:active{transform:scale(0.97);}' +
+      '.gch-accept{background:linear-gradient(135deg,#2563eb,#9333ea);color:#fff;box-shadow:0 4px 16px rgba(91,140,255,0.3);}' +
+      '.gch-accept:hover{box-shadow:0 4px 22px rgba(91,140,255,0.5);}' +
+      '.gch-decline{background:rgba(255,255,255,0.08);color:#e6ecff;border:1px solid rgba(255,90,110,0.4);}' +
+      '.gch-decline:hover{background:rgba(255,90,110,0.15);}';
+    document.head.appendChild(st);
+  }
+
+  // Modal HTML (bir marta)
+  if (!document.getElementById("gChallengeModal")) {
+    const ov = document.createElement("div");
+    ov.className = "gch-overlay";
+    ov.id = "gChallengeModal";
+    ov.innerHTML =
+      '<div class="gch-box">' +
+        '<div class="gch-ava" id="gchAva">?</div>' +
+        '<div class="gch-title" id="gchTitle">Jang chaqiruvi</div>' +
+        '<div class="gch-sub" id="gchSub"></div>' +
+        '<div class="gch-fmt" id="gchFmt"></div>' +
+        '<div class="gch-actions">' +
+          '<button class="gch-btn gch-decline" id="gchDecline">Rad etish</button>' +
+          '<button class="gch-btn gch-accept" id="gchAccept">Qabul qilish</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+
+    document.getElementById("gchAccept").onclick = function () { gchRespond(true); };
+    document.getElementById("gchDecline").onclick = function () { gchRespond(false); };
+  }
+
+  const fmtNames = { quick: "Tezkor · 10 savol", standard: "Standart · 20 savol", extended: "Uzaytirilgan · 30 savol", marathon: "Marafon · 40 savol" };
+
+  function showChallengeModal(data) {
+    incoming = data;
+    document.getElementById("gchAva").innerHTML = avatarHTML(data.fromName, data.fromPic || null);
+    document.getElementById("gchTitle").textContent = "Jang chaqiruvi!";
+    document.getElementById("gchSub").innerHTML = "<b>" + escapeText(data.fromName) + "</b> sizni jangga chaqirmoqda";
+    document.getElementById("gchFmt").textContent = fmtNames[data.lengthKey] || fmtNames.standard;
+    document.getElementById("gChallengeModal").classList.add("show");
+  }
+
+  function hideChallengeModal() {
+    document.getElementById("gChallengeModal").classList.remove("show");
+  }
+
+  function gchRespond(accepted) {
+    hideChallengeModal();
+    if (!incoming) return;
+    const sock = window.socket || window.globalSocket;
+    if (!sock) return;
+    sock.emit("challengeResponse", {
+      accepted: accepted,
+      fromSocketId: incoming.fromSocketId,
+      fromUserId: incoming.fromUserId,
+      fromName: incoming.fromName,
+      myUserId: me.id,
+      myName: (me.first_name || "") + " " + (me.last_name || ""),
+      level: incoming.level,
+      lengthKey: incoming.lengthKey || "standard",
+    });
+    incoming = null;
+  }
+
+  function escapeText(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // Socket handlerlarni ulaymiz (socket tayyor bo'lganda)
+  function attachHandlers() {
+    const sock = window.socket || window.globalSocket;
+    if (!sock) { setTimeout(attachHandlers, 500); return; }
+
+    sock.on("challengeReceived", function (data) {
+      showChallengeModal(data);
+    });
+
+    // Chaqiruvchi bekor qildi
+    sock.on("challengeCancelled", function (data) {
+      if (incoming && String(incoming.fromUserId) === String(data.fromUserId)) {
+        incoming = null;
+        hideChallengeModal();
+      }
+    });
+
+    // Qabul qilindi — battle.html'ga o'tamiz (found ekran + countdown)
+    sock.on("matchFound", function (data) {
+      try {
+        sessionStorage.setItem("battleData", JSON.stringify(data));
+        if (data.lengthKey) sessionStorage.setItem("battleIntent", JSON.stringify({ mode: "friend", lengthKey: data.lengthKey, ts: Date.now() }));
+      } catch (e) {}
+      window.location.href = "/battle.html?room=" + encodeURIComponent(data.roomId);
+    });
+  }
+  attachHandlers();
+})();
