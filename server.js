@@ -1723,6 +1723,57 @@ app.get("/admin/room-messages", requireAdmin, async (req, res) => {
   }
 });
 
+// ===== ADMIN: HISOBOTLAR (REPORTS) =====
+// Tahlil — vaqt oralig'i bo'yicha. Query: ?days=30 (yoki 7, 90)
+app.get("/admin/reports", requireAdmin, async (req, res) => {
+  try {
+    var days = parseInt(req.query.days) || 30;
+    if ([7, 30, 90].indexOf(days) === -1) days = 30;
+
+    var results = await Promise.all([
+      // 1. Asosiy ko'rsatkichlar (umumiy)
+      pool.query("SELECT COUNT(*) AS c FROM users"),
+      pool.query("SELECT COUNT(*) AS c FROM battle_history"),
+      pool.query("SELECT COUNT(*) AS c FROM questions"),
+      pool.query("SELECT COUNT(*) AS c FROM flags WHERE status = 'pending'"),
+      // 2. Tanlangan davrdagi yangi foydalanuvchilar
+      pool.query("SELECT COUNT(*) AS c FROM users WHERE created_at >= CURRENT_DATE - ($1 || ' days')::interval", [days - 1]),
+      // 3. Tanlangan davrdagi janglar
+      pool.query("SELECT COUNT(*) AS c FROM battle_history WHERE played_at >= CURRENT_DATE - ($1 || ' days')::interval", [days - 1]),
+      // 4. Foydalanuvchi o'sishi (kunlik, tanlangan davr)
+      pool.query("SELECT TO_CHAR(created_at, 'YYYY-MM-DD') AS day, COUNT(*) AS c FROM users WHERE created_at >= CURRENT_DATE - ($1 || ' days')::interval GROUP BY day ORDER BY day", [days - 1]),
+      // 5. Jang faolligi (kunlik, tanlangan davr)
+      pool.query("SELECT TO_CHAR(played_at, 'YYYY-MM-DD') AS day, COUNT(*) AS c FROM battle_history WHERE played_at >= CURRENT_DATE - ($1 || ' days')::interval GROUP BY day ORDER BY day", [days - 1]),
+      // 6. Daraja taqsimoti (barcha o'quvchilar)
+      pool.query("SELECT cefr_level, COUNT(*) AS c FROM users WHERE role = 'student' OR role IS NULL GROUP BY cefr_level"),
+      // 7. Eng faol viloyatlar (top 6)
+      pool.query("SELECT region, COUNT(*) AS c FROM users WHERE region IS NOT NULL AND region != '' GROUP BY region ORDER BY c DESC LIMIT 6"),
+      // 8. Eng faol maktablar (top 6, o'quvchi soni bo'yicha)
+      pool.query("SELECT school, region, COUNT(*) AS c FROM users WHERE school IS NOT NULL AND school != '' GROUP BY school, region ORDER BY c DESC LIMIT 6"),
+    ]);
+
+    res.json({
+      days: days,
+      totals: {
+        users: parseInt(results[0].rows[0].c),
+        battles: parseInt(results[1].rows[0].c),
+        questions: parseInt(results[2].rows[0].c),
+        pendingFlags: parseInt(results[3].rows[0].c),
+        newUsers: parseInt(results[4].rows[0].c),
+        periodBattles: parseInt(results[5].rows[0].c),
+      },
+      userGrowth: results[6].rows.map(function (r) { return { day: r.day, count: parseInt(r.c) }; }),
+      battleActivity: results[7].rows.map(function (r) { return { day: r.day, count: parseInt(r.c) }; }),
+      levelDistribution: results[8].rows.map(function (r) { return { level: r.cefr_level || "A1", count: parseInt(r.c) }; }),
+      topRegions: results[9].rows.map(function (r) { return { name: r.region, count: parseInt(r.c) }; }),
+      topSchools: results[10].rows.map(function (r) { return { name: r.school, region: r.region || "—", count: parseInt(r.c) }; }),
+    });
+  } catch (err) {
+    console.error("Hisobotlar xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // Savollarni olish (admin) — pagination, search, filter bilan
 // GET, token bilan (parol emas). Query: ?page=1&limit=25&search=&level=&skill=&status=&date_from=&date_to=
 app.get("/admin/questions", requireAdmin, async (req, res) => {

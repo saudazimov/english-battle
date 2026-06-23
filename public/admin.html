@@ -478,6 +478,53 @@
     .qf-actions { display: flex; gap: 10px; margin-top: 20px; }
     .qf-actions .btn { flex: 1; }
     .flag-reviewed { font-size: 12.5px; color: var(--text-faint); display: flex; align-items: center; gap: 6px; }
+    
+    /* REPORTS */
+    .rep-period { display: flex; gap: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: 4px; }
+    .rep-period-btn { background: transparent; border: none; color: var(--text-dim); font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: var(--r-sm); cursor: pointer; transition: all 0.15s; }
+    .rep-period-btn:hover { color: var(--text); }
+    .rep-period-btn.active { background: var(--accent); color: #fff; }
+
+    .rep-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .rep-kpi { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px; }
+    .rep-kpi-label { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+    .rep-kpi-label i { width: 15px; height: 15px; }
+    .rep-kpi-value { font-size: 28px; font-weight: 800; line-height: 1; }
+    .rep-kpi-sub { font-size: 12px; color: var(--text-faint); margin-top: 6px; }
+    .rep-kpi-sub.up { color: var(--green); }
+
+    .rep-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    @media (max-width: 900px) { .rep-grid { grid-template-columns: 1fr; } }
+    .rep-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; }
+    .rep-card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .rep-card-title i { width: 17px; height: 17px; color: var(--accent); }
+    .rep-card-sub { font-size: 12px; color: var(--text-faint); margin-bottom: 18px; }
+
+    /* Bar chart (kunlik) */
+    .rep-bars { display: flex; align-items: flex-end; gap: 3px; height: 140px; }
+    .rep-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; position: relative; }
+    .rep-bar { width: 100%; max-width: 24px; background: linear-gradient(180deg, var(--accent), rgba(91,140,255,0.3)); border-radius: 4px 4px 0 0; min-height: 2px; transition: all 0.3s; cursor: pointer; }
+    .rep-bar:hover { filter: brightness(1.25); }
+    .rep-bar-col:hover .rep-bar-tip { opacity: 1; }
+    .rep-bar-tip { position: absolute; top: -28px; background: var(--panel-2); border: 1px solid var(--border-bright); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; white-space: nowrap; opacity: 0; transition: opacity 0.15s; pointer-events: none; z-index: 5; }
+    .rep-bar-label { font-size: 9px; color: var(--text-faint); white-space: nowrap; }
+    .rep-empty-chart { height: 140px; display: flex; align-items: center; justify-content: center; color: var(--text-faint); font-size: 13px; }
+
+    /* Daraja taqsimoti (gorizontal) */
+    .rep-level-row { display: flex; align-items: center; gap: 12px; margin-bottom: 11px; }
+    .rep-level-name { width: 32px; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+    .rep-level-track { flex: 1; height: 24px; background: var(--panel); border-radius: 6px; overflow: hidden; }
+    .rep-level-fill { height: 100%; border-radius: 6px; transition: width 0.4s; display: flex; align-items: center; padding-left: 8px; }
+    .rep-level-count { font-size: 12px; color: var(--text-dim); width: 60px; text-align: right; flex-shrink: 0; }
+
+    /* Top ro'yxat (viloyat/maktab) */
+    .rep-top-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .rep-top-row:last-child { border-bottom: none; }
+    .rep-top-rank { width: 24px; height: 24px; border-radius: 7px; background: var(--panel-2); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
+    .rep-top-rank.gold { background: rgba(251,191,36,0.2); color: var(--gold); }
+    .rep-top-name { flex: 1; font-size: 13.5px; font-weight: 600; }
+    .rep-top-sub { font-size: 11.5px; color: var(--text-faint); }
+    .rep-top-count { font-size: 13px; font-weight: 700; color: var(--accent); }
 
     .hidden { display: none !important; }
 
@@ -512,7 +559,7 @@
       <div class="nav-label">Boshqaruv</div>
       <div class="nav-item" id="nav-users" onclick="switchView('users')"><i data-lucide="users" class="ico"></i> Foydalanuvchilar</div>
       <div class="nav-item" id="nav-schools" onclick="switchView('schools')"><i data-lucide="school" class="ico"></i> Maktablar</div>
-      <div class="nav-item" onclick="navSoon('Hisobotlar')"><i data-lucide="bar-chart-3" class="ico"></i> Hisobotlar <span class="tag">tez orada</span></div>
+      <div class="nav-item" id="nav-reports" onclick="switchView('reports')"><i data-lucide="bar-chart-3" class="ico"></i> Hisobotlar</div>
       <div class="nav-item" id="nav-moderation" onclick="switchView('moderation')"><i data-lucide="shield-alert" class="ico"></i> Moderatsiya <span class="flag-badge" id="flagBadge" style="display:none;"></span></div>
       <div class="nav-label">Tizim</div>
       <div class="nav-item" id="nav-audit" onclick="switchView('audit')"><i data-lucide="scroll-text" class="ico"></i> Audit Logs</div>
@@ -633,6 +680,22 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- ====== REPORTS VIEW ====== -->
+        <div id="view-reports" style="display:none;">
+          <div class="page-head">
+            <div>
+              <h2 class="page-title-lg">Hisobotlar</h2>
+              <p class="page-sub">Platforma tahlili va statistika</p>
+            </div>
+            <div class="rep-period">
+              <button class="rep-period-btn active" data-days="7" onclick="setReportPeriod(7)">7 kun</button>
+              <button class="rep-period-btn" data-days="30" onclick="setReportPeriod(30)">30 kun</button>
+              <button class="rep-period-btn" data-days="90" onclick="setReportPeriod(90)">90 kun</button>
+            </div>
+          </div>
+          <div id="reportsBody"><div class="loading-row">Yuklanmoqda...</div></div>
         </div>
 
         <!-- ====== SETTINGS VIEW ====== -->
@@ -1358,7 +1421,7 @@
     function switchView(view) {
       currentView = view;
       // Barcha view'larni yashiramiz
-      var views = ["questions", "audit", "overview", "users", "schools", "settings", "moderation"];
+      var views = ["questions", "audit", "overview", "users", "schools", "settings", "moderation", "reports"];
       views.forEach(function (v) {
         var el = document.getElementById("view-" + v);
         if (el) el.style.display = (v === view) ? "block" : "none";
@@ -1372,6 +1435,7 @@
       if (view === "schools") loadSchools(1);
       if (view === "settings") loadSettings();
       if (view === "moderation") loadFlags(1);
+      if (view === "reports") loadReports();
     }
 
     // ===== AUDIT LOGS =====
@@ -2257,6 +2321,158 @@
           } catch (err) { if (err.message !== "auth") toast("Server xatosi", "error"); }
         }
       });
+    }
+
+    // ===== HISOBOTLAR (Reports) =====
+    var currentReportDays = 7;
+    var _reportData = null;
+
+    function setReportPeriod(days) {
+      currentReportDays = days;
+      document.querySelectorAll(".rep-period-btn").forEach(function (b) {
+        b.classList.toggle("active", parseInt(b.getAttribute("data-days")) === days);
+      });
+      loadReports();
+    }
+
+    async function loadReports() {
+      var body = document.getElementById("reportsBody");
+      body.innerHTML = '<div class="loading-row">Yuklanmoqda...</div>';
+      try {
+        var res = await apiGet("/admin/reports?days=" + currentReportDays);
+        var d = await res.json();
+        _reportData = d;
+        renderReports(d);
+      } catch (err) {
+        if (err.message !== "auth") body.innerHTML = '<div class="empty-state"><i data-lucide="alert-circle" class="ico"></i><div>Yuklab bo\'lmadi</div></div>';
+        icons();
+      }
+    }
+
+    function renderReports(d) {
+      var t = d.totals;
+      var periodLabel = d.days + " kun";
+
+      // KPI kartalar
+      var kpis = '<div class="rep-kpis">' +
+        repKpi("users", "Jami foydalanuvchi", t.users, "+" + t.newUsers + " (" + periodLabel + ")", true) +
+        repKpi("swords", "Jami janglar", t.battles, t.periodBattles + " (" + periodLabel + ")", false) +
+        repKpi("file-question", "Savollar", t.questions, "", false) +
+        repKpi("flag", "Kutilayotgan shikoyat", t.pendingFlags, "", false) +
+      '</div>';
+
+      // Grafiklar (2 ustun)
+      var charts = '<div class="rep-grid">' +
+        '<div class="rep-card"><div class="rep-card-title"><i data-lucide="trending-up"></i> Foydalanuvchi o\'sishi</div><div class="rep-card-sub">Kunlik yangi ro\'yxatdan o\'tishlar</div>' + repBarChart(d.userGrowth) + '</div>' +
+        '<div class="rep-card"><div class="rep-card-title"><i data-lucide="activity"></i> Jang faolligi</div><div class="rep-card-sub">Kunlik janglar soni</div>' + repBarChart(d.battleActivity) + '</div>' +
+      '</div>';
+
+      // Daraja taqsimoti + Top viloyatlar
+      var dist = '<div class="rep-grid">' +
+        '<div class="rep-card"><div class="rep-card-title"><i data-lucide="layers"></i> Daraja taqsimoti</div><div class="rep-card-sub">O\'quvchilar CEFR darajasi bo\'yicha</div>' + repLevels(d.levelDistribution) + '</div>' +
+        '<div class="rep-card"><div class="rep-card-title"><i data-lucide="map-pin"></i> Eng faol viloyatlar</div><div class="rep-card-sub">O\'quvchi soni bo\'yicha</div>' + repTopList(d.topRegions, false) + '</div>' +
+      '</div>';
+
+      // Top maktablar (to'liq kenglik)
+      var schools = '<div class="rep-card" style="margin-bottom:16px;"><div class="rep-card-title"><i data-lucide="school"></i> Eng faol maktablar</div><div class="rep-card-sub">O\'quvchi soni bo\'yicha top 6</div>' + repTopList(d.topSchools, true) + '</div>';
+
+      // Eksport tugmasi
+      var exportBtn = '<div style="display:flex;justify-content:flex-end;"><button class="btn btn-ghost" onclick="exportReportCSV()"><i data-lucide="download" class="ico-sm"></i> CSV eksport</button></div>';
+
+      document.getElementById("reportsBody").innerHTML = kpis + charts + dist + schools + exportBtn;
+      icons();
+    }
+
+    function repKpi(icon, label, value, sub, up) {
+      return '<div class="rep-kpi"><div class="rep-kpi-label"><i data-lucide="' + icon + '"></i> ' + label + '</div>' +
+        '<div class="rep-kpi-value">' + value + '</div>' +
+        (sub ? '<div class="rep-kpi-sub' + (up ? ' up' : '') + '">' + sub + '</div>' : '') + '</div>';
+    }
+
+    // Kunlik bar chart
+    function repBarChart(data) {
+      if (!data || data.length === 0) return '<div class="rep-empty-chart">Bu davrda ma\'lumot yo\'q</div>';
+      var max = Math.max.apply(null, data.map(function (x) { return x.count; }));
+      if (max === 0) max = 1;
+      // Ko'p kun bo'lsa, har birini ko'rsatmaymiz (label siqilmasin)
+      var showLabel = data.length <= 15;
+      return '<div class="rep-bars">' + data.map(function (x) {
+        var h = Math.round((x.count / max) * 100);
+        var dayShort = x.day.slice(5); // MM-DD
+        return '<div class="rep-bar-col"><div class="rep-bar-tip">' + dayShort + ': ' + x.count + '</div>' +
+          '<div class="rep-bar" style="height:' + h + '%"></div>' +
+          (showLabel ? '<div class="rep-bar-label">' + dayShort + '</div>' : '') + '</div>';
+      }).join("") + '</div>';
+    }
+
+    // Daraja taqsimoti
+    function repLevels(data) {
+      var order = ["A1", "A2", "B1", "B2", "C1", "C2"];
+      var colors = { A1: "#38e1ff", A2: "#34d399", B1: "#5b8cff", B2: "#a855f7", C1: "#fbbf24", C2: "#f87171" };
+      var map = {}; data.forEach(function (x) { map[x.level] = x.count; });
+      var max = Math.max.apply(null, order.map(function (l) { return map[l] || 0; }));
+      if (max === 0) max = 1;
+      return order.map(function (l) {
+        var c = map[l] || 0;
+        var pct = Math.round((c / max) * 100);
+        return '<div class="rep-level-row"><div class="rep-level-name" style="color:' + colors[l] + ';">' + l + '</div>' +
+          '<div class="rep-level-track"><div class="rep-level-fill" style="width:' + pct + '%;background:' + colors[l] + '33;border-left:3px solid ' + colors[l] + ';"></div></div>' +
+          '<div class="rep-level-count">' + c + ' ta</div></div>';
+      }).join("");
+    }
+
+    // Top ro'yxat (viloyat yoki maktab)
+    function repTopList(data, isSchool) {
+      if (!data || data.length === 0) return '<div class="empty-sm">Ma\'lumot yo\'q</div>';
+      return data.map(function (x, i) {
+        var rankCls = i === 0 ? "gold" : "";
+        var sub = isSchool ? '<div class="rep-top-sub">' + esc(x.region) + '</div>' : '';
+        return '<div class="rep-top-row"><div class="rep-top-rank ' + rankCls + '">' + (i + 1) + '</div>' +
+          '<div class="rep-top-name">' + esc(x.name) + sub + '</div>' +
+          '<div class="rep-top-count">' + x.count + ' o\'quvchi</div></div>';
+      }).join("");
+    }
+
+    // CSV eksport (joriy hisobot)
+    function exportReportCSV() {
+      if (!_reportData) return;
+      var d = _reportData;
+      var rows = [];
+      rows.push(["English Battle — Hisobot", d.days + " kun"]);
+      rows.push([]);
+      rows.push(["Asosiy ko'rsatkichlar"]);
+      rows.push(["Jami foydalanuvchi", d.totals.users]);
+      rows.push(["Yangi foydalanuvchi (" + d.days + " kun)", d.totals.newUsers]);
+      rows.push(["Jami janglar", d.totals.battles]);
+      rows.push(["Janglar (" + d.days + " kun)", d.totals.periodBattles]);
+      rows.push(["Savollar", d.totals.questions]);
+      rows.push(["Kutilayotgan shikoyat", d.totals.pendingFlags]);
+      rows.push([]);
+      rows.push(["Daraja taqsimoti"]);
+      d.levelDistribution.forEach(function (x) { rows.push([x.level, x.count]); });
+      rows.push([]);
+      rows.push(["Eng faol viloyatlar"]);
+      d.topRegions.forEach(function (x) { rows.push([x.name, x.count]); });
+      rows.push([]);
+      rows.push(["Eng faol maktablar"]);
+      d.topSchools.forEach(function (x) { rows.push([x.name, x.region, x.count]); });
+
+      var csv = rows.map(function (r) {
+        return r.map(function (cell) {
+          var s = String(cell == null ? "" : cell);
+          if (s.indexOf(",") > -1 || s.indexOf('"') > -1) s = '"' + s.replace(/"/g, '""') + '"';
+          return s;
+        }).join(",");
+      }).join("\n");
+
+      var blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "english-battle-hisobot-" + d.days + "kun.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast("Hisobot yuklab olindi", "success");
     }
     
     // ===== HELPERS =====
