@@ -984,6 +984,7 @@
     //  - do'st jangi havolasi (?room=...)
     // Aks holda — professional empty state ko'rsatamiz va to'xtaymiz.
     var battleLengthKey = "standard"; // tanlangan format (lobby'dan)
+    var battleMode = "ranked"; // tanlangan rejim (ranked yoki casual)
 
     // Format jadvali (chips uchun — haqiqiy savol soni/vaqt)
     var battleLengthsCfg = {
@@ -1003,9 +1004,16 @@
       var tEl = document.getElementById("mmTime"); if (tEl) tEl.textContent = fmtMMSS(cfg.totalSeconds);
       var lEl = document.getElementById("mmMyLevel"); if (lEl) lEl.textContent = level || user.cefr_level || "A1";
       var mEl = document.getElementById("mmMode"); if (mEl) mEl.textContent = mode || "1v1 Ranked";
-      // Rating oralig'i (±100)
+
+      // Casual rejimda reyting yo'q — RP mukofoti va rating oralig'ini yashiramiz
+      var isCasualMode = (mode === "1v1 Casual");
+      var rpEl = document.getElementById("mmRewardRp");
+      if (rpEl) rpEl.style.display = isCasualMode ? "none" : "";
+
+      // Rating oralig'i (±100) — casual'da "—"
       var r = myRating || user.rating || 1000;
-      var rEl = document.getElementById("mmRange"); if (rEl) rEl.textContent = (r - 100) + "–" + (r + 100);
+      var rEl = document.getElementById("mmRange");
+      if (rEl) rEl.textContent = isCasualMode ? "—" : ((r - 100) + "–" + (r + 100));
     }
     (function guardBattle() {
       var hasRoom = new URLSearchParams(window.location.search).get("room");
@@ -1018,6 +1026,7 @@
           if (intent && intent.ts && (Date.now() - intent.ts) < 5 * 60 * 1000) {
             validIntent = true;
             if (intent.lengthKey) battleLengthKey = intent.lengthKey; // formatni saqlaymiz
+            if (intent.mode) battleMode = intent.mode; // rejimni saqlaymiz (ranked/casual)
           }
         } catch (e) {}
       }
@@ -1192,9 +1201,9 @@
 
         socket.emit("joinFriendBattle", { roomId: friendRoom, userId: user.id });
       } else {
-        // 1v1: chiplarni tanlangan format bilan to'ldiramiz
-        fillBattleChips(battleLengthKey, user.cefr_level, user.rating, "1v1 Ranked");
-        socket.emit("findMatch", { userId: user.id, name: user.first_name, level: user.cefr_level, lengthKey: battleLengthKey });
+        // 1v1: chiplarni tanlangan format + rejim bilan to'ldiramiz
+        fillBattleChips(battleLengthKey, user.cefr_level, user.rating, battleMode === "casual" ? "1v1 Casual" : "1v1 Ranked");
+        socket.emit("findMatch", { userId: user.id, name: user.first_name, level: user.cefr_level, lengthKey: battleLengthKey, mode: battleMode });
       }
     });
 
@@ -1519,10 +1528,35 @@
 
       if (data.updated_user) localStorage.setItem("user", JSON.stringify(data.updated_user));
 
+      var isCasualResult = (data.mode === "casual");
       let ratingText = "";
-      if (data.rating_change > 0) ratingText = " · +" + data.rating_change + " reyting";
-      else if (data.rating_change < 0) ratingText = " · " + data.rating_change + " reyting";
+      if (!isCasualResult) {
+        if (data.rating_change > 0) ratingText = " · +" + data.rating_change + " reyting";
+        else if (data.rating_change < 0) ratingText = " · " + data.rating_change + " reyting";
+      }
       document.getElementById("xpEarned").innerHTML = '<i data-lucide="zap"></i> +' + data.xp_earned + " XP" + ratingText;
+
+      // Casual belgisi — XP badge bilan bitta flex qatorda (aynan teng balandlik)
+      var casualBadgeEl = document.getElementById("casualBadge");
+      if (!casualBadgeEl) {
+        var xpEl = document.getElementById("xpEarned");
+        if (xpEl && xpEl.parentNode) {
+          // XP va Casual'ni bitta flex konteynerga o'raymiz
+          var wrap = document.createElement("div");
+          wrap.style.cssText = "display:flex;align-items:stretch;justify-content:center;gap:12px;margin-bottom:26px;";
+          // XP badge'ning o'z margin-bottom'ini olib tashlaymiz (wrap boshqaradi)
+          xpEl.style.marginBottom = "0";
+          xpEl.parentNode.insertBefore(wrap, xpEl);
+          wrap.appendChild(xpEl);
+
+          casualBadgeEl = document.createElement("div");
+          casualBadgeEl.id = "casualBadge";
+          casualBadgeEl.style.cssText = "display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:rgba(139,151,192,0.12);border:1px solid rgba(139,151,192,0.3);border-radius:12px;color:var(--text-dim);font-size:17px;font-weight:700;box-sizing:border-box;";
+          casualBadgeEl.innerHTML = '<i data-lucide="shield-off" style="width:18px;height:18px;"></i> Casual';
+          wrap.appendChild(casualBadgeEl);
+        }
+      }
+      if (casualBadgeEl) casualBadgeEl.style.display = isCasualResult ? "inline-flex" : "none";
 
       const title = document.getElementById("resultTitle");
       const ic = document.getElementById("resultIc");
@@ -1537,8 +1571,15 @@
         title.textContent = "Durang!"; title.className = "draw";
         ic.className = "result-ic draw"; ic.innerHTML = '<i data-lucide="handshake"></i>';
       }
-      renderLeagueProgress(data);
-      renderLeagueProgress(data);
+      // Liga progressi faqat ranked'da (casual reytingga ta'sir qilmaydi)
+      if (isCasualResult) {
+        var lpBox = document.getElementById("leagueProg");
+        if (lpBox) lpBox.style.display = "none";
+      } else {
+        var lpBox2 = document.getElementById("leagueProg");
+        if (lpBox2) lpBox2.style.display = "";
+        renderLeagueProgress(data);
+      }
       // Rematch faqat haqiqiy raqib (do'st) bilan - bot/oddiy emas
       if (oppIdGlobal) document.getElementById("rematchBtn").style.display = "inline-flex";
       // Raqib ustidan shikoyat — faqat haqiqiy raqib bo'lsa (bot emas)
@@ -1547,15 +1588,15 @@
     });
 
    function playAgain() {
-      // "Yana o'ynash" = xuddi shu formatda YANGI raqib bilan 1v1 ranked jang
+      // "Yana o'ynash" = xuddi shu format va rejimda YANGI raqib bilan jang
       // (Rematch'dan farqli — u xuddi shu raqib bilan edi)
 
       // Joriy formatni saqlaymiz (battleLengthKey jang davomida saqlangan)
       var fmt = battleLengthKey || "standard";
 
-      // Yangi ranked battle intent yozamiz (lobby'dan kelgandek)
+      // Yangi battle intent yozamiz — joriy rejim (ranked yoki casual) saqlanadi
       sessionStorage.setItem("battleIntent", JSON.stringify({
-        mode: "ranked",
+        mode: battleMode || "ranked",
         lengthKey: fmt,
         ts: Date.now(),
       }));

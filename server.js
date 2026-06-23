@@ -433,6 +433,7 @@ async function startBotBattle(roomId, humanPlayer) {
       botId: botId,
       level: humanPlayer.level || "A1",
       lengthKey: humanPlayer.lengthKey || "standard",
+      mode: humanPlayer.mode || "ranked",
       players: {
         [humanPlayer.socketId]: { userId: humanPlayer.userId, name: humanPlayer.name, score: 0, finished: false, answeredCount: 0 },
         [botId]: { userId: null, name: humanPlayer.botName, score: 0, finished: false, answeredCount: 0, isBot: true },
@@ -648,6 +649,7 @@ async function startBattle(roomId, player1, player2) {
       questions: questions,
       level: player1.level || "A1",
       lengthKey: player1.lengthKey || "standard",
+      mode: player1.mode || "ranked",
       players: {
         [player1.socketId]: { userId: player1.userId, name: player1.name, score: 0, finished: false, answeredCount: 0 },
         [player2.socketId]: { userId: player2.userId, name: player2.name, score: 0, finished: false, answeredCount: 0 },
@@ -989,6 +991,7 @@ io.on("connection", (socket) => {
         name: playerData.name || "O'yinchi",
         level: playerData.level || "A1",
         lengthKey: playerData.lengthKey || "standard",
+        mode: playerData.mode || "ranked",
         botName: botName,
       };
       socket.emit("waiting", { message: "Raqib qidirilmoqda..." });
@@ -1045,7 +1048,7 @@ io.on("connection", (socket) => {
       io.sockets.sockets.get(opponent.socketId)?.join(roomId);
 
       const player1 = opponent;
-      const player2 = { socketId: socket.id, userId: playerData.userId, name: playerData.name || "O'yinchi", level: playerData.level || "A1", lengthKey: playerData.lengthKey || "standard" };
+      const player2 = { socketId: socket.id, userId: playerData.userId, name: playerData.name || "O'yinchi", level: playerData.level || "A1", lengthKey: playerData.lengthKey || "standard", mode: playerData.mode || "ranked" };
 
       // Ikki o'yinchi rasmini bazadan olish
       let p1Pic = null, p2Pic = null;
@@ -1260,6 +1263,9 @@ async function finishBattle(roomId) {
       outcome = "lose";
       ratingDelta = -RATING_CHANGE;
     }
+    // Casual rejimda reyting o'zgarmaydi (faqat XP)
+    var isCasual = battle.mode === "casual";
+    if (isCasual) ratingDelta = 0;
 
     // Tanlangan format bo'yicha XP (Quick=4, Standard=8, Extended=12, Marathon=16)
     const fmtXp = lengthConfig(battle.lengthKey).xp;
@@ -1343,6 +1349,7 @@ async function finishBattle(roomId) {
       opponent_score: opp.score,
       total: battle.questions.length,
       lengthKey: battle.lengthKey || "standard",
+      mode: battle.mode || "ranked",
       xp_earned: xpEarned,
       rating_change: ratingDelta,
       updated_user: updatedUser,
