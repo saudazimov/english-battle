@@ -1781,6 +1781,81 @@ app.get("/admin/reports", requireAdmin, async (req, res) => {
   }
 });
 
+// ============ PRACTICE (YAKKA MASHQ) ============
+
+// Practice savollarini olish (token bilan, daraja + son tanlanadi)
+app.get("/practice/start", authMiddleware, async (req, res) => {
+  try {
+    var level = (req.query.level || req.user.cefr_level || "A1").trim();
+    var count = parseInt(req.query.count) || 10;
+    if (count < 5) count = 5;
+    if (count > 30) count = 30;
+
+    var validLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+    if (validLevels.indexOf(level) === -1) level = "A1";
+
+    // Savollarni olamiz (to'g'ri javob bilan — practice'da darhol ko'rsatamiz)
+    var result = await pool.query(
+      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, skill
+       FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
+      [level, count]
+    );
+
+    // Yetarli savol bo'lmasa — har qanday darajadan to'ldiramiz
+    if (result.rows.length < count) {
+      var extra = await pool.query(
+        `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, skill
+         FROM questions WHERE cefr_level != $1 ORDER BY RANDOM() LIMIT $2`,
+        [level, count - result.rows.length]
+      );
+      result.rows = result.rows.concat(extra.rows);
+    }
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Hozircha savollar mavjud emas" });
+    }
+
+    res.json({ level: level, total: result.rows.length, questions: result.rows });
+  } catch (err) {
+    console.error("Practice start xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Practice yakunlash — XP berish (reyting YO'Q, faqat XP)
+app.post("/practice/finish", authMiddleware, async (req, res) => {
+  try {
+    var userId = req.user.id;
+    var correct = parseInt(req.body.correct) || 0;
+    var total = parseInt(req.body.total) || 0;
+
+    if (total <= 0 || correct < 0 || correct > total) {
+      return res.status(400).json({ error: "Noto'g'ri natija" });
+    }
+
+    // Practice XP: har to'g'ri javob uchun 2 XP (rankedّdan kam — bu mashq)
+    var xpEarned = correct * 2;
+
+    var updated = await pool.query(
+      "UPDATE users SET xp = xp + $1 WHERE id = $2 RETURNING id, xp, cefr_level, rating",
+      [xpEarned, userId]
+    );
+
+    // Topshiriq progressini ham yangilaymiz (practice ham "javob berish" hisoblanadi)
+    await updateQuestProgress(userId, { won: false, correctAnswers: correct, xpEarned: xpEarned });
+
+    res.json({
+      xp_earned: xpEarned,
+      correct: correct,
+      total: total,
+      updated_user: updated.rows[0],
+    });
+  } catch (err) {
+    console.error("Practice finish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // Savollarni olish (admin) — pagination, search, filter bilan
 // GET, token bilan (parol emas). Query: ?page=1&limit=25&search=&level=&skill=&status=&date_from=&date_to=
 app.get("/admin/questions", requireAdmin, async (req, res) => {

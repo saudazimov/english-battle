@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Practice — English Battle</title>
+  <style>
+    :root {
+      --bg: #070b16;
+      --panel: #0e1428;
+      --panel-2: #131b33;
+      --border: rgba(99,130,220,0.18);
+      --border-bright: rgba(99,130,220,0.35);
+      --text: #e6ecff;
+      --text-dim: #94a3c4;
+      --text-faint: #64748b;
+      --accent: #5b8cff;
+      --accent-2: #a855f7;
+      --gold: #fbbf24;
+      --green: #34d399;
+      --cyan: #38e1ff;
+      --red: #f87171;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 240px; }
+    .sidebar a { text-decoration: none !important; }
+    .main { min-height: 100vh; padding: 30px 24px; display: flex; justify-content: center; align-items: center; }
+    @media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; } }
+
+    .wrap { max-width: 900px; width: 100%; margin: 0 auto; }
+
+    /* Header */
+    .pr-header { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
+    .pr-head-ic { width: 50px; height: 50px; border-radius: 14px; background: linear-gradient(135deg, rgba(52,211,153,0.25), rgba(56,225,255,0.2)); border: 1px solid rgba(52,211,153,0.4); display: grid; place-items: center; flex-shrink: 0; }
+    .pr-head-ic i { width: 26px; height: 26px; color: var(--green); }
+    .pr-title { font-size: 25px; font-weight: 800; line-height: 1.1; }
+    .pr-sub { font-size: 13.5px; color: var(--text-dim); margin-top: 3px; }
+
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 40px; }
+
+    /* ===== SOZLAMA EKRANI ===== */
+    .pr-setup-label { font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-faint); font-weight: 700; margin-bottom: 14px; }
+    .pr-options { margin-bottom: 30px !important; }
+    .pr-options { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 26px; }
+    .pr-opt { background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 15px 26px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.15s; color: var(--text-dim); }
+    .pr-opt:hover { border-color: var(--border-bright); color: var(--text); }
+    .pr-opt.active { border-color: var(--green); background: rgba(52,211,153,0.1); color: var(--green); }
+
+    .pr-back-link { display: inline-flex; align-items: center; gap: 7px; background: transparent; border: none; color: var(--text-dim); font-size: 14px; font-weight: 600; cursor: pointer; padding: 0 0 14px; transition: color 0.15s; }
+    .pr-back-link:hover { color: var(--accent); }
+    .pr-back-link i { width: 17px; height: 17px; }
+
+    .pr-start-btn { width: 100%; background: linear-gradient(135deg, var(--green), #10b981); color: #042018; border: none; border-radius: 14px; padding: 19px; font-size: 18px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.15s; }
+    .pr-start-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .pr-start-btn i { width: 20px; height: 20px; }
+
+    .pr-info-row { display: flex; gap: 12px; margin-top: 18px; }
+    .pr-info { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
+    .pr-info-ic i { width: 20px; height: 20px; color: var(--accent); }
+    .pr-info-text { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+
+    /* ===== MASHQ EKRANI ===== */
+    .pr-progress-top { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+    .pr-progress-bar { flex: 1; height: 10px; background: var(--panel-2); border-radius: 999px; overflow: hidden; }
+    .pr-progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--cyan)); border-radius: 999px; transition: width 0.3s; width: 0%; }
+    .pr-progress-text { font-size: 14px; font-weight: 700; color: var(--text-dim); white-space: nowrap; }
+    .pr-exit { background: transparent; border: none; color: var(--text-faint); cursor: pointer; padding: 4px; display: grid; place-items: center; }
+    .pr-exit i { width: 22px; height: 22px; }
+    .pr-exit:hover { color: var(--red); }
+
+    .pr-skill-badge { display: inline-block; font-size: 11.5px; font-weight: 700; color: var(--accent); background: rgba(91,140,255,0.12); border: 1px solid rgba(91,140,255,0.3); padding: 4px 12px; border-radius: 999px; margin-bottom: 16px; text-transform: capitalize; }
+    .pr-question { font-size: 25px; font-weight: 700; line-height: 1.4; margin-bottom: 28px; }
+
+    .pr-answers { display: flex; flex-direction: column; gap: 11px; }
+    .pr-answer { display: flex; align-items: center; gap: 16px; padding: 19px 22px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.15s; text-align: left; width: 100%; color: var(--text); font-family: inherit; }
+    .pr-answer:hover:not(:disabled) { border-color: var(--accent); background: rgba(91,140,255,0.05); }
+    .pr-answer:disabled { cursor: default; }
+    .pr-answer-letter { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--border); }
+    .pr-answer-text { flex: 1; font-size: 17px; }
+    .pr-answer-mark { width: 22px; height: 22px; flex-shrink: 0; opacity: 0; }
+    .pr-answer-mark i { width: 22px; height: 22px; }
+    /* To'g'ri tanlangan / to'g'ri javob */
+    .pr-answer.correct { border-color: var(--green); background: rgba(52,211,153,0.12); }
+    .pr-answer.correct .pr-answer-letter { background: rgba(52,211,153,0.25); color: var(--green); border-color: rgba(52,211,153,0.5); }
+    .pr-answer.correct .pr-answer-mark { opacity: 1; color: var(--green); }
+    /* Xato tanlangan */
+    .pr-answer.wrong { border-color: var(--red); background: rgba(248,113,113,0.12); }
+    .pr-answer.wrong .pr-answer-letter { background: rgba(248,113,113,0.25); color: var(--red); border-color: rgba(248,113,113,0.5); }
+    .pr-answer.wrong .pr-answer-mark { opacity: 1; color: var(--red); }
+
+    /* Tushuntirish (javobdan keyin) */
+    .pr-feedback { margin-top: 20px; padding: 18px; border-radius: 14px; display: none; }
+    .pr-feedback.show { display: block; animation: prFade 0.25s ease; }
+    .pr-feedback.correct { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3); }
+    .pr-feedback.wrong { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); }
+    .pr-feedback-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .pr-feedback.correct .pr-feedback-title { color: var(--green); }
+    .pr-feedback.wrong .pr-feedback-title { color: var(--red); }
+    .pr-feedback-title i { width: 18px; height: 18px; }
+    .pr-feedback-text { font-size: 13.5px; color: var(--text-dim); line-height: 1.55; }
+
+    .pr-next-btn { width: 100%; margin-top: 20px; background: var(--accent); color: #fff; border: none; border-radius: 14px; padding: 15px; font-size: 15.5px; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
+    .pr-next-btn.show { display: flex; }
+    .pr-next-btn:hover { filter: brightness(1.1); }
+    .pr-next-btn i { width: 18px; height: 18px; }
+
+    /* ===== NATIJA EKRANI ===== */
+    .pr-result { text-align: center; padding: 16px; }
+    .pr-result-ic { width: 88px; height: 88px; border-radius: 50%; margin: 0 auto 20px; display: grid; place-items: center; }
+    .pr-result-ic.great { background: rgba(52,211,153,0.15); border: 2px solid rgba(52,211,153,0.4); }
+    .pr-result-ic.good { background: rgba(91,140,255,0.15); border: 2px solid rgba(91,140,255,0.4); }
+    .pr-result-ic.ok { background: rgba(251,191,36,0.15); border: 2px solid rgba(251,191,36,0.4); }
+    .pr-result-ic i { width: 44px; height: 44px; }
+    .pr-result-ic.great i { color: var(--green); }
+    .pr-result-ic.good i { color: var(--accent); }
+    .pr-result-ic.ok i { color: var(--gold); }
+    .pr-result-title { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .pr-result-sub { font-size: 14px; color: var(--text-dim); margin-bottom: 26px; }
+    .pr-result-stats { display: flex; gap: 12px; margin-bottom: 26px; }
+    .pr-result-stat { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+    .pr-result-stat-val { font-size: 28px; font-weight: 800; line-height: 1; }
+    .pr-result-stat-lbl { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+    .pr-result-actions { display: flex; gap: 12px; }
+    .pr-result-actions button { flex: 1; padding: 15px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
+    .pr-again-btn { background: linear-gradient(135deg, var(--green), #10b981); color: #042018; }
+    .pr-again-btn:hover { filter: brightness(1.08); }
+    .pr-lobby-btn { background: var(--panel-2); color: var(--text); border: 1px solid var(--border) !important; }
+    .pr-lobby-btn:hover { background: var(--border); }
+    .pr-result-actions button i { width: 18px; height: 18px; }
+
+    .pr-loading { text-align: center; padding: 50px; color: var(--text-dim); }
+
+    @keyframes prFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <aside class="sidebar"></aside>
+  <div class="main">
+    <div class="wrap">
+      <div class="pr-header">
+        <div class="pr-head-ic"><i data-lucide="dumbbell"></i></div>
+        <div>
+          <div class="pr-title">Practice Mode</div>
+          <div class="pr-sub">Raqibsiz, bosimsiz mashq — bilimingizni sinab ko'ring</div>
+        </div>
+      </div>
+
+      <!-- SOZLAMA EKRANI -->
+      <div id="setupScreen">
+        <button class="pr-back-link" onclick="window.location.href='/lobby.html'"><i data-lucide="arrow-left"></i> Lobbyga qaytish</button>
+        <div class="card">
+          <div class="pr-setup-label">Daraja (CEFR)</div>
+          <div class="pr-options" id="levelOptions">
+            <button class="pr-opt" data-level="A1">A1</button>
+            <button class="pr-opt" data-level="A2">A2</button>
+            <button class="pr-opt" data-level="B1">B1</button>
+            <button class="pr-opt" data-level="B2">B2</button>
+            <button class="pr-opt" data-level="C1">C1</button>
+            <button class="pr-opt" data-level="C2">C2</button>
+          </div>
+
+          <div class="pr-setup-label">Savollar soni</div>
+          <div class="pr-options" id="countOptions">
+            <button class="pr-opt" data-count="5">5 ta</button>
+            <button class="pr-opt active" data-count="10">10 ta</button>
+            <button class="pr-opt" data-count="15">15 ta</button>
+            <button class="pr-opt" data-count="20">20 ta</button>
+          </div>
+
+          <button class="pr-start-btn" onclick="startPractice()"><i data-lucide="play"></i> Mashqni boshlash</button>
+
+          <div class="pr-info-row">
+            <div class="pr-info"><div class="pr-info-ic"><i data-lucide="shield-off"></i></div><div class="pr-info-text">Reyting o'zgarmaydi</div></div>
+            <div class="pr-info"><div class="pr-info-ic"><i data-lucide="zap"></i></div><div class="pr-info-text">Har to'g'ri javob +2 XP</div></div>
+            <div class="pr-info"><div class="pr-info-ic"><i data-lucide="lightbulb"></i></div><div class="pr-info-text">Darhol tushuntirish</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MASHQ EKRANI -->
+      <div id="quizScreen" style="display:none;">
+        <div class="pr-progress-top">
+          <button class="pr-exit" onclick="exitPractice()" title="Chiqish"><i data-lucide="x"></i></button>
+          <div class="pr-progress-bar"><div class="pr-progress-fill" id="progressFill"></div></div>
+          <div class="pr-progress-text" id="progressText">1 / 10</div>
+        </div>
+        <div class="card">
+          <div class="pr-skill-badge" id="skillBadge">grammar</div>
+          <div class="pr-question" id="questionText">—</div>
+          <div class="pr-answers" id="answersBox"></div>
+          <div class="pr-feedback" id="feedback">
+            <div class="pr-feedback-title" id="feedbackTitle">—</div>
+            <div class="pr-feedback-text" id="feedbackText">—</div>
+          </div>
+          <button class="pr-next-btn" id="nextBtn" onclick="nextQuestion()"><i data-lucide="arrow-right"></i> Keyingi savol</button>
+        </div>
+      </div>
+
+      <!-- NATIJA EKRANI -->
+      <div id="resultScreen" style="display:none;">
+        <div class="card">
+          <div class="pr-result">
+            <div class="pr-result-ic" id="resultIc"><i data-lucide="award"></i></div>
+            <div class="pr-result-title" id="resultTitle">Mashq tugadi!</div>
+            <div class="pr-result-sub" id="resultSub">—</div>
+            <div class="pr-result-stats">
+              <div class="pr-result-stat"><div class="pr-result-stat-val" id="resultCorrect" style="color:var(--green);">0</div><div class="pr-result-stat-lbl">To'g'ri javob</div></div>
+              <div class="pr-result-stat"><div class="pr-result-stat-val" id="resultPercent" style="color:var(--accent);">0%</div><div class="pr-result-stat-lbl">Aniqlik</div></div>
+              <div class="pr-result-stat"><div class="pr-result-stat-val" id="resultXp" style="color:var(--gold);">0</div><div class="pr-result-stat-lbl">XP</div></div>
+            </div>
+            <div class="pr-result-actions">
+              <button class="pr-again-btn" onclick="practiceAgain()"><i data-lucide="rotate-ccw"></i> Yana mashq</button>
+              <button class="pr-lobby-btn" onclick="window.location.href='/lobby.html'"><i data-lucide="home"></i> Lobbyga</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/api.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/sidebar.js"></script>
+  <script src="/profile-modal.js"></script>
+  <script>
+    var token = localStorage.getItem("token");
+    if (!token) window.location.href = "/index.html";
+
+    var selectedLevel = null;
+    var selectedCount = 10;
+    var questions = [];
+    var currentIndex = 0;
+    var correctCount = 0;
+    var answered = false;
+
+    function icons() { if (window.lucide) lucide.createIcons(); }
+
+    // Foydalanuvchi darajasini default qilamiz
+    (function initLevel() {
+      try {
+        var u = JSON.parse(localStorage.getItem("user") || "{}");
+        selectedLevel = u.cefr_level || "A1";
+      } catch (e) { selectedLevel = "A1"; }
+      document.querySelectorAll("#levelOptions .pr-opt").forEach(function (b) {
+        b.classList.toggle("active", b.getAttribute("data-level") === selectedLevel);
+      });
+    })();
+
+    // Daraja tanlash
+    document.querySelectorAll("#levelOptions .pr-opt").forEach(function (b) {
+      b.onclick = function () {
+        document.querySelectorAll("#levelOptions .pr-opt").forEach(function (x) { x.classList.remove("active"); });
+        b.classList.add("active");
+        selectedLevel = b.getAttribute("data-level");
+      };
+    });
+    // Son tanlash
+    document.querySelectorAll("#countOptions .pr-opt").forEach(function (b) {
+      b.onclick = function () {
+        document.querySelectorAll("#countOptions .pr-opt").forEach(function (x) { x.classList.remove("active"); });
+        b.classList.add("active");
+        selectedCount = parseInt(b.getAttribute("data-count"));
+      };
+    });
+
+    function showScreen(id) {
+      ["setupScreen", "quizScreen", "resultScreen"].forEach(function (s) {
+        document.getElementById(s).style.display = (s === id) ? "block" : "none";
+      });
+    }
+
+    async function startPractice() {
+      showScreen("quizScreen");
+      document.getElementById("answersBox").innerHTML = '<div class="pr-loading">Savollar yuklanmoqda...</div>';
+      try {
+        var res = await fetch("/practice/start?level=" + selectedLevel + "&count=" + selectedCount, {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        var data = await res.json();
+        if (!res.ok) { alert(data.error || "Xato"); showScreen("setupScreen"); return; }
+        questions = data.questions || [];
+        if (questions.length === 0) { alert("Savol topilmadi"); showScreen("setupScreen"); return; }
+        currentIndex = 0;
+        correctCount = 0;
+        renderQuestion();
+      } catch (err) {
+        alert("Server xatosi");
+        showScreen("setupScreen");
+      }
+    }
+
+    function renderQuestion() {
+      answered = false;
+      var q = questions[currentIndex];
+
+      // Progress
+      var pct = Math.round((currentIndex / questions.length) * 100);
+      document.getElementById("progressFill").style.width = pct + "%";
+      document.getElementById("progressText").textContent = (currentIndex + 1) + " / " + questions.length;
+
+      document.getElementById("skillBadge").textContent = q.skill || "grammar";
+      document.getElementById("questionText").textContent = q.question_text;
+
+      // Javoblar
+      var box = document.getElementById("answersBox");
+      box.innerHTML = "";
+      ["A", "B", "C", "D"].forEach(function (letter) {
+        var text = q["option_" + letter.toLowerCase()] || "";
+        var btn = document.createElement("button");
+        btn.className = "pr-answer";
+        btn.setAttribute("data-letter", letter);
+        btn.innerHTML = '<div class="pr-answer-letter">' + letter + '</div>' +
+          '<div class="pr-answer-text">' + escapeHtml(text) + '</div>' +
+          '<div class="pr-answer-mark"></div>';
+        btn.onclick = function () { selectAnswer(letter); };
+        box.appendChild(btn);
+      });
+
+      // Feedback va next yashirin
+      document.getElementById("feedback").className = "pr-feedback";
+      document.getElementById("nextBtn").className = "pr-next-btn";
+      icons();
+    }
+
+    function selectAnswer(letter) {
+      if (answered) return;
+      answered = true;
+      var q = questions[currentIndex];
+      var isCorrect = (letter === q.correct_option);
+      if (isCorrect) correctCount++;
+
+      // Barcha tugmalarni o'chiramiz, to'g'ri/xato belgilaymiz
+      document.querySelectorAll("#answersBox .pr-answer").forEach(function (btn) {
+        btn.disabled = true;
+        var bl = btn.getAttribute("data-letter");
+        var mark = btn.querySelector(".pr-answer-mark");
+        if (bl === q.correct_option) {
+          btn.classList.add("correct");
+          mark.innerHTML = '<i data-lucide="check-circle"></i>';
+        } else if (bl === letter && !isCorrect) {
+          btn.classList.add("wrong");
+          mark.innerHTML = '<i data-lucide="x-circle"></i>';
+        }
+      });
+
+      // Feedback
+      var fb = document.getElementById("feedback");
+      fb.className = "pr-feedback show " + (isCorrect ? "correct" : "wrong");
+      document.getElementById("feedbackTitle").innerHTML = isCorrect
+        ? '<i data-lucide="check-circle"></i> To\'g\'ri!'
+        : '<i data-lucide="x-circle"></i> Noto\'g\'ri';
+      var explain = q.explanation && q.explanation.trim()
+        ? q.explanation
+        : (isCorrect ? "Ajoyib, davom eting!" : "To'g'ri javob: " + q.correct_option);
+      document.getElementById("feedbackText").textContent = explain;
+
+      // Next tugma
+      var nextBtn = document.getElementById("nextBtn");
+      nextBtn.className = "pr-next-btn show";
+      nextBtn.innerHTML = (currentIndex === questions.length - 1)
+        ? '<i data-lucide="flag"></i> Natijani ko\'rish'
+        : '<i data-lucide="arrow-right"></i> Keyingi savol';
+      icons();
+    }
+
+    function nextQuestion() {
+      if (currentIndex < questions.length - 1) {
+        currentIndex++;
+        renderQuestion();
+      } else {
+        finishPractice();
+      }
+    }
+
+    async function finishPractice() {
+      showScreen("resultScreen");
+      var total = questions.length;
+      var percent = Math.round((correctCount / total) * 100);
+
+      // Natijani serverga yuboramiz (XP olish)
+      var xpEarned = 0;
+      try {
+        var res = await fetch("/practice/finish", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+          body: JSON.stringify({ correct: correctCount, total: total })
+        });
+        var data = await res.json();
+        if (res.ok) {
+          xpEarned = data.xp_earned || 0;
+          // localStorage'dagi user XP'ni yangilaymiz
+          if (data.updated_user) {
+            try {
+              var u = JSON.parse(localStorage.getItem("user") || "{}");
+              u.xp = data.updated_user.xp;
+              localStorage.setItem("user", JSON.stringify(u));
+            } catch (e) {}
+          }
+        }
+      } catch (err) { /* XP olinmasa ham natija ko'rsatamiz */ }
+
+      // Natija ko'rsatish
+      var icEl = document.getElementById("resultIc");
+      var titleEl = document.getElementById("resultTitle");
+      if (percent >= 80) {
+        icEl.className = "pr-result-ic great"; icEl.innerHTML = '<i data-lucide="trophy"></i>';
+        titleEl.textContent = "Ajoyib natija!";
+      } else if (percent >= 50) {
+        icEl.className = "pr-result-ic good"; icEl.innerHTML = '<i data-lucide="thumbs-up"></i>';
+        titleEl.textContent = "Yaxshi mashq!";
+      } else {
+        icEl.className = "pr-result-ic ok"; icEl.innerHTML = '<i data-lucide="book-open"></i>';
+        titleEl.textContent = "Mashq qilishda davom eting!";
+      }
+      document.getElementById("resultSub").textContent = total + " ta savoldan " + correctCount + " tasiga to'g'ri javob berdingiz";
+      document.getElementById("resultCorrect").textContent = correctCount + "/" + total;
+      document.getElementById("resultPercent").textContent = percent + "%";
+      document.getElementById("resultXp").textContent = "+" + xpEarned;
+      icons();
+    }
+
+    function exitPractice() {
+      if (confirm("Mashqni tugatasizmi? Progress saqlanmaydi.")) {
+        showScreen("setupScreen");
+      }
+    }
+    function practiceAgain() { showScreen("setupScreen"); }
+
+    function escapeHtml(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    icons();
+  </script>
+</body>
+</html>

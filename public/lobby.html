@@ -966,6 +966,11 @@
         window.location.href = "/friends.html";
         return;
       }
+      // Practice Mode — yakka mashq sahifasiga (raqib/format kerak emas)
+      if (selectedMode === "practice") {
+        window.location.href = "/practice.html";
+        return;
+      }
       // Format tanlash modalini ochamiz (savol soni / vaqt / XP)
       openLengthModal();
     }
