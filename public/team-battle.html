@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jamoa Jang — English Battle</title>
+  <style>
+    :root {
+      --bg: #070b16; --panel: #0e1428; --panel-2: #131b33;
+      --border: rgba(99,130,220,0.18); --border-bright: rgba(99,130,220,0.35);
+      --text: #e6ecff; --text-dim: #94a3c4; --text-faint: #64748b;
+      --accent: #5b8cff; --accent-2: #a855f7; --gold: #fbbf24;
+      --green: #34d399; --cyan: #38e1ff; --red: #f87171;
+      --teamA: #5b8cff; --teamB: #f87171;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .stage { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .wrap { max-width: 900px; width: 100%; }
+
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 36px; }
+
+    /* ===== MATCHMAKING ===== */
+    .mm-center { text-align: center; }
+    .mm-orb { width: 120px; height: 120px; margin: 0 auto 22px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, rgba(91,140,255,0.4), rgba(168,85,247,0.15)); border: 2px solid rgba(91,140,255,0.4); display: grid; place-items: center; position: relative; }
+    .mm-orb.found { background: radial-gradient(circle at 40% 35%, rgba(52,211,153,0.4), rgba(56,225,255,0.15)); border-color: rgba(52,211,153,0.5); }
+    .mm-orb i { width: 48px; height: 48px; color: var(--accent); }
+    .mm-orb.found i { color: var(--green); }
+    .mm-orb::before { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid transparent; border-top-color: var(--accent); animation: mmSpin 1.2s linear infinite; }
+    .mm-orb.found::before { display: none; }
+    @keyframes mmSpin { to { transform: rotate(360deg); } }
+
+    .mm-title { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .mm-sub { font-size: 14px; color: var(--text-dim); margin-bottom: 26px; }
+    .mm-mode-badge { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--accent); background: rgba(91,140,255,0.12); border: 1px solid rgba(91,140,255,0.3); padding: 6px 14px; border-radius: 999px; margin-bottom: 22px; }
+    .mm-mode-badge i { width: 15px; height: 15px; }
+
+    .mm-progress { font-size: 15px; font-weight: 700; color: var(--text-dim); margin-bottom: 20px; }
+    .mm-progress b { color: var(--cyan); font-size: 19px; }
+
+    /* Jamoa slotlari */
+    .mm-teams { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 26px; }
+    .mm-team { flex: 1; max-width: 320px; }
+    .mm-team-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .mm-team.a .mm-team-label { color: var(--teamA); }
+    .mm-team.b .mm-team-label { color: var(--teamB); }
+    .mm-slots { display: flex; flex-direction: column; gap: 8px; }
+    .mm-slot { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; }
+    .mm-slot.empty { border-style: dashed; opacity: 0.5; }
+    .mm-slot-ava { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+    .mm-team.a .mm-slot-ava { background: rgba(91,140,255,0.2); color: var(--teamA); }
+    .mm-team.b .mm-slot-ava { background: rgba(248,113,113,0.2); color: var(--teamB); }
+    .mm-slot.empty .mm-slot-ava { background: var(--panel-2); color: var(--text-faint); }
+    .mm-slot-name { font-size: 13.5px; font-weight: 600; }
+    .mm-slot-tag { font-size: 10px; color: var(--text-faint); margin-left: auto; }
+    .mm-vs { font-size: 20px; font-weight: 800; color: var(--text-faint); flex-shrink: 0; }
+
+    .mm-cancel { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--red); font-size: 14px; font-weight: 700; padding: 13px 28px; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.15s; }
+    .mm-cancel:hover { background: rgba(248,113,113,0.18); }
+    .mm-cancel i { width: 17px; height: 17px; }
+    .mm-countdown { font-size: 50px; font-weight: 800; color: var(--cyan); margin: 10px 0; }
+
+    /* ===== JANG EKRANI ===== */
+    .battle-top { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+    .team-score { flex: 1; padding: 14px 18px; border-radius: 14px; display: flex; align-items: center; gap: 12px; }
+    .team-score.mine { background: rgba(91,140,255,0.1); border: 1px solid rgba(91,140,255,0.3); }
+    .team-score.enemy { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); flex-direction: row-reverse; text-align: right; }
+    .team-score-val { font-size: 32px; font-weight: 800; line-height: 1; }
+    .team-score.mine .team-score-val { color: var(--teamA); }
+    .team-score.enemy .team-score-val { color: var(--teamB); }
+    .team-score-label { font-size: 12px; color: var(--text-dim); }
+    .battle-vs { font-size: 16px; font-weight: 800; color: var(--text-faint); }
+
+    .team-rosters { display: flex; gap: 12px; margin-bottom: 18px; }
+    .roster { flex: 1; }
+    .roster-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .roster.mine .roster-title { color: var(--teamA); }
+    .roster.enemy .roster-title { color: var(--teamB); }
+    .roster-player { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; }
+    .roster-player-name { font-size: 12.5px; font-weight: 600; flex: 1; }
+    .roster-player-prog { font-size: 11px; color: var(--text-faint); }
+    .roster-player-score { font-size: 13px; font-weight: 700; }
+    .roster.mine .roster-player-score { color: var(--teamA); }
+    .roster.enemy .roster-player-score { color: var(--teamB); }
+    .roster-mini-bar { height: 4px; background: var(--panel-2); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+    .roster-mini-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+    .roster.mine .roster-mini-fill { background: var(--teamA); }
+    .roster.enemy .roster-mini-fill { background: var(--teamB); }
+
+    .q-timer-bar { height: 8px; background: var(--panel-2); border-radius: 4px; overflow: hidden; margin-bottom: 16px; }
+    .q-timer-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--cyan)); border-radius: 4px; transition: width 1s linear; width: 100%; }
+    .q-counter { font-size: 13px; color: var(--text-dim); margin-bottom: 10px; font-weight: 600; }
+    .q-text { font-size: 23px; font-weight: 700; line-height: 1.4; margin-bottom: 22px; }
+    .q-answers { display: flex; flex-direction: column; gap: 11px; }
+    .q-answer { display: flex; align-items: center; gap: 14px; padding: 17px 20px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.15s; text-align: left; width: 100%; color: var(--text); font-family: inherit; }
+    .q-answer:hover:not(:disabled) { border-color: var(--accent); background: rgba(91,140,255,0.05); }
+    .q-answer:disabled { cursor: default; }
+    .q-answer-letter { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--border); }
+    .q-answer-text { flex: 1; font-size: 16px; }
+    .q-answer.correct { border-color: var(--green); background: rgba(52,211,153,0.12); }
+    .q-answer.correct .q-answer-letter { background: rgba(52,211,153,0.25); color: var(--green); }
+    .q-answer.wrong { border-color: var(--red); background: rgba(248,113,113,0.12); }
+    .q-answer.wrong .q-answer-letter { background: rgba(248,113,113,0.25); color: var(--red); }
+    .q-wait { text-align: center; padding: 30px; color: var(--text-dim); font-size: 14px; }
+    .q-wait i { width: 32px; height: 32px; color: var(--accent); margin-bottom: 10px; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* ===== NATIJA ===== */
+    .result { text-align: center; }
+    .result-banner { font-size: 38px; font-weight: 800; margin-bottom: 6px; }
+    .result-banner.win { color: var(--green); }
+    .result-banner.lose { color: var(--red); }
+    .result-banner.draw { color: var(--gold); }
+    .result-sub { font-size: 15px; color: var(--text-dim); margin-bottom: 24px; }
+    .result-scoreboard { display: flex; align-items: stretch; gap: 14px; margin-bottom: 24px; }
+    .result-team { flex: 1; padding: 20px; border-radius: 16px; }
+    .result-team.mine { background: rgba(91,140,255,0.1); border: 1px solid rgba(91,140,255,0.3); }
+    .result-team.enemy { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); }
+    .result-team-label { font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+    .result-team.mine .result-team-label { color: var(--teamA); }
+    .result-team.enemy .result-team-label { color: var(--teamB); }
+    .result-team-score { font-size: 40px; font-weight: 800; line-height: 1; margin-bottom: 14px; }
+    .result-team.mine .result-team-score { color: var(--teamA); }
+    .result-team.enemy .result-team-score { color: var(--teamB); }
+    .result-roster-item { display: flex; justify-content: space-between; font-size: 12.5px; padding: 5px 0; border-top: 1px solid var(--border); }
+    .result-roster-item .nm { color: var(--text-dim); }
+    .result-roster-item .sc { font-weight: 700; }
+    .result-vs { display: grid; place-items: center; font-size: 18px; font-weight: 800; color: var(--text-faint); }
+    .result-rewards { display: flex; justify-content: center; gap: 14px; margin-bottom: 24px; }
+    .result-reward { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 12px; font-size: 16px; font-weight: 700; }
+    .result-reward.xp { background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3); color: var(--accent-2); }
+    .result-reward.rp { background: rgba(91,140,255,0.12); border: 1px solid rgba(91,140,255,0.3); color: var(--accent); }
+    .result-reward i { width: 18px; height: 18px; }
+    .result-actions { display: flex; gap: 12px; justify-content: center; }
+    .result-actions button { padding: 15px 28px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.15s; }
+    .btn-again { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
+    .btn-again:hover { filter: brightness(1.1); }
+    .btn-lobby { background: var(--panel-2); color: var(--text); border: 1px solid var(--border) !important; }
+    .btn-lobby:hover { background: var(--border); }
+    .result-actions button i { width: 18px; height: 18px; }
+
+    .err-box { text-align: center; padding: 40px; }
+    .err-box i { width: 40px; height: 40px; color: var(--red); margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="wrap">
+
+      <!-- MATCHMAKING -->
+      <div id="mmScreen">
+        <div class="card mm-center">
+          <div class="mm-mode-badge" id="mmModeBadge"><i data-lucide="users"></i> <span id="mmModeText">Duo (2v2)</span></div>
+          <div class="mm-orb" id="mmOrb"><i data-lucide="users" id="mmOrbIcon"></i></div>
+          <div class="mm-title" id="mmTitle">Jamoa qidirilmoqda...</div>
+          <div class="mm-sub" id="mmSub">O'yinchilar yig'ilmoqda, kuting</div>
+          <div class="mm-progress" id="mmProgress"><b id="mmCurrent">1</b> / <span id="mmNeeded">4</span> o'yinchi</div>
+
+          <div class="mm-teams" id="mmTeams" style="display:none;">
+            <div class="mm-team a">
+              <div class="mm-team-label">Sizning jamoa</div>
+              <div class="mm-slots" id="mmTeamA"></div>
+            </div>
+            <div class="mm-vs">VS</div>
+            <div class="mm-team b">
+              <div class="mm-team-label">Raqib jamoa</div>
+              <div class="mm-slots" id="mmTeamB"></div>
+            </div>
+          </div>
+
+          <div id="mmCountdownBox" style="display:none;">
+            <div class="mm-countdown" id="mmCountdown">5</div>
+            <div class="mm-sub">Jang boshlanmoqda...</div>
+          </div>
+
+          <button class="mm-cancel" id="mmCancelBtn" onclick="cancelSearch()"><i data-lucide="x"></i> Qidiruvni bekor qilish</button>
+        </div>
+      </div>
+
+      <!-- JANG -->
+      <div id="battleScreen" style="display:none;">
+        <div class="battle-top">
+          <div class="team-score mine"><div class="team-score-val" id="myTeamScore">0</div><div><div class="team-score-label">Sizning jamoa</div></div></div>
+          <div class="battle-vs">VS</div>
+          <div class="team-score enemy"><div class="team-score-val" id="enemyTeamScore">0</div><div><div class="team-score-label">Raqib jamoa</div></div></div>
+        </div>
+
+        <div class="team-rosters">
+          <div class="roster mine"><div class="roster-title">Sizning jamoa</div><div id="myRoster"></div></div>
+          <div class="roster enemy"><div class="roster-title">Raqib jamoa</div><div id="enemyRoster"></div></div>
+        </div>
+
+        <div class="card">
+          <div class="q-timer-bar"><div class="q-timer-fill" id="qTimerFill"></div></div>
+          <div class="q-counter" id="qCounter">Savol 1 / 10</div>
+          <div class="q-text" id="qText">—</div>
+          <div class="q-answers" id="qAnswers"></div>
+          <div class="q-wait" id="qWait" style="display:none;">
+            <div><i data-lucide="loader"></i></div>
+            <div>Raqiblar javob bermoqda... Jang tugashini kuting.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NATIJA -->
+      <div id="resultScreen" style="display:none;">
+        <div class="card">
+          <div class="result">
+            <div class="result-banner" id="resultBanner">—</div>
+            <div class="result-sub" id="resultSub">—</div>
+            <div class="result-scoreboard">
+              <div class="result-team mine">
+                <div class="result-team-label">Sizning jamoa</div>
+                <div class="result-team-score" id="resMyScore">0</div>
+                <div id="resMyRoster"></div>
+              </div>
+              <div class="result-vs">VS</div>
+              <div class="result-team enemy">
+                <div class="result-team-label">Raqib jamoa</div>
+                <div class="result-team-score" id="resEnemyScore">0</div>
+                <div id="resEnemyRoster"></div>
+              </div>
+            </div>
+            <div class="result-rewards">
+              <div class="result-reward xp"><i data-lucide="zap"></i> +<span id="resXp">0</span> XP</div>
+              <div class="result-reward rp" id="resRpBox"><i data-lucide="star"></i> <span id="resRp">0</span> reyting</div>
+            </div>
+            <div class="result-actions">
+              <button class="btn-again" onclick="playAgain()"><i data-lucide="rotate-ccw"></i> Yana o'ynash</button>
+              <button class="btn-lobby" onclick="window.location.href='/lobby.html'"><i data-lucide="home"></i> Lobbyga</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- XATO -->
+      <div id="errScreen" style="display:none;">
+        <div class="card err-box">
+          <div><i data-lucide="alert-circle"></i></div>
+          <div class="mm-title" style="font-size:20px;" id="errText">Xato yuz berdi</div>
+          <button class="btn-lobby" style="margin-top:18px;padding:13px 26px;border-radius:12px;font-weight:700;cursor:pointer;" onclick="window.location.href='/lobby.html'">Lobbyga qaytish</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    var token = localStorage.getItem("token");
+    if (!token) window.location.href = "/index.html";
+    var user = {};
+    try { user = JSON.parse(localStorage.getItem("user") || "{}"); } catch (e) {}
+
+    // URL'dan rejim (duo/squad)
+    var params = new URLSearchParams(window.location.search);
+    var teamMode = params.get("mode") === "squad" ? "squad" : "duo";
+    var teamSize = teamMode === "squad" ? 4 : 2;
+    var needed = teamSize * 2;
+
+    var socket = io();
+    var roomId = null;
+    var questions = [];
+    var currentQ = 0;
+    var myScore = 0;
+    var answered = false;
+    var qTimer = null;
+    var QUESTION_TIME = 15; // soniya har savol
+
+    function icons() { if (window.lucide) lucide.createIcons(); }
+    function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+    function showScreen(id) {
+      ["mmScreen", "battleScreen", "resultScreen", "errScreen"].forEach(function (s) {
+        document.getElementById(s).style.display = (s === id) ? "block" : "none";
+      });
+    }
+
+    // Rejim matnini ko'rsatamiz
+    document.getElementById("mmModeText").textContent = teamMode === "squad" ? "Squad (4v4)" : "Duo (2v2)";
+    document.getElementById("mmNeeded").textContent = needed;
+
+    // ===== MATCHMAKING BOSHLASH =====
+    socket.on("connect", function () {
+      socket.emit("findTeamMatch", {
+        userId: user.id,
+        name: user.first_name || "O'yinchi",
+        level: user.cefr_level || "A1",
+        rating: user.rating || 1000,
+        lengthKey: "standard",
+        teamMode: teamMode,
+      });
+    });
+
+    // Navbat holati
+    socket.on("teamQueueUpdate", function (data) {
+      document.getElementById("mmCurrent").textContent = data.current;
+      document.getElementById("mmNeeded").textContent = data.needed;
+    });
+
+    // Jang topildi — boshlanyapti
+    socket.on("teamBattleStart", function (data) {
+      roomId = data.roomId;
+      questions = data.questions || [];
+      myScore = 0;
+      currentQ = 0;
+
+      // Orb yashil, jamoalar ko'rsatiladi
+      document.getElementById("mmOrb").classList.add("found");
+      document.getElementById("mmTitle").textContent = "Jamoa topildi!";
+      document.getElementById("mmSub").textContent = "Jang boshlanmoqda, tayyorlaning";
+      document.getElementById("mmProgress").style.display = "none";
+      document.getElementById("mmCancelBtn").style.display = "none";
+
+      // Jamoa tarkiblarini ko'rsatamiz
+      renderMMTeams(data.myTeamPlayers, data.enemyTeamPlayers);
+      document.getElementById("mmTeams").style.display = "flex";
+
+      // Countdown
+      document.getElementById("mmCountdownBox").style.display = "block";
+      var cd = 5;
+      document.getElementById("mmCountdown").textContent = cd;
+      var cdInt = setInterval(function () {
+        cd--;
+        if (cd <= 0) {
+          clearInterval(cdInt);
+          startBattleUI();
+        } else {
+          document.getElementById("mmCountdown").textContent = cd;
+        }
+      }, 1000);
+    });
+
+    function renderMMTeams(myTeam, enemyTeam) {
+      function slots(players, box) {
+        var html = "";
+        players.forEach(function (p) {
+          var initial = (p.name || "?").charAt(0).toUpperCase();
+          html += '<div class="mm-slot"><div class="mm-slot-ava">' + esc(initial) + '</div><div class="mm-slot-name">' + esc(p.name) + '</div>' + (p.isBot ? '<span class="mm-slot-tag">bot</span>' : '') + '</div>';
+        });
+        document.getElementById(box).innerHTML = html;
+      }
+      slots(myTeam, "mmTeamA");
+      slots(enemyTeam, "mmTeamB");
+    }
+
+    // ===== JANG UI =====
+    function startBattleUI() {
+      showScreen("battleScreen");
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      answered = false;
+      if (currentQ >= questions.length) { showWaiting(); return; }
+      var q = questions[currentQ];
+      document.getElementById("qCounter").textContent = "Savol " + (currentQ + 1) + " / " + questions.length;
+      document.getElementById("qText").textContent = q.question_text;
+      document.getElementById("qWait").style.display = "none";
+      document.getElementById("qAnswers").style.display = "flex";
+
+      var box = document.getElementById("qAnswers");
+      box.innerHTML = "";
+      ["A", "B", "C", "D"].forEach(function (letter) {
+        var text = q["option_" + letter.toLowerCase()] || "";
+        var btn = document.createElement("button");
+        btn.className = "q-answer";
+        btn.setAttribute("data-letter", letter);
+        btn.innerHTML = '<div class="q-answer-letter">' + letter + '</div><div class="q-answer-text">' + esc(text) + '</div>';
+        btn.onclick = function () { selectAnswer(letter, q); };
+        box.appendChild(btn);
+      });
+      icons();
+      startQTimer();
+    }
+
+    function startQTimer() {
+      var timeLeft = QUESTION_TIME;
+      var fill = document.getElementById("qTimerFill");
+      fill.style.transition = "none";
+      fill.style.width = "100%";
+      setTimeout(function () { fill.style.transition = "width " + QUESTION_TIME + "s linear"; fill.style.width = "0%"; }, 50);
+      if (qTimer) clearTimeout(qTimer);
+      qTimer = setTimeout(function () {
+        if (!answered) selectAnswer(null, questions[currentQ]); // vaqt tugadi — bo'sh javob
+      }, QUESTION_TIME * 1000);
+    }
+
+    function selectAnswer(letter, q) {
+      if (answered) return;
+      answered = true;
+      if (qTimer) clearTimeout(qTimer);
+
+      // Serverga yuboramiz
+      socket.emit("submitTeamAnswer", { roomId: roomId, questionId: q.id, answer: letter });
+
+      // Vaqtincha bloklash (natija server'dan keladi)
+      document.querySelectorAll("#qAnswers .q-answer").forEach(function (b) { b.disabled = true; });
+    }
+
+    // Javob natijasi (server'dan)
+    socket.on("teamAnswerResult", function (data) {
+      myScore = data.myScore;
+      // To'g'ri/xato belgilash
+      document.querySelectorAll("#qAnswers .q-answer").forEach(function (btn) {
+        var bl = btn.getAttribute("data-letter");
+        if (bl === data.correct_option) btn.classList.add("correct");
+      });
+      // Keyingi savolga o'tamiz (qisqa pauza)
+      setTimeout(function () {
+        currentQ++;
+        if (currentQ >= questions.length) { showWaiting(); }
+        else { renderQuestion(); }
+      }, 900);
+    });
+
+    function showWaiting() {
+      document.getElementById("qAnswers").style.display = "none";
+      document.getElementById("qWait").style.display = "block";
+      document.getElementById("qCounter").textContent = "Tugatdingiz!";
+      document.getElementById("qText").textContent = "Barcha savollarga javob berdingiz";
+      document.getElementById("qTimerFill").style.width = "0%";
+      icons();
+    }
+
+    // Jamoa progressi (real-time)
+    socket.on("teamProgress", function (data) {
+      document.getElementById("myTeamScore").textContent = data.myTeamScore;
+      document.getElementById("enemyTeamScore").textContent = data.enemyTeamScore;
+      renderRoster("myRoster", data.myTeamPlayers, "mine");
+      renderRoster("enemyRoster", data.enemyTeamPlayers, "enemy");
+    });
+
+    function renderRoster(box, players, side) {
+      var total = questions.length || 1;
+      var html = "";
+      players.forEach(function (p) {
+        var pct = Math.round((p.answeredCount / total) * 100);
+        html += '<div class="roster-player"><div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;"><span class="roster-player-name">' + esc(p.name) + '</span>' +
+          (p.isBot ? '<span style="font-size:9px;color:var(--text-faint);">bot</span>' : '') +
+          '<span class="roster-player-score">' + p.score + '</span></div>' +
+          '<div class="roster-mini-bar"><div class="roster-mini-fill" style="width:' + pct + '%;"></div></div></div></div>';
+      });
+      document.getElementById(box).innerHTML = html;
+    }
+
+    // ===== NATIJA =====
+    socket.on("teamBattleEnd", function (data) {
+      showScreen("resultScreen");
+      var banner = document.getElementById("resultBanner");
+      if (data.outcome === "win") { banner.textContent = "G'ALABA!"; banner.className = "result-banner win"; }
+      else if (data.outcome === "lose") { banner.textContent = "MAG'LUBIYAT"; banner.className = "result-banner lose"; }
+      else { banner.textContent = "DURANG"; banner.className = "result-banner draw"; }
+
+      document.getElementById("resultSub").textContent = "Sizning shaxsiy natijangiz: " + data.myScore + " / " + data.total + " to'g'ri";
+      document.getElementById("resMyScore").textContent = data.myTeamScore;
+      document.getElementById("resEnemyScore").textContent = data.enemyTeamScore;
+
+      renderResultRoster("resMyRoster", data.myTeamPlayers);
+      renderResultRoster("resEnemyRoster", data.enemyTeamPlayers);
+
+      document.getElementById("resXp").textContent = data.xp_earned || 0;
+      var rp = data.rating_change || 0;
+      document.getElementById("resRp").textContent = (rp > 0 ? "+" : "") + rp;
+
+      // localStorage user yangilash
+      if (data.updated_user) {
+        try {
+          var u = JSON.parse(localStorage.getItem("user") || "{}");
+          u.xp = data.updated_user.xp; u.rating = data.updated_user.rating;
+          u.win_streak = data.updated_user.win_streak; u.coins = data.updated_user.coins;
+          localStorage.setItem("user", JSON.stringify(u));
+        } catch (e) {}
+      }
+      icons();
+    });
+
+    function renderResultRoster(box, players) {
+      var html = "";
+      players.forEach(function (p) {
+        html += '<div class="result-roster-item"><span class="nm">' + esc(p.name) + (p.isBot ? ' (bot)' : '') + '</span><span class="sc">' + p.score + '</span></div>';
+      });
+      document.getElementById(box).innerHTML = html;
+    }
+
+    // ===== BOSHQARUV =====
+    function cancelSearch() {
+      socket.emit("cancelTeamMatch");
+      window.location.href = "/lobby.html";
+    }
+    function playAgain() { window.location.reload(); }
+
+    socket.on("battleError", function (data) {
+      document.getElementById("errText").textContent = (data && data.message) || "Xato yuz berdi";
+      showScreen("errScreen");
+      icons();
+    });
+
+    icons();
+  </script>
+</body>
+</html>

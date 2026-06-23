@@ -626,18 +626,19 @@
           <div class="mode-title">1v1 Casual</div>
           <div class="mode-desc">No pressure</div>
         </div>
-        <div class="mode-card" data-mode="4player" onclick="selectMode(this)">
+        <div class="mode-card" data-mode="duo" onclick="selectMode(this)">
           <div class="mode-check"><i data-lucide="check"></i></div>
           <div class="mode-ic mode-ic-purple"><i data-lucide="users"></i></div>
-          <div class="mode-title">4-Player Battle</div>
-          <div class="mode-desc">Free for all</div>
+          <div class="mode-title">Duo (2v2)</div>
+          <div class="mode-desc">Jamoa jang</div>
         </div>
-        <div class="mode-card" data-mode="practice" onclick="selectMode(this)">
+        <div class="mode-card" data-mode="squad" onclick="selectMode(this)">
           <div class="mode-check"><i data-lucide="check"></i></div>
-          <div class="mode-ic mode-ic-green"><i data-lucide="target"></i></div>
-          <div class="mode-title">Practice Mode</div>
-          <div class="mode-desc">Hone your skills</div>
+          <div class="mode-ic mode-ic-purple"><i data-lucide="swords"></i></div>
+          <div class="mode-title">Squad (4v4)</div>
+          <div class="mode-desc">Jamoaviy urush</div>
         </div>
+        
         <div class="mode-card" data-mode="friend" onclick="selectMode(this)">
           <div class="mode-check"><i data-lucide="check"></i></div>
           <div class="mode-ic mode-ic-gold"><i data-lucide="user-plus"></i></div>
@@ -903,9 +904,13 @@
         name: "1v1 Casual", btn: "FIND OPPONENT", rating: false,
         rewards: { coins: 50, gems: 5, xp: 100, last: { icon: "gift", color: "var(--accent-2)", val: "?", lbl: "Skin" } }
       },
-      "4player": {
-        name: "4-Player Battle", btn: "FIND OPPONENT", rating: true,
-        rewards: { coins: 150, gems: 15, xp: 300, last: { icon: "trophy", color: "var(--gold)", val: "1st", lbl: "Bonus" } }
+      duo: {
+        name: "Duo (2v2)", btn: "FIND TEAM", rating: true,
+        rewards: { coins: 100, gems: 10, xp: 200, last: { icon: "users", color: "var(--accent)", val: "2v2", lbl: "Team" } }
+      },
+      squad: {
+        name: "Squad (4v4)", btn: "FIND SQUAD", rating: true,
+        rewards: { coins: 200, gems: 20, xp: 400, last: { icon: "swords", color: "var(--gold)", val: "4v4", lbl: "Squad" } }
       },
       practice: {
         name: "Practice Mode", btn: "START PRACTICE", rating: false,
@@ -969,6 +974,15 @@
       // Practice Mode — yakka mashq sahifasiga (raqib/format kerak emas)
       if (selectedMode === "practice") {
         window.location.href = "/practice.html";
+        return;
+      }
+      // Jamoa janglar — team-battle.html ga (Duo yoki Squad)
+      if (selectedMode === "duo") {
+        window.location.href = "/team-battle.html?mode=duo";
+        return;
+      }
+      if (selectedMode === "squad") {
+        window.location.href = "/team-battle.html?mode=squad";
         return;
       }
       // Format tanlash modalini ochamiz (savol soni / vaqt / XP)

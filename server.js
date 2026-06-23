@@ -581,6 +581,10 @@ function simulateBotAnswers(roomId, botId, questions) {
 
 let waitingPlayer = null;
 const battles = {}; // Faol janglar: roomId -> jang ma'lumoti
+
+// Jamoa janglar navbati (1v1 dan alohida — solo queue)
+const teamQueues = { duo: [], squad: [] }; // duo=2v2, squad=4v4
+const teamQueueTimers = {}; // har navbat uchun bot-fill timer
 const pendingBattles = {}; // Do'st janglari: battle.html'da tayyor bo'lishni kutayotgan
 const onlineUsers = {}; // { userId: socketId }
 
@@ -1082,6 +1086,102 @@ io.on("connection", (socket) => {
     }
   });
 
+  // ============ JAMOA MATCHMAKING (Duo 2v2 / Squad 4v4) ============
+  socket.on("findTeamMatch", async (playerData) => {
+    try {
+      var teamMode = playerData.teamMode === "squad" ? "squad" : "duo";
+      var teamSize = teamMode === "squad" ? 4 : 2; // har jamoada nechta o'yinchi
+      var needed = teamSize * 2; // jami kerakli o'yinchi (2 jamoa)
+
+      var queue = teamQueues[teamMode];
+
+      // O'yinchini navbatga qo'shamiz
+      var player = {
+        socketId: socket.id,
+        userId: playerData.userId,
+        name: playerData.name || "O'yinchi",
+        level: playerData.level || "A1",
+        lengthKey: playerData.lengthKey || "standard",
+        rating: playerData.rating || 1000,
+      };
+      queue.push(player);
+
+      console.log("Jamoa navbati [" + teamMode + "]: " + queue.length + "/" + needed);
+
+      // Navbatdagilarga holatni bildiramiz
+      queue.forEach(function (p) {
+        io.to(p.socketId).emit("teamQueueUpdate", { current: queue.length, needed: needed, teamMode: teamMode });
+      });
+
+      // Yetarli o'yinchi yig'ildimi?
+      if (queue.length >= needed) {
+        // Bot-fill timerni bekor qilamiz (real o'yinchilar yetdi)
+        if (teamQueueTimers[teamMode]) { clearTimeout(teamQueueTimers[teamMode]); delete teamQueueTimers[teamMode]; }
+
+        var group = queue.splice(0, needed); // birinchi N o'yinchini olamiz
+        startTeamBattle(group, teamMode, teamSize);
+      } else {
+        // Yetarli emas — bot-fill timer (15 soniyadan keyin botlar bilan to'ldiramiz)
+        if (teamQueueTimers[teamMode]) clearTimeout(teamQueueTimers[teamMode]);
+        teamQueueTimers[teamMode] = setTimeout(function () {
+          fillTeamWithBots(teamMode, teamSize, needed);
+        }, 15000);
+      }
+    } catch (err) {
+      console.error("Jamoa matchmaking xatosi:", err.message);
+      io.to(socket.id).emit("battleError", { message: "Jamoa qidirishda xato" });
+    }
+  });
+
+  // Jamoa qidiruvini bekor qilish
+  socket.on("cancelTeamMatch", () => {
+    ["duo", "squad"].forEach(function (mode) {
+      var idx = teamQueues[mode].findIndex(function (p) { return p.socketId === socket.id; });
+      if (idx !== -1) {
+        teamQueues[mode].splice(idx, 1);
+        console.log("O'yinchi jamoa navbatidan chiqdi [" + mode + "]: " + teamQueues[mode].length);
+        // Qolganlarga yangilangan holat
+        var needed = (mode === "squad" ? 4 : 2) * 2;
+        teamQueues[mode].forEach(function (p) {
+          io.to(p.socketId).emit("teamQueueUpdate", { current: teamQueues[mode].length, needed: needed, teamMode: mode });
+        });
+      }
+    });
+  });
+
+  // Jamoa jangda javob berish
+  socket.on("submitTeamAnswer", ({ roomId, questionId, answer }) => {
+    var battle = battles[roomId];
+    if (!battle || !battle.isTeam) return;
+    var player = battle.players[socket.id];
+    if (!player || player.finished) return;
+
+    // Savolni topamiz
+    var q = battle.questions.find(function (x) { return x.id === questionId; });
+    if (!q) return;
+
+    var isCorrect = (answer === q.correct_option);
+    if (isCorrect) player.score++;
+    player.answers.push({ questionId: q.id, selected: answer, correct: q.correct_option, isCorrect: isCorrect });
+    player.answeredCount++;
+    if (player.answeredCount >= battle.questions.length) player.finished = true;
+
+    // O'yinchiga javob natijasini yuboramiz
+    io.to(socket.id).emit("teamAnswerResult", {
+      isCorrect: isCorrect,
+      correct_option: q.correct_option,
+      answeredCount: player.answeredCount,
+      total: battle.questions.length,
+      myScore: player.score,
+    });
+
+    // Jamoa progressini hammaga yuboramiz
+    emitTeamProgress(roomId);
+
+    // Hamma tugatdimi?
+    checkTeamFinish(roomId);
+  });
+
   // O'yinchi javob yuboradi
   socket.on("submitAnswer", ({ roomId, questionId, answer }) => {
     const battle = battles[roomId];
@@ -1231,6 +1331,316 @@ async function updateQuestProgress(userId, { won, correctAnswers, xpEarned }) {
   } catch (err) {
     console.error("Quest progress xatosi:", err.message);
   }
+}
+
+// Jamoa progressini barcha real o'yinchilarga yuborish
+function emitTeamProgress(roomId) {
+  var battle = battles[roomId];
+  if (!battle) return;
+  function teamProg(ids) {
+    return ids.map(function (sid) {
+      var p = battle.players[sid];
+      return { name: p.name, answeredCount: p.answeredCount, score: p.score, finished: p.finished, isBot: p.isBot };
+    });
+  }
+  var progA = teamProg(battle.teams.A);
+  var progB = teamProg(battle.teams.B);
+  var totalA = progA.reduce(function (s, p) { return s + p.score; }, 0);
+  var totalB = progB.reduce(function (s, p) { return s + p.score; }, 0);
+
+  Object.keys(battle.players).forEach(function (sid) {
+    var p = battle.players[sid];
+    if (p.isBot) return;
+    var myTeam = p.team;
+    io.to(sid).emit("teamProgress", {
+      myTeamPlayers: myTeam === "A" ? progA : progB,
+      enemyTeamPlayers: myTeam === "A" ? progB : progA,
+      myTeamScore: myTeam === "A" ? totalA : totalB,
+      enemyTeamScore: myTeam === "A" ? totalB : totalA,
+    });
+  });
+}
+
+// Hamma tugatdimi — tekshirib, tugagan bo'lsa finishTeamBattle
+function checkTeamFinish(roomId) {
+  var battle = battles[roomId];
+  if (!battle || battle.finished) return;
+  var allFinished = Object.keys(battle.players).every(function (sid) { return battle.players[sid].finished; });
+  if (allFinished) finishTeamBattle(roomId);
+}
+
+// Bot javoblarini simulyatsiya qilish (jamoa)
+function simulateTeamBotAnswers(roomId, botId, questions) {
+  var qIndex = 0;
+  function answerNext() {
+    var battle = battles[roomId];
+    if (!battle || battle.finished) return;
+    var bot = battle.players[botId];
+    if (!bot || bot.finished) return;
+
+    if (qIndex >= questions.length) { bot.finished = true; emitTeamProgress(roomId); checkTeamFinish(roomId); return; }
+
+    var q = questions[qIndex];
+    var correct = Math.random() < 0.68; // bot ~68% aniqlik
+    if (correct) bot.score++;
+    bot.answeredCount++;
+    qIndex++;
+    if (bot.answeredCount >= questions.length) bot.finished = true;
+
+    emitTeamProgress(roomId);
+
+    if (bot.finished) {
+      checkTeamFinish(roomId);
+    } else {
+      setTimeout(answerNext, 2000 + Math.random() * 3500); // 2-5.5s har savol
+    }
+  }
+  setTimeout(answerNext, 2000 + Math.random() * 3500);
+}
+
+// ============ JAMOA JANG (Duo/Squad) ============
+
+// Jamoa jangini boshlash (group = barcha o'yinchilar, 2 jamoaga bo'linadi)
+async function startTeamBattle(group, teamMode, teamSize) {
+  try {
+    var roomId = "team_" + teamMode + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+
+    // Jamoalarga bo'lamiz: birinchi yarmi = A, ikkinchi yarmi = B
+    var teamA = group.slice(0, teamSize);
+    var teamB = group.slice(teamSize, teamSize * 2);
+
+    // Format va daraja: birinchi o'yinchidan olamiz
+    var lengthKey = group[0].lengthKey || "standard";
+    var level = group[0].level || "A1";
+    var cfg = lengthConfig(lengthKey);
+    var qCount = cfg.questions;
+
+    // Savollarni olamiz
+    var result = await pool.query(
+      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
+       FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
+      [level, qCount]
+    );
+    if (result.rows.length === 0) {
+      result = await pool.query(
+        `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
+         FROM questions ORDER BY RANDOM() LIMIT $1`,
+        [qCount]
+      );
+    }
+    var questions = result.rows;
+    if (questions.length === 0) {
+      group.forEach(function (p) { io.to(p.socketId).emit("battleError", { message: "Hozircha savollar mavjud emas." }); });
+      return;
+    }
+
+    // Jang holatini quramiz — players (hammasi) + teams (A/B taqsimot)
+    var players = {};
+    var teamAIds = [], teamBIds = [];
+
+    teamA.forEach(function (p) {
+      players[p.socketId] = { userId: p.userId, name: p.name, score: 0, finished: false, answeredCount: 0, answers: [], team: "A", isBot: !!p.isBot };
+      teamAIds.push(p.socketId);
+    });
+    teamB.forEach(function (p) {
+      players[p.socketId] = { userId: p.userId, name: p.name, score: 0, finished: false, answeredCount: 0, answers: [], team: "B", isBot: !!p.isBot };
+      teamBIds.push(p.socketId);
+    });
+
+    battles[roomId] = {
+      isTeam: true,
+      teamMode: teamMode,
+      questions: questions,
+      level: level,
+      lengthKey: lengthKey,
+      teams: { A: teamAIds, B: teamBIds },
+      players: players,
+    };
+
+    // Savollarni xavfsiz (to'g'ri javobsiz) tayyorlaymiz
+    var safeQuestions = questions.map(function (q) {
+      return { id: q.id, question_text: q.question_text, option_a: q.option_a, option_b: q.option_b, option_c: q.option_c, option_d: q.option_d };
+    });
+
+    // Har o'yinchiga jang boshlanishini yuboramiz (o'z jamoasi va raqib jamoasi ma'lumoti bilan)
+    function teamInfo(ids) {
+      return ids.map(function (sid) { return { name: players[sid].name, isBot: players[sid].isBot, userId: players[sid].userId }; });
+    }
+    var infoA = teamInfo(teamAIds);
+    var infoB = teamInfo(teamBIds);
+
+    group.forEach(function (p) {
+      if (p.isBot) return; // botga yuborilmaydi
+      var myTeam = players[p.socketId].team;
+      io.to(p.socketId).emit("teamBattleStart", {
+        roomId: roomId,
+        teamMode: teamMode,
+        total_questions: safeQuestions.length,
+        questions: safeQuestions,
+        myTeam: myTeam,
+        myTeamPlayers: myTeam === "A" ? infoA : infoB,
+        enemyTeamPlayers: myTeam === "A" ? infoB : infoA,
+      });
+    });
+
+    console.log("Jamoa jang boshlandi [" + teamMode + "]: " + roomId + " | A:" + teamAIds.length + " B:" + teamBIds.length);
+
+    // Botlar javobini simulyatsiya qilamiz
+    [].concat(teamAIds, teamBIds).forEach(function (sid) {
+      if (players[sid].isBot) simulateTeamBotAnswers(roomId, sid, questions);
+    });
+  } catch (err) {
+    console.error("startTeamBattle xatosi:", err.message);
+  }
+}
+
+// Navbatni bot bilan to'ldirish (yetarli real o'yinchi yo'q bo'lsa)
+function fillTeamWithBots(teamMode, teamSize, needed) {
+  try {
+    var queue = teamQueues[teamMode];
+    if (queue.length === 0) return; // hech kim yo'q
+
+    var botNames = ["Sardor", "Jasur", "Aziz", "Bobur", "Dilshod", "Kamol", "Nodir", "Olim", "Rustam", "Sherzod"];
+    var group = queue.splice(0, queue.length); // mavjud real o'yinchilar
+
+    // Yetishmagan joylarni bot bilan to'ldiramiz
+    var botsNeeded = needed - group.length;
+    for (var i = 0; i < botsNeeded; i++) {
+      var bn = botNames[Math.floor(Math.random() * botNames.length)];
+      group.push({
+        socketId: "tbot_" + teamMode + "_" + Date.now() + "_" + i,
+        userId: null,
+        name: bn,
+        level: group[0] ? group[0].level : "A1",
+        lengthKey: group[0] ? group[0].lengthKey : "standard",
+        rating: 1000,
+        isBot: true,
+      });
+    }
+
+    console.log("Jamoa navbati bot bilan to'ldirildi [" + teamMode + "]: " + group.length + " o'yinchi (" + botsNeeded + " bot)");
+    if (teamQueueTimers[teamMode]) { clearTimeout(teamQueueTimers[teamMode]); delete teamQueueTimers[teamMode]; }
+    startTeamBattle(group, teamMode, teamSize);
+  } catch (err) {
+    console.error("fillTeamWithBots xatosi:", err.message);
+  }
+}
+
+// Jamoa jangini yakunlash — jamoa balli (a'zolar yig'indisi), g'olib jamoa, baza
+async function finishTeamBattle(roomId) {
+  var battle = battles[roomId];
+  if (!battle || battle.finished) return;
+  battle.finished = true; // ikki marta yakunlanmasligi uchun
+
+  // Jamoa ballari = a'zolar ballari yig'indisi
+  function teamTotal(ids) {
+    return ids.reduce(function (s, sid) { return s + battle.players[sid].score; }, 0);
+  }
+  var totalA = teamTotal(battle.teams.A);
+  var totalB = teamTotal(battle.teams.B);
+
+  var winningTeam = null;
+  if (totalA > totalB) winningTeam = "A";
+  else if (totalB > totalA) winningTeam = "B";
+  // teng bo'lsa — durang
+
+  var RATING_CHANGE = 20;
+  var fmtXp = lengthConfig(battle.lengthKey).xp;
+
+  // Jamoa tarkiblari (natijada ko'rsatish uchun)
+  function teamRoster(ids) {
+    return ids.map(function (sid) {
+      var p = battle.players[sid];
+      return { name: p.name, score: p.score, isBot: p.isBot };
+    });
+  }
+  var rosterA = teamRoster(battle.teams.A);
+  var rosterB = teamRoster(battle.teams.B);
+
+  // Har bir REAL o'yinchini qayta ishlaymiz (botlar saqlanmaydi)
+  for (var sid of Object.keys(battle.players)) {
+    var me = battle.players[sid];
+    if (me.isBot) continue;
+
+    var myTeam = me.team;
+    var outcome = "draw";
+    var ratingDelta = 0;
+    if (winningTeam === myTeam) { outcome = "win"; ratingDelta = RATING_CHANGE; }
+    else if (winningTeam !== null) { outcome = "lose"; ratingDelta = -RATING_CHANGE; }
+
+    var xpEarned;
+    if (outcome === "win") xpEarned = fmtXp;
+    else if (outcome === "draw") xpEarned = Math.round(fmtXp / 2);
+    else xpEarned = Math.max(1, Math.round(fmtXp / 4));
+
+    var myTeamScore = (myTeam === "A") ? totalA : totalB;
+    var enemyTeamScore = (myTeam === "A") ? totalB : totalA;
+    var myRoster = (myTeam === "A") ? rosterA : rosterB;
+    var enemyRoster = (myTeam === "A") ? rosterB : rosterA;
+
+    var updatedUser = null;
+    if (me.userId) {
+      try {
+        var oldRatingResult = await pool.query("SELECT rating FROM users WHERE id = $1", [me.userId]);
+        var oldRating = oldRatingResult.rows[0] ? oldRatingResult.rows[0].rating : 1000;
+
+        var streakSql;
+        if (outcome === "win") streakSql = "win_streak = win_streak + 1, best_win_streak = GREATEST(best_win_streak, win_streak + 1)";
+        else if (outcome === "lose") streakSql = "win_streak = 0";
+        else streakSql = "win_streak = win_streak";
+
+        var result = await pool.query(
+          `UPDATE users SET xp = xp + $1, rating = GREATEST(0, rating + $2), ${streakSql}
+           WHERE id = $3
+           RETURNING id, first_name, last_name, email, cefr_level, xp, rating, coins, win_streak, best_win_streak`,
+          [xpEarned, ratingDelta, me.userId]
+        );
+        if (result.rows.length > 0) {
+          updatedUser = result.rows[0];
+          var oldLeague = getLeagueName(oldRating);
+          var newLeague = getLeagueName(updatedUser.rating);
+          if (oldLeague !== newLeague) {
+            me.leagueChange = { old: oldLeague, new: newLeague, promoted: updatedUser.rating > oldRating };
+          }
+        }
+
+        // Jang tarixiga yozish (raqib = raqib jamoa)
+        var enemyLabel = (battle.teamMode === "squad" ? "Squad" : "Duo") + " jamoa";
+        await pool.query(
+          `INSERT INTO battle_history
+           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          [me.userId, enemyLabel, null, myTeamScore, enemyTeamScore, outcome, xpEarned, ratingDelta, battle.level || "A1"]
+        );
+        await updateQuestProgress(me.userId, { won: outcome === "win", correctAnswers: me.score, xpEarned: xpEarned });
+      } catch (err) {
+        console.error("Jamoa natijani saqlashda xato:", err.message);
+      }
+    }
+
+    // O'yinchiga natija yuboramiz
+    io.to(sid).emit("teamBattleEnd", {
+      outcome: outcome,
+      teamMode: battle.teamMode,
+      myTeam: myTeam,
+      myTeamScore: myTeamScore,
+      enemyTeamScore: enemyTeamScore,
+      myTeamPlayers: myRoster,
+      enemyTeamPlayers: enemyRoster,
+      myScore: me.score,
+      total: battle.questions.length,
+      lengthKey: battle.lengthKey || "standard",
+      xp_earned: xpEarned,
+      rating_change: ratingDelta,
+      updated_user: updatedUser,
+      answers: me.answers || [],
+      league_change: me.leagueChange || null,
+    });
+  }
+
+  console.log("Jamoa jang tugadi [" + battle.teamMode + "]: " + roomId + " | A:" + totalA + " B:" + totalB + " | G'olib: " + (winningTeam || "Durang"));
+  // Jangni biroz keyin o'chiramiz (qayta ulanishlar uchun)
+  setTimeout(function () { delete battles[roomId]; }, 30000);
 }
 
 // Jangni yakunlash va g'olibni aniqlash
