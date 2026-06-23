@@ -460,6 +460,23 @@
     .flag-reporter-link { cursor: pointer; transition: color 0.15s; }
     .flag-reporter-link:hover { color: var(--accent); }
     .flag-reporter-link:hover b { color: var(--accent); }
+    /* Savol shikoyat modal */
+    .qf-section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); font-weight: 700; margin: 0 0 8px; }
+    .qf-complaint { background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.2); border-radius: var(--r-md); padding: 14px; margin-bottom: 18px; }
+    .qf-complaint-reason { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--red); margin-bottom: 8px; }
+    .qf-complaint-comment { font-size: 13.5px; color: var(--text-dim); font-style: italic; margin: 6px 0; }
+    .qf-complaint-meta { font-size: 12px; color: var(--text-faint); }
+    .qf-question-text { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.4; margin-bottom: 14px; }
+    .qf-opt { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: var(--r-md); margin-bottom: 7px; background: var(--bg); border: 1px solid var(--border); }
+    .qf-opt.correct { background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.4); }
+    .qf-opt-letter { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 12.5px; flex-shrink: 0; background: var(--panel-2); color: var(--text-dim); }
+    .qf-opt.correct .qf-opt-letter { background: rgba(52,211,153,0.2); color: var(--green); }
+    .qf-opt-text { flex: 1; font-size: 14px; color: var(--text); }
+    .qf-opt-correct-tag { font-size: 11.5px; font-weight: 600; color: var(--green); display: flex; align-items: center; gap: 5px; }
+    .qf-explain { background: rgba(91,140,255,0.08); border: 1px solid rgba(91,140,255,0.25); border-radius: var(--r-md); padding: 12px 14px; margin-top: 14px; font-size: 13.5px; color: var(--text-dim); line-height: 1.5; display: flex; gap: 8px; }
+    .qf-explain i { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+    .qf-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .qf-actions .btn { flex: 1; }
     .flag-reviewed { font-size: 12.5px; color: var(--text-faint); display: flex; align-items: center; gap: 6px; }
 
     .hidden { display: none !important; }
@@ -797,6 +814,18 @@
         <button class="modal-btn" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;" id="formSubmitBtn" onclick="submitForm()">Saqlash</button>
       </div>
       <div class="message" id="formMsg"></div>
+    </div>
+  </div>
+
+  <!-- SAVOL SHIKOYAT MODAL -->
+  <div class="modal-overlay" id="questionFlagModal">
+    <div class="modal-box wide" style="max-width:560px;">
+      <div class="modal-head-wide">
+        <div class="mh-ic"><i data-lucide="flag" class="ico"></i></div>
+        <div><div class="mh-title">Savol shikoyati</div><div style="font-size:12.5px;color:var(--text-dim);">Shikoyatni tekshiring va savolni tahrirlang</div></div>
+        <div class="mh-close" onclick="closeQuestionFlagModal()"><i data-lucide="x" class="ico"></i></div>
+      </div>
+      <div id="qfBody"><div class="loading-row">Yuklanmoqda...</div></div>
     </div>
   </div>
 
@@ -2012,7 +2041,9 @@
       }
     }
 
+    var _flagsCache = [];
     function renderFlags(flags) {
+      _flagsCache = flags; // modal uchun saqlaymiz
       var list = document.getElementById("flagsList");
       if (flags.length === 0) {
         list.innerHTML = '<div class="empty-state"><i data-lucide="shield-check" class="ico"></i><div>Shikoyatlar yo\'q</div><div style="font-size:12.5px;color:var(--text-faint);margin-top:4px;">Bu holatda shikoyat topilmadi</div></div>';
@@ -2026,7 +2057,7 @@
         var entityHtml = "";
         if (f.entity_type === "question") {
           var qText = f.question_text ? esc(f.question_text) : "(Savol o'chirilgan yoki topilmadi)";
-          entityHtml = '<div class="flag-entity"><div class="flag-entity-label">Savol (#' + f.entity_id + ')</div><div class="flag-entity-text">' + qText + '</div></div>';
+          entityHtml = '<div class="flag-entity flag-clickable" onclick="openQuestionFlagModal(' + f.id + ')"><div class="flag-entity-label">Savol (#' + f.entity_id + ') · ko\'rish va tahrirlash uchun bosing</div><div class="flag-entity-text">' + qText + ' <i data-lucide="external-link" class="ico-sm" style="vertical-align:-2px;opacity:0.6;"></i></div></div>';
         } else {
           var targetName = esc((f.target_first || "") + " " + (f.target_last || "")).trim() || "(Foydalanuvchi topilmadi)";
           var roomArg = f.context_room_id ? ",'" + esc(f.context_room_id).replace(/'/g, "\\'") + "'" : ",null";
@@ -2119,6 +2150,114 @@
       } catch (err) { /* sokin */ }
     }
 
+    // ===== SAVOL SHIKOYAT MODALI =====
+    var _qfFlag = null; // joriy ochilgan shikoyat
+
+    var QF_REASONS = {
+      incorrect: "Noto'g'ri javob", inappropriate: "Nomaqbul kontent",
+      offensive: "Haqorat", cheating: "Firibgarlik", spam: "Spam", other: "Boshqa",
+    };
+
+    async function openQuestionFlagModal(flagId) {
+      // Shikoyatni cache'dan topamiz
+      var flag = _flagsCache.find(function (f) { return f.id === flagId; });
+      if (!flag) { toast("Shikoyat topilmadi", "error"); return; }
+      _qfFlag = flag;
+
+      document.getElementById("qfBody").innerHTML = '<div class="loading-row">Savol yuklanmoqda...</div>';
+      document.getElementById("questionFlagModal").classList.add("show");
+      icons();
+
+      // Savolni to'liq olamiz (openEditModal kabi — ID bo'yicha qidiramiz)
+      try {
+        var res = await apiGet("/admin/questions?search=" + flag.entity_id + "&limit=100");
+        var data = await res.json();
+        var q = (data.questions || []).find(function (x) { return x.id === flag.entity_id; });
+        renderQuestionFlagModal(flag, q);
+      } catch (err) {
+        if (err.message !== "auth") document.getElementById("qfBody").innerHTML = '<div class="empty-sm">Savolni yuklab bo\'lmadi</div>';
+      }
+    }
+    function closeQuestionFlagModal() { document.getElementById("questionFlagModal").classList.remove("show"); _qfFlag = null; }
+
+    function renderQuestionFlagModal(flag, q) {
+      var reporter = esc((flag.reporter_first || "") + " " + (flag.reporter_last || "")).trim() || "Noma'lum";
+      var reason = QF_REASONS[flag.reason] || flag.reason;
+
+      // Shikoyat qismi
+      var complaintHtml = '<div class="qf-complaint">' +
+        '<div class="qf-complaint-reason"><i data-lucide="flag" class="ico-sm"></i> ' + reason + '</div>' +
+        (flag.comment ? '<div class="qf-complaint-comment">"' + esc(flag.comment) + '"</div>' : '') +
+        '<div class="qf-complaint-meta">Shikoyatchi: <b>' + reporter + '</b> · ' + fmtDateTime(flag.created_at) + '</div>' +
+      '</div>';
+
+      // Savol qismi
+      var questionHtml;
+      if (!q) {
+        questionHtml = '<div class="empty-sm">Savol topilmadi (o\'chirilgan bo\'lishi mumkin)</div>';
+      } else {
+        var optsHtml = "";
+        ["A","B","C","D"].forEach(function (letter) {
+          var text = q["option_" + letter.toLowerCase()] || "";
+          var isCorrect = letter === q.correct_option;
+          optsHtml += '<div class="qf-opt' + (isCorrect ? ' correct' : '') + '">' +
+            '<div class="qf-opt-letter">' + letter + '</div>' +
+            '<div class="qf-opt-text">' + esc(text) + '</div>' +
+            (isCorrect ? '<span class="qf-opt-correct-tag"><i data-lucide="check-circle" class="ico-sm"></i> To\'g\'ri</span>' : '') +
+          '</div>';
+        });
+        questionHtml = '<div class="qf-question-text">' + esc(q.question_text) + '</div>' + optsHtml +
+          (q.explanation ? '<div class="qf-explain"><i data-lucide="lightbulb"></i> <div>' + esc(q.explanation) + '</div></div>' : '');
+      }
+
+      // Amallar
+      var actionsHtml = '<div class="qf-actions">';
+      if (q) {
+        actionsHtml += '<button class="btn" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));" onclick="qfEditQuestion()"><i data-lucide="pencil" class="ico-sm"></i> Tahrirlash</button>';
+      }
+      if (flag.status === "pending") {
+        actionsHtml += '<button class="btn" style="background:linear-gradient(135deg,var(--green),#10b981);" onclick="qfResolve(\'resolve\')"><i data-lucide="check" class="ico-sm"></i> Tasdiqlash</button>' +
+          '<button class="btn btn-ghost" onclick="qfResolve(\'dismiss\')"><i data-lucide="x" class="ico-sm"></i> Rad etish</button>';
+      }
+      actionsHtml += '</div>';
+
+      document.getElementById("qfBody").innerHTML =
+        '<div class="qf-section-label">Shikoyat</div>' + complaintHtml +
+        '<div class="qf-section-label">Shikoyat qilingan savol (#' + flag.entity_id + ')</div>' + questionHtml +
+        actionsHtml;
+      icons();
+    }
+
+    // Modaldan tahrirlashga o'tish — mavjud openEditModal'ni ishlatamiz
+    function qfEditQuestion() {
+      if (!_qfFlag) return;
+      var qId = _qfFlag.entity_id;
+      closeQuestionFlagModal();
+      // Savollar bankiga o'tamiz (savol o'sha yerda) va edit modalni ochamiz
+      switchView("questions");
+      setTimeout(function () { openEditModal(qId); }, 200);
+    }
+
+    // Modaldan shikoyatni hal qilish
+    function qfResolve(action) {
+      if (!_qfFlag) return;
+      var flagId = _qfFlag.id;
+      var isResolve = action === "resolve";
+      closeQuestionFlagModal();
+      showConfirm({
+        title: isResolve ? "Shikoyatni tasdiqlash" : "Shikoyatni rad etish",
+        text: isResolve ? "Bu shikoyat asosli deb tasdiqlanadi va yopiladi." : "Bu shikoyat asossiz deb rad etiladi va yopiladi.",
+        btnText: isResolve ? "Tasdiqlash" : "Rad etish",
+        danger: !isResolve,
+        onConfirm: async function () {
+          try {
+            var res = await apiPost("/admin/flags/resolve", { id: flagId, action: action });
+            if (res.ok) { toast(isResolve ? "Shikoyat hal qilindi" : "Shikoyat rad etildi", "success"); loadFlags(currentFlagsPage); }
+            else { var d = await res.json(); toast(d.error || "Xato", "error"); }
+          } catch (err) { if (err.message !== "auth") toast("Server xatosi", "error"); }
+        }
+      });
+    }
     
     // ===== HELPERS =====
     function navSoon(name) { toast(name + " bo'limi tez orada", "error"); }
