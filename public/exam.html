@@ -170,10 +170,20 @@
       let status = null;
       try {
         const res = await authFetch("/exam/status/" + user.id);
-        status = await res.json();
+        if (res.ok) status = await res.json();
       } catch (err) {}
 
-      const currentLevel = (status && status.current_level) || user.cefr_level || "A1";
+      // CEFR darajani aniqlash (eng ishonchli manbadan):
+      // 1-navbat: endpoint (bazadan, eng yangi) — Ultimate Exam'dan keyin to'g'ri
+      // 2-navbat: localStorage (refreshUser uni bazadan yangilab turadi, eskirmaydi)
+      // localStorage'ni AYNAN SHU PAYTDA qayta o'qiymiz (refreshUser yangilagan bo'lishi mumkin)
+      const freshUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const currentLevel =
+        (status && status.current_level) ||
+        freshUser.cefr_level ||
+        user.cefr_level ||
+        "A1";
+
       renderLevelFilter(currentLevel);
       renderMainExam(status, currentLevel);
       renderOtherExams(currentLevel);
@@ -301,6 +311,16 @@
     }
 
     loadExamHub();
+    // refreshUser() bazadan yangi CEFR daraja olganda — imtihon hub'ini qayta yuklaymiz
+    // (Ultimate Exam'dan keyin A1->A2 bo'lsa, to'g'ri imtihon ko'rsatiladi)
+    window.addEventListener("userRefreshed", function (e) {
+      const fresh = e.detail || JSON.parse(localStorage.getItem("user") || "{}");
+      // Agar CEFR daraja o'zgargan bo'lsa — hub'ni qayta yuklaymiz
+      if (fresh.cefr_level && fresh.cefr_level !== user.cefr_level) {
+        user.cefr_level = fresh.cefr_level;
+        loadExamHub(); // yangi daraja bilan qayta render
+      }
+    });
     lucide.createIcons();
   </script>
 </body>

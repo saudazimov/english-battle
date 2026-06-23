@@ -191,7 +191,13 @@ function renderTopbar(opts) {
     '<div class="notif-wrap" id="notifWrap">' +
       '<div class="icon-btn" onclick="toggleNotif(event)" style="cursor:pointer;"><i data-lucide="bell"></i> <span class="badge" id="notifBadge" style="display:none">0</span></div>' +
       '<div class="notif-bar" id="notifBar">' +
-        '<div class="notif-bar-head"><span>Bildirishnomalar</span><i data-lucide="x" class="notif-close" onclick="closeNotif()"></i></div>' +
+        '<div class="notif-bar-head">' +
+          '<span>Bildirishnomalar</span>' +
+          '<div class="notif-head-actions">' +
+            '<button class="notif-act-btn" id="notifClearBtn" onclick="clearAllNotifs(event)" title="Hammasini tozalash"><i data-lucide="trash-2"></i></button>' +
+            '<i data-lucide="x" class="notif-close" onclick="closeNotif()"></i>' +
+          '</div>' +
+        '</div>' +
         '<div class="notif-list" id="notifList"></div>' +
       '</div>' +
     '</div>' +
@@ -215,10 +221,71 @@ function renderTopbar(opts) {
 
   // Bildirishnomalarni yuklash
   loadNotifs();
+
+  // Foydalanuvchi ma'lumotini bazadan yangilash (markaziy sync)
+  refreshUser();
+}
+
+// ===== MARKAZIY FOYDALANUVCHI SYNC (refreshUser) =====
+// Har sahifada renderTopbar() ichida chaqiriladi.
+// Bazadan eng yangi ma'lumotni olib, localStorage'ni yangilaydi.
+// Bloklamaydi — sahifa darhol ochiladi, keyin yangilanadi.
+async function refreshUser() {
+  const u = JSON.parse(localStorage.getItem("user") || "{}");
+  if (!u.id) return;
+
+  try {
+    const res = await authFetch("/profile/" + u.id);
+    if (!res.ok) return; // xato bo'lsa — eski localStorage qoladi, sahifa buzilmaydi
+
+    const data = await res.json();
+    if (!data || !data.user) return;
+    const fresh = data.user;
+
+    // O'zgaruvchan maydonlarni bazadagi eng yangi qiymat bilan yangilaymiz
+    // (faqat mavjud bo'lsa — undefined bilan ustiga yozib yubormaymiz)
+    const fields = [
+      "first_name", "last_name", "cefr_level", "rating", "xp", "coins",
+      "current_streak", "longest_streak", "win_streak", "best_win_streak",
+      "region", "district", "village", "school", "profile_picture",
+    ];
+    let changed = false;
+    fields.forEach(function (k) {
+      if (fresh[k] !== undefined && fresh[k] !== u[k]) {
+        u[k] = fresh[k];
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      localStorage.setItem("user", JSON.stringify(u));
+    }
+
+    // Win rate ham foydali — alohida saqlaymiz (stats'dan)
+    if (data.stats && typeof data.stats.win_rate === "number") {
+      u.win_rate = data.stats.win_rate;
+      localStorage.setItem("user", JSON.stringify(u));
+    }
+
+    // Sahifalarga xabar beramiz — xohlasa o'zini yangilab oladi
+    try {
+      window.dispatchEvent(new CustomEvent("userRefreshed", { detail: u }));
+    } catch (e) {}
+
+    // Topbar'dagi coins/gems/avatar'ni ham yangilab qo'yamiz (agar mavjud bo'lsa)
+    var coinsEl = document.getElementById("tbCoins");
+    if (coinsEl && u.coins != null) coinsEl.textContent = u.coins;
+    var avaEl = document.getElementById("topAva");
+    if (avaEl) avaEl.innerHTML = avatarHTML(u.first_name, u.profile_picture);
+
+  } catch (err) {
+    // Tarmoq xatosi — eski localStorage qoladi, hech narsa buzilmaydi
+  }
 }
 
 // ===== BILDIRISHNOMALAR (NOTIFICATIONS) — barcha sahifada =====
 let _notifData = [];
+let _notifUnread = 0;
 
 function _notifUser() { return JSON.parse(localStorage.getItem("user") || "{}"); }
 
@@ -254,16 +321,15 @@ function notifLink(type) {
 }
 
 function updateNotifBadge() {
-  const total = _notifData.length;
   const badge = document.getElementById("notifBadge");
   if (!badge) return;
-  if (total > 0) {
-    // Xabar bor — qizil + son
-    badge.textContent = total;
+  if (_notifUnread > 0) {
+    // O'qilmagan xabar bor — qizil + son
+    badge.textContent = _notifUnread > 99 ? "99+" : _notifUnread;
     badge.classList.add("has-unread");
     badge.style.display = "grid";
   } else {
-    // Xabar yo'q — badge umuman ko'rinmaydi (yashil 0 ham yo'q)
+    // Hammasi o'qilgan — badge ko'rinmaydi
     badge.style.display = "none";
   }
 }
@@ -297,9 +363,59 @@ async function loadNotifs() {
     const res = await authFetch("/notifications/" + u.id);
     const data = await res.json();
     _notifData = data.notifications || [];
-  } catch (err) { _notifData = []; }
+    _notifUnread = data.unread || 0;
+  } catch (err) { _notifData = []; _notifUnread = 0; }
   updateNotifBadge();
   renderNotifList();
+}
+
+// ===== REAL-TIME BILDIRISHNOMA (har sahifada, friends/battle ham) =====
+// newFriendRequest socket eventini tinglaymiz — globalChallengeSystem'dan MUSTAQIL,
+// shuning uchun friends.html va battle.html'da ham ishlaydi.
+function attachNotifSocket() {
+  const sock = window.socket || window.globalSocket;
+  if (!sock) { setTimeout(attachNotifSocket, 500); return; } // socket tayyor bo'lguncha kutamiz
+
+  // Ikki marta ulanib qolmaslik uchun himoya
+  if (sock._notifBound) return;
+  sock._notifBound = true;
+
+  // Yangi do'st so'rovi keldi (B oladi)
+  sock.on("newFriendRequest", function (data) {
+    loadNotifs(); // badge + ro'yxat darhol yangilanadi (F5 kerak emas)
+    showNotifToast((data && data.fromName ? data.fromName : "Kimdir") + " sizga do'st so'rovi yubordi");
+  });
+
+  // So'rovga javob keldi — qabul/rad (A oladi)
+  sock.on("requestResponded", function (data) {
+    loadNotifs(); // badge + panel darhol yangilanadi
+    if (data && data.action === "accept") {
+      showNotifToast((data.byName || "Kimdir") + " do'st so'rovingizni qabul qildi");
+    }
+    // Rad etilganda — toast ko'rsatmaymiz (bildirishnoma ham yaratilmaydi), jim qoladi
+  });
+}
+attachNotifSocket();
+
+// ===== REAL-TIME TOAST (o'ng yuqorida suzib chiqadi) =====
+function showNotifToast(text) {
+  let toast = document.getElementById("notifToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "notifToast";
+    toast.className = "notif-toast";
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML =
+    '<div class="notif-toast-ic"><i data-lucide="user-plus"></i></div>' +
+    '<div class="notif-toast-text">' + text + '</div>';
+  if (window.lucide) lucide.createIcons();
+
+  toast.classList.add("show");
+  clearTimeout(window._notifToastTimer);
+  window._notifToastTimer = setTimeout(function () {
+    toast.classList.remove("show");
+  }, 4000);
 }
 
 function toggleNotif(e) {
@@ -309,10 +425,27 @@ function toggleNotif(e) {
   if (wrap.classList.contains("open")) { closeNotif(); return; }
   wrap.classList.add("open");
   renderNotifList();
+  markAllNotifsRead();
 }
+
+// Panel ochilganda — hammasini o'qilgan deb belgilaymiz
+async function markAllNotifsRead() {
+  if (_notifUnread === 0) return; // o'qilmagan yo'q bo'lsa — bekorга so'rov yubormaymiz
+  const u = _notifUser();
+  if (!u.id) return;
+  // Darhol UI'da yo'qotamiz (optimistik), keyin serverга yuboramiz
+  _notifUnread = 0;
+  updateNotifBadge();
+  _notifData.forEach(n => { n.is_read = true; });
+  try {
+    await authFetch("/notifications/read/" + u.id, { method: "POST" });
+  } catch (err) {}
+}
+
 function closeNotif() {
   const wrap = document.getElementById("notifWrap");
   if (wrap) wrap.classList.remove("open");
+  _resetClearBtn(); // yopilганда tasdiq holatини bekor qilamiz
 }
 
 function openNotif(id) {
@@ -322,16 +455,53 @@ function openNotif(id) {
   if (link) window.location.href = link;
 }
 
-async function deleteNotif(e, id) {
-  e.stopPropagation();
-  try {
-    const res = await authFetch("/notifications/" + id, { method: "DELETE" });
-    if (res.ok) {
-      _notifData = _notifData.filter(n => n.id !== id);
-      updateNotifBadge();
-      renderNotifList();
+// Barcha xabarlarni tozalash (inline tasdiq bilan)
+let _notifClearArmed = false;
+async function clearAllNotifs(e) {
+  if (e) e.stopPropagation();
+  if (!_notifData || _notifData.length === 0) return; // bo'sh bo'lsa — hech narsa
+
+  const btn = document.getElementById("notifClearBtn");
+
+  // 1-bosish: tasdiq so'raymiz (tugma qizil "Tozalashni tasdiqlang" bo'ladi)
+  if (!_notifClearArmed) {
+    _notifClearArmed = true;
+    if (btn) {
+      btn.classList.add("armed");
+      btn.innerHTML = '<i data-lucide="check"></i>';
+      btn.title = "Tasdiqlash uchun yana bosing";
+      if (window.lucide) lucide.createIcons();
     }
+    // 3 soniyada bekor bo'ladi (foydalanuvchi fikridan qaytsa)
+    setTimeout(() => { _resetClearBtn(); }, 3000);
+    return;
+  }
+
+  // 2-bosish: rostdan tozalaymiz
+  _resetClearBtn();
+  const u = _notifUser();
+  if (!u.id) return;
+
+  // Optimistik — darhol UI'da bo'shatamiz
+  _notifData = [];
+  _notifUnread = 0;
+  updateNotifBadge();
+  renderNotifList();
+
+  try {
+    await authFetch("/notifications/clear/" + u.id, { method: "POST" });
   } catch (err) {}
+}
+
+function _resetClearBtn() {
+  _notifClearArmed = false;
+  const btn = document.getElementById("notifClearBtn");
+  if (btn) {
+    btn.classList.remove("armed");
+    btn.innerHTML = '<i data-lucide="trash-2"></i>';
+    btn.title = "Hammasini tozalash";
+    if (window.lucide) lucide.createIcons();
+  }
 }
 
 // Profil dropdown ochish/yopish (topbar user-chip)

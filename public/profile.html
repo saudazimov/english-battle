@@ -587,7 +587,7 @@
           }
         }
         if (data.user) {
-          document.getElementById("pcStreak").textContent = data.user.current_streak || 0;
+          document.getElementById("pcStreak").textContent = data.user.win_streak || 0;
           document.getElementById("pcSchool").textContent = data.user.school || "—";
           // About Me
           document.getElementById("abRegion").textContent = data.user.region || "—";
@@ -714,7 +714,7 @@
     authFetch("/profile/" + viewUserId)
       .then(r => r.json())
       .then(data => {
-        if (data.user) document.getElementById("prStreak").textContent = data.user.longest_streak || 0;
+        if (data.user) document.getElementById("prStreak").textContent = data.user.best_win_streak || 0;
         if (data.stats) {
           document.getElementById("prBattles").textContent = data.stats.total_battles;
           document.getElementById("prWins").textContent = data.stats.wins;

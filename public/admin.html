@@ -3,293 +3,1841 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Admin</title>
+  <title>English Battle — Admin Panel</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
+    :root {
+      --bg: #070b16; --bg-2: #0b1020; --panel: #0e1428; --panel-2: #121a33;
+      --border: rgba(99,130,220,0.18); --border-bright: rgba(120,150,255,0.4);
+      --text: #e6ecff; --text-dim: #8b97c0; --text-faint: #5a648c;
+      --accent: #5b8cff; --accent-2: #a855f7; --gold: #fbbf24; --green: #34d399; --cyan: #38e1ff; --red: #f87171;
+      --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 20px;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #0f1117;
-      min-height: 100vh;
-      color: #e2e8f0;
-      padding: 20px;
-    }
-    .container { max-width: 900px; margin: 0 auto; }
-    h1 { margin-bottom: 20px; color: #818cf8; }
-    h2 { margin: 24px 0 12px; font-size: 18px; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { font-family: 'Inter','Segoe UI',system-ui,-apple-system,Arial,sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); -webkit-font-smoothing: antialiased; font-size: 14px; }
+    a { text-decoration: none; color: inherit; }
+    [data-lucide] { stroke-width: 2; display: block; }
 
-    .card {
-      background: #1a1d27;
-      border: 1px solid #2d3142;
-      border-radius: 14px;
-      padding: 24px;
-      margin-bottom: 20px;
-    }
+    *::-webkit-scrollbar { width: 9px; height: 9px; }
+    *::-webkit-scrollbar-track { background: transparent; margin: 4px 0; }
+    *::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(91,140,255,0.4), rgba(168,85,247,0.4)); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+    *::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, rgba(91,140,255,0.65), rgba(168,85,247,0.65)); background-clip: padding-box; }
+    * { scrollbar-width: thin; scrollbar-color: rgba(91,140,255,0.4) transparent; }
 
-    label { display: block; margin: 12px 0 6px; font-size: 13px; color: #94a3b8; }
-    input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      background: #0f1117;
-      border: 1px solid #2d3142;
-      border-radius: 8px;
-      color: #e2e8f0;
-      font-size: 14px;
-      font-family: inherit;
-    }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1; }
+    .ico { width: 18px; height: 18px; flex-shrink: 0; }
+    .ico-sm { width: 15px; height: 15px; flex-shrink: 0; }
+    .ico-lg { width: 22px; height: 22px; flex-shrink: 0; }
 
-    .row { display: flex; gap: 12px; }
-    .row > div { flex: 1; }
+    /* LOGIN */
+    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+      background: radial-gradient(900px circle at 20% 10%, rgba(91,140,255,0.10), transparent 50%), radial-gradient(900px circle at 85% 90%, rgba(168,85,247,0.10), transparent 50%), var(--bg); }
+    .login-card { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border-bright); border-radius: var(--r-xl); padding: 44px 36px; max-width: 400px; width: 100%; box-shadow: 0 30px 80px rgba(0,0,0,0.5); text-align: center; }
+    .login-logo { width: 66px; height: 66px; border-radius: var(--r-lg); margin: 0 auto 20px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; box-shadow: 0 0 32px rgba(91,140,255,0.4); }
+    .login-logo .ico { width: 30px; height: 30px; color: #fff; }
+    .login-card h1 { font-size: 23px; font-weight: 800; margin-bottom: 5px; letter-spacing: -0.3px; }
+    .login-card .sub { font-size: 13.5px; color: var(--text-dim); margin-bottom: 28px; }
+    .login-card label { display: block; text-align: left; font-size: 13px; color: var(--text-dim); margin-bottom: 8px; font-weight: 500; }
 
-    .btn {
-      padding: 12px 24px;
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 16px;
-    }
-    .btn:hover { opacity: 0.9; }
+    input, select, textarea { width: 100%; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); color: var(--text); font-size: 14px; font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,140,255,0.12); }
+    input::placeholder, textarea::placeholder { color: var(--text-faint); }
+    input.invalid, textarea.invalid { border-color: var(--red); box-shadow: 0 0 0 3px rgba(248,113,113,0.12); }
+    textarea { resize: vertical; min-height: 58px; line-height: 1.5; }
+    select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%238b97c0' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
 
-    .message {
-      margin-top: 12px;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 14px;
-      display: none;
-    }
-    .message.error { display: block; background: rgba(239,68,68,0.15); color: #fca5a5; }
-    .message.success { display: block; background: rgba(34,197,94,0.15); color: #86efac; }
+    .btn { padding: 12px 22px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; border-radius: var(--r-md); color: #fff; font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: transform 0.1s, box-shadow 0.15s, opacity 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn:hover { box-shadow: 0 6px 22px rgba(91,140,255,0.4); }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.6; cursor: wait; }
+    .btn-full { width: 100%; margin-top: 20px; }
+    .btn-sm { padding: 9px 16px; font-size: 13.5px; }
+    .btn-ghost { background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--border-bright); box-shadow: none; }
 
-    .q-item {
-      background: #0f1117;
-      border: 1px solid #2d3142;
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-    }
-    .q-item .q-content { flex: 1; }
-    .q-item .q-text { font-weight: 600; margin-bottom: 6px; }
-    .q-item .q-meta { font-size: 12px; color: #64748b; }
-    .q-item .q-correct { color: #86efac; }
+    .message { margin-top: 14px; padding: 11px 14px; border-radius: var(--r-md); font-size: 13.5px; display: none; text-align: left; line-height: 1.45; }
+    .message.error { display: block; background: rgba(248,113,113,0.12); color: #fca5a5; border: 1px solid rgba(248,113,113,0.3); }
+    .message.success { display: block; background: rgba(52,211,153,0.12); color: #86efac; border: 1px solid rgba(52,211,153,0.3); }
 
-    .delete-btn {
-      padding: 6px 12px;
-      background: rgba(239,68,68,0.15);
-      border: 1px solid rgba(239,68,68,0.4);
-      border-radius: 6px;
-      color: #fca5a5;
-      cursor: pointer;
-      font-size: 13px;
-      flex-shrink: 0;
-    }
+    /* LAYOUT */
+    .admin-app { display: grid; grid-template-columns: 256px 1fr; height: 100vh; overflow: hidden; }
+    .sidebar { background: linear-gradient(180deg, var(--bg-2), var(--bg)); border-right: 1px solid var(--border); padding: 22px 14px 16px; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+    .side-logo { display: flex; align-items: center; gap: 12px; padding: 0 8px 20px; }
+    .side-logo .mark { width: 44px; height: 44px; border-radius: var(--r-md); flex-shrink: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; box-shadow: 0 0 22px rgba(91,140,255,0.35); }
+    .side-logo .mark .ico { width: 22px; height: 22px; color: #fff; }
+    .side-logo .txt .l1 { font-size: 14.5px; font-weight: 800; letter-spacing: 0.6px; line-height: 1.15; }
+    .side-logo .txt .l2 { font-size: 14.5px; font-weight: 800; letter-spacing: 0.6px; line-height: 1.15; background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-faint); padding: 16px 10px 8px; font-weight: 700; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--r-md); cursor: pointer; font-size: 13.5px; font-weight: 500; color: var(--text-dim); transition: background 0.15s, color 0.15s; margin-bottom: 2px; border: 1px solid transparent; }
+    .nav-item:hover { background: var(--panel); color: var(--text); }
+    .nav-item.active { background: linear-gradient(135deg, rgba(91,140,255,0.18), rgba(168,85,247,0.10)); color: #fff; border-color: var(--border-bright); }
+    .nav-item .ico { width: 18px; height: 18px; }
+    .nav-item .tag { margin-left: auto; font-size: 9px; font-weight: 700; color: var(--gold); background: rgba(251,191,36,0.12); padding: 3px 7px; border-radius: 999px; letter-spacing: 0.3px; }
+    .nav-item .dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 8px var(--accent-2); }
+    .side-foot { margin-top: auto; padding-top: 16px; }
+    .side-user { display: flex; align-items: center; gap: 11px; padding: 12px; border-radius: var(--r-md); background: var(--panel); border: 1px solid var(--border); }
+    .side-user .ava { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 15px; }
+    .side-user .info { flex: 1; min-width: 0; }
+    .side-user .nm { font-size: 13.5px; font-weight: 600; line-height: 1.2; }
+    .side-user .rl { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+    .side-logout { margin-top: 10px; width: 100%; padding: 9px; border-radius: var(--r-md); background: transparent; border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .side-logout:hover { background: rgba(248,113,113,0.1); color: var(--red); border-color: rgba(248,113,113,0.3); }
 
-    .hidden { display: none; }
-    .count { color: #64748b; font-size: 14px; }
+    .main { display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
+    .topbar { display: flex; align-items: center; gap: 18px; padding: 14px 28px; border-bottom: 1px solid var(--border); background: rgba(11,16,32,0.7); backdrop-filter: blur(12px); flex-shrink: 0; }
+    .topsearch { flex: 1; max-width: 520px; position: relative; display: flex; align-items: center; }
+    .topsearch .s-ic { position: absolute; left: 14px; color: var(--text-faint); pointer-events: none; }
+    .topsearch input { padding-left: 42px; padding-right: 52px; background: var(--panel); height: 42px; }
+    .topsearch .s-kbd { position: absolute; right: 12px; font-size: 11px; color: var(--text-faint); background: var(--bg); border: 1px solid var(--border); padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+    .top-right { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+    .prod-badge { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--green); background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3); padding: 8px 14px; border-radius: 999px; height: 38px; }
+    .prod-badge .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.5); } 50% { box-shadow: 0 0 0 6px rgba(52,211,153,0); } }
+    .top-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .top-profile .ava { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 15px; }
+    .top-profile .nm { font-size: 13.5px; font-weight: 600; line-height: 1.2; }
+    .top-profile .rl { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+
+    .content { padding: 24px 28px 60px; overflow-y: auto; flex: 1; }
+    /* 2-column grid: chap (asosiy) + o'ng (panel) */
+    .layout-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+
+    .security-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+    .sec-chip { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--green); background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.25); padding: 9px 13px; border-radius: var(--r-md); }
+    .sec-chip .ico-sm { color: var(--green); }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .stat-card { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px; display: flex; align-items: center; gap: 13px; transition: border-color 0.15s; }
+    .stat-card:hover { border-color: var(--border-bright); }
+    .stat-card .s-ic { width: 44px; height: 44px; border-radius: var(--r-md); flex-shrink: 0; display: grid; place-items: center; }
+    .s-ic.blue { background: rgba(91,140,255,0.15); color: var(--accent); }
+    .s-ic.purple { background: rgba(168,85,247,0.15); color: var(--accent-2); }
+    .s-ic.cyan { background: rgba(56,225,255,0.15); color: var(--cyan); }
+    .s-ic.green { background: rgba(52,211,153,0.15); color: var(--green); }
+    .s-ic.gold { background: rgba(251,191,36,0.15); color: var(--gold); }
+    .stat-card .s-ic .ico-lg { width: 22px; height: 22px; }
+    .stat-card .s-label { font-size: 12px; color: var(--text-dim); margin-bottom: 3px; }
+    .stat-card .s-val { font-size: 23px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; }
+
+    .card { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 22px; margin-bottom: 20px; }
+    .card-head { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; font-size: 16px; font-weight: 700; }
+    .card-head .ch-ic { width: 34px; height: 34px; border-radius: var(--r-sm); display: grid; place-items: center; background: rgba(91,140,255,0.12); color: var(--accent); }
+    .card-head .ch-ic .ico-sm { width: 17px; height: 17px; }
+    .card-head .cnt { font-size: 12px; font-weight: 600; color: var(--text-dim); background: var(--bg); border: 1px solid var(--border); padding: 4px 10px; border-radius: 999px; margin-left: auto; }
+
+    .row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .row > div { flex: 1; min-width: 140px; }
+    label { display: block; font-size: 13px; color: var(--text-dim); margin: 0 0 7px; font-weight: 500; }
+    .field { margin-bottom: 16px; }
+
+    /* TOOLBAR (qidiruv + filtr) */
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; align-items: center; }
+    .toolbar .tb-search { flex: 1; min-width: 200px; position: relative; display: flex; align-items: center; }
+    .toolbar .tb-search .s-ic { position: absolute; left: 12px; color: var(--text-faint); pointer-events: none; }
+    .toolbar .tb-search input { padding-left: 38px; height: 40px; background: var(--bg); }
+    .toolbar select { width: auto; min-width: 120px; height: 40px; background: var(--bg); font-size: 13px; }
+    .tb-reset { height: 40px; padding: 0 14px; }
+
+    /* TABLE */
+    .qbank-wrap { overflow-x: auto; margin: 0 -4px; }
+    .qbank-table { width: 100%; border-collapse: collapse; min-width: 720px; }
+    .qbank-table thead th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-faint); font-weight: 700; padding: 0 14px 13px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .qbank-table tbody td { padding: 13px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
+    .qbank-table tbody tr { transition: background 0.12s; }
+    .qbank-table tbody tr:hover { background: rgba(91,140,255,0.05); }
+    .qbank-table tbody tr:last-child td { border-bottom: none; }
+    .qb-id { font-family: 'SF Mono', Consolas, monospace; font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+    .qb-question { max-width: 340px; }
+    .qb-qtext { font-weight: 600; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .qb-skill { color: var(--text-dim); text-transform: capitalize; white-space: nowrap; }
+    .qb-date { color: var(--text-faint); font-size: 12px; white-space: nowrap; }
+    .qb-actions { display: flex; gap: 6px; white-space: nowrap; }
+
+    .lvl-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: var(--r-sm); }
+    .lvl-A1 { background: rgba(91,140,255,0.18); color: var(--accent); }
+    .lvl-A2 { background: rgba(168,85,247,0.18); color: var(--accent-2); }
+    .lvl-B1 { background: rgba(56,225,255,0.18); color: var(--cyan); }
+    .lvl-B2 { background: rgba(52,211,153,0.18); color: var(--green); }
+    .lvl-C1 { background: rgba(251,191,36,0.18); color: var(--gold); }
+    .lvl-C2 { background: rgba(248,113,113,0.18); color: var(--red); }
+
+    .st-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+    .st-pill .sdot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .st-published { background: rgba(52,211,153,0.12); color: var(--green); }
+    .st-draft { background: rgba(139,151,192,0.14); color: var(--text-dim); }
+    .st-needs_review { background: rgba(251,191,36,0.14); color: var(--gold); }
+
+    .icon-btn { padding: 7px 10px; border-radius: var(--r-sm); cursor: pointer; font-size: 12.5px; font-weight: 600; border: 1px solid var(--border); background: var(--panel); color: var(--text-dim); font-family: inherit; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+    .icon-btn:hover { color: var(--text); border-color: var(--border-bright); }
+    .icon-btn.edit:hover { color: var(--accent); border-color: var(--border-bright); background: rgba(91,140,255,0.1); }
+    .icon-btn.danger:hover { color: var(--red); border-color: rgba(248,113,113,0.4); background: rgba(248,113,113,0.1); }
+    .icon-btn .ico-sm { width: 14px; height: 14px; }
+
+    /* PAGINATION */
+    .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; flex-wrap: wrap; gap: 12px; }
+    .pg-info { font-size: 13px; color: var(--text-dim); }
+    .pg-controls { display: flex; align-items: center; gap: 6px; }
+    .pg-controls select { width: auto; height: 36px; padding: 0 28px 0 10px; font-size: 13px; background: var(--bg); }
+    .pg-btn { width: 36px; height: 36px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--panel); color: var(--text-dim); cursor: pointer; display: grid; place-items: center; font-family: inherit; font-size: 13px; font-weight: 600; transition: all 0.15s; }
+    .pg-btn:hover:not(:disabled) { color: var(--text); border-color: var(--border-bright); }
+    .pg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pg-btn.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border-color: transparent; }
+
+    /* RIGHT PANEL */
+    .side-card { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 20px; margin-bottom: 18px; }
+    .side-card-head { font-size: 14.5px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .side-card-head .ico-sm { color: var(--accent); }
+
+    /* DONUT */
+    .donut-wrap { display: flex; align-items: center; gap: 18px; margin-bottom: 16px; }
+    .donut { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+    .donut svg { transform: rotate(-90deg); }
+    .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .donut-center .dc-val { font-size: 22px; font-weight: 800; line-height: 1; }
+    .donut-center .dc-lbl { font-size: 10.5px; color: var(--text-faint); margin-top: 3px; }
+    .donut-legend { flex: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+    .lg-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+    .lg-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+    .lg-name { font-weight: 600; }
+    .lg-val { margin-left: auto; color: var(--text-dim); font-size: 12px; }
+
+    /* HEALTH */
+    .health-score { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+    .hs-ring { position: relative; width: 84px; height: 84px; flex-shrink: 0; }
+    .hs-ring svg { transform: rotate(-90deg); }
+    .hs-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .hs-pct { font-size: 19px; font-weight: 800; line-height: 1; }
+    .hs-lbl { font-size: 9px; color: var(--text-faint); margin-top: 2px; }
+    .hs-meta { flex: 1; }
+    .hs-meta .hm-row { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; padding: 4px 0; }
+    .hs-meta .hm-row .hm-k { color: var(--text-dim); }
+    .hs-meta .hm-row .hm-v { font-weight: 700; }
+    .health-breakdown { display: flex; flex-direction: column; gap: 8px; }
+    .hb-row { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm); }
+    .hb-k { color: var(--text-dim); display: flex; align-items: center; gap: 7px; }
+    .hb-k .ico-sm { width: 14px; height: 14px; }
+    .hb-v { font-weight: 700; }
+    .hb-v.warn { color: var(--gold); }
+    .hb-v.bad { color: var(--red); }
+    .hb-v.ok { color: var(--green); }
+
+    /* ACTIVITY */
+    .activity-list { display: flex; flex-direction: column; gap: 2px; }
+    .act-item { display: flex; gap: 11px; padding: 10px 8px; border-radius: var(--r-sm); transition: background 0.12s; }
+    .act-item:hover { background: var(--bg); }
+    .act-ic { width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; display: grid; place-items: center; }
+    .act-ic .ico-sm { width: 15px; height: 15px; }
+    .act-ic.create { background: rgba(52,211,153,0.14); color: var(--green); }
+    .act-ic.edit { background: rgba(91,140,255,0.14); color: var(--accent); }
+    .act-ic.delete { background: rgba(248,113,113,0.14); color: var(--red); }
+    .act-ic.login { background: rgba(168,85,247,0.14); color: var(--accent-2); }
+    .act-ic.other { background: rgba(139,151,192,0.14); color: var(--text-dim); }
+    .act-body { flex: 1; min-width: 0; }
+    .act-txt { font-size: 12.5px; line-height: 1.4; }
+    .act-txt b { font-weight: 700; }
+    .act-time { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-faint); }
+    .empty-state .ico { width: 36px; height: 36px; margin: 0 auto 12px; opacity: 0.5; }
+    .empty-sm { text-align: center; padding: 24px 16px; color: var(--text-faint); font-size: 13px; }
+    .loading-row { text-align: center; padding: 30px; color: var(--text-faint); font-size: 13.5px; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(3,6,15,0.78); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; animation: fadeIn 0.15s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-box { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border-bright); border-radius: var(--r-xl); padding: 28px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,0.6); animation: popIn 0.2s cubic-bezier(0.16,1,0.3,1); }
+    .modal-box.wide { max-width: 560px; text-align: left; max-height: 90vh; overflow-y: auto; }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.94) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .modal-icon { width: 56px; height: 56px; border-radius: var(--r-lg); margin: 0 auto 16px; display: grid; place-items: center; background: rgba(248,113,113,0.12); }
+    .modal-icon .ico-lg { width: 28px; height: 28px; color: var(--red); }
+    .modal-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .modal-text { font-size: 14px; color: var(--text-dim); line-height: 1.5; margin-bottom: 24px; }
+    .modal-actions { display: flex; gap: 12px; }
+    .modal-btn { flex: 1; padding: 12px; border-radius: var(--r-md); font-size: 14px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: all 0.15s; }
+    .modal-btn-cancel { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+    .modal-btn-cancel:hover { background: #1a2342; }
+    .modal-btn-confirm { background: linear-gradient(135deg, var(--red), #dc2626); color: #fff; }
+    .modal-btn-confirm:hover { opacity: 0.9; }
+    .modal-head-wide { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .modal-head-wide .mh-ic { width: 42px; height: 42px; border-radius: var(--r-md); display: grid; place-items: center; background: rgba(91,140,255,0.12); color: var(--accent); }
+    .modal-head-wide .mh-title { font-size: 19px; font-weight: 800; }
+    .modal-head-wide .mh-close { margin-left: auto; cursor: pointer; color: var(--text-dim); width: 32px; height: 32px; border-radius: var(--r-sm); display: grid; place-items: center; transition: all 0.15s; }
+    .modal-head-wide .mh-close:hover { background: var(--panel-2); color: var(--text); }
+
+    /* TOAST */
+    .toast-wrap { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
+    .toast { display: flex; align-items: center; gap: 11px; background: var(--panel); border: 1px solid var(--border-bright); border-radius: var(--r-md); padding: 13px 16px; min-width: 260px; max-width: 360px; box-shadow: 0 16px 50px rgba(0,0,0,0.5); animation: slideIn 0.3s cubic-bezier(0.16,1,0.3,1); }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+    .toast.success { border-left: 4px solid var(--green); }
+    .toast.error { border-left: 4px solid var(--red); }
+    .toast .t-ic { flex-shrink: 0; }
+    .toast.success .t-ic { color: var(--green); }
+    .toast.error .t-ic { color: var(--red); }
+    .toast .t-txt { font-size: 13.5px; font-weight: 600; line-height: 1.4; }
+
+    /* BULK IMPORT */
+    .imp-steps { display: flex; gap: 8px; margin-bottom: 20px; }
+    .imp-step { flex: 1; display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; color: var(--text-faint); padding: 9px 12px; border-radius: var(--r-sm); background: var(--bg); border: 1px solid var(--border); }
+    .imp-step.active { color: var(--accent); border-color: var(--border-bright); background: rgba(91,140,255,0.08); }
+    .imp-step.done { color: var(--green); }
+    .imp-num { width: 20px; height: 20px; border-radius: 50%; background: var(--panel-2); display: grid; place-items: center; font-size: 11px; flex-shrink: 0; }
+    .imp-step.active .imp-num { background: var(--accent); color: #fff; }
+    .imp-step.done .imp-num { background: var(--green); color: #fff; }
+    .imp-drop { border: 2px dashed var(--border-bright); border-radius: var(--r-lg); padding: 36px 20px; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .imp-drop:hover { background: rgba(91,140,255,0.05); border-color: var(--accent); }
+    .imp-summary { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .imp-stat { flex: 1; min-width: 100px; padding: 12px 14px; border-radius: var(--r-md); background: var(--bg); border: 1px solid var(--border); text-align: center; }
+    .imp-stat .is-val { font-size: 22px; font-weight: 800; line-height: 1; }
+    .imp-stat .is-lbl { font-size: 11.5px; color: var(--text-dim); margin-top: 4px; }
+    .imp-stat.ok .is-val { color: var(--green); }
+    .imp-stat.bad .is-val { color: var(--red); }
+    .imp-stat.warn .is-val { color: var(--gold); }
+    .imp-table-wrap { max-height: 300px; overflow: auto; border: 1px solid var(--border); border-radius: var(--r-md); }
+    .imp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .imp-table th { position: sticky; top: 0; background: var(--panel-2); text-align: left; padding: 8px 10px; font-size: 11px; text-transform: uppercase; color: var(--text-faint); white-space: nowrap; }
+    .imp-table td { padding: 8px 10px; border-top: 1px solid var(--border); white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+    .imp-table tr.bad-row { background: rgba(248,113,113,0.08); }
+    .imp-table tr.bad-row td { color: #fca5a5; }
+    .imp-err { font-size: 11px; color: var(--red); }
+    .imp-result-box { text-align: center; padding: 24px; }
+    .imp-result-box .ico-lg { width: 48px; height: 48px; margin: 0 auto 14px; color: var(--green); }
+    
+    /* SAHIFA SARLAVHASI (view'lar uchun) */
+    .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 14px; }
+    .page-title-lg { font-size: 24px; font-weight: 800; letter-spacing: -0.4px; }
+    .page-sub { font-size: 13.5px; color: var(--text-dim); margin-top: 4px; }
+
+    /* AUDIT JADVAL */
+    .audit-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+    .audit-table thead th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-faint); font-weight: 700; padding: 0 14px 13px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .audit-table tbody td { padding: 13px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    .audit-table tbody tr:hover { background: rgba(91,140,255,0.05); }
+    .audit-table tbody tr:last-child td { border-bottom: none; }
+    .au-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+    .au-badge .ico-sm { width: 13px; height: 13px; }
+    .au-create { background: rgba(52,211,153,0.12); color: var(--green); }
+    .au-edit { background: rgba(91,140,255,0.12); color: var(--accent); }
+    .au-delete { background: rgba(248,113,113,0.12); color: var(--red); }
+    .au-login { background: rgba(168,85,247,0.12); color: var(--accent-2); }
+    .au-other { background: rgba(139,151,192,0.14); color: var(--text-dim); }
+    .au-admin { font-weight: 600; }
+    .au-entity { font-family: 'SF Mono', Consolas, monospace; font-size: 12px; color: var(--text-dim); }
+    .au-ip { font-family: 'SF Mono', Consolas, monospace; font-size: 11.5px; color: var(--text-faint); }
+    .au-time { color: var(--text-faint); font-size: 12px; white-space: nowrap; }
+    
+    /* OVERVIEW */
+    .ov-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .ov-card { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; transition: border-color 0.15s; }
+    .ov-card:hover { border-color: var(--border-bright); }
+    .ov-card .ov-top { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+    .ov-card .ov-ic { width: 44px; height: 44px; border-radius: var(--r-md); display: grid; place-items: center; flex-shrink: 0; }
+    .ov-card .ov-ic .ico-lg { width: 22px; height: 22px; }
+    .ov-card .ov-label { font-size: 13px; color: var(--text-dim); font-weight: 500; }
+    .ov-card .ov-val { font-size: 30px; font-weight: 800; line-height: 1; letter-spacing: -0.6px; }
+    .ov-card .ov-foot { font-size: 12px; color: var(--text-faint); margin-top: 8px; display: flex; align-items: center; gap: 5px; }
+    .ov-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    /* O'sish bar grafik (pure CSS) */
+    .growth-bars { display: flex; align-items: flex-end; gap: 10px; height: 140px; padding-top: 10px; }
+    .gb-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
+    .gb-bar { width: 100%; max-width: 36px; background: linear-gradient(180deg, var(--accent), var(--accent-2)); border-radius: 6px 6px 0 0; min-height: 4px; transition: height 0.4s ease; position: relative; }
+    .gb-bar:hover::after { content: attr(data-val); position: absolute; top: -22px; left: 50%; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--border); padding: 2px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap; }
+    .gb-label { font-size: 11px; color: var(--text-faint); white-space: nowrap; }
+    /* Viloyat ro'yxati */
+    .region-list { display: flex; flex-direction: column; gap: 10px; }
+    .region-row { display: flex; align-items: center; gap: 12px; }
+    .region-rank { width: 24px; height: 24px; border-radius: 7px; background: var(--bg); border: 1px solid var(--border); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
+    .region-name { font-size: 13.5px; font-weight: 600; flex-shrink: 0; min-width: 90px; }
+    .region-bar-track { flex: 1; height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+    .region-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 999px; }
+    .region-count { font-size: 12.5px; color: var(--text-dim); font-weight: 600; min-width: 60px; text-align: right; }
+    @media (max-width: 900px) { .ov-two-col { grid-template-columns: 1fr; } }
+    
+    /* USERS */
+    .users-table { width: 100%; border-collapse: collapse; min-width: 720px; }
+    .users-table thead th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-faint); font-weight: 700; padding: 0 14px 13px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .users-table tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
+    .users-table tbody tr:hover { background: rgba(91,140,255,0.05); }
+    .users-table tbody tr:last-child td { border-bottom: none; }
+    .u-name-cell { display: flex; align-items: center; gap: 10px; }
+    .u-ava { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 14px; color: #fff; }
+    .u-name { font-weight: 600; }
+    .u-phone { font-size: 11.5px; color: var(--text-faint); font-family: 'SF Mono', Consolas, monospace; }
+    .role-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: var(--r-sm); }
+    .role-student { background: rgba(56,225,255,0.15); color: var(--cyan); }
+    .role-teacher { background: rgba(168,85,247,0.15); color: var(--accent-2); }
+    .role-school_admin { background: rgba(251,191,36,0.15); color: var(--gold); }
+    .u-school { color: var(--text-dim); font-size: 12.5px; }
+    .u-banned-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--red); }
+    .u-actions { display: flex; gap: 6px; white-space: nowrap; }
+
+    /* USER MODAL */
+    .um-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+    .um-field { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; }
+    .um-field .umf-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); font-weight: 700; margin-bottom: 5px; }
+    .um-field .umf-val { font-size: 14px; font-weight: 600; }
+    .um-stats-row { display: flex; gap: 10px; margin-bottom: 18px; }
+    .um-stat { flex: 1; text-align: center; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px; }
+    .um-stat .ums-val { font-size: 20px; font-weight: 800; line-height: 1; }
+    .um-stat .ums-lbl { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+    .um-actions { display: flex; gap: 10px; }
+    .um-actions .btn { flex: 1; }
+    .um-banned-banner { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #fca5a5; border-radius: var(--r-md); padding: 10px 14px; font-size: 13px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .modal-icon.warn { background: rgba(251,191,36,0.12); }
+    .modal-icon.warn .ico-lg { color: var(--gold); }
+    
+    /* SCHOOLS */
+    .schools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .school-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px; cursor: pointer; transition: all 0.15s; }
+    .school-card:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+    .school-card .sc-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .school-card .sc-ic { width: 44px; height: 44px; border-radius: var(--r-md); background: rgba(52,211,153,0.15); color: var(--green); display: grid; place-items: center; flex-shrink: 0; }
+    .school-card .sc-name { font-size: 14.5px; font-weight: 700; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .school-card .sc-loc { font-size: 11.5px; color: var(--text-faint); margin-top: 2px; }
+    .school-card .sc-stats { display: flex; gap: 10px; }
+    .school-card .sc-stat { flex: 1; background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px; text-align: center; }
+    .school-card .scs-val { font-size: 18px; font-weight: 800; line-height: 1; }
+    .school-card .scs-lbl { font-size: 10.5px; color: var(--text-dim); margin-top: 3px; }
+    /* Maktab o'quvchilari modali */
+    .sch-students-list { display: flex; flex-direction: column; gap: 6px; max-height: 400px; overflow-y: auto; }
+    .sch-student-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm); }
+    .sch-student-row .ssr-rank { width: 26px; height: 26px; border-radius: 7px; background: var(--panel-2); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
+    .sch-student-row .ssr-name { font-weight: 600; font-size: 13.5px; flex: 1; }
+    .sch-student-row .ssr-rating { font-size: 13px; font-weight: 700; color: var(--gold); }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 1100px) { .layout-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { .admin-app { grid-template-columns: 1fr; } .sidebar { display: none; } .topsearch { max-width: none; } .top-profile .nm, .top-profile .rl { display: none; } }
+    @media (max-width: 560px) { .row > div { min-width: 100%; } .prod-badge span { display: none; } .content { padding: 18px 16px 50px; } .topbar { padding: 12px 16px; } }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🛠️ Admin Panel</h1>
 
-    <!-- PAROL EKRANI -->
-    <div class="card" id="loginCard">
-      <h2>Admin kirish</h2>
+  <!-- LOGIN -->
+  <div class="login-wrap" id="loginScreen">
+    <div class="login-card">
+      <div class="login-logo"><i data-lucide="shield-check" class="ico"></i></div>
+      <h1>English Battle</h1>
+      <div class="sub">Admin Panel — boshqaruv markazi</div>
       <label>Maxfiy parol</label>
-      <input type="password" id="adminPass" placeholder="••••••">
-      <button class="btn" onclick="enterAdmin()">Kirish</button>
+      <input type="password" id="adminPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')enterAdmin()">
+      <button class="btn btn-full" id="loginBtn" onclick="enterAdmin()"><i data-lucide="log-in" class="ico-sm"></i> Kirish</button>
       <div class="message" id="loginMsg"></div>
-    </div>
-
-    <!-- ADMIN PANEL (parol to'g'ri bo'lsa) -->
-    <div id="adminPanel" class="hidden">
-
-      <!-- SAVOL QO'SHISH -->
-      <div class="card">
-        <h2>➕ Yangi savol qo'shish</h2>
-        <label>Savol matni</label>
-        <textarea id="qText" rows="2" placeholder="She ___ a teacher."></textarea>
-
-        <div class="row">
-          <div><label>Variant A</label><input id="optA" placeholder="am"></div>
-          <div><label>Variant B</label><input id="optB" placeholder="is"></div>
-        </div>
-        <div class="row">
-          <div><label>Variant C</label><input id="optC" placeholder="are"></div>
-          <div><label>Variant D</label><input id="optD" placeholder="be"></div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label>To'g'ri javob</label>
-            <select id="correct">
-              <option value="A">A</option>
-              <option value="B">B</option>
-              <option value="C">C</option>
-              <option value="D">D</option>
-            </select>
-          </div>
-          <div>
-            <label>Daraja</label>
-            <select id="level">
-              <option value="A1">A1</option>
-              <option value="A2">A2</option>
-              <option value="B1">B1</option>
-              <option value="B2">B2</option>
-              <option value="C1">C1</option>
-              <option value="C2">C2</option>
-            </select>
-          </div>
-          <div>
-            <label>Ko'nikma</label>
-            <select id="skill">
-              <option value="grammar">Grammar</option>
-              <option value="vocabulary">Vocabulary</option>
-              <option value="reading">Reading</option>
-              <option value="everyday">Everyday</option>
-            </select>
-          </div>
-        </div>
-
-        <label>Tushuntirish (ixtiyoriy)</label>
-        <input id="explanation" placeholder="'She' uchun 'is' ishlatiladi.">
-
-        <button class="btn" onclick="addQuestion()">Savol qo'shish</button>
-        <div class="message" id="addMsg"></div>
-      </div>
-
-      <!-- SAVOLLAR RO'YXATI -->
-      <div class="card">
-        <h2>📋 Mavjud savollar <span class="count" id="qCount"></span></h2>
-        <div id="questionsList">Yuklanmoqda...</div>
-      </div>
-
     </div>
   </div>
 
+  <!-- ADMIN -->
+  <div class="admin-app hidden" id="adminApp">
+    <aside class="sidebar">
+      <div class="side-logo"><div class="mark"><i data-lucide="swords" class="ico"></i></div><div class="txt"><div class="l1">ENGLISH</div><div class="l2">BATTLE</div></div></div>
+      <div class="nav-label">Asosiy</div>
+      <div class="nav-item" id="nav-overview" onclick="switchView('overview')"><i data-lucide="layout-dashboard" class="ico"></i> Overview</div>
+      <div class="nav-item active" id="nav-questions" onclick="switchView('questions')"><i data-lucide="library" class="ico"></i> Savollar banki</div>
+      <div class="nav-item" onclick="openImportModal()"><i data-lucide="upload" class="ico"></i> Bulk Import</div>
+      <div class="nav-label">Boshqaruv</div>
+      <div class="nav-item" id="nav-users" onclick="switchView('users')"><i data-lucide="users" class="ico"></i> Foydalanuvchilar</div>
+      <div class="nav-item" id="nav-schools" onclick="switchView('schools')"><i data-lucide="school" class="ico"></i> Maktablar</div>
+      <div class="nav-item" onclick="navSoon('Hisobotlar')"><i data-lucide="bar-chart-3" class="ico"></i> Hisobotlar <span class="tag">tez orada</span></div>
+      <div class="nav-item" onclick="navSoon('Moderatsiya')"><i data-lucide="shield-alert" class="ico"></i> Moderatsiya <span class="dot"></span></div>
+      <div class="nav-label">Tizim</div>
+      <div class="nav-item" id="nav-audit" onclick="switchView('audit')"><i data-lucide="scroll-text" class="ico"></i> Audit Logs</div>
+      <div class="nav-item" onclick="navSoon('Sozlamalar')"><i data-lucide="settings" class="ico"></i> Sozlamalar <span class="tag">tez orada</span></div>
+      <div class="side-foot">
+        <div class="side-user"><div class="ava">A</div><div class="info"><div class="nm">Admin</div><div class="rl">Super Admin</div></div></div>
+        <button class="side-logout" onclick="adminLogout()"><i data-lucide="log-out" class="ico-sm"></i> Chiqish</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topsearch"><i data-lucide="search" class="s-ic ico-sm"></i><input type="text" id="topSearch" placeholder="Tezkor qidiruv..." oninput="onTopSearch(this.value)"><span class="s-kbd">⌘ K</span></div>
+        <div class="top-right">
+          <div class="prod-badge"><span class="pulse"></span> <span>Production</span></div>
+          <div class="top-profile"><div class="ava">A</div><div><div class="nm">Admin</div><div class="rl">Super Admin</div></div></div>
+        </div>
+      </div>
+
+      <div class="content">
+        <!-- ====== QUESTION BANK VIEW ====== -->
+        <div id="view-questions">
+        <div class="security-bar">
+          <div class="sec-chip"><i data-lucide="shield-check" class="ico-sm"></i> Token autentifikatsiya</div>
+          <div class="sec-chip"><i data-lucide="gauge" class="ico-sm"></i> Rate limit faol</div>
+          <div class="sec-chip"><i data-lucide="code" class="ico-sm"></i> XSS himoyasi</div>
+          <div class="sec-chip"><i data-lucide="baby" class="ico-sm"></i> Bolalar xavfsizligi</div>
+          <div class="sec-chip"><i data-lucide="scroll-text" class="ico-sm"></i> Audit log</div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card"><div class="s-ic blue"><i data-lucide="database" class="ico-lg"></i></div><div><div class="s-label">Jami savollar</div><div class="s-val" id="statTotal">—</div></div></div>
+          <div class="stat-card"><div class="s-ic blue"><i data-lucide="book-open" class="ico-lg"></i></div><div><div class="s-label">A1</div><div class="s-val" id="statA1">—</div></div></div>
+          <div class="stat-card"><div class="s-ic purple"><i data-lucide="book-open" class="ico-lg"></i></div><div><div class="s-label">A2</div><div class="s-val" id="statA2">—</div></div></div>
+          <div class="stat-card"><div class="s-ic cyan"><i data-lucide="book-open" class="ico-lg"></i></div><div><div class="s-label">B1</div><div class="s-val" id="statB1">—</div></div></div>
+          <div class="stat-card"><div class="s-ic gold"><i data-lucide="flag" class="ico-lg"></i></div><div><div class="s-label">Tekshiruv kutmoqda</div><div class="s-val" id="statReview">—</div></div></div>
+        </div>
+
+        <div class="layout-grid">
+          <!-- CHAP: Question Bank -->
+          <div>
+            <div class="card">
+              <div class="card-head"><span class="ch-ic"><i data-lucide="plus" class="ico-sm"></i></span> Yangi savol qo'shish <button class="btn btn-sm" style="margin-left:auto;" onclick="openAddModal()"><i data-lucide="plus" class="ico-sm"></i> Qo'shish</button></div>
+              <div class="empty-sm">Savol qo'shish uchun yuqoridagi tugmani bosing</div>
+            </div>
+
+            <div class="card">
+              <div class="card-head"><span class="ch-ic"><i data-lucide="list" class="ico-sm"></i></span> Savollar banki <span class="cnt" id="qCount">—</span></div>
+
+              <div class="toolbar">
+                <div class="tb-search"><i data-lucide="search" class="s-ic ico-sm"></i><input type="text" id="fSearch" placeholder="Savol yoki ID..." oninput="onFilterSearch(this.value)"></div>
+                <select id="fLevel" onchange="applyFilters()"><option value="">Barcha daraja</option><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select>
+                <select id="fSkill" onchange="applyFilters()"><option value="">Barcha ko'nikma</option><option value="grammar">Grammar</option><option value="vocabulary">Vocabulary</option><option value="reading">Reading</option><option value="everyday">Everyday</option></select>
+                <select id="fStatus" onchange="applyFilters()"><option value="">Barcha status</option><option value="published">Chop etilgan</option><option value="draft">Qoralama</option><option value="needs_review">Tekshiruv</option></select>
+                <button class="btn btn-ghost tb-reset" onclick="resetFilters()"><i data-lucide="rotate-ccw" class="ico-sm"></i> Reset</button>
+              </div>
+
+              <div id="questionsList"><div class="loading-row">Yuklanmoqda...</div></div>
+
+              <div class="pagination" id="pagination" style="display:none;">
+                <div class="pg-info" id="pgInfo"></div>
+                <div class="pg-controls">
+                  <select id="pgLimit" onchange="changeLimit(this.value)"><option value="25">25 / sahifa</option><option value="50">50 / sahifa</option><option value="100">100 / sahifa</option></select>
+                  <button class="pg-btn" id="pgPrev" onclick="goPage(currentPage-1)"><i data-lucide="chevron-left" class="ico-sm"></i></button>
+                  <div id="pgNumbers" style="display:flex;gap:6px;"></div>
+                  <button class="pg-btn" id="pgNext" onclick="goPage(currentPage+1)"><i data-lucide="chevron-right" class="ico-sm"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- O'NG: panel -->
+          <div>
+            <!-- Distribution -->
+            <div class="side-card">
+              <div class="side-card-head"><i data-lucide="pie-chart" class="ico-sm"></i> Daraja taqsimoti</div>
+              <div id="distContent"><div class="empty-sm">Yuklanmoqda...</div></div>
+            </div>
+            <!-- Health -->
+            <div class="side-card">
+              <div class="side-card-head"><i data-lucide="activity" class="ico-sm"></i> Savollar salomatligi</div>
+              <div id="healthContent"><div class="empty-sm">Yuklanmoqda...</div></div>
+            </div>
+            <!-- Activity -->
+            <div class="side-card">
+              <div class="side-card-head"><i data-lucide="history" class="ico-sm"></i> So'nggi faollik</div>
+              <div id="activityContent"><div class="empty-sm">Yuklanmoqda...</div></div>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <!-- ====== SCHOOLS VIEW ====== -->
+        <div id="view-schools" style="display:none;">
+          <div class="page-head">
+            <div>
+              <h2 class="page-title-lg">Maktablar</h2>
+              <p class="page-sub">Maktablar bo'yicha o'quvchilar va statistika</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="toolbar">
+              <div class="tb-search"><i data-lucide="search" class="s-ic ico-sm"></i><input type="text" id="schSearch" placeholder="Maktab nomi..." oninput="onSchoolSearch(this.value)"></div>
+              <button class="btn btn-ghost tb-reset" onclick="document.getElementById('schSearch').value='';loadSchools(1)"><i data-lucide="rotate-ccw" class="ico-sm"></i> Reset</button>
+            </div>
+            <div id="schoolsList"><div class="loading-row">Yuklanmoqda...</div></div>
+            <div class="pagination" id="schoolsPagination" style="display:none;">
+              <div class="pg-info" id="schoolsPgInfo"></div>
+              <div class="pg-controls">
+                <button class="pg-btn" id="schoolsPrev" onclick="loadSchools(currentSchoolsPage-1)"><i data-lucide="chevron-left" class="ico-sm"></i></button>
+                <div id="schoolsPgNumbers" style="display:flex;gap:6px;"></div>
+                <button class="pg-btn" id="schoolsNext" onclick="loadSchools(currentSchoolsPage+1)"><i data-lucide="chevron-right" class="ico-sm"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== USERS VIEW ====== -->
+        <div id="view-users" style="display:none;">
+          <div class="page-head">
+            <div>
+              <h2 class="page-title-lg">Foydalanuvchilar</h2>
+              <p class="page-sub">O'quvchi va o'qituvchilarni boshqarish</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="toolbar">
+              <div class="tb-search"><i data-lucide="search" class="s-ic ico-sm"></i><input type="text" id="uSearch" placeholder="Ism yoki telefon..." oninput="onUserSearch(this.value)"></div>
+              <select id="uRole" onchange="loadUsers(1)"><option value="">Barcha rol</option><option value="student">O'quvchi</option><option value="teacher">O'qituvchi</option><option value="school_admin">Maktab admini</option></select>
+              <select id="uLevel" onchange="loadUsers(1)"><option value="">Barcha daraja</option><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select>
+              <button class="btn btn-ghost tb-reset" onclick="resetUserFilters()"><i data-lucide="rotate-ccw" class="ico-sm"></i> Reset</button>
+            </div>
+            <div id="usersList"><div class="loading-row">Yuklanmoqda...</div></div>
+            <div class="pagination" id="usersPagination" style="display:none;">
+              <div class="pg-info" id="usersPgInfo"></div>
+              <div class="pg-controls">
+                <button class="pg-btn" id="usersPrev" onclick="loadUsers(currentUsersPage-1)"><i data-lucide="chevron-left" class="ico-sm"></i></button>
+                <div id="usersPgNumbers" style="display:flex;gap:6px;"></div>
+                <button class="pg-btn" id="usersNext" onclick="loadUsers(currentUsersPage+1)"><i data-lucide="chevron-right" class="ico-sm"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== OVERVIEW VIEW ====== -->
+        <div id="view-overview" style="display:none;">
+          <div class="page-head">
+            <div>
+              <h2 class="page-title-lg">Overview</h2>
+              <p class="page-sub">Platforma umumiy holati — bir qarashda</p>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadOverview()"><i data-lucide="refresh-cw" class="ico-sm"></i> Yangilash</button>
+          </div>
+
+          <div class="ov-stat-grid" id="ovStatGrid">
+            <div class="loading-row" style="grid-column:1/-1;">Yuklanmoqda...</div>
+          </div>
+
+          <div class="ov-two-col">
+            <div class="card">
+              <div class="card-head"><span class="ch-ic"><i data-lucide="trending-up" class="ico-sm"></i></span> Savollar o'sishi (7 kun)</div>
+              <div id="ovGrowth"><div class="empty-sm">Yuklanmoqda...</div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><span class="ch-ic"><i data-lucide="map-pin" class="ico-sm"></i></span> Eng faol viloyatlar</div>
+              <div id="ovRegions"><div class="empty-sm">Yuklanmoqda...</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== AUDIT LOGS VIEW ====== -->
+        <div id="view-audit" style="display:none;">
+          <div class="page-head">
+            <div>
+              <h2 class="page-title-lg">Audit Logs</h2>
+              <p class="page-sub">Barcha admin amallari tarixi — kim nima qildi, qachon</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="toolbar">
+              <select id="auditAction" onchange="loadAuditPage(1)" style="min-width:180px;">
+                <option value="">Barcha amallar</option>
+                <option value="admin_login_success">Tizimga kirish</option>
+                <option value="admin_login_failed">Noto'g'ri kirish</option>
+                <option value="admin_logout">Chiqish</option>
+                <option value="question_created">Savol qo'shish</option>
+                <option value="question_updated">Savol tahrirlash</option>
+                <option value="question_deleted">Savol o'chirish</option>
+                <option value="bulk_import_completed">Bulk import</option>
+              </select>
+              <button class="btn btn-ghost tb-reset" onclick="document.getElementById('auditAction').value='';loadAuditPage(1)"><i data-lucide="rotate-ccw" class="ico-sm"></i> Reset</button>
+              <button class="btn btn-ghost tb-reset" onclick="loadAuditPage(currentAuditPage)" style="margin-left:auto;"><i data-lucide="refresh-cw" class="ico-sm"></i> Yangilash</button>
+            </div>
+            <div id="auditList"><div class="loading-row">Yuklanmoqda...</div></div>
+            <div class="pagination" id="auditPagination" style="display:none;">
+              <div class="pg-info" id="auditPgInfo"></div>
+              <div class="pg-controls">
+                <button class="pg-btn" id="auditPrev" onclick="loadAuditPage(currentAuditPage-1)"><i data-lucide="chevron-left" class="ico-sm"></i></button>
+                <div id="auditPgNumbers" style="display:flex;gap:6px;"></div>
+                <button class="pg-btn" id="auditNext" onclick="loadAuditPage(currentAuditPage+1)"><i data-lucide="chevron-right" class="ico-sm"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD/EDIT MODAL -->
+  <div class="modal-overlay" id="formModal">
+    <div class="modal-box wide">
+      <div class="modal-head-wide">
+        <div class="mh-ic"><i data-lucide="file-plus" class="ico"></i></div>
+        <div class="mh-title" id="formTitle">Yangi savol</div>
+        <div class="mh-close" onclick="closeFormModal()"><i data-lucide="x" class="ico"></i></div>
+      </div>
+      <input type="hidden" id="editId">
+      <div class="field"><label>Savol matni</label><textarea id="qText" rows="2" placeholder="She ___ a teacher."></textarea></div>
+      <div class="row" style="margin-bottom:16px;"><div><label>Variant A</label><input id="optA" placeholder="am"></div><div><label>Variant B</label><input id="optB" placeholder="is"></div></div>
+      <div class="row" style="margin-bottom:16px;"><div><label>Variant C</label><input id="optC" placeholder="are"></div><div><label>Variant D</label><input id="optD" placeholder="be"></div></div>
+      <div class="row" style="margin-bottom:16px;">
+        <div><label>To'g'ri javob</label><select id="correct"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
+        <div><label>Daraja</label><select id="level"><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select></div>
+        <div><label>Ko'nikma</label><select id="skill"><option value="grammar">Grammar</option><option value="vocabulary">Vocabulary</option><option value="reading">Reading</option><option value="everyday">Everyday</option></select></div>
+      </div>
+      <div class="row" style="margin-bottom:16px;">
+        <div><label>Status</label><select id="status"><option value="published">Chop etilgan</option><option value="draft">Qoralama</option><option value="needs_review">Tekshiruv kutmoqda</option></select></div>
+        <div><label>Tushuntirish (ixtiyoriy)</label><input id="explanation" placeholder="'She' uchun 'is'."></div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeFormModal()">Bekor qilish</button>
+        <button class="modal-btn" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;" id="formSubmitBtn" onclick="submitForm()">Saqlash</button>
+      </div>
+      <div class="message" id="formMsg"></div>
+    </div>
+  </div>
+
+  <!-- USER DETAIL MODAL -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal-box wide" style="max-width:520px;">
+      <div class="modal-head-wide">
+        <div class="mh-ic" id="umAva" style="font-weight:700;font-size:18px;">?</div>
+        <div><div class="mh-title" id="umName">—</div><div style="font-size:12.5px;color:var(--text-dim);" id="umRole">—</div></div>
+        <div class="mh-close" onclick="closeUserModal()"><i data-lucide="x" class="ico"></i></div>
+      </div>
+      <div id="umBody"><div class="loading-row">Yuklanmoqda...</div></div>
+    </div>
+  </div>
+
+  <!-- TASDIQ MODAL (universal: ban, rol) -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box">
+      <div class="modal-icon" id="cmIcon"><i data-lucide="alert-triangle" class="ico-lg"></i></div>
+      <div class="modal-title" id="cmTitle">Tasdiqlash</div>
+      <div class="modal-text" id="cmText">—</div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeConfirm()">Bekor qilish</button>
+        <button class="modal-btn modal-btn-confirm" id="cmConfirmBtn" onclick="execConfirm()">Tasdiqlash</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE MODAL -->
+  <div class="modal-overlay" id="delModal">
+    <div class="modal-box">
+      <div class="modal-icon"><i data-lucide="trash-2" class="ico-lg"></i></div>
+      <div class="modal-title">Savolni o'chirish</div>
+      <div class="modal-text">Bu amalni qaytarib bo'lmaydi. Rostdan o'chirmoqchimisiz?</div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeDelModal()">Bekor qilish</button>
+        <button class="modal-btn modal-btn-confirm" onclick="confirmDelete()">O'chirish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BULK IMPORT MODAL -->
+  <div class="modal-overlay" id="importModal">
+    <div class="modal-box wide">
+      <div class="modal-head-wide">
+        <div class="mh-ic"><i data-lucide="upload" class="ico"></i></div>
+        <div class="mh-title">Bulk Import (CSV)</div>
+        <div class="mh-close" onclick="closeImportModal()"><i data-lucide="x" class="ico"></i></div>
+      </div>
+
+      <!-- Qadamlar ko'rsatkichi -->
+      <div class="imp-steps">
+        <div class="imp-step active" id="impStep1"><span class="imp-num">1</span> Yuklash</div>
+        <div class="imp-step" id="impStep2"><span class="imp-num">2</span> Tekshirish</div>
+        <div class="imp-step" id="impStep3"><span class="imp-num">3</span> Ko'rib chiqish</div>
+        <div class="imp-step" id="impStep4"><span class="imp-num">4</span> Import</div>
+      </div>
+
+      <!-- 1: Upload -->
+      <div id="impUpload">
+        <div class="imp-drop" onclick="document.getElementById('xlsxFile').click()">
+          <i data-lucide="file-spreadsheet" class="ico-lg" style="margin:0 auto 10px;color:var(--green);"></i>
+          <div style="font-weight:600;margin-bottom:4px;">Excel faylni tanlang (.xlsx)</div>
+          <div style="font-size:12.5px;color:var(--text-faint);">savol, option A–D, to'g'ri javob, daraja, ko'nikma, explanation</div>
+        </div>
+        <input type="file" id="xlsxFile" accept=".xlsx,.xls" style="display:none;" onchange="handleXlsxFile(this.files[0])">
+        <div style="font-size:12px;color:var(--text-faint);margin-top:12px;line-height:1.6;">
+          <b>Ustunlar (birinchi qator sarlavha):</b> savol · option A · option B · option C · option D · to'g'ri javob (A/B/C/D) · daraja (A1–C2) · ko'nikma · explanation (ixtiyoriy).
+          <a href="#" onclick="downloadXlsxTemplate();return false;" style="color:var(--accent);">Namuna Excel yuklab olish</a>
+        </div>
+      </div>
+
+      <!-- 2-3: Validate + Preview -->
+      <div id="impPreview" style="display:none;">
+        <div class="imp-summary" id="impSummary"></div>
+        <div class="imp-table-wrap"><table class="imp-table" id="impTable"></table></div>
+      </div>
+
+      <!-- 4: Result -->
+      <div id="impResult" style="display:none;"></div>
+
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="modal-btn modal-btn-cancel" onclick="closeImportModal()">Yopish</button>
+        <button class="modal-btn" id="impActionBtn" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;display:none;" onclick="doImport()">Import qilish</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
   <script>
-    let adminPassword = "";
+    // ===== TOKEN AUTH (parol localStorage'da SAQLANMAYDI, faqat token) =====
+    var ADMIN_TOKEN = sessionStorage.getItem("adminToken") || "";
+    var currentPage = 1, currentLimit = 25, totalPages = 1;
+    var searchTimer = null;
+
+    function icons() { if (window.lucide) lucide.createIcons(); }
+    icons();
+
+    // Token bilan fetch — har so'rovda Authorization header
+    async function apiGet(url) {
+      var res = await fetch(url, { headers: { "Authorization": "Bearer " + ADMIN_TOKEN } });
+      if (res.status === 401) { forceLogout(); throw new Error("auth"); }
+      return res;
+    }
+    async function apiPost(url, body) {
+      var res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ADMIN_TOKEN }, body: JSON.stringify(body || {}) });
+      if (res.status === 401) { forceLogout(); throw new Error("auth"); }
+      return res;
+    }
+
+    // Sahifa ochilganda — token bormi tekshiramiz
+    window.addEventListener("DOMContentLoaded", async function () {
+      if (ADMIN_TOKEN) {
+        try {
+          var res = await apiGet("/admin/me");
+          if (res.ok) { showPanel(); return; }
+        } catch (e) {}
+      }
+      // Token yo'q yoki yaroqsiz — login ko'rsatamiz
+    });
 
     async function enterAdmin() {
       const pass = document.getElementById("adminPass").value;
       if (!pass) return showMsg("loginMsg", "Parolni kiriting", "error");
-
-      // Parolni tekshirish uchun savollarni so'raymiz
+      const btn = document.getElementById("loginBtn");
+      btn.disabled = true; btn.textContent = "Tekshirilmoqda...";
       try {
-        const res = await fetch("/admin/questions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password: pass }),
-        });
-
-        if (res.status === 401) {
-          return showMsg("loginMsg", "Noto'g'ri parol", "error");
-        }
-
+        const res = await fetch("/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pass }) });
         const data = await res.json();
-        adminPassword = pass; // parolni saqlash (keyingi so'rovlar uchun)
-
-        document.getElementById("loginCard").classList.add("hidden");
-        document.getElementById("adminPanel").classList.remove("hidden");
-        renderQuestions(data.questions);
+        if (!res.ok) { showMsg("loginMsg", data.error || "Xato", "error"); return; }
+        ADMIN_TOKEN = data.token;
+        sessionStorage.setItem("adminToken", ADMIN_TOKEN); // token saqlanadi (parol EMAS)
+        document.getElementById("adminPass").value = "";
+        showPanel();
       } catch (err) {
         showMsg("loginMsg", "Server bilan aloqa yo'q", "error");
+      } finally {
+        btn.disabled = false; btn.innerHTML = '<i data-lucide="log-in" class="ico-sm"></i> Kirish'; icons();
       }
     }
 
-    async function addQuestion() {
-      const body = {
-        password: adminPassword,
-        question_text: document.getElementById("qText").value,
-        option_a: document.getElementById("optA").value,
-        option_b: document.getElementById("optB").value,
-        option_c: document.getElementById("optC").value,
-        option_d: document.getElementById("optD").value,
-        correct_option: document.getElementById("correct").value,
-        cefr_level: document.getElementById("level").value,
-        skill: document.getElementById("skill").value,
-        explanation: document.getElementById("explanation").value,
-      };
-
-      try {
-        const res = await fetch("/admin/questions/add", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        const data = await res.json();
-
-        if (!res.ok) return showMsg("addMsg", data.error || "Xato", "error");
-
-        showMsg("addMsg", "✅ " + data.message, "success");
-        // Formani tozalash
-        ["qText","optA","optB","optC","optD","explanation"].forEach(id =>
-          document.getElementById(id).value = "");
-        loadQuestions(); // ro'yxatni yangilash
-      } catch (err) {
-        showMsg("addMsg", "Server xatosi", "error");
-      }
+    function showPanel() {
+      document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("adminApp").classList.remove("hidden");
+      icons();
+      loadAll();
+    }
+    function forceLogout() {
+      ADMIN_TOKEN = ""; sessionStorage.removeItem("adminToken");
+      document.getElementById("adminApp").classList.add("hidden");
+      document.getElementById("loginScreen").classList.remove("hidden");
+    }
+    async function adminLogout() {
+      try { await apiPost("/admin/logout", {}); } catch (e) {}
+      forceLogout();
     }
 
+    // Hammasini yuklash
+    function loadAll() {
+      loadQuestions();
+      loadStats();
+      loadHealth();
+      loadActivity();
+    }
+
+    // ===== QUESTION BANK =====
     async function loadQuestions() {
-      const res = await fetch("/admin/questions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: adminPassword }),
-      });
-      const data = await res.json();
-      renderQuestions(data.questions);
+      var list = document.getElementById("questionsList");
+      list.innerHTML = '<div class="loading-row">Yuklanmoqda...</div>';
+      try {
+        var qs = buildQuery();
+        var res = await apiGet("/admin/questions?" + qs);
+        var data = await res.json();
+        renderQuestions(data.questions || []);
+        renderPagination(data.pagination || {});
+      } catch (err) {
+        if (err.message !== "auth") list.innerHTML = '<div class="empty-state"><i data-lucide="alert-circle" class="ico"></i><div>Yuklab bo\'lmadi</div><button class="btn btn-sm btn-ghost" style="margin-top:12px;" onclick="loadQuestions()">Qayta urinish</button></div>';
+        icons();
+      }
+    }
+
+    function buildQuery() {
+      var p = new URLSearchParams();
+      p.set("page", currentPage); p.set("limit", currentLimit);
+      var s = document.getElementById("fSearch").value.trim();
+      var lv = document.getElementById("fLevel").value;
+      var sk = document.getElementById("fSkill").value;
+      var st = document.getElementById("fStatus").value;
+      if (s) p.set("search", s);
+      if (lv) p.set("level", lv);
+      if (sk) p.set("skill", sk);
+      if (st) p.set("status", st);
+      return p.toString();
     }
 
     function renderQuestions(questions) {
-      document.getElementById("qCount").textContent = "(" + questions.length + " ta)";
-      const list = document.getElementById("questionsList");
-
+      document.getElementById("qCount").textContent = questions.length + " ta (shu sahifada)";
+      var list = document.getElementById("questionsList");
       if (questions.length === 0) {
-        list.innerHTML = '<p class="count">Hali savol yo\'q</p>';
+        list.innerHTML = '<div class="empty-state"><i data-lucide="inbox" class="ico"></i><div>Savol topilmadi</div></div>';
+        icons(); return;
+      }
+      var stLabels = { published: "Chop etilgan", draft: "Qoralama", needs_review: "Tekshiruv" };
+      var rows = questions.map(function (q) {
+        var lvl = q.cefr_level || "A1";
+        var st = q.status || "published";
+        return '<tr>' +
+          '<td class="qb-id">Q-' + q.id + '</td>' +
+          '<td class="qb-question"><div class="qb-qtext">' + esc(q.question_text) + '</div></td>' +
+          '<td><span class="lvl-pill lvl-' + esc(lvl) + '">' + esc(lvl) + '</span></td>' +
+          '<td class="qb-skill">' + esc(q.skill || "grammar") + '</td>' +
+          '<td><span class="st-pill st-' + esc(st) + '"><span class="sdot"></span>' + (stLabels[st] || st) + '</span></td>' +
+          '<td class="qb-date">' + fmtDate(q.updated_at || q.created_at) + '</td>' +
+          '<td><div class="qb-actions">' +
+            '<button class="icon-btn edit" onclick="openEditModal(' + q.id + ')"><i data-lucide="pencil" class="ico-sm"></i></button>' +
+            '<button class="icon-btn danger" onclick="askDelete(' + q.id + ')"><i data-lucide="trash-2" class="ico-sm"></i></button>' +
+          '</div></td></tr>';
+      }).join("");
+      list.innerHTML = '<div class="qbank-wrap"><table class="qbank-table"><thead><tr><th>ID</th><th>Savol</th><th>Daraja</th><th>Ko\'nikma</th><th>Status</th><th>Yangilangan</th><th>Amal</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      icons();
+    }
+
+    var _allQuestionsCache = {}; // edit uchun cache
+    function renderPagination(pg) {
+      totalPages = pg.totalPages || 1;
+      currentPage = pg.page || 1;
+      var pagEl = document.getElementById("pagination");
+      if (!pg.total || pg.total === 0) { pagEl.style.display = "none"; return; }
+      pagEl.style.display = "flex";
+      var from = (pg.page - 1) * pg.limit + 1;
+      var to = Math.min(pg.page * pg.limit, pg.total);
+      document.getElementById("pgInfo").textContent = from + "–" + to + " / jami " + pg.total + " ta savol";
+      document.getElementById("pgPrev").disabled = pg.page <= 1;
+      document.getElementById("pgNext").disabled = pg.page >= totalPages;
+      // Sahifa raqamlari (max 5)
+      var nums = ""; var start = Math.max(1, currentPage - 2); var end = Math.min(totalPages, start + 4);
+      start = Math.max(1, end - 4);
+      for (var i = start; i <= end; i++) {
+        nums += '<button class="pg-btn' + (i === currentPage ? ' active' : '') + '" onclick="goPage(' + i + ')">' + i + '</button>';
+      }
+      document.getElementById("pgNumbers").innerHTML = nums;
+      icons();
+    }
+    function goPage(p) { if (p < 1 || p > totalPages) return; currentPage = p; loadQuestions(); }
+    function changeLimit(v) { currentLimit = parseInt(v); currentPage = 1; loadQuestions(); }
+
+    // Filtr
+    function applyFilters() { currentPage = 1; loadQuestions(); }
+    function onFilterSearch(v) { clearTimeout(searchTimer); searchTimer = setTimeout(function () { currentPage = 1; loadQuestions(); }, 300); }
+    function onTopSearch(v) { document.getElementById("fSearch").value = v; onFilterSearch(v); }
+    function resetFilters() {
+      document.getElementById("fSearch").value = "";
+      document.getElementById("fLevel").value = "";
+      document.getElementById("fSkill").value = "";
+      document.getElementById("fStatus").value = "";
+      document.getElementById("topSearch").value = "";
+      currentPage = 1; loadQuestions();
+    }
+
+    // ===== ADD/EDIT MODAL =====
+    function openAddModal() {
+      document.getElementById("formTitle").textContent = "Yangi savol";
+      document.getElementById("editId").value = "";
+      ["qText","optA","optB","optC","optD","explanation"].forEach(function (id) { document.getElementById(id).value = ""; document.getElementById(id).classList.remove("invalid"); });
+      document.getElementById("correct").value = "A";
+      document.getElementById("level").value = "A1";
+      document.getElementById("skill").value = "grammar";
+      document.getElementById("status").value = "published";
+      hideMsg("formMsg");
+      document.getElementById("formModal").classList.add("show");
+      icons();
+    }
+    async function openEditModal(id) {
+      // Savolni serverdan olamiz (joriy sahifada bo'lsa cache'dan)
+      try {
+        var res = await apiGet("/admin/questions?search=" + id + "&limit=100");
+        var data = await res.json();
+        var q = (data.questions || []).find(function (x) { return x.id === id; });
+        if (!q) { toast("Savol topilmadi", "error"); return; }
+        document.getElementById("formTitle").textContent = "Savolni tahrirlash";
+        document.getElementById("editId").value = q.id;
+        document.getElementById("qText").value = q.question_text || "";
+        document.getElementById("optA").value = q.option_a || "";
+        document.getElementById("optB").value = q.option_b || "";
+        document.getElementById("optC").value = q.option_c || "";
+        document.getElementById("optD").value = q.option_d || "";
+        document.getElementById("correct").value = q.correct_option || "A";
+        document.getElementById("level").value = q.cefr_level || "A1";
+        document.getElementById("skill").value = q.skill || "grammar";
+        document.getElementById("status").value = q.status || "published";
+        document.getElementById("explanation").value = q.explanation || "";
+        ["qText","optA","optB","optC","optD"].forEach(function (idd) { document.getElementById(idd).classList.remove("invalid"); });
+        hideMsg("formMsg");
+        document.getElementById("formModal").classList.add("show");
+        icons();
+      } catch (err) { if (err.message !== "auth") toast("Yuklab bo'lmadi", "error"); }
+    }
+    function closeFormModal() { document.getElementById("formModal").classList.remove("show"); }
+
+    async function submitForm() {
+      var qText = document.getElementById("qText").value.trim();
+      var oA = document.getElementById("optA").value.trim();
+      var oB = document.getElementById("optB").value.trim();
+      var oC = document.getElementById("optC").value.trim();
+      var oD = document.getElementById("optD").value.trim();
+
+      // Validatsiya + qizil border
+      var bad = false;
+      [["qText",qText],["optA",oA],["optB",oB],["optC",oC],["optD",oD]].forEach(function (pair) {
+        var el = document.getElementById(pair[0]);
+        if (!pair[1]) { el.classList.add("invalid"); bad = true; } else el.classList.remove("invalid");
+      });
+      if (bad) return showMsg("formMsg", "Bo'sh maydonlarni to'ldiring", "error");
+      if (qText.length < 3) { document.getElementById("qText").classList.add("invalid"); return showMsg("formMsg", "Savol matni juda qisqa", "error"); }
+      var opts = [oA.toLowerCase(), oB.toLowerCase(), oC.toLowerCase(), oD.toLowerCase()];
+      if (new Set(opts).size !== 4) return showMsg("formMsg", "Variantlar bir-biridan farq qilishi kerak", "error");
+
+      var body = {
+        question_text: qText, option_a: oA, option_b: oB, option_c: oC, option_d: oD,
+        correct_option: document.getElementById("correct").value,
+        cefr_level: document.getElementById("level").value,
+        skill: document.getElementById("skill").value,
+        status: document.getElementById("status").value,
+        explanation: document.getElementById("explanation").value.trim(),
+      };
+      var editId = document.getElementById("editId").value;
+      var btn = document.getElementById("formSubmitBtn");
+      btn.disabled = true; btn.textContent = "Saqlanmoqda...";
+      try {
+        var url, msg;
+        if (editId) { body.id = parseInt(editId); url = "/admin/questions/edit"; msg = "Savol yangilandi"; }
+        else { url = "/admin/questions/add"; msg = "Savol qo'shildi"; }
+        var res = await apiPost(url, body);
+        var data = await res.json();
+        if (!res.ok) { showMsg("formMsg", data.error || "Xato", "error"); return; }
+        closeFormModal();
+        toast(msg, "success");
+        loadAll();
+      } catch (err) {
+        if (err.message !== "auth") showMsg("formMsg", "Server xatosi", "error");
+      } finally {
+        btn.disabled = false; btn.textContent = "Saqlash";
+      }
+    }
+
+    // ===== DELETE =====
+    var _delId = null;
+    function askDelete(id) { _delId = id; document.getElementById("delModal").classList.add("show"); }
+    function closeDelModal() { _delId = null; document.getElementById("delModal").classList.remove("show"); }
+    async function confirmDelete() {
+      if (_delId == null) return;
+      var id = _delId; closeDelModal();
+      try {
+        var res = await apiPost("/admin/questions/delete", { id: id });
+        if (res.ok) { toast("Savol o'chirildi", "success"); loadAll(); }
+        else toast("O'chirishda xato", "error");
+      } catch (err) { if (err.message !== "auth") toast("Server xatosi", "error"); }
+    }
+
+    // ===== STATS =====
+    async function loadStats() {
+      try {
+        var res = await apiGet("/admin/questions/stats");
+        var d = await res.json();
+        document.getElementById("statTotal").textContent = d.totalQuestions;
+        document.getElementById("statA1").textContent = d.levels.A1;
+        document.getElementById("statA2").textContent = d.levels.A2;
+        document.getElementById("statB1").textContent = d.levels.B1;
+        document.getElementById("statReview").textContent = (d.status && d.status.needs_review) || 0;
+        renderDistribution(d);
+      } catch (err) {}
+    }
+
+    function renderDistribution(d) {
+      var el = document.getElementById("distContent");
+      if (!d.totalQuestions) { el.innerHTML = '<div class="empty-sm">Hali savol yo\'q</div>'; return; }
+      var colors = { A1: "#5b8cff", A2: "#a855f7", B1: "#38e1ff", B2: "#34d399", C1: "#fbbf24", C2: "#f87171" };
+      var levels = ["A1","A2","B1","B2","C1","C2"];
+      var total = d.totalQuestions;
+      // Donut segmentlari (SVG stroke-dasharray)
+      var radius = 52, circ = 2 * Math.PI * radius;
+      var offset = 0; var segs = "";
+      levels.forEach(function (lv) {
+        var val = d.levels[lv] || 0;
+        if (val === 0) return;
+        var frac = val / total;
+        var len = frac * circ;
+        segs += '<circle cx="60" cy="60" r="' + radius + '" fill="none" stroke="' + colors[lv] + '" stroke-width="14" stroke-dasharray="' + len + ' ' + (circ - len) + '" stroke-dashoffset="' + (-offset) + '"></circle>';
+        offset += len;
+      });
+      var legend = levels.map(function (lv) {
+        var val = d.levels[lv] || 0;
+        var pct = total ? Math.round(val / total * 100) : 0;
+        return '<div class="lg-item"><span class="lg-dot" style="background:' + colors[lv] + '"></span><span class="lg-name">' + lv + '</span><span class="lg-val">' + val + ' (' + pct + '%)</span></div>';
+      }).join("");
+      el.innerHTML =
+        '<div class="donut-wrap"><div class="donut"><svg width="120" height="120">' +
+          '<circle cx="60" cy="60" r="52" fill="none" stroke="rgba(99,130,220,0.12)" stroke-width="14"></circle>' + segs +
+        '</svg><div class="donut-center"><div class="dc-val">' + total + '</div><div class="dc-lbl">Jami</div></div></div>' +
+        '<div class="donut-legend">' + legend + '</div></div>';
+    }
+
+    // ===== HEALTH =====
+    async function loadHealth() {
+      try {
+        var res = await apiGet("/admin/questions/health");
+        var d = await res.json();
+        renderHealth(d);
+      } catch (err) {}
+    }
+    function renderHealth(d) {
+      var el = document.getElementById("healthContent");
+      if (!d.totalQuestions) { el.innerHTML = '<div class="empty-sm">Hali savol yo\'q</div>'; return; }
+      var score = d.validationScore || 0;
+      var radius = 36, circ = 2 * Math.PI * radius;
+      var fill = (score / 100) * circ;
+      var ringColor = score >= 90 ? "#34d399" : score >= 70 ? "#fbbf24" : "#f87171";
+      el.innerHTML =
+        '<div class="health-score">' +
+          '<div class="hs-ring"><svg width="84" height="84">' +
+            '<circle cx="42" cy="42" r="36" fill="none" stroke="rgba(99,130,220,0.12)" stroke-width="8"></circle>' +
+            '<circle cx="42" cy="42" r="36" fill="none" stroke="' + ringColor + '" stroke-width="8" stroke-linecap="round" stroke-dasharray="' + fill + ' ' + (circ - fill) + '"></circle>' +
+          '</svg><div class="hs-center"><div class="hs-pct">' + score + '%</div><div class="hs-lbl">Validatsiya</div></div></div>' +
+          '<div class="hs-meta">' +
+            '<div class="hm-row"><span class="hm-k">Valid savollar</span><span class="hm-v ok">' + d.validQuestions + '</span></div>' +
+            '<div class="hm-row"><span class="hm-k">Jami</span><span class="hm-v">' + d.totalQuestions + '</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="health-breakdown">' +
+          hbRow("file-x", "Maydon yetishmaydi", d.missingFields) +
+          hbRow("key", "Noto'g'ri javob kaliti", d.invalidAnswerKey) +
+          hbRow("copy", "Duplicate xavfi", d.duplicateRisk) +
+          hbRow("eye", "Tekshiruv kutmoqda", d.needsReview) +
+          hbRow("check-circle", "Chop etilgan", d.published, "ok") +
+          hbRow("file-edit", "Qoralama", d.draft) +
+        '</div>';
+      icons();
+    }
+    function hbRow(ic, label, val, forceClass) {
+      var cls = forceClass || (val > 0 ? (label.indexOf("Maydon") > -1 || label.indexOf("Noto") > -1 ? "bad" : "warn") : "");
+      return '<div class="hb-row"><span class="hb-k"><i data-lucide="' + ic + '" class="ico-sm"></i>' + label + '</span><span class="hb-v ' + cls + '">' + val + '</span></div>';
+    }
+
+    // ===== ACTIVITY =====
+    async function loadActivity() {
+      try {
+        var res = await apiGet("/admin/audit-logs?limit=6");
+        var d = await res.json();
+        renderActivity(d.logs || []);
+      } catch (err) {}
+    }
+    function renderActivity(logs) {
+      var el = document.getElementById("activityContent");
+      if (logs.length === 0) { el.innerHTML = '<div class="empty-sm">Hali faollik yo\'q</div>'; return; }
+      var map = {
+        question_created: { ic: "plus", cls: "create", txt: "savol qo'shildi" },
+        question_updated: { ic: "pencil", cls: "edit", txt: "savol tahrirlandi" },
+        question_deleted: { ic: "trash-2", cls: "delete", txt: "savol o'chirildi" },
+        admin_login_success: { ic: "log-in", cls: "login", txt: "tizimga kirdi" },
+        admin_login_failed: { ic: "shield-x", cls: "delete", txt: "noto'g'ri kirish urinishi" },
+        admin_logout: { ic: "log-out", cls: "other", txt: "tizimdan chiqdi" },
+      };
+      el.innerHTML = '<div class="activity-list">' + logs.map(function (l) {
+        var m = map[l.action] || { ic: "circle", cls: "other", txt: l.action };
+        var detail = l.entity_id ? " (Q-" + l.entity_id + ")" : "";
+        return '<div class="act-item"><div class="act-ic ' + m.cls + '"><i data-lucide="' + m.ic + '" class="ico-sm"></i></div>' +
+          '<div class="act-body"><div class="act-txt"><b>' + esc(l.admin_name || "Admin") + '</b> ' + m.txt + detail + '</div>' +
+          '<div class="act-time">' + timeAgo(l.created_at) + '</div></div></div>';
+      }).join("") + '</div>';
+      icons();
+    }
+
+    // ===== VIEW ALMASHTIRISH (Question Bank ↔ Audit Logs ↔ ...) =====
+    var currentView = "questions";
+    function switchView(view) {
+      currentView = view;
+      // Barcha view'larni yashiramiz
+      var views = ["questions", "audit", "overview", "users", "schools"];
+      views.forEach(function (v) {
+        var el = document.getElementById("view-" + v);
+        if (el) el.style.display = (v === view) ? "block" : "none";
+        var nav = document.getElementById("nav-" + v);
+        if (nav) { if (v === view) nav.classList.add("active"); else nav.classList.remove("active"); }
+      });
+      // View ochilganda ma'lumot yuklaymiz
+      if (view === "audit") loadAuditPage(1);
+      if (view === "overview") loadOverview();
+      if (view === "users") loadUsers(1);
+      if (view === "schools") loadSchools(1);
+    }
+
+    // ===== AUDIT LOGS =====
+    var currentAuditPage = 1, auditTotalPages = 1;
+    async function loadAuditPage(page) {
+      if (page < 1) return;
+      currentAuditPage = page;
+      var list = document.getElementById("auditList");
+      list.innerHTML = '<div class="loading-row">Yuklanmoqda...</div>';
+      try {
+        var action = document.getElementById("auditAction").value;
+        var url = "/admin/audit-logs?page=" + page + "&limit=20" + (action ? "&action=" + action : "");
+        var res = await apiGet(url);
+        var data = await res.json();
+        renderAuditLogs(data.logs || []);
+        renderAuditPagination(data.pagination || {});
+      } catch (err) {
+        if (err.message !== "auth") list.innerHTML = '<div class="empty-state"><i data-lucide="alert-circle" class="ico"></i><div>Yuklab bo\'lmadi</div></div>';
+        icons();
+      }
+    }
+
+    function renderAuditLogs(logs) {
+      var list = document.getElementById("auditList");
+      if (logs.length === 0) {
+        list.innerHTML = '<div class="empty-state"><i data-lucide="scroll-text" class="ico"></i><div>Hali audit yozuvi yo\'q</div></div>';
+        icons(); return;
+      }
+      var map = {
+        question_created: { ic: "plus", cls: "au-create", txt: "Savol qo'shildi" },
+        question_updated: { ic: "pencil", cls: "au-edit", txt: "Savol tahrirlandi" },
+        question_deleted: { ic: "trash-2", cls: "au-delete", txt: "Savol o'chirildi" },
+        admin_login_success: { ic: "log-in", cls: "au-login", txt: "Tizimga kirdi" },
+        admin_login_failed: { ic: "shield-x", cls: "au-delete", txt: "Noto'g'ri kirish" },
+        admin_logout: { ic: "log-out", cls: "au-other", txt: "Tizimdan chiqdi" },
+        bulk_import_completed: { ic: "upload", cls: "au-create", txt: "Bulk import" },
+      };
+      var rows = logs.map(function (l) {
+        var m = map[l.action] || { ic: "circle", cls: "au-other", txt: l.action };
+        var entity = l.entity_id ? '<span class="au-entity">Q-' + esc(l.entity_id) + '</span>' : '<span style="color:var(--text-faint)">—</span>';
+        var details = l.details ? esc(l.details) : '<span style="color:var(--text-faint)">—</span>';
+        return '<tr>' +
+          '<td class="au-time">' + fmtDateTime(l.created_at) + '</td>' +
+          '<td class="au-admin">' + esc(l.admin_name || "Admin") + '</td>' +
+          '<td><span class="au-badge ' + m.cls + '"><i data-lucide="' + m.ic + '" class="ico-sm"></i>' + m.txt + '</span></td>' +
+          '<td>' + entity + '</td>' +
+          '<td>' + details + '</td>' +
+          '<td class="au-ip">' + esc(l.ip_address || "—") + '</td>' +
+          '</tr>';
+      }).join("");
+      list.innerHTML = '<div class="qbank-wrap"><table class="audit-table"><thead><tr><th>Vaqt</th><th>Admin</th><th>Amal</th><th>Obyekt</th><th>Tafsilot</th><th>IP</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      icons();
+    }
+
+    function renderAuditPagination(pg) {
+      auditTotalPages = pg.totalPages || 1;
+      var pagEl = document.getElementById("auditPagination");
+      if (!pg.total || pg.total === 0) { pagEl.style.display = "none"; return; }
+      pagEl.style.display = "flex";
+      var from = (pg.page - 1) * pg.limit + 1;
+      var to = Math.min(pg.page * pg.limit, pg.total);
+      document.getElementById("auditPgInfo").textContent = from + "–" + to + " / jami " + pg.total + " ta yozuv";
+      document.getElementById("auditPrev").disabled = pg.page <= 1;
+      document.getElementById("auditNext").disabled = pg.page >= auditTotalPages;
+      var nums = ""; var start = Math.max(1, currentAuditPage - 2); var end = Math.min(auditTotalPages, start + 4);
+      start = Math.max(1, end - 4);
+      for (var i = start; i <= end; i++) {
+        nums += '<button class="pg-btn' + (i === currentAuditPage ? ' active' : '') + '" onclick="loadAuditPage(' + i + ')">' + i + '</button>';
+      }
+      document.getElementById("auditPgNumbers").innerHTML = nums;
+      icons();
+    }
+
+    // Sana + vaqt formatlash (audit uchun aniqroq)
+    function fmtDateTime(iso) {
+      if (!iso) return "—";
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return "—";
+      var m = ["Yan","Fev","Mar","Apr","May","Iyun","Iyul","Avg","Sen","Okt","Noy","Dek"];
+      var hh = String(d.getHours()).padStart(2, "0");
+      var mm = String(d.getMinutes()).padStart(2, "0");
+      return d.getDate() + " " + m[d.getMonth()] + ", " + hh + ":" + mm;
+    }
+
+    // ===== OVERVIEW (Dashboard) =====
+    async function loadOverview() {
+      try {
+        var res = await apiGet("/admin/overview");
+        var d = await res.json();
+        renderOverviewStats(d);
+        renderGrowth(d.questionGrowth || []);
+        renderRegions(d.topRegions || []);
+      } catch (err) {
+        if (err.message !== "auth") {
+          document.getElementById("ovStatGrid").innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i data-lucide="alert-circle" class="ico"></i><div>Yuklab bo\'lmadi</div></div>';
+          icons();
+        }
+      }
+    }
+
+    function renderOverviewStats(d) {
+      var cards = [
+        { ic: "database", cls: "blue", label: "Jami savollar", val: d.totalQuestions, foot: "savollar bankida" },
+        { ic: "users", cls: "cyan", label: "O'quvchilar", val: d.totalStudents, foot: d.activeToday + " ta bugun faol" },
+        { ic: "graduation-cap", cls: "purple", label: "O'qituvchilar", val: d.totalTeachers, foot: "o'qituvchi va admin" },
+        { ic: "school", cls: "green", label: "Maktablar", val: d.totalSchools, foot: "ro'yxatdan o'tgan" },
+        { ic: "swords", cls: "gold", label: "Janglar", val: d.totalBattles, foot: "jami o'ynalgan" },
+      ];
+      document.getElementById("ovStatGrid").innerHTML = cards.map(function (c) {
+        return '<div class="ov-card"><div class="ov-top"><div class="ov-ic s-ic ' + c.cls + '"><i data-lucide="' + c.ic + '" class="ico-lg"></i></div>' +
+          '<div><div class="ov-label">' + c.label + '</div></div></div>' +
+          '<div class="ov-val">' + c.val + '</div>' +
+          '<div class="ov-foot"><i data-lucide="info" class="ico-sm" style="width:13px;height:13px;"></i> ' + c.foot + '</div></div>';
+      }).join("");
+      icons();
+    }
+
+    function renderGrowth(growth) {
+      var el = document.getElementById("ovGrowth");
+      if (!growth || growth.length === 0) { el.innerHTML = '<div class="empty-sm">So\'nggi 7 kunda savol qo\'shilmagan</div>'; return; }
+      // So'nggi 7 kunni to'ldiramiz (bo'sh kunlar 0)
+      var days = [];
+      for (var i = 6; i >= 0; i--) {
+        var dt = new Date(); dt.setDate(dt.getDate() - i);
+        var key = dt.toISOString().slice(0, 10);
+        var found = growth.find(function (g) { return g.day === key; });
+        days.push({ key: key, count: found ? found.count : 0, label: dt.getDate() + "/" + (dt.getMonth() + 1) });
+      }
+      var max = Math.max.apply(null, days.map(function (d) { return d.count; }));
+      if (max === 0) max = 1;
+      var bars = days.map(function (d) {
+        var h = Math.round((d.count / max) * 100);
+        return '<div class="gb-col"><div class="gb-bar" style="height:' + h + '%" data-val="' + d.count + ' ta"></div><div class="gb-label">' + d.label + '</div></div>';
+      }).join("");
+      el.innerHTML = '<div class="growth-bars">' + bars + '</div>';
+    }
+
+    function renderRegions(regions) {
+      var el = document.getElementById("ovRegions");
+      if (!regions || regions.length === 0) { el.innerHTML = '<div class="empty-sm">Viloyat ma\'lumoti yo\'q</div>'; return; }
+      var max = regions[0].count || 1;
+      el.innerHTML = '<div class="region-list">' + regions.map(function (r, i) {
+        var pct = Math.round((r.count / max) * 100);
+        return '<div class="region-row"><div class="region-rank">' + (i + 1) + '</div>' +
+          '<div class="region-name">' + esc(r.name) + '</div>' +
+          '<div class="region-bar-track"><div class="region-bar-fill" style="width:' + pct + '%"></div></div>' +
+          '<div class="region-count">' + r.count + ' o\'quvchi</div></div>';
+      }).join("") + '</div>';
+    }
+
+    
+    // ===== USERS (Foydalanuvchilar) =====
+    var currentUsersPage = 1, usersTotalPages = 1, usersSearchTimer = null;
+
+    async function loadUsers(page) {
+      if (page < 1) return;
+      currentUsersPage = page;
+      var list = document.getElementById("usersList");
+      list.innerHTML = '<div class="loading-row">Yuklanmoqda...</div>';
+      try {
+        var p = new URLSearchParams();
+        p.set("page", page); p.set("limit", 25);
+        var s = document.getElementById("uSearch").value.trim();
+        var role = document.getElementById("uRole").value;
+        var level = document.getElementById("uLevel").value;
+        if (s) p.set("search", s);
+        if (role) p.set("role", role);
+        if (level) p.set("level", level);
+        var res = await apiGet("/admin/users?" + p.toString());
+        var data = await res.json();
+        renderUsers(data.users || []);
+        renderUsersPagination(data.pagination || {});
+      } catch (err) {
+        if (err.message !== "auth") list.innerHTML = '<div class="empty-state"><i data-lucide="alert-circle" class="ico"></i><div>Yuklab bo\'lmadi</div></div>';
+        icons();
+      }
+    }
+
+    function renderUsers(users) {
+      var list = document.getElementById("usersList");
+      if (users.length === 0) {
+        list.innerHTML = '<div class="empty-state"><i data-lucide="users" class="ico"></i><div>Foydalanuvchi topilmadi</div></div>';
+        icons(); return;
+      }
+      var roleLabels = { student: "O'quvchi", teacher: "O'qituvchi", school_admin: "Maktab admini" };
+      var rows = users.map(function (u) {
+        var name = esc((u.first_name || "") + " " + (u.last_name || ""));
+        var initial = ((u.first_name || "?")[0] || "?").toUpperCase();
+        var role = u.role || "student";
+        var banned = u.is_banned;
+        return '<tr style="cursor:pointer;' + (banned ? 'opacity:0.6;' : '') + '" onclick="openUserModal(' + u.id + ')">' +
+          '<td><div class="u-name-cell"><div class="u-ava">' + initial + '</div>' +
+            '<div><div class="u-name">' + name + (banned ? ' <span class="u-banned-badge"><i data-lucide="ban" class="ico-sm" style="width:12px;height:12px;"></i>bloklangan</span>' : '') + '</div>' +
+            '<div class="u-phone">' + esc(u.phone || "—") + '</div></div></div></td>' +
+          '<td><span class="role-badge role-' + role + '">' + (roleLabels[role] || role) + '</span></td>' +
+          '<td><span class="lvl-pill lvl-' + esc(u.cefr_level || "A1") + '">' + esc(u.cefr_level || "A1") + '</span></td>' +
+          '<td>' + (u.rating != null ? u.rating : "—") + '</td>' +
+          '<td class="u-school">' + esc(u.school || "—") + '</td>' +
+          '<td><div class="u-actions">' +
+            '<button class="icon-btn" onclick="event.stopPropagation();openUserModal(' + u.id + ')" title="Ko\'rish"><i data-lucide="eye" class="ico-sm"></i></button>' +
+          '</div></td></tr>';
+      }).join("");
+      list.innerHTML = '<div class="qbank-wrap"><table class="users-table"><thead><tr><th>Foydalanuvchi</th><th>Rol</th><th>Daraja</th><th>Rating</th><th>Maktab</th><th>Amal</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      icons();
+    }
+
+    function renderUsersPagination(pg) {
+      usersTotalPages = pg.totalPages || 1;
+      var pagEl = document.getElementById("usersPagination");
+      if (!pg.total || pg.total === 0) { pagEl.style.display = "none"; return; }
+      pagEl.style.display = "flex";
+      var from = (pg.page - 1) * pg.limit + 1;
+      var to = Math.min(pg.page * pg.limit, pg.total);
+      document.getElementById("usersPgInfo").textContent = from + "–" + to + " / jami " + pg.total + " ta foydalanuvchi";
+      document.getElementById("usersPrev").disabled = pg.page <= 1;
+      document.getElementById("usersNext").disabled = pg.page >= usersTotalPages;
+      var nums = ""; var start = Math.max(1, currentUsersPage - 2); var end = Math.min(usersTotalPages, start + 4);
+      start = Math.max(1, end - 4);
+      for (var i = start; i <= end; i++) {
+        nums += '<button class="pg-btn' + (i === currentUsersPage ? ' active' : '') + '" onclick="loadUsers(' + i + ')">' + i + '</button>';
+      }
+      document.getElementById("usersPgNumbers").innerHTML = nums;
+      icons();
+    }
+
+    function onUserSearch(v) { clearTimeout(usersSearchTimer); usersSearchTimer = setTimeout(function () { loadUsers(1); }, 300); }
+    function resetUserFilters() {
+      document.getElementById("uSearch").value = "";
+      document.getElementById("uRole").value = "";
+      document.getElementById("uLevel").value = "";
+      loadUsers(1);
+    }
+
+    // ===== FOYDALANUVCHI MODALI =====
+    var _umUser = null; // joriy ochilgan foydalanuvchi
+
+    async function openUserModal(id) {
+      document.getElementById("umBody").innerHTML = '<div class="loading-row">Yuklanmoqda...</div>';
+      document.getElementById("umName").textContent = "—";
+      document.getElementById("umRole").textContent = "—";
+      document.getElementById("umAva").textContent = "?";
+      document.getElementById("userModal").classList.add("show");
+      icons();
+      try {
+        var res = await apiGet("/admin/users/" + id);
+        var data = await res.json();
+        if (!res.ok) { toast(data.error || "Xato", "error"); closeUserModal(); return; }
+        _umUser = data.user;
+        renderUserModal(_umUser);
+      } catch (err) { if (err.message !== "auth") { toast("Yuklab bo'lmadi", "error"); closeUserModal(); } }
+    }
+    function closeUserModal() { document.getElementById("userModal").classList.remove("show"); _umUser = null; }
+
+    function renderUserModal(u) {
+      var roleLabels = { student: "O'quvchi", teacher: "O'qituvchi", school_admin: "Maktab admini" };
+      var name = esc((u.first_name || "") + " " + (u.last_name || ""));
+      document.getElementById("umName").textContent = name;
+      document.getElementById("umRole").textContent = roleLabels[u.role] || u.role;
+      document.getElementById("umAva").textContent = ((u.first_name || "?")[0] || "?").toUpperCase();
+
+      var banner = u.is_banned ? '<div class="um-banned-banner"><i data-lucide="ban" class="ico-sm"></i> Bu foydalanuvchi bloklangan</div>' : '';
+
+      var winRate = u.total_battles > 0 ? Math.round(u.total_wins / u.total_battles * 100) : 0;
+
+      var html = banner +
+        '<div class="um-stats-row">' +
+          '<div class="um-stat"><div class="ums-val">' + (u.rating || 0) + '</div><div class="ums-lbl">Rating</div></div>' +
+          '<div class="um-stat"><div class="ums-val">' + (u.total_battles || 0) + '</div><div class="ums-lbl">Janglar</div></div>' +
+          '<div class="um-stat"><div class="ums-val">' + winRate + '%</div><div class="ums-lbl">G\'alaba</div></div>' +
+          '<div class="um-stat"><div class="ums-val">' + (u.best_win_streak || 0) + '</div><div class="ums-lbl">Best streak</div></div>' +
+        '</div>' +
+        '<div class="um-grid">' +
+          umField("CEFR daraja", u.cefr_level || "A1") +
+          umField("XP", u.xp || 0) +
+          umField("Viloyat", u.region || "—") +
+          umField("Tuman", u.district || "—") +
+          umField("Maktab", u.school || "—") +
+          umField("Telefon", u.phone || "—") +
+          umField("Tug'ilgan sana", u.birth_date ? fmtDate(u.birth_date) : "—") +
+          umField("Ro'yxatdan o'tgan", fmtDate(u.created_at)) +
+        '</div>' +
+        '<div class="um-actions">' +
+          '<button class="btn btn-ghost" onclick="askRoleChange()"><i data-lucide="user-cog" class="ico-sm"></i> Rolni o\'zgartirish</button>' +
+          (u.is_banned
+            ? '<button class="btn" style="background:linear-gradient(135deg,var(--green),#10b981);" onclick="askBan(false)"><i data-lucide="user-check" class="ico-sm"></i> Blokni ochish</button>'
+            : '<button class="btn" style="background:linear-gradient(135deg,var(--red),#dc2626);" onclick="askBan(true)"><i data-lucide="ban" class="ico-sm"></i> Bloklash</button>') +
+        '</div>';
+      document.getElementById("umBody").innerHTML = html;
+      icons();
+    }
+    function umField(label, val) {
+      return '<div class="um-field"><div class="umf-label">' + label + '</div><div class="umf-val">' + esc(String(val)) + '</div></div>';
+    }
+
+    // ===== TASDIQ MODAL (universal) =====
+    var _confirmAction = null;
+    function showConfirm(opts) {
+      document.getElementById("cmTitle").textContent = opts.title || "Tasdiqlash";
+      document.getElementById("cmText").textContent = opts.text || "";
+      document.getElementById("cmConfirmBtn").textContent = opts.btnText || "Tasdiqlash";
+      var iconEl = document.getElementById("cmIcon");
+      var btnEl = document.getElementById("cmConfirmBtn");
+      if (opts.danger) {
+        iconEl.className = "modal-icon"; btnEl.className = "modal-btn modal-btn-confirm";
+      } else {
+        iconEl.className = "modal-icon warn"; btnEl.className = "modal-btn modal-btn-confirm";
+        btnEl.style.background = "linear-gradient(135deg,var(--accent),var(--accent-2))";
+      }
+      if (opts.danger) btnEl.style.background = "linear-gradient(135deg,var(--red),#dc2626)";
+      _confirmAction = opts.onConfirm;
+      document.getElementById("confirmModal").classList.add("show");
+      icons();
+    }
+    function closeConfirm() { document.getElementById("confirmModal").classList.remove("show"); _confirmAction = null; }
+    async function execConfirm() {
+      if (_confirmAction) { var fn = _confirmAction; closeConfirm(); await fn(); }
+    }
+
+    // Rol o'zgartirish (modal bilan)
+    function askRoleChange() {
+      if (!_umUser) return;
+      var order = ["student", "teacher", "school_admin"];
+      var labels = { student: "O'quvchi", teacher: "O'qituvchi", school_admin: "Maktab admini" };
+      var current = _umUser.role || "student";
+      var next = order[(order.indexOf(current) + 1) % order.length];
+      var uid = _umUser.id;
+      showConfirm({
+        title: "Rolni o'zgartirish",
+        text: labels[current] + " → " + labels[next] + " ga o'zgartirilsinmi?",
+        btnText: "O'zgartirish", danger: false,
+        onConfirm: async function () {
+          try {
+            var res = await apiPost("/admin/users/role", { id: uid, role: next });
+            if (res.ok) { toast("Rol o'zgartirildi", "success"); closeUserModal(); loadUsers(currentUsersPage); }
+            else { var d = await res.json(); toast(d.error || "Xato", "error"); }
+          } catch (err) { if (err.message !== "auth") toast("Server xatosi", "error"); }
+        }
+      });
+    }
+
+    // Ban (modal bilan)
+    function askBan(banned) {
+      if (!_umUser) return;
+      var uid = _umUser.id;
+      var name = (_umUser.first_name || "") + " " + (_umUser.last_name || "");
+      showConfirm({
+        title: banned ? "Foydalanuvchini bloklash" : "Blokni ochish",
+        text: banned ? name + " ni bloklaysizmi? U tizimga kira olmaydi." : name + " blokini ochasizmi?",
+        btnText: banned ? "Bloklash" : "Blokni ochish", danger: banned,
+        onConfirm: async function () {
+          try {
+            var res = await apiPost("/admin/users/ban", { id: uid, banned: banned });
+            if (res.ok) { toast(banned ? "Bloklandi" : "Blok ochildi", "success"); closeUserModal(); loadUsers(currentUsersPage); }
+            else { var d = await res.json(); toast(d.error || "Xato", "error"); }
+          } catch (err) { if (err.message !== "auth") toast("Server xatosi", "error"); }
+        }
+      });
+    }
+
+    // ===== SCHOOLS (Maktablar) =====
+    var currentSchoolsPage = 1, schoolsTotalPages = 1, schoolsSearchTimer = null;
+
+    async function loadSchools(page) {
+      if (page < 1) return;
+      currentSchoolsPage = page;
+      var list = document.getElementById("schoolsList");
+      list.innerHTML = '<div class="loading-row">Yuklanmoqda...</div>';
+      try {
+        var p = new URLSearchParams();
+        p.set("page", page); p.set("limit", 24);
+        var s = document.getElementById("schSearch").value.trim();
+        if (s) p.set("search", s);
+        var res = await apiGet("/admin/schools?" + p.toString());
+        var data = await res.json();
+        renderSchools(data.schools || []);
+        renderSchoolsPagination(data.pagination || {});
+      } catch (err) {
+        if (err.message !== "auth") list.innerHTML = '<div class="empty-state"><i data-lucide="alert-circle" class="ico"></i><div>Yuklab bo\'lmadi</div></div>';
+        icons();
+      }
+    }
+
+    function renderSchools(schools) {
+      var list = document.getElementById("schoolsList");
+      if (schools.length === 0) {
+        list.innerHTML = '<div class="empty-state"><i data-lucide="school" class="ico"></i><div>Maktab topilmadi</div></div>';
+        icons(); return;
+      }
+      var cards = schools.map(function (s) {
+        var loc = (s.region !== "—" ? s.region : "") + (s.district !== "—" ? ", " + s.district : "");
+        return '<div class="school-card" onclick="openSchoolModal(\'' + esc(s.name).replace(/'/g, "\\'") + '\')">' +
+          '<div class="sc-top"><div class="sc-ic"><i data-lucide="school" class="ico-lg"></i></div>' +
+            '<div style="min-width:0;"><div class="sc-name">' + esc(s.name) + '</div><div class="sc-loc">' + (esc(loc) || "—") + '</div></div></div>' +
+          '<div class="sc-stats">' +
+            '<div class="sc-stat"><div class="scs-val">' + s.studentCount + '</div><div class="scs-lbl">O\'quvchi</div></div>' +
+            '<div class="sc-stat"><div class="scs-val">' + s.avgRating + '</div><div class="scs-lbl">O\'rtacha rating</div></div>' +
+          '</div></div>';
+      }).join("");
+      list.innerHTML = '<div class="schools-grid">' + cards + '</div>';
+      icons();
+    }
+
+    function renderSchoolsPagination(pg) {
+      schoolsTotalPages = pg.totalPages || 1;
+      var pagEl = document.getElementById("schoolsPagination");
+      if (!pg.total || pg.total === 0) { pagEl.style.display = "none"; return; }
+      pagEl.style.display = "flex";
+      var from = (pg.page - 1) * pg.limit + 1;
+      var to = Math.min(pg.page * pg.limit, pg.total);
+      document.getElementById("schoolsPgInfo").textContent = from + "–" + to + " / jami " + pg.total + " ta maktab";
+      document.getElementById("schoolsPrev").disabled = pg.page <= 1;
+      document.getElementById("schoolsNext").disabled = pg.page >= schoolsTotalPages;
+      var nums = ""; var start = Math.max(1, currentSchoolsPage - 2); var end = Math.min(schoolsTotalPages, start + 4);
+      start = Math.max(1, end - 4);
+      for (var i = start; i <= end; i++) {
+        nums += '<button class="pg-btn' + (i === currentSchoolsPage ? ' active' : '') + '" onclick="loadSchools(' + i + ')">' + i + '</button>';
+      }
+      document.getElementById("schoolsPgNumbers").innerHTML = nums;
+      icons();
+    }
+
+    function onSchoolSearch(v) { clearTimeout(schoolsSearchTimer); schoolsSearchTimer = setTimeout(function () { loadSchools(1); }, 300); }
+
+    // Maktab o'quvchilari modali (drill-down) — userModal'ni qayta ishlatamiz
+    async function openSchoolModal(school) {
+      document.getElementById("umBody").innerHTML = '<div class="loading-row">Yuklanmoqda...</div>';
+      document.getElementById("umName").textContent = school;
+      document.getElementById("umRole").textContent = "Maktab";
+      document.getElementById("umAva").innerHTML = '<i data-lucide="school" class="ico"></i>';
+      document.getElementById("userModal").classList.add("show");
+      icons();
+      try {
+        var res = await apiGet("/admin/schools/students?school=" + encodeURIComponent(school));
+        var data = await res.json();
+        if (!res.ok) { toast(data.error || "Xato", "error"); closeUserModal(); return; }
+        renderSchoolStudents(data.students || []);
+      } catch (err) { if (err.message !== "auth") { toast("Yuklab bo'lmadi", "error"); closeUserModal(); } }
+    }
+
+    function renderSchoolStudents(students) {
+      if (students.length === 0) {
+        document.getElementById("umBody").innerHTML = '<div class="empty-sm">Bu maktabda o\'quvchi yo\'q</div>';
         return;
       }
+      var rows = students.map(function (s, i) {
+        var name = esc((s.first_name || "") + " " + (s.last_name || ""));
+        return '<div class="sch-student-row"><div class="ssr-rank">' + (i + 1) + '</div>' +
+          '<div class="ssr-name">' + name + (s.is_banned ? ' <span class="u-banned-badge" style="font-size:10px;"><i data-lucide="ban" class="ico-sm" style="width:11px;height:11px;"></i></span>' : '') + '</div>' +
+          '<span class="lvl-pill lvl-' + esc(s.cefr_level || "A1") + '">' + esc(s.cefr_level || "A1") + '</span>' +
+          '<span class="ssr-rating">' + (s.rating || 0) + '</span></div>';
+      }).join("");
+      document.getElementById("umBody").innerHTML =
+        '<div style="font-size:13px;color:var(--text-dim);margin-bottom:14px;">Jami ' + students.length + ' ta o\'quvchi (rating bo\'yicha)</div>' +
+        '<div class="sch-students-list">' + rows + '</div>';
+      icons();
+    }
 
-      list.innerHTML = "";
-      questions.forEach(q => {
-        const item = document.createElement("div");
-        item.className = "q-item";
-        item.innerHTML =
-          '<div class="q-content">' +
-            '<div class="q-text">' + q.question_text + '</div>' +
-            '<div class="q-meta">' +
-              'A) ' + q.option_a + ' · B) ' + q.option_b + ' · C) ' + q.option_c + ' · D) ' + q.option_d +
-              ' &nbsp;|&nbsp; <span class="q-correct">To\'g\'ri: ' + q.correct_option + '</span>' +
-              ' &nbsp;|&nbsp; ' + q.cefr_level + ' · ' + q.skill +
-            '</div>' +
-          '</div>' +
-          '<button class="delete-btn" onclick="deleteQuestion(' + q.id + ')">O\'chirish</button>';
-        list.appendChild(item);
+    // ===== HELPERS =====
+    function navSoon(name) { toast(name + " bo'limi tez orada", "error"); }
+    function esc(str) { if (str == null) return ""; return String(str).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function fmtDate(iso) { if (!iso) return "—"; var d = new Date(iso); if (isNaN(d.getTime())) return "—"; var m = ["Yan","Fev","Mar","Apr","May","Iyun","Iyul","Avg","Sen","Okt","Noy","Dek"]; return d.getDate() + " " + m[d.getMonth()] + " " + d.getFullYear(); }
+    function timeAgo(iso) { if (!iso) return ""; var diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000); if (diff < 60) return "hozir"; if (diff < 3600) return Math.floor(diff/60) + " daq oldin"; if (diff < 86400) return Math.floor(diff/3600) + " soat oldin"; if (diff < 604800) return Math.floor(diff/86400) + " kun oldin"; return fmtDate(iso); }
+    function showMsg(elId, text, type) { var el = document.getElementById(elId); el.textContent = text; el.className = "message " + type; }
+    function hideMsg(elId) { var el = document.getElementById(elId); el.className = "message"; }
+    function toast(text, type) {
+      var w = document.getElementById("toastWrap");
+      var t = document.createElement("div");
+      t.className = "toast " + (type || "success");
+      var ic = type === "error" ? "alert-circle" : "check-circle";
+      t.innerHTML = '<i data-lucide="' + ic + '" class="ico t-ic"></i><div class="t-txt">' + esc(text) + '</div>';
+      w.appendChild(t); icons();
+      setTimeout(function () { t.style.opacity = "0"; t.style.transform = "translateX(60px)"; t.style.transition = "all 0.3s"; setTimeout(function () { t.remove(); }, 300); }, 3000);
+    }
+
+    // ===== BULK IMPORT =====
+    var _importRows = []; // tahlil qilingan qatorlar
+
+    function openImportModal() {
+      _importRows = [];
+      document.getElementById("impUpload").style.display = "block";
+      document.getElementById("impPreview").style.display = "none";
+      document.getElementById("impResult").style.display = "none";
+      document.getElementById("impActionBtn").style.display = "none";
+      document.getElementById("xlsxFile").value = "";
+      setImpStep(1);
+      document.getElementById("importModal").classList.add("show");
+      icons();
+    }
+    function closeImportModal() { document.getElementById("importModal").classList.remove("show"); }
+
+    function setImpStep(n) {
+      [1,2,3,4].forEach(function (i) {
+        var el = document.getElementById("impStep" + i);
+        el.classList.remove("active", "done");
+        if (i < n) el.classList.add("done");
+        else if (i === n) el.classList.add("active");
       });
     }
 
-    async function deleteQuestion(id) {
-      if (!confirm("Bu savolni o'chirishni xohlaysizmi?")) return;
-
-      const res = await fetch("/admin/questions/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: adminPassword, id: id }),
-      });
-      if (res.ok) loadQuestions();
+    // Excel faylni o'qish va tahlil qilish (SheetJS orqali)
+    function handleXlsxFile(file) {
+      if (!file) return;
+      var nm = file.name.toLowerCase();
+      if (!nm.endsWith(".xlsx") && !nm.endsWith(".xls")) { toast("Faqat .xlsx fayl", "error"); return; }
+      if (typeof XLSX === "undefined") { toast("Excel kutubxonasi yuklanmadi (internet kerak)", "error"); return; }
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          var data = new Uint8Array(e.target.result);
+          var workbook = XLSX.read(data, { type: "array" });
+          var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          // Sheetni qatorlar massiviga aylantiramiz (sarlavha bilan)
+          var rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
+          parseXlsxRows(rows);
+        } catch (err) {
+          toast("Excel o'qishda xato", "error");
+        }
+      };
+      reader.readAsArrayBuffer(file);
     }
 
-    function showMsg(elId, text, type) {
-      const el = document.getElementById(elId);
-      el.textContent = text;
-      el.className = "message " + type;
+    // Ustun sarlavhalarini moslash — turli yozilishlarni qabul qiladi
+    function matchHeader(headers, variants) {
+      for (var i = 0; i < headers.length; i++) {
+        var h = String(headers[i] || "").trim().toLowerCase();
+        for (var j = 0; j < variants.length; j++) {
+          if (h === variants[j]) return i;
+        }
+      }
+      return -1;
+    }
+
+    function parseXlsxRows(rows) {
+      if (!rows || rows.length < 2) { toast("Excel bo'sh yoki faqat sarlavha", "error"); return; }
+
+      var headers = rows[0].map(function (h) { return String(h || "").trim().toLowerCase(); });
+
+      // Sizning format: savol, option A–D, to'g'ri javob, daraja, ko'nikma, explanation
+      // Turli yozilishlarni ham qabul qilamiz (moslashuvchan)
+      var idx = {
+        question: matchHeader(headers, ["savol", "question", "question_text", "savol matni"]),
+        a: matchHeader(headers, ["option a", "option_a", "a", "variant a"]),
+        b: matchHeader(headers, ["option b", "option_b", "b", "variant b"]),
+        c: matchHeader(headers, ["option c", "option_c", "c", "variant c"]),
+        d: matchHeader(headers, ["option d", "option_d", "d", "variant d"]),
+        correct: matchHeader(headers, ["to'g'ri javob", "to‘g‘ri javob", "togri javob", "correct", "correct_option", "javob", "answer"]),
+        level: matchHeader(headers, ["daraja", "level", "cefr_level", "cefr"]),
+        skill: matchHeader(headers, ["ko'nikma", "ko‘nikma", "konikma", "skill", "category"]),
+        explanation: matchHeader(headers, ["explanation", "tushuntirish", "izoh"]),
+      };
+
+      if (idx.question === -1 || idx.a === -1 || idx.correct === -1) {
+        toast("Sarlavhalar topilmadi (savol, option A, to'g'ri javob kerak)", "error"); return;
+      }
+
+      var validLevels = ["A1","A2","B1","B2","C1","C2"];
+      var validAnswers = ["A","B","C","D"];
+      var seen = {};
+      _importRows = [];
+
+      for (var i = 1; i < rows.length; i++) {
+        var cols = rows[i];
+        // Bo'sh qatorni o'tkazib yuboramiz
+        if (!cols || cols.every(function (c) { return String(c || "").trim() === ""; })) continue;
+
+        function g(ix) { return ix > -1 && cols[ix] != null ? String(cols[ix]).trim() : ""; }
+
+        var row = {
+          question_text: g(idx.question),
+          option_a: g(idx.a), option_b: g(idx.b), option_c: g(idx.c), option_d: g(idx.d),
+          correct_option: g(idx.correct).toUpperCase(),
+          cefr_level: (g(idx.level) || "A1").toUpperCase(),
+          skill: (g(idx.skill) || "grammar").toLowerCase(),
+          explanation: g(idx.explanation),
+          status: "published",
+        };
+
+        // Validatsiya
+        var errs = [];
+        if (!row.question_text || row.question_text.length < 3) errs.push("savol matni");
+        if (!row.option_a || !row.option_b || !row.option_c || !row.option_d) errs.push("variant bo'sh");
+        if (validAnswers.indexOf(row.correct_option) === -1) errs.push("javob A/B/C/D emas");
+        if (validLevels.indexOf(row.cefr_level) === -1) row.cefr_level = "A1";
+        var norm = row.question_text.toLowerCase();
+        if (norm && seen[norm]) errs.push("duplicate");
+        if (norm) seen[norm] = true;
+
+        row._valid = errs.length === 0;
+        row._errors = errs;
+        _importRows.push(row);
+      }
+
+      if (_importRows.length === 0) { toast("Hech qanday qator topilmadi", "error"); return; }
+      renderImportPreview();
+    }
+
+    function renderImportPreview() {
+      document.getElementById("impUpload").style.display = "none";
+      document.getElementById("impPreview").style.display = "block";
+      setImpStep(3);
+
+      var valid = _importRows.filter(function (r) { return r._valid; }).length;
+      var invalid = _importRows.length - valid;
+      var dups = _importRows.filter(function (r) { return r._errors.indexOf("duplicate") > -1; }).length;
+
+      document.getElementById("impSummary").innerHTML =
+        '<div class="imp-stat"><div class="is-val">' + _importRows.length + '</div><div class="is-lbl">Jami qator</div></div>' +
+        '<div class="imp-stat ok"><div class="is-val">' + valid + '</div><div class="is-lbl">Valid</div></div>' +
+        '<div class="imp-stat bad"><div class="is-val">' + invalid + '</div><div class="is-lbl">Xato</div></div>' +
+        '<div class="imp-stat warn"><div class="is-val">' + dups + '</div><div class="is-lbl">Duplicate</div></div>';
+
+      // Preview jadval (birinchi 20 qator)
+      var preview = _importRows.slice(0, 20);
+      var rows = preview.map(function (r) {
+        var cls = r._valid ? "" : "bad-row";
+        var errCol = r._valid ? '<span style="color:var(--green)">✓</span>' : '<span class="imp-err">' + esc(r._errors.join(", ")) + '</span>';
+        return '<tr class="' + cls + '"><td>' + esc(r.question_text) + '</td><td>' + esc(r.correct_option) + '</td><td>' + esc(r.cefr_level) + '</td><td>' + esc(r.skill) + '</td><td>' + errCol + '</td></tr>';
+      }).join("");
+      document.getElementById("impTable").innerHTML =
+        '<thead><tr><th>Savol</th><th>Javob</th><th>Daraja</th><th>Ko\'nikma</th><th>Holat</th></tr></thead><tbody>' + rows + '</tbody>';
+
+      var btn = document.getElementById("impActionBtn");
+      if (valid > 0) {
+        btn.style.display = "block";
+        btn.textContent = valid + " ta savolni import qilish";
+        btn.disabled = false;
+      } else {
+        btn.style.display = "none";
+      }
+      icons();
+    }
+
+    async function doImport() {
+      var validRows = _importRows.filter(function (r) { return r._valid; });
+      if (validRows.length === 0) return;
+      var btn = document.getElementById("impActionBtn");
+      btn.disabled = true; btn.textContent = "Import qilinmoqda...";
+      setImpStep(4);
+      try {
+        var res = await apiPost("/admin/questions/bulk-import", { rows: validRows });
+        var d = await res.json();
+        if (!res.ok) { toast(d.error || "Import xatosi", "error"); btn.disabled = false; return; }
+        // Natija ekrani
+        document.getElementById("impPreview").style.display = "none";
+        document.getElementById("impResult").style.display = "block";
+        document.getElementById("impResult").innerHTML =
+          '<div class="imp-result-box"><i data-lucide="check-circle" class="ico-lg"></i>' +
+          '<div style="font-size:20px;font-weight:800;margin-bottom:8px;">Import tugadi!</div>' +
+          '<div style="color:var(--text-dim);font-size:14px;">' + d.inserted + ' ta savol qo\'shildi' +
+          (d.skipped > 0 ? ', ' + d.skipped + ' ta o\'tkazib yuborildi' : '') + '</div></div>';
+        document.getElementById("impActionBtn").style.display = "none";
+        icons();
+        loadAll(); // ro'yxat + statistika yangilanadi
+        toast(d.inserted + " ta savol import qilindi", "success");
+      } catch (err) {
+        if (err.message !== "auth") toast("Server xatosi", "error");
+        btn.disabled = false; btn.textContent = "Import qilish";
+      }
+    }
+
+    // Namuna Excel yuklab olish (sizning format: savol, option A-D, to'g'ri javob, daraja, ko'nikma, explanation)
+    function downloadXlsxTemplate() {
+      if (typeof XLSX === "undefined") { toast("Excel kutubxonasi yuklanmadi", "error"); return; }
+      var data = [
+        ["savol", "option A", "option B", "option C", "option D", "to'g'ri javob", "daraja", "ko'nikma", "explanation"],
+        ["My sister and I ___ very naughty.", "am", "is", "are", "have", "C", "A1", "grammar", "My sister and I' bu ko'plik, 'are' ishlatamiz"],
+        ["She ___ a doctor.", "am", "is", "are", "be", "B", "A1", "grammar", "'She' uchun 'is' ishlatiladi"],
+      ];
+      var ws = XLSX.utils.aoa_to_sheet(data);
+      // Ustun kengligi (chiroyli ko'rinish uchun)
+      ws["!cols"] = [{ wch: 36 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 40 }];
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Savollar");
+      XLSX.writeFile(wb, "savollar_namuna.xlsx");
     }
   </script>
 </body>

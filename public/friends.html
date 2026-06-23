@@ -1016,11 +1016,17 @@
       window.location.href = "/battle.html?room=" + encodeURIComponent(data.roomId);
     });
 
-    // Yangi do'st so'rovi keldi (real-time) - markazda oyna yo'q, faqat so'rovlar yangilanadi
+    // Yangi do'st so'rovi keldi (real-time) - so'rovlar + yuqoridagi notification panel
     socket.on("newFriendRequest", (data) => {
       loadRequests();
       loadPendingCount();
+      // Yuqoridagi qo'ng'iroq panelini ham yangilaymiz (sidebar.js dan)
+      if (typeof loadNotifs === "function") loadNotifs();
+      if (typeof showNotifToast === "function") {
+        showNotifToast((data && data.fromName ? data.fromName : "Kimdir") + " sizga do'st so'rovi yubordi");
+      }
     });
+    
     // So'rovga javob keldi (qabul/rad) - tugmani real-time yangilash
     socket.on("requestResponded", (data) => {
       const btn = document.getElementById("addBtn-" + data.byUserId);

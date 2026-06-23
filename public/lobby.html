@@ -839,12 +839,28 @@
           const freshRating = data.user.rating != null ? data.user.rating : (user.rating || 1000);
           document.getElementById("pcRating").textContent = freshRating;
           document.getElementById("pcLeague").innerHTML = leagueFull(freshRating);
-          document.getElementById("pcStreak").textContent = data.user.current_streak || 0;
-          // localStorage rating ham yangilanadi
-          if (data.user.rating != null && data.user.rating !== user.rating) {
-            user.rating = data.user.rating;
-            localStorage.setItem("user", JSON.stringify(user));
+          document.getElementById("pcStreak").textContent = data.user.win_streak || 0;
+
+          // CEFR daraja — bazadan eng yangi (Ultimate Exam'dan keyin A1->A2 ko'tarilsa, darhol to'g'ri ko'rinadi)
+          if (data.user.cefr_level) {
+            document.getElementById("pcCefr").textContent = data.user.cefr_level;
+            document.getElementById("pcCefrLabel").textContent = cefrLabels[data.user.cefr_level] || "Beginner";
           }
+
+          // Ism-familya — bazadan eng yangi (profil tahrirlansa to'g'ri ko'rinadi)
+          if (data.user.first_name) {
+            document.getElementById("pcName").textContent =
+              data.user.first_name + " " + (data.user.last_name || "");
+          }
+
+          // localStorage'ni bazadagi eng yangi qiymatlar bilan to'liq sync qilamiz
+          // (keyingi sahifalar ham to'g'ri ma'lumot ko'rsatishi uchun)
+          let changed = false;
+          if (data.user.rating != null && data.user.rating !== user.rating) { user.rating = data.user.rating; changed = true; }
+          if (data.user.cefr_level && data.user.cefr_level !== user.cefr_level) { user.cefr_level = data.user.cefr_level; changed = true; }
+          if (data.user.first_name && data.user.first_name !== user.first_name) { user.first_name = data.user.first_name; changed = true; }
+          if (data.user.last_name && data.user.last_name !== user.last_name) { user.last_name = data.user.last_name; changed = true; }
+          if (changed) localStorage.setItem("user", JSON.stringify(user));
         }
         // Profil rasmini bazadan eng yangi holatda olamiz (localStorage eski bo'lsa ham)
         if (data.user) {

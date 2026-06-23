@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS users (
   coins INTEGER DEFAULT 0,
   current_streak INTEGER DEFAULT 0,
   longest_streak INTEGER DEFAULT 0,
+  win_streak INTEGER DEFAULT 0,
+  best_win_streak INTEGER DEFAULT 0,
   last_active_date DATE,
   phone VARCHAR(20),
   birth_date DATE,
@@ -22,6 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
   village VARCHAR(150),
   school VARCHAR(200),
   profile_picture VARCHAR(255),
+  is_banned BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW()
 );
 -- Savollar jadvali
@@ -37,7 +40,9 @@ CREATE TABLE IF NOT EXISTS questions (
   skill VARCHAR(50) DEFAULT 'grammar',
   difficulty VARCHAR(20) DEFAULT 'easy',
   explanation TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
+  status VARCHAR(20) DEFAULT 'published',
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Jang tarixi jadvali
@@ -93,6 +98,19 @@ CREATE TABLE IF NOT EXISTS notifications (
   type VARCHAR(50) NOT NULL,
   message VARCHAR(255) NOT NULL,
   is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Audit log (admin amallari tarixi) — kim nima qildi
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id SERIAL PRIMARY KEY,
+  admin_id INTEGER,
+  admin_name VARCHAR(150),
+  action VARCHAR(80) NOT NULL,
+  entity_type VARCHAR(50),
+  entity_id VARCHAR(50),
+  details TEXT,
+  ip_address VARCHAR(60),
   created_at TIMESTAMP DEFAULT NOW()
 );
 

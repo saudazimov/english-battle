@@ -1219,6 +1219,33 @@
       showQuestion();
     }
 
+// Server javob natijasini qaytardi — Accuracy va Streak ni yangilaymiz
+    socket.on("answerResult", (data) => {
+      myAnswered = data.answered || (myAnswered + 1);
+      myCorrect = data.my_score != null ? data.my_score : myCorrect;
+
+      // Streak: to'g'ri bo'lsa +1, xato bo'lsa 0 ga tushadi
+      if (data.is_correct) {
+        myStreak++;
+        if (myStreak > myBestStreak) myBestStreak = myStreak;
+      } else {
+        myStreak = 0;
+      }
+
+      // Accuracy = to'g'ri / javob berilgan * 100
+      var acc = myAnswered > 0 ? Math.round((myCorrect / myAnswered) * 100) : 0;
+
+      // Battle Room'dagi statlarni yangilaymiz
+      var accEl = document.getElementById("brAccuracy");
+      if (accEl) accEl.textContent = acc + "%";
+      var accBar = document.getElementById("brAccBar");
+      if (accBar) accBar.style.width = acc + "%";
+      var stEl = document.getElementById("brStreak");
+      if (stEl) stEl.textContent = myStreak;
+      var bestEl = document.getElementById("brBestStreak");
+      if (bestEl) bestEl.textContent = "Best: " + myBestStreak;
+    });
+
     socket.on("opponentProgress", (data) => {
       var count = data.answeredCount || 0;
       var total = questions.length || 10;
@@ -1308,7 +1335,24 @@
       showScreen("resultScreen");
     });
 
-    function playAgain() { window.location.reload(); }
+   function playAgain() {
+      // "Yana o'ynash" = xuddi shu formatda YANGI raqib bilan 1v1 ranked jang
+      // (Rematch'dan farqli — u xuddi shu raqib bilan edi)
+
+      // Joriy formatni saqlaymiz (battleLengthKey jang davomida saqlangan)
+      var fmt = battleLengthKey || "standard";
+
+      // Yangi ranked battle intent yozamiz (lobby'dan kelgandek)
+      sessionStorage.setItem("battleIntent", JSON.stringify({
+        mode: "ranked",
+        lengthKey: fmt,
+        ts: Date.now(),
+      }));
+
+      // Toza URL bilan qayta ochamiz — ?room= (eski do'st jangi) bo'lsa, olib tashlanadi
+      // Shunda guardBattle yangi intentni ko'rib, yangi 1v1 matchmaking boshlaydi
+      window.location.href = "/battle.html";
+    }
     function renderLeagueProgress(data) {
       const rating = (data.updated_user && data.updated_user.rating) || user.rating || 1000;
       const leagues = [

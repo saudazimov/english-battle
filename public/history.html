@@ -55,7 +55,8 @@
     .win .br-res-text { color: var(--green); }
     .lose .br-res-text { color: var(--red); }
     .draw .br-res-text { color: var(--accent); }
-    .br-opp { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+    .br-opp { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; border-radius: 10px; padding: 4px 8px; margin: -4px -8px; transition: background 0.15s; }
+    .br-opp:hover .br-opp-name { color: var(--accent); }
     .br-ava { position: relative; width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 700; font-size: 16px; overflow: hidden; }
     .br-ava img { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
     .br-opp-info { min-width: 0; }
@@ -178,6 +179,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/sidebar.js"></script>
+  <script src="/profile-modal.js"></script>
   <script>
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
@@ -219,6 +221,17 @@
       }
     }
 
+    // refreshUser() bazadan yangi ma'lumot olganda — panelni qayta chizamiz
+    // (rating va win_streak eng yangi qiymatga yangilanadi)
+    window.addEventListener("userRefreshed", function (e) {
+      // localStorage'dan yangilangan user'ni qayta o'qiymiz
+      const fresh = e.detail || JSON.parse(localStorage.getItem("user") || "{}");
+      user.rating = fresh.rating;
+      user.win_streak = fresh.win_streak;
+      user.current_streak = fresh.current_streak;
+      renderOverview(); // panel yangi qiymatlar bilan qayta chiziladi
+    });
+
     function renderList() {
       const list = document.getElementById("histList");
       if (allHistory.length === 0) {
@@ -253,7 +266,7 @@
         list.innerHTML +=
           '<div class="battle-row ' + res + '">' +
             '<div class="br-result"><div class="br-icon"><i data-lucide="' + icon + '"></i></div><div class="br-res-text">' + resText + '</div></div>' +
-            '<div class="br-opp"><div class="br-ava">' + oppAva + '</div>' +
+            '<div class="br-opp"' + (h.opponent_id ? ' style="cursor:pointer" onclick="openProfileModal(' + h.opponent_id + ')"' : '') + '><div class="br-ava">' + oppAva + '</div>' +
               '<div class="br-opp-info"><div class="br-opp-name">' + oppName + '</div>' +
               '<div class="br-opp-sub">' + oppSub + '</div></div></div>' +
             '<div class="br-score"><div class="br-score-val">' + h.my_score + ' : ' + h.opponent_score + '</div><div class="br-score-lbl">Hisob</div></div>' +
@@ -278,7 +291,7 @@
       document.getElementById("ovLosses").textContent = losses;
       document.getElementById("ovWinRate").textContent = winRate + "%";
       document.getElementById("ovBest").textContent = user.rating || 1000;
-      document.getElementById("ovStreak").textContent = user.current_streak || 0;
+      document.getElementById("ovStreak").textContent = user.win_streak || 0;
     }
 
     function renderDonut() {

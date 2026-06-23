@@ -112,4 +112,43 @@ function requireStudent(req, res, next) {
     });
 }
 
-module.exports = { signToken, authMiddleware, requireTeacher, requireStudent };
+// ===== ADMIN AUTH =====
+// Admin uchun alohida token — ichida isAdmin belgisi bor.
+// Oddiy user tokenidan farq qiladi (admin huquqlari uchun).
+const ADMIN_TOKEN_EXPIRES = "24h"; // admin token 24 soat amal qiladi
+
+function signAdminToken(adminName) {
+  return jwt.sign(
+    { isAdmin: true, adminName: adminName || "Admin", role: "super_admin" },
+    JWT_SECRET,
+    { expiresIn: ADMIN_TOKEN_EXPIRES }
+  );
+}
+
+// Admin himoyalangan endpointlar uchun middleware.
+// Token'ni tekshiradi, isAdmin:true bo'lishini talab qiladi.
+function requireAdmin(req, res, next) {
+  try {
+    const authHeader = req.headers["authorization"];
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Admin tokeni yo'q" });
+    }
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // MUHIM: faqat isAdmin:true bo'lgan token o'tadi (oddiy user tokeni emas)
+    if (!decoded.isAdmin) {
+      return res.status(403).json({ error: "Admin huquqi kerak" });
+    }
+
+    req.admin = { name: decoded.adminName || "Admin", role: decoded.role || "admin" };
+    next();
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Admin token muddati tugagan, qaytadan kiring" });
+    }
+    return res.status(401).json({ error: "Admin token noto'g'ri" });
+  }
+}
+
+module.exports = { signToken, authMiddleware, requireTeacher, requireStudent, signAdminToken, requireAdmin };

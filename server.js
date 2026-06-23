@@ -6,7 +6,8 @@ const { Server } = require("socket.io");
 
 const multer = require("multer");
 const path = require("path");
-const { signToken, authMiddleware, requireTeacher, requireStudent } = require("./auth");
+const { signToken, authMiddleware, requireTeacher, requireStudent, signAdminToken, requireAdmin } = require("./auth");
+const { validateRegionDistrict } = require("./regions");
 
 const app = express();
 const server = http.createServer(app);
@@ -189,6 +190,12 @@ app.post("/register", async (req, res) => {
     }
     // ============ OTP TEKSHIRUVI TUGADI ============
 
+    // Viloyat-tuman juftligini tekshiramiz (frontendga ishonmaymiz — anti-abuse)
+    const regionCheck = validateRegionDistrict(region, district);
+    if (!regionCheck.valid) {
+      return res.status(400).json({ error: regionCheck.error });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await pool.query(
@@ -244,6 +251,11 @@ app.post("/login", async (req, res) => {
 
     if (!validPassword) {
       return res.status(400).json({ error: "Telefon yoki parol noto'g'ri" });
+    }
+
+    // Bloklangan foydalanuvchi kira olmaydi (admin tomonidan ban qilingan)
+    if (user.is_banned) {
+      return res.status(403).json({ error: "Hisobingiz bloklangan. Administrator bilan bog'laning." });
     }
 
     const token = signToken(user);
@@ -1094,6 +1106,15 @@ io.on("connection", (socket) => {
       });
     }
 
+    // Javob bergan o'yinchining O'ZIGA natijani qaytaramiz (to'g'ri/xato + jonli stat)
+    // Server-authoritative: frontend faqat ko'rsatadi, aldab bo'lmaydi
+    socket.emit("answerResult", {
+      is_correct: isCorrect,
+      correct_answer: question ? question.correct_option : null,
+      my_score: player.score,          // jami to'g'ri javoblar
+      answered: player.answeredCount,  // jami javob berilgan
+    });
+
     // Raqibga jonli progress yuborish
     socket.to(roomId).emit("opponentProgress", {
       answeredCount: player.answeredCount,
@@ -1250,12 +1271,27 @@ async function finishBattle(roomId) {
         );
         const oldRating = oldRatingResult.rows[0] ? oldRatingResult.rows[0].rating : 1000;
 
+        // Win streak mantiqi: g'alaba => +1, mag'lubiyat => 0, durang => o'zgarmaydi
+        // best_win_streak — eng yuqori rekord (hech qachon kamaymaydi)
+        let streakSql;
+        if (outcome === "win") {
+          // Yutdi: win_streak +1, agar yangi rekord bo'lsa best_win_streak ham yangilanadi
+          streakSql = "win_streak = win_streak + 1, best_win_streak = GREATEST(best_win_streak, win_streak + 1)";
+        } else if (outcome === "lose") {
+          // Yutqazdi: streak uziladi
+          streakSql = "win_streak = 0";
+        } else {
+          // Durang: o'zgarmaydi (eski qiymatni saqlaymiz)
+          streakSql = "win_streak = win_streak";
+        }
+
         const result = await pool.query(
           `UPDATE users
            SET xp = xp + $1,
-               rating = GREATEST(0, rating + $2)
+               rating = GREATEST(0, rating + $2),
+               ${streakSql}
            WHERE id = $3
-           RETURNING id, first_name, last_name, email, cefr_level, xp, rating, coins`,
+           RETURNING id, first_name, last_name, email, cefr_level, xp, rating, coins, win_streak, best_win_streak`,
           [xpEarned, ratingDelta, me.userId]
         );
         if (result.rows.length > 0) {
@@ -1356,20 +1392,151 @@ function checkAdminPassword(password) {
   return password === process.env.ADMIN_PASSWORD;
 }
 
-// Barcha savollarni olish (admin uchun, to'g'ri javob bilan)
-app.post("/admin/questions", async (req, res) => {
+// ===== AUDIT LOG HELPER =====
+// Admin amallarini audit_logs jadvaliga yozadi (kim, nima, qachon)
+async function logAudit(req, action, opts) {
+  opts = opts || {};
+  try {
+    var adminName = (req.admin && req.admin.name) ? req.admin.name : "Admin";
+    var ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "";
+    await pool.query(
+      `INSERT INTO audit_logs (admin_name, action, entity_type, entity_id, details, ip_address)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [adminName, action, opts.entityType || null, opts.entityId ? String(opts.entityId) : null, opts.details || null, String(ip).slice(0, 60)]
+    );
+  } catch (err) {
+    console.error("Audit log xatosi:", err.message); // audit xatosi asosiy amalni to'xtatmaydi
+  }
+}
+
+// ===== ADMIN LOGIN RATE LIMIT (in-memory, tashqi paketsiz) =====
+// Brute-force himoyasi: bir IP'dan ketma-ket noto'g'ri urinishlarni cheklaydi
+var _adminLoginAttempts = {}; // { ip: { count, firstAt, blockedUntil } }
+function adminLoginRateLimit(req, res, next) {
+  var ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
+  var now = Date.now();
+  var rec = _adminLoginAttempts[ip];
+
+  // Blok muddati o'tgan bo'lsa — tozalaymiz
+  if (rec && rec.blockedUntil && now > rec.blockedUntil) { delete _adminLoginAttempts[ip]; rec = null; }
+
+  // Bloklangan bo'lsa — rad etamiz
+  if (rec && rec.blockedUntil && now <= rec.blockedUntil) {
+    var waitMin = Math.ceil((rec.blockedUntil - now) / 60000);
+    return res.status(429).json({ error: "Juda ko'p urinish. " + waitMin + " daqiqadan keyin qayta urinib ko'ring." });
+  }
+  next();
+}
+
+// Noto'g'ri urinishni qayd qilish
+function recordFailedLogin(req) {
+  var ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
+  var now = Date.now();
+  if (!_adminLoginAttempts[ip]) _adminLoginAttempts[ip] = { count: 0, firstAt: now };
+  _adminLoginAttempts[ip].count++;
+  // 5 ta noto'g'ri urinishdan keyin — 15 daqiqa blok
+  if (_adminLoginAttempts[ip].count >= 5) {
+    _adminLoginAttempts[ip].blockedUntil = now + 15 * 60 * 1000;
+  }
+}
+function clearLoginAttempts(req) {
+  var ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
+  delete _adminLoginAttempts[ip];
+}
+
+// ===== ADMIN AUTH ENDPOINTLAR =====
+
+// Admin login — parolni tekshiradi, token beradi
+app.post("/admin/login", adminLoginRateLimit, async (req, res) => {
   try {
     const { password } = req.body;
-    if (!checkAdminPassword(password)) {
+    if (!password || !checkAdminPassword(password)) {
+      recordFailedLogin(req);
+      // Noto'g'ri login urinishini audit'ga yozamiz
+      await logAudit(req, "admin_login_failed", { details: "Noto'g'ri parol urinishi" });
       return res.status(401).json({ error: "Noto'g'ri parol" });
     }
+    clearLoginAttempts(req); // muvaffaqiyatli — urinishlarni tozalaymiz
+    const token = signAdminToken("Admin");
+    // req.admin'ni qo'lda o'rnatamiz (logAudit uchun)
+    req.admin = { name: "Admin" };
+    await logAudit(req, "admin_login_success", { details: "Admin tizimga kirdi" });
+    res.json({ token: token, admin: { name: "Admin", role: "super_admin" } });
+  } catch (err) {
+    console.error("Admin login xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
 
-    const result = await pool.query(
-      `SELECT id, question_text, option_a, option_b, option_c, option_d,
-              correct_option, cefr_level, skill, difficulty
-       FROM questions ORDER BY id DESC`
+// Admin token tekshirish — sahifa qayta yuklanganda token hali amal qiladimi
+app.get("/admin/me", requireAdmin, (req, res) => {
+  res.json({ admin: req.admin });
+});
+
+// Admin logout — token frontend'da o'chiriladi, bu yerda faqat audit
+app.post("/admin/logout", requireAdmin, async (req, res) => {
+  await logAudit(req, "admin_logout", { details: "Admin tizimdan chiqdi" });
+  res.json({ message: "Chiqildi" });
+});
+
+// Savollarni olish (admin) — pagination, search, filter bilan
+// GET, token bilan (parol emas). Query: ?page=1&limit=25&search=&level=&skill=&status=&date_from=&date_to=
+app.get("/admin/questions", requireAdmin, async (req, res) => {
+  try {
+    var page = Math.max(1, parseInt(req.query.page) || 1);
+    var limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+    var offset = (page - 1) * limit;
+
+    var search = (req.query.search || "").trim();
+    var level = (req.query.level || "").trim();
+    var skill = (req.query.skill || "").trim();
+    var status = (req.query.status || "").trim();
+    var dateFrom = (req.query.date_from || "").trim();
+    var dateTo = (req.query.date_to || "").trim();
+
+    // WHERE shartlarni dinamik quramiz (SQL injection'dan himoya: parametrlar $1, $2...)
+    var conds = [];
+    var params = [];
+    var p = 0;
+
+    if (search) {
+      p++; conds.push("(LOWER(question_text) LIKE $" + p + " OR CAST(id AS TEXT) LIKE $" + p + ")");
+      params.push("%" + search.toLowerCase() + "%");
+    }
+    if (level) { p++; conds.push("cefr_level = $" + p); params.push(level); }
+    if (skill) { p++; conds.push("skill = $" + p); params.push(skill); }
+    if (status) { p++; conds.push("status = $" + p); params.push(status); }
+    if (dateFrom) { p++; conds.push("created_at >= $" + p); params.push(dateFrom); }
+    if (dateTo) { p++; conds.push("created_at <= $" + p); params.push(dateTo + " 23:59:59"); }
+
+    var whereClause = conds.length ? "WHERE " + conds.join(" AND ") : "";
+
+    // Jami sonni olamiz (pagination uchun)
+    var countResult = await pool.query("SELECT COUNT(*) AS total FROM questions " + whereClause, params);
+    var total = parseInt(countResult.rows[0].total);
+
+    // Sahifa ma'lumotini olamiz (limit + offset)
+    var dataParams = params.slice();
+    dataParams.push(limit); var limitIdx = dataParams.length;
+    dataParams.push(offset); var offsetIdx = dataParams.length;
+
+    var dataResult = await pool.query(
+      "SELECT id, question_text, option_a, option_b, option_c, option_d, " +
+      "correct_option, cefr_level, skill, difficulty, explanation, status, created_at, updated_at " +
+      "FROM questions " + whereClause +
+      " ORDER BY id DESC LIMIT $" + limitIdx + " OFFSET $" + offsetIdx,
+      dataParams
     );
-    res.json({ questions: result.rows });
+
+    res.json({
+      questions: dataResult.rows,
+      pagination: {
+        page: page,
+        limit: limit,
+        total: total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (err) {
     console.error("Admin savollar xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
@@ -1377,35 +1544,35 @@ app.post("/admin/questions", async (req, res) => {
 });
 
 // Yangi savol qo'shish
-app.post("/admin/questions/add", async (req, res) => {
+app.post("/admin/questions/add", requireAdmin, async (req, res) => {
   try {
-    const { password, question_text, option_a, option_b, option_c, option_d,
-            correct_option, cefr_level, skill, explanation } = req.body;
-
-    if (!checkAdminPassword(password)) {
-      return res.status(401).json({ error: "Noto'g'ri parol" });
-    }
+    const { question_text, option_a, option_b, option_c, option_d,
+            correct_option, cefr_level, skill, explanation, status } = req.body;
 
     // Tekshirish
     if (!question_text || !option_a || !option_b || !option_c || !option_d || !correct_option) {
       return res.status(400).json({ error: "Barcha maydonlarni to'ldiring" });
     }
-
-    // To'g'ri javob A/B/C/D bo'lishi kerak
     if (!["A", "B", "C", "D"].includes(correct_option)) {
       return res.status(400).json({ error: "To'g'ri javob A, B, C yoki D bo'lishi kerak" });
     }
+    // Status validatsiyasi
+    var st = status || "published";
+    if (!["published", "draft", "needs_review"].includes(st)) st = "published";
 
     const result = await pool.query(
       `INSERT INTO questions
-       (question_text, option_a, option_b, option_c, option_d, correct_option, cefr_level, skill, difficulty, explanation)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'easy', $9)
+       (question_text, option_a, option_b, option_c, option_d, correct_option, cefr_level, skill, difficulty, explanation, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'easy', $9, $10)
        RETURNING id`,
       [question_text, option_a, option_b, option_c, option_d, correct_option,
-       cefr_level || "A1", skill || "grammar", explanation || ""]
+       cefr_level || "A1", skill || "grammar", explanation || "", st]
     );
 
-    res.json({ message: "Savol qo'shildi!", id: result.rows[0].id });
+    var newId = result.rows[0].id;
+    await logAudit(req, "question_created", { entityType: "question", entityId: newId, details: (cefr_level || "A1") + " · " + (skill || "grammar") });
+
+    res.json({ message: "Savol qo'shildi!", id: newId });
   } catch (err) {
     console.error("Savol qo'shish xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
@@ -1413,17 +1580,513 @@ app.post("/admin/questions/add", async (req, res) => {
 });
 
 // Savolni o'chirish
-app.post("/admin/questions/delete", async (req, res) => {
+app.post("/admin/questions/delete", requireAdmin, async (req, res) => {
   try {
-    const { password, id } = req.body;
-    if (!checkAdminPassword(password)) {
-      return res.status(401).json({ error: "Noto'g'ri parol" });
-    }
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: "Savol ID kerak" });
 
     await pool.query("DELETE FROM questions WHERE id = $1", [id]);
+    await logAudit(req, "question_deleted", { entityType: "question", entityId: id });
     res.json({ message: "Savol o'chirildi!" });
   } catch (err) {
     console.error("Savol o'chirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Savolni tahrirlash (Edit)
+app.post("/admin/questions/edit", requireAdmin, async (req, res) => {
+  try {
+    const { id, question_text, option_a, option_b, option_c, option_d,
+            correct_option, cefr_level, skill, explanation, status } = req.body;
+
+    if (!id) return res.status(400).json({ error: "Savol ID kerak" });
+    if (!question_text || !option_a || !option_b || !option_c || !option_d || !correct_option) {
+      return res.status(400).json({ error: "Barcha maydonlarni to'ldiring" });
+    }
+    if (!["A", "B", "C", "D"].includes(correct_option)) {
+      return res.status(400).json({ error: "To'g'ri javob A, B, C yoki D bo'lishi kerak" });
+    }
+    var st = status || "published";
+    if (!["published", "draft", "needs_review"].includes(st)) st = "published";
+
+    const result = await pool.query(
+      `UPDATE questions SET
+         question_text = $1, option_a = $2, option_b = $3, option_c = $4, option_d = $5,
+         correct_option = $6, cefr_level = $7, skill = $8, explanation = $9, status = $10,
+         updated_at = NOW()
+       WHERE id = $11 RETURNING id`,
+      [question_text, option_a, option_b, option_c, option_d, correct_option,
+       cefr_level || "A1", skill || "grammar", explanation || "", st, id]
+    );
+
+    if (result.rows.length === 0) return res.status(404).json({ error: "Savol topilmadi" });
+
+    await logAudit(req, "question_updated", { entityType: "question", entityId: id, details: (cefr_level || "A1") + " · " + (skill || "grammar") });
+    res.json({ message: "Savol yangilandi!", id: id });
+  } catch (err) {
+    console.error("Savol tahrirlash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== QUESTION DISTRIBUTION (real statistika) =====
+// Daraja, ko'nikma, status bo'yicha savol taqsimoti — hammasi bazadan
+app.get("/admin/questions/stats", requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT cefr_level, skill, status FROM questions"
+    );
+    const rows = result.rows;
+
+    var levels = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0 };
+    var skills = {};
+    var status = { published: 0, draft: 0, needs_review: 0 };
+
+    rows.forEach(function (q) {
+      // Daraja
+      if (levels[q.cefr_level] != null) levels[q.cefr_level]++;
+      // Ko'nikma
+      var sk = q.skill || "grammar";
+      skills[sk] = (skills[sk] || 0) + 1;
+      // Status
+      var st = q.status || "published";
+      if (status[st] != null) status[st]++;
+    });
+
+    // Eng ko'p / eng kam daraja
+    var mostLevel = null, leastLevel = null, maxC = -1, minC = Infinity;
+    Object.keys(levels).forEach(function (lv) {
+      if (levels[lv] > maxC) { maxC = levels[lv]; mostLevel = lv; }
+      if (levels[lv] < minC) { minC = levels[lv]; leastLevel = lv; }
+    });
+    // Eng ko'p ko'nikma
+    var mostSkill = null, maxSk = -1;
+    Object.keys(skills).forEach(function (sk) {
+      if (skills[sk] > maxSk) { maxSk = skills[sk]; mostSkill = sk; }
+    });
+
+    res.json({
+      totalQuestions: rows.length,
+      levels: levels,
+      skills: skills,
+      status: status,
+      mostCommonLevel: mostLevel,
+      leastCoveredLevel: leastLevel,
+      mostCommonSkill: mostSkill,
+    });
+  } catch (err) {
+    console.error("Stats xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== QUESTION HEALTH (real validatsiya formulasi) =====
+// Validation Score = valid savollar / jami × 100. Hammasi bazadan hisoblanadi.
+app.get("/admin/questions/health", requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, question_text, option_a, option_b, option_c, option_d,
+              correct_option, cefr_level, skill, status FROM questions`
+    );
+    const rows = result.rows;
+
+    var total = rows.length;
+    var valid = 0, missingFields = 0, invalidAnswerKey = 0;
+    var published = 0, draft = 0, needsReview = 0;
+    var validStatuses = ["published", "draft", "needs_review"];
+    var validAnswers = ["A", "B", "C", "D"];
+
+    // Duplicate aniqlash: normalized (lowercase, trim) matn bo'yicha
+    var seen = {};
+    var duplicateRisk = 0;
+
+    rows.forEach(function (q) {
+      // Status sanog'i
+      var st = q.status || "published";
+      if (st === "published") published++;
+      else if (st === "draft") draft++;
+      else if (st === "needs_review") needsReview++;
+
+      // Maydon to'liqligini tekshirish
+      var hasAllFields =
+        q.question_text && q.question_text.trim().length >= 3 &&
+        q.option_a && q.option_a.trim() &&
+        q.option_b && q.option_b.trim() &&
+        q.option_c && q.option_c.trim() &&
+        q.option_d && q.option_d.trim() &&
+        q.cefr_level && q.skill;
+
+      var answerOk = validAnswers.indexOf(q.correct_option) > -1;
+      var statusOk = validStatuses.indexOf(st) > -1;
+
+      if (!hasAllFields) missingFields++;
+      if (!answerOk) invalidAnswerKey++;
+
+      // Duplicate tekshiruvi
+      var norm = (q.question_text || "").toLowerCase().trim().replace(/\s+/g, " ");
+      if (norm) {
+        if (seen[norm]) duplicateRisk++;
+        else seen[norm] = true;
+      }
+
+      // Valid: hamma shart bajarilsa
+      if (hasAllFields && answerOk && statusOk) valid++;
+    });
+
+    var score = total > 0 ? Math.round((valid / total) * 1000) / 10 : 0;
+
+    res.json({
+      totalQuestions: total,
+      validQuestions: valid,
+      validationScore: score,
+      missingFields: missingFields,
+      invalidAnswerKey: invalidAnswerKey,
+      duplicateRisk: duplicateRisk,
+      needsReview: needsReview,
+      published: published,
+      draft: draft,
+    });
+  } catch (err) {
+    console.error("Health xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== AUDIT LOGS RO'YXATI (Recent Admin Activity) =====
+app.get("/admin/audit-logs", requireAdmin, async (req, res) => {
+  try {
+    var page = Math.max(1, parseInt(req.query.page) || 1);
+    var limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
+    var offset = (page - 1) * limit;
+
+    var action = (req.query.action || "").trim();
+    var conds = []; var params = []; var p = 0;
+    if (action) { p++; conds.push("action = $" + p); params.push(action); }
+    var whereClause = conds.length ? "WHERE " + conds.join(" AND ") : "";
+
+    var countResult = await pool.query("SELECT COUNT(*) AS total FROM audit_logs " + whereClause, params);
+    var total = parseInt(countResult.rows[0].total);
+
+    var dataParams = params.slice();
+    dataParams.push(limit); var li = dataParams.length;
+    dataParams.push(offset); var oi = dataParams.length;
+
+    var dataResult = await pool.query(
+      "SELECT id, admin_name, action, entity_type, entity_id, details, created_at FROM audit_logs " +
+      whereClause + " ORDER BY id DESC LIMIT $" + li + " OFFSET $" + oi,
+      dataParams
+    );
+
+    res.json({
+      logs: dataResult.rows,
+      pagination: { page: page, limit: limit, total: total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (err) {
+    console.error("Audit logs xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== ADMIN OVERVIEW (umumiy dashboard statistikasi) =====
+// Jami savol, foydalanuvchi, maktab, jang — hammasi bazadan
+app.get("/admin/overview", requireAdmin, async (req, res) => {
+  try {
+    // Bir nechta so'rovni parallel bajaramiz (tezroq)
+    var results = await Promise.all([
+      pool.query("SELECT COUNT(*) AS c FROM questions"),
+      pool.query("SELECT COUNT(*) AS c FROM users WHERE role = 'student'"),
+      pool.query("SELECT COUNT(*) AS c FROM users WHERE role = 'teacher' OR role = 'school_admin'"),
+      pool.query("SELECT COUNT(DISTINCT school) AS c FROM users WHERE school IS NOT NULL AND school != ''"),
+      pool.query("SELECT COUNT(*) AS c FROM battle_history"),
+      pool.query("SELECT COUNT(*) AS c FROM users WHERE last_active_date = CURRENT_DATE"),
+      // Eng faol viloyatlar (top 5)
+      pool.query("SELECT region, COUNT(*) AS c FROM users WHERE region IS NOT NULL AND region != '' GROUP BY region ORDER BY c DESC LIMIT 5"),
+      // So'nggi 7 kun ichida qo'shilgan savollar (o'sish grafigi uchun)
+      pool.query("SELECT TO_CHAR(created_at, 'YYYY-MM-DD') AS day, COUNT(*) AS c FROM questions WHERE created_at >= CURRENT_DATE - INTERVAL '6 days' GROUP BY day ORDER BY day"),
+    ]);
+
+    res.json({
+      totalQuestions: parseInt(results[0].rows[0].c),
+      totalStudents: parseInt(results[1].rows[0].c),
+      totalTeachers: parseInt(results[2].rows[0].c),
+      totalSchools: parseInt(results[3].rows[0].c),
+      totalBattles: parseInt(results[4].rows[0].c),
+      activeToday: parseInt(results[5].rows[0].c),
+      topRegions: results[6].rows.map(function (r) { return { name: r.region, count: parseInt(r.c) }; }),
+      questionGrowth: results[7].rows.map(function (r) { return { day: r.day, count: parseInt(r.c) }; }),
+    });
+  } catch (err) {
+    console.error("Overview xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== ADMIN: FOYDALANUVCHILAR =====
+// Ro'yxat — pagination, qidiruv, filtr (rol, daraja, viloyat)
+app.get("/admin/users", requireAdmin, async (req, res) => {
+  try {
+    var page = Math.max(1, parseInt(req.query.page) || 1);
+    var limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+    var offset = (page - 1) * limit;
+
+    var search = (req.query.search || "").trim();
+    var role = (req.query.role || "").trim();
+    var level = (req.query.level || "").trim();
+    var region = (req.query.region || "").trim();
+
+    var conds = []; var params = []; var p = 0;
+    if (search) {
+      p++; conds.push("(LOWER(first_name) LIKE $" + p + " OR LOWER(last_name) LIKE $" + p + " OR phone LIKE $" + p + ")");
+      params.push("%" + search.toLowerCase() + "%");
+    }
+    if (role) { p++; conds.push("role = $" + p); params.push(role); }
+    if (level) { p++; conds.push("cefr_level = $" + p); params.push(level); }
+    if (region) { p++; conds.push("region = $" + p); params.push(region); }
+    var whereClause = conds.length ? "WHERE " + conds.join(" AND ") : "";
+
+    var countResult = await pool.query("SELECT COUNT(*) AS total FROM users " + whereClause, params);
+    var total = parseInt(countResult.rows[0].total);
+
+    var dataParams = params.slice();
+    dataParams.push(limit); var li = dataParams.length;
+    dataParams.push(offset); var oi = dataParams.length;
+
+    var dataResult = await pool.query(
+      "SELECT id, first_name, last_name, role, cefr_level, rating, region, district, school, " +
+      "phone, is_banned, created_at FROM users " + whereClause +
+      " ORDER BY id DESC LIMIT $" + li + " OFFSET $" + oi,
+      dataParams
+    );
+
+    res.json({
+      users: dataResult.rows,
+      pagination: { page: page, limit: limit, total: total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (err) {
+    console.error("Admin users xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Rolni o'zgartirish
+app.post("/admin/users/role", requireAdmin, async (req, res) => {
+  try {
+    const { id, role } = req.body;
+    if (!id || !role) return res.status(400).json({ error: "id va role kerak" });
+    var validRoles = ["student", "teacher", "school_admin"];
+    if (validRoles.indexOf(role) === -1) return res.status(400).json({ error: "Noto'g'ri rol" });
+
+    var result = await pool.query("UPDATE users SET role = $1 WHERE id = $2 RETURNING first_name, last_name", [role, id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
+
+    var name = result.rows[0].first_name + " " + result.rows[0].last_name;
+    await logAudit(req, "user_role_changed", { entityType: "user", entityId: id, details: name + " → " + role });
+    res.json({ message: "Rol o'zgartirildi" });
+  } catch (err) {
+    console.error("Rol o'zgartirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Ban / faolsizlantirish (toggle)
+app.post("/admin/users/ban", requireAdmin, async (req, res) => {
+  try {
+    const { id, banned } = req.body;
+    if (!id) return res.status(400).json({ error: "id kerak" });
+
+    var result = await pool.query("UPDATE users SET is_banned = $1 WHERE id = $2 RETURNING first_name, last_name", [banned === true, id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
+
+    var name = result.rows[0].first_name + " " + result.rows[0].last_name;
+    await logAudit(req, banned ? "user_banned" : "user_unbanned", { entityType: "user", entityId: id, details: name });
+    res.json({ message: banned ? "Foydalanuvchi bloklandi" : "Blok olib tashlandi" });
+  } catch (err) {
+    console.error("Ban xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Bitta foydalanuvchi to'liq ma'lumoti (modal uchun)
+app.get("/admin/users/:id", requireAdmin, async (req, res) => {
+  try {
+    var id = parseInt(req.params.id);
+    if (!id) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    var userResult = await pool.query(
+      `SELECT id, first_name, last_name, role, cefr_level, rating, xp, coins,
+              current_streak, longest_streak, win_streak, best_win_streak,
+              region, district, village, school, phone, birth_date,
+              profile_picture, is_banned, created_at
+       FROM users WHERE id = $1`,
+      [id]
+    );
+    if (userResult.rows.length === 0) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
+
+    // Jang soni (qo'shimcha statistika)
+    var battleResult = await pool.query("SELECT COUNT(*) AS c FROM battle_history WHERE user_id = $1", [id]);
+    // G'alaba soni
+    var winResult = await pool.query("SELECT COUNT(*) AS c FROM battle_history WHERE user_id = $1 AND outcome = 'win'", [id]);
+
+    var user = userResult.rows[0];
+    user.total_battles = parseInt(battleResult.rows[0].c);
+    user.total_wins = parseInt(winResult.rows[0].c);
+
+    res.json({ user: user });
+  } catch (err) {
+    console.error("Foydalanuvchi ma'lumoti xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== ADMIN: MAKTABLAR =====
+// Maktablar ro'yxati — viloyat + tuman + nom bo'yicha guruhlangan (sun'iy juftlik yo'q)
+app.get("/admin/schools", requireAdmin, async (req, res) => {
+  try {
+    var page = Math.max(1, parseInt(req.query.page) || 1);
+    var limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+    var offset = (page - 1) * limit;
+    var search = (req.query.search || "").trim();
+    var region = (req.query.region || "").trim();
+
+    var conds = ["school IS NOT NULL", "school != ''"];
+    var params = []; var p = 0;
+    if (search) { p++; conds.push("LOWER(school) LIKE $" + p); params.push("%" + search.toLowerCase() + "%"); }
+    if (region) { p++; conds.push("region = $" + p); params.push(region); }
+    var whereClause = "WHERE " + conds.join(" AND ");
+
+    // MUHIM: viloyat + tuman + maktab bo'yicha guruhlaymiz (MAX emas!)
+    // Shunda "Toshkent, 5-maktab" va "Namangan, 5-maktab" alohida ko'rinadi (to'g'ri)
+    var countResult = await pool.query(
+      "SELECT COUNT(*) AS total FROM (SELECT school, region, district FROM users " + whereClause + " GROUP BY school, region, district) AS sub", params
+    );
+    var total = parseInt(countResult.rows[0].total);
+
+    var dataParams = params.slice();
+    dataParams.push(limit); var li = dataParams.length;
+    dataParams.push(offset); var oi = dataParams.length;
+
+    var dataResult = await pool.query(
+      "SELECT school, region, district, " +
+      "COUNT(*) AS student_count, " +
+      "ROUND(AVG(rating)) AS avg_rating " +
+      "FROM users " + whereClause +
+      " GROUP BY school, region, district ORDER BY student_count DESC LIMIT $" + li + " OFFSET $" + oi,
+      dataParams
+    );
+
+    res.json({
+      schools: dataResult.rows.map(function (r) {
+        return {
+          name: r.school,
+          studentCount: parseInt(r.student_count),
+          avgRating: r.avg_rating != null ? parseInt(r.avg_rating) : 0,
+          region: r.region || "—",
+          district: r.district || "—",
+        };
+      }),
+      pagination: { page: page, limit: limit, total: total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (err) {
+    console.error("Maktablar xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Bitta maktab o'quvchilari (drill-down) — nom + viloyat + tuman bo'yicha
+app.get("/admin/schools/students", requireAdmin, async (req, res) => {
+  try {
+    var school = (req.query.school || "").trim();
+    var region = (req.query.region || "").trim();
+    var district = (req.query.district || "").trim();
+    if (!school) return res.status(400).json({ error: "Maktab nomi kerak" });
+
+    var conds = ["school = $1"];
+    var params = [school]; var p = 1;
+    if (region && region !== "—") { p++; conds.push("region = $" + p); params.push(region); }
+    if (district && district !== "—") { p++; conds.push("district = $" + p); params.push(district); }
+
+    var result = await pool.query(
+      "SELECT id, first_name, last_name, role, cefr_level, rating, is_banned " +
+      "FROM users WHERE " + conds.join(" AND ") + " ORDER BY rating DESC LIMIT 100",
+      params
+    );
+    res.json({ school: school, students: result.rows });
+  } catch (err) {
+    console.error("Maktab o'quvchilari xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== BULK IMPORT (CSV) =====
+// Frontend tahlil qilingan qatorlarni yuboradi. Backend HAR qatorni QAYTA validatsiya qiladi
+// (frontendga ishonmaymiz) va faqat valid qatorlarni bazaga qo'shadi.
+app.post("/admin/questions/bulk-import", requireAdmin, async (req, res) => {
+  try {
+    const { rows } = req.body;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ error: "Import uchun qatorlar yo'q" });
+    }
+    if (rows.length > 1000) {
+      return res.status(400).json({ error: "Bir martada maksimal 1000 ta savol" });
+    }
+
+    var validLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+    var validAnswers = ["A", "B", "C", "D"];
+    var validStatuses = ["published", "draft", "needs_review"];
+
+    // Mavjud savollar matnini olamiz (duplicate tekshiruvi uchun)
+    var existing = await pool.query("SELECT LOWER(TRIM(question_text)) AS qt FROM questions");
+    var existingSet = {};
+    existing.rows.forEach(function (r) { existingSet[r.qt] = true; });
+
+    var inserted = 0, skipped = 0;
+    var seenInBatch = {};
+    var errors = [];
+
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i] || {};
+      var qText = (r.question_text || "").trim();
+      var oA = (r.option_a || "").trim();
+      var oB = (r.option_b || "").trim();
+      var oC = (r.option_c || "").trim();
+      var oD = (r.option_d || "").trim();
+      var correct = (r.correct_option || "").trim().toUpperCase();
+      var level = (r.cefr_level || "A1").trim().toUpperCase();
+      var skill = (r.skill || "grammar").trim().toLowerCase();
+      var explanation = (r.explanation || "").trim();
+      var status = (r.status || "published").trim().toLowerCase();
+
+      // Backend validatsiya (frontenddan mustaqil)
+      if (!qText || qText.length < 3 || !oA || !oB || !oC || !oD) { skipped++; continue; }
+      if (validAnswers.indexOf(correct) === -1) { skipped++; continue; }
+      if (validLevels.indexOf(level) === -1) level = "A1";
+      if (validStatuses.indexOf(status) === -1) status = "published";
+
+      // Duplicate tekshiruvi (bazada yoki shu partiyada)
+      var norm = qText.toLowerCase();
+      if (existingSet[norm] || seenInBatch[norm]) { skipped++; continue; }
+      seenInBatch[norm] = true;
+
+      try {
+        await pool.query(
+          `INSERT INTO questions
+           (question_text, option_a, option_b, option_c, option_d, correct_option, cefr_level, skill, difficulty, explanation, status)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'easy',$9,$10)`,
+          [qText, oA, oB, oC, oD, correct, level, skill, explanation, status]
+        );
+        inserted++;
+      } catch (e) {
+        skipped++;
+        errors.push("Qator " + (i + 1) + ": " + e.message);
+      }
+    }
+
+    await logAudit(req, "bulk_import_completed", { entityType: "question", details: inserted + " qo'shildi, " + skipped + " o'tkazib yuborildi" });
+
+    res.json({ inserted: inserted, skipped: skipped, total: rows.length, errors: errors.slice(0, 10) });
+  } catch (err) {
+    console.error("Bulk import xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });
@@ -1594,7 +2257,7 @@ app.get("/profile/:userId", authMiddleware, async (req, res) => {
     // Asosiy foydalanuvchi ma'lumoti
     const userResult = await pool.query(
       `SELECT id, first_name, last_name, cefr_level, rating, xp, coins,
-              current_streak, longest_streak,
+              current_streak, longest_streak, win_streak, best_win_streak,
               region, district, village, school, birth_date, phone, profile_picture
        FROM users WHERE id = $1`,
       [userId]

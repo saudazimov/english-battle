@@ -284,6 +284,7 @@
   <script src="/api.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/sidebar.js"></script>
+  <script src="/profile-modal.js"></script>
   <script>
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
@@ -345,6 +346,14 @@
       }
     }
 
+    // refreshUser() bazadan yangi rating olganda — "Your Rankings" panelini yangilaymiz
+    window.addEventListener("userRefreshed", function (e) {
+      const fresh = e.detail || JSON.parse(localStorage.getItem("user") || "{}");
+      user.rating = fresh.rating;
+      user.school = fresh.school;
+      setupYourRankings(); // liga, ball, medal eng yangi rating bilan qayta chiziladi
+    });
+
     function renderTable() {
       const list = document.getElementById("lbList");
       if (allPlayers.length === 0) {
@@ -363,6 +372,8 @@
 
         const row = document.createElement("div");
         row.className = "lb-row" + (isMe ? " me" : "");
+        row.style.cursor = "pointer";
+        row.onclick = () => openProfileModal(p.id);
         row.innerHTML =
           '<div class="lb-rank ' + rankCls + '">' + rank + '</div>' +
           '<div class="lb-player"><div class="lb-ava">' + avatarHTML(p.first_name, p.profile_picture) + '</div><div class="lb-name">' + name + '</div></div>' +
@@ -378,7 +389,14 @@
 
     // Your Rankings (global o'rin)
     function setupYourRankings() {
-      const myRating = user.rating || 1000;
+      // Rating'ni eng ishonchli manbadan olamiz:
+      // 1-navbat: leaderboard jadvalidagi o'zimizning yozuv (bazadan, eng yangi)
+      // 2-navbat: localStorage (refreshUser yangilab turadi)
+      const myInList = allPlayers.find(p => p.id === user.id);
+      const myRating = (myInList && myInList.rating != null)
+        ? myInList.rating
+        : (user.rating || 1000);
+
       document.getElementById("yrLeague").textContent = leagueName(myRating);
       document.getElementById("yrMedal").innerHTML = leagueIcon(myRating);
       document.getElementById("yrPoints").textContent = myRating;
@@ -413,6 +431,8 @@
         const crown = o.rank === 1 ? '<div class="podium-crown">👑</div>' : "";
         const div = document.createElement("div");
         div.className = "podium-place " + o.cls;
+        div.style.cursor = "pointer";
+        div.onclick = () => openProfileModal(o.p.id);
         div.innerHTML =
           crown +
           '<div class="podium-rank">' + o.rank + '</div>' +
