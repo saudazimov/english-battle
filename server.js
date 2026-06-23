@@ -588,6 +588,101 @@ const teamQueueTimers = {}; // har navbat uchun bot-fill timer
 const pendingBattles = {}; // Do'st janglari: battle.html'da tayyor bo'lishni kutayotgan
 const onlineUsers = {}; // { userId: socketId }
 
+// ============ PARTY (Do'stlar jamoasi) ============
+const parties = {};      // { partyId: { leader, teamMode, maxSize, members: [{userId, name, socketId, isLeader}], status } }
+const userParty = {};    // { userId: partyId } — tez qidirish uchun
+
+function makePartyId() { return "party_" + Date.now() + "_" + Math.floor(Math.random() * 10000); }
+
+// Party holatini barcha a'zolarga yuborish
+function broadcastParty(partyId) {
+  var party = parties[partyId];
+  if (!party) return;
+  var payload = {
+    partyId: partyId,
+    teamMode: party.teamMode,
+    maxSize: party.maxSize,
+    status: party.status,
+    leaderId: party.leader,
+    members: party.members.map(function (m) { return { userId: m.userId, name: m.name, isLeader: m.userId === party.leader }; }),
+  };
+  party.members.forEach(function (m) {
+    if (m.socketId) io.to(m.socketId).emit("partyUpdated", payload);
+  });
+}
+
+// A'zoni partydan chiqarish (disconnect yoki leave)
+function removeFromParty(userId) {
+  var partyId = userParty[userId];
+  if (!partyId) return;
+  var party = parties[partyId];
+  if (!party) { delete userParty[userId]; return; }
+
+  party.members = party.members.filter(function (m) { return m.userId !== userId; });
+  delete userParty[userId];
+
+  if (party.members.length === 0) {
+    // Bo'sh party — o'chiramiz
+    delete parties[partyId];
+    return;
+  }
+
+  // Agar lider chiqgan bo'lsa — keyingi a'zo lider bo'ladi
+  if (party.leader === userId) {
+    party.leader = party.members[0].userId;
+  }
+  broadcastParty(partyId);
+}
+
+// Pending party janglar (a'zolar team-battle.html ga yetib kelishini kutadi)
+const pendingPartyMatches = {}; // { partyId: { teamMode, teamSize, expected:[uid], arrived:{uid:{...}}, timer } }
+
+var TEAM_BOT_NAMES = ["Sardor", "Jasur", "Aziz", "Bobur", "Dilshod", "Kamol", "Nodir", "Olim", "Rustam", "Sherzod", "Tohir", "Umid"];
+function makeTeamBot(refPlayer, idx) {
+  var bn = TEAM_BOT_NAMES[Math.floor(Math.random() * TEAM_BOT_NAMES.length)];
+  return {
+    socketId: "pbot_" + Date.now() + "_" + idx + "_" + Math.floor(Math.random() * 1000),
+    userId: null,
+    name: bn,
+    level: refPlayer ? refPlayer.level : "A1",
+    lengthKey: refPlayer ? refPlayer.lengthKey : "standard",
+    isBot: true,
+  };
+}
+
+// Party jangini boshlash (yetib kelgan a'zolar + bot to'ldirish)
+function startPartyBattle(partyId) {
+  var pending = pendingPartyMatches[partyId];
+  if (!pending) return;
+  delete pendingPartyMatches[partyId];
+
+  var teamSize = pending.teamSize;
+  var arrivedPlayers = Object.keys(pending.arrived).map(function (uid) { return pending.arrived[uid]; });
+  if (arrivedPlayers.length === 0) return;
+
+  var ref = arrivedPlayers[0];
+
+  // A jamoa = party a'zolari (+ bot to'ldirish)
+  var teamA = arrivedPlayers.slice(0, teamSize);
+  var bi = 0;
+  while (teamA.length < teamSize) { teamA.push(makeTeamBot(ref, bi++)); }
+
+  // B jamoa = bot (hozircha — keyin party/tasodifiy)
+  var teamB = [];
+  while (teamB.length < teamSize) { teamB.push(makeTeamBot(ref, bi++)); }
+
+  var group = teamA.concat(teamB);
+  console.log("Party jang boshlanmoqda [" + pending.teamMode + "]: party=" + partyId + " A:" + teamA.length + " (party " + arrivedPlayers.length + ")");
+
+  // Party holatini tozalaymiz (jang boshlandi)
+  if (parties[partyId]) {
+    parties[partyId].members.forEach(function (m) { delete userParty[m.userId]; });
+    delete parties[partyId];
+  }
+
+  startTeamBattle(group, pending.teamMode, teamSize);
+}
+
 
 // Raqib kartasi uchun: rating + win rate olish (matchmaking overlay'da ko'rsatish uchun)
 async function getOpponentCardInfo(userId) {
@@ -809,6 +904,9 @@ io.on("connection", (socket) => {
       console.log("User offline:", userId);
 
       notifyFriendsStatus(userId, false);
+
+      // Partydan ham chiqaramiz
+      removeFromParty(String(userId));
     }
 
     console.log("Socket disconnected:", socket.id);
@@ -863,6 +961,140 @@ io.on("connection", (socket) => {
       requesterSocket.emit("matchFound", { roomId, opponent: { name: myName, profile_picture: myPic, rating: myCard.rating, level: level || "A1" }, lengthKey: lk, redirect: true, message: "Rematch qabul qilindi!" });
     }
     socket.emit("matchFound", { roomId, opponent: { name: fromName, profile_picture: fromPic, rating: fromCard.rating, level: level || "A1" }, lengthKey: lk, redirect: true, message: "Siz rematchni qabul qildingiz!" });
+  });
+
+  // ============ PARTY HANDLERLAR ============
+
+  // Party yaratish (lider bo'lib)
+  socket.on("createParty", ({ userId, name, teamMode }) => {
+    if (!userId) return;
+    var uid = String(userId);
+
+    // Avvalgi partydan chiqaramiz (agar bor bo'lsa)
+    if (userParty[uid]) removeFromParty(uid);
+
+    var mode = teamMode === "squad" ? "squad" : "duo";
+    var maxSize = mode === "squad" ? 4 : 2;
+    var partyId = makePartyId();
+
+    parties[partyId] = {
+      leader: uid,
+      teamMode: mode,
+      maxSize: maxSize,
+      status: "forming",
+      members: [{ userId: uid, name: name || "O'yinchi", socketId: socket.id, isLeader: true }],
+    };
+    userParty[uid] = partyId;
+
+    socket.emit("partyCreated", { partyId: partyId });
+    broadcastParty(partyId);
+    console.log("Party yaratildi [" + mode + "]: " + partyId + " lider:" + uid);
+  });
+
+  // Do'stni partyga taklif qilish
+  socket.on("inviteToParty", ({ partyId, fromName, toUserId }) => {
+    var party = parties[partyId];
+    if (!party) { socket.emit("partyError", { message: "Party topilmadi" }); return; }
+    if (party.members.length >= party.maxSize) { socket.emit("partyError", { message: "Party to'la" }); return; }
+
+    var targetSocket = onlineUsers[String(toUserId)];
+    if (!targetSocket) { socket.emit("partyError", { message: "Do'stingiz hozir onlayn emas" }); return; }
+
+    // Do'st allaqachon shu partyda bo'lsa
+    if (party.members.find(function (m) { return m.userId === String(toUserId); })) {
+      socket.emit("partyError", { message: "Bu o'yinchi allaqachon partyda" });
+      return;
+    }
+
+    io.to(targetSocket).emit("partyInviteReceived", {
+      partyId: partyId,
+      fromName: fromName || "O'yinchi",
+      teamMode: party.teamMode,
+    });
+    socket.emit("partyInviteSent", { toUserId: String(toUserId) });
+    console.log("Party taklif: " + partyId + " -> " + toUserId);
+  });
+
+  // Taklifni qabul qilish
+  socket.on("acceptPartyInvite", ({ partyId, userId, name }) => {
+    var party = parties[partyId];
+    if (!party) { socket.emit("partyError", { message: "Party endi mavjud emas" }); return; }
+    if (party.members.length >= party.maxSize) { socket.emit("partyError", { message: "Party to'lib qoldi" }); return; }
+
+    var uid = String(userId);
+    // Avvalgi partydan chiqaramiz
+    if (userParty[uid] && userParty[uid] !== partyId) removeFromParty(uid);
+
+    // Allaqachon a'zomi?
+    if (!party.members.find(function (m) { return m.userId === uid; })) {
+      party.members.push({ userId: uid, name: name || "O'yinchi", socketId: socket.id, isLeader: false });
+      userParty[uid] = partyId;
+    }
+    broadcastParty(partyId);
+    console.log("Party qo'shildi: " + uid + " -> " + partyId);
+  });
+
+  // Taklifni rad etish
+  socket.on("declinePartyInvite", ({ partyId, name }) => {
+    var party = parties[partyId];
+    if (!party) return;
+    var leaderSocket = onlineUsers[party.leader];
+    if (leaderSocket) io.to(leaderSocket).emit("partyInviteDeclined", { byName: name || "Do'stingiz" });
+  });
+
+  // Partydan chiqish
+  socket.on("leaveParty", ({ userId }) => {
+    removeFromParty(String(userId));
+    socket.emit("partyLeft", {});
+  });
+
+  // Lider party jangini boshlaydi
+  socket.on("startPartyQueue", ({ partyId, userId }) => {
+    var party = parties[partyId];
+    if (!party) { socket.emit("partyError", { message: "Party topilmadi" }); return; }
+    if (String(party.leader) !== String(userId)) { socket.emit("partyError", { message: "Faqat lider boshlay oladi" }); return; }
+    if (party.members.length < 2) { socket.emit("partyError", { message: "Kamida 2 o'yinchi kerak" }); return; }
+
+    party.status = "in_battle";
+
+    // Pending match yaratamiz (a'zolar yetib kelishini kutadi)
+    pendingPartyMatches[partyId] = {
+      teamMode: party.teamMode,
+      teamSize: party.maxSize,
+      expected: party.members.map(function (m) { return String(m.userId); }),
+      arrived: {},
+      timer: null,
+    };
+
+    // Hamma a'zoga team-battle.html ga o'tishni aytamiz
+    party.members.forEach(function (m) {
+      if (m.socketId) io.to(m.socketId).emit("partyMatchStarting", { teamMode: party.teamMode, partyId: partyId });
+    });
+    console.log("Party queue boshlandi: " + partyId + " (" + party.members.length + " a'zo)");
+  });
+
+  // team-battle.html dan: party a'zosi yetib keldi
+  socket.on("joinPartyMatch", ({ partyId, userId, name, level, lengthKey }) => {
+    var pending = pendingPartyMatches[partyId];
+    if (!pending) {
+      // Pending yo'q (kech qoldi yoki xato) — solo team matchga tushiramiz
+      io.to(socket.id).emit("partyMatchExpired", {});
+      return;
+    }
+    var uid = String(userId);
+    pending.arrived[uid] = { socketId: socket.id, userId: uid, name: name || "O'yinchi", level: level || "A1", lengthKey: lengthKey || "standard" };
+
+    console.log("Party a'zosi yetib keldi: " + uid + " -> " + partyId + " (" + Object.keys(pending.arrived).length + "/" + pending.expected.length + ")");
+
+    // Hamma yetib keldimi?
+    var allArrived = pending.expected.every(function (eid) { return pending.arrived[eid]; });
+    if (allArrived) {
+      if (pending.timer) clearTimeout(pending.timer);
+      startPartyBattle(partyId);
+    } else if (!pending.timer) {
+      // 12s ichida hamma kelmasa — kelganlar bilan boshlaymiz
+      pending.timer = setTimeout(function () { startPartyBattle(partyId); }, 12000);
+    }
   });
 
   // Do'stga jang chaqiruvi yuborish

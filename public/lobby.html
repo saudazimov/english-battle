@@ -559,6 +559,80 @@
     .length-start { flex: 2; display: flex; align-items: center; justify-content: center; gap: 9px; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(95deg, var(--accent), var(--accent-2)); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 22px rgba(91,140,255,0.3); transition: opacity 0.15s; }
     .length-start:hover { opacity: 0.93; }
     .length-start i { width: 18px; height: 18px; }
+
+    /* ===== PARTY ===== */
+    .party-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 9000; align-items: center; justify-content: center; padding: 20px; }
+    .party-overlay.show { display: flex; }
+    .party-box { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 26px; max-width: 480px; width: 100%; box-shadow: 0 24px 70px rgba(0,0,0,0.5); }
+
+    .party-choice-head { text-align: center; margin-bottom: 22px; }
+    .party-choice-title { font-size: 22px; font-weight: 800; }
+    .party-choice-sub { font-size: 13.5px; color: var(--text-dim); margin-top: 4px; }
+    .party-choice-options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+    .party-choice-opt { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.15s; }
+    .party-choice-opt:hover { border-color: var(--accent); background: rgba(91,140,255,0.06); }
+    .pco-ic { width: 44px; height: 44px; border-radius: 12px; background: rgba(91,140,255,0.15); display: grid; place-items: center; flex-shrink: 0; }
+    .pco-ic.purple { background: rgba(168,85,247,0.15); }
+    .pco-ic i { width: 22px; height: 22px; color: var(--accent); }
+    .pco-ic.purple i { color: var(--accent-2); }
+    .pco-text { flex: 1; }
+    .pco-name { font-size: 15px; font-weight: 700; }
+    .pco-desc { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+    .pco-arrow { width: 18px; height: 18px; color: var(--text-faint); }
+
+    .party-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .party-title { font-size: 19px; font-weight: 800; }
+    .party-sub { font-size: 13px; color: var(--text-dim); margin-top: 3px; }
+    .party-close-x { width: 34px; height: 34px; border-radius: 9px; background: var(--bg); display: grid; place-items: center; cursor: pointer; color: var(--text-dim); }
+    .party-close-x:hover { color: var(--red); }
+    .party-close-x i { width: 18px; height: 18px; }
+
+    .party-members { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .party-member { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; }
+    .party-member.leader { border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.05); }
+    .party-member-ava { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-size: 15px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .party-member-name { font-size: 14px; font-weight: 700; flex: 1; }
+    .party-member-badge { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+    .party-member-badge.leader { background: rgba(251,191,36,0.18); color: var(--gold); }
+    .party-member-badge.member { background: rgba(91,140,255,0.15); color: var(--accent); }
+    .party-slot-empty { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--bg); border: 1px dashed var(--border); border-radius: 12px; opacity: 0.5; }
+    .party-slot-empty-ava { width: 38px; height: 38px; border-radius: 50%; background: var(--panel-2); display: grid; place-items: center; color: var(--text-faint); flex-shrink: 0; }
+    .party-slot-empty-text { font-size: 13px; color: var(--text-faint); }
+
+    .party-section-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .party-invite-section { margin-bottom: 20px; }
+    .party-friends-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
+    .party-friend-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
+    .party-friend-ava { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; position: relative; }
+    .party-friend-dot { position: absolute; bottom: -1px; right: -1px; width: 9px; height: 9px; border-radius: 50%; background: var(--green); border: 2px solid var(--panel); }
+    .party-friend-name { font-size: 13px; font-weight: 600; flex: 1; }
+    .party-invite-btn { background: var(--accent); color: #fff; border: none; font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+    .party-invite-btn:hover { filter: brightness(1.1); }
+    .party-invite-btn:disabled { background: var(--panel-2); color: var(--text-faint); cursor: default; }
+    .party-empty-sm { font-size: 12.5px; color: var(--text-faint); text-align: center; padding: 14px; }
+
+    .party-start-btn { width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.15s; }
+    .party-start-btn:hover:not(:disabled) { filter: brightness(1.1); }
+    .party-start-btn:disabled { opacity: 0.5; cursor: default; }
+    .party-start-btn i { width: 19px; height: 19px; }
+    .party-wait-note { text-align: center; font-size: 12.5px; color: var(--text-faint); margin-top: 10px; }
+    .party-close-btn { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text-dim); border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .party-close-btn:hover { color: var(--text); }
+
+    /* Taklif popup */
+    .party-invite-popup { display: none; position: fixed; top: 24px; right: 24px; z-index: 9500; background: var(--panel); border: 1px solid var(--border-bright); border-radius: 16px; padding: 16px; width: 340px; box-shadow: 0 16px 50px rgba(0,0,0,0.5); align-items: center; gap: 12px; animation: pipSlide 0.3s ease; }
+    .party-invite-popup.show { display: flex; }
+    @keyframes pipSlide { from { transform: translateX(380px); } to { transform: translateX(0); } }
+    .pip-ic { width: 42px; height: 42px; border-radius: 12px; background: rgba(168,85,247,0.15); display: grid; place-items: center; flex-shrink: 0; }
+    .pip-ic i { width: 22px; height: 22px; color: var(--accent-2); }
+    .pip-body { flex: 1; min-width: 0; }
+    .pip-title { font-size: 13px; font-weight: 700; }
+    .pip-text { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+    .pip-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .pip-accept, .pip-decline { width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer; display: grid; place-items: center; }
+    .pip-accept { background: var(--green); color: #042018; }
+    .pip-decline { background: rgba(248,113,113,0.15); color: var(--red); }
+    .pip-accept i, .pip-decline i { width: 18px; height: 18px; }
   </style>
 
 </head>
@@ -976,13 +1050,9 @@
         window.location.href = "/practice.html";
         return;
       }
-      // Jamoa janglar — team-battle.html ga (Duo yoki Squad)
-      if (selectedMode === "duo") {
-        window.location.href = "/team-battle.html?mode=duo";
-        return;
-      }
-      if (selectedMode === "squad") {
-        window.location.href = "/team-battle.html?mode=squad";
+      // Jamoa janglar — tanlov modal (Yolg'iz / Do'st bilan)
+      if (selectedMode === "duo" || selectedMode === "squad") {
+        openPartyChoice(selectedMode);
         return;
       }
       // Format tanlash modalini ochamiz (savol soni / vaqt / XP)
@@ -1365,6 +1435,274 @@
     // Lucide ikonalarni faollashtirish
     lucide.createIcons();
 
+    // ============ PARTY (Do'stlar jamoasi) ============
+    var partyState = null;        // joriy party holati
+    var partyChoiceMode = null;   // tanlangan rejim (duo/squad)
+    var pendingInvite = null;     // kelgan taklif
+
+    // Party socket — globalSocket'ni ishlatamiz (sidebar.js yaratadi)
+    function partySocket() { return window.globalSocket || window.socket || null; }
+
+    // Socket tayyor bo'lganda party eventlarni ulaymiz
+    (function initPartySocket() {
+      var tries = 0;
+      var iv = setInterval(function () {
+        var s = partySocket();
+        if (s) {
+          clearInterval(iv);
+          attachPartyEvents(s);
+        } else if (++tries > 60) {
+          clearInterval(iv);
+        }
+      }, 100);
+    })();
+
+    function attachPartyEvents(s) {
+      s.on("partyCreated", function (d) {
+        // party yaratildi — panel ochiladi (partyUpdated bilan to'ladi)
+      });
+      s.on("partyUpdated", function (d) {
+        partyState = d;
+        renderPartyPanel();
+        openPartyPanel();
+      });
+      s.on("partyInviteReceived", function (d) {
+        pendingInvite = d;
+        showInvitePopup(d);
+      });
+      s.on("partyInviteSent", function (d) {
+        // taklif yuborildi — do'st tugmasini "Yuborildi" qilamiz
+        var btn = document.getElementById("inviteBtn_" + d.toUserId);
+        if (btn) { btn.textContent = "Yuborildi"; btn.disabled = true; }
+      });
+      s.on("partyInviteDeclined", function (d) {
+        showToast((d.byName || "Do'stingiz") + " taklifni rad etdi");
+      });
+      s.on("partyError", function (d) {
+        showToast(d.message || "Party xatosi");
+      });
+      s.on("partyLeft", function () {
+        partyState = null;
+        closePartyPanel();
+      });
+      // Party jang boshlanishi — team-battle.html ga o'tamiz
+      s.on("partyMatchStarting", function (d) {
+        window.location.href = "/team-battle.html?mode=" + d.teamMode + "&party=" + d.partyId;
+      });
+    }
+
+    // ---- Tanlov modal ----
+    function openPartyChoice(mode) {
+      partyChoiceMode = mode;
+      document.getElementById("pcTitle").textContent = mode === "squad" ? "Squad (4v4)" : "Duo (2v2)";
+      document.getElementById("partyChoiceModal").classList.add("show");
+      if (window.lucide) lucide.createIcons();
+    }
+    function closePartyChoice() { document.getElementById("partyChoiceModal").classList.remove("show"); }
+
+    function choosePlaySolo() {
+      closePartyChoice();
+      window.location.href = "/team-battle.html?mode=" + partyChoiceMode;
+    }
+    function choosePlayParty() {
+      closePartyChoice();
+      var s = partySocket();
+      if (!s) { showToast("Ulanish kutilmoqda, qayta urinib ko'ring"); return; }
+      s.emit("createParty", { userId: user.id, name: user.first_name || "O'yinchi", teamMode: partyChoiceMode });
+    }
+
+    // ---- Party panel ----
+    function openPartyPanel() { document.getElementById("partyPanelModal").classList.add("show"); }
+    function closePartyPanel() { document.getElementById("partyPanelModal").classList.remove("show"); }
+
+    function leavePartyAndClose() {
+      var s = partySocket();
+      if (s) s.emit("leaveParty", { userId: user.id });
+      partyState = null;
+      closePartyPanel();
+    }
+
+    function renderPartyPanel() {
+      if (!partyState) return;
+      var modeLabel = partyState.teamMode === "squad" ? "Squad (4v4)" : "Duo (2v2)";
+      document.getElementById("ppSub").innerHTML = modeLabel + " · <span id=\"ppCount\">" + partyState.members.length + "/" + partyState.maxSize + "</span>";
+
+      var amLeader = (String(partyState.leaderId) === String(user.id));
+
+      // A'zolar
+      var membersHtml = "";
+      partyState.members.forEach(function (m) {
+        var initial = (m.name || "?").charAt(0).toUpperCase();
+        membersHtml += '<div class="party-member' + (m.isLeader ? ' leader' : '') + '">' +
+          '<div class="party-member-ava">' + escapeHtml(initial) + '</div>' +
+          '<div class="party-member-name">' + escapeHtml(m.name) + '</div>' +
+          '<div class="party-member-badge ' + (m.isLeader ? 'leader' : 'member') + '">' + (m.isLeader ? 'Lider' : 'A\'zo') + '</div></div>';
+      });
+      // Bo'sh slotlar
+      var emptySlots = partyState.maxSize - partyState.members.length;
+      for (var i = 0; i < emptySlots; i++) {
+        membersHtml += '<div class="party-slot-empty"><div class="party-slot-empty-ava"><i data-lucide="user" style="width:18px;height:18px;"></i></div><div class="party-slot-empty-text">Bo\'sh joy — do\'st chaqiring</div></div>';
+      }
+      document.getElementById("ppMembers").innerHTML = membersHtml;
+
+      // Do'st chaqirish ro'yxati (online do'stlar, partyda yo'qlar)
+      loadPartyFriends();
+
+      // Boshlash tugmasi — faqat lider
+      var startBtn = document.getElementById("ppStartBtn");
+      var waitNote = document.getElementById("ppWaitNote");
+      if (amLeader) {
+        startBtn.style.display = "flex";
+        startBtn.disabled = false;
+        document.getElementById("ppStartText").textContent = partyState.members.length < 2 ? "Kamida 2 o'yinchi kerak" : "Jang boshlash";
+        startBtn.disabled = partyState.members.length < 2;
+        waitNote.style.display = "none";
+      } else {
+        startBtn.style.display = "none";
+        waitNote.style.display = "block";
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function loadPartyFriends() {
+      var box = document.getElementById("ppFriendsList");
+      try {
+        var res = await authFetch("/friends/" + user.id);
+        var data = await res.json();
+        var friends = (data.friends || []).filter(function (f) { return f.isOnline; });
+        // Partyda bo'lganlarni chiqaramiz
+        var inParty = (partyState ? partyState.members.map(function (m) { return String(m.userId); }) : []);
+        friends = friends.filter(function (f) { return inParty.indexOf(String(f.id)) === -1; });
+
+        if (friends.length === 0) {
+          box.innerHTML = '<div class="party-empty-sm">Chaqirish uchun onlayn do\'st yo\'q</div>';
+          return;
+        }
+        var full = partyState && partyState.members.length >= partyState.maxSize;
+        box.innerHTML = friends.map(function (f) {
+          var nm = (f.first_name || "") + " " + (f.last_name || "");
+          var initial = (f.first_name || "?").charAt(0).toUpperCase();
+          return '<div class="party-friend-item"><div class="party-friend-ava">' + escapeHtml(initial) + '<span class="party-friend-dot"></span></div>' +
+            '<div class="party-friend-name">' + escapeHtml(nm.trim()) + '</div>' +
+            '<button class="party-invite-btn" id="inviteBtn_' + f.id + '" onclick="invitePartyFriend(' + f.id + ')"' + (full ? ' disabled' : '') + '>Chaqirish</button></div>';
+        }).join("");
+      } catch (err) {
+        box.innerHTML = '<div class="party-empty-sm">Do\'stlarni yuklab bo\'lmadi</div>';
+      }
+    }
+
+    function invitePartyFriend(friendId) {
+      if (!partyState) return;
+      var s = partySocket();
+      if (!s) return;
+      s.emit("inviteToParty", { partyId: partyState.partyId, fromName: user.first_name || "O'yinchi", toUserId: friendId });
+    }
+
+    function startPartyMatch() {
+      if (!partyState) return;
+      var s = partySocket();
+      if (!s) return;
+      s.emit("startPartyQueue", { partyId: partyState.partyId, userId: user.id });
+    }
+
+    // ---- Taklif popup (chaqirilgan do'st) ----
+    function showInvitePopup(d) {
+      var modeLabel = d.teamMode === "squad" ? "Squad (4v4)" : "Duo (2v2)";
+      document.getElementById("pipText").textContent = d.fromName + " sizni " + modeLabel + " partyga chaqirdi";
+      document.getElementById("partyInvitePopup").classList.add("show");
+      if (window.lucide) lucide.createIcons();
+
+      document.getElementById("pipAcceptBtn").onclick = function () {
+        var s = partySocket();
+        if (s) s.emit("acceptPartyInvite", { partyId: d.partyId, userId: user.id, name: user.first_name || "O'yinchi" });
+        hideInvitePopup();
+      };
+      document.getElementById("pipDeclineBtn").onclick = function () {
+        var s = partySocket();
+        if (s) s.emit("declinePartyInvite", { partyId: d.partyId, name: user.first_name || "O'yinchi" });
+        hideInvitePopup();
+      };
+      // 15s dan keyin avtomatik yopiladi
+      setTimeout(hideInvitePopup, 15000);
+    }
+    function hideInvitePopup() { document.getElementById("partyInvitePopup").classList.remove("show"); }
+
+    // Yordamchi: toast (agar lobby'da showToast bo'lmasa)
+    function showToast(msg) {
+      if (typeof window.toast === "function") { window.toast(msg); return; }
+      console.log("[party]", msg);
+      // Oddiy toast
+      var t = document.createElement("div");
+      t.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border-bright);color:var(--text);padding:12px 20px;border-radius:12px;z-index:9999;font-size:14px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.4);";
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(function () { t.remove(); }, 3000);
+    }
+
+    function escapeHtml(s) {
+      return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
   </script>
+
+  <!-- PARTY TANLOV MODAL (Yolg'iz / Do'st bilan) -->
+  <div class="party-overlay" id="partyChoiceModal">
+    <div class="party-box" style="max-width:440px;">
+      <div class="party-choice-head">
+        <div class="party-choice-title" id="pcTitle">Duo (2v2)</div>
+        <div class="party-choice-sub">Qanday o'ynaysiz?</div>
+      </div>
+      <div class="party-choice-options">
+        <div class="party-choice-opt" onclick="choosePlaySolo()">
+          <div class="pco-ic"><i data-lucide="user"></i></div>
+          <div class="pco-text"><div class="pco-name">Yolg'iz o'ynash</div><div class="pco-desc">Tasodifiy jamoadoshlar bilan</div></div>
+          <i data-lucide="chevron-right" class="pco-arrow"></i>
+        </div>
+        <div class="party-choice-opt" onclick="choosePlayParty()">
+          <div class="pco-ic purple"><i data-lucide="users"></i></div>
+          <div class="pco-text"><div class="pco-name">Do'st bilan o'ynash</div><div class="pco-desc">Party tuzing, do'stlaringizni chaqiring</div></div>
+          <i data-lucide="chevron-right" class="pco-arrow"></i>
+        </div>
+      </div>
+      <button class="party-close-btn" onclick="closePartyChoice()">Bekor qilish</button>
+    </div>
+  </div>
+
+  <!-- PARTY PANEL MODAL -->
+  <div class="party-overlay" id="partyPanelModal">
+    <div class="party-box">
+      <div class="party-head">
+        <div>
+          <div class="party-title" id="ppTitle">Sizning Party</div>
+          <div class="party-sub" id="ppSub">Duo (2v2) · <span id="ppCount">1/2</span></div>
+        </div>
+        <div class="party-close-x" onclick="leavePartyAndClose()"><i data-lucide="x"></i></div>
+      </div>
+
+      <div class="party-members" id="ppMembers"></div>
+
+      <div class="party-invite-section">
+        <div class="party-section-label"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> Do'st chaqirish</div>
+        <div class="party-friends-list" id="ppFriendsList"><div class="party-empty-sm">Yuklanmoqda...</div></div>
+      </div>
+
+      <button class="party-start-btn" id="ppStartBtn" onclick="startPartyMatch()"><i data-lucide="swords"></i> <span id="ppStartText">Jang boshlash</span></button>
+      <div class="party-wait-note" id="ppWaitNote" style="display:none;">Faqat lider jangni boshlay oladi</div>
+    </div>
+  </div>
+
+  <!-- PARTY TAKLIF POPUP (chaqirilgan do'st uchun) -->
+  <div class="party-invite-popup" id="partyInvitePopup">
+    <div class="pip-ic"><i data-lucide="users"></i></div>
+    <div class="pip-body">
+      <div class="pip-title" id="pipTitle">Party taklifi</div>
+      <div class="pip-text" id="pipText">—</div>
+    </div>
+    <div class="pip-actions">
+      <button class="pip-accept" id="pipAcceptBtn"><i data-lucide="check"></i></button>
+      <button class="pip-decline" id="pipDeclineBtn"><i data-lucide="x"></i></button>
+    </div>
+  </div>
+
 </body>
 </html>

@@ -253,11 +253,12 @@
     var user = {};
     try { user = JSON.parse(localStorage.getItem("user") || "{}"); } catch (e) {}
 
-    // URL'dan rejim (duo/squad)
+    // URL'dan rejim (duo/squad) va party ID
     var params = new URLSearchParams(window.location.search);
     var teamMode = params.get("mode") === "squad" ? "squad" : "duo";
     var teamSize = teamMode === "squad" ? 4 : 2;
     var needed = teamSize * 2;
+    var partyId = params.get("party") || null; // party bo'lsa — birga kiramiz
 
     var socket = io();
     var roomId = null;
@@ -282,14 +283,30 @@
 
     // ===== MATCHMAKING BOSHLASH =====
     socket.on("connect", function () {
-      socket.emit("findTeamMatch", {
-        userId: user.id,
-        name: user.first_name || "O'yinchi",
-        level: user.cefr_level || "A1",
-        rating: user.rating || 1000,
-        lengthKey: "standard",
-        teamMode: teamMode,
-      });
+      if (partyId) {
+        // Party rejimi — a'zo sifatida yetib keldik
+        socket.emit("joinPartyMatch", {
+          partyId: partyId,
+          userId: user.id,
+          name: user.first_name || "O'yinchi",
+          level: user.cefr_level || "A1",
+          lengthKey: "standard",
+        });
+        // Matchmaking ekranida "party" matni
+        document.getElementById("mmTitle").textContent = "Party yig'ilmoqda...";
+        document.getElementById("mmSub").textContent = "Jamoadoshlaringiz kutilmoqda";
+        document.getElementById("mmProgress").style.display = "none";
+      } else {
+        // Solo queue
+        socket.emit("findTeamMatch", {
+          userId: user.id,
+          name: user.first_name || "O'yinchi",
+          level: user.cefr_level || "A1",
+          rating: user.rating || 1000,
+          lengthKey: "standard",
+          teamMode: teamMode,
+        });
+      }
     });
 
     // Navbat holati
@@ -494,6 +511,22 @@
       document.getElementById("errText").textContent = (data && data.message) || "Xato yuz berdi";
       showScreen("errScreen");
       icons();
+    });
+
+    // Party muddati tugadi (pending topilmadi) — solo queue'ga o'tamiz
+    socket.on("partyMatchExpired", function () {
+      partyId = null;
+      socket.emit("findTeamMatch", {
+        userId: user.id,
+        name: user.first_name || "O'yinchi",
+        level: user.cefr_level || "A1",
+        rating: user.rating || 1000,
+        lengthKey: "standard",
+        teamMode: teamMode,
+      });
+      document.getElementById("mmTitle").textContent = "Jamoa qidirilmoqda...";
+      document.getElementById("mmSub").textContent = "Party tarqaldi — tasodifiy jamoa qidirilmoqda";
+      document.getElementById("mmProgress").style.display = "block";
     });
 
     icons();
