@@ -38,6 +38,8 @@
     .mm-progress { font-size: 15px; font-weight: 700; color: var(--text-dim); margin-bottom: 20px; }
     .mm-progress b { color: var(--cyan); font-size: 19px; }
 
+    .mm-search-time { font-size: 12.5px; color: var(--text-faint); margin-bottom: 18px; }
+
     /* Jamoa slotlari */
     .mm-teams { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 26px; }
     .mm-team { flex: 1; max-width: 320px; }
@@ -155,6 +157,7 @@
           <div class="mm-title" id="mmTitle">Jamoa qidirilmoqda...</div>
           <div class="mm-sub" id="mmSub">O'yinchilar yig'ilmoqda, kuting</div>
           <div class="mm-progress" id="mmProgress"><b id="mmCurrent">1</b> / <span id="mmNeeded">4</span> o'yinchi</div>
+          <div class="mm-search-time" id="mmSearchTimeWrap">Kutish vaqti: <span id="mmSearchTime">0 soniya</span></div>
 
           <div class="mm-teams" id="mmTeams" style="display:none;">
             <div class="mm-team a">
@@ -268,6 +271,8 @@
     var answered = false;
     var qTimer = null;
     var QUESTION_TIME = 15; // soniya har savol
+    var searchSeconds = 0;
+    var searchTimer = null;
 
     function icons() { if (window.lucide) lucide.createIcons(); }
     function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
@@ -307,16 +312,43 @@
           teamMode: teamMode,
         });
       }
+      // Kutish vaqti hisoblagichi
+      startSearchTimer();
     });
 
-    // Navbat holati
+    function startSearchTimer() {
+      searchSeconds = 0;
+      if (searchTimer) clearInterval(searchTimer);
+      searchTimer = setInterval(function () {
+        searchSeconds++;
+        var el = document.getElementById("mmSearchTime");
+        if (el) {
+          var m = Math.floor(searchSeconds / 60);
+          var s = searchSeconds % 60;
+          el.textContent = (m > 0 ? m + ":" + (s < 10 ? "0" : "") + s : s + " soniya");
+        }
+      }, 1000);
+    }
+    function stopSearchTimer() { if (searchTimer) { clearInterval(searchTimer); searchTimer = null; } }
+
+    // Navbat holati (party a'zolari yetib kelgach — raqib qidiriladi)
     socket.on("teamQueueUpdate", function (data) {
       document.getElementById("mmCurrent").textContent = data.current;
       document.getElementById("mmNeeded").textContent = data.needed;
+
+      // Party rejimida: a'zolar yetib kelgach navbat ko'rinadi (raqib qidiriladi)
+      if (partyId) {
+        document.getElementById("mmTitle").textContent = "Raqib qidirilmoqda...";
+        document.getElementById("mmSub").textContent = "Sizning jamoangiz tayyor — raqib kutilmoqda";
+        document.getElementById("mmProgress").style.display = "block";
+      }
     });
 
     // Jang topildi — boshlanyapti
     socket.on("teamBattleStart", function (data) {
+      stopSearchTimer();
+      var stWrap = document.getElementById("mmSearchTimeWrap");
+      if (stWrap) stWrap.style.display = "none";
       roomId = data.roomId;
       questions = data.questions || [];
       myScore = 0;

@@ -582,9 +582,110 @@ function simulateBotAnswers(roomId, botId, questions) {
 let waitingPlayer = null;
 const battles = {}; // Faol janglar: roomId -> jang ma'lumoti
 
-// Jamoa janglar navbati (1v1 dan alohida — solo queue)
-const teamQueues = { duo: [], squad: [] }; // duo=2v2, squad=4v4
-const teamQueueTimers = {}; // har navbat uchun bot-fill timer
+// Jamoa janglar navbati (eski — endi ishlatilmaydi, xavfsizlik uchun qoldirildi)
+const teamQueues = { duo: [], squad: [] };
+const teamQueueTimers = {};
+
+// ===== YAGONA JAMOA MATCHMAKING POOL (party + solo birga) =====
+const teamMatchPool = { duo: [], squad: [] }; // entry: {id, type:"solo"|"party", size, players:[...], partyId?}
+const teamMatchTimers = {};
+
+// Navbat holatini barcha kutayotganlarga yuborish
+function emitTeamQueueStatus(mode) {
+  var teamSize = mode === "squad" ? 4 : 2;
+  var needed = teamSize * 2;
+  var pool = teamMatchPool[mode];
+  var count = pool.reduce(function (s, e) { return s + e.size; }, 0);
+  pool.forEach(function (e) {
+    e.players.forEach(function (p) {
+      if (!p.isBot && p.socketId) io.to(p.socketId).emit("teamQueueUpdate", { current: count, needed: needed, teamMode: mode });
+    });
+  });
+}
+
+// 2 ta jamoa tuzishga harakat (party butun bir jamoaga, solo bo'sh joyni to'ldiradi)
+function tryFormTeamMatch(mode) {
+  var teamSize = mode === "squad" ? 4 : 2;
+  var pool = teamMatchPool[mode];
+  if (pool.length === 0) return false;
+
+  function assembleTeam(avail) {
+    var team = [], used = [];
+    // Avval party joylaymiz (guruh buzilmaydi)
+    for (var i = 0; i < avail.length && team.length < teamSize; i++) {
+      var e = avail[i];
+      if (e.type === "party" && e.size <= (teamSize - team.length)) {
+        team = team.concat(e.players); used.push(e.id);
+        avail.splice(i, 1); i--;
+      }
+    }
+    // Qolgan joyni solo bilan to'ldiramiz
+    for (var j = 0; j < avail.length && team.length < teamSize; j++) {
+      var e2 = avail[j];
+      if (e2.type === "solo") {
+        team = team.concat(e2.players); used.push(e2.id);
+        avail.splice(j, 1); j--;
+      }
+    }
+    return team.length === teamSize ? { team: team, used: used } : null;
+  }
+
+  var avail = pool.slice();
+  var A = assembleTeam(avail);
+  if (!A) return false;
+  var B = assembleTeam(avail);
+  if (!B) return false;
+
+  var usedIds = A.used.concat(B.used);
+  teamMatchPool[mode] = pool.filter(function (e) { return usedIds.indexOf(e.id) === -1; });
+  if (teamMatchPool[mode].length === 0 && teamMatchTimers[mode]) { clearTimeout(teamMatchTimers[mode]); delete teamMatchTimers[mode]; }
+
+  console.log("Jamoa match topildi [" + mode + "]: A=" + A.team.length + " B=" + B.team.length + " (haqiqiy o'yinchilar)");
+  startTeamBattle(A.team.concat(B.team), mode, teamSize);
+  return true;
+}
+
+// Vaqt tugadi — kutayotganlarni bot bilan to'ldirib jang boshlash
+function botFillTeamMatch(mode) {
+  var teamSize = mode === "squad" ? 4 : 2;
+  var pool = teamMatchPool[mode];
+  if (pool.length === 0) return;
+
+  var avail = pool.slice();
+  teamMatchPool[mode] = [];
+  if (teamMatchTimers[mode]) { clearTimeout(teamMatchTimers[mode]); delete teamMatchTimers[mode]; }
+
+  function takeTeam() {
+    var team = [];
+    for (var i = 0; i < avail.length && team.length < teamSize; i++) {
+      if (avail[i].type === "party" && avail[i].size <= (teamSize - team.length)) { team = team.concat(avail[i].players); avail.splice(i, 1); i--; }
+    }
+    for (var j = 0; j < avail.length && team.length < teamSize; j++) {
+      if (avail[j].type === "solo") { team = team.concat(avail[j].players); avail.splice(j, 1); j--; }
+    }
+    return team;
+  }
+  var teamA = takeTeam();
+  var teamB = takeTeam();
+  var ref = teamA[0] || teamB[0];
+  var bi = 0;
+  while (teamA.length < teamSize) teamA.push(makeTeamBot(ref, bi++));
+  while (teamB.length < teamSize) teamB.push(makeTeamBot(ref, bi++));
+
+  console.log("Jamoa match bot bilan to'ldirildi [" + mode + "]");
+  startTeamBattle(teamA.concat(teamB), mode, teamSize);
+}
+
+// Poolga entry qo'shish + match urinishi + bot-fill timer
+function addTeamEntry(mode, entry) {
+  teamMatchPool[mode].push(entry);
+  emitTeamQueueStatus(mode);
+  var formed = tryFormTeamMatch(mode);
+  if (!formed) {
+    if (teamMatchTimers[mode]) clearTimeout(teamMatchTimers[mode]);
+    teamMatchTimers[mode] = setTimeout(function () { botFillTeamMatch(mode); }, 15000);
+  }
+}
 const pendingBattles = {}; // Do'st janglari: battle.html'da tayyor bo'lishni kutayotgan
 const onlineUsers = {}; // { userId: socketId }
 
@@ -650,37 +751,36 @@ function makeTeamBot(refPlayer, idx) {
   };
 }
 
-// Party jangini boshlash (yetib kelgan a'zolar + bot to'ldirish)
+// Party jang qidiruvi — party butun guruh sifatida YAGONA POOLGA kiradi
 function startPartyBattle(partyId) {
   var pending = pendingPartyMatches[partyId];
   if (!pending) return;
   delete pendingPartyMatches[partyId];
 
+  var teamMode = pending.teamMode;
   var teamSize = pending.teamSize;
   var arrivedPlayers = Object.keys(pending.arrived).map(function (uid) { return pending.arrived[uid]; });
   if (arrivedPlayers.length === 0) return;
 
-  var ref = arrivedPlayers[0];
+  // Xavfsizlik: party a'zolari teamSize dan oshmasin
+  if (arrivedPlayers.length > teamSize) arrivedPlayers = arrivedPlayers.slice(0, teamSize);
 
-  // A jamoa = party a'zolari (+ bot to'ldirish)
-  var teamA = arrivedPlayers.slice(0, teamSize);
-  var bi = 0;
-  while (teamA.length < teamSize) { teamA.push(makeTeamBot(ref, bi++)); }
-
-  // B jamoa = bot (hozircha — keyin party/tasodifiy)
-  var teamB = [];
-  while (teamB.length < teamSize) { teamB.push(makeTeamBot(ref, bi++)); }
-
-  var group = teamA.concat(teamB);
-  console.log("Party jang boshlanmoqda [" + pending.teamMode + "]: party=" + partyId + " A:" + teamA.length + " (party " + arrivedPlayers.length + ")");
-
-  // Party holatini tozalaymiz (jang boshlandi)
+  // Party holatini tozalaymiz (endi jang qidiruvida)
   if (parties[partyId]) {
     parties[partyId].members.forEach(function (m) { delete userParty[m.userId]; });
     delete parties[partyId];
   }
 
-  startTeamBattle(group, pending.teamMode, teamSize);
+  // Partyni yagona poolga qo'shamiz — party vs party / party vs solo / (yetmasa) bot
+  var entry = {
+    id: "party_" + partyId,
+    type: "party",
+    size: arrivedPlayers.length,
+    players: arrivedPlayers,
+    partyId: partyId,
+  };
+  console.log("Party poolga qo'shildi [" + teamMode + "]: party=" + partyId + " (" + arrivedPlayers.length + " a'zo)");
+  addTeamEntry(teamMode, entry);
 }
 
 
@@ -1318,66 +1418,39 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ============ JAMOA MATCHMAKING (Duo 2v2 / Squad 4v4) ============
+  // ============ JAMOA MATCHMAKING (Duo 2v2 / Squad 4v4) — yagona pool ============
   socket.on("findTeamMatch", async (playerData) => {
     try {
       var teamMode = playerData.teamMode === "squad" ? "squad" : "duo";
-      var teamSize = teamMode === "squad" ? 4 : 2; // har jamoada nechta o'yinchi
-      var needed = teamSize * 2; // jami kerakli o'yinchi (2 jamoa)
-
-      var queue = teamQueues[teamMode];
-
-      // O'yinchini navbatga qo'shamiz
-      var player = {
-        socketId: socket.id,
-        userId: playerData.userId,
-        name: playerData.name || "O'yinchi",
-        level: playerData.level || "A1",
-        lengthKey: playerData.lengthKey || "standard",
-        rating: playerData.rating || 1000,
+      var entry = {
+        id: "solo_" + socket.id + "_" + Date.now(),
+        type: "solo",
+        size: 1,
+        players: [{
+          socketId: socket.id,
+          userId: playerData.userId,
+          name: playerData.name || "O'yinchi",
+          level: playerData.level || "A1",
+          lengthKey: playerData.lengthKey || "standard",
+          rating: playerData.rating || 1000,
+        }],
       };
-      queue.push(player);
-
-      console.log("Jamoa navbati [" + teamMode + "]: " + queue.length + "/" + needed);
-
-      // Navbatdagilarga holatni bildiramiz
-      queue.forEach(function (p) {
-        io.to(p.socketId).emit("teamQueueUpdate", { current: queue.length, needed: needed, teamMode: teamMode });
-      });
-
-      // Yetarli o'yinchi yig'ildimi?
-      if (queue.length >= needed) {
-        // Bot-fill timerni bekor qilamiz (real o'yinchilar yetdi)
-        if (teamQueueTimers[teamMode]) { clearTimeout(teamQueueTimers[teamMode]); delete teamQueueTimers[teamMode]; }
-
-        var group = queue.splice(0, needed); // birinchi N o'yinchini olamiz
-        startTeamBattle(group, teamMode, teamSize);
-      } else {
-        // Yetarli emas — bot-fill timer (15 soniyadan keyin botlar bilan to'ldiramiz)
-        if (teamQueueTimers[teamMode]) clearTimeout(teamQueueTimers[teamMode]);
-        teamQueueTimers[teamMode] = setTimeout(function () {
-          fillTeamWithBots(teamMode, teamSize, needed);
-        }, 15000);
-      }
+      addTeamEntry(teamMode, entry);
     } catch (err) {
       console.error("Jamoa matchmaking xatosi:", err.message);
       io.to(socket.id).emit("battleError", { message: "Jamoa qidirishda xato" });
     }
   });
 
-  // Jamoa qidiruvini bekor qilish
+  // Jamoa qidiruvini bekor qilish (pooldan chiqarish)
   socket.on("cancelTeamMatch", () => {
     ["duo", "squad"].forEach(function (mode) {
-      var idx = teamQueues[mode].findIndex(function (p) { return p.socketId === socket.id; });
-      if (idx !== -1) {
-        teamQueues[mode].splice(idx, 1);
-        console.log("O'yinchi jamoa navbatidan chiqdi [" + mode + "]: " + teamQueues[mode].length);
-        // Qolganlarga yangilangan holat
-        var needed = (mode === "squad" ? 4 : 2) * 2;
-        teamQueues[mode].forEach(function (p) {
-          io.to(p.socketId).emit("teamQueueUpdate", { current: teamQueues[mode].length, needed: needed, teamMode: mode });
-        });
-      }
+      var pool = teamMatchPool[mode];
+      var before = pool.length;
+      teamMatchPool[mode] = pool.filter(function (e) {
+        return !e.players.some(function (p) { return p.socketId === socket.id; });
+      });
+      if (teamMatchPool[mode].length !== before) emitTeamQueueStatus(mode);
     });
   });
 
