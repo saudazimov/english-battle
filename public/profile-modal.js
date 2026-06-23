@@ -48,6 +48,8 @@
     '.fpc-btn i{width:16px;height:16px;}' +
     '.fpc-challenge{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;}' +
     '.fpc-challenge:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(91,140,255,0.4);}' +
+    '.fpc-report{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);color:#f87171;}' +
+    '.fpc-report:hover{background:rgba(248,113,113,0.18);border-color:#f87171;}' +
     '.fpc-full{background:rgba(91,140,255,0.12);border:1px solid var(--border-bright);color:var(--accent);}' +
     '.fpc-full:hover{background:rgba(91,140,255,0.2);}' +
     '.fp-block{padding:20px 22px;background:rgba(0,0,0,0.15);border:1px solid var(--border);border-radius:16px;}' +
@@ -223,9 +225,90 @@
       '<div class="fpc-actions">' +
         mainBtn +
         '<button class="fpc-btn fpc-full" onclick="window.location.href=\'/profile.html?id=' + (u.id || 0) + '\'"><i data-lucide="external-link"></i> To\'liq profil</button>' +
+        (fs !== "self" ? '<button class="fpc-btn fpc-report" onclick="fpReportUser(' + (u.id || 0) + ', \'' + name.replace(/'/g, "\\'") + '\')"><i data-lucide="flag"></i> Shikoyat</button>' : '') +
       '</div>';
     if (window.lucide) lucide.createIcons();
   }
+
+  // ===== FOYDALANUVCHIGA SHIKOYAT =====
+  window.fpReportUser = function (userId, name) {
+    // Modal yo'q bo'lsa — yaratamiz (bir marta)
+    if (!document.getElementById("userReportModal")) {
+      var m = document.createElement("div");
+      m.id = "userReportModal";
+      m.style.cssText = "display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:10001;align-items:center;justify-content:center;padding:20px;";
+      m.innerHTML =
+        '<div style="background:#0e1428;border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+            '<div style="display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;color:#fff;"><i data-lucide="flag" style="width:18px;height:18px;color:#f87171;"></i> <span id="urTitle">Shikoyat</span></div>' +
+            '<div onclick="fpCloseReport()" style="cursor:pointer;color:#94a3b8;width:30px;height:30px;display:grid;place-items:center;border-radius:8px;"><i data-lucide="x" style="width:18px;height:18px;"></i></div>' +
+          '</div>' +
+          '<p style="font-size:13px;color:#94a3b8;margin:0 0 16px;">Bu foydalanuvchida qanday muammo bor?</p>' +
+          '<input type="hidden" id="urUserId">' +
+          '<div id="urReasons" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">' +
+            urReasonHtml("inappropriate", "Nomaqbul xatti-harakat", "Qo'pol yoki nomaqbul muomala") +
+            urReasonHtml("offensive", "Haqorat", "Haqoratli yoki zararli til") +
+            urReasonHtml("cheating", "Firibgarlik", "O'yinda aldash, halol bo'lmagan harakat") +
+            urReasonHtml("spam", "Spam", "Keraksiz xabar yoki reklama") +
+            urReasonHtml("other", "Boshqa", "Boshqa muammo") +
+          '</div>' +
+          '<textarea id="urComment" placeholder="Qo\'shimcha izoh (ixtiyoriy)..." maxlength="500" style="width:100%;background:#070b16;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;color:#e8edf7;font-size:13px;font-family:inherit;resize:vertical;min-height:60px;box-sizing:border-box;margin-bottom:14px;"></textarea>' +
+          '<div style="display:flex;gap:10px;">' +
+            '<button onclick="fpCloseReport()" style="flex:1;padding:11px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;background:rgba(255,255,255,0.06);color:#cbd5e1;">Bekor qilish</button>' +
+            '<button id="urSubmitBtn" onclick="fpSubmitReport()" style="flex:1;padding:11px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;background:linear-gradient(135deg,#f87171,#dc2626);color:#fff;">Yuborish</button>' +
+          '</div>' +
+          '<div id="urMsg" style="margin-top:12px;font-size:13px;text-align:center;min-height:18px;"></div>' +
+        '</div>';
+      document.body.appendChild(m);
+    }
+    document.getElementById("urUserId").value = userId;
+    document.getElementById("urTitle").textContent = name + " — shikoyat";
+    document.querySelectorAll('input[name="urReason"]').forEach(function (r) { r.checked = false; });
+    document.getElementById("urComment").value = "";
+    var msg = document.getElementById("urMsg"); msg.textContent = ""; msg.style.color = "";
+    var btn = document.getElementById("urSubmitBtn"); btn.disabled = false; btn.textContent = "Yuborish";
+    document.getElementById("userReportModal").style.display = "flex";
+    if (window.lucide) lucide.createIcons();
+  };
+
+  function urReasonHtml(value, title, sub) {
+    return '<label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;">' +
+      '<input type="radio" name="urReason" value="' + value + '" style="accent-color:#5b8cff;width:16px;height:16px;flex-shrink:0;">' +
+      '<span style="display:flex;flex-direction:column;gap:2px;"><b style="font-size:13.5px;color:#e8edf7;font-weight:600;">' + title + '</b><small style="font-size:11.5px;color:#64748b;">' + sub + '</small></span></label>';
+  }
+
+  window.fpCloseReport = function () {
+    var m = document.getElementById("userReportModal");
+    if (m) m.style.display = "none";
+  };
+
+  window.fpSubmitReport = async function () {
+    var userId = document.getElementById("urUserId").value;
+    var reasonEl = document.querySelector('input[name="urReason"]:checked');
+    var comment = document.getElementById("urComment").value.trim();
+    var msg = document.getElementById("urMsg");
+
+    if (!reasonEl) { msg.textContent = "Iltimos, sababni tanlang"; msg.style.color = "#f87171"; return; }
+    var token = localStorage.getItem("token");
+    if (!token) { msg.textContent = "Avtorizatsiya xatosi"; msg.style.color = "#f87171"; return; }
+
+    var btn = document.getElementById("urSubmitBtn");
+    btn.disabled = true; btn.textContent = "Yuborilmoqda...";
+    try {
+      var res = await fetch("/flags/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify({ entity_type: "user", entity_id: parseInt(userId), reason: reasonEl.value, comment: comment }),
+      });
+      var d = await res.json();
+      if (!res.ok) { msg.textContent = d.error || "Xato"; msg.style.color = "#f87171"; btn.disabled = false; btn.textContent = "Yuborish"; return; }
+      msg.textContent = "✅ " + d.message; msg.style.color = "#34d399";
+      setTimeout(window.fpCloseReport, 1500);
+    } catch (err) {
+      msg.textContent = "Server xatosi"; msg.style.color = "#f87171";
+      btn.disabled = false; btn.textContent = "Yuborish";
+    }
+  };
 
   // Do'stlashish (friend request yuborish)
   window.fpAddFriend = function (userId, name, btnEl) {

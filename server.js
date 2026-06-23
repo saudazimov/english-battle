@@ -783,6 +783,14 @@ io.on("connection", (socket) => {
       message: text,
       createdAt: new Date().toISOString(),
     });
+
+    // Moderatsiya uchun xabarni bazaga saqlaymiz (faqat haqiqiy o'yinchi, bot emas)
+    if (sender.userId) {
+      pool.query(
+        "INSERT INTO chat_messages (room_id, sender_id, sender_name, message) VALUES ($1, $2, $3, $4)",
+        [roomId, sender.userId, sender.name || "O'yinchi", text]
+      ).catch(function (e) { console.error("Chat saqlash xatosi:", e.message); });
+    }
   });
 
   // User disconnect
@@ -1388,7 +1396,20 @@ app.get("/leaderboard", async (req, res) => {
 // ============ ADMIN PANEL ============
 
 // Admin parolni tekshirish (yordamchi)
-function checkAdminPassword(password) {
+// AVVAL bazadagi hashlangan parolni tekshiradi (admin o'zgartirgan bo'lsa).
+// Agar bazada parol yo'q bo'lsa — eski usul (_env). Shunda login hech qachon buzilmaydi.
+async function checkAdminPassword(password) {
+  if (!password) return false;
+  try {
+    var result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'admin_password_hash'");
+    if (result.rows.length > 0 && result.rows[0].setting_value) {
+      // Bazada hashlangan parol bor — bcrypt bilan solishtiramiz
+      return await bcrypt.compare(password, result.rows[0].setting_value);
+    }
+  } catch (err) {
+    console.error("Admin parol tekshirish (baza) xatosi:", err.message);
+  }
+  // Bazada yo'q — eski usul (_env)
   return password === process.env.ADMIN_PASSWORD;
 }
 
@@ -1450,7 +1471,8 @@ function clearLoginAttempts(req) {
 app.post("/admin/login", adminLoginRateLimit, async (req, res) => {
   try {
     const { password } = req.body;
-    if (!password || !checkAdminPassword(password)) {
+    var passOk = await checkAdminPassword(password);
+    if (!passOk) {
       recordFailedLogin(req);
       // Noto'g'ri login urinishini audit'ga yozamiz
       await logAudit(req, "admin_login_failed", { details: "Noto'g'ri parol urinishi" });
@@ -1477,6 +1499,228 @@ app.get("/admin/me", requireAdmin, (req, res) => {
 app.post("/admin/logout", requireAdmin, async (req, res) => {
   await logAudit(req, "admin_logout", { details: "Admin tizimdan chiqdi" });
   res.json({ message: "Chiqildi" });
+});
+
+// Admin parolini o'zgartirish (eski parolni tasdiqlash bilan)
+app.post("/admin/settings/password", requireAdmin, async (req, res) => {
+  try {
+    const { current_password, new_password } = req.body;
+    if (!current_password || !new_password) {
+      return res.status(400).json({ error: "Joriy va yangi parol kerak" });
+    }
+    if (new_password.length < 6) {
+      return res.status(400).json({ error: "Yangi parol kamida 6 belgi bo'lishi kerak" });
+    }
+
+    // Joriy parolni tekshiramiz (xavfsizlik — eski parolni bilmasangiz o'zgartira olmaysiz)
+    var currentOk = await checkAdminPassword(current_password);
+    if (!currentOk) {
+      await logAudit(req, "admin_password_change_failed", { details: "Joriy parol noto'g'ri" });
+      return res.status(401).json({ error: "Joriy parol noto'g'ri" });
+    }
+
+    // Yangi parolni hashlash va bazaga saqlash (UPSERT)
+    var hashed = await bcrypt.hash(new_password, 10);
+    await pool.query(
+      `INSERT INTO admin_settings (setting_key, setting_value, updated_at)
+       VALUES ('admin_password_hash', $1, NOW())
+       ON CONFLICT (setting_key) DO UPDATE SET setting_value = $1, updated_at = NOW()`,
+      [hashed]
+    );
+
+    await logAudit(req, "admin_password_changed", { details: "Admin parol o'zgartirildi" });
+    res.json({ message: "Parol muvaffaqiyatli o'zgartirildi" });
+  } catch (err) {
+    console.error("Parol o'zgartirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Tizim ma'lumotlari (Settings sahifasi uchun)
+app.get("/admin/settings/info", requireAdmin, async (req, res) => {
+  try {
+    // Parol manbai: bazadami yoki _env (eski)?
+    var pwResult = await pool.query("SELECT updated_at FROM admin_settings WHERE setting_key = 'admin_password_hash'");
+    var passwordSource = pwResult.rows.length > 0 ? "database" : "env";
+    var passwordUpdated = pwResult.rows.length > 0 ? pwResult.rows[0].updated_at : null;
+
+    // Umumiy sonlar
+    var counts = await Promise.all([
+      pool.query("SELECT COUNT(*) AS c FROM users"),
+      pool.query("SELECT COUNT(*) AS c FROM questions"),
+      pool.query("SELECT COUNT(*) AS c FROM audit_logs"),
+    ]);
+
+    res.json({
+      passwordSource: passwordSource,
+      passwordUpdated: passwordUpdated,
+      totalUsers: parseInt(counts[0].rows[0].c),
+      totalQuestions: parseInt(counts[1].rows[0].c),
+      totalAuditLogs: parseInt(counts[2].rows[0].c),
+    });
+  } catch (err) {
+    console.error("Settings info xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============ MODERATSIYA (SHIKOYAT / FLAG) ============
+
+// O'quvchi shikoyat yuboradi (savol yoki foydalanuvchi ustidan)
+app.post("/flags/report", authMiddleware, async (req, res) => {
+  try {
+    const reporterId = req.user.id;
+    const { entity_type, entity_id, reason, comment } = req.body;
+
+    // Validatsiya
+    if (!entity_type || !entity_id || !reason) {
+      return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
+    }
+    var validTypes = ["question", "user"];
+    if (validTypes.indexOf(entity_type) === -1) {
+      return res.status(400).json({ error: "Noto'g'ri tur" });
+    }
+    var validReasons = ["incorrect", "inappropriate", "spam", "offensive", "cheating", "other"];
+    if (validReasons.indexOf(reason) === -1) {
+      return res.status(400).json({ error: "Noto'g'ri sabab" });
+    }
+    // O'ziga shikoyat qila olmaydi
+    if (entity_type === "user" && parseInt(entity_id) === reporterId) {
+      return res.status(400).json({ error: "O'zingizga shikoyat qila olmaysiz" });
+    }
+
+    // Anti-abuse: bir foydalanuvchi bir narsaga faqat bir marta shikoyat qila oladi
+    var existing = await pool.query(
+      "SELECT id FROM flags WHERE reporter_id = $1 AND entity_type = $2 AND entity_id = $3 AND status = 'pending'",
+      [reporterId, entity_type, parseInt(entity_id)]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: "Siz bu haqda allaqachon shikoyat qilgansiz" });
+    }
+
+    var contextRoom = (req.body.context_room_id || "").trim().slice(0, 120) || null;
+    await pool.query(
+      "INSERT INTO flags (reporter_id, entity_type, entity_id, reason, comment, context_room_id) VALUES ($1, $2, $3, $4, $5, $6)",
+      [reporterId, entity_type, parseInt(entity_id), reason, (comment || "").trim().slice(0, 500) || null, contextRoom]
+    );
+
+    res.json({ message: "Shikoyat yuborildi. Rahmat!" });
+  } catch (err) {
+    console.error("Shikoyat xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Admin: shikoyatlar ro'yxati (pagination, status filtr)
+app.get("/admin/flags", requireAdmin, async (req, res) => {
+  try {
+    var page = Math.max(1, parseInt(req.query.page) || 1);
+    var limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
+    var offset = (page - 1) * limit;
+    var status = (req.query.status || "pending").trim();
+
+    var conds = []; var params = []; var p = 0;
+    if (status && status !== "all") { p++; conds.push("f.status = $" + p); params.push(status); }
+    var whereClause = conds.length ? "WHERE " + conds.join(" AND ") : "";
+
+    var countResult = await pool.query("SELECT COUNT(*) AS total FROM flags f " + whereClause, params);
+    var total = parseInt(countResult.rows[0].total);
+
+    var dataParams = params.slice();
+    dataParams.push(limit); var li = dataParams.length;
+    dataParams.push(offset); var oi = dataParams.length;
+
+    // Shikoyat + shikoyatchi ismi + (savol bo'lsa) savol matni
+    var dataResult = await pool.query(
+      "SELECT f.id, f.entity_type, f.entity_id, f.reason, f.comment, f.status, " +
+      "f.reviewed_by, f.reviewed_at, f.created_at, f.reporter_id, f.context_room_id, " +
+      "r.first_name AS reporter_first, r.last_name AS reporter_last, " +
+      "q.question_text AS question_text, " +
+      "tu.first_name AS target_first, tu.last_name AS target_last " +
+      "FROM flags f " +
+      "LEFT JOIN users r ON r.id = f.reporter_id " +
+      "LEFT JOIN questions q ON (f.entity_type = 'question' AND q.id = f.entity_id) " +
+      "LEFT JOIN users tu ON (f.entity_type = 'user' AND tu.id = f.entity_id) " +
+      whereClause + " ORDER BY f.created_at DESC LIMIT $" + li + " OFFSET $" + oi,
+      dataParams
+    );
+
+    res.json({
+      flags: dataResult.rows,
+      pagination: { page: page, limit: limit, total: total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (err) {
+    console.error("Flags ro'yxat xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Admin: shikoyatni hal qilish (resolved yoki dismissed)
+app.post("/admin/flags/resolve", requireAdmin, async (req, res) => {
+  try {
+    const { id, action } = req.body; // action: 'resolve' yoki 'dismiss'
+    if (!id || !action) return res.status(400).json({ error: "id va action kerak" });
+
+    var newStatus = action === "resolve" ? "resolved" : "dismissed";
+    var adminName = (req.admin && req.admin.name) ? req.admin.name : "Admin";
+
+    var result = await pool.query(
+      "UPDATE flags SET status = $1, reviewed_by = $2, reviewed_at = NOW() WHERE id = $3 RETURNING entity_type, entity_id",
+      [newStatus, adminName, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: "Shikoyat topilmadi" });
+
+    var f = result.rows[0];
+    await logAudit(req, "flag_" + newStatus, { entityType: f.entity_type, entityId: f.entity_id, details: "Shikoyat " + (newStatus === "resolved" ? "tasdiqlandi" : "rad etildi") });
+    res.json({ message: newStatus === "resolved" ? "Shikoyat hal qilindi" : "Shikoyat rad etildi" });
+  } catch (err) {
+    console.error("Flag resolve xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Admin: kutilayotgan shikoyatlar soni (sidebar badge uchun)
+app.get("/admin/flags/count", requireAdmin, async (req, res) => {
+  try {
+    var result = await pool.query("SELECT COUNT(*) AS c FROM flags WHERE status = 'pending'");
+    res.json({ pending: parseInt(result.rows[0].c) });
+  } catch (err) {
+    res.json({ pending: 0 });
+  }
+});
+
+// Admin: foydalanuvchining so'nggi chat xabarlari (moderatsiya uchun)
+app.get("/admin/users/:id/messages", requireAdmin, async (req, res) => {
+  try {
+    var id = parseInt(req.params.id);
+    if (!id) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    var result = await pool.query(
+      "SELECT message, room_id, created_at FROM chat_messages WHERE sender_id = $1 ORDER BY created_at DESC LIMIT 50",
+      [id]
+    );
+    res.json({ messages: result.rows });
+  } catch (err) {
+    console.error("Foydalanuvchi xabarlari xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Admin: bitta jang (room) suhbati — ikkala o'yinchi xabarlari (moderatsiya)
+app.get("/admin/room-messages", requireAdmin, async (req, res) => {
+  try {
+    var roomId = (req.query.room || "").trim();
+    if (!roomId) return res.status(400).json({ error: "Room ID kerak" });
+
+    var result = await pool.query(
+      "SELECT sender_id, sender_name, message, created_at FROM chat_messages WHERE room_id = $1 ORDER BY created_at ASC LIMIT 200",
+      [roomId]
+    );
+    res.json({ messages: result.rows });
+  } catch (err) {
+    console.error("Room xabarlari xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
 });
 
 // Savollarni olish (admin) — pagination, search, filter bilan
@@ -1903,6 +2147,38 @@ app.post("/admin/users/ban", requireAdmin, async (req, res) => {
     res.json({ message: banned ? "Foydalanuvchi bloklandi" : "Blok olib tashlandi" });
   } catch (err) {
     console.error("Ban xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Foydalanuvchi ma'lumotini tahrirlash (viloyat, tuman, maktab, daraja)
+app.post("/admin/users/update", requireAdmin, async (req, res) => {
+  try {
+    const { id, region, district, school, cefr_level } = req.body;
+    if (!id) return res.status(400).json({ error: "Foydalanuvchi ID kerak" });
+
+    // Viloyat-tuman juftligini tekshiramiz (regions.js bilan — bir xil himoya)
+    const regionCheck = validateRegionDistrict(region, district);
+    if (!regionCheck.valid) {
+      return res.status(400).json({ error: regionCheck.error });
+    }
+
+    // CEFR daraja validatsiyasi
+    var validLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+    var lvl = cefr_level || "A1";
+    if (validLevels.indexOf(lvl) === -1) lvl = "A1";
+
+    var result = await pool.query(
+      "UPDATE users SET region = $1, district = $2, school = $3, cefr_level = $4 WHERE id = $5 RETURNING first_name, last_name",
+      [region, district, normalizeSchool(school), lvl, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
+
+    var name = result.rows[0].first_name + " " + result.rows[0].last_name;
+    await logAudit(req, "user_updated", { entityType: "user", entityId: id, details: name + " — " + region + ", " + district });
+    res.json({ message: "Foydalanuvchi yangilandi" });
+  } catch (err) {
+    console.error("Foydalanuvchi yangilash xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });

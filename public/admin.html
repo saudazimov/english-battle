@@ -384,6 +384,26 @@
     .um-actions { display: flex; gap: 10px; }
     .um-actions .btn { flex: 1; }
     .um-banned-banner { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #fca5a5; border-radius: var(--r-md); padding: 10px 14px; font-size: 13px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .um-messages { margin: 16px 0; }
+    .um-msg-loading, .um-msg-empty { font-size: 13px; color: var(--text-faint); padding: 12px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 7px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); }
+    .um-msg-title { font-size: 12.5px; font-weight: 700; color: var(--text-dim); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+    .um-msg-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px; }
+    .um-msg-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 8px 10px; background: var(--panel); border-radius: var(--r-sm); }
+    .um-msg-text { font-size: 13.5px; color: var(--text); line-height: 1.4; word-break: break-word; }
+    .um-msg-time { font-size: 11px; color: var(--text-faint); white-space: nowrap; flex-shrink: 0; }
+    /* Telegram uslubidagi suhbat */
+    .um-chat { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px; }
+    .um-chat-row { display: flex; }
+    .um-chat-row.reporter { justify-content: flex-start; }
+    .um-chat-row.reported { justify-content: flex-end; }
+    .um-chat-bubble { max-width: 75%; padding: 8px 12px; border-radius: 14px; }
+    .um-chat-bubble.reporter { background: var(--panel-2); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .um-chat-bubble.reported { background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); border-bottom-right-radius: 4px; }
+    .um-chat-sender { font-size: 11.5px; font-weight: 700; color: var(--accent); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+    .um-chat-bubble.reported .um-chat-sender { color: var(--red); }
+    .um-chat-tag { font-size: 9.5px; font-weight: 600; background: rgba(248,113,113,0.2); color: var(--red); padding: 1px 6px; border-radius: 999px; }
+    .um-chat-msg { font-size: 13.5px; color: var(--text); line-height: 1.4; word-break: break-word; }
+    .um-chat-time { font-size: 10px; color: var(--text-faint); margin-top: 3px; text-align: right; }
     .modal-icon.warn { background: rgba(251,191,36,0.12); }
     .modal-icon.warn .ico-lg { color: var(--gold); }
     
@@ -405,6 +425,42 @@
     .sch-student-row .ssr-rank { width: 26px; height: 26px; border-radius: 7px; background: var(--panel-2); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
     .sch-student-row .ssr-name { font-weight: 600; font-size: 13.5px; flex: 1; }
     .sch-student-row .ssr-rating { font-size: 13px; font-weight: 700; color: var(--gold); }
+
+    /* SETTINGS */
+    .settings-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .si-item { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px; }
+    .si-item .si-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); font-weight: 700; margin-bottom: 6px; }
+    .si-item .si-value { font-size: 16px; font-weight: 700; }
+    .si-item .si-value.src-db { color: var(--green); }
+    .si-item .si-value.src-env { color: var(--gold); }
+    .si-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+    
+    /* MODERATION */
+    .flag-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; border-radius: 999px; margin-left: auto; }
+    .flag-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px; margin-bottom: 12px; }
+    .flag-card.pending { border-left: 3px solid var(--gold); }
+    .flag-card.resolved { border-left: 3px solid var(--green); }
+    .flag-card.dismissed { border-left: 3px solid var(--text-faint); }
+    .flag-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+    .flag-reason-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; padding: 5px 12px; border-radius: var(--r-sm); background: rgba(248,113,113,0.12); color: var(--red); }
+    .flag-type-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: var(--r-sm); background: rgba(91,140,255,0.12); color: var(--accent); }
+    .flag-status-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+    .flag-status-badge.pending { background: rgba(251,191,36,0.15); color: var(--gold); }
+    .flag-status-badge.resolved { background: rgba(52,211,153,0.15); color: var(--green); }
+    .flag-status-badge.dismissed { background: rgba(148,163,184,0.15); color: var(--text-faint); }
+    .flag-entity { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 12px; }
+    .flag-entity-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); font-weight: 700; margin-bottom: 5px; }
+    .flag-entity-text { font-size: 14px; color: var(--text); line-height: 1.5; }
+    .flag-comment { font-size: 13.5px; color: var(--text-dim); font-style: italic; margin-bottom: 12px; padding-left: 12px; border-left: 2px solid var(--border-bright); }
+    .flag-meta { display: flex; align-items: center; gap: 14px; font-size: 12.5px; color: var(--text-faint); flex-wrap: wrap; margin-bottom: 14px; }
+    .flag-meta b { color: var(--text-dim); font-weight: 600; }
+    .flag-actions { display: flex; gap: 10px; }
+    .flag-clickable { cursor: pointer; transition: all 0.15s; }
+    .flag-clickable:hover { border-color: var(--accent); background: rgba(91,140,255,0.05); }
+    .flag-reporter-link { cursor: pointer; transition: color 0.15s; }
+    .flag-reporter-link:hover { color: var(--accent); }
+    .flag-reporter-link:hover b { color: var(--accent); }
+    .flag-reviewed { font-size: 12.5px; color: var(--text-faint); display: flex; align-items: center; gap: 6px; }
 
     .hidden { display: none !important; }
 
@@ -440,10 +496,10 @@
       <div class="nav-item" id="nav-users" onclick="switchView('users')"><i data-lucide="users" class="ico"></i> Foydalanuvchilar</div>
       <div class="nav-item" id="nav-schools" onclick="switchView('schools')"><i data-lucide="school" class="ico"></i> Maktablar</div>
       <div class="nav-item" onclick="navSoon('Hisobotlar')"><i data-lucide="bar-chart-3" class="ico"></i> Hisobotlar <span class="tag">tez orada</span></div>
-      <div class="nav-item" onclick="navSoon('Moderatsiya')"><i data-lucide="shield-alert" class="ico"></i> Moderatsiya <span class="dot"></span></div>
+      <div class="nav-item" id="nav-moderation" onclick="switchView('moderation')"><i data-lucide="shield-alert" class="ico"></i> Moderatsiya <span class="flag-badge" id="flagBadge" style="display:none;"></span></div>
       <div class="nav-label">Tizim</div>
       <div class="nav-item" id="nav-audit" onclick="switchView('audit')"><i data-lucide="scroll-text" class="ico"></i> Audit Logs</div>
-      <div class="nav-item" onclick="navSoon('Sozlamalar')"><i data-lucide="settings" class="ico"></i> Sozlamalar <span class="tag">tez orada</span></div>
+      <div class="nav-item" id="nav-settings" onclick="switchView('settings')"><i data-lucide="settings" class="ico"></i> Sozlamalar</div>
       <div class="side-foot">
         <div class="side-user"><div class="ava">A</div><div class="info"><div class="nm">Admin</div><div class="rl">Super Admin</div></div></div>
         <button class="side-logout" onclick="adminLogout()"><i data-lucide="log-out" class="ico-sm"></i> Chiqish</button>
@@ -530,6 +586,73 @@
             </div>
           </div>
         </div>
+        </div>
+
+        <!-- ====== MODERATION VIEW ====== -->
+        <div id="view-moderation" style="display:none;">
+          <div class="page-head">
+            <div>
+              <h2 class="page-title-lg">Moderatsiya</h2>
+              <p class="page-sub">Foydalanuvchilar shikoyatlarini ko'rib chiqish</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="toolbar">
+              <select id="flagStatus" onchange="loadFlags(1)">
+                <option value="pending">Kutilayotgan</option>
+                <option value="resolved">Hal qilingan</option>
+                <option value="dismissed">Rad etilgan</option>
+                <option value="all">Hammasi</option>
+              </select>
+              <button class="btn btn-ghost tb-reset" onclick="loadFlags(1)"><i data-lucide="refresh-cw" class="ico-sm"></i> Yangilash</button>
+            </div>
+            <div id="flagsList"><div class="loading-row">Yuklanmoqda...</div></div>
+            <div class="pagination" id="flagsPagination" style="display:none;">
+              <div class="pg-info" id="flagsPgInfo"></div>
+              <div class="pg-controls">
+                <button class="pg-btn" id="flagsPrev" onclick="loadFlags(currentFlagsPage-1)"><i data-lucide="chevron-left" class="ico-sm"></i></button>
+                <div id="flagsPgNumbers" style="display:flex;gap:6px;"></div>
+                <button class="pg-btn" id="flagsNext" onclick="loadFlags(currentFlagsPage+1)"><i data-lucide="chevron-right" class="ico-sm"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== SETTINGS VIEW ====== -->
+        <div id="view-settings" style="display:none;">
+          <div class="page-head">
+            <div>
+              <h2 class="page-title-lg">Sozlamalar</h2>
+              <p class="page-sub">Tizim sozlamalari va xavfsizlik</p>
+            </div>
+          </div>
+
+          <!-- Tizim ma'lumotlari -->
+          <div class="card">
+            <div class="card-head"><span class="ch-ic"><i data-lucide="info" class="ico-sm"></i></span> Tizim ma'lumotlari</div>
+            <div id="settingsInfo"><div class="loading-row">Yuklanmoqda...</div></div>
+          </div>
+
+          <!-- Parol o'zgartirish -->
+          <div class="card">
+            <div class="card-head"><span class="ch-ic"><i data-lucide="key" class="ico-sm"></i></span> Admin parolini o'zgartirish</div>
+            <div style="max-width:420px;">
+              <div class="field">
+                <label>Joriy parol</label>
+                <input type="password" id="curPass" placeholder="••••••••">
+              </div>
+              <div class="field">
+                <label>Yangi parol (kamida 6 belgi)</label>
+                <input type="password" id="newPass" placeholder="••••••••">
+              </div>
+              <div class="field">
+                <label>Yangi parolni takrorlang</label>
+                <input type="password" id="newPass2" placeholder="••••••••">
+              </div>
+              <button class="btn" id="changePassBtn" onclick="changeAdminPassword()"><i data-lucide="check" class="ico-sm"></i> Parolni o'zgartirish</button>
+              <div class="message" id="passMsg"></div>
+            </div>
+          </div>
         </div>
 
         <!-- ====== SCHOOLS VIEW ====== -->
@@ -689,6 +812,41 @@
     </div>
   </div>
 
+  <!-- USER EDIT MODAL -->
+  <div class="modal-overlay" id="userEditModal">
+    <div class="modal-box wide" style="max-width:480px;">
+      <div class="modal-head-wide">
+        <div class="mh-ic"><i data-lucide="user-cog" class="ico"></i></div>
+        <div class="mh-title">Foydalanuvchini tahrirlash</div>
+        <div class="mh-close" onclick="closeUserEditModal()"><i data-lucide="x" class="ico"></i></div>
+      </div>
+      <input type="hidden" id="ueId">
+      <div class="field">
+        <label>Daraja (CEFR)</label>
+        <select id="ueLevel"><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select>
+      </div>
+      <div class="row" style="margin-bottom:16px;">
+        <div>
+          <label>Viloyat</label>
+          <select id="ueRegion" onchange="ueLoadDistricts()"><option value="">Tanlang</option></select>
+        </div>
+        <div>
+          <label>Tuman</label>
+          <select id="ueDistrict"><option value="">Avval viloyat</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Maktab</label>
+        <input id="ueSchool" placeholder="5-maktab">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeUserEditModal()">Bekor qilish</button>
+        <button class="modal-btn" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;" id="ueSubmitBtn" onclick="submitUserEdit()">Saqlash</button>
+      </div>
+      <div class="message" id="ueMsg"></div>
+    </div>
+  </div>
+
   <!-- TASDIQ MODAL (universal: ban, rol) -->
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-box">
@@ -765,6 +923,25 @@
   <div class="toast-wrap" id="toastWrap"></div>
 
   <script>
+
+    // ===== VILOYAT-TUMAN RO'YXATI (register.html bilan bir xil) =====
+    var REGIONS = {
+      "Toshkent shahri": ["Bektemir", "Chilonzor", "Mirobod", "Mirzo Ulug'bek", "Sergeli", "Shayxontohur", "Olmazor", "Uchtepa", "Yakkasaroy", "Yashnobod", "Yunusobod"],
+      "Toshkent viloyati": ["Angren", "Bekobod", "Chirchiq", "Ohangaron", "Olmaliq", "Yangiyo'l", "Bo'ka", "Qibray", "Zangiota"],
+      "Andijon": ["Andijon shahri", "Asaka", "Baliqchi", "Bo'ston", "Buloqboshi", "Izboskan", "Jalaquduq", "Marhamat", "Oltinko'l", "Paxtaobod", "Shahrixon", "Xo'jaobod"],
+      "Buxoro": ["Buxoro shahri", "G'ijduvon", "Kogon", "Olot", "Peshku", "Qorako'l", "Romitan", "Shofirkon", "Vobkent"],
+      "Farg'ona": ["Farg'ona shahri", "Beshariq", "Bog'dod", "Buvayda", "Dang'ara", "Furqat", "Quva", "Marg'ilon", "Qo'qon", "Rishton", "So'x", "Toshloq", "Uchko'prik", "O'zbekiston", "Yozyovon"],
+      "Jizzax": ["Jizzax shahri", "Arnasoy", "Baxmal", "Do'stlik", "Forish", "G'allaorol", "Mirzacho'l", "Paxtakor", "Yangiobod", "Zafarobod", "Zarbdor", "Zomin"],
+      "Xorazm": ["Urganch", "Bog'ot", "Gurlan", "Hazorasp", "Xonqa", "Xiva", "Qo'shko'pir", "Shovot", "Yangiariq", "Yangibozor"],
+      "Namangan": ["Namangan shahri", "Chortoq", "Chust", "Kosonsoy", "Mingbuloq", "Norin", "Pop", "To'raqo'rg'on", "Uchqo'rg'on", "Uychi", "Yangiqo'rg'on"],
+      "Navoiy": ["Navoiy shahri", "Karmana", "Konimex", "Navbahor", "Nurota", "Qiziltepa", "Tomdi", "Uchquduq", "Xatirchi", "Zarafshon"],
+      "Qashqadaryo": ["Qarshi", "Chiroqchi", "Dehqonobod", "G'uzor", "Kasbi", "Kitob", "Koson", "Mirishkor", "Muborak", "Nishon", "Qamashi", "Shahrisabz", "Yakkabog'"],
+      "Qoraqalpog'iston": ["Nukus", "Amudaryo", "Beruniy", "Chimboy", "Ellikqal'a", "Kegeyli", "Mo'ynoq", "Nukus tumani", "Qanliko'l", "Qo'ng'irot", "Qorao'zak", "Shumanay", "Taxtako'pir", "To'rtko'l", "Xo'jayli"],
+      "Samarqand": ["Samarqand shahri", "Bulung'ur", "Ishtixon", "Jomboy", "Kattaqo'rg'on", "Narpay", "Nurobod", "Oqdaryo", "Past darg'om", "Paxtachi", "Payariq", "Qo'shrabot", "Toyloq", "Urgut"],
+      "Sirdaryo": ["Guliston", "Boyovut", "Mirzaobod", "Oqoltin", "Sardoba", "Sayxunobod", "Sirdaryo tumani", "Xovos", "Yangiyer"],
+      "Surxondaryo": ["Termiz", "Angor", "Bandixon", "Boysun", "Denov", "Jarqo'rg'on", "Muzrabot", "Oltinsoy", "Qiziriq", "Qumqo'rg'on", "Sariosiyo", "Sherobod", "Sho'rchi", "Termiz tumani", "Uzun"],
+    };
+
     // ===== TOKEN AUTH (parol localStorage'da SAQLANMAYDI, faqat token) =====
     var ADMIN_TOKEN = sessionStorage.getItem("adminToken") || "";
     var currentPage = 1, currentLimit = 25, totalPages = 1;
@@ -1152,7 +1329,7 @@
     function switchView(view) {
       currentView = view;
       // Barcha view'larni yashiramiz
-      var views = ["questions", "audit", "overview", "users", "schools"];
+      var views = ["questions", "audit", "overview", "users", "schools", "settings", "moderation"];
       views.forEach(function (v) {
         var el = document.getElementById("view-" + v);
         if (el) el.style.display = (v === view) ? "block" : "none";
@@ -1164,6 +1341,8 @@
       if (view === "overview") loadOverview();
       if (view === "users") loadUsers(1);
       if (view === "schools") loadSchools(1);
+      if (view === "settings") loadSettings();
+      if (view === "moderation") loadFlags(1);
     }
 
     // ===== AUDIT LOGS =====
@@ -1246,6 +1425,12 @@
       var hh = String(d.getHours()).padStart(2, "0");
       var mm = String(d.getMinutes()).padStart(2, "0");
       return d.getDate() + " " + m[d.getMonth()] + ", " + hh + ":" + mm;
+    }
+
+    function fmtTime(s) {
+      if (!s) return "";
+      var d = new Date(s);
+      return d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
     }
 
     // ===== OVERVIEW (Dashboard) =====
@@ -1400,7 +1585,7 @@
     // ===== FOYDALANUVCHI MODALI =====
     var _umUser = null; // joriy ochilgan foydalanuvchi
 
-    async function openUserModal(id) {
+    async function openUserModal(id, contextRoom) {
       document.getElementById("umBody").innerHTML = '<div class="loading-row">Yuklanmoqda...</div>';
       document.getElementById("umName").textContent = "—";
       document.getElementById("umRole").textContent = "—";
@@ -1413,7 +1598,58 @@
         if (!res.ok) { toast(data.error || "Xato", "error"); closeUserModal(); return; }
         _umUser = data.user;
         renderUserModal(_umUser);
+        // Agar jang konteksti bo'lsa — o'sha jang suhbati (ikkala o'yinchi). Aks holda umumiy xabarlar.
+        if (contextRoom) loadRoomConversation(contextRoom, id);
+        else loadUserMessages(id);
       } catch (err) { if (err.message !== "auth") { toast("Yuklab bo'lmadi", "error"); closeUserModal(); } }
+    }
+
+    // Bitta jang suhbati — Telegram uslubida (ikkala o'yinchi)
+    async function loadRoomConversation(roomId, reportedUserId) {
+      try {
+        var res = await apiGet("/admin/room-messages?room=" + encodeURIComponent(roomId));
+        var data = await res.json();
+        var msgs = data.messages || [];
+        var box = document.getElementById("umMessages");
+        if (!box) return;
+        if (msgs.length === 0) {
+          box.innerHTML = '<div class="um-msg-empty"><i data-lucide="message-circle-off" class="ico-sm"></i> Bu jangda chat xabarlari yo\'q</div>';
+          icons(); return;
+        }
+        box.innerHTML = '<div class="um-msg-title"><i data-lucide="message-square" class="ico-sm"></i> Shikoyat qilingan jang suhbati (' + msgs.length + ' xabar)</div>' +
+          '<div class="um-chat">' + msgs.map(function (m) {
+            // Shikoyat qilingan foydalanuvchi xabarlari — bir tomonda (qizil ohang), boshqasi — ikkinchi tomonda
+            var isReported = String(m.sender_id) === String(reportedUserId);
+            var side = isReported ? "reported" : "reporter";
+            return '<div class="um-chat-row ' + side + '">' +
+              '<div class="um-chat-bubble ' + side + '">' +
+                '<div class="um-chat-sender">' + esc(m.sender_name || "O\'yinchi") + (isReported ? ' <span class="um-chat-tag">shikoyat qilingan</span>' : '') + '</div>' +
+                '<div class="um-chat-msg">' + esc(m.message) + '</div>' +
+                '<div class="um-chat-time">' + fmtTime(m.created_at) + '</div>' +
+              '</div></div>';
+          }).join("") + '</div>';
+        icons();
+      } catch (err) { /* sokin */ }
+    }
+
+    // Foydalanuvchining so'nggi chat xabarlari (moderatsiya)
+    async function loadUserMessages(id) {
+      try {
+        var res = await apiGet("/admin/users/" + id + "/messages");
+        var data = await res.json();
+        var msgs = data.messages || [];
+        var box = document.getElementById("umMessages");
+        if (!box) return; // modal yopilgan bo'lsa
+        if (msgs.length === 0) {
+          box.innerHTML = '<div class="um-msg-empty"><i data-lucide="message-circle-off" class="ico-sm"></i> Chat xabarlari yo\'q</div>';
+        } else {
+          box.innerHTML = '<div class="um-msg-title"><i data-lucide="message-square" class="ico-sm"></i> So\'nggi chat xabarlari (' + msgs.length + ')</div>' +
+            '<div class="um-msg-list">' + msgs.map(function (m) {
+              return '<div class="um-msg-item"><div class="um-msg-text">' + esc(m.message) + '</div><div class="um-msg-time">' + fmtDateTime(m.created_at) + '</div></div>';
+            }).join("") + '</div>';
+        }
+        icons();
+      } catch (err) { /* sokin — xabarlar ixtiyoriy */ }
     }
     function closeUserModal() { document.getElementById("userModal").classList.remove("show"); _umUser = null; }
 
@@ -1445,8 +1681,12 @@
           umField("Tug'ilgan sana", u.birth_date ? fmtDate(u.birth_date) : "—") +
           umField("Ro'yxatdan o'tgan", fmtDate(u.created_at)) +
         '</div>' +
+        '<div id="umMessages" class="um-messages"><div class="um-msg-loading">Xabarlar yuklanmoqda...</div></div>' +
         '<div class="um-actions">' +
-          '<button class="btn btn-ghost" onclick="askRoleChange()"><i data-lucide="user-cog" class="ico-sm"></i> Rolni o\'zgartirish</button>' +
+          '<button class="btn btn-ghost" onclick="openUserEdit()"><i data-lucide="pencil" class="ico-sm"></i> Tahrirlash</button>' +
+        '<div class="um-actions">' +
+          '<button class="btn btn-ghost" onclick="openUserEdit()"><i data-lucide="pencil" class="ico-sm"></i> Tahrirlash</button>' +
+          '<button class="btn btn-ghost" onclick="askRoleChange()"><i data-lucide="user-cog" class="ico-sm"></i> Rol</button>' +
           (u.is_banned
             ? '<button class="btn" style="background:linear-gradient(135deg,var(--green),#10b981);" onclick="askBan(false)"><i data-lucide="user-check" class="ico-sm"></i> Blokni ochish</button>'
             : '<button class="btn" style="background:linear-gradient(135deg,var(--red),#dc2626);" onclick="askBan(true)"><i data-lucide="ban" class="ico-sm"></i> Bloklash</button>') +
@@ -1521,6 +1761,74 @@
           } catch (err) { if (err.message !== "auth") toast("Server xatosi", "error"); }
         }
       });
+    }
+
+    // ===== FOYDALANUVCHINI TAHRIRLASH =====
+    function openUserEdit() {
+      if (!_umUser) return;
+      var u = _umUser;
+      document.getElementById("ueId").value = u.id;
+      document.getElementById("ueLevel").value = u.cefr_level || "A1";
+      document.getElementById("ueSchool").value = u.school || "";
+
+      // Viloyat dropdown to'ldirish
+      var regionSel = document.getElementById("ueRegion");
+      regionSel.innerHTML = '<option value="">Tanlang</option>';
+      Object.keys(REGIONS).forEach(function (r) {
+        var o = document.createElement("option");
+        o.value = r; o.textContent = r;
+        if (r === u.region) o.selected = true;
+        regionSel.appendChild(o);
+      });
+
+      // Tuman dropdown (tanlangan viloyatga qarab)
+      ueLoadDistricts();
+      if (u.district) document.getElementById("ueDistrict").value = u.district;
+
+      hideMsg("ueMsg");
+      closeUserModal(); // ko'rish modalini yopamiz
+      document.getElementById("userEditModal").classList.add("show");
+      icons();
+    }
+    function closeUserEditModal() { document.getElementById("userEditModal").classList.remove("show"); }
+
+    // Viloyat tanlanganda tumanlarni yuklash (register.html kabi)
+    function ueLoadDistricts() {
+      var region = document.getElementById("ueRegion").value;
+      var ds = document.getElementById("ueDistrict");
+      ds.innerHTML = "";
+      if (!region || !REGIONS[region]) { ds.innerHTML = '<option value="">Avval viloyat</option>'; return; }
+      ds.innerHTML = '<option value="">Tumanni tanlang</option>';
+      REGIONS[region].forEach(function (d) {
+        var o = document.createElement("option"); o.value = d; o.textContent = d; ds.appendChild(o);
+      });
+    }
+
+    async function submitUserEdit() {
+      var id = document.getElementById("ueId").value;
+      var region = document.getElementById("ueRegion").value;
+      var district = document.getElementById("ueDistrict").value;
+      var school = document.getElementById("ueSchool").value.trim();
+      var level = document.getElementById("ueLevel").value;
+
+      // Frontend validatsiya — viloyat/tuman majburiy
+      if (!region) return showMsg("ueMsg", "Viloyatni tanlang", "error");
+      if (!district) return showMsg("ueMsg", "Tumanni tanlang", "error");
+
+      var btn = document.getElementById("ueSubmitBtn");
+      btn.disabled = true; btn.textContent = "Saqlanmoqda...";
+      try {
+        var res = await apiPost("/admin/users/update", { id: parseInt(id), region: region, district: district, school: school, cefr_level: level });
+        var d = await res.json();
+        if (!res.ok) { showMsg("ueMsg", d.error || "Xato", "error"); return; }
+        closeUserEditModal();
+        toast("Foydalanuvchi yangilandi", "success");
+        loadUsers(currentUsersPage);
+      } catch (err) {
+        if (err.message !== "auth") showMsg("ueMsg", "Server xatosi", "error");
+      } finally {
+        btn.disabled = false; btn.textContent = "Saqlash";
+      }
     }
 
     // ===== SCHOOLS (Maktablar) =====
@@ -1621,6 +1929,197 @@
       icons();
     }
 
+    // ===== SETTINGS (Sozlamalar) =====
+    async function loadSettings() {
+      var el = document.getElementById("settingsInfo");
+      el.innerHTML = '<div class="loading-row">Yuklanmoqda...</div>';
+      try {
+        var res = await apiGet("/admin/settings/info");
+        var d = await res.json();
+        var srcLabel = d.passwordSource === "database" ? "Bazada (xavfsiz)" : "Sozlanmagan (.env)";
+        var srcClass = d.passwordSource === "database" ? "src-db" : "src-env";
+        var updatedTxt = d.passwordUpdated ? fmtDateTime(d.passwordUpdated) : "—";
+        el.innerHTML = '<div class="settings-info-grid">' +
+          '<div class="si-item"><div class="si-label">Parol manbai</div><div class="si-value ' + srcClass + '">' + srcLabel + '</div></div>' +
+          '<div class="si-item"><div class="si-label">Parol yangilangan</div><div class="si-value" style="font-size:13.5px;">' + updatedTxt + '</div></div>' +
+          '<div class="si-item"><div class="si-label">Jami foydalanuvchi</div><div class="si-value">' + d.totalUsers + '</div></div>' +
+          '<div class="si-item"><div class="si-label">Jami savol</div><div class="si-value">' + d.totalQuestions + '</div></div>' +
+          '<div class="si-item"><div class="si-label">Audit yozuvlari</div><div class="si-value">' + d.totalAuditLogs + '</div></div>' +
+          '</div>';
+      } catch (err) {
+        if (err.message !== "auth") el.innerHTML = '<div class="empty-sm">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    async function changeAdminPassword() {
+      var cur = document.getElementById("curPass").value;
+      var nw = document.getElementById("newPass").value;
+      var nw2 = document.getElementById("newPass2").value;
+
+      if (!cur || !nw || !nw2) return showMsg("passMsg", "Barcha maydonlarni to'ldiring", "error");
+      if (nw.length < 6) return showMsg("passMsg", "Yangi parol kamida 6 belgi bo'lishi kerak", "error");
+      if (nw !== nw2) return showMsg("passMsg", "Yangi parollar mos kelmadi", "error");
+      if (cur === nw) return showMsg("passMsg", "Yangi parol eskisidan farq qilishi kerak", "error");
+
+      var btn = document.getElementById("changePassBtn");
+      btn.disabled = true; btn.textContent = "O'zgartirilmoqda...";
+      try {
+        var res = await apiPost("/admin/settings/password", { current_password: cur, new_password: nw });
+        var d = await res.json();
+        if (!res.ok) { showMsg("passMsg", d.error || "Xato", "error"); return; }
+        showMsg("passMsg", "✅ " + d.message + ". Keyingi safar yangi parol bilan kiring.", "success");
+        document.getElementById("curPass").value = "";
+        document.getElementById("newPass").value = "";
+        document.getElementById("newPass2").value = "";
+        loadSettings(); // ma'lumotni yangilash (endi "Bazada")
+      } catch (err) {
+        if (err.message !== "auth") showMsg("passMsg", "Server xatosi", "error");
+      } finally {
+        btn.disabled = false; btn.innerHTML = '<i data-lucide="check" class="ico-sm"></i> Parolni o\'zgartirish'; icons();
+      }
+    }
+
+    // ===== MODERATSIYA (Shikoyatlar) =====
+    var currentFlagsPage = 1, flagsTotalPages = 1;
+
+    var FLAG_REASONS = {
+      incorrect: "Noto'g'ri javob",
+      inappropriate: "Nomaqbul kontent",
+      offensive: "Haqorat",
+      cheating: "Firibgarlik",
+      spam: "Spam",
+      other: "Boshqa",
+    };
+    var FLAG_STATUS_LABELS = { pending: "Kutilmoqda", resolved: "Hal qilingan", dismissed: "Rad etilgan" };
+
+    async function loadFlags(page) {
+      if (page < 1) return;
+      currentFlagsPage = page;
+      var list = document.getElementById("flagsList");
+      list.innerHTML = '<div class="loading-row">Yuklanmoqda...</div>';
+      try {
+        var status = document.getElementById("flagStatus").value;
+        var p = new URLSearchParams();
+        p.set("page", page); p.set("limit", 20); p.set("status", status);
+        var res = await apiGet("/admin/flags?" + p.toString());
+        var data = await res.json();
+        renderFlags(data.flags || []);
+        renderFlagsPagination(data.pagination || {});
+        loadFlagBadge(); // badge yangilash
+      } catch (err) {
+        if (err.message !== "auth") list.innerHTML = '<div class="empty-state"><i data-lucide="alert-circle" class="ico"></i><div>Yuklab bo\'lmadi</div></div>';
+        icons();
+      }
+    }
+
+    function renderFlags(flags) {
+      var list = document.getElementById("flagsList");
+      if (flags.length === 0) {
+        list.innerHTML = '<div class="empty-state"><i data-lucide="shield-check" class="ico"></i><div>Shikoyatlar yo\'q</div><div style="font-size:12.5px;color:var(--text-faint);margin-top:4px;">Bu holatda shikoyat topilmadi</div></div>';
+        icons(); return;
+      }
+      list.innerHTML = flags.map(function (f) {
+        var reporter = esc((f.reporter_first || "") + " " + (f.reporter_last || "")).trim() || "Noma'lum";
+        var reason = FLAG_REASONS[f.reason] || f.reason;
+
+        // Shikoyat obyekti: savol yoki foydalanuvchi
+        var entityHtml = "";
+        if (f.entity_type === "question") {
+          var qText = f.question_text ? esc(f.question_text) : "(Savol o'chirilgan yoki topilmadi)";
+          entityHtml = '<div class="flag-entity"><div class="flag-entity-label">Savol (#' + f.entity_id + ')</div><div class="flag-entity-text">' + qText + '</div></div>';
+        } else {
+          var targetName = esc((f.target_first || "") + " " + (f.target_last || "")).trim() || "(Foydalanuvchi topilmadi)";
+          var roomArg = f.context_room_id ? ",'" + esc(f.context_room_id).replace(/'/g, "\\'") + "'" : ",null";
+          entityHtml = '<div class="flag-entity flag-clickable" onclick="openUserModal(' + f.entity_id + roomArg + ')"><div class="flag-entity-label">Foydalanuvchi (#' + f.entity_id + ') · ko\'rish uchun bosing</div><div class="flag-entity-text">' + targetName + ' <i data-lucide="external-link" class="ico-sm" style="vertical-align:-2px;opacity:0.6;"></i></div></div>';
+        }
+
+        var typeIcon = f.entity_type === "question" ? "file-question" : "user";
+        var typeLabel = f.entity_type === "question" ? "Savol" : "Foydalanuvchi";
+
+        var commentHtml = f.comment ? '<div class="flag-comment">"' + esc(f.comment) + '"</div>' : '';
+
+        // Hal qilingan bo'lsa — kim, qachon
+        var reviewedHtml = "";
+        if (f.status !== "pending" && f.reviewed_by) {
+          reviewedHtml = '<div class="flag-reviewed"><i data-lucide="check" class="ico-sm"></i> ' + esc(f.reviewed_by) + ' · ' + fmtDateTime(f.reviewed_at) + '</div>';
+        }
+
+        // Amal tugmalari (faqat pending uchun)
+        var actionsHtml = "";
+        if (f.status === "pending") {
+          actionsHtml = '<div class="flag-actions">' +
+            '<button class="btn" style="background:linear-gradient(135deg,var(--green),#10b981);" onclick="askResolveFlag(' + f.id + ',\'resolve\')"><i data-lucide="check" class="ico-sm"></i> Tasdiqlash</button>' +
+            '<button class="btn btn-ghost" onclick="askResolveFlag(' + f.id + ',\'dismiss\')"><i data-lucide="x" class="ico-sm"></i> Rad etish</button>' +
+          '</div>';
+        }
+
+        return '<div class="flag-card ' + f.status + '">' +
+          '<div class="flag-top">' +
+            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+              '<span class="flag-reason-badge"><i data-lucide="flag" class="ico-sm"></i> ' + reason + '</span>' +
+              '<span class="flag-type-badge"><i data-lucide="' + typeIcon + '" class="ico-sm"></i> ' + typeLabel + '</span>' +
+            '</div>' +
+            '<span class="flag-status-badge ' + f.status + '">' + (FLAG_STATUS_LABELS[f.status] || f.status) + '</span>' +
+          '</div>' +
+          entityHtml +
+          commentHtml +
+          '<div class="flag-meta"><span class="flag-reporter-link" onclick="openUserModal(' + (f.reporter_id || 0) + ')"><i data-lucide="user" class="ico-sm" style="vertical-align:-2px;"></i> Shikoyatchi: <b>' + reporter + '</b></span><span><i data-lucide="clock" class="ico-sm" style="vertical-align:-2px;"></i> ' + fmtDateTime(f.created_at) + '</span></div>' +
+          actionsHtml +
+          reviewedHtml +
+        '</div>';
+      }).join("");
+      icons();
+    }
+
+    function renderFlagsPagination(pg) {
+      flagsTotalPages = pg.totalPages || 1;
+      var pagEl = document.getElementById("flagsPagination");
+      if (!pg.total || pg.total === 0) { pagEl.style.display = "none"; return; }
+      pagEl.style.display = "flex";
+      var from = (pg.page - 1) * pg.limit + 1;
+      var to = Math.min(pg.page * pg.limit, pg.total);
+      document.getElementById("flagsPgInfo").textContent = from + "–" + to + " / jami " + pg.total + " ta shikoyat";
+      document.getElementById("flagsPrev").disabled = pg.page <= 1;
+      document.getElementById("flagsNext").disabled = pg.page >= flagsTotalPages;
+      var nums = ""; var start = Math.max(1, currentFlagsPage - 2); var end = Math.min(flagsTotalPages, start + 4);
+      start = Math.max(1, end - 4);
+      for (var i = start; i <= end; i++) {
+        nums += '<button class="pg-btn' + (i === currentFlagsPage ? ' active' : '') + '" onclick="loadFlags(' + i + ')">' + i + '</button>';
+      }
+      document.getElementById("flagsPgNumbers").innerHTML = nums;
+      icons();
+    }
+
+    // Shikoyatni hal qilish (tasdiq modal bilan — universal showConfirm ishlatamiz)
+    function askResolveFlag(id, action) {
+      var isResolve = action === "resolve";
+      showConfirm({
+        title: isResolve ? "Shikoyatni tasdiqlash" : "Shikoyatni rad etish",
+        text: isResolve ? "Bu shikoyat asosli deb tasdiqlanadi va yopiladi." : "Bu shikoyat asossiz deb rad etiladi va yopiladi.",
+        btnText: isResolve ? "Tasdiqlash" : "Rad etish",
+        danger: !isResolve,
+        onConfirm: async function () {
+          try {
+            var res = await apiPost("/admin/flags/resolve", { id: id, action: action });
+            if (res.ok) { toast(isResolve ? "Shikoyat hal qilindi" : "Shikoyat rad etildi", "success"); loadFlags(currentFlagsPage); }
+            else { var d = await res.json(); toast(d.error || "Xato", "error"); }
+          } catch (err) { if (err.message !== "auth") toast("Server xatosi", "error"); }
+        }
+      });
+    }
+
+    // Sidebar badge (kutilayotgan shikoyatlar soni)
+    async function loadFlagBadge() {
+      try {
+        var res = await apiGet("/admin/flags/count");
+        var d = await res.json();
+        var badge = document.getElementById("flagBadge");
+        if (d.pending > 0) { badge.textContent = d.pending; badge.style.display = "inline-flex"; }
+        else { badge.style.display = "none"; }
+      } catch (err) { /* sokin */ }
+    }
+
+    
     // ===== HELPERS =====
     function navSoon(name) { toast(name + " bo'limi tez orada", "error"); }
     function esc(str) { if (str == null) return ""; return String(str).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }

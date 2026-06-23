@@ -114,6 +114,39 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Admin sozlamalari (parol va boshqa tizim sozlamalari)
+CREATE TABLE IF NOT EXISTS admin_settings (
+  id SERIAL PRIMARY KEY,
+  setting_key VARCHAR(50) UNIQUE NOT NULL,
+  setting_value TEXT,
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Shikoyatlar / flaglar (moderatsiya tizimi)
+CREATE TABLE IF NOT EXISTS flags (
+  id SERIAL PRIMARY KEY,
+  reporter_id INTEGER REFERENCES users(id),
+  entity_type VARCHAR(20) NOT NULL,
+  entity_id INTEGER NOT NULL,
+  reason VARCHAR(50) NOT NULL,
+  comment TEXT,
+  status VARCHAR(20) DEFAULT 'pending',
+  reviewed_by VARCHAR(150),
+  reviewed_at TIMESTAMP,
+  context_room_id VARCHAR(120),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Chat xabarlari (moderatsiya uchun saqlanadi)
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id SERIAL PRIMARY KEY,
+  room_id VARCHAR(120),
+  sender_id INTEGER REFERENCES users(id),
+  sender_name VARCHAR(100),
+  message VARCHAR(200) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 -- OTP kodlar (telefon tasdiqlash uchun, vaqtincha saqlanadi)
 CREATE TABLE IF NOT EXISTS otp_codes (
   id SERIAL PRIMARY KEY,
