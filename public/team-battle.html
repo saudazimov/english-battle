@@ -551,7 +551,7 @@
       function members(players, box) {
         document.getElementById(box).innerHTML = players.map(function (p) {
           var initial = (p.name || "?").charAt(0).toUpperCase();
-          return '<div class="mm-member"><div class="mm-member-ava">' + avaInner(p) + '</div><div class="mm-member-name">' + esc(p.name) + '</div>' + (p.isBot ? '<span class="mm-member-tag">bot</span>' : '') + '</div>';
+          return '<div class="mm-member"><div class="mm-member-ava">' + avaInner(p) + '</div><div class="mm-member-name">' + esc(p.name) + '</div></div>';
         }).join("");
       }
       members(myTeam, "mmTeamA");
@@ -583,7 +583,7 @@
         return '<div class="bt-pl">' +
           '<div class="bt-pl-ava-wrap"><div class="bt-pl-ava">' + avaInner(p) + '</div>' +
             '<span class="bt-pl-cefr">' + esc(p.level || "A1") + '</span>' +
-            (p.isBot ? '' : '<span class="bt-pl-online"></span>') + '</div>' +
+            '<span class="bt-pl-online"></span></div>' +
           '<div class="bt-pl-mid">' +
             '<div class="bt-pl-namerow"><span class="bt-pl-name">' + esc(p.name) + '</span>' +
               '<span class="bt-pl-rating"><svg class="bolt-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg> ' + (p.rating || 1000) + '</span></div>' +
@@ -744,7 +744,7 @@
       document.getElementById(box).innerHTML = players.map(function (p, i) {
         var pic = (cached && cached[i]) ? cached[i].profile_picture : null;
         var ava = pic ? '<img class="rsr-ava" src="' + esc(pic) + '">' : '<span class="rsr-ava rsr-init">' + esc((p.name || "?").charAt(0).toUpperCase()) + '</span>';
-        return '<div class="rs-roster-item">' + ava + '<span class="nm">' + esc(p.name) + (p.isBot ? ' 🤖' : '') + '</span><span class="sc">' + (p.score * SCORE_MULT) + '</span></div>';
+        return '<div class="rs-roster-item">' + ava + '<span class="nm">' + esc(p.name) + '</span><span class="sc">' + (p.score * SCORE_MULT) + '</span></div>';
       }).join("");
     }
 

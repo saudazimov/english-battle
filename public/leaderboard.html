@@ -110,7 +110,7 @@
     .lb-card { padding: 20px 22px; }
     .lb-cols, .lb-row {
       display: grid;
-      grid-template-columns: 60px 2.2fr 80px 1.4fr 80px 90px 100px;
+      grid-template-columns: 60px 2fr 1fr 1fr 1fr 1fr 1fr;
       align-items: center;
     }
     .lb-cols {
@@ -146,6 +146,7 @@
     .lb-league { font-size: 13px; color: var(--cyan); }
     .lb-wins { font-weight: 600; }
     .lb-winrate { color: var(--green); font-weight: 700; }
+    .lb-loc { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .lb-rating { display: flex; align-items: center; gap: 5px; font-weight: 800; color: var(--gold); }
     .lb-rating i { width: 15px; height: 15px; }
     .lb-empty { text-align: center; color: var(--text-faint); padding: 30px; }
@@ -201,19 +202,19 @@
       <!-- Filtrlar -->
       <div class="card filter-card">
         <div class="filter-tabs">
-          <div class="ftab active"><i data-lucide="globe"></i> Global</div>
-          <div class="ftab disabled"><i data-lucide="flag"></i> National <span class="soon-dot">•</span></div>
-          <div class="ftab disabled"><i data-lucide="map-pin"></i> Region <span class="soon-dot">•</span></div>
-          <div class="ftab disabled"><i data-lucide="building"></i> District <span class="soon-dot">•</span></div>
-          <div class="ftab disabled" onclick="window.location.href='/rankings.html'"><i data-lucide="building-2"></i> School</div>
-          <div class="ftab disabled" onclick="window.location.href='/friends.html'"><i data-lucide="users"></i> Friends</div>
+          <div class="ftab active" data-scope="global" onclick="switchScope('global')"><i data-lucide="globe"></i> Global</div>
+          <div class="ftab" data-scope="national" onclick="switchScope('national')"><i data-lucide="flag"></i> National</div>
+          <div class="ftab" data-scope="region" onclick="switchScope('region')"><i data-lucide="map-pin"></i> Region</div>
+          <div class="ftab" data-scope="district" onclick="switchScope('district')"><i data-lucide="building"></i> District</div>
+          <div class="ftab" data-scope="school" onclick="switchScope('school')"><i data-lucide="building-2"></i> School</div>
+          <div class="ftab" data-scope="friends" onclick="switchScope('friends')"><i data-lucide="users"></i> Friends</div>
         </div>
         <div class="filter-time">
-          <div class="ttab disabled"><i data-lucide="calendar"></i> All Time</div>
-          <div class="ttab active"><i data-lucide="sparkles"></i> Weekly</div>
-          <div class="ttab disabled"><i data-lucide="calendar-days"></i> Monthly</div>
-          <div class="ttab disabled"><i data-lucide="trophy"></i> Season</div>
-          <span class="time-note">Reyting har 10 daqiqada yangilanadi</span>
+          <div class="ttab active" data-period="all" onclick="switchPeriod('all')"><i data-lucide="calendar"></i> All Time</div>
+          <div class="ttab" data-period="week" onclick="switchPeriod('week')"><i data-lucide="sparkles"></i> Weekly</div>
+          <div class="ttab" data-period="month" onclick="switchPeriod('month')"><i data-lucide="calendar-days"></i> Monthly</div>
+          <div class="ttab" data-period="season" onclick="switchPeriod('season')"><i data-lucide="trophy"></i> Season</div>
+          <span class="time-note" id="timeNote">Joriy rating bo'yicha</span>
         </div>
       </div>
       <!-- Podium -->
@@ -228,8 +229,8 @@
           <span>Level</span>
           <span>League</span>
           <span>Wins</span>
-          <span>Win Rate</span>
-          <span>Rating</span>
+          <span id="colLoc">Davlat</span>
+          <span id="colRating">Rating</span>
         </div>
         <div id="lbList"><div class="lb-empty">Yuklanmoqda...</div></div>
         <div class="lb-foot">Reyting har 10 daqiqada yangilanadi</div>
@@ -250,8 +251,10 @@
         </div>
         <div class="yr-rows">
           <div class="yr-row"><span>Global Rank</span><span class="yr-rank" id="yrGlobal">#—</span></div>
-          <div class="yr-row"><span>National Rank <span class="soon-badge">tez kunda</span></span><span class="yr-rank">#—</span></div>
-          <div class="yr-row"><span>Region Rank <span class="soon-badge">tez kunda</span></span><span class="yr-rank">#—</span></div>
+          <div class="yr-row"><span>National Rank</span><span class="yr-rank" id="yrNational">#—</span></div>
+          <div class="yr-row"><span>Region Rank</span><span class="yr-rank" id="yrRegion">#—</span></div>
+          <div class="yr-row"><span>District Rank</span><span class="yr-rank" id="yrDistrict">#—</span></div>
+          <div class="yr-row"><span>School Rank</span><span class="yr-rank" id="yrSchool">#—</span></div>
         </div>
       </div>
 
@@ -333,11 +336,65 @@
     }
 
     let allPlayers = [];
+    let currentScope = "global";
+    let currentPeriod = "all";
+    let myRankInfo = {};
+    const periodNotes = {
+      all: "Joriy rating bo'yicha",
+      week: "Shu hafta yutilgan rating bo'yicha",
+      month: "Shu oy yutilgan rating bo'yicha",
+      season: "Shu mavsum yutilgan rating bo'yicha",
+    };
+
+    function switchPeriod(period) {
+      currentPeriod = period;
+      document.querySelectorAll(".ttab").forEach(t => t.classList.toggle("active", t.getAttribute("data-period") === period));
+      var note = document.getElementById("timeNote"); if (note) note.textContent = periodNotes[period] || "";
+      var col = document.getElementById("colRating"); if (col) col.textContent = (period === "all") ? "Rating" : "O'sish";
+      loadLeaderboard();
+    }
+
+    const UZ_FLAG = '<svg width="24" height="12" viewBox="0 0 200 100" style="vertical-align:middle;margin-right:7px;border-radius:1px;flex-shrink:0;"><rect width="200" height="100" fill="#fff"/><rect width="200" height="31" fill="#0099B5"/><rect y="69" width="200" height="31" fill="#1EB53A"/><rect y="31" width="200" height="4" fill="#CE1126"/><rect y="65" width="200" height="4" fill="#CE1126"/><circle cx="26" cy="16" r="9" fill="#fff"/><circle cx="30" cy="16" r="9" fill="#0099B5"/><g fill="#fff"><circle cx="44" cy="9" r="1.6"/><circle cx="52" cy="9" r="1.6"/><circle cx="60" cy="9" r="1.6"/><circle cx="44" cy="16" r="1.6"/><circle cx="52" cy="16" r="1.6"/><circle cx="60" cy="16" r="1.6"/></g></svg>';
+    const COUNTRY_NAMES = {
+      UZ: "O'zbekiston", KZ: "Qozog'iston", KG: "Qirg'iziston", TJ: "Tojikiston", TM: "Turkmaniston",
+      RU: "Rossiya", TR: "Turkiya", AZ: "Ozarbayjon", AF: "Afg'oniston", UA: "Ukraina",
+      US: "AQSH", GB: "Buyuk Britaniya", DE: "Germaniya", FR: "Fransiya", CN: "Xitoy",
+      KR: "Janubiy Koreya", JP: "Yaponiya", IN: "Hindiston", SA: "Saudiya Arabistoni", AE: "BAA",
+    };
+    function countryName(code) { return COUNTRY_NAMES[(code || "UZ").toUpperCase()] || (code || "—"); }
+    function flagHtml(code) {
+      code = (code || "UZ").toLowerCase();
+      if (code === "uz") return UZ_FLAG;
+      return '<img src="https://flagcdn.com/' + code + '.svg" alt="' + code.toUpperCase() + '" onerror="this.style.display=\'none\'" style="width:24px;height:16px;object-fit:cover;border-radius:2px;vertical-align:middle;margin-right:7px;flex-shrink:0;">';
+    }
+    const scopeLocLabel = { global: "Davlat", national: "Viloyat", region: "Tuman", district: "Maktab", school: "G'alaba %", friends: "Maktab" };
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+    function updateLocHeader() {
+      var el = document.getElementById("colLoc");
+      if (el) el.textContent = scopeLocLabel[currentScope] || "Joy";
+    }
+    function locCellHtml(p) {
+      if (currentScope === "global") return flagHtml(p.country) + countryName(p.country);
+      if (currentScope === "national") return esc(p.region || "—");
+      if (currentScope === "region") return esc(p.district || "—");
+      if (currentScope === "district") return esc(p.school || "—");
+      if (currentScope === "school") return '<span style="color:var(--green);font-weight:700;">' + (p.win_rate || 0) + '%</span>';
+      return esc(p.school || p.region || "—");
+    }
+
+    function switchScope(scope) {
+      currentScope = scope;
+      document.querySelectorAll(".ftab").forEach(t => t.classList.toggle("active", t.getAttribute("data-scope") === scope));
+      updateLocHeader();
+      loadLeaderboard();
+    }
+
     async function loadLeaderboard() {
       try {
-        const res = await authFetch("/leaderboard");
+        const res = await authFetch("/leaderboard?scope=" + currentScope + "&period=" + currentPeriod);
         const data = await res.json();
         allPlayers = data.players || [];
+        myRankInfo = { my_rank: data.my_rank, my_entry: data.my_entry, total: data.total_players };
         renderPodium();
         renderTable();
         setupYourRankings();
@@ -352,46 +409,62 @@
       user.rating = fresh.rating;
       user.school = fresh.school;
       setupYourRankings(); // liga, ball, medal eng yangi rating bilan qayta chiziladi
+      loadMyRanks(); // rating o'zgardi — har qamrov o'rni ham yangilanadi
     });
+
+    function lbRowEl(p) {
+      const rank = p.rank;
+      const name = p.first_name + " " + p.last_name;
+      const isMe = p.id === user.id;
+      let rankCls = "";
+      if (rank === 1) rankCls = "top1";
+      else if (rank === 2) rankCls = "top2";
+      else if (rank === 3) rankCls = "top3";
+      let ratingCell;
+      if (currentPeriod === "all") {
+        ratingCell = '<div class="lb-rating"><i data-lucide="trophy"></i> ' + p.rating + '</div>';
+      } else {
+        const g = p.period_gain || 0;
+        const col = g > 0 ? "var(--green)" : (g < 0 ? "#f87171" : "var(--text-dim)");
+        ratingCell = '<div class="lb-rating" style="color:' + col + '"><i data-lucide="' + (g >= 0 ? "trending-up" : "trending-down") + '"></i> ' + (g >= 0 ? "+" : "") + g + '</div>';
+      }
+      const row = document.createElement("div");
+      row.className = "lb-row" + (isMe ? " me" : "");
+      row.style.cursor = "pointer";
+      row.onclick = () => openProfileModal(p.id);
+      row.innerHTML =
+        '<div class="lb-rank ' + rankCls + '">' + rank + '</div>' +
+        '<div class="lb-player"><div class="lb-ava">' + avatarHTML(p.first_name, p.profile_picture) + '</div><div class="lb-name">' + name + '</div></div>' +
+        '<div><span class="lb-level">' + (p.cefr_level || "A1") + '</span></div>' +
+        '<div class="lb-league">' + leagueFull(p.rating) + '</div>' +
+        '<div class="lb-wins">' + (p.wins || 0) + '</div>' +
+        '<div class="lb-loc">' + locCellHtml(p) + '</div>' +
+        ratingCell;
+      return row;
+    }
 
     function renderTable() {
       const list = document.getElementById("lbList");
       if (allPlayers.length === 0) {
-        list.innerHTML = '<div class="lb-empty">Hali o\'yinchi yo\'q</div>';
+        list.innerHTML = '<div class="lb-empty">' + (currentPeriod === "all" ? "Bu qamrovda hali o'yinchi yo'q" : "Bu davrda hali hech kim o'ynamagan") + '</div>';
         return;
       }
       list.innerHTML = "";
-      allPlayers.forEach((p, i) => {
-        const rank = i + 1;
-        const name = p.first_name + " " + p.last_name;
-        const isMe = p.id === user.id;
-        let rankCls = "";
-        if (rank === 1) rankCls = "top1";
-        else if (rank === 2) rankCls = "top2";
-        else if (rank === 3) rankCls = "top3";
-
-        const row = document.createElement("div");
-        row.className = "lb-row" + (isMe ? " me" : "");
-        row.style.cursor = "pointer";
-        row.onclick = () => openProfileModal(p.id);
-        row.innerHTML =
-          '<div class="lb-rank ' + rankCls + '">' + rank + '</div>' +
-          '<div class="lb-player"><div class="lb-ava">' + avatarHTML(p.first_name, p.profile_picture) + '</div><div class="lb-name">' + name + '</div></div>' +
-          '<div><span class="lb-level">' + (p.cefr_level || "A1") + '</span></div>' +
-          '<div class="lb-league">' + leagueFull(p.rating) + '</div>' + 
-          '<div class="lb-wins">' + (p.wins || 0) + '</div>' +
-          '<div class="lb-winrate">' + (p.win_rate || 0) + '%</div>' +
-          '<div class="lb-rating"><i data-lucide="trophy"></i> ' + p.rating + '</div>';
-        list.appendChild(row);
-      });
+      allPlayers.forEach(p => list.appendChild(lbRowEl(p)));
+      // O'zim top 50 dan tashqarida bo'lsam — pastga qadab ko'rsataman
+      if (myRankInfo.my_entry) {
+        const sep = document.createElement("div");
+        sep.className = "lb-empty";
+        sep.style.padding = "6px";
+        sep.textContent = "• • •";
+        list.appendChild(sep);
+        list.appendChild(lbRowEl(myRankInfo.my_entry));
+      }
       lucide.createIcons();
     }
 
-    // Your Rankings (global o'rin)
+    // Your Rankings (liga + ball)
     function setupYourRankings() {
-      // Rating'ni eng ishonchli manbadan olamiz:
-      // 1-navbat: leaderboard jadvalidagi o'zimizning yozuv (bazadan, eng yangi)
-      // 2-navbat: localStorage (refreshUser yangilab turadi)
       const myInList = allPlayers.find(p => p.id === user.id);
       const myRating = (myInList && myInList.rating != null)
         ? myInList.rating
@@ -401,15 +474,21 @@
       document.getElementById("yrMedal").innerHTML = leagueIcon(myRating);
       document.getElementById("yrPoints").textContent = myRating;
       document.getElementById("srName").textContent = user.school || "Maktabingiz";
-
-      // Global rank - allPlayers ichidan topamiz
-      const myIndex = allPlayers.findIndex(p => p.id === user.id);
-      if (myIndex >= 0) {
-        document.getElementById("yrGlobal").textContent = "#" + (myIndex + 1);
-      } else {
-        document.getElementById("yrGlobal").textContent = "#50+";
-      }
       lucide.createIcons();
+    }
+
+    // Har qamrovdagi o'rin (Global/National/Region/District/School)
+    async function loadMyRanks() {
+      try {
+        const res = await authFetch("/leaderboard/my-ranks");
+        const d = await res.json();
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = (v != null ? "#" + v : "—"); };
+        set("yrGlobal", d.global);
+        set("yrNational", d.national);
+        set("yrRegion", d.region);
+        set("yrDistrict", d.district);
+        set("yrSchool", d.school);
+      } catch (err) {}
     }
 
     function renderPodium() {
@@ -439,12 +518,16 @@
           '<div class="podium-ava">' + avatarHTML(o.p.first_name, o.p.profile_picture) + '</div>' +
           '<div class="podium-name">' + name + '</div>' +
           '<div class="podium-league">' + leagueFull(o.p.rating) + '</div>' +
-          '<div class="podium-rating"><i data-lucide="trophy"></i> ' + o.p.rating + '</div>';
+          ((currentPeriod === "all")
+            ? '<div class="podium-rating"><i data-lucide="trophy"></i> ' + o.p.rating + '</div>'
+            : '<div class="podium-rating" style="color:var(--green)"><i data-lucide="trending-up"></i> ' + ((o.p.period_gain || 0) >= 0 ? "+" : "") + (o.p.period_gain || 0) + '</div>');
         podium.appendChild(div);
       });
       lucide.createIcons();
     }
+    updateLocHeader();
     loadLeaderboard();
+    loadMyRanks();
 
     lucide.createIcons();
   </script>

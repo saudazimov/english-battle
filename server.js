@@ -1834,6 +1834,32 @@ function fillTeamWithBots(teamMode, teamSize, needed) {
   }
 }
 
+// ===== SCHOOL BATTLE: maktabga ochko yig'ish =====
+function currentSeason() {
+  var d = new Date();
+  var q = Math.floor(d.getMonth() / 3) + 1; // 3 oylik mavsum (chorak): Yan-Mar=1, Apr-Iyun=2...
+  return d.getFullYear() + "-S" + q; // masalan "2026-S2"
+}
+
+async function awardSchoolPoints(userId, points, source) {
+  if (!userId || !points || points <= 0) return;
+  try {
+    var u = await pool.query("SELECT region, district, school FROM users WHERE id = $1", [userId]);
+    if (!u.rows[0] || !u.rows[0].school) return; // maktab tanlanmagan — ochko yo'q
+    var row = u.rows[0];
+    await pool.query(
+      `INSERT INTO school_battle_points (user_id, region, district, school, points, source, season)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [userId, row.region, row.district, row.school, points, source, currentSeason()]
+    );
+    console.log("School ochko: +" + points + " (" + source + ") -> " + row.school + " [user " + userId + "]");
+  } catch (err) {
+    console.error("School Battle ochko xatosi:", err.message);
+  }
+}
+
+
+
 // Jamoa jangini yakunlash — jamoa balli (a'zolar yig'indisi), g'olib jamoa, baza
 async function finishTeamBattle(roomId) {
   var battle = battles[roomId];
@@ -1921,6 +1947,10 @@ async function finishTeamBattle(roomId) {
           [me.userId, enemyLabel, null, myTeamScore, enemyTeamScore, outcome, xpEarned, ratingDelta, battle.level || "A1"]
         );
         await updateQuestProgress(me.userId, { won: outcome === "win", correctAnswers: me.score, xpEarned: xpEarned });
+
+        // === SCHOOL BATTLE: maktabga ochko (win/draw — bot ham hisoblanadi) ===
+        var spTeam = (outcome === "win") ? 15 : (outcome === "draw" ? 7 : 0);
+        if (spTeam > 0) await awardSchoolPoints(me.userId, spTeam, "team_" + outcome);
       } catch (err) {
         console.error("Jamoa natijani saqlashda xato:", err.message);
       }
@@ -2055,6 +2085,12 @@ async function finishBattle(roomId) {
           xpEarned: xpEarned,
         });
 
+        // === SCHOOL BATTLE: maktabga ochko (ranked + win/draw — bot ham hisoblanadi) ===
+        if (!isCasual) {
+          var sp1v1 = (outcome === "win") ? 10 : (outcome === "draw" ? 5 : 0);
+          if (sp1v1 > 0) await awardSchoolPoints(me.userId, sp1v1, "ranked_" + outcome);
+        }
+
       } catch (err) {
         console.error("Natijani saqlashda xato:", err.message);
       }
@@ -2080,40 +2116,384 @@ async function finishBattle(roomId) {
   delete battles[roomId];
 }
 
-app.get("/leaderboard", async (req, res) => {
+// ===== SCHOOL BATTLE: maktablar reytingi =====
+app.get("/school-battle/rankings", authMiddleware, async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT
-         u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.xp, u.profile_picture,
-         COUNT(bh.id) FILTER (WHERE bh.outcome = 'win') AS wins,
-         COUNT(bh.id) AS total_battles
-       FROM users u
-       LEFT JOIN battle_history bh ON bh.user_id = u.id
-       GROUP BY u.id
-       ORDER BY u.rating DESC, u.xp DESC
-       LIMIT 50`
+    const userId = req.user.id;
+    const scope = ["national", "region", "district"].includes(req.query.scope) ? req.query.scope : "national";
+    const period = ["all", "week", "month", "season"].includes(req.query.period) ? req.query.period : "all";
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const pageSize = 50;
+    const offset = (page - 1) * pageSize;
+
+    const ur = await pool.query("SELECT region, district, school FROM users WHERE id = $1", [userId]);
+    const me = ur.rows[0] || {};
+
+    // Filtrlarni quramiz
+    const conds = [];
+    const params = [];
+    let pi = 1;
+    if (period === "week") conds.push("created_at >= date_trunc('week', NOW())");
+    else if (period === "month") conds.push("created_at >= date_trunc('month', NOW())");
+    else if (period === "season") { conds.push(`season = $${pi++}`); params.push(currentSeason()); }
+    if (scope === "region") { conds.push(`region = $${pi++}`); params.push(me.region); }
+    else if (scope === "district") { conds.push(`region = $${pi++}`); params.push(me.region); conds.push(`district = $${pi++}`); params.push(me.district); }
+    const whereSql = conds.length ? "WHERE " + conds.join(" AND ") : "";
+
+    const cte = `
+      WITH ranked AS (
+        SELECT region, district, school,
+               SUM(points)::int AS total_points,
+               COUNT(DISTINCT user_id)::int AS active_students,
+               ROW_NUMBER() OVER (ORDER BY SUM(points) DESC, COUNT(DISTINCT user_id) DESC, school ASC) AS rank
+        FROM school_battle_points
+        ${whereSql}
+        GROUP BY region, district, school
+      )`;
+
+    const pageRes = await pool.query(
+      `${cte} SELECT *, COUNT(*) OVER() AS total_schools FROM ranked ORDER BY rank LIMIT ${pageSize} OFFSET ${offset}`,
+      params
     );
 
-    // Win rate hisoblash
-    const players = result.rows.map(p => {
-      const total = parseInt(p.total_battles);
-      const wins = parseInt(p.wins);
-      return {
-        id: p.id,
-        first_name: p.first_name,
-        last_name: p.last_name,
-        cefr_level: p.cefr_level,
-        rating: p.rating,
-        xp: p.xp,
-        profile_picture: p.profile_picture,
-        wins: wins,
-        win_rate: total > 0 ? Math.round((wins / total) * 100) : 0,
-      };
+    let mySchool = null;
+    if (me.school) {
+      const mineRes = await pool.query(
+        `${cte} SELECT * FROM ranked WHERE region = $${pi} AND district = $${pi + 1} AND school = $${pi + 2}`,
+        [...params, me.region, me.district, me.school]
+      );
+      mySchool = mineRes.rows[0] || null;
+    }
+
+    const totalSchools = pageRes.rows[0] ? parseInt(pageRes.rows[0].total_schools) : 0;
+    const fmt = (r) => ({
+      rank: parseInt(r.rank), region: r.region, district: r.district, school: r.school,
+      total_points: r.total_points, active_students: r.active_students,
+      avg_points: r.active_students ? Math.round(r.total_points / r.active_students) : 0,
+      is_mine: !!(me.school && r.region === me.region && r.district === me.district && r.school === me.school),
     });
 
-    res.json({ players: players });
+    res.json({
+      scope, period, page, pageSize, total_schools: totalSchools,
+      schools: pageRes.rows.map(fmt),
+      my_school: mySchool ? fmt(mySchool) : null,
+    });
+  } catch (err) {
+    console.error("School rankings xato:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// O'z maktab holati (Dashboard kartasi uchun)
+app.get("/school-battle/my", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const ur = await pool.query("SELECT region, district, school FROM users WHERE id = $1", [userId]);
+    const me = ur.rows[0] || {};
+    if (!me.school) return res.json({ has_school: false });
+
+    const tot = await pool.query(
+      `SELECT COALESCE(SUM(points),0)::int AS total_points, COUNT(DISTINCT user_id)::int AS active_students
+       FROM school_battle_points WHERE region=$1 AND district=$2 AND school=$3`,
+      [me.region, me.district, me.school]
+    );
+    const total_points = tot.rows[0].total_points;
+    const active_students = tot.rows[0].active_students;
+
+    const seasonTot = await pool.query(
+      `SELECT COALESCE(SUM(points),0)::int AS sp FROM school_battle_points WHERE region=$1 AND district=$2 AND school=$3 AND season=$4`,
+      [me.region, me.district, me.school, currentSeason()]
+    );
+    const season_points = seasonTot.rows[0].sp;
+
+    async function rankIn(cond, prms) {
+      const q = await pool.query(
+        `SELECT COUNT(*) + 1 AS rank FROM (
+           SELECT region, district, school, SUM(points) AS tp FROM school_battle_points
+           ${cond ? "WHERE " + cond : ""} GROUP BY region, district, school
+         ) s WHERE s.tp > $${prms.length + 1}`,
+        [...prms, total_points]
+      );
+      return parseInt(q.rows[0].rank);
+    }
+    async function countSchools(cond, prms) {
+      const q = await pool.query(
+        `SELECT COUNT(*) AS c FROM (SELECT 1 FROM school_battle_points ${cond ? "WHERE " + cond : ""} GROUP BY region, district, school) s`,
+        prms
+      );
+      return parseInt(q.rows[0].c);
+    }
+
+    const rank_national = await rankIn("", []);
+    const rank_region = await rankIn("region = $1", [me.region]);
+    const rank_district = await rankIn("region = $1 AND district = $2", [me.region, me.district]);
+    const total_national = await countSchools("", []);
+    const total_region = await countSchools("region = $1", [me.region]);
+    const total_district = await countSchools("region = $1 AND district = $2", [me.region, me.district]);
+
+    const mine = await pool.query(`SELECT COALESCE(SUM(points),0)::int AS my_points FROM school_battle_points WHERE user_id = $1`, [userId]);
+    const my_contribution = mine.rows[0].my_points;
+    const myRank = await pool.query(
+      `SELECT COUNT(*) + 1 AS rank FROM (
+         SELECT user_id, SUM(points) AS up FROM school_battle_points
+         WHERE region=$1 AND district=$2 AND school=$3 GROUP BY user_id
+       ) c WHERE c.up > $4`,
+      [me.region, me.district, me.school, my_contribution]
+    );
+
+    res.json({
+      has_school: true,
+      region: me.region, district: me.district, school: me.school,
+      total_points, season_points, active_students,
+      rank_national, rank_region, rank_district,
+      total_national, total_region, total_district,
+      my_contribution, my_rank_in_school: parseInt(myRank.rows[0].rank),
+    });
+  } catch (err) {
+    console.error("School my xato:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== BIRLASHGAN MAKTAB REYTINGI (Fame + Effort) — rankings.html uchun =====
+app.get("/rankings/combined", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const scope = ["schools", "districts", "regions"].includes(req.query.scope) ? req.query.scope : "schools";
+    const period = ["all", "week", "month", "season"].includes(req.query.period) ? req.query.period : "season";
+    let within = ["country", "region", "district"].includes(req.query.within) ? req.query.within : "country";
+    // Tab'ga mos cheklash: regions faqat country; districts faqat region/country
+    if (scope === "regions") within = "country";
+    if (scope === "districts" && within === "district") within = "region";
+
+    const ur = await pool.query("SELECT region, district, school FROM users WHERE id = $1", [userId]);
+    const me = ur.rows[0] || {};
+
+    // Scope bo'yicha guruhlash
+    let groupCols, selCols, fameWhere;
+    if (scope === "regions") {
+      groupCols = "region"; selCols = "region";
+      fameWhere = "region IS NOT NULL AND region <> ''";
+    } else if (scope === "districts") {
+      groupCols = "region, district"; selCols = "region, district";
+      fameWhere = "region IS NOT NULL AND region <> '' AND district IS NOT NULL AND district <> ''";
+    } else {
+      groupCols = "region, district, school"; selCols = "region, district, school";
+      fameWhere = "region IS NOT NULL AND region <> '' AND school IS NOT NULL AND school <> ''";
+    }
+    const keyOf = (r) => {
+      if (scope === "regions") return r.region || "";
+      if (scope === "districts") return (r.region || "") + "||" + (r.district || "");
+      return (r.region || "") + "||" + (r.district || "") + "||" + (r.school || "");
+    };
+
+    // Geografik filtr (within) — maktabni o'z tumani/viloyati/davlat ichida
+    const fameParams = [];
+    let geoSql = "";
+    if (within !== "country" && me.region) {
+      fameParams.push(me.region); geoSql += ` AND region = $${fameParams.length}`;
+    }
+    if (within === "district" && me.district) {
+      fameParams.push(me.district); geoSql += ` AND district = $${fameParams.length}`;
+    }
+
+    // FAME — o'rtacha rating (joriy)
+    const fameRes = await pool.query(
+      `SELECT ${selCols}, ROUND(AVG(rating))::int AS avg_rating, COUNT(*)::int AS player_count
+       FROM users WHERE ${fameWhere}${geoSql} GROUP BY ${groupCols}`,
+      fameParams
+    );
+
+    // EFFORT — davr bo'yicha jang ochkosi
+    const effConds = []; const effParams = [];
+    if (period === "week") effConds.push("created_at >= date_trunc('week', NOW())");
+    else if (period === "month") effConds.push("created_at >= date_trunc('month', NOW())");
+    else if (period === "season") { effConds.push("season = $1"); effParams.push(currentSeason()); }
+    // Geografik filtr (within) — effort ham o'sha tuman/viloyat ichida
+    if (within !== "country" && me.region) {
+      effParams.push(me.region); effConds.push(`region = $${effParams.length}`);
+    }
+    if (within === "district" && me.district) {
+      effParams.push(me.district); effConds.push(`district = $${effParams.length}`);
+    }
+    const effWhere = effConds.length ? "WHERE " + effConds.join(" AND ") : "";
+    const effRes = await pool.query(
+      `SELECT ${selCols}, COALESCE(SUM(points),0)::int AS effort_points, COUNT(DISTINCT user_id)::int AS active_students
+       FROM school_battle_points ${effWhere} GROUP BY ${groupCols}`,
+      effParams
+    );
+    const effMap = {};
+    effRes.rows.forEach((r) => { effMap[keyOf(r)] = r; });
+
+    // FORMULA — teng vazn (Fame 1500 / Effort 1500)
+    const FAME_W = 1500, EFFORT_W = 1500, FAME_MIN = 800, FAME_MAX = 2000, EFFORT_K = 1500;
+    const fameScore = (avg) => Math.max(0, Math.min(1, (avg - FAME_MIN) / (FAME_MAX - FAME_MIN))) * FAME_W;
+    const effortScore = (pts) => EFFORT_W * pts / (pts + EFFORT_K);
+
+    let rows = fameRes.rows.map((f) => {
+      const eff = effMap[keyOf(f)] || {};
+      const effort_points = eff.effort_points || 0;
+      const fame_score = Math.round(fameScore(f.avg_rating));
+      const effort_score = Math.round(effortScore(effort_points));
+      return {
+        region: f.region, district: f.district || null, school: f.school || null,
+        avg_rating: f.avg_rating, player_count: f.player_count,
+        effort_points, active_students: eff.active_students || 0,
+        fame_score, effort_score, school_rating: fame_score + effort_score,
+      };
+    });
+    rows.sort((a, b) => b.school_rating - a.school_rating || b.effort_points - a.effort_points || b.avg_rating - a.avg_rating);
+    rows.forEach((r, i) => { r.rank = i + 1; });
+
+    const mineKey = (scope === "regions") ? (me.region || "")
+      : (scope === "districts") ? (me.region || "") + "||" + (me.district || "")
+      : (me.region || "") + "||" + (me.district || "") + "||" + (me.school || "");
+    let myEntry = null;
+    rows.forEach((r) => {
+      r.is_mine = (keyOf(r) === mineKey) && (scope !== "schools" || !!me.school) && (scope !== "districts" || !!me.district) && (scope !== "regions" || !!me.region);
+      if (r.is_mine) myEntry = r;
+    });
+
+    res.json({ scope, period, within, season: currentSeason(), count: rows.length, total: rows.length, rankings: rows.slice(0, 100), my_entry: myEntry });
+  } catch (err) {
+    console.error("Combined rankings xato:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+app.get("/leaderboard", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const scope = ["global", "national", "region", "district", "school", "friends"].includes(req.query.scope) ? req.query.scope : "global";
+    const period = ["all", "week", "month", "season"].includes(req.query.period) ? req.query.period : "all";
+
+    const ur = await pool.query("SELECT region, district, school FROM users WHERE id = $1", [userId]);
+    const me = ur.rows[0] || {};
+
+    // Qamrov filtri
+    let where = "";
+    const params = [];
+    if (scope === "region") { params.push(me.region); where = "WHERE u.region = $1"; }
+    else if (scope === "district") { params.push(me.region, me.district); where = "WHERE u.region = $1 AND u.district = $2"; }
+    else if (scope === "school") { params.push(me.region, me.district, me.school); where = "WHERE u.region = $1 AND u.district = $2 AND u.school = $3"; }
+    else if (scope === "friends") {
+      const fr = await pool.query(
+        `SELECT CASE WHEN requester_id = $1 THEN receiver_id ELSE requester_id END AS fid
+         FROM friendships WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
+        [userId]
+      );
+      const ids = fr.rows.map(r => r.fid); ids.push(userId);
+      params.push(ids); where = "WHERE u.id = ANY($1)";
+    }
+
+    let allRows;
+    if (period === "all") {
+      const result = await pool.query(
+        `SELECT u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.xp, u.profile_picture,
+                u.region, u.district, u.school, u.village, u.country,
+                COUNT(bh.id) FILTER (WHERE bh.outcome = 'win') AS wins,
+                COUNT(bh.id) AS total_battles
+         FROM users u
+         LEFT JOIN battle_history bh ON bh.user_id = u.id
+         ${where}
+         GROUP BY u.id
+         ORDER BY u.rating DESC, u.xp DESC`,
+        params
+      );
+      allRows = result.rows.map((p) => {
+        const total = parseInt(p.total_battles), wins = parseInt(p.wins);
+        return {
+          id: p.id, first_name: p.first_name, last_name: p.last_name, cefr_level: p.cefr_level,
+          rating: p.rating, profile_picture: p.profile_picture,
+          region: p.region, district: p.district, school: p.school, village: p.village, country: p.country,
+          wins: wins, win_rate: total > 0 ? Math.round((wins / total) * 100) : 0,
+        };
+      });
+    } else {
+      const startSql = period === "week" ? "date_trunc('week', NOW())" : (period === "month" ? "date_trunc('month', NOW())" : "date_trunc('quarter', NOW())");
+      const result = await pool.query(
+        `SELECT u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.profile_picture,
+                u.region, u.district, u.school, u.village, u.country,
+                COALESCE(SUM(bh.rating_change), 0)::int AS period_gain,
+                COUNT(bh.id) FILTER (WHERE bh.outcome = 'win')::int AS period_wins,
+                COUNT(bh.id)::int AS period_battles
+         FROM users u
+         JOIN battle_history bh ON bh.user_id = u.id AND bh.played_at >= ${startSql}
+         ${where}
+         GROUP BY u.id
+         ORDER BY period_gain DESC, period_wins DESC`,
+        params
+      );
+      allRows = result.rows.map((p) => ({
+        id: p.id, first_name: p.first_name, last_name: p.last_name, cefr_level: p.cefr_level,
+        rating: p.rating, profile_picture: p.profile_picture,
+        region: p.region, district: p.district, school: p.school, village: p.village, country: p.country,
+        period_gain: p.period_gain, wins: p.period_wins,
+        win_rate: p.period_battles > 0 ? Math.round((p.period_wins / p.period_battles) * 100) : 0,
+      }));
+    }
+
+    const myIndex = allRows.findIndex(p => p.id === userId);
+    const my_rank = myIndex >= 0 ? myIndex + 1 : null;
+    allRows.forEach((p, i) => { p.rank = i + 1; });
+    const players = allRows.slice(0, 50);
+    const my_entry = (myIndex >= 50) ? allRows[myIndex] : null;
+
+    res.json({ scope, period, players, my_rank, my_entry, total_players: allRows.length });
   } catch (err) {
     console.error("Leaderboard xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// O'quvchining har qamrovdagi o'rni (Your Rankings kartasi uchun)
+app.get("/leaderboard/my-ranks", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const ur = await pool.query("SELECT region, district, school, rating FROM users WHERE id = $1", [userId]);
+    const me = ur.rows[0];
+    if (!me) return res.json({});
+    const myRating = me.rating || 1000;
+
+    async function rankIn(cond, prms) {
+      const q = await pool.query(
+        `SELECT COUNT(*) + 1 AS rank FROM users WHERE rating > $1${cond ? " AND " + cond : ""}`,
+        [myRating, ...prms]
+      );
+      return parseInt(q.rows[0].rank);
+    }
+    async function totIn(cond, prms) {
+      const q = await pool.query(`SELECT COUNT(*) AS c FROM users${cond ? " WHERE " + cond : ""}`, prms);
+      return parseInt(q.rows[0].c);
+    }
+
+    const fr = await pool.query(
+      `SELECT CASE WHEN requester_id = $1 THEN receiver_id ELSE requester_id END AS fid
+       FROM friendships WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
+      [userId]
+    );
+    const fids = fr.rows.map(r => r.fid); fids.push(userId);
+    const frRankQ = await pool.query(
+      `SELECT COUNT(*) + 1 AS rank FROM users WHERE id = ANY($2) AND rating > $1`,
+      [myRating, fids]
+    );
+
+    res.json({
+      rating: myRating,
+      global: await rankIn("", []),
+      national: await rankIn("", []),
+      region: me.region ? await rankIn("region = $2", [me.region]) : null,
+      district: (me.region && me.district) ? await rankIn("region = $2 AND district = $3", [me.region, me.district]) : null,
+      school: (me.region && me.district && me.school) ? await rankIn("region = $2 AND district = $3 AND school = $4", [me.region, me.district, me.school]) : null,
+      friends: parseInt(frRankQ.rows[0].rank),
+      total_global: await totIn("", []),
+      total_region: me.region ? await totIn("region = $1", [me.region]) : 0,
+      total_district: (me.region && me.district) ? await totIn("region = $1 AND district = $2", [me.region, me.district]) : 0,
+      total_school: (me.region && me.district && me.school) ? await totIn("region = $1 AND district = $2 AND school = $3", [me.region, me.district, me.school]) : 0,
+      total_friends: fids.length,
+    });
+  } catch (err) {
+    console.error("My-ranks xato:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });

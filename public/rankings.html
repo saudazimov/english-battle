@@ -34,6 +34,13 @@
     .ttab.disabled { opacity: 0.5; }
     .time-note { margin-left: auto; font-size: 12px; color: var(--text-faint); }
 
+    /* within (hudud miqyosi) tugmalari */
+    .filter-within { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .within-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 2px; }
+    .wtab { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-dim); border: 1px solid var(--border); transition: all 0.2s; }
+    .wtab i { width: 14px; height: 14px; }
+    .wtab.active { background: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.4); color: var(--accent-2); }
+
     .podium { display: flex; align-items: flex-end; justify-content: center; gap: 20px; padding: 10px 0; }
     .podium-empty { text-align: center; color: var(--text-faint); padding: 40px; }
     .podium-place { background: linear-gradient(180deg, var(--panel), var(--bg-2)); border: 1px solid var(--border); border-radius: 18px; padding: 24px 20px; text-align: center; width: 240px; position: relative; }
@@ -57,6 +64,9 @@
 
     .lb-card { padding: 20px 22px; }
     .lb-cols, .lb-row { display: grid; grid-template-columns: 60px 2.6fr 100px 110px 110px; align-items: center; }
+    .lb-cols.with-dist, .lb-row.with-dist { grid-template-columns: 60px 2.2fr 120px 100px 110px 110px; }
+    .lb-dist { color: var(--text-dim); font-weight: 600; font-size: 13px; text-align: center; }
+    .lb-region { color: var(--gold); font-weight: 600; font-size: 13px; text-align: center; }
     .lb-cols { padding: 0 12px 12px; font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
     .lb-cols span:nth-child(n+3), .lb-row > span:nth-child(n+3) { text-align: center; }
     .lb-row { padding: 13px 12px; border-radius: 12px; transition: background 0.2s; }
@@ -76,6 +86,12 @@
     .lb-rating i { width: 15px; height: 15px; }
     .lb-empty { text-align: center; color: var(--text-faint); padding: 30px; }
     .lb-foot { text-align: center; font-size: 12px; color: var(--text-faint); margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+    /* TOP 100 dan tashqaridagi "mening obyektim" qadalgan qatori */
+    .lb-gap { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: var(--text-faint); font-size: 12px; }
+    .lb-gap::before, .lb-gap::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+    .lb-pinned { margin-top: 4px; }
+    .lb-pinned .lb-row.me { border: 1px solid var(--accent-2); box-shadow: 0 0 0 1px rgba(168,85,247,0.2); }
 
     .rb-card { padding: 20px; }
     .rb-head { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; margin-bottom: 16px; }
@@ -119,7 +135,7 @@
 
       <div class="page-head">
         <div class="crest-ic"><i data-lucide="building-2"></i></div>
-        <div><h1>Maktablar Reytingi</h1><p>Maktab, tuman va viloyatlar bo'yicha eng kuchli jamoalar.</p></div>
+        <div><h1>Maktablar Reytingi</h1><p>Kuch (rating) + Mehnat (jang ochkosi) — birlashgan mavsumiy reyting.</p></div>
       </div>
 
       <div class="card filter-card">
@@ -129,11 +145,14 @@
           <div class="ftab" data-tab="regions" onclick="switchTab('regions')"><i data-lucide="map-pin"></i> Viloyatlar</div>
         </div>
         <div class="filter-time">
-          <div class="ttab active"><i data-lucide="calendar"></i> Barcha vaqt</div>
-          <div class="ttab disabled"><i data-lucide="sparkles"></i> Haftalik</div>
-          <div class="ttab disabled"><i data-lucide="calendar-days"></i> Oylik</div>
-          <div class="ttab disabled"><i data-lucide="trophy"></i> Mavsum</div>
-          <span class="time-note">Jami reyting bo'yicha tartiblangan</span>
+          <div class="ttab" data-period="all" onclick="switchPeriod('all')"><i data-lucide="calendar"></i> Barcha vaqt</div>
+          <div class="ttab" data-period="week" onclick="switchPeriod('week')"><i data-lucide="sparkles"></i> Haftalik</div>
+          <div class="ttab" data-period="month" onclick="switchPeriod('month')"><i data-lucide="calendar-days"></i> Oylik</div>
+          <div class="ttab active" data-period="season" onclick="switchPeriod('season')"><i data-lucide="trophy"></i> Mavsum</div>
+          <span class="time-note">Mavsum: shu mavsum mehnati + kuch</span>
+        </div>
+        <div class="filter-within" id="withinBar">
+          <span class="within-label">Miqyos</span>
         </div>
       </div>
 
@@ -141,10 +160,10 @@
 
       <div class="card lb-card">
         <div class="lb-cols" id="lbCols">
-          <span>O'rin</span><span id="colName">Maktab</span><span>O'yinchi</span><span>O'rtacha</span><span>Jami RP</span>
+          <span>O'rin</span><span id="colName">Maktab</span><span id="colDist" style="display:none;">Tuman</span><span id="colReg" style="display:none;">Viloyat</span><span>O'yinchi</span><span>Mehnat</span><span>Reyting</span>
         </div>
         <div id="lbList"><div class="lb-empty">Yuklanmoqda...</div></div>
-        <div class="lb-foot">Jami reyting (RP) bo'yicha tartiblangan</div>
+        <div class="lb-foot">School Rating (Kuch + Mehnat) bo'yicha tartiblangan</div>
       </div>
     </main>
 
@@ -160,7 +179,8 @@
         </div>
         <div class="yr-rows">
           <div class="yr-row"><span>Reytingdagi o'rni</span><span class="yr-rank accent" id="yrRank">—</span></div>
-          <div class="yr-row"><span>Jami RP</span><span class="yr-rank" id="yrRP">—</span></div>
+          <div class="yr-row"><span>School Rating</span><span class="yr-rank" id="yrRP">—</span></div>
+          <div class="yr-row"><span>Mavsum mehnati</span><span class="yr-rank" id="yrEffort">—</span></div>
           <div class="yr-row"><span>O'yinchilar</span><span class="yr-rank" id="yrPlayers">—</span></div>
         </div>
       </div>
@@ -201,14 +221,38 @@
     renderSidebar("schools");
 
     let currentTab = "schools";
+    let currentPeriod = "season";
+    let currentWithin = "region";
     let cache = {};
 
-    const endpoints = { schools: "/rankings/schools", districts: "/rankings/districts", regions: "/rankings/regions" };
-    const dataKeys = { schools: "schools", districts: "districts", regions: "regions" };
-    const iconNames = { schools: "building-2", districts: "map", regions: "map-pin" };
-    function entIconSvg(tab) {
-      return '<i data-lucide="' + (iconNames[tab] || "building-2") + '" style="width:100%;height:100%;"></i>';
+    // Har tab uchun ruxsat etilgan miqyoslar (within)
+    const withinOpts = {
+      schools:   [{ k: "district", t: "Tuman", i: "map" }, { k: "region", t: "Viloyat", i: "map-pin" }, { k: "country", t: "Respublika", i: "flag" }],
+      districts: [{ k: "region", t: "Viloyat", i: "map-pin" }, { k: "country", t: "Respublika", i: "flag" }],
+      regions:   [{ k: "country", t: "Respublika", i: "flag" }],
+    };
+    const withinDefault = { schools: "region", districts: "region", regions: "country" };
+
+    function renderWithinBar() {
+      const bar = document.getElementById("withinBar");
+      const opts = withinOpts[currentTab] || [];
+      // Joriy within shu tab uchun ruxsat etilmaган bo'lsa — default'ga qaytar
+      if (!opts.some(o => o.k === currentWithin)) currentWithin = withinDefault[currentTab];
+      let html = '<span class="within-label">Miqyos</span>';
+      opts.forEach(o => {
+        html += '<div class="wtab' + (o.k === currentWithin ? " active" : "") + '" data-within="' + o.k +
+          '" onclick="switchWithin(\'' + o.k + '\')"><i data-lucide="' + o.i + '"></i> ' + o.t + '</div>';
+      });
+      bar.innerHTML = html;
+      lucide.createIcons();
     }
+
+    function switchWithin(w) {
+      currentWithin = w;
+      renderWithinBar();
+      loadAndRender();
+    }
+
     const icons = {
       schools: '<i data-lucide="building-2" class="ent-ic ent-school"></i>',
       districts: '<i data-lucide="map" class="ent-ic ent-district"></i>',
@@ -216,6 +260,13 @@
     };
     const colNames = { schools: "Maktab", districts: "Tuman", regions: "Viloyat" };
     const titles = { schools: "Sizning maktabingiz", districts: "Sizning tumaningiz", regions: "Sizning viloyatingiz" };
+    const periodNotes = {
+      all: "Barcha vaqt: kuch + jami mehnat",
+      week: "Haftalik: shu hafta mehnati + kuch",
+      month: "Oylik: shu oy mehnati + kuch",
+      season: "Mavsum: shu mavsum mehnati + kuch",
+    };
+    function cacheKey() { return currentTab + "_" + currentPeriod + "_" + currentWithin; }
 
     function nameFieldOf(tab) { return tab === "schools" ? "school" : (tab === "districts" ? "district" : "region"); }
 
@@ -225,17 +276,26 @@
       document.getElementById("colName").textContent = colNames[tab];
       document.getElementById("yrTitle").textContent = titles[tab];
       document.getElementById("yrIcon").innerHTML = icons[tab];
+      renderWithinBar();
+      loadAndRender();
+    }
+
+    function switchPeriod(period) {
+      currentPeriod = period;
+      document.querySelectorAll(".ttab").forEach(t => t.classList.toggle("active", t.getAttribute("data-period") === period));
+      var note = document.querySelector(".time-note");
+      if (note) note.textContent = periodNotes[period] || "";
       loadAndRender();
     }
 
     async function loadAndRender() {
-      if (cache[currentTab]) { render(); return; }
+      if (cache[cacheKey()]) { render(); return; }
       document.getElementById("lbList").innerHTML = '<div class="lb-empty">Yuklanmoqda...</div>';
       document.getElementById("podium").innerHTML = '<div class="podium-empty">Yuklanmoqda...</div>';
       try {
-        const res = await authFetch(endpoints[currentTab]);
+        const res = await authFetch("/rankings/combined?scope=" + currentTab + "&period=" + currentPeriod + "&within=" + currentWithin);
         const data = await res.json();
-        cache[currentTab] = data[dataKeys[currentTab]] || [];
+        cache[cacheKey()] = { rankings: data.rankings || [], my_entry: data.my_entry || null, total: data.total || 0 };
         render();
       } catch (err) {
         document.getElementById("lbList").innerHTML = '<div class="lb-empty">Yuklab bo\'lmadi</div>';
@@ -243,12 +303,13 @@
     }
 
     function render() {
-      const list = cache[currentTab] || [];
+      const entry = cache[cacheKey()] || { rankings: [], my_entry: null, total: 0 };
+      const list = entry.rankings || [];
       const nameField = nameFieldOf(currentTab);
       const icon = icons[currentTab];
       renderPodium(list, nameField, icon);
-      renderTable(list, nameField, icon);
-      updateMyBox(list, nameField);
+      renderTable(list, nameField, icon, entry.my_entry);
+      updateMyBox(list, nameField, entry.my_entry);
       updateStats();
     }
 
@@ -264,10 +325,13 @@
         { item: top3[0], rank: 1, cls: "first" },
         { item: top3[2], rank: 3, cls: "third" },
       ];
+      const showReg = (currentTab === "schools" && currentWithin === "country");
       podium.innerHTML = "";
       order.forEach(o => {
         const name = o.item[nameField] || "—";
-        const sub = currentTab === "schools" ? (o.item.region || "") : (o.item.player_count + " o'yinchi");
+        let sub;
+        if (currentTab === "schools") sub = showReg ? (o.item.district || "") : (o.item.region || "");
+        else sub = o.item.player_count + " o'yinchi";
         const crown = o.rank === 1 ? '<div class="podium-crown">👑</div>' : "";
         podium.innerHTML +=
           '<div class="podium-place ' + o.cls + '">' + crown +
@@ -275,88 +339,136 @@
             '<div class="podium-ava">' + icon + '</div>' +
             '<div class="podium-name">' + name + '</div>' +
             '<div class="podium-sub">' + sub + '</div>' +
-            '<div class="podium-rating"><i data-lucide="trophy"></i> ' + o.item.total_rating + '</div>' +
-            '<div class="podium-rating-sub">o\'rtacha ' + o.item.avg_rating + '</div>' +
+            '<div class="podium-rating"><i data-lucide="trophy"></i> ' + o.item.school_rating + '</div>' +
+            '<div class="podium-rating-sub">Mehnat ' + o.item.effort_points + ' · Kuch ' + o.item.avg_rating + '</div>' +
           '</div>';
       });
       lucide.createIcons();
     }
 
-    function renderTable(list, nameField, icon) {
+    function renderTable(list, nameField, icon, myEntry) {
       const lbList = document.getElementById("lbList");
+      // Maktablar uchun qo'shimcha ustun: Tuman/Viloyat miqyosi → "Tuman", Respublika → "Viloyat"
+      const showDist = (currentTab === "schools" && (currentWithin === "district" || currentWithin === "region"));
+      const showReg = (currentTab === "schools" && currentWithin === "country");
+      const cols = document.getElementById("lbCols");
+      const colDist = document.getElementById("colDist");
+      const colReg = document.getElementById("colReg");
+      cols.classList.toggle("with-dist", showDist || showReg);
+      if (colDist) colDist.style.display = showDist ? "" : "none";
+      if (colReg) colReg.style.display = showReg ? "" : "none";
+
       if (list.length === 0) {
         lbList.innerHTML = '<div class="lb-empty">Hozircha ma\'lumot yo\'q</div>';
         return;
       }
-      const myField = currentTab === "schools" ? user.school : (currentTab === "districts" ? user.district : user.region);
       lbList.innerHTML = "";
-      list.forEach((item, i) => {
-        const rank = i + 1;
+      list.forEach((item) => {
+        const rank = item.rank;
         let rcls = ""; if (rank === 1) rcls = "top1"; else if (rank === 2) rcls = "top2"; else if (rank === 3) rcls = "top3";
         const name = item[nameField] || "—";
-        const sub = currentTab === "schools" ? (item.region || "—") : (currentTab === "districts" ? (item.region || "—") : "Viloyat");
-        const isMe = myField && name === myField;
+        // Respublika miqyosida maktab nomi tagida TUMAN, qolganda VILOYAT
+        let sub;
+        if (currentTab === "schools") sub = showReg ? (item.district || "—") : (item.region || "—");
+        else if (currentTab === "districts") sub = item.region || "—";
+        else sub = "Viloyat";
+        const distCell = showDist ? ('<span class="lb-dist">' + (item.district || "—") + '</span>') : "";
+        const regCell = showReg ? ('<span class="lb-region">' + (item.region || "—") + '</span>') : "";
         lbList.innerHTML +=
-          '<div class="lb-row' + (isMe ? " me" : "") + '">' +
+          '<div class="lb-row' + ((showDist || showReg) ? " with-dist" : "") + (item.is_mine ? " me" : "") + '">' +
             '<div class="lb-rank ' + rcls + '">' + rank + '</div>' +
             '<div class="lb-ent"><div class="lb-ava">' + icon + '</div>' +
               '<div><div class="lb-name">' + name + '</div><div class="lb-name-sub">' + sub + '</div></div></div>' +
+            distCell + regCell +
             '<span class="lb-players">' + item.player_count + '</span>' +
-            '<span class="lb-avg">' + item.avg_rating + '</span>' +
-            '<div class="lb-rating"><i data-lucide="trophy"></i> ' + item.total_rating + '</div>' +
+            '<span class="lb-avg">' + item.effort_points + '</span>' +
+            '<div class="lb-rating"><i data-lucide="trophy"></i> ' + item.school_rating + '</div>' +
           '</div>';
       });
+
+      // TOP 100 dan tashqarida bo'lsa — pastga "mening obyektim #N" qadab qo'yamiz
+      const inList = myEntry && list.some(it => it.is_mine);
+      if (myEntry && !inList) {
+        const rank = myEntry.rank;
+        const name = myEntry[nameField] || "—";
+        let sub;
+        if (currentTab === "schools") sub = showReg ? (myEntry.district || "—") : (myEntry.region || "—");
+        else if (currentTab === "districts") sub = myEntry.region || "—";
+        else sub = "Viloyat";
+        const distCell = showDist ? ('<span class="lb-dist">' + (myEntry.district || "—") + '</span>') : "";
+        const regCell = showReg ? ('<span class="lb-region">' + (myEntry.region || "—") + '</span>') : "";
+        lbList.innerHTML +=
+          '<div class="lb-gap">Sizning o\'rningiz</div>' +
+          '<div class="lb-pinned">' +
+            '<div class="lb-row me' + ((showDist || showReg) ? " with-dist" : "") + '">' +
+              '<div class="lb-rank">' + rank + '</div>' +
+              '<div class="lb-ent"><div class="lb-ava">' + icon + '</div>' +
+                '<div><div class="lb-name">' + name + '</div><div class="lb-name-sub">' + sub + '</div></div></div>' +
+              distCell + regCell +
+              '<span class="lb-players">' + myEntry.player_count + '</span>' +
+              '<span class="lb-avg">' + myEntry.effort_points + '</span>' +
+              '<div class="lb-rating"><i data-lucide="trophy"></i> ' + myEntry.school_rating + '</div>' +
+            '</div>' +
+          '</div>';
+      }
+
       lucide.createIcons();
     }
 
-    function updateMyBox(list, nameField) {
+    function updateMyBox(list, nameField, myEntry) {
       const myField = currentTab === "schools" ? user.school : (currentTab === "districts" ? user.district : user.region);
+      const setEffort = function (v) { var e = document.getElementById("yrEffort"); if (e) e.textContent = v; };
       if (!myField) {
         document.getElementById("yrName").textContent = "—";
         document.getElementById("yrSub").textContent = "Ma'lumot yo'q";
         document.getElementById("yrRank").textContent = "—";
         document.getElementById("yrRP").textContent = "—";
+        setEffort("—");
         document.getElementById("yrPlayers").textContent = "—";
         return;
       }
-      const idx = list.findIndex(it => (it[nameField] || "") === myField);
+      const item = list.find(it => it.is_mine) || myEntry;
       document.getElementById("yrName").textContent = myField;
-      if (idx >= 0) {
-        const item = list[idx];
+      if (item) {
         const sub = currentTab === "schools" ? (item.region || "") : "";
         document.getElementById("yrSub").textContent = sub || (item.player_count + " o'yinchi");
-        document.getElementById("yrRank").textContent = "#" + (idx + 1);
-        document.getElementById("yrRP").textContent = item.total_rating;
+        document.getElementById("yrRank").textContent = "#" + item.rank;
+        document.getElementById("yrRP").textContent = item.school_rating;
+        setEffort(item.effort_points);
         document.getElementById("yrPlayers").textContent = item.player_count;
       } else {
         document.getElementById("yrSub").textContent = "Reytingda yo'q";
         document.getElementById("yrRank").textContent = "—";
         document.getElementById("yrRP").textContent = "—";
+        setEffort("—");
         document.getElementById("yrPlayers").textContent = "—";
       }
     }
 
     function updateStats() {
-      if (cache.schools) document.getElementById("statSchools").textContent = cache.schools.length;
-      if (cache.districts) document.getElementById("statDistricts").textContent = cache.districts.length;
-      if (cache.regions) document.getElementById("statRegions").textContent = cache.regions.length;
+      var sk = "schools_" + currentPeriod + "_" + withinDefault.schools;
+      var dk = "districts_" + currentPeriod + "_" + withinDefault.districts;
+      var rk = "regions_" + currentPeriod + "_" + withinDefault.regions;
+      if (cache[sk]) document.getElementById("statSchools").textContent = cache[sk].total || cache[sk].rankings.length;
+      if (cache[dk]) document.getElementById("statDistricts").textContent = cache[dk].total || cache[dk].rankings.length;
+      if (cache[rk]) document.getElementById("statRegions").textContent = cache[rk].total || cache[rk].rankings.length;
     }
 
-    async function preloadStats() {
+    async function preloadAll() {
       try {
-        const [s, d, r] = await Promise.all([
-          authFetch("/rankings/schools").then(x => x.json()),
-          authFetch("/rankings/districts").then(x => x.json()),
-          authFetch("/rankings/regions").then(x => x.json()),
-        ]);
-        cache.schools = s.schools || [];
-        cache.districts = d.districts || [];
-        cache.regions = r.regions || [];
+        const scopes = ["schools", "districts", "regions"];
+        await Promise.all(scopes.map(async function (sc) {
+          const w = withinDefault[sc];
+          const res = await authFetch("/rankings/combined?scope=" + sc + "&period=" + currentPeriod + "&within=" + w);
+          const data = await res.json();
+          cache[sc + "_" + currentPeriod + "_" + w] = { rankings: data.rankings || [], my_entry: data.my_entry || null, total: data.total || 0 };
+        }));
         render();
         updateStats();
       } catch (err) {}
     }
-    preloadStats();
+    renderWithinBar();
+    preloadAll();
 
     lucide.createIcons();
   </script>

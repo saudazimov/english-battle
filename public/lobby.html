@@ -370,6 +370,26 @@
     .rb-timer i { width: 13px; height: 13px; }
     .rb-empty { text-align: center; color: var(--text-faint); padding: 16px; font-size: 13px; }
 
+    /* Maktabim kartasi (School Battle) */
+    .ms-school { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .ms-logo { width: 40px; height: 40px; border-radius: 11px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-size: 16px; font-weight: 800; color: #fff; flex-shrink: 0; }
+    .ms-school-name { font-size: 14.5px; font-weight: 700; line-height: 1.2; }
+    .ms-school-loc { font-size: 11.5px; color: var(--text-faint); margin-top: 2px; }
+    .ms-rank-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .ms-rank-num { font-size: 32px; font-weight: 800; color: var(--accent); line-height: 1; }
+    .ms-rank-ctx { font-size: 12px; color: var(--text-dim); line-height: 1.3; }
+    .ms-rank-of { color: var(--text-faint); }
+    .ms-rank-sub { font-size: 11.5px; color: var(--text-faint); margin-bottom: 14px; }
+    .ms-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .ms-stat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; }
+    .ms-stat-val { font-size: 17px; font-weight: 800; }
+    .ms-stat-lbl { font-size: 10.5px; color: var(--text-faint); margin-top: 2px; }
+    .ms-contrib { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .ms-contrib i { width: 14px; height: 14px; flex-shrink: 0; }
+    .ms-contrib b { color: var(--green); }
+    .ms-empty { text-align: center; padding: 8px 4px; }
+    .ms-empty-txt { font-size: 12.5px; color: var(--text-dim); line-height: 1.5; }
+
     /* Current Rank */
     .rank-display { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
     .rank-medal { font-size: 46px; width: 56px; height: 56px; display: inline-flex; align-items: center; justify-content: center; }
@@ -796,6 +816,12 @@
         </div>
         <div class="rank-bar"><div class="rank-bar-fill" id="rankBarFill" style="width:40%;"></div></div>
         <div class="rank-next">Next Rank: <span id="rankNext">Gold</span></div>
+      </div>
+
+      <!-- Maktabim (School Battle) -->
+      <div class="card rb-card" id="mySchoolCard">
+        <div class="rb-head"><span>Maktabim</span><a class="view-all" onclick="window.location.href='/school-battle.html'">Batafsil</a></div>
+        <div id="mySchoolBody"><div class="rb-empty">Yuklanmoqda...</div></div>
       </div>
 
       <!-- Daily Quests -->
@@ -1359,6 +1385,45 @@
       }
     }
     loadQuests();
+
+    // Maktabim (School Battle)
+    async function loadMySchool() {
+      var body = document.getElementById("mySchoolBody");
+      try {
+        var res = await authFetch("/school-battle/my");
+        var d = await res.json();
+        if (!d.has_school) {
+          body.innerHTML = '<div class="ms-empty"><div class="ms-empty-txt">Maktab tanlanmagan. Profilingizda maktabni belgilang — keyin maktabingiz uchun jang qiling.</div></div>';
+          return;
+        }
+        var initial = (d.school || "?").charAt(0).toUpperCase();
+        var schoolBlock =
+          '<div class="ms-school"><div class="ms-logo">' + escapeHtml(initial) + '</div>' +
+          '<div><div class="ms-school-name">' + escapeHtml(d.school) + '</div>' +
+          '<div class="ms-school-loc">' + escapeHtml((d.district || "") + (d.region ? ", " + d.region : "")) + '</div></div></div>';
+        if (!d.total_points) {
+          body.innerHTML = schoolBlock +
+            '<div class="ms-empty"><div class="ms-empty-txt">Hali ochko yo\'q. Birinchi jangni yutib, maktabingizga birinchi ochkoni qo\'shing!</div></div>';
+          return;
+        }
+        var rankBlock =
+          '<div class="ms-rank-row"><div class="ms-rank-num">#' + d.rank_district + '</div>' +
+          '<div class="ms-rank-ctx">tumanda<br><span class="ms-rank-of">' + d.total_district + ' maktabdan</span></div></div>' +
+          '<div class="ms-rank-sub">Viloyatda #' + d.rank_region + ' · Respublikada #' + d.rank_national + '</div>';
+        var statsBlock =
+          '<div class="ms-stats">' +
+          '<div class="ms-stat"><div class="ms-stat-val">' + Number(d.total_points).toLocaleString() + '</div><div class="ms-stat-lbl">Jami ochko</div></div>' +
+          '<div class="ms-stat"><div class="ms-stat-val">' + Number(d.season_points).toLocaleString() + '</div><div class="ms-stat-lbl">Bu mavsum</div></div>' +
+          '</div>';
+        var contribBlock =
+          '<div class="ms-contrib"><i data-lucide="user"></i> Sening hissang: <b>' + Number(d.my_contribution).toLocaleString() + '</b> · Maktabda #' + d.my_rank_in_school + '</div>';
+        body.innerHTML = schoolBlock + rankBlock + statsBlock + contribBlock;
+        if (window.lucide) lucide.createIcons();
+      } catch (err) {
+        body.innerHTML = '<div class="rb-empty">Maktab ma\'lumotini yuklab bo\'lmadi</div>';
+      }
+    }
+    loadMySchool();
 
     // Friends Online
     async function loadFriendsOnline() {
