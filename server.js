@@ -705,7 +705,7 @@ function broadcastParty(partyId) {
     maxSize: party.maxSize,
     status: party.status,
     leaderId: party.leader,
-    members: party.members.map(function (m) { return { userId: m.userId, name: m.name, isLeader: m.userId === party.leader }; }),
+    members: party.members.map(function (m) { return { userId: m.userId, name: m.name, isLeader: m.userId === party.leader, profile_picture: m.profile_picture || null }; }),
   };
   party.members.forEach(function (m) {
     if (m.socketId) io.to(m.socketId).emit("partyUpdated", payload);
@@ -1067,7 +1067,7 @@ io.on("connection", (socket) => {
   // ============ PARTY HANDLERLAR ============
 
   // Party yaratish (lider bo'lib)
-  socket.on("createParty", ({ userId, name, teamMode }) => {
+  socket.on("createParty", ({ userId, name, teamMode, profile_picture }) => {
     if (!userId) return;
     var uid = String(userId);
 
@@ -1083,7 +1083,7 @@ io.on("connection", (socket) => {
       teamMode: mode,
       maxSize: maxSize,
       status: "forming",
-      members: [{ userId: uid, name: name || "O'yinchi", socketId: socket.id, isLeader: true }],
+      members: [{ userId: uid, name: name || "O'yinchi", socketId: socket.id, isLeader: true, profile_picture: profile_picture || null }],
     };
     userParty[uid] = partyId;
 
@@ -1117,7 +1117,7 @@ io.on("connection", (socket) => {
   });
 
   // Taklifni qabul qilish
-  socket.on("acceptPartyInvite", ({ partyId, userId, name }) => {
+  socket.on("acceptPartyInvite", ({ partyId, userId, name, profile_picture }) => {
     var party = parties[partyId];
     if (!party) { socket.emit("partyError", { message: "Party endi mavjud emas" }); return; }
     if (party.members.length >= party.maxSize) { socket.emit("partyError", { message: "Party to'lib qoldi" }); return; }
@@ -1128,7 +1128,7 @@ io.on("connection", (socket) => {
 
     // Allaqachon a'zomi?
     if (!party.members.find(function (m) { return m.userId === uid; })) {
-      party.members.push({ userId: uid, name: name || "O'yinchi", socketId: socket.id, isLeader: false });
+      party.members.push({ userId: uid, name: name || "O'yinchi", socketId: socket.id, isLeader: false, profile_picture: profile_picture || null });
       userParty[uid] = partyId;
     }
     broadcastParty(partyId);
