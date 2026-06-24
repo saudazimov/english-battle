@@ -747,6 +747,7 @@ function makeTeamBot(refPlayer, idx) {
     name: bn,
     level: refPlayer ? refPlayer.level : "A1",
     lengthKey: refPlayer ? refPlayer.lengthKey : "standard",
+    rating: (refPlayer && refPlayer.rating ? Math.max(800, refPlayer.rating + Math.floor(Math.random() * 200 - 100)) : (1000 + Math.floor(Math.random() * 700))),
     isBot: true,
   };
 }
@@ -1174,7 +1175,7 @@ io.on("connection", (socket) => {
   });
 
   // team-battle.html dan: party a'zosi yetib keldi
-  socket.on("joinPartyMatch", ({ partyId, userId, name, level, lengthKey }) => {
+  socket.on("joinPartyMatch", ({ partyId, userId, name, level, lengthKey, profile_picture }) => {
     var pending = pendingPartyMatches[partyId];
     if (!pending) {
       // Pending yo'q (kech qoldi yoki xato) — solo team matchga tushiramiz
@@ -1182,7 +1183,7 @@ io.on("connection", (socket) => {
       return;
     }
     var uid = String(userId);
-    pending.arrived[uid] = { socketId: socket.id, userId: uid, name: name || "O'yinchi", level: level || "A1", lengthKey: lengthKey || "standard" };
+    pending.arrived[uid] = { socketId: socket.id, userId: uid, name: name || "O'yinchi", level: level || "A1", rating: 1000, lengthKey: lengthKey || "standard", profile_picture: profile_picture || null };
 
     console.log("Party a'zosi yetib keldi: " + uid + " -> " + partyId + " (" + Object.keys(pending.arrived).length + "/" + pending.expected.length + ")");
 
@@ -1433,6 +1434,7 @@ io.on("connection", (socket) => {
           level: playerData.level || "A1",
           lengthKey: playerData.lengthKey || "standard",
           rating: playerData.rating || 1000,
+          profile_picture: playerData.profile_picture || null,
         }],
       };
       addTeamEntry(teamMode, entry);
@@ -1645,7 +1647,7 @@ function emitTeamProgress(roomId) {
   function teamProg(ids) {
     return ids.map(function (sid) {
       var p = battle.players[sid];
-      return { name: p.name, answeredCount: p.answeredCount, score: p.score, finished: p.finished, isBot: p.isBot };
+      return { name: p.name, answeredCount: p.answeredCount, score: p.score, finished: p.finished, isBot: p.isBot, level: p.level, rating: p.rating };
     });
   }
   var progA = teamProg(battle.teams.A);
@@ -1744,11 +1746,11 @@ async function startTeamBattle(group, teamMode, teamSize) {
     var teamAIds = [], teamBIds = [];
 
     teamA.forEach(function (p) {
-      players[p.socketId] = { userId: p.userId, name: p.name, score: 0, finished: false, answeredCount: 0, answers: [], team: "A", isBot: !!p.isBot };
+      players[p.socketId] = { userId: p.userId, name: p.name, level: p.level || "A1", rating: p.rating || 1000, profile_picture: p.profile_picture || null, score: 0, finished: false, answeredCount: 0, answers: [], team: "A", isBot: !!p.isBot };
       teamAIds.push(p.socketId);
     });
     teamB.forEach(function (p) {
-      players[p.socketId] = { userId: p.userId, name: p.name, score: 0, finished: false, answeredCount: 0, answers: [], team: "B", isBot: !!p.isBot };
+      players[p.socketId] = { userId: p.userId, name: p.name, level: p.level || "A1", rating: p.rating || 1000, profile_picture: p.profile_picture || null, score: 0, finished: false, answeredCount: 0, answers: [], team: "B", isBot: !!p.isBot };
       teamBIds.push(p.socketId);
     });
 
@@ -1769,7 +1771,7 @@ async function startTeamBattle(group, teamMode, teamSize) {
 
     // Har o'yinchiga jang boshlanishini yuboramiz (o'z jamoasi va raqib jamoasi ma'lumoti bilan)
     function teamInfo(ids) {
-      return ids.map(function (sid) { return { name: players[sid].name, isBot: players[sid].isBot, userId: players[sid].userId }; });
+      return ids.map(function (sid) { return { name: players[sid].name, isBot: players[sid].isBot, userId: players[sid].userId, level: players[sid].level, rating: players[sid].rating, profile_picture: players[sid].profile_picture }; });
     }
     var infoA = teamInfo(teamAIds);
     var infoB = teamInfo(teamBIds);
@@ -1780,6 +1782,7 @@ async function startTeamBattle(group, teamMode, teamSize) {
       io.to(p.socketId).emit("teamBattleStart", {
         roomId: roomId,
         teamMode: teamMode,
+        level: level,
         total_questions: safeQuestions.length,
         questions: safeQuestions,
         myTeam: myTeam,

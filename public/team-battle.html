@@ -11,227 +11,386 @@
       --text: #e6ecff; --text-dim: #94a3c4; --text-faint: #64748b;
       --accent: #5b8cff; --accent-2: #a855f7; --gold: #fbbf24;
       --green: #34d399; --cyan: #38e1ff; --red: #f87171;
-      --teamA: #5b8cff; --teamB: #f87171;
+      --teamA: #38bdf8; --teamB: #ec4899;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
     .stage { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
-    .wrap { max-width: 900px; width: 100%; }
-
+    .wrap { max-width: 1080px; width: 100%; }
+    .wrap.battle-wide { max-width: 1320px; }
     .card { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 36px; }
 
-    /* ===== MATCHMAKING ===== */
-    .mm-center { text-align: center; }
-    .mm-orb { width: 120px; height: 120px; margin: 0 auto 22px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, rgba(91,140,255,0.4), rgba(168,85,247,0.15)); border: 2px solid rgba(91,140,255,0.4); display: grid; place-items: center; position: relative; }
-    .mm-orb.found { background: radial-gradient(circle at 40% 35%, rgba(52,211,153,0.4), rgba(56,225,255,0.15)); border-color: rgba(52,211,153,0.5); }
-    .mm-orb i { width: 48px; height: 48px; color: var(--accent); }
-    .mm-orb.found i { color: var(--green); }
-    .mm-orb::before { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid transparent; border-top-color: var(--accent); animation: mmSpin 1.2s linear infinite; }
-    .mm-orb.found::before { display: none; }
-    @keyframes mmSpin { to { transform: rotate(360deg); } }
+    /* ===== MATCHMAKING (1v1 Ranked uslubi) ===== */
+    .mm-card { padding: 32px 44px; text-align: center; max-width: 1080px; margin: 0 auto; }
+    .mm-scanner { position: relative; width: 120px; height: 120px; margin: 0 auto 18px; display: grid; place-items: center; }
+    .scanner-ring { position: absolute; border-radius: 50%; }
+    .scanner-ring.r1 { inset: 0; border: 2px solid rgba(91,140,255,0.5); border-top-color: var(--accent); border-right-color: var(--accent-2); animation: scanSpin 5s linear infinite; }
+    .scanner-ring.r2 { inset: 14px; border: 2px solid rgba(168,85,247,0.4); border-bottom-color: var(--accent-2); border-left-color: var(--cyan); animation: scanSpinRev 4s linear infinite; }
+    .scanner-ring.r3 { inset: 28px; border: 1.5px solid rgba(56,225,255,0.3); border-top-color: var(--cyan); animation: scanSpin 7s linear infinite; }
+    @keyframes scanSpin { to { transform: rotate(360deg); } }
+    @keyframes scanSpinRev { to { transform: rotate(-360deg); } }
+    .scanner-core { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; box-shadow: 0 0 40px rgba(91,140,255,0.55); z-index: 1; animation: scanPulse 2.2s ease-in-out infinite; }
+    .scanner-core i { width: 28px; height: 28px; color: #fff; }
+    @keyframes scanPulse { 0%,100% { box-shadow: 0 0 30px rgba(91,140,255,0.4); } 50% { box-shadow: 0 0 50px rgba(168,85,247,0.7); } }
+    .mm-scanner.found .scanner-ring.r1 { border-top-color: var(--cyan); border-right-color: var(--green); }
+    .mm-scanner.found .scanner-ring.r2 { border-bottom-color: var(--green); border-left-color: var(--cyan); }
+    .mm-scanner.found .scanner-core { background: linear-gradient(135deg, var(--cyan), var(--green)); box-shadow: 0 0 45px rgba(52,211,153,0.6); animation: foundBurst 0.6s ease-out; }
+    @keyframes foundBurst { 0% { transform: scale(1); } 40% { transform: scale(1.14); } 100% { transform: scale(1); } }
+    .mm-title { font-size: 28px; font-weight: 800; margin-bottom: 6px; color: #e6ecff; }
+    .mm-sub { font-size: 15px; color: var(--text-dim); margin-bottom: 22px; }
+    .mm-chips { display: flex; justify-content: center; flex-wrap: nowrap; gap: 12px; margin-bottom: 24px; }
+    .mm-chip { display: flex; align-items: center; gap: 11px; background: rgba(12,18,40,0.75); border: 1px solid rgba(100,120,255,0.25); border-radius: 14px; padding: 12px 18px; white-space: nowrap; }
+    .mm-chip > i { width: 19px; height: 19px; color: var(--accent-2); flex-shrink: 0; }
+    .mc-lbl { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 1px; }
+    .mc-val { font-size: 15px; font-weight: 700; color: var(--cyan); margin-top: 2px; }
+    .mm-versus { display: grid; grid-template-columns: 1fr 240px 1fr; gap: 18px; align-items: stretch; margin-bottom: 18px; }
+    .mm-team-card { padding: 16px; border-radius: 16px; text-align: left; }
+    .mm-team-card.me { background: rgba(10,20,45,0.7); border: 1px solid rgba(56,225,255,0.35); }
+    .mm-team-card.opp { background: rgba(25,15,50,0.65); border: 1px solid rgba(168,85,247,0.4); }
+    .mm-team-card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+    .mm-team-card.me .mm-team-card-title { color: var(--cyan); }
+    .mm-team-card.opp .mm-team-card-title { color: var(--accent-2); }
+    .mm-team-members { display: flex; flex-direction: column; gap: 8px; }
+    .mm-member { display: flex; align-items: center; gap: 10px; padding: 9px 11px; background: rgba(0,0,0,0.22); border-radius: 11px; }
+    .mm-member-ava { position: relative; width: 34px; height: 34px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; } 
+    .mm-team-card.me .mm-member-ava { background: linear-gradient(135deg, var(--accent), var(--cyan)); }
+    .mm-team-card.opp .mm-member-ava { background: linear-gradient(135deg, #f59e0b, var(--accent-2)); }
+    .mm-member-ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .mm-member-name { font-size: 14px; font-weight: 600; flex: 1; }
+    .mm-member-tag { font-size: 10px; color: var(--text-faint); background: rgba(255,255,255,0.06); padding: 2px 7px; border-radius: 999px; }
+    .mm-member-empty { font-size: 13px; color: var(--text-faint); padding: 16px 10px; text-align: center; opacity: 0.7; }
+    .mm-center { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .mm-timer { font-size: 46px; font-weight: 800; color: var(--cyan); font-variant-numeric: tabular-nums; text-shadow: 0 0 24px rgba(56,225,255,0.5); line-height: 1; }
+    .mm-wait-note { font-size: 12.5px; color: var(--text-faint); margin-top: 8px; }
+    .mm-progress { position: relative; width: 100%; max-width: 220px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 999px; margin-top: 14px; overflow: hidden; }
+    .mm-progress-dot { position: absolute; top: 50%; left: 0; width: 50px; height: 3px; transform: translateY(-50%); background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent); border-radius: 999px; animation: mmScan 1.8s ease-in-out infinite; }
+    @keyframes mmScan { 0% { left: -50px; } 100% { left: 100%; } }
+    .mm-cd-circle { position: relative; width: 96px; height: 96px; margin: 0 auto; border-radius: 50%; background: rgba(20,30,70,0.75); border: 1px solid rgba(100,120,255,0.4); display: grid; place-items: center; }
+    .mm-cd-circle span { font-size: 46px; font-weight: 900; color: var(--cyan); line-height: 1; }
+    .mm-cd-ring { position: absolute; inset: -4px; border-radius: 50%; border: 2px solid transparent; border-top-color: var(--accent); border-right-color: var(--accent-2); animation: scanSpin 3s linear infinite; }
+    .mm-cd-text { font-size: 13px; color: var(--text-dim); margin-top: 12px; }
+    .mm-trust { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--text-dim); margin-bottom: 18px; }
+    .mm-trust span { display: inline-flex; align-items: center; gap: 6px; }
+    .mm-trust i { width: 14px; height: 14px; color: var(--cyan); }
+    .mm-dot { color: var(--text-faint); }
+    .mm-rewards { padding-top: 4px; margin-bottom: 20px; }
+    .mm-rewards-title { font-size: 14px; color: var(--text-dim); margin-bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 16px; }
+    .mm-rewards-title::before, .mm-rewards-title::after { content: ""; height: 1px; flex: 1; max-width: 220px; background: linear-gradient(90deg, transparent, var(--border)); }
+    .mm-rewards-title::after { background: linear-gradient(90deg, var(--border), transparent); }
+    .mm-rewards-row { display: flex; justify-content: center; gap: 36px; flex-wrap: wrap; }
+    .mm-reward { display: flex; align-items: center; gap: 11px; }
+    .mr-ic { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+    .mr-ic.rp { background: rgba(91,140,255,0.15); color: var(--accent); }
+    .mr-ic.xp { background: rgba(168,85,247,0.15); color: var(--accent-2); }
+    .mr-ic.coin { background: rgba(251,191,36,0.15); color: var(--gold); }
+    .mr-ic.coin i { width: 20px; height: 20px; }
+    .mr-val { font-size: 17px; font-weight: 800; color: var(--text); text-align: left; }
+    .mr-lbl { font-size: 12px; color: var(--text-dim); text-align: left; }
+    .mm-cancel-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 56px; min-width: 280px; padding: 0 32px; border-radius: 14px; cursor: pointer; background: rgba(120,35,55,0.45); border: 1px solid rgba(255,90,110,0.6); color: #ff7b8a; font-size: 16px; font-weight: 700; font-family: inherit; transition: background 0.2s; }
+    .mm-cancel-btn:hover { background: rgba(150,45,70,0.6); }
+    .mm-cancel-btn i { width: 18px; height: 18px; }
+    .mm-cancel-note { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--text-faint); margin-top: 14px; }
+    .mm-cancel-note i { width: 14px; height: 14px; }
+    .mm-status-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 420px; height: 56px; padding: 0 32px; border-radius: 14px; background: linear-gradient(90deg, #2563eb, #9333ea); color: #fff; font-size: 16px; font-weight: 800; }
+    .mm-status-btn i { width: 19px; height: 19px; }
+    @media (max-width: 820px) {
+      .mm-card { padding: 28px 18px; }
+      .mm-chips { flex-wrap: wrap; }
+      .mm-versus { grid-template-columns: 1fr; gap: 14px; }
+      .mm-title { font-size: 24px; }
+      .mm-rewards-row { gap: 20px; }
+      .mm-cancel-btn, .mm-status-btn { width: 100%; min-width: 0; }
+    }
 
-    .mm-title { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
-    .mm-sub { font-size: 14px; color: var(--text-dim); margin-bottom: 26px; }
-    .mm-mode-badge { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--accent); background: rgba(91,140,255,0.12); border: 1px solid rgba(91,140,255,0.3); padding: 6px 14px; border-radius: 999px; margin-bottom: 22px; }
-    .mm-mode-badge i { width: 15px; height: 15px; }
-
-    .mm-progress { font-size: 15px; font-weight: 700; color: var(--text-dim); margin-bottom: 20px; }
-    .mm-progress b { color: var(--cyan); font-size: 19px; }
-
-    .mm-search-time { font-size: 12.5px; color: var(--text-faint); margin-bottom: 18px; }
-
-    /* Jamoa slotlari */
-    .mm-teams { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 26px; }
-    .mm-team { flex: 1; max-width: 320px; }
-    .mm-team-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
-    .mm-team.a .mm-team-label { color: var(--teamA); }
-    .mm-team.b .mm-team-label { color: var(--teamB); }
-    .mm-slots { display: flex; flex-direction: column; gap: 8px; }
-    .mm-slot { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; }
-    .mm-slot.empty { border-style: dashed; opacity: 0.5; }
-    .mm-slot-ava { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-    .mm-team.a .mm-slot-ava { background: rgba(91,140,255,0.2); color: var(--teamA); }
-    .mm-team.b .mm-slot-ava { background: rgba(248,113,113,0.2); color: var(--teamB); }
-    .mm-slot.empty .mm-slot-ava { background: var(--panel-2); color: var(--text-faint); }
-    .mm-slot-name { font-size: 13.5px; font-weight: 600; }
-    .mm-slot-tag { font-size: 10px; color: var(--text-faint); margin-left: auto; }
-    .mm-vs { font-size: 20px; font-weight: 800; color: var(--text-faint); flex-shrink: 0; }
-
-    .mm-cancel { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--red); font-size: 14px; font-weight: 700; padding: 13px 28px; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.15s; }
-    .mm-cancel:hover { background: rgba(248,113,113,0.18); }
-    .mm-cancel i { width: 17px; height: 17px; }
-    .mm-countdown { font-size: 50px; font-weight: 800; color: var(--cyan); margin: 10px 0; }
-
-    /* ===== JANG EKRANI ===== */
-    .battle-top { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
-    .team-score { flex: 1; padding: 14px 18px; border-radius: 14px; display: flex; align-items: center; gap: 12px; }
-    .team-score.mine { background: rgba(91,140,255,0.1); border: 1px solid rgba(91,140,255,0.3); }
-    .team-score.enemy { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); flex-direction: row-reverse; text-align: right; }
-    .team-score-val { font-size: 32px; font-weight: 800; line-height: 1; }
-    .team-score.mine .team-score-val { color: var(--teamA); }
-    .team-score.enemy .team-score-val { color: var(--teamB); }
-    .team-score-label { font-size: 12px; color: var(--text-dim); }
-    .battle-vs { font-size: 16px; font-weight: 800; color: var(--text-faint); }
-
-    .team-rosters { display: flex; gap: 12px; margin-bottom: 18px; }
-    .roster { flex: 1; }
-    .roster-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    .roster.mine .roster-title { color: var(--teamA); }
-    .roster.enemy .roster-title { color: var(--teamB); }
-    .roster-player { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; }
-    .roster-player-name { font-size: 12.5px; font-weight: 600; flex: 1; }
-    .roster-player-prog { font-size: 11px; color: var(--text-faint); }
-    .roster-player-score { font-size: 13px; font-weight: 700; }
-    .roster.mine .roster-player-score { color: var(--teamA); }
-    .roster.enemy .roster-player-score { color: var(--teamB); }
-    .roster-mini-bar { height: 4px; background: var(--panel-2); border-radius: 2px; overflow: hidden; margin-top: 4px; }
-    .roster-mini-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
-    .roster.mine .roster-mini-fill { background: var(--teamA); }
-    .roster.enemy .roster-mini-fill { background: var(--teamB); }
-
-    .q-timer-bar { height: 8px; background: var(--panel-2); border-radius: 4px; overflow: hidden; margin-bottom: 16px; }
-    .q-timer-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--cyan)); border-radius: 4px; transition: width 1s linear; width: 100%; }
-    .q-counter { font-size: 13px; color: var(--text-dim); margin-bottom: 10px; font-weight: 600; }
-    .q-text { font-size: 23px; font-weight: 700; line-height: 1.4; margin-bottom: 22px; }
-    .q-answers { display: flex; flex-direction: column; gap: 11px; }
-    .q-answer { display: flex; align-items: center; gap: 14px; padding: 17px 20px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.15s; text-align: left; width: 100%; color: var(--text); font-family: inherit; }
-    .q-answer:hover:not(:disabled) { border-color: var(--accent); background: rgba(91,140,255,0.05); }
-    .q-answer:disabled { cursor: default; }
-    .q-answer-letter { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--border); }
-    .q-answer-text { flex: 1; font-size: 16px; }
-    .q-answer.correct { border-color: var(--green); background: rgba(52,211,153,0.12); }
-    .q-answer.correct .q-answer-letter { background: rgba(52,211,153,0.25); color: var(--green); }
-    .q-answer.wrong { border-color: var(--red); background: rgba(248,113,113,0.12); }
-    .q-answer.wrong .q-answer-letter { background: rgba(248,113,113,0.25); color: var(--red); }
-    .q-wait { text-align: center; padding: 30px; color: var(--text-dim); font-size: 14px; }
-    .q-wait i { width: 32px; height: 32px; color: var(--accent); margin-bottom: 10px; animation: pulse 1.5s infinite; }
+    /* ===== JANG (maket dizayni) ===== */
+    .bt-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .bt-room { display: flex; align-items: center; gap: 14px; }
+    .bt-room-logo { width: 48px; height: 48px; border-radius: 13px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; box-shadow: 0 0 24px rgba(91,140,255,0.4); }
+    .bt-room-logo i { width: 24px; height: 24px; color: #fff; }
+    .bt-room-title { font-size: 21px; font-weight: 800; letter-spacing: 0.5px; }
+    .bt-room-sub { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+    .bt-header-right { display: flex; align-items: center; gap: 18px; }
+    .bt-live { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--green); }
+    .bt-live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .bt-leave { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 11px; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.4); color: var(--red); font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+    .bt-leave:hover { background: rgba(248,113,113,0.16); }
+    .bt-leave i { width: 16px; height: 16px; }
 
-    /* ===== NATIJA ===== */
-    .result { text-align: center; }
-    .result-banner { font-size: 38px; font-weight: 800; margin-bottom: 6px; }
-    .result-banner.win { color: var(--green); }
-    .result-banner.lose { color: var(--red); }
-    .result-banner.draw { color: var(--gold); }
-    .result-sub { font-size: 15px; color: var(--text-dim); margin-bottom: 24px; }
-    .result-scoreboard { display: flex; align-items: stretch; gap: 14px; margin-bottom: 24px; }
-    .result-team { flex: 1; padding: 20px; border-radius: 16px; }
-    .result-team.mine { background: rgba(91,140,255,0.1); border: 1px solid rgba(91,140,255,0.3); }
-    .result-team.enemy { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); }
-    .result-team-label { font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
-    .result-team.mine .result-team-label { color: var(--teamA); }
-    .result-team.enemy .result-team-label { color: var(--teamB); }
-    .result-team-score { font-size: 40px; font-weight: 800; line-height: 1; margin-bottom: 14px; }
-    .result-team.mine .result-team-score { color: var(--teamA); }
-    .result-team.enemy .result-team-score { color: var(--teamB); }
-    .result-roster-item { display: flex; justify-content: space-between; font-size: 12.5px; padding: 5px 0; border-top: 1px solid var(--border); }
-    .result-roster-item .nm { color: var(--text-dim); }
-    .result-roster-item .sc { font-weight: 700; }
-    .result-vs { display: grid; place-items: center; font-size: 18px; font-weight: 800; color: var(--text-faint); }
-    .result-rewards { display: flex; justify-content: center; gap: 14px; margin-bottom: 24px; }
-    .result-reward { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 12px; font-size: 16px; font-weight: 700; }
-    .result-reward.xp { background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3); color: var(--accent-2); }
-    .result-reward.rp { background: rgba(91,140,255,0.12); border: 1px solid rgba(91,140,255,0.3); color: var(--accent); }
-    .result-reward i { width: 18px; height: 18px; }
-    .result-actions { display: flex; gap: 12px; justify-content: center; }
+    .bt-scoreboard { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: center; margin-bottom: 22px; }
+    .bt-team-panel { border-radius: 18px; padding: 18px 20px; }
+    .bt-team-panel.mine { background: linear-gradient(135deg, rgba(56,189,248,0.07), rgba(10,20,45,0.5)); border: 1px solid rgba(56,189,248,0.3); }
+    .bt-team-panel.enemy { background: linear-gradient(135deg, rgba(236,72,153,0.07), rgba(40,15,40,0.5)); border: 1px solid rgba(236,72,153,0.3); }
+    .bt-pl { display: flex; align-items: center; gap: 14px; padding: 8px 0; }
+    .bt-pl + .bt-pl { border-top: 1px solid rgba(255,255,255,0.06); margin-top: 4px; padding-top: 14px; }
+    .bt-pl-ava-wrap { position: relative; flex-shrink: 0; }
+    .bt-pl-ava { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; font-weight: 800; color: #fff; overflow: hidden; }
+    .bt-team-panel.mine .bt-pl-ava { background: linear-gradient(135deg, #1e3a8a, #38bdf8); border: 2px solid rgba(56,189,248,0.5); }
+    .bt-team-panel.enemy .bt-pl-ava { background: linear-gradient(135deg, #7c2d12, #ec4899); border: 2px solid rgba(236,72,153,0.5); }
+    .bt-pl-ava img { width: 100%; height: 100%; object-fit: cover; }
+    .bt-pl-cefr { position: absolute; bottom: -3px; left: -3px; font-size: 9.5px; font-weight: 800; padding: 1px 5px; border-radius: 6px; background: var(--accent); color: #fff; border: 1.5px solid var(--panel); }
+    .bt-team-panel.enemy .bt-pl-cefr { background: var(--accent-2); }
+    .bt-pl-online { position: absolute; bottom: 1px; right: 1px; width: 12px; height: 12px; border-radius: 50%; background: var(--green); border: 2px solid var(--panel); }
+    .bt-pl-mid { flex: 1; min-width: 0; }
+    .bt-pl-namerow { display: flex; align-items: center; gap: 8px; }
+    .bt-pl-name { font-size: 15.5px; font-weight: 700; }
+    .bt-pl-rating { display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; color: var(--text-dim); font-weight: 600; }
+    .bt-pl-rating .bolt-svg { width: 12px; height: 12px; color: var(--gold); flex-shrink: 0; display: inline-block; vertical-align: middle; }
+    .bt-pl-proglabel { font-size: 11.5px; color: var(--text-faint); margin: 6px 0 5px; }
+    .bt-pl-progbar { height: 6px; background: rgba(0,0,0,0.35); border-radius: 999px; overflow: hidden; }
+    .bt-pl-progfill { height: 100%; border-radius: 999px; transition: width 0.4s; }
+    .bt-team-panel.mine .bt-pl-progfill { background: linear-gradient(90deg, #38bdf8, #5b8cff); }
+    .bt-team-panel.enemy .bt-pl-progfill { background: linear-gradient(90deg, #ec4899, #f472b6); }
+    .bt-pl-right { text-align: right; flex-shrink: 0; }
+    .bt-pl-score { font-size: 30px; font-weight: 800; line-height: 1; }
+    .bt-team-panel.mine .bt-pl-score { color: var(--teamA); }
+    .bt-team-panel.enemy .bt-pl-score { color: var(--teamB); }
+    .bt-pl-count { font-size: 12px; color: var(--text-faint); margin-top: 6px; }
+
+    .bt-vs { text-align: center; padding: 0 6px; }
+    .bt-vs-row { display: flex; align-items: center; gap: 14px; }
+    .bt-vs-num { font-size: 30px; font-weight: 800; }
+    .bt-vs-num.mine { color: var(--teamA); }
+    .bt-vs-num.enemy { color: var(--teamB); }
+    .bt-vs-badge { font-size: 30px; font-weight: 900; color: #fff; text-shadow: 0 0 18px rgba(255,255,255,0.3); }
+    .bt-vs-mode { font-size: 15px; font-weight: 800; color: var(--accent); margin-top: 12px; }
+    .bt-vs-mode-sub { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 3px; }
+
+    .bt-qcard { background: rgba(12,18,40,0.5); border: 1px solid var(--border); border-radius: 20px; padding: 28px 34px; min-height: 520px; display: flex; flex-direction: column; }
+    .bt-qtop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .bt-qmeta { display: flex; align-items: center; gap: 12px; }
+    .bt-qnum { font-size: 15px; font-weight: 700; color: var(--text-dim); }
+    .bt-qcefr { font-size: 12px; font-weight: 700; color: var(--accent-2); background: rgba(168,85,247,0.15); padding: 4px 11px; border-radius: 8px; }
+    .bt-qtimer { display: inline-flex; align-items: center; gap: 7px; font-size: 16px; font-weight: 800; color: var(--cyan); }
+    .bt-qtimer i { width: 17px; height: 17px; }
+    .bt-qtimer.low { color: var(--red); }
+    .bt-report { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .bt-report:hover { color: var(--red); border-color: rgba(248,113,113,0.4); }
+    .bt-report i { width: 14px; height: 14px; }
+    .bt-qtext { font-size: 28px; font-weight: 800; text-align: center; line-height: 1.35; margin-bottom: 28px; flex: 1; display: flex; align-items: center; justify-content: center; min-height: 90px; }
+    .bt-answers { display: flex; flex-direction: column; gap: 12px; }
+    .bt-answer { display: flex; align-items: center; gap: 16px; padding: 17px 20px; background: rgba(8,12,24,0.6); border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.15s; text-align: left; width: 100%; color: var(--text); font-family: inherit; }
+    .bt-answer:hover:not(:disabled) { border-color: var(--accent); }
+    .bt-answer:disabled { cursor: default; }
+    .bt-answer-letter { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 15px; flex-shrink: 0; background: rgba(168,85,247,0.18); color: #c4b5fd; }
+    .bt-answer-text { flex: 1; font-size: 16.5px; }
+    .bt-answer.selected { border-color: var(--accent); background: rgba(91,140,255,0.12); box-shadow: 0 0 0 1px var(--accent); }
+    .bt-answer.correct { border-color: var(--green); background: rgba(52,211,153,0.14); }
+    .bt-answer.correct .bt-answer-letter { background: rgba(52,211,153,0.3); color: var(--green); }
+    .bt-answer.wrong { border-color: var(--red); background: rgba(248,113,113,0.14); }
+    .bt-answer.wrong .bt-answer-letter { background: rgba(248,113,113,0.3); color: var(--red); }
+
+    @media (max-width: 980px) {
+      .bt-scoreboard { grid-template-columns: 1fr; }
+      .bt-vs-row { justify-content: center; }
+      .bt-qtext { font-size: 22px; }
+    }
+
+    /* ===== NATIJA (1v1 ranked uslubi) ===== */
+    .result-card { padding: 40px; text-align: center; }
+    .result-ic { width: 90px; height: 90px; border-radius: 26px; margin: 0 auto 16px; display: grid; place-items: center; animation: rPop 0.6s ease; }
+    .result-ic i { width: 46px; height: 46px; }
+    .result-ic.win { background: rgba(251,191,36,0.15); color: var(--gold); box-shadow: 0 0 40px rgba(251,191,36,0.3); }
+    .result-ic.lose { background: var(--panel-2); color: var(--text-dim); }
+    .result-ic.draw { background: rgba(91,140,255,0.15); color: var(--accent); }
+    @keyframes rPop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+    .result-card h1 { font-size: 38px; font-weight: 800; margin-bottom: 6px; }
+    .result-card h1.win { color: var(--gold); }
+    .result-card h1.lose { color: var(--text-dim); }
+    .result-card h1.draw { color: var(--accent); }
+    .result-sub { font-size: 14px; color: var(--text-dim); margin-bottom: 26px; }
+    .result-scores { display: flex; justify-content: center; gap: 40px; margin-bottom: 24px; align-items: flex-start; }
+    .rs { position: relative; }
+    .rs-crown { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); color: var(--gold); display: none; }
+    .rs-crown i { width: 24px; height: 24px; }
+    .rs.winner .rs-crown { display: block; animation: crownPop 0.6s ease forwards; }
+    @keyframes crownPop { 0% { opacity: 0; transform: translateX(-50%) scale(0.5) translateY(10px); } 60% { opacity: 1; transform: translateX(-50%) scale(1.15); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
+    .rs-ava { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 12px; display: grid; place-items: center; overflow: hidden; border: 3px solid var(--border-bright); }
+    .rs-ava i { width: 34px; height: 34px; color: #fff; }
+    .rs-ava img { width: 100%; height: 100%; object-fit: cover; }
+    .rs-ava.mine { background: linear-gradient(135deg, #1e3a8a, #38bdf8); }
+    .rs-ava.enemy { background: linear-gradient(135deg, #7c2d12, #ec4899); }
+    .rs.winner .rs-ava { border-color: var(--gold); box-shadow: 0 0 20px rgba(251,191,36,0.5); }
+    .rs-num { font-size: 46px; font-weight: 800; }
+    .rs.you .rs-num { color: var(--teamA); }
+    .rs.opp .rs-num { color: var(--teamB); }
+    .rs-lbl { font-size: 12px; color: var(--text-dim); margin-top: 4px; letter-spacing: 1px; font-weight: 700; }
+    .rs-roster { margin-top: 14px; min-width: 170px; }
+    .rs-roster-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 5px 0; border-top: 1px solid var(--border); }
+    .rs-roster-item .nm { color: var(--text-dim); flex: 1; text-align: left; }
+    .rs-roster-item .sc { font-weight: 700; color: var(--text); }
+    .rsr-ava { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .rsr-init { display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+    .xp-earned { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3); border-radius: 12px; color: var(--green); font-size: 17px; font-weight: 700; margin-bottom: 24px; }
+    .xp-earned i { width: 18px; height: 18px; }
+    .league-prog { max-width: 440px; margin: 0 auto 26px; padding: 16px 20px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px; }
+    .lp-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .lp-cur { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+    .lp-cur i { width: 18px; height: 18px; }
+    .lp-next { font-size: 13px; color: var(--text-dim); }
+    .lp-bar { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; }
+    .lp-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 4px; transition: width 0.8s ease; width: 0; }
+    .lp-rp { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+    .result-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
     .result-actions button { padding: 15px 28px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.15s; }
     .btn-again { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
     .btn-again:hover { filter: brightness(1.1); }
     .btn-lobby { background: var(--panel-2); color: var(--text); border: 1px solid var(--border) !important; }
     .btn-lobby:hover { background: var(--border); }
     .result-actions button i { width: 18px; height: 18px; }
-
     .err-box { text-align: center; padding: 40px; }
     .err-box i { width: 40px; height: 40px; color: var(--red); margin-bottom: 14px; }
+
+    /* Modal (report + leave) */
+    .ov { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+    .ov.show { display: flex; }
+    .ov-box { background: var(--panel); border: 1px solid var(--border-bright); border-radius: 18px; padding: 24px; max-width: 400px; width: 100%; box-shadow: 0 24px 70px rgba(0,0,0,0.5); }
+    .ov-title { font-size: 17px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .ov-title i { width: 18px; height: 18px; }
+    .ov-text { font-size: 13.5px; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px; }
+    .ov-opt { display: flex; align-items: center; gap: 10px; padding: 11px 13px; border: 1px solid var(--border); border-radius: 11px; cursor: pointer; margin-bottom: 7px; font-size: 13.5px; }
+    .ov-opt:hover { border-color: var(--accent); }
+    .ov-opt input { accent-color: var(--accent); }
+    .ov-actions { display: flex; gap: 10px; margin-top: 14px; }
+    .ov-actions button { flex: 1; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; border: none; font-size: 14px; }
+    .ov-cancel { background: var(--panel-2); color: var(--text-dim); }
+    .ov-danger { background: linear-gradient(135deg, var(--red), #dc2626); color: #fff; }
+    .ov-msg { text-align: center; font-size: 13px; margin-top: 10px; min-height: 16px; }
   </style>
 </head>
 <body>
   <div class="stage">
-    <div class="wrap">
+    <div class="wrap" id="pageWrap">
 
       <!-- MATCHMAKING -->
       <div id="mmScreen">
-        <div class="card mm-center">
-          <div class="mm-mode-badge" id="mmModeBadge"><i data-lucide="users"></i> <span id="mmModeText">Duo (2v2)</span></div>
-          <div class="mm-orb" id="mmOrb"><i data-lucide="users" id="mmOrbIcon"></i></div>
-          <div class="mm-title" id="mmTitle">Jamoa qidirilmoqda...</div>
-          <div class="mm-sub" id="mmSub">O'yinchilar yig'ilmoqda, kuting</div>
-          <div class="mm-progress" id="mmProgress"><b id="mmCurrent">1</b> / <span id="mmNeeded">4</span> o'yinchi</div>
-          <div class="mm-search-time" id="mmSearchTimeWrap">Kutish vaqti: <span id="mmSearchTime">0 soniya</span></div>
-
-          <div class="mm-teams" id="mmTeams" style="display:none;">
-            <div class="mm-team a">
-              <div class="mm-team-label">Sizning jamoa</div>
-              <div class="mm-slots" id="mmTeamA"></div>
+        <div class="card mm-card">
+          <div class="mm-scanner" id="mmScanner">
+            <div class="scanner-ring r1"></div><div class="scanner-ring r2"></div><div class="scanner-ring r3"></div>
+            <div class="scanner-core"><i data-lucide="users"></i></div>
+          </div>
+          <h2 class="mm-title" id="mmTitle">Raqib jamoa qidirilmoqda...</h2>
+          <p class="mm-sub" id="mmSub">O'yinchilar yig'ilmoqda, iltimos kuting.</p>
+          <div class="mm-chips">
+            <div class="mm-chip"><i data-lucide="users"></i><div><div class="mc-lbl">REJIM</div><div class="mc-val" id="mmModeChip">Duo (2v2)</div></div></div>
+            <div class="mm-chip"><i data-lucide="shield"></i><div><div class="mc-lbl">DARAJA</div><div class="mc-val" id="mmLevelChip">A1</div></div></div>
+            <div class="mm-chip"><i data-lucide="book-open"></i><div><div class="mc-lbl">SAVOLLAR</div><div class="mc-val" id="mmQChip">20</div></div></div>
+            <div class="mm-chip"><i data-lucide="clock"></i><div><div class="mc-lbl">VAQT</div><div class="mc-val">15s/savol</div></div></div>
+            <div class="mm-chip"><i data-lucide="user-check"></i><div><div class="mc-lbl">O'YINCHILAR</div><div class="mc-val"><span id="mmCurrent">1</span>/<span id="mmNeeded">4</span></div></div></div>
+          </div>
+          <div class="mm-versus">
+            <div class="mm-team-card me"><div class="mm-team-card-title">Sizning jamoa</div><div class="mm-team-members" id="mmTeamA"><div class="mm-member-empty">Kutilmoqda...</div></div></div>
+            <div class="mm-center">
+              <div id="mmCenterSearch">
+                <div class="mm-timer" id="mmSearchTime">00:00</div>
+                <div class="mm-wait-note">O'rtacha kutish: 10–20 soniya</div>
+                <div class="mm-progress"><div class="mm-progress-dot"></div></div>
+              </div>
+              <div id="mmCenterFound" style="display:none;">
+                <div class="mm-cd-circle"><div class="mm-cd-ring"></div><span id="mmCountdown">5</span></div>
+                <div class="mm-cd-text">Jang boshlanmoqda...</div>
+              </div>
             </div>
-            <div class="mm-vs">VS</div>
-            <div class="mm-team b">
-              <div class="mm-team-label">Raqib jamoa</div>
-              <div class="mm-slots" id="mmTeamB"></div>
+            <div class="mm-team-card opp"><div class="mm-team-card-title">Raqib jamoa</div><div class="mm-team-members" id="mmTeamB"><div class="mm-member-empty">Qidirilmoqda...</div></div></div>
+          </div>
+          <div class="mm-trust">
+            <span><i data-lucide="scale"></i> Adolatli matchmaking</span><span class="mm-dot">•</span>
+            <span><i data-lucide="users"></i> Jamoaviy</span><span class="mm-dot">•</span>
+            <span><i data-lucide="git-compare"></i> Bir xil daraja</span>
+          </div>
+          <div class="mm-rewards">
+            <div class="mm-rewards-title">Potensial mukofotlar</div>
+            <div class="mm-rewards-row">
+              <div class="mm-reward"><div class="mr-ic rp">RP</div><div><div class="mr-val">±20</div><div class="mr-lbl">Reyting ochkolari</div></div></div>
+              <div class="mm-reward"><div class="mr-ic xp">XP</div><div><div class="mr-val">+8</div><div class="mr-lbl">XP ochkolari</div></div></div>
+              <div class="mm-reward"><div class="mr-ic coin"><i data-lucide="circle-dollar-sign"></i></div><div><div class="mr-val">+2</div><div class="mr-lbl">EduCoin</div></div></div>
             </div>
           </div>
-
-          <div id="mmCountdownBox" style="display:none;">
-            <div class="mm-countdown" id="mmCountdown">5</div>
-            <div class="mm-sub">Jang boshlanmoqda...</div>
+          <div id="mmActionSearch">
+            <button class="mm-cancel-btn" onclick="cancelSearch()"><i data-lucide="x"></i> Qidiruvni bekor qilish</button>
+            <div class="mm-cancel-note"><i data-lucide="shield"></i> Qidiruv bekor qilinsa hech qanday jarima bo'lmaydi.</div>
           </div>
-
-          <button class="mm-cancel" id="mmCancelBtn" onclick="cancelSearch()"><i data-lucide="x"></i> Qidiruvni bekor qilish</button>
+          <div id="mmActionFound" style="display:none;">
+            <div class="mm-status-btn"><i data-lucide="check"></i> Tayyor! Jang boshlanmoqda...</div>
+          </div>
         </div>
       </div>
 
-      <!-- JANG -->
+      <!-- JANG (maket) -->
       <div id="battleScreen" style="display:none;">
-        <div class="battle-top">
-          <div class="team-score mine"><div class="team-score-val" id="myTeamScore">0</div><div><div class="team-score-label">Sizning jamoa</div></div></div>
-          <div class="battle-vs">VS</div>
-          <div class="team-score enemy"><div class="team-score-val" id="enemyTeamScore">0</div><div><div class="team-score-label">Raqib jamoa</div></div></div>
-        </div>
-
-        <div class="team-rosters">
-          <div class="roster mine"><div class="roster-title">Sizning jamoa</div><div id="myRoster"></div></div>
-          <div class="roster enemy"><div class="roster-title">Raqib jamoa</div><div id="enemyRoster"></div></div>
-        </div>
-
-        <div class="card">
-          <div class="q-timer-bar"><div class="q-timer-fill" id="qTimerFill"></div></div>
-          <div class="q-counter" id="qCounter">Savol 1 / 10</div>
-          <div class="q-text" id="qText">—</div>
-          <div class="q-answers" id="qAnswers"></div>
-          <div class="q-wait" id="qWait" style="display:none;">
-            <div><i data-lucide="loader"></i></div>
-            <div>Raqiblar javob bermoqda... Jang tugashini kuting.</div>
+        <div class="bt-header">
+          <div class="bt-room">
+            <div class="bt-room-logo"><i data-lucide="shield"></i></div>
+            <div>
+              <div class="bt-room-title">BATTLE ROOM</div>
+              <div class="bt-room-sub" id="btRoomSub">2v2 Duo Battle · English</div>
+            </div>
           </div>
+          <div class="bt-header-right">
+            <span class="bt-live">LIVE</span>
+            <button class="bt-leave" onclick="leaveBattle()"><i data-lucide="log-out"></i> Leave Battle</button>
+          </div>
+        </div>
+
+        <div class="bt-scoreboard">
+          <div class="bt-team-panel mine" id="btMyPanel"></div>
+          <div class="bt-vs">
+            <div class="bt-vs-row">
+              <span class="bt-vs-num mine" id="btVsMine">0</span>
+              <span class="bt-vs-badge">VS</span>
+              <span class="bt-vs-num enemy" id="btVsEnemy">0</span>
+            </div>
+            <div class="bt-vs-mode" id="btVsMode">2v2</div>
+            <div class="bt-vs-mode-sub" id="btVsModeSub">DUO BATTLE</div>
+          </div>
+          <div class="bt-team-panel enemy" id="btEnemyPanel"></div>
+        </div>
+
+        <div class="bt-qcard">
+          <div class="bt-qtop">
+            <div class="bt-qmeta">
+              <span class="bt-qnum" id="btQNum">Savol 1 / 10</span>
+              <span class="bt-qcefr" id="btQCefr">A1</span>
+            </div>
+            <div class="bt-qtimer" id="btQTimer"><i data-lucide="clock"></i> <span id="btQTimerVal">15</span>s</div>
+            <button class="bt-report" onclick="openReport()"><i data-lucide="flag"></i> Report</button>
+          </div>
+          <div class="bt-qtext" id="btQText">—</div>
+          <div class="bt-answers" id="btAnswers"></div>
         </div>
       </div>
 
-      <!-- NATIJA -->
+      <!-- NATIJA (1v1 ranked uslubi) -->
       <div id="resultScreen" style="display:none;">
-        <div class="card">
-          <div class="result">
-            <div class="result-banner" id="resultBanner">—</div>
-            <div class="result-sub" id="resultSub">—</div>
-            <div class="result-scoreboard">
-              <div class="result-team mine">
-                <div class="result-team-label">Sizning jamoa</div>
-                <div class="result-team-score" id="resMyScore">0</div>
-                <div id="resMyRoster"></div>
-              </div>
-              <div class="result-vs">VS</div>
-              <div class="result-team enemy">
-                <div class="result-team-label">Raqib jamoa</div>
-                <div class="result-team-score" id="resEnemyScore">0</div>
-                <div id="resEnemyRoster"></div>
-              </div>
+        <div class="card result-card">
+          <div class="result-ic win" id="resultIc"><i data-lucide="trophy"></i></div>
+          <h1 id="resultTitle" class="win">G'alaba!</h1>
+          <div class="result-sub" id="resultSub">—</div>
+          <div class="result-scores">
+            <div class="rs you" id="rsMy">
+              <div class="rs-crown"><i data-lucide="crown"></i></div>
+              <div class="rs-ava mine"><i data-lucide="users"></i></div>
+              <div class="rs-num" id="resMyScore">0</div>
+              <div class="rs-lbl">SIZNING JAMOA</div>
+              <div class="rs-roster" id="resMyRoster"></div>
             </div>
-            <div class="result-rewards">
-              <div class="result-reward xp"><i data-lucide="zap"></i> +<span id="resXp">0</span> XP</div>
-              <div class="result-reward rp" id="resRpBox"><i data-lucide="star"></i> <span id="resRp">0</span> reyting</div>
+            <div class="rs opp" id="rsEnemy">
+              <div class="rs-crown"><i data-lucide="crown"></i></div>
+              <div class="rs-ava enemy"><i data-lucide="users"></i></div>
+              <div class="rs-num" id="resEnemyScore">0</div>
+              <div class="rs-lbl">RAQIB JAMOA</div>
+              <div class="rs-roster" id="resEnemyRoster"></div>
             </div>
-            <div class="result-actions">
-              <button class="btn-again" onclick="playAgain()"><i data-lucide="rotate-ccw"></i> Yana o'ynash</button>
-              <button class="btn-lobby" onclick="window.location.href='/lobby.html'"><i data-lucide="home"></i> Lobbyga</button>
-            </div>
+          </div>
+          <div class="xp-earned" id="xpEarned"><i data-lucide="zap"></i> +0 XP</div>
+          <div class="league-prog" id="leagueProg" style="display:none;">
+            <div class="lp-top"><div class="lp-cur" id="lpCur"></div><div class="lp-next" id="lpNext"></div></div>
+            <div class="lp-bar"><div class="lp-fill" id="lpFill"></div></div>
+            <div class="lp-rp" id="lpRp"></div>
+          </div>
+          <div class="result-actions">
+            <button class="btn-again" onclick="playAgain()"><i data-lucide="rotate-ccw"></i> Yana o'ynash</button>
+            <button class="btn-lobby" onclick="window.location.href='/lobby.html'"><i data-lucide="home"></i> Lobbyga</button>
           </div>
         </div>
       </div>
@@ -248,6 +407,34 @@
     </div>
   </div>
 
+  <!-- REPORT MODAL -->
+  <div class="ov" id="repOverlay">
+    <div class="ov-box">
+      <div class="ov-title"><i data-lucide="flag" style="color:var(--red);"></i> Savol ustidan shikoyat</div>
+      <label class="ov-opt"><input type="radio" name="repReason" value="incorrect"> Noto'g'ri javob</label>
+      <label class="ov-opt"><input type="radio" name="repReason" value="inappropriate"> Nomaqbul kontent</label>
+      <label class="ov-opt"><input type="radio" name="repReason" value="spam"> Spam / takror</label>
+      <label class="ov-opt"><input type="radio" name="repReason" value="other"> Boshqa</label>
+      <div class="ov-msg" id="repMsg"></div>
+      <div class="ov-actions">
+        <button class="ov-cancel" onclick="closeReport()">Bekor</button>
+        <button class="ov-danger" onclick="submitReport()">Yuborish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEAVE MODAL -->
+  <div class="ov" id="leaveOverlay">
+    <div class="ov-box">
+      <div class="ov-title"><i data-lucide="log-out" style="color:var(--red);"></i> Jangni tark etish</div>
+      <div class="ov-text">Jangni hozir tark etsangiz, bu <b style="color:var(--red);">mag'lubiyat</b> sifatida hisoblanishi va reytingingizga ta'sir qilishi mumkin. Rostdan ham chiqasizmi?</div>
+      <div class="ov-actions">
+        <button class="ov-cancel" onclick="closeLeave()">Davom etish</button>
+        <button class="ov-danger" onclick="confirmLeave()">Ha, tark etaman</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
@@ -256,63 +443,53 @@
     var user = {};
     try { user = JSON.parse(localStorage.getItem("user") || "{}"); } catch (e) {}
 
-    // URL'dan rejim (duo/squad) va party ID
     var params = new URLSearchParams(window.location.search);
     var teamMode = params.get("mode") === "squad" ? "squad" : "duo";
     var teamSize = teamMode === "squad" ? 4 : 2;
     var needed = teamSize * 2;
-    var partyId = params.get("party") || null; // party bo'lsa — birga kiramiz
+    var partyId = params.get("party") || null;
+
+    var SCORE_MULT = 40;
 
     var socket = io();
     var roomId = null;
+    var battleLevel = "A1";
     var questions = [];
     var currentQ = 0;
     var myScore = 0;
     var answered = false;
-    var qTimer = null;
-    var QUESTION_TIME = 15; // soniya har savol
-    var searchSeconds = 0;
-    var searchTimer = null;
+    var qTimer = null, qTick = null;
+    var QUESTION_TIME = 15;
+    var searchSeconds = 0, searchTimer = null;
+    var lastProgress = { my: [], enemy: [], myScore: 0, enemyScore: 0 };
 
     function icons() { if (window.lucide) lucide.createIcons(); }
     function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+    // Avatar ichi: profil rasmi bo'lsa rasm, bo'lmasa ism harfi
+    function avaInner(p) {
+      if (p && p.profile_picture) return '<img src="' + esc(p.profile_picture) + '" alt="">';
+      return esc(((p && p.name) ? p.name : "?").charAt(0).toUpperCase());
+    }
     function showScreen(id) {
       ["mmScreen", "battleScreen", "resultScreen", "errScreen"].forEach(function (s) {
         document.getElementById(s).style.display = (s === id) ? "block" : "none";
       });
+      document.getElementById("pageWrap").classList.toggle("battle-wide", id === "battleScreen");
     }
 
-    // Rejim matnini ko'rsatamiz
-    document.getElementById("mmModeText").textContent = teamMode === "squad" ? "Squad (4v4)" : "Duo (2v2)";
+    document.getElementById("mmModeChip").textContent = teamMode === "squad" ? "Squad (4v4)" : "Duo (2v2)";
+    document.getElementById("mmLevelChip").textContent = user.cefr_level || "A1";
     document.getElementById("mmNeeded").textContent = needed;
 
-    // ===== MATCHMAKING BOSHLASH =====
+    // ===== MATCHMAKING =====
     socket.on("connect", function () {
       if (partyId) {
-        // Party rejimi — a'zo sifatida yetib keldik
-        socket.emit("joinPartyMatch", {
-          partyId: partyId,
-          userId: user.id,
-          name: user.first_name || "O'yinchi",
-          level: user.cefr_level || "A1",
-          lengthKey: "standard",
-        });
-        // Matchmaking ekranida "party" matni
+        socket.emit("joinPartyMatch", { partyId: partyId, userId: user.id, name: user.first_name || "O'yinchi", level: user.cefr_level || "A1", lengthKey: "standard", profile_picture: user.profile_picture || null });
         document.getElementById("mmTitle").textContent = "Party yig'ilmoqda...";
         document.getElementById("mmSub").textContent = "Jamoadoshlaringiz kutilmoqda";
-        document.getElementById("mmProgress").style.display = "none";
       } else {
-        // Solo queue
-        socket.emit("findTeamMatch", {
-          userId: user.id,
-          name: user.first_name || "O'yinchi",
-          level: user.cefr_level || "A1",
-          rating: user.rating || 1000,
-          lengthKey: "standard",
-          teamMode: teamMode,
-        });
+        socket.emit("findTeamMatch", { userId: user.id, name: user.first_name || "O'yinchi", level: user.cefr_level || "A1", rating: user.rating || 1000, lengthKey: "standard", teamMode: teamMode, profile_picture: user.profile_picture || null });
       }
-      // Kutish vaqti hisoblagichi
       startSearchTimer();
     });
 
@@ -321,101 +498,119 @@
       if (searchTimer) clearInterval(searchTimer);
       searchTimer = setInterval(function () {
         searchSeconds++;
+        var m = Math.floor(searchSeconds / 60), s = searchSeconds % 60;
         var el = document.getElementById("mmSearchTime");
-        if (el) {
-          var m = Math.floor(searchSeconds / 60);
-          var s = searchSeconds % 60;
-          el.textContent = (m > 0 ? m + ":" + (s < 10 ? "0" : "") + s : s + " soniya");
-        }
+        if (el) el.textContent = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
       }, 1000);
     }
     function stopSearchTimer() { if (searchTimer) { clearInterval(searchTimer); searchTimer = null; } }
 
-    // Navbat holati (party a'zolari yetib kelgach — raqib qidiriladi)
     socket.on("teamQueueUpdate", function (data) {
       document.getElementById("mmCurrent").textContent = data.current;
       document.getElementById("mmNeeded").textContent = data.needed;
-
-      // Party rejimida: a'zolar yetib kelgach navbat ko'rinadi (raqib qidiriladi)
       if (partyId) {
-        document.getElementById("mmTitle").textContent = "Raqib qidirilmoqda...";
+        document.getElementById("mmTitle").textContent = "Raqib jamoa qidirilmoqda...";
         document.getElementById("mmSub").textContent = "Sizning jamoangiz tayyor — raqib kutilmoqda";
-        document.getElementById("mmProgress").style.display = "block";
       }
     });
 
-    // Jang topildi — boshlanyapti
     socket.on("teamBattleStart", function (data) {
       stopSearchTimer();
-      var stWrap = document.getElementById("mmSearchTimeWrap");
-      if (stWrap) stWrap.style.display = "none";
       roomId = data.roomId;
+      battleLevel = data.level || "A1";
       questions = data.questions || [];
-      myScore = 0;
-      currentQ = 0;
+      myScore = 0; currentQ = 0;
 
-      // Orb yashil, jamoalar ko'rsatiladi
-      document.getElementById("mmOrb").classList.add("found");
+      document.getElementById("mmQChip").textContent = questions.length;
+      document.getElementById("mmScanner").classList.add("found");
       document.getElementById("mmTitle").textContent = "Jamoa topildi!";
       document.getElementById("mmSub").textContent = "Jang boshlanmoqda, tayyorlaning";
-      document.getElementById("mmProgress").style.display = "none";
-      document.getElementById("mmCancelBtn").style.display = "none";
-
-      // Jamoa tarkiblarini ko'rsatamiz
+      document.getElementById("mmCenterSearch").style.display = "none";
+      document.getElementById("mmCenterFound").style.display = "block";
+      document.getElementById("mmActionSearch").style.display = "none";
+      document.getElementById("mmActionFound").style.display = "block";
       renderMMTeams(data.myTeamPlayers, data.enemyTeamPlayers);
-      document.getElementById("mmTeams").style.display = "flex";
 
-      // Countdown
-      document.getElementById("mmCountdownBox").style.display = "block";
+      lastProgress.my = data.myTeamPlayers.map(function (p) { return { name: p.name, score: 0, answeredCount: 0, isBot: p.isBot, level: p.level, rating: p.rating, profile_picture: p.profile_picture }; });
+      lastProgress.enemy = data.enemyTeamPlayers.map(function (p) { return { name: p.name, score: 0, answeredCount: 0, isBot: p.isBot, level: p.level, rating: p.rating, profile_picture: p.profile_picture }; });
+
+      document.getElementById("btRoomSub").textContent = (teamMode === "squad" ? "4v4 Squad Battle" : "2v2 Duo Battle") + " · English";
+      document.getElementById("btVsMode").textContent = teamMode === "squad" ? "4v4" : "2v2";
+      document.getElementById("btVsModeSub").textContent = teamMode === "squad" ? "SQUAD BATTLE" : "DUO BATTLE";
+
       var cd = 5;
       document.getElementById("mmCountdown").textContent = cd;
       var cdInt = setInterval(function () {
         cd--;
-        if (cd <= 0) {
-          clearInterval(cdInt);
-          startBattleUI();
-        } else {
-          document.getElementById("mmCountdown").textContent = cd;
-        }
+        if (cd <= 0) { clearInterval(cdInt); startBattleUI(); }
+        else { document.getElementById("mmCountdown").textContent = cd; }
       }, 1000);
     });
 
     function renderMMTeams(myTeam, enemyTeam) {
-      function slots(players, box) {
-        var html = "";
-        players.forEach(function (p) {
+      function members(players, box) {
+        document.getElementById(box).innerHTML = players.map(function (p) {
           var initial = (p.name || "?").charAt(0).toUpperCase();
-          html += '<div class="mm-slot"><div class="mm-slot-ava">' + esc(initial) + '</div><div class="mm-slot-name">' + esc(p.name) + '</div>' + (p.isBot ? '<span class="mm-slot-tag">bot</span>' : '') + '</div>';
-        });
-        document.getElementById(box).innerHTML = html;
+          return '<div class="mm-member"><div class="mm-member-ava">' + avaInner(p) + '</div><div class="mm-member-name">' + esc(p.name) + '</div>' + (p.isBot ? '<span class="mm-member-tag">bot</span>' : '') + '</div>';
+        }).join("");
       }
-      slots(myTeam, "mmTeamA");
-      slots(enemyTeam, "mmTeamB");
+      members(myTeam, "mmTeamA");
+      members(enemyTeam, "mmTeamB");
     }
 
     // ===== JANG UI =====
     function startBattleUI() {
       showScreen("battleScreen");
+      renderScoreboard();
       renderQuestion();
+    }
+
+    function renderScoreboard() {
+      document.getElementById("btMyPanel").innerHTML = playersHtml(lastProgress.my);
+      document.getElementById("btEnemyPanel").innerHTML = playersHtml(lastProgress.enemy);
+      var myTotal = lastProgress.my.reduce(function (s, p) { return s + p.score; }, 0) * SCORE_MULT;
+      var enTotal = lastProgress.enemy.reduce(function (s, p) { return s + p.score; }, 0) * SCORE_MULT;
+      document.getElementById("btVsMine").textContent = myTotal;
+      document.getElementById("btVsEnemy").textContent = enTotal;
+    }
+
+    function playersHtml(players) {
+      var total = questions.length || 1;
+      return players.map(function (p, i) {
+        var initial = (p.name || "?").charAt(0).toUpperCase();
+        var pct = Math.round((p.answeredCount / total) * 100);
+        var ord = (i === 0 ? "1st" : i === 1 ? "2nd" : i === 2 ? "3rd" : (i + 1) + "th");
+        return '<div class="bt-pl">' +
+          '<div class="bt-pl-ava-wrap"><div class="bt-pl-ava">' + avaInner(p) + '</div>' +
+            '<span class="bt-pl-cefr">' + esc(p.level || "A1") + '</span>' +
+            (p.isBot ? '' : '<span class="bt-pl-online"></span>') + '</div>' +
+          '<div class="bt-pl-mid">' +
+            '<div class="bt-pl-namerow"><span class="bt-pl-name">' + esc(p.name) + '</span>' +
+              '<span class="bt-pl-rating"><svg class="bolt-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg> ' + (p.rating || 1000) + '</span></div>' +
+            '<div class="bt-pl-proglabel">' + ord + ' Player Progress</div>' +
+            '<div class="bt-pl-progbar"><div class="bt-pl-progfill" style="width:' + pct + '%"></div></div>' +
+          '</div>' +
+          '<div class="bt-pl-right"><div class="bt-pl-score">' + (p.score * SCORE_MULT) + '</div>' +
+            '<div class="bt-pl-count">' + p.answeredCount + ' / ' + total + '</div></div>' +
+        '</div>';
+      }).join("");
     }
 
     function renderQuestion() {
       answered = false;
-      if (currentQ >= questions.length) { showWaiting(); return; }
       var q = questions[currentQ];
-      document.getElementById("qCounter").textContent = "Savol " + (currentQ + 1) + " / " + questions.length;
-      document.getElementById("qText").textContent = q.question_text;
-      document.getElementById("qWait").style.display = "none";
-      document.getElementById("qAnswers").style.display = "flex";
-
-      var box = document.getElementById("qAnswers");
+      if (!q) { showWaiting(); return; }
+      document.getElementById("btQNum").textContent = "Savol " + (currentQ + 1) + " / " + questions.length;
+      document.getElementById("btQCefr").textContent = battleLevel;
+      document.getElementById("btQText").textContent = q.question_text;
+      var box = document.getElementById("btAnswers");
       box.innerHTML = "";
       ["A", "B", "C", "D"].forEach(function (letter) {
         var text = q["option_" + letter.toLowerCase()] || "";
         var btn = document.createElement("button");
-        btn.className = "q-answer";
+        btn.className = "bt-answer";
         btn.setAttribute("data-letter", letter);
-        btn.innerHTML = '<div class="q-answer-letter">' + letter + '</div><div class="q-answer-text">' + esc(text) + '</div>';
+        btn.innerHTML = '<div class="bt-answer-letter">' + letter + '</div><div class="bt-answer-text">' + esc(text) + '</div>';
         btn.onclick = function () { selectAnswer(letter, q); };
         box.appendChild(btn);
       });
@@ -425,94 +620,114 @@
 
     function startQTimer() {
       var timeLeft = QUESTION_TIME;
-      var fill = document.getElementById("qTimerFill");
-      fill.style.transition = "none";
-      fill.style.width = "100%";
-      setTimeout(function () { fill.style.transition = "width " + QUESTION_TIME + "s linear"; fill.style.width = "0%"; }, 50);
+      var valEl = document.getElementById("btQTimerVal");
+      var timerEl = document.getElementById("btQTimer");
+      valEl.textContent = timeLeft;
+      timerEl.classList.remove("low");
+      if (qTick) clearInterval(qTick);
+      qTick = setInterval(function () {
+        timeLeft--;
+        if (valEl) valEl.textContent = Math.max(0, timeLeft);
+        if (timeLeft <= 5) timerEl.classList.add("low");
+        if (timeLeft <= 0) clearInterval(qTick);
+      }, 1000);
       if (qTimer) clearTimeout(qTimer);
-      qTimer = setTimeout(function () {
-        if (!answered) selectAnswer(null, questions[currentQ]); // vaqt tugadi — bo'sh javob
-      }, QUESTION_TIME * 1000);
+      qTimer = setTimeout(function () { if (!answered) selectAnswer(null, questions[currentQ]); }, QUESTION_TIME * 1000);
     }
 
     function selectAnswer(letter, q) {
       if (answered) return;
       answered = true;
       if (qTimer) clearTimeout(qTimer);
-
-      // Serverga yuboramiz
+      if (qTick) clearInterval(qTick);
+      if (letter) {
+        var sel = document.querySelector('#btAnswers .bt-answer[data-letter="' + letter + '"]');
+        if (sel) sel.classList.add("selected");
+      }
+      document.querySelectorAll("#btAnswers .bt-answer").forEach(function (b) { b.disabled = true; });
       socket.emit("submitTeamAnswer", { roomId: roomId, questionId: q.id, answer: letter });
-
-      // Vaqtincha bloklash (natija server'dan keladi)
-      document.querySelectorAll("#qAnswers .q-answer").forEach(function (b) { b.disabled = true; });
     }
 
-    // Javob natijasi (server'dan)
     socket.on("teamAnswerResult", function (data) {
       myScore = data.myScore;
-      // To'g'ri/xato belgilash
-      document.querySelectorAll("#qAnswers .q-answer").forEach(function (btn) {
+      var selected = null;
+      var selEl = document.querySelector("#btAnswers .bt-answer.selected");
+      if (selEl) selected = selEl.getAttribute("data-letter");
+      document.querySelectorAll("#btAnswers .bt-answer").forEach(function (btn) {
         var bl = btn.getAttribute("data-letter");
-        if (bl === data.correct_option) btn.classList.add("correct");
+        if (bl === data.correct_option) { btn.classList.add("correct"); btn.classList.remove("selected"); }
+        else if (bl === selected && !data.isCorrect) { btn.classList.add("wrong"); btn.classList.remove("selected"); }
       });
-      // Keyingi savolga o'tamiz (qisqa pauza)
       setTimeout(function () {
         currentQ++;
         if (currentQ >= questions.length) { showWaiting(); }
         else { renderQuestion(); }
-      }, 900);
+      }, 1000);
     });
 
     function showWaiting() {
-      document.getElementById("qAnswers").style.display = "none";
-      document.getElementById("qWait").style.display = "block";
-      document.getElementById("qCounter").textContent = "Tugatdingiz!";
-      document.getElementById("qText").textContent = "Barcha savollarga javob berdingiz";
-      document.getElementById("qTimerFill").style.width = "0%";
+      if (qTick) clearInterval(qTick);
+      document.getElementById("btQNum").textContent = "Tugatdingiz!";
+      document.getElementById("btQCefr").style.display = "none";
+      document.getElementById("btQTimer").style.display = "none";
+      document.getElementById("btQText").textContent = "Barcha savollarga javob berdingiz. Raqiblar tugatishini kuting...";
+      document.getElementById("btAnswers").innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);"><i data-lucide="loader" style="width:30px;height:30px;color:var(--accent);"></i></div>';
       icons();
     }
 
     // Jamoa progressi (real-time)
     socket.on("teamProgress", function (data) {
-      document.getElementById("myTeamScore").textContent = data.myTeamScore;
-      document.getElementById("enemyTeamScore").textContent = data.enemyTeamScore;
-      renderRoster("myRoster", data.myTeamPlayers, "mine");
-      renderRoster("enemyRoster", data.enemyTeamPlayers, "enemy");
+      // Faqat ball/progress yangilanadi — rasm/level/rating boshlang'ich keshdan saqlanadi
+      data.myTeamPlayers.forEach(function (p, i) { if (lastProgress.my[i]) { lastProgress.my[i].score = p.score; lastProgress.my[i].answeredCount = p.answeredCount; } });
+      data.enemyTeamPlayers.forEach(function (p, i) { if (lastProgress.enemy[i]) { lastProgress.enemy[i].score = p.score; lastProgress.enemy[i].answeredCount = p.answeredCount; } });
+      lastProgress.myScore = data.myTeamScore;
+      lastProgress.enemyScore = data.enemyTeamScore;
+      renderScoreboard();
     });
-
-    function renderRoster(box, players, side) {
-      var total = questions.length || 1;
-      var html = "";
-      players.forEach(function (p) {
-        var pct = Math.round((p.answeredCount / total) * 100);
-        html += '<div class="roster-player"><div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;"><span class="roster-player-name">' + esc(p.name) + '</span>' +
-          (p.isBot ? '<span style="font-size:9px;color:var(--text-faint);">bot</span>' : '') +
-          '<span class="roster-player-score">' + p.score + '</span></div>' +
-          '<div class="roster-mini-bar"><div class="roster-mini-fill" style="width:' + pct + '%;"></div></div></div></div>';
-      });
-      document.getElementById(box).innerHTML = html;
-    }
 
     // ===== NATIJA =====
     socket.on("teamBattleEnd", function (data) {
+      if (qTimer) clearTimeout(qTimer);
+      if (qTick) clearInterval(qTick);
       showScreen("resultScreen");
-      var banner = document.getElementById("resultBanner");
-      if (data.outcome === "win") { banner.textContent = "G'ALABA!"; banner.className = "result-banner win"; }
-      else if (data.outcome === "lose") { banner.textContent = "MAG'LUBIYAT"; banner.className = "result-banner lose"; }
-      else { banner.textContent = "DURANG"; banner.className = "result-banner draw"; }
 
-      document.getElementById("resultSub").textContent = "Sizning shaxsiy natijangiz: " + data.myScore + " / " + data.total + " to'g'ri";
-      document.getElementById("resMyScore").textContent = data.myTeamScore;
-      document.getElementById("resEnemyScore").textContent = data.enemyTeamScore;
+      var ic = document.getElementById("resultIc");
+      var title = document.getElementById("resultTitle");
+      if (data.outcome === "win") {
+        ic.className = "result-ic win"; ic.innerHTML = '<i data-lucide="trophy"></i>';
+        title.className = "win"; title.textContent = "G'alaba!";
+      } else if (data.outcome === "lose") {
+        ic.className = "result-ic lose"; ic.innerHTML = '<i data-lucide="frown"></i>';
+        title.className = "lose"; title.textContent = "Mag'lubiyat";
+      } else {
+        ic.className = "result-ic draw"; ic.innerHTML = '<i data-lucide="minus"></i>';
+        title.className = "draw"; title.textContent = "Durang";
+      }
+      document.getElementById("resultSub").textContent = "Sizning shaxsiy hissangiz: " + data.myScore + " / " + data.total + " to'g'ri javob";
 
-      renderResultRoster("resMyRoster", data.myTeamPlayers);
-      renderResultRoster("resEnemyRoster", data.enemyTeamPlayers);
+      // G'olib jamoaga toj
+      document.getElementById("rsMy").classList.remove("winner");
+      document.getElementById("rsEnemy").classList.remove("winner");
+      if (data.outcome === "win") document.getElementById("rsMy").classList.add("winner");
+      else if (data.outcome === "lose") document.getElementById("rsEnemy").classList.add("winner");
 
-      document.getElementById("resXp").textContent = data.xp_earned || 0;
+      animateScore("resMyScore", data.myTeamScore * SCORE_MULT, 800);
+      animateScore("resEnemyScore", data.enemyTeamScore * SCORE_MULT, 800);
+      renderResultRoster("resMyRoster", data.myTeamPlayers, lastProgress.my);
+      renderResultRoster("resEnemyRoster", data.enemyTeamPlayers, lastProgress.enemy);
+
+      // Katta jamoa avatarlari: sizniki = joriy foydalanuvchi, raqibniki = raqib jamoaning birinchi rasmi
+      var myAva = document.querySelector("#rsMy .rs-ava");
+      var enAva = document.querySelector("#rsEnemy .rs-ava");
+      if (myAva) myAva.innerHTML = user.profile_picture ? '<img src="' + esc(user.profile_picture) + '">' : '<i data-lucide="users"></i>';
+      var enemyPic = (lastProgress.enemy.find(function (p) { return p.profile_picture; }) || {}).profile_picture;
+      if (enAva) enAva.innerHTML = enemyPic ? '<img src="' + esc(enemyPic) + '">' : '<i data-lucide="users"></i>';
+
+      // XP + reyting (bitta badge'da, 1v1 kabi)
       var rp = data.rating_change || 0;
-      document.getElementById("resRp").textContent = (rp > 0 ? "+" : "") + rp;
+      var ratingText = rp > 0 ? " · +" + rp + " reyting" : (rp < 0 ? " · " + rp + " reyting" : "");
+      document.getElementById("xpEarned").innerHTML = '<i data-lucide="zap"></i> +' + (data.xp_earned || 0) + " XP" + ratingText;
 
-      // localStorage user yangilash
       if (data.updated_user) {
         try {
           var u = JSON.parse(localStorage.getItem("user") || "{}");
@@ -521,44 +736,103 @@
           localStorage.setItem("user", JSON.stringify(u));
         } catch (e) {}
       }
+      renderLeagueProgress(data);
       icons();
     });
 
-    function renderResultRoster(box, players) {
-      var html = "";
-      players.forEach(function (p) {
-        html += '<div class="result-roster-item"><span class="nm">' + esc(p.name) + (p.isBot ? ' (bot)' : '') + '</span><span class="sc">' + p.score + '</span></div>';
-      });
-      document.getElementById(box).innerHTML = html;
+    function renderResultRoster(box, players, cached) {
+      document.getElementById(box).innerHTML = players.map(function (p, i) {
+        var pic = (cached && cached[i]) ? cached[i].profile_picture : null;
+        var ava = pic ? '<img class="rsr-ava" src="' + esc(pic) + '">' : '<span class="rsr-ava rsr-init">' + esc((p.name || "?").charAt(0).toUpperCase()) + '</span>';
+        return '<div class="rs-roster-item">' + ava + '<span class="nm">' + esc(p.name) + (p.isBot ? ' 🤖' : '') + '</span><span class="sc">' + (p.score * SCORE_MULT) + '</span></div>';
+      }).join("");
     }
 
-    // ===== BOSHQARUV =====
-    function cancelSearch() {
-      socket.emit("cancelTeamMatch");
-      window.location.href = "/lobby.html";
+    function animateScore(id, target, dur) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var t0 = performance.now();
+      function step(now) {
+        var p = Math.min(1, (now - t0) / dur);
+        el.textContent = Math.round(target * p);
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
     }
-    function playAgain() { window.location.reload(); }
+
+    // Liga progress bari (1v1 bilan bir xil)
+    function renderLeagueProgress(data) {
+      var rating = (data.updated_user && data.updated_user.rating) || user.rating || 1000;
+      var leagues = [
+        { name: "Bronze", min: 0, max: 999, icon: "shield", color: "#cd7f32" },
+        { name: "Silver", min: 1000, max: 1199, icon: "shield", color: "#cbd5e1" },
+        { name: "Gold", min: 1200, max: 1399, icon: "medal", color: "#fbbf24" },
+        { name: "Platinum", min: 1400, max: 1599, icon: "gem", color: "#5b8cff" },
+        { name: "Diamond", min: 1600, max: 1799, icon: "gem", color: "#38e1ff" },
+        { name: "Master", min: 1800, max: 1999, icon: "crown", color: "#a855f7" },
+        { name: "Grandmaster", min: 2000, max: 99999, icon: "crown", color: "#fbbf24" },
+      ];
+      var idx = 0;
+      leagues.forEach(function (l, i) { if (rating >= l.min && rating <= l.max) idx = i; });
+      var cur = leagues[idx], next = leagues[idx + 1];
+      document.getElementById("lpCur").innerHTML = '<i data-lucide="' + cur.icon + '" style="color:' + cur.color + ';"></i> ' + cur.name;
+      document.getElementById("leagueProg").style.display = "block";
+      if (next) {
+        var prog = Math.round(((rating - cur.min) / (cur.max - cur.min + 1)) * 100);
+        var remain = (cur.max + 1) - rating;
+        document.getElementById("lpNext").textContent = "Keyingi: " + next.name;
+        document.getElementById("lpRp").textContent = next.name + " ligasiga " + remain + " RP qoldi";
+        setTimeout(function () { document.getElementById("lpFill").style.width = prog + "%"; }, 200);
+      } else {
+        document.getElementById("lpNext").textContent = "Eng yuqori!";
+        document.getElementById("lpRp").textContent = "Siz eng yuqori ligadasiz!";
+        setTimeout(function () { document.getElementById("lpFill").style.width = "100%"; }, 200);
+      }
+      icons();
+    }
+
+    // ===== REPORT =====
+    function openReport() {
+      document.getElementById("repMsg").textContent = "";
+      document.querySelectorAll('input[name="repReason"]').forEach(function (r) { r.checked = false; });
+      document.getElementById("repOverlay").classList.add("show");
+      icons();
+    }
+    function closeReport() { document.getElementById("repOverlay").classList.remove("show"); }
+    async function submitReport() {
+      var r = document.querySelector('input[name="repReason"]:checked');
+      var msg = document.getElementById("repMsg");
+      if (!r) { msg.style.color = "var(--red)"; msg.textContent = "Sababni tanlang"; return; }
+      var q = questions[currentQ];
+      if (!q) return;
+      try {
+        var res = await fetch("/flags/report", {
+          method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+          body: JSON.stringify({ entity_type: "question", entity_id: q.id, reason: r.value })
+        });
+        var d = await res.json();
+        if (res.ok) { msg.style.color = "var(--green)"; msg.textContent = "✓ " + (d.message || "Yuborildi"); setTimeout(closeReport, 1300); }
+        else { msg.style.color = "var(--red)"; msg.textContent = d.error || "Xato"; }
+      } catch (e) { msg.style.color = "var(--red)"; msg.textContent = "Server xatosi"; }
+    }
+
+    // ===== LEAVE (modal) =====
+    function leaveBattle() { document.getElementById("leaveOverlay").classList.add("show"); icons(); }
+    function closeLeave() { document.getElementById("leaveOverlay").classList.remove("show"); }
+    function confirmLeave() { window.location.href = "/lobby.html"; }
+
+    function cancelSearch() { socket.emit("cancelTeamMatch"); window.location.href = "/lobby.html"; }
+    function playAgain() { window.location.href = "/team-battle.html?mode=" + teamMode; }
 
     socket.on("battleError", function (data) {
       document.getElementById("errText").textContent = (data && data.message) || "Xato yuz berdi";
-      showScreen("errScreen");
-      icons();
+      showScreen("errScreen"); icons();
     });
-
-    // Party muddati tugadi (pending topilmadi) — solo queue'ga o'tamiz
     socket.on("partyMatchExpired", function () {
       partyId = null;
-      socket.emit("findTeamMatch", {
-        userId: user.id,
-        name: user.first_name || "O'yinchi",
-        level: user.cefr_level || "A1",
-        rating: user.rating || 1000,
-        lengthKey: "standard",
-        teamMode: teamMode,
-      });
-      document.getElementById("mmTitle").textContent = "Jamoa qidirilmoqda...";
+      socket.emit("findTeamMatch", { userId: user.id, name: user.first_name || "O'yinchi", level: user.cefr_level || "A1", rating: user.rating || 1000, lengthKey: "standard", teamMode: teamMode, profile_picture: user.profile_picture || null });
+      document.getElementById("mmTitle").textContent = "Raqib jamoa qidirilmoqda...";
       document.getElementById("mmSub").textContent = "Party tarqaldi — tasodifiy jamoa qidirilmoqda";
-      document.getElementById("mmProgress").style.display = "block";
     });
 
     icons();
