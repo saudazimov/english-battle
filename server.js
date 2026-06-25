@@ -4914,6 +4914,251 @@ app.post("/profile/:userId/picture", authMiddleware, upload.single("picture"), a
   }
 });
 
+// ============================================================
+// SCHOOL CUP — Bosqich 3: School Admin jamoa tuzish
+// ============================================================
+
+// Yordamchi: foydalanuvchi school_admin ekanini va maktabini qaytaradi
+async function getSchoolAdmin(userId) {
+  const r = await pool.query("SELECT id, first_name, last_name, role, school, region, district FROM users WHERE id = $1", [userId]);
+  if (r.rows.length === 0) return { ok: false, error: "Foydalanuvchi topilmadi" };
+  const u = r.rows[0];
+  if (u.role !== "school_admin") return { ok: false, error: "Faqat maktab admini uchun" };
+  if (!u.school || !u.school.trim()) return { ok: false, error: "Maktabingiz belgilanmagan" };
+  return { ok: true, user: u };
+}
+
+// School admin bosh panel — maktab umumiy ko'rinishi
+app.get("/school/overview", authMiddleware, async (req, res) => {
+  try {
+    const sa = await getSchoolAdmin(req.user.id);
+    if (!sa.ok) return res.status(403).json({ error: sa.error });
+    const me = sa.user;
+
+    // Maktab o'quvchilari statistikasi
+    const statsQ = await pool.query(
+      `SELECT COUNT(*) AS total,
+              ROUND(AVG(rating)) AS avg_rating,
+              MAX(rating) AS top_rating
+       FROM users
+       WHERE school = $1 AND (role = 'student' OR role IS NULL) AND (is_banned IS NULL OR is_banned = false)`,
+      [me.school]
+    );
+    const st = statsQ.rows[0];
+
+    // Eng yaxshi 5 o'quvchi
+    const topQ = await pool.query(
+      `SELECT id, first_name, last_name, rating, cefr_level, profile_picture
+       FROM users
+       WHERE school = $1 AND (role = 'student' OR role IS NULL) AND (is_banned IS NULL OR is_banned = false)
+       ORDER BY rating DESC LIMIT 5`,
+      [me.school]
+    );
+
+    // Faol turnirlar soni (maktab tegishli)
+    const tournQ = await pool.query(
+      `SELECT COUNT(*) AS c FROM tournaments t
+       WHERE t.status IN ('registration','bracket','live')
+         AND (
+           (t.level = 'district' AND t.scope_value = $1 AND t.region = $2)
+           OR (t.level = 'region' AND t.scope_value = $2)
+           OR (t.level = 'country')
+         )`,
+      [me.district, me.region]
+    );
+
+    res.json({
+      admin: { first_name: me.first_name, last_name: me.last_name },
+      school: me.school, region: me.region, district: me.district,
+      stats: {
+        total_students: parseInt(st.total) || 0,
+        avg_rating: parseInt(st.avg_rating) || 0,
+        top_rating: parseInt(st.top_rating) || 0,
+        active_tournaments: parseInt(tournQ.rows[0].c) || 0,
+      },
+      top_students: topQ.rows,
+    });
+  } catch (err) {
+    console.error("School overview xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// 1. Mening maktabim qatnashishi mumkin bo'lgan faol turnirlar
+app.get("/school/tournaments", authMiddleware, async (req, res) => {
+  try {
+    const sa = await getSchoolAdmin(req.user.id);
+    if (!sa.ok) return res.status(403).json({ error: sa.error });
+    const me = sa.user;
+
+    // Maktab joylashgan tuman/viloyatdagi turnirlar (registration yoki undan keyingi)
+    // Tuman darajasi: scope_value = mening tumanim, region = mening viloyatim
+    const q = await pool.query(
+      `SELECT t.*,
+              (SELECT COUNT(*) FROM tournament_team_members tm
+               WHERE tm.tournament_id = t.id AND tm.school = $1) AS my_team_count
+       FROM tournaments t
+       WHERE t.status IN ('registration','bracket','live','finished')
+         AND (
+           (t.level = 'district' AND t.scope_value = $2 AND t.region = $3)
+           OR (t.level = 'region' AND t.scope_value = $3)
+           OR (t.level = 'country')
+         )
+       ORDER BY t.created_at DESC`,
+      [me.school, me.district, me.region]
+    );
+    res.json({
+      school: me.school, region: me.region, district: me.district,
+      tournaments: q.rows,
+    });
+  } catch (err) {
+    console.error("School turnirlar xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// 2. Maktabimning o'quvchilari (reyting bo'yicha — jamoa tanlash uchun)
+app.get("/school/tournaments/:id/students", authMiddleware, async (req, res) => {
+  try {
+    const sa = await getSchoolAdmin(req.user.id);
+    if (!sa.ok) return res.status(403).json({ error: sa.error });
+    const me = sa.user;
+
+    const q = await pool.query(
+      `SELECT id, first_name, last_name, rating, cefr_level, profile_picture
+       FROM users
+       WHERE school = $1 AND (role = 'student' OR role IS NULL) AND (is_banned IS NULL OR is_banned = false)
+       ORDER BY rating DESC, first_name ASC`,
+      [me.school]
+    );
+    res.json({ students: q.rows });
+  } catch (err) {
+    console.error("Maktab o'quvchilari xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// 3. Joriy jamoa (saqlangan bo'lsa)
+app.get("/school/tournaments/:id/team", authMiddleware, async (req, res) => {
+  try {
+    const sa = await getSchoolAdmin(req.user.id);
+    if (!sa.ok) return res.status(403).json({ error: sa.error });
+    const me = sa.user;
+
+    const q = await pool.query(
+      `SELECT tm.user_id, tm.member_role, tm.slot_order,
+              u.first_name, u.last_name, u.rating, u.cefr_level, u.profile_picture
+       FROM tournament_team_members tm
+       JOIN users u ON u.id = tm.user_id
+       WHERE tm.tournament_id = $1 AND tm.school = $2
+       ORDER BY tm.member_role DESC, tm.slot_order ASC`,
+      [req.params.id, me.school]
+    );
+    res.json({ team: q.rows });
+  } catch (err) {
+    console.error("Jamoa olish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// 4. Jamoani saqlash (asosiy + zaxira o'quvchilar)
+app.post("/school/tournaments/:id/team", authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const sa = await getSchoolAdmin(req.user.id);
+    if (!sa.ok) { client.release(); return res.status(403).json({ error: sa.error }); }
+    const me = sa.user;
+    const tid = req.params.id;
+
+    // Turnirni tekshiramiz
+    const tr = await client.query("SELECT * FROM tournaments WHERE id = $1", [tid]);
+    if (tr.rows.length === 0) { client.release(); return res.status(404).json({ error: "Turnir topilmadi" }); }
+    const t = tr.rows[0];
+
+    // Faqat registration bosqichida jamoa tuzish/o'zgartirish mumkin
+    if (t.status !== "registration") {
+      client.release();
+      return res.status(400).json({ error: "Ro'yxatdan o'tish yopilgan — jamoani o'zgartirib bo'lmaydi" });
+    }
+    // Deadline tekshiruvi
+    if (t.registration_deadline && new Date() > new Date(t.registration_deadline)) {
+      client.release();
+      return res.status(400).json({ error: "Jamoa tuzish muddati tugagan" });
+    }
+
+    const { starters, reserves } = req.body; // user_id massivlari
+    const startersArr = Array.isArray(starters) ? starters : [];
+    const reservesArr = Array.isArray(reserves) ? reserves : [];
+
+    // Validatsiya: asosiy a'zo soni = team_size
+    if (startersArr.length !== t.team_size) {
+      client.release();
+      return res.status(400).json({ error: "Asosiy o'yinchilar soni " + t.team_size + " ta bo'lishi kerak (hozir: " + startersArr.length + ")" });
+    }
+    if (reservesArr.length > t.reserve_size) {
+      client.release();
+      return res.status(400).json({ error: "Zaxira o'yinchilar " + t.reserve_size + " tadan oshmasligi kerak" });
+    }
+    // Takrorlanish tekshiruvi
+    const all = startersArr.concat(reservesArr);
+    if (new Set(all).size !== all.length) {
+      client.release();
+      return res.status(400).json({ error: "Bir o'quvchi ikki marta tanlangan" });
+    }
+
+    // Tanlangan o'quvchilar haqiqatan shu maktabdanmi?
+    const check = await client.query(
+      `SELECT id FROM users WHERE id = ANY($1) AND school = $2 AND (role = 'student' OR role IS NULL)`,
+      [all, me.school]
+    );
+    if (check.rows.length !== all.length) {
+      client.release();
+      return res.status(400).json({ error: "Ba'zi o'quvchilar bu maktabga tegishli emas" });
+    }
+
+    // Saqlash: eski jamoani o'chirib, yangisini yozamiz (last-write-wins)
+    await client.query("BEGIN");
+    await client.query("DELETE FROM tournament_team_members WHERE tournament_id = $1 AND school = $2", [tid, me.school]);
+
+    let slot = 1;
+    for (const uid of startersArr) {
+      await client.query(
+        "INSERT INTO tournament_team_members (tournament_id, school, user_id, member_role, slot_order) VALUES ($1, $2, $3, 'starter', $4)",
+        [tid, me.school, uid, slot++]
+      );
+    }
+    slot = 1;
+    for (const uid of reservesArr) {
+      await client.query(
+        "INSERT INTO tournament_team_members (tournament_id, school, user_id, member_role, slot_order) VALUES ($1, $2, $3, 'reserve', $4)",
+        [tid, me.school, uid, slot++]
+      );
+    }
+
+    // Maktabni turnir ishtirokchilariga qo'shamiz (agar yo'q bo'lsa)
+    const avgQ = await client.query(
+      `SELECT ROUND(AVG(rating)) AS avg FROM users WHERE id = ANY($1)`, [startersArr]
+    );
+    const avgRating = parseInt(avgQ.rows[0].avg) || 1000;
+    await client.query(
+      `INSERT INTO tournament_schools (tournament_id, school, region, district, avg_rating)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (tournament_id, school)
+       DO UPDATE SET avg_rating = $5`,
+      [tid, me.school, me.region, me.district, avgRating]
+    );
+
+    await client.query("COMMIT");
+    client.release();
+    res.json({ success: true, starters: startersArr.length, reserves: reservesArr.length });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    client.release();
+    console.error("Jamoa saqlash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi: " + err.message });
+  }
+});
+
 
 // ============================================================
 // O'QITUVCHI PANELI (TEACHER) ENDPOINTLARI

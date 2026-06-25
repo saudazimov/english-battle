@@ -1105,6 +1105,22 @@
     </div>
   </div>
 
+  <!-- Rol tanlash modali -->
+  <div class="modal-overlay" id="rolePickModal">
+    <div class="modal-box" style="max-width:420px;">
+      <div class="modal-head-wide">
+        <span class="mh-ic"><i data-lucide="user-cog" class="ico-sm"></i></span>
+        <span class="mh-title">Rolni tanlang</span>
+        <span class="mh-close" onclick="closeRolePick()"><i data-lucide="x" class="ico-sm"></i></span>
+      </div>
+      <div style="padding:6px 2px;">
+        <div id="rpName" style="font-size:13px;color:var(--text-dim);margin-bottom:14px;"></div>
+        <div id="rpOptions" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <div id="rpMsg" class="message" style="display:none;margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- TASDIQ MODAL (universal: ban, rol) -->
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-box">
@@ -2275,26 +2291,59 @@
       if (_confirmAction) { var fn = _confirmAction; closeConfirm(); await fn(); }
     }
 
-    // Rol o'zgartirish (modal bilan)
+    // Rol o'zgartirish (tanlov modali bilan)
     function askRoleChange() {
       if (!_umUser) return;
-      var order = ["student", "teacher", "school_admin"];
       var labels = { student: "O'quvchi", teacher: "O'qituvchi", school_admin: "Maktab admini" };
+      var icons2 = { student: "graduation-cap", teacher: "presentation", school_admin: "shield-check" };
       var current = _umUser.role || "student";
-      var next = order[(order.indexOf(current) + 1) % order.length];
       var uid = _umUser.id;
-      showConfirm({
-        title: "Rolni o'zgartirish",
-        text: labels[current] + " → " + labels[next] + " ga o'zgartirilsinmi?",
-        btnText: "O'zgartirish", danger: false,
-        onConfirm: async function () {
-          try {
-            var res = await apiPost("/admin/users/role", { id: uid, role: next });
-            if (res.ok) { toast("Rol o'zgartirildi", "success"); closeUserModal(); loadUsers(currentUsersPage); }
-            else { var d = await res.json(); toast(d.error || "Xato", "error"); }
-          } catch (err) { if (err.message !== "auth") toast("Server xatosi", "error"); }
-        }
+      var fullName = ((_umUser.first_name || "") + " " + (_umUser.last_name || "")).trim();
+
+      document.getElementById("rpName").innerHTML = "<b>" + esc(fullName) + "</b> — hozirgi rol: " + (labels[current] || current);
+      var msg = document.getElementById("rpMsg");
+      msg.style.display = "none";
+
+      var html = "";
+      ["student", "teacher", "school_admin"].forEach(function (role) {
+        var isCurrent = (role === current);
+        html += '<button class="btn" ' +
+          (isCurrent ? 'disabled style="opacity:0.5;cursor:default;justify-content:flex-start;"' : 'style="justify-content:flex-start;background:var(--bg-soft,#0e1526);border:1px solid var(--border);color:var(--text);"') +
+          ' onclick="' + (isCurrent ? '' : 'doRoleChange(' + uid + ',\'' + role + '\')') + '">' +
+          '<i data-lucide="' + icons2[role] + '" class="ico-sm"></i> ' + labels[role] +
+          (isCurrent ? ' (joriy)' : '') + '</button>';
       });
+      document.getElementById("rpOptions").innerHTML = html;
+      document.getElementById("rolePickModal").classList.add("show");
+      icons();
+    }
+
+    function closeRolePick() {
+      document.getElementById("rolePickModal").classList.remove("show");
+    }
+
+    async function doRoleChange(uid, role) {
+      var msg = document.getElementById("rpMsg");
+      try {
+        var res = await apiPost("/admin/users/role", { id: uid, role: role });
+        var d = await res.json();
+        if (res.ok) {
+          closeRolePick();
+          toast("Rol o'zgartirildi", "success");
+          closeUserModal();
+          loadUsers(currentUsersPage);
+        } else {
+          msg.textContent = d.error || "Xato";
+          msg.className = "message error";
+          msg.style.display = "block";
+        }
+      } catch (err) {
+        if (err.message !== "auth") {
+          msg.textContent = "Server xatosi";
+          msg.className = "message error";
+          msg.style.display = "block";
+        }
+      }
     }
 
     // Ban (modal bilan)

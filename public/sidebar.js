@@ -2,9 +2,58 @@
 // Har sahifada chaqiriladi: renderSidebar("battle") — qaysi menyu aktiv
 
 function renderSidebar(activePage) {
+  // School_admin himoyasi: o'quvchi sahifalariga kira olmaydi → o'z paneliga
+  try {
+    const _guard = JSON.parse(localStorage.getItem("user") || "{}");
+    if (_guard.role === "school_admin") {
+      // School_admin ko'rishi mumkin bo'lgan sahifalar
+      const allowed = ["home", "tournaments", "profile"];
+      if (!allowed.includes(activePage)) {
+        window.location.href = "/school-admin.html";
+        return "";
+      }
+    }
+  } catch (e) {}
   // Brand markaziy config'dan (brand.js). Yuklanmagan bo'lsa — zaxira qiymat.
   const B = window.BRAND || { nameLine1: "KNOWLEDGE", nameLine2: "ARENA", sloganEn: "Learn. Battle. Rise." };
 
+  // School_admin uchun ALOHIDA menyu (o'ynamaydi — faqat boshqaruv)
+  let _saUser = {};
+  try { _saUser = JSON.parse(localStorage.getItem("user") || "{}"); } catch (e) {}
+  if (_saUser.role === "school_admin") {
+    const saMenu = [
+      { id: "home", icon: "layout-dashboard", label: "Bosh sahifa", href: "/school-admin.html", ready: true },
+      { id: "tournaments", icon: "trophy", label: "Turnirlar", href: "/school-tournaments.html", ready: true },
+      { id: "profile", icon: "user", label: "Profil", href: "/profile.html", ready: true },
+    ];
+    let saNavHtml = "";
+    saMenu.forEach(m => {
+      const active = m.id === activePage ? " active" : "";
+      saNavHtml += '<a class="nav-item' + active + '" href="' + m.href + '">' +
+        '<i data-lucide="' + m.icon + '" class="ic"></i> ' + m.label + '</a>';
+    });
+    saNavHtml += '<a class="nav-item" onclick="sidebarLogout()" style="cursor:pointer;">' +
+      '<i data-lucide="log-out" class="ic"></i> Chiqish</a>';
+
+    const B2 = window.BRAND || { nameLine1: "KNOWLEDGE", nameLine2: "ARENA", sloganEn: "Learn. Battle. Rise." };
+    const saSidebar =
+      '<div class="logo-box"><div class="crest">' +
+        '<span class="e">' + B2.nameLine1 + '</span><br><span class="b">' + B2.nameLine2 + '</span>' +
+        '<div style="font-size:11px;font-weight:500;color:var(--text-faint);letter-spacing:0.5px;margin-top:4px;">Maktab paneli</div>' +
+      '</div></div>' +
+      '<nav class="nav">' + saNavHtml + '</nav>' +
+      '<div class="sidebar-foot"><div class="mascot-box">' +
+        '<div style="font-size:34px;">🏫</div>' +
+        '<div style="margin-top:6px;">Maktabingiz nomidan turnirlarda g\'alaba qozoning!</div>' +
+        '<a href="/school-tournaments.html" style="display:block;margin-top:10px;padding:9px;background:linear-gradient(95deg,var(--accent),var(--accent-2));color:#fff;border-radius:10px;font-size:12.5px;font-weight:700;text-decoration:none;">Turnirlarga o\'tish</a>' +
+      '</div></div>';
+
+    const sb = document.querySelector(".sidebar");
+    if (sb) sb.innerHTML = saSidebar;
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+  
   // ready:false => sahifa hali tayyor emas (coming soon), broken link bo'lmaydi
   const menu = [
     { id: "battle", icon: "swords", label: "Battle", href: "/lobby.html", ready: true },
@@ -17,6 +66,18 @@ function renderSidebar(activePage) {
     { id: "progress", icon: "trending-up", label: "Progress", href: "/progress.html", ready: false },
     { id: "profile", icon: "user", label: "Profile", href: "/profile.html", ready: true },
   ];
+
+  // School admin uchun qo'shimcha: Turnirlar (faqat school_admin ko'radi)
+  try {
+    const _su = JSON.parse(localStorage.getItem("user") || "{}");
+    if (_su.role === "school_admin") {
+      // "Ranking" dan keyin joylashtiramiz
+      const insertAt = menu.findIndex(m => m.id === "ranking");
+      const tItem = { id: "tournaments", icon: "trophy", label: "Turnirlar", href: "/school-tournaments.html", ready: true };
+      if (insertAt >= 0) menu.splice(insertAt + 1, 0, tItem);
+      else menu.push(tItem);
+    }
+  } catch (e) {}
 
   let navHtml = "";
   menu.forEach(m => {

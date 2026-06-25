@@ -448,7 +448,9 @@
         localStorage.setItem("user", JSON.stringify(result.user));
         if (result.token) localStorage.setItem("token", result.token);
         // Rol bo'yicha yo'naltirish
-        if (result.user.role === "teacher" || result.user.role === "school_admin") {
+        if (result.user.role === "school_admin") {
+          window.location.href = "/school-admin.html";
+        } else if (result.user.role === "teacher") {
           window.location.href = "/teacher.html";
         } else if (result.user.role === "student") {
           window.location.href = "/lobby.html";

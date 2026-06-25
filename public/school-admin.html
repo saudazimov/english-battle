@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Battle — Maktab paneli</title>
+  <link rel="stylesheet" href="/app.css">
+  <style>
+    .app { grid-template-columns: 200px 1fr; max-width: 1320px; }
+    .topbar { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+
+    /* Maktab sarlavha kartasi */
+    .school-hero { display: flex; align-items: center; gap: 20px; padding: 26px 28px; margin-bottom: 22px; background: linear-gradient(135deg, rgba(91,140,255,0.1), rgba(168,85,247,0.06)); border: 1px solid var(--border-bright); }
+    .school-hero-ic { width: 72px; height: 72px; border-radius: 18px; flex-shrink: 0; background: rgba(91,140,255,0.15); display: grid; place-items: center; }
+    .school-hero-ic i { width: 36px; height: 36px; color: var(--accent); }
+    .school-hero-name { font-size: 24px; font-weight: 800; line-height: 1.1; }
+    .school-hero-sub { font-size: 14px; color: var(--text-dim); margin-top: 5px; }
+    .school-hero-admin { font-size: 13px; color: var(--text-faint); margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+    .school-hero-admin i { width: 14px; height: 14px; }
+
+    /* Statistika kartalari */
+    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 22px; }
+    @media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+    .scard { padding: 20px 22px; }
+    .scard-ic { width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; margin-bottom: 14px; }
+    .scard-ic i { width: 21px; height: 21px; }
+    .scard-ic.blue { background: rgba(91,140,255,0.14); } .scard-ic.blue i { color: var(--accent); }
+    .scard-ic.gold { background: rgba(251,191,36,0.14); } .scard-ic.gold i { color: var(--gold); }
+    .scard-ic.green { background: rgba(52,211,153,0.14); } .scard-ic.green i { color: var(--green); }
+    .scard-ic.purple { background: rgba(168,85,247,0.14); } .scard-ic.purple i { color: var(--accent-2); }
+    .scard-v { font-size: 28px; font-weight: 800; line-height: 1; }
+    .scard-k { font-size: 13px; color: var(--text-dim); margin-top: 6px; }
+
+    /* Bo'lim kartalari */
+    .panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    @media (max-width: 900px) { .panel-grid { grid-template-columns: 1fr; } }
+    .pcard { padding: 22px 24px; }
+    .pcard-head { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; margin-bottom: 18px; }
+    .pcard-head i { width: 18px; height: 18px; color: var(--accent); }
+    .pcard-head .more { margin-left: auto; font-size: 13px; color: var(--accent); cursor: pointer; font-weight: 600; }
+
+    /* Top o'quvchilar */
+    .top-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .top-row:last-child { border-bottom: none; }
+    .top-rank { width: 26px; font-weight: 800; font-size: 15px; color: var(--text-dim); text-align: center; flex-shrink: 0; }
+    .top-rank.r1 { color: var(--gold); } .top-rank.r2 { color: #cbd5e1; } .top-rank.r3 { color: #d97706; }
+    .top-ava { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; position: relative; overflow: hidden; }
+    .top-ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .top-ava-init { width: 100%; height: 100%; display: grid; place-items: center; font-weight: 700; font-size: 15px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
+    .top-name { flex: 1; font-size: 14px; font-weight: 600; }
+    .top-cefr { font-size: 12px; color: var(--text-dim); }
+    .top-rating { font-size: 14px; font-weight: 700; color: var(--gold); }
+
+    /* Turnir CTA */
+    .tourn-cta { text-align: center; padding: 30px 20px; }
+    .tourn-cta-ic { width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 16px; background: rgba(251,191,36,0.12); display: grid; place-items: center; }
+    .tourn-cta-ic i { width: 28px; height: 28px; color: var(--gold); }
+    .tourn-cta-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .tourn-cta-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 18px; line-height: 1.5; }
+    .tourn-count { display: inline-block; font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 999px; background: rgba(52,211,153,0.15); color: var(--green); margin-bottom: 16px; }
+
+    .empty-mini { text-align: center; color: var(--text-faint); padding: 24px; font-size: 13px; }
+    .loading-mini { text-align: center; color: var(--text-faint); padding: 24px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar"></aside>
+
+    <main class="content">
+      <div class="topbar"></div>
+
+      <div class="school-hero" id="schoolHero">
+        <div class="school-hero-ic"><i data-lucide="building-2"></i></div>
+        <div>
+          <div class="school-hero-name" id="heroName">Yuklanmoqda...</div>
+          <div class="school-hero-sub" id="heroSub">—</div>
+          <div class="school-hero-admin" id="heroAdmin"></div>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="card scard">
+          <div class="scard-ic blue"><i data-lucide="users"></i></div>
+          <div class="scard-v" id="statStudents">—</div>
+          <div class="scard-k">O'quvchilar</div>
+        </div>
+        <div class="card scard">
+          <div class="scard-ic gold"><i data-lucide="trophy"></i></div>
+          <div class="scard-v" id="statTop">—</div>
+          <div class="scard-k">Eng yuqori reyting</div>
+        </div>
+        <div class="card scard">
+          <div class="scard-ic green"><i data-lucide="trending-up"></i></div>
+          <div class="scard-v" id="statAvg">—</div>
+          <div class="scard-k">O'rtacha reyting</div>
+        </div>
+        <div class="card scard">
+          <div class="scard-ic purple"><i data-lucide="swords"></i></div>
+          <div class="scard-v" id="statTourn">—</div>
+          <div class="scard-k">Faol turnirlar</div>
+        </div>
+      </div>
+
+      <div class="panel-grid">
+        <div class="card pcard">
+          <div class="pcard-head"><i data-lucide="award"></i> Eng yaxshi o'quvchilar</div>
+          <div id="topStudents"><div class="loading-mini">Yuklanmoqda...</div></div>
+        </div>
+
+        <div class="card pcard">
+          <div class="pcard-head"><i data-lucide="trophy"></i> Turnirlar</div>
+          <div id="tournPanel"><div class="loading-mini">Yuklanmoqda...</div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/api.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/sidebar.js"></script>
+  <script>
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = JSON.parse(userData);
+
+    // Faqat school_admin uchun
+    if (user.role && user.role !== "school_admin") {
+      window.location.href = user.role === "teacher" ? "/teacher.html" : "/lobby.html";
+    }
+
+    renderTopbar();
+    renderSidebar("home");
+
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function avatarHtml(firstName, pic) {
+      if (pic) return '<img src="' + esc(pic) + '" alt="">';
+      return '<div class="top-ava-init">' + esc((firstName || "?").charAt(0).toUpperCase()) + '</div>';
+    }
+
+    async function loadOverview() {
+      try {
+        var r = await authFetch("/school/overview");
+        if (r.status === 403) {
+          document.getElementById("heroName").textContent = "Ruxsat yo'q";
+          document.getElementById("heroSub").textContent = "Bu sahifa faqat maktab adminlari uchun.";
+          return;
+        }
+        var d = await r.json();
+
+        // Hero
+        document.getElementById("heroName").textContent = d.school || "Maktab";
+        document.getElementById("heroSub").textContent = (d.district || "") + (d.region ? ", " + d.region : "");
+        document.getElementById("heroAdmin").innerHTML = '<i data-lucide="shield-check"></i> Admin: ' + esc(((d.admin.first_name || "") + " " + (d.admin.last_name || "")).trim());
+
+        // Stats
+        document.getElementById("statStudents").textContent = d.stats.total_students;
+        document.getElementById("statTop").textContent = d.stats.top_rating || "—";
+        document.getElementById("statAvg").textContent = d.stats.avg_rating || "—";
+        document.getElementById("statTourn").textContent = d.stats.active_tournaments;
+
+        // Top o'quvchilar
+        var top = d.top_students || [];
+        var topBox = document.getElementById("topStudents");
+        if (top.length === 0) {
+          topBox.innerHTML = '<div class="empty-mini">Hali o\'quvchi yo\'q</div>';
+        } else {
+          topBox.innerHTML = top.map(function (s, i) {
+            var rcls = i === 0 ? "r1" : (i === 1 ? "r2" : (i === 2 ? "r3" : ""));
+            var name = (esc(s.first_name) + " " + esc(s.last_name || "")).trim();
+            return '<div class="top-row">' +
+              '<div class="top-rank ' + rcls + '">' + (i + 1) + '</div>' +
+              '<div class="top-ava">' + avatarHtml(s.first_name, s.profile_picture) + '</div>' +
+              '<div class="top-name">' + name + '<div class="top-cefr">' + (s.cefr_level || "—") + '</div></div>' +
+              '<div class="top-rating">' + (s.rating || 1000) + '</div>' +
+            '</div>';
+          }).join("");
+        }
+
+        // Turnir paneli
+        var tp = document.getElementById("tournPanel");
+        var cnt = d.stats.active_tournaments;
+        if (cnt > 0) {
+          tp.innerHTML = '<div class="tourn-cta">' +
+            '<div class="tourn-cta-ic"><i data-lucide="trophy"></i></div>' +
+            '<div class="tourn-count">' + cnt + ' ta faol turnir</div>' +
+            '<div class="tourn-cta-sub">Maktabingiz qatnashishi mumkin bo\'lgan turnirlar bor. Jamoangizni tuzing!</div>' +
+            '<button class="btn" onclick="window.location.href=\'/school-tournaments.html\'"><i data-lucide="users" style="width:16px;height:16px;"></i> Turnirlarga o\'tish</button>' +
+          '</div>';
+        } else {
+          tp.innerHTML = '<div class="tourn-cta">' +
+            '<div class="tourn-cta-ic"><i data-lucide="trophy"></i></div>' +
+            '<div class="tourn-cta-title">Hozircha turnir yo\'q</div>' +
+            '<div class="tourn-cta-sub">Maktabingiz uchun faol turnir mavjud emas. Tez orada yangi turnirlar e\'lon qilinadi.</div>' +
+          '</div>';
+        }
+
+        lucide.createIcons();
+      } catch (e) {
+        document.getElementById("heroName").textContent = "Yuklab bo'lmadi";
+      }
+    }
+
+    loadOverview();
+    lucide.createIcons();
+  </script>
+</body>
+</html>
