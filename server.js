@@ -5328,6 +5328,67 @@ app.get("/school/tournaments/:id/students", authMiddleware, async (req, res) => 
   }
 });
 
+// School admin: o'z maktabi qatnashgan turnir setkasini ko'rish
+app.get("/school/tournaments/:id/bracket", authMiddleware, async (req, res) => {
+  try {
+    const sa = await getSchoolAdmin(req.user.id);
+    if (!sa.ok) return res.status(403).json({ error: sa.error });
+    const me = sa.user;
+    const tid = req.params.id;
+
+    const tr = await pool.query("SELECT * FROM tournaments WHERE id = $1", [tid]);
+    if (tr.rows.length === 0) return res.status(404).json({ error: "Turnir topilmadi" });
+    const t = tr.rows[0];
+
+    // Bu maktab turnirda qatnashayaptimi? (tournament_schools da bormi)
+    const partQ = await pool.query(
+      "SELECT seed, eliminated, placement FROM tournament_schools WHERE tournament_id = $1 AND school = $2",
+      [tid, me.school]
+    );
+    const myPart = partQ.rows[0] || null;
+
+    // Qatnashuvchi maktablar (seed bilan)
+    const schoolsQ = await pool.query(
+      "SELECT school, seed, avg_rating, eliminated, placement FROM tournament_schools WHERE tournament_id = $1 ORDER BY seed ASC",
+      [tid]
+    );
+
+    // Barcha matchlar
+    const matchesQ = await pool.query(
+      `SELECT id, round, match_no, school_a, school_b, score_a, score_b,
+              winner_school, status, scheduled_at, started_at, finished_at
+       FROM tournament_matches
+       WHERE tournament_id = $1
+       ORDER BY round ASC, match_no ASC`,
+      [tid]
+    );
+
+    // Raundlarga guruhlaymiz + mening maktabim ishtirok etgan matchni belgilaymiz
+    const rounds = {};
+    matchesQ.rows.forEach(m => {
+      if (!rounds[m.round]) rounds[m.round] = [];
+      m.is_mine = (m.school_a === me.school || m.school_b === me.school);
+      rounds[m.round].push(m);
+    });
+
+    res.json({
+      tournament: {
+        id: t.id, name: t.name, status: t.status,
+        bracket_size: t.bracket_size, level: t.level,
+        scope_value: t.scope_value, region: t.region, team_size: t.team_size,
+      },
+      my_school: me.school,
+      my_participation: myPart,  // seed, eliminated, placement (qatnashmasa null)
+      schools: schoolsQ.rows,
+      rounds: rounds,
+      total_rounds: t.bracket_size ? Math.log2(t.bracket_size) : 0,
+    });
+  } catch (err) {
+    console.error("School bracket xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // 3. Joriy jamoa (saqlangan bo'lsa)
 app.get("/school/tournaments/:id/team", authMiddleware, async (req, res) => {
   try {

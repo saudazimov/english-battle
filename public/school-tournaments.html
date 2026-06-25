@@ -105,6 +105,45 @@
     </main>
   </div>
 
+  <!-- Setka ko'rish modali -->
+  <div class="tm-overlay" id="bracketModal">
+    <div class="tm-box" style="max-width:900px;">
+      <div class="tm-head">
+        <div class="tm-head-ic"><i data-lucide="git-fork"></i></div>
+        <div class="tm-head-title">Turnir setkasi<div class="tm-head-sub" id="brSubtitle">—</div></div>
+        <div class="tm-close" onclick="closeBracket()"><i data-lucide="x"></i></div>
+      </div>
+      <div class="tm-body" id="brBody">
+        <div style="text-align:center;padding:40px;color:var(--text-dim);">Yuklanmoqda...</div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .br-my-status { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; margin-bottom: 18px; background: linear-gradient(135deg, rgba(91,140,255,0.1), rgba(168,85,247,0.06)); border: 1px solid var(--border-bright); }
+    .br-my-status i { width: 22px; height: 22px; color: var(--accent); }
+    .br-my-seed { font-size: 20px; font-weight: 800; color: var(--accent); }
+    .br-my-txt { font-size: 14px; }
+    .br-my-sub { font-size: 12px; color: var(--text-dim); }
+    .br-rounds { display: flex; gap: 24px; padding: 8px 4px; min-width: min-content; }
+    .br-round { display: flex; flex-direction: column; justify-content: space-around; gap: 14px; min-width: 210px; }
+    .br-round-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); text-align: center; margin-bottom: 4px; }
+    .br-match { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .br-match.mine { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(91,140,255,0.25); }
+    .br-team { display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 13px; }
+    .br-team:first-child { border-bottom: 1px solid var(--border); }
+    .br-team.winner { background: rgba(52,211,153,0.1); font-weight: 700; }
+    .br-team.winner .br-team-name { color: var(--green); }
+    .br-team.is-me .br-team-name { color: var(--accent); font-weight: 700; }
+    .br-seed { width: 22px; height: 22px; border-radius: 6px; background: rgba(0,0,0,0.25); display: grid; place-items: center; font-size: 10px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
+    .br-team-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .br-team-name.tbd { color: var(--text-faint); font-style: italic; }
+    .br-score { font-weight: 700; font-size: 13px; }
+    .br-match-status { font-size: 10px; text-align: center; padding: 4px; color: var(--text-faint); background: rgba(0,0,0,0.2); }
+    .br-match-status.live { color: #f87171; font-weight: 700; }
+    .br-match-status.done { color: var(--green); }
+  </style>
+
   <!-- Jamoa tuzish modali -->
   <div class="tm-overlay" id="teamModal">
     <div class="tm-box">
@@ -215,7 +254,9 @@
       if (canEdit) {
         btnHtml = '<button class="btn" onclick="openTeamModal(' + t.id + ')"><i data-lucide="users" style="width:16px;height:16px;"></i> ' + (teamCount > 0 ? "Jamoani tahrirlash" : "Jamoa tuzish") + '</button>';
       } else {
-        btnHtml = '<button class="btn btn-ghost" onclick="openTeamModal(' + t.id + ')"><i data-lucide="eye" style="width:16px;height:16px;"></i> Jamoani ko\'rish</button>';
+        // Setka tuzilgan — jamoani ko'rish + setkani ko'rish
+        btnHtml = '<button class="btn btn-ghost" onclick="openTeamModal(' + t.id + ')"><i data-lucide="eye" style="width:16px;height:16px;"></i> Jamoa</button>' +
+          ' <button class="btn" onclick="openBracket(' + t.id + ')"><i data-lucide="git-fork" style="width:16px;height:16px;"></i> Setkani ko\'rish</button>';
       }
 
       var deadlineHtml = (canEdit && t.registration_deadline)
@@ -244,6 +285,97 @@
         '</div>' +
       '</div>';
     }
+
+    // ===== Setka ko'rish =====
+    async function openBracket(tid) {
+      document.getElementById("bracketModal").classList.add("show");
+      document.getElementById("brBody").innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Yuklanmoqda...</div>';
+      try {
+        var r = await authFetch("/school/tournaments/" + tid + "/bracket");
+        var d = await r.json();
+        document.getElementById("brSubtitle").textContent = d.tournament.name;
+        renderBracket(d);
+      } catch (e) {
+        document.getElementById("brBody").innerHTML = '<div style="text-align:center;padding:40px;color:#f87171;">Yuklab bo\'lmadi</div>';
+      }
+    }
+
+    function closeBracket() {
+      document.getElementById("bracketModal").classList.remove("show");
+    }
+
+    function renderBracket(d) {
+      var rounds = d.rounds || {};
+      var roundKeys = Object.keys(rounds).sort(function (a, b) { return a - b; });
+      var body = document.getElementById("brBody");
+
+      if (roundKeys.length === 0) {
+        body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Setka hali yaratilmagan</div>';
+        return;
+      }
+
+      var totalRounds = roundKeys.length;
+      var roundName = function (rnd) {
+        var fromEnd = totalRounds - rnd;
+        if (fromEnd === 0) return "Final";
+        if (fromEnd === 1) return "Yarim final";
+        if (fromEnd === 2) return "Chorak final";
+        return rnd + "-raund";
+      };
+      var statusLabels = { pending: "Kutilmoqda", checkin: "Tayyorlanish", live: "Jonli", done: "Tugadi" };
+
+      // Mening maktabim holati (yuqorida)
+      var html = "";
+      var mp = d.my_participation;
+      if (mp) {
+        var statusTxt = mp.placement === 1 ? "🏆 Chempion!" : (mp.eliminated ? "Turnirdan chiqgan" : "Turnirda davom etmoqda");
+        html += '<div class="br-my-status">' +
+          '<span class="br-my-seed">#' + mp.seed + '</span>' +
+          '<div><div class="br-my-txt">' + esc(d.my_school) + ' — Seed ' + mp.seed + '</div>' +
+          '<div class="br-my-sub">' + statusTxt + '</div></div>' +
+        '</div>';
+      }
+
+      html += '<div style="overflow-x:auto;"><div class="br-rounds">';
+      roundKeys.forEach(function (rnd) {
+        html += '<div class="br-round"><div class="br-round-title">' + roundName(parseInt(rnd)) + '</div>';
+        rounds[rnd].forEach(function (m) {
+          var aWin = m.winner_school && m.winner_school === m.school_a;
+          var bWin = m.winner_school && m.winner_school === m.school_b;
+          var isBye = (m.status === "done" && (!m.school_a || !m.school_b));
+
+          html += '<div class="br-match' + (m.is_mine ? " mine" : "") + '">';
+          html += brTeamRow(m.school_a, m.score_a, aWin, m.status, d.my_school);
+          html += brTeamRow(m.school_b, m.score_b, bWin, m.status, d.my_school);
+          if (isBye) {
+            html += '<div class="br-match-status">Avtomatik o\'tdi</div>';
+          } else {
+            var scls = m.status === "live" ? "live" : (m.status === "done" ? "done" : "");
+            var sched = m.scheduled_at ? " · " + new Date(m.scheduled_at).toLocaleString("uz", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+            html += '<div class="br-match-status ' + scls + '">' + (statusLabels[m.status] || m.status) + sched + '</div>';
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+      });
+      html += '</div></div>';
+      body.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function brTeamRow(school, score, isWinner, status, mySchool) {
+      var showScore = (status === "done" || status === "live");
+      var isMe = (school && school === mySchool);
+      var name = school
+        ? '<span class="br-team-name">' + esc(school) + '</span>'
+        : '<span class="br-team-name tbd">— kutilmoqda —</span>';
+      return '<div class="br-team' + (isWinner ? " winner" : "") + (isMe ? " is-me" : "") + '">' +
+        name +
+        (showScore && school ? '<span class="br-score">' + (score || 0) + '</span>' : "") +
+      '</div>';
+    }
+
+    // ===== Jamoa tuzish modali =====
 
     // ===== Jamoa tuzish modali =====
     var tmTournament = null;
