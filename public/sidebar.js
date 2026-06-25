@@ -24,7 +24,7 @@ function renderSidebar(activePage) {
     const saMenu = [
       { id: "home", icon: "layout-dashboard", label: "Bosh sahifa", href: "/school-admin.html", ready: true },
       { id: "tournaments", icon: "trophy", label: "Turnirlar", href: "/school-tournaments.html", ready: true },
-      { id: "profile", icon: "user", label: "Profil", href: "/profile.html", ready: true },
+      { id: "profile", icon: "user", label: "Profil", href: "/school-admin-profile.html", ready: true },
     ];
     let saNavHtml = "";
     saMenu.forEach(m => {
@@ -53,7 +53,7 @@ function renderSidebar(activePage) {
     if (window.lucide) lucide.createIcons();
     return;
   }
-  
+
   // ready:false => sahifa hali tayyor emas (coming soon), broken link bo'lmaydi
   const menu = [
     { id: "battle", icon: "swords", label: "Battle", href: "/lobby.html", ready: true },

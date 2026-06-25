@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Battle — Admin profili</title>
+  <link rel="stylesheet" href="/app.css">
+  <style>
+    .app { grid-template-columns: 230px 1fr; gap: 20px; max-width: 1680px; margin: 0 auto; padding: 20px; }
+    .topbar { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+
+    /* Profil sarlavha kartasi */
+    .prof-hero { display: flex; align-items: center; gap: 24px; padding: 28px 30px; margin-bottom: 22px; background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(251,191,36,0.05)); border: 1px solid var(--border-bright); position: relative; }
+    .prof-ava-wrap { position: relative; flex-shrink: 0; }
+    .prof-ava { width: 96px; height: 96px; border-radius: 50%; position: relative; overflow: hidden; border: 3px solid rgba(168,85,247,0.4); }
+    .prof-ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .prof-ava-init { width: 100%; height: 100%; display: grid; place-items: center; font-weight: 800; font-size: 38px; background: linear-gradient(135deg, var(--accent-2), var(--accent)); color: #fff; }
+    .prof-ava-edit { position: absolute; bottom: 2px; right: 2px; width: 30px; height: 30px; border-radius: 50%; background: var(--accent-2); border: 2px solid var(--panel); display: grid; place-items: center; cursor: pointer; }
+    .prof-ava-edit i { width: 14px; height: 14px; color: #fff; }
+    .prof-name { font-size: 26px; font-weight: 800; line-height: 1.1; }
+    .prof-role-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 13px; font-weight: 700; padding: 5px 14px; border-radius: 999px; background: rgba(168,85,247,0.18); color: var(--accent-2); border: 1px solid rgba(168,85,247,0.35); }
+    .prof-role-badge i { width: 14px; height: 14px; }
+    .prof-meta { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 14px; }
+    .prof-meta-item { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-dim); }
+    .prof-meta-item i { width: 15px; height: 15px; }
+
+    /* Ikki ustun layout */
+    .prof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    @media (max-width: 880px) { .prof-grid { grid-template-columns: 1fr; } }
+
+    .pcard { padding: 22px 24px; }
+    .pcard-head { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; margin-bottom: 18px; }
+    .pcard-head i { width: 18px; height: 18px; color: var(--accent); }
+
+    /* Ma'lumot qatorlari */
+    .info-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+    .info-row:last-child { border-bottom: none; }
+    .info-ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; background: var(--panel-2); }
+    .info-ic i { width: 17px; height: 17px; color: var(--text-dim); }
+    .info-k { font-size: 12px; color: var(--text-faint); }
+    .info-v { font-size: 15px; font-weight: 600; }
+    .info-main { flex: 1; }
+
+    /* Maktab statistika mini-kartalar */
+    .mini-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 4px; }
+    .mini-stat { background: var(--panel-2); border-radius: 12px; padding: 16px 14px; text-align: center; }
+    .mini-stat-v { font-size: 22px; font-weight: 800; }
+    .mini-stat-v.blue { color: var(--accent); }
+    .mini-stat-v.gold { color: var(--gold); }
+    .mini-stat-v.green { color: var(--green); }
+    .mini-stat-k { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+    /* Boshqaruv statistika */
+    .mgmt-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .mgmt-row:last-child { border-bottom: none; }
+    .mgmt-ic { width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; flex-shrink: 0; }
+    .mgmt-ic.purple { background: rgba(168,85,247,0.14); } .mgmt-ic.purple i { color: var(--accent-2); }
+    .mgmt-ic.gold { background: rgba(251,191,36,0.14); } .mgmt-ic.gold i { color: var(--gold); }
+    .mgmt-ic.cyan { background: rgba(56,225,255,0.14); } .mgmt-ic.cyan i { color: var(--cyan); }
+    .mgmt-ic i { width: 20px; height: 20px; }
+    .mgmt-v { font-size: 24px; font-weight: 800; }
+    .mgmt-k { font-size: 13px; color: var(--text-dim); }
+
+    /* Tezkor harakatlar */
+    .quick-actions { display: flex; flex-direction: column; gap: 10px; }
+    .qa-btn { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; text-decoration: none; color: var(--text); }
+    .qa-btn:hover { border-color: var(--border-bright); background: var(--panel-2); }
+    .qa-ic { width: 38px; height: 38px; border-radius: 10px; background: rgba(91,140,255,0.12); display: grid; place-items: center; flex-shrink: 0; }
+    .qa-ic i { width: 18px; height: 18px; color: var(--accent); }
+    .qa-title { font-weight: 600; font-size: 14px; }
+    .qa-sub { font-size: 12px; color: var(--text-dim); }
+    .qa-arrow { margin-left: auto; color: var(--text-faint); }
+
+    .loading-mini { text-align: center; color: var(--text-faint); padding: 30px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar"></aside>
+
+    <main class="content">
+      <div class="topbar"></div>
+
+      <div class="page-head">
+        <div class="crest-ic"><i data-lucide="user"></i></div>
+        <div><h1>Profil</h1><p>Shaxsiy ma'lumotlaringiz va maktab boshqaruvi.</p></div>
+      </div>
+
+      <!-- Profil sarlavhasi -->
+      <div class="prof-hero">
+        <div class="prof-ava-wrap">
+          <div class="prof-ava" id="profAva"><div class="prof-ava-init">?</div></div>
+          <div class="prof-ava-edit" onclick="document.getElementById('avaInput').click()" title="Rasmni o'zgartirish"><i data-lucide="camera"></i></div>
+          <input type="file" id="avaInput" accept="image/*" style="display:none;" onchange="uploadAvatar(event)">
+        </div>
+        <div>
+          <div class="prof-name" id="profName">Yuklanmoqda...</div>
+          <span class="prof-role-badge"><i data-lucide="shield-check"></i> Maktab Admini</span>
+          <div class="prof-meta" id="profMeta"></div>
+        </div>
+      </div>
+
+      <div class="prof-grid">
+        <!-- Chap ustun -->
+        <div>
+          <!-- Shaxsiy ma'lumotlar -->
+          <div class="card pcard" style="margin-bottom:22px;">
+            <div class="pcard-head"><i data-lucide="user-circle"></i> Shaxsiy ma'lumotlar</div>
+            <div id="personalInfo"><div class="loading-mini">Yuklanmoqda...</div></div>
+          </div>
+
+          <!-- Boshqaradigan maktab -->
+          <div class="card pcard">
+            <div class="pcard-head"><i data-lucide="building-2"></i> Boshqaradigan maktab</div>
+            <div id="schoolInfo"><div class="loading-mini">Yuklanmoqda...</div></div>
+          </div>
+        </div>
+
+        <!-- O'ng ustun -->
+        <div>
+          <!-- Boshqaruv faoliyati -->
+          <div class="card pcard" style="margin-bottom:22px;">
+            <div class="pcard-head"><i data-lucide="clipboard-list"></i> Boshqaruv faoliyati</div>
+            <div id="mgmtInfo"><div class="loading-mini">Yuklanmoqda...</div></div>
+          </div>
+
+          <!-- Tezkor harakatlar -->
+          <div class="card pcard">
+            <div class="pcard-head"><i data-lucide="zap"></i> Tezkor harakatlar</div>
+            <div class="quick-actions">
+              <a class="qa-btn" href="/school-admin.html">
+                <div class="qa-ic"><i data-lucide="layout-dashboard"></i></div>
+                <div><div class="qa-title">Maktab paneli</div><div class="qa-sub">Umumiy ko'rinish va statistika</div></div>
+                <i data-lucide="chevron-right" class="qa-arrow"></i>
+              </a>
+              <a class="qa-btn" href="/school-tournaments.html">
+                <div class="qa-ic"><i data-lucide="trophy"></i></div>
+                <div><div class="qa-title">Turnirlar</div><div class="qa-sub">Jamoa tuzish va boshqarish</div></div>
+                <i data-lucide="chevron-right" class="qa-arrow"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/api.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/sidebar.js"></script>
+  <script>
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = JSON.parse(userData);
+
+    // Faqat school_admin uchun
+    if (user.role && user.role !== "school_admin") {
+      window.location.href = user.role === "teacher" ? "/teacher.html" : "/lobby.html";
+    }
+
+    renderTopbar();
+    renderSidebar("profile");
+
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+    function fmtDate(d) {
+      if (!d) return "—";
+      var date = new Date(d);
+      var months = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"];
+      return date.getDate() + " " + months[date.getMonth()] + " " + date.getFullYear();
+    }
+
+    function fmtPhone(p) {
+      if (!p) return "—";
+      var s = String(p).replace(/\D/g, "");
+      if (s.length === 12 && s.startsWith("998")) {
+        return "+" + s.slice(0, 3) + " " + s.slice(3, 5) + " " + s.slice(5, 8) + " " + s.slice(8, 10) + " " + s.slice(10);
+      }
+      return "+" + s;
+    }
+
+    async function loadProfile() {
+      try {
+        var r = await authFetch("/school/profile");
+        if (r.status === 403) {
+          document.getElementById("profName").textContent = "Ruxsat yo'q";
+          return;
+        }
+        var d = await r.json();
+        var a = d.admin;
+
+        // Hero
+        var fullName = ((a.first_name || "") + " " + (a.last_name || "")).trim();
+        document.getElementById("profName").textContent = fullName;
+
+        // Avatar
+        var avaBox = document.getElementById("profAva");
+        if (a.profile_picture) {
+          avaBox.innerHTML = '<img src="' + esc(a.profile_picture) + '" alt="">';
+        } else {
+          avaBox.innerHTML = '<div class="prof-ava-init">' + esc((a.first_name || "?").charAt(0).toUpperCase()) + '</div>';
+        }
+
+        // Meta (maktab + joylashuv)
+        document.getElementById("profMeta").innerHTML =
+          '<div class="prof-meta-item"><i data-lucide="building-2"></i> ' + esc(d.school || "—") + '</div>' +
+          '<div class="prof-meta-item"><i data-lucide="map-pin"></i> ' + esc((d.district || "") + (d.region ? ", " + d.region : "")) + '</div>';
+
+        // Shaxsiy ma'lumotlar
+        document.getElementById("personalInfo").innerHTML =
+          infoRow("phone", "Telefon", fmtPhone(a.phone)) +
+          infoRow("calendar", "Ro'yxatdan o'tgan", fmtDate(a.created_at)) +
+          infoRow("shield-check", "Rol", "Maktab Admini");
+
+        // Maktab ma'lumotlari + statistika
+        var ss = d.school_stats;
+        document.getElementById("schoolInfo").innerHTML =
+          infoRow("building-2", "Maktab", d.school || "—") +
+          infoRow("map", "Tuman", d.district || "—") +
+          infoRow("map-pin", "Viloyat", d.region || "—") +
+          '<div class="mini-stats">' +
+            '<div class="mini-stat"><div class="mini-stat-v blue">' + ss.total_students + '</div><div class="mini-stat-k">O\'quvchilar</div></div>' +
+            '<div class="mini-stat"><div class="mini-stat-v gold">' + (ss.top_rating || "—") + '</div><div class="mini-stat-k">Eng yuqori</div></div>' +
+            '<div class="mini-stat"><div class="mini-stat-v green">' + (ss.avg_rating || "—") + '</div><div class="mini-stat-k">O\'rtacha</div></div>' +
+          '</div>';
+
+        // Boshqaruv faoliyati
+        var m = d.management;
+        document.getElementById("mgmtInfo").innerHTML =
+          mgmtRow("purple", "swords", m.active_tournaments, "Faol turnirlar") +
+          mgmtRow("gold", "trophy", m.total_tournaments, "Jami turnirlar") +
+          mgmtRow("cyan", "users", m.teams_built, "Tuzilgan jamoalar");
+
+        lucide.createIcons();
+      } catch (e) {
+        document.getElementById("profName").textContent = "Yuklab bo'lmadi";
+      }
+    }
+
+    function infoRow(icon, key, val) {
+      return '<div class="info-row">' +
+        '<div class="info-ic"><i data-lucide="' + icon + '"></i></div>' +
+        '<div class="info-main"><div class="info-k">' + key + '</div><div class="info-v">' + esc(val) + '</div></div>' +
+      '</div>';
+    }
+
+    function mgmtRow(color, icon, val, key) {
+      return '<div class="mgmt-row">' +
+        '<div class="mgmt-ic ' + color + '"><i data-lucide="' + icon + '"></i></div>' +
+        '<div><div class="mgmt-v">' + val + '</div><div class="mgmt-k">' + key + '</div></div>' +
+      '</div>';
+    }
+
+    async function uploadAvatar(ev) {
+      var file = ev.target.files[0];
+      if (!file) return;
+      var fd = new FormData();
+      fd.append("picture", file);
+      try {
+        var r = await authFetch("/profile/" + user.id + "/picture", { method: "POST", body: fd });
+        var d = await r.json();
+        if (d.profile_picture || d.success) {
+          // localStorage yangilaymiz
+          user.profile_picture = d.profile_picture || user.profile_picture;
+          localStorage.setItem("user", JSON.stringify(user));
+          loadProfile();
+        }
+      } catch (e) {}
+    }
+
+    loadProfile();
+    lucide.createIcons();
+  </script>
+</body>
+</html>

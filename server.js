@@ -4928,6 +4928,78 @@ async function getSchoolAdmin(userId) {
   return { ok: true, user: u };
 }
 
+// School admin profil — shaxsiy + maktab + boshqaruv ma'lumotlari
+app.get("/school/profile", authMiddleware, async (req, res) => {
+  try {
+    const sa = await getSchoolAdmin(req.user.id);
+    if (!sa.ok) return res.status(403).json({ error: sa.error });
+    const me = sa.user;
+
+    // Shaxsiy ma'lumotlar (telefon, ro'yxat sanasi, avatar)
+    const personalQ = await pool.query(
+      "SELECT phone, profile_picture, created_at FROM users WHERE id = $1",
+      [me.id]
+    );
+    const p = personalQ.rows[0] || {};
+
+    // Maktab statistikasi
+    const statsQ = await pool.query(
+      `SELECT COUNT(*) AS total, ROUND(AVG(rating)) AS avg_rating, MAX(rating) AS top_rating
+       FROM users
+       WHERE school = $1 AND (role = 'student' OR role IS NULL) AND (is_banned IS NULL OR is_banned = false)`,
+      [me.school]
+    );
+    const st = statsQ.rows[0];
+
+    // Boshqaruv: faol + jami turnirlar (maktab tegishli)
+    const tournQ = await pool.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE status IN ('registration','bracket','live')) AS active,
+         COUNT(*) AS total
+       FROM tournaments t
+       WHERE (
+         (t.level = 'district' AND t.scope_value = $1 AND t.region = $2)
+         OR (t.level = 'region' AND t.scope_value = $2)
+         OR (t.level = 'country')
+       )`,
+      [me.district, me.region]
+    );
+    const tn = tournQ.rows[0];
+
+    // Maktab tuzgan jamoalar soni (nechta turnirda jamoa tuzilgan)
+    const teamQ = await pool.query(
+      `SELECT COUNT(DISTINCT tournament_id) AS c FROM tournament_team_members WHERE school = $1`,
+      [me.school]
+    );
+
+    res.json({
+      admin: {
+        first_name: me.first_name,
+        last_name: me.last_name,
+        phone: p.phone || null,
+        profile_picture: p.profile_picture || null,
+        created_at: p.created_at || null,
+      },
+      school: me.school,
+      region: me.region,
+      district: me.district,
+      school_stats: {
+        total_students: parseInt(st.total) || 0,
+        avg_rating: parseInt(st.avg_rating) || 0,
+        top_rating: parseInt(st.top_rating) || 0,
+      },
+      management: {
+        active_tournaments: parseInt(tn.active) || 0,
+        total_tournaments: parseInt(tn.total) || 0,
+        teams_built: parseInt(teamQ.rows[0].c) || 0,
+      },
+    });
+  } catch (err) {
+    console.error("School profile xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // School admin bosh panel — maktab umumiy ko'rinishi
 app.get("/school/overview", authMiddleware, async (req, res) => {
   try {
