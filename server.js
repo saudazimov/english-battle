@@ -3061,6 +3061,224 @@ app.get("/admin/tournaments/list", requireAdmin, async (req, res) => {
   }
 });
 
+// ===== SETKA GENERATSIYASI (Bosqich 4) =====
+
+// Standart seeding tartibi (kuchlilar finalda uchrashadi)
+function seedOrder(size) {
+  // 2 lik asosдан boshlab rekursiv quramiz
+  let rounds = Math.log2(size);
+  let order = [1, 2];
+  for (let r = 1; r < rounds; r++) {
+    const next = [];
+    const sum = order.length * 2 + 1;
+    for (const x of order) {
+      next.push(x);
+      next.push(sum - x);
+    }
+    order = next;
+  }
+  return order; // masalan size=8 → [1,8,5,4,3,6,7,2] tartibida pozitsiyalar
+}
+
+// Setkani yaratish — seeding + bracket + jadval
+app.post("/admin/tournaments/:id/generate-bracket", requireAdmin, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const tid = req.params.id;
+    const tr = await client.query("SELECT * FROM tournaments WHERE id = $1", [tid]);
+    if (tr.rows.length === 0) { client.release(); return res.status(404).json({ error: "Turnir topilmadi" }); }
+    const t = tr.rows[0];
+
+    // Faqat registration holatida setka yaratish mumkin
+    if (t.status !== "registration") {
+      client.release();
+      return res.status(400).json({ error: "Setka faqat 'Ro'yxat' bosqichida yaratiladi (hozir: " + t.status + ")" });
+    }
+
+    // Qatnashuvchi maktablar (jamoa tuzganlar) — reyting bo'yicha
+    const schoolsQ = await client.query(
+      `SELECT school, region, district, avg_rating
+       FROM tournament_schools
+       WHERE tournament_id = $1
+       ORDER BY avg_rating DESC, school ASC`,
+      [tid]
+    );
+    const schools = schoolsQ.rows;
+    const n = schools.length;
+
+    if (n < 2) {
+      client.release();
+      return res.status(400).json({ error: "Setka uchun kamida 2 ta maktab kerak (jamoa tuzgan: " + n + ")" });
+    }
+
+    // Bracket hajmi: n dan keyingi 2 daraja (2,4,8,16,32)
+    let size = 2;
+    while (size < n) size *= 2;
+
+    // Seeding: maktablarga 1..n seed beramiz (reyting bo'yicha), seedlarni saqlaymiz
+    await client.query("BEGIN");
+    for (let i = 0; i < n; i++) {
+      await client.query(
+        "UPDATE tournament_schools SET seed = $1, eliminated = false, placement = NULL WHERE tournament_id = $2 AND school = $3",
+        [i + 1, tid, schools[i].school]
+      );
+    }
+
+    // Eski matchlarni tozalaymiz (qayta generatsiya bo'lsa)
+    await client.query(
+      `DELETE FROM tournament_match_players WHERE match_id IN (SELECT id FROM tournament_matches WHERE tournament_id = $1)`,
+      [tid]
+    );
+    await client.query("DELETE FROM tournament_matches WHERE tournament_id = $1", [tid]);
+
+    // Seeding pozitsiyalari (setkadagi joylashuv)
+    const positions = seedOrder(size); // size uzunlikdagi massiv, qiymatlar 1..size
+    // Har pozitsiyaga maktab (seed) yoki null (bye) joylaymiz
+    // positions[i] = shu slotda turadigan seed raqami
+    const slots = positions.map(seedNo => (seedNo <= n ? schools[seedNo - 1].school : null));
+
+    // 1-raund matchlari: slotларни juft-juft olamiz
+    const startsAt = t.starts_at ? new Date(t.starts_at) : new Date(Date.now() + 24 * 3600 * 1000);
+    const gapMin = 30; // matchlar orasида 30 daqiqa
+    const round1MatchCount = size / 2;
+    let matchTime = new Date(startsAt);
+
+    const round1Winners = []; // bye bo'lsa avtomatik g'olib
+    for (let m = 0; m < round1MatchCount; m++) {
+      const a = slots[m * 2];
+      const b = slots[m * 2 + 1];
+
+      // Bye holati: biri null bo'lsa, ikkinchisi avtomatik o'tadi (match yaratamiz, lekin done)
+      let status = "pending";
+      let winner = null;
+      if (a && !b) { status = "done"; winner = a; }
+      else if (!a && b) { status = "done"; winner = b; }
+      else if (!a && !b) { status = "done"; winner = null; } // ikkalasi bye (kam holat)
+
+      const sched = (status === "pending") ? new Date(matchTime) : null;
+      const ins = await client.query(
+        `INSERT INTO tournament_matches
+          (tournament_id, round, match_no, school_a, school_b, winner_school, status, scheduled_at, finished_at)
+         VALUES ($1, 1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+        [tid, m + 1, a, b, winner, status, sched, (status === "done" ? new Date() : null)]
+      );
+
+      if (status === "pending") matchTime = new Date(matchTime.getTime() + gapMin * 60000);
+      round1Winners.push({ matchNo: m + 1, winner: winner });
+    }
+
+    // Keyingi raundlar uchun bo'sh matchlar (kim chiqishi keyin aniqlanadi)
+    let prevCount = round1MatchCount;
+    let round = 2;
+    while (prevCount > 1) {
+      const cnt = prevCount / 2;
+      for (let m = 0; m < cnt; m++) {
+        await client.query(
+          `INSERT INTO tournament_matches
+            (tournament_id, round, match_no, status, scheduled_at)
+           VALUES ($1, $2, $3, 'pending', $4)`,
+          [tid, round, m + 1, new Date(matchTime)]
+        );
+        matchTime = new Date(matchTime.getTime() + gapMin * 60000);
+      }
+      prevCount = cnt;
+      round++;
+    }
+
+    // Bye g'oliblarini keyingi raundga ko'chiramiz (avtomatik o'tganlar)
+    await propagateByes(client, tid);
+
+    // Turnir statusini 'bracket' ga o'tkazamiz + bracket_size saqlaymiz
+    await client.query(
+      "UPDATE tournaments SET status = 'bracket', bracket_size = $1 WHERE id = $2",
+      [size, tid]
+    );
+
+    await client.query("COMMIT");
+    client.release();
+    res.json({
+      success: true,
+      bracket_size: size,
+      schools: n,
+      byes: size - n,
+      rounds: Math.log2(size),
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    client.release();
+    console.error("Setka generatsiya xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi: " + err.message });
+  }
+});
+
+// Bye g'oliblarini keyingi raundga avtomatik joylashtirish
+async function propagateByes(client, tid) {
+  // 1-raunddagi 'done' (bye) matchlardan g'oliblarni keyingi raundga qo'yamiz
+  const r1 = await client.query(
+    "SELECT match_no, winner_school FROM tournament_matches WHERE tournament_id = $1 AND round = 1 AND status = 'done' ORDER BY match_no",
+    [tid]
+  );
+  for (const row of r1.rows) {
+    if (!row.winner_school) continue;
+    // Keyingi raunddagi match: (match_no+1)/2, tomonni aniqlaymiz
+    const nextMatchNo = Math.ceil(row.match_no / 2);
+    const isA = (row.match_no % 2 === 1); // toq matchlar -> A tomon
+    const col = isA ? "school_a" : "school_b";
+    await client.query(
+      `UPDATE tournament_matches SET ${col} = $1 WHERE tournament_id = $2 AND round = 2 AND match_no = $3`,
+      [row.winner_school, tid, nextMatchNo]
+    );
+  }
+}
+
+// Setkani o'qish — barcha matchlar + maktablar (admin va keyin o'quvchilar ko'radi)
+app.get("/admin/tournaments/:id/bracket", requireAdmin, async (req, res) => {
+  try {
+    const tid = req.params.id;
+    const tr = await pool.query("SELECT * FROM tournaments WHERE id = $1", [tid]);
+    if (tr.rows.length === 0) return res.status(404).json({ error: "Turnir topilmadi" });
+    const t = tr.rows[0];
+
+    // Qatnashuvchi maktablar (seed bilan)
+    const schoolsQ = await pool.query(
+      "SELECT school, seed, avg_rating, eliminated, placement FROM tournament_schools WHERE tournament_id = $1 ORDER BY seed ASC",
+      [tid]
+    );
+
+    // Barcha matchlar
+    const matchesQ = await pool.query(
+      `SELECT id, round, match_no, school_a, school_b, score_a, score_b,
+              winner_school, status, scheduled_at, started_at, finished_at
+       FROM tournament_matches
+       WHERE tournament_id = $1
+       ORDER BY round ASC, match_no ASC`,
+      [tid]
+    );
+
+    // Raundlarga guruhlaymiz
+    const rounds = {};
+    matchesQ.rows.forEach(m => {
+      if (!rounds[m.round]) rounds[m.round] = [];
+      rounds[m.round].push(m);
+    });
+
+    res.json({
+      tournament: {
+        id: t.id, name: t.name, status: t.status,
+        bracket_size: t.bracket_size, level: t.level,
+        scope_value: t.scope_value, region: t.region,
+        team_size: t.team_size,
+      },
+      schools: schoolsQ.rows,
+      rounds: rounds,
+      total_rounds: t.bracket_size ? Math.log2(t.bracket_size) : 0,
+    });
+  } catch (err) {
+    console.error("Setka o'qish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // Bitta turnirni olish (tahrirlash modali uchun)
 app.get("/admin/tournaments/:id", requireAdmin, async (req, res) => {
   try {
