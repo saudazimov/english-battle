@@ -3061,6 +3061,126 @@ app.get("/admin/tournaments/list", requireAdmin, async (req, res) => {
   }
 });
 
+// Bitta turnirni olish (tahrirlash modali uchun)
+app.get("/admin/tournaments/:id", requireAdmin, async (req, res) => {
+  try {
+    const q = await pool.query("SELECT * FROM tournaments WHERE id = $1", [req.params.id]);
+    if (q.rows.length === 0) return res.status(404).json({ error: "Turnir topilmadi" });
+    res.json({ tournament: q.rows[0] });
+  } catch (err) {
+    console.error("Turnir olish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Turnirni tahrirlash (status'ga qarab xavfsiz)
+app.post("/admin/tournaments/:id/edit", requireAdmin, async (req, res) => {
+  try {
+    const id = req.params.id;
+    const cur = await pool.query("SELECT * FROM tournaments WHERE id = $1", [id]);
+    if (cur.rows.length === 0) return res.status(404).json({ error: "Turnir topilmadi" });
+    const t = cur.rows[0];
+
+    const { name, team_size, reserve_size, questions_per_match,
+            seconds_per_match, registration_deadline, starts_at, region, district } = req.body;
+
+    // Setka tuzilganmi? (registration = hali tuzilmagan, erkin tahrir)
+    const bracketLocked = (t.status !== "registration" && t.status !== "draft");
+
+    // Yangi qiymatlarni yig'amiz (faqat kelganlarini o'zgartiramiz)
+    const fields = [];
+    const vals = [];
+    let pi = 0;
+
+    function setField(col, val) { pi++; fields.push(col + " = $" + pi); vals.push(val); }
+
+    // Nom — har doim o'zgartirish mumkin (xavfsiz)
+    if (name !== undefined && name.trim()) setField("name", name.trim());
+
+    // Sana/deadline — har doim mumkin
+    if (registration_deadline !== undefined) setField("registration_deadline", registration_deadline || null);
+    if (starts_at !== undefined) setField("starts_at", starts_at || null);
+
+    // Quyidagilar — faqat setka tuzilmaganda (bracketLocked = false)
+    if (!bracketLocked) {
+      if (team_size !== undefined) {
+        const ts = parseInt(team_size);
+        if (ts >= 1 && ts <= 10) setField("team_size", ts);
+      }
+      if (reserve_size !== undefined) {
+        const rs = parseInt(reserve_size);
+        if (rs >= 0 && rs <= 5) setField("reserve_size", rs);
+      }
+      if (questions_per_match !== undefined) {
+        const q = parseInt(questions_per_match);
+        if (q >= 5 && q <= 50) setField("questions_per_match", q);
+      }
+      if (seconds_per_match !== undefined) {
+        const s = parseInt(seconds_per_match);
+        if (s >= 60 && s <= 1200) setField("seconds_per_match", s);
+      }
+      if (region !== undefined && region) setField("region", region);
+      if (district !== undefined && district) setField("scope_value", district);
+    } else {
+      // Setka tuzilgan — xavfli maydonlar so'ralsa, ogohlantirib o'tkazib yuboramiz
+      const blocked = [];
+      if (team_size !== undefined && parseInt(team_size) !== t.team_size) blocked.push("jamoa hajmi");
+      if (region !== undefined && region !== t.region) blocked.push("viloyat");
+      if (district !== undefined && district !== t.scope_value) blocked.push("tuman");
+      if (blocked.length > 0) {
+        return res.status(400).json({ error: "Setka tuzilgani uchun o'zgartirib bo'lmaydi: " + blocked.join(", ") });
+      }
+    }
+
+    if (fields.length === 0) return res.status(400).json({ error: "O'zgartirish uchun ma'lumot yo'q" });
+
+    pi++;
+    vals.push(id);
+    const upd = await pool.query(
+      `UPDATE tournaments SET ${fields.join(", ")} WHERE id = $${pi} RETURNING *`,
+      vals
+    );
+    res.json({ success: true, tournament: upd.rows[0] });
+  } catch (err) {
+    console.error("Turnir tahrirlash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi: " + err.message });
+  }
+});
+
+// Turnirni o'chirish (bog'liq hamma narsa bilan)
+app.post("/admin/tournaments/:id/delete", requireAdmin, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const id = req.params.id;
+    const cur = await client.query("SELECT id FROM tournaments WHERE id = $1", [id]);
+    if (cur.rows.length === 0) {
+      client.release();
+      return res.status(404).json({ error: "Turnir topilmadi" });
+    }
+
+    // Tranzaksiya: bog'liq jadvallarni tartib bilan o'chiramiz
+    await client.query("BEGIN");
+    // match_players (matchlarga bog'liq)
+    await client.query(
+      `DELETE FROM tournament_match_players
+       WHERE match_id IN (SELECT id FROM tournament_matches WHERE tournament_id = $1)`,
+      [id]
+    );
+    await client.query("DELETE FROM tournament_matches WHERE tournament_id = $1", [id]);
+    await client.query("DELETE FROM tournament_team_members WHERE tournament_id = $1", [id]);
+    await client.query("DELETE FROM tournament_schools WHERE tournament_id = $1", [id]);
+    await client.query("DELETE FROM tournaments WHERE id = $1", [id]);
+    await client.query("COMMIT");
+    client.release();
+    res.json({ success: true });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    client.release();
+    console.error("Turnir o'chirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi: " + err.message });
+  }
+});
+
 // Savollarni olish (admin) — pagination, search, filter bilan
 // GET, token bilan (parol emas). Query: ?page=1&limit=25&search=&level=&skill=&status=&date_from=&date_to=
 app.get("/admin/questions", requireAdmin, async (req, res) => {

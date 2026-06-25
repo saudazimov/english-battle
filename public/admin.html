@@ -958,6 +958,118 @@
     </div>
   </div>
 
+  <!-- Turnir tahrirlash modali -->
+  <div class="modal-overlay" id="tournEditModal">
+    <div class="modal-box wide" style="max-width:560px;">
+      <div class="modal-head-wide">
+        <span class="mh-ic"><i data-lucide="pencil" class="ico-sm"></i></span>
+        <span class="mh-title">Turnirni tahrirlash</span>
+        <span class="mh-close" onclick="closeEditTournament()"><i data-lucide="x" class="ico-sm"></i></span>
+      </div>
+      <div style="padding:4px 2px;">
+        <input type="hidden" id="teId">
+        <div id="teLockNote" style="display:none;font-size:12px;color:var(--gold);background:rgba(251,191,36,0.1);padding:10px 12px;border-radius:8px;margin-bottom:14px;">
+          ⚠ Setka tuzilgani uchun ba'zi maydonlar bloklangan (jamoa hajmi, viloyat, tuman).
+        </div>
+        <div style="margin-bottom:14px;">
+          <label>Turnir nomi</label>
+          <input type="text" id="teName">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label>Viloyat</label>
+            <input type="text" id="teRegion">
+          </div>
+          <div>
+            <label>Tuman</label>
+            <input type="text" id="teDistrict">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label>Jamoa hajmi (asosiy)</label>
+            <input type="number" id="teTeamSize" min="1" max="10">
+          </div>
+          <div>
+            <label>Zaxira o'yinchilar</label>
+            <input type="number" id="teReserve" min="0" max="5">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label>Har matchda savol</label>
+            <input type="number" id="teQpm" min="5" max="50">
+          </div>
+          <div>
+            <label>Match vaqti (min)</label>
+            <input type="number" id="teSpm" min="1" max="20">
+          </div>
+        </div>
+        <div id="teMsg" class="message" style="display:none;margin-bottom:12px;"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeEditTournament()">Bekor qilish</button>
+        <button class="modal-btn" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;" id="teSaveBtn" onclick="saveEditTournament()">Saqlash</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Turnir tahrirlash modali -->
+  <div class="modal-overlay" id="tournEditModal">
+    <div class="modal-box wide" style="max-width:560px;">
+      <div class="modal-head-wide">
+        <span class="mh-ic"><i data-lucide="pencil" class="ico-sm"></i></span>
+        <span class="mh-title">Turnirni tahrirlash</span>
+        <span class="mh-close" onclick="closeEditTournament()"><i data-lucide="x" class="ico-sm"></i></span>
+      </div>
+      <div style="padding:4px 2px;">
+        <input type="hidden" id="teId">
+        <div id="teLockNote" style="display:none;font-size:12px;color:var(--gold);background:rgba(251,191,36,0.1);padding:10px 12px;border-radius:8px;margin-bottom:14px;">
+          ⚠ Setka tuzilgani uchun ba'zi maydonlar bloklangan (jamoa hajmi, viloyat, tuman).
+        </div>
+        <div style="margin-bottom:14px;">
+          <label>Turnir nomi</label>
+          <input type="text" id="teName">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label>Viloyat</label>
+            <input type="text" id="teRegion">
+          </div>
+          <div>
+            <label>Tuman</label>
+            <input type="text" id="teDistrict">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label>Jamoa hajmi (asosiy)</label>
+            <input type="number" id="teTeamSize" min="1" max="10">
+          </div>
+          <div>
+            <label>Zaxira o'yinchilar</label>
+            <input type="number" id="teReserve" min="0" max="5">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label>Har matchda savol</label>
+            <input type="number" id="teQpm" min="5" max="50">
+          </div>
+          <div>
+            <label>Match vaqti (min)</label>
+            <input type="number" id="teSpm" min="1" max="20">
+          </div>
+        </div>
+        <div id="teMsg" class="message" style="display:none;margin-bottom:12px;"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeEditTournament()">Bekor qilish</button>
+        <button class="modal-btn" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;" id="teSaveBtn" onclick="saveEditTournament()">Saqlash</button>
+      </div>
+    </div>
+  </div>
+
   <!-- USER EDIT MODAL -->
   <div class="modal-overlay" id="userEditModal">
     <div class="modal-box wide" style="max-width:480px;">
@@ -1577,12 +1689,192 @@
               '<div style="font-size:12px;color:var(--text-dim);margin-top:2px;">' + esc(t.scope_value || "") + (t.region ? ", " + esc(t.region) : "") + ' · ' + (t.school_count || 0) + ' maktab · Jamoa: ' + t.team_size + '+' + t.reserve_size + '</div>' +
             '</div>' +
             '<span style="font-size:11px;padding:4px 10px;border-radius:999px;background:rgba(91,140,255,0.12);color:var(--accent);font-weight:600;">' + (statusLabels[t.status] || t.status) + '</span>' +
+            '<div style="display:flex;gap:6px;">' +
+              '<button class="btn btn-ghost btn-sm" onclick="openEditTournament(' + t.id + ')" title="Tahrirlash"><i data-lucide="pencil" class="ico-sm"></i></button>' +
+              '<button class="btn btn-ghost btn-sm" onclick="confirmDeleteTournament(' + t.id + ', \'' + esc(t.name).replace(/'/g, "\\'") + '\')" title="O\'chirish" style="color:#f87171;"><i data-lucide="trash-2" class="ico-sm"></i></button>' +
+            '</div>' +
           '</div>';
         }).join("");
         if (window.lucide) lucide.createIcons();
       } catch (e) {
         box.innerHTML = '<div style="padding:20px;text-align:center;color:#f87171;">Yuklab bo\'lmadi</div>';
       }
+    }
+
+    // ===== TURNIR TAHRIRLASH =====
+    async function openEditTournament(id) {
+      try {
+        var r = await apiGet("/admin/tournaments/" + id);
+        var d = await r.json();
+        if (!d.tournament) return;
+        var t = d.tournament;
+        document.getElementById("teId").value = t.id;
+        document.getElementById("teName").value = t.name || "";
+        document.getElementById("teRegion").value = t.region || "";
+        document.getElementById("teDistrict").value = t.scope_value || "";
+        document.getElementById("teTeamSize").value = t.team_size;
+        document.getElementById("teReserve").value = t.reserve_size;
+        document.getElementById("teQpm").value = t.questions_per_match;
+        document.getElementById("teSpm").value = Math.round((t.seconds_per_match || 300) / 60);
+
+        // Setka tuzilganmi? Xavfli maydonlarni bloklaymiz
+        var locked = (t.status !== "registration" && t.status !== "draft");
+        document.getElementById("teLockNote").style.display = locked ? "block" : "none";
+        ["teRegion", "teDistrict", "teTeamSize", "teReserve"].forEach(function (fid) {
+          document.getElementById(fid).disabled = locked;
+        });
+
+        var msg = document.getElementById("teMsg");
+        msg.style.display = "none";
+        document.getElementById("tournEditModal").classList.add("show");
+        if (window.lucide) lucide.createIcons();
+      } catch (e) {}
+    }
+
+    function closeEditTournament() {
+      document.getElementById("tournEditModal").classList.remove("show");
+    }
+
+    async function saveEditTournament() {
+      var id = document.getElementById("teId").value;
+      var btn = document.getElementById("teSaveBtn");
+      var body = {
+        name: document.getElementById("teName").value.trim(),
+        region: document.getElementById("teRegion").value.trim(),
+        district: document.getElementById("teDistrict").value.trim(),
+        team_size: document.getElementById("teTeamSize").value,
+        reserve_size: document.getElementById("teReserve").value,
+        questions_per_match: document.getElementById("teQpm").value,
+        seconds_per_match: (parseInt(document.getElementById("teSpm").value) || 5) * 60,
+      };
+      btn.disabled = true;
+      try {
+        var r = await apiPost("/admin/tournaments/" + id + "/edit", body);
+        var d = await r.json();
+        var msg = document.getElementById("teMsg");
+        if (d.success) {
+          msg.textContent = "✓ Saqlandi";
+          msg.className = "message success";
+          msg.style.display = "block";
+          loadTournList();
+          setTimeout(closeEditTournament, 800);
+        } else {
+          msg.textContent = d.error || "Xato";
+          msg.className = "message error";
+          msg.style.display = "block";
+        }
+      } catch (e) {
+        var msg2 = document.getElementById("teMsg");
+        msg2.textContent = "Server xatosi";
+        msg2.className = "message error";
+        msg2.style.display = "block";
+      }
+      btn.disabled = false;
+    }
+
+    // ===== TURNIR O'CHIRISH =====
+    function confirmDeleteTournament(id, name) {
+      showConfirm({
+        title: "Turnirni o'chirish",
+        text: '"' + name + '" turnirini o\'chirasizmi? Unga bog\'liq barcha jamoalar va matchlar ham o\'chadi. Bu amalni qaytarib bo\'lmaydi.',
+        btnText: "O'chirish",
+        danger: true,
+        onConfirm: async function () {
+          try {
+            var r = await apiPost("/admin/tournaments/" + id + "/delete", {});
+            var d = await r.json();
+            if (d.success) loadTournList();
+          } catch (e) {}
+        },
+      });
+    }
+
+    // ===== TURNIR TAHRIRLASH =====
+    async function openEditTournament(id) {
+      try {
+        var r = await apiGet("/admin/tournaments/" + id);
+        var d = await r.json();
+        if (!d.tournament) return;
+        var t = d.tournament;
+        document.getElementById("teId").value = t.id;
+        document.getElementById("teName").value = t.name || "";
+        document.getElementById("teRegion").value = t.region || "";
+        document.getElementById("teDistrict").value = t.scope_value || "";
+        document.getElementById("teTeamSize").value = t.team_size;
+        document.getElementById("teReserve").value = t.reserve_size;
+        document.getElementById("teQpm").value = t.questions_per_match;
+        document.getElementById("teSpm").value = Math.round((t.seconds_per_match || 300) / 60);
+
+        // Setka tuzilganmi? Xavfli maydonlarni bloklaymiz
+        var locked = (t.status !== "registration" && t.status !== "draft");
+        document.getElementById("teLockNote").style.display = locked ? "block" : "none";
+        ["teRegion", "teDistrict", "teTeamSize", "teReserve"].forEach(function (fid) {
+          document.getElementById(fid).disabled = locked;
+        });
+
+        var msg = document.getElementById("teMsg");
+        msg.style.display = "none";
+        document.getElementById("tournEditModal").classList.add("show");
+        if (window.lucide) lucide.createIcons();
+      } catch (e) {}
+    }
+
+    function closeEditTournament() {
+      document.getElementById("tournEditModal").classList.remove("show");
+    }
+
+    async function saveEditTournament() {
+      var id = document.getElementById("teId").value;
+      var btn = document.getElementById("teSaveBtn");
+      var body = {
+        name: document.getElementById("teName").value.trim(),
+        region: document.getElementById("teRegion").value.trim(),
+        district: document.getElementById("teDistrict").value.trim(),
+        team_size: document.getElementById("teTeamSize").value,
+        reserve_size: document.getElementById("teReserve").value,
+        questions_per_match: document.getElementById("teQpm").value,
+        seconds_per_match: (parseInt(document.getElementById("teSpm").value) || 5) * 60,
+      };
+      btn.disabled = true;
+      try {
+        var r = await apiPost("/admin/tournaments/" + id + "/edit", body);
+        var d = await r.json();
+        var msg = document.getElementById("teMsg");
+        if (d.success) {
+          msg.textContent = "✓ Saqlandi";
+          msg.className = "message success";
+          msg.style.display = "block";
+          loadTournList();
+          setTimeout(closeEditTournament, 800);
+        } else {
+          msg.textContent = d.error || "Xato";
+          msg.className = "message error";
+          msg.style.display = "block";
+        }
+      } catch (e) {
+        var msg2 = document.getElementById("teMsg");
+        msg2.textContent = "Server xatosi";
+        msg2.className = "message error";
+        msg2.style.display = "block";
+      }
+      btn.disabled = false;
+    }
+
+    // ===== TURNIR O'CHIRISH =====
+    function confirmDeleteTournament(id, name) {
+      showConfirm({
+        title: "Turnirni o'chirish",
+        message: '"' + name + '" turnirini o\'chirasizmi? Unga bog\'liq barcha jamoalar va matchlar ham o\'chadi. Bu amalni qaytarib bo\'lmaydi.',
+        confirmText: "O'chirish",
+        danger: true,
+        onConfirm: async function () {
+          try {
+            var r = await apiPost("/admin/tournaments/" + id + "/delete", {});
+            var d = await r.json();
+            if (d.success) loadTournList();
+          } catch (e) {}
+        },
+      });
     }
 
     function switchView(view) {
