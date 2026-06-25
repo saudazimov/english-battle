@@ -559,6 +559,7 @@
       <div class="nav-label">Boshqaruv</div>
       <div class="nav-item" id="nav-users" onclick="switchView('users')"><i data-lucide="users" class="ico"></i> Foydalanuvchilar</div>
       <div class="nav-item" id="nav-schools" onclick="switchView('schools')"><i data-lucide="school" class="ico"></i> Maktablar</div>
+      <div class="nav-item" id="nav-tournaments" onclick="switchView('tournaments')"><i data-lucide="trophy" class="ico"></i> Turnirlar <span class="tag">YANGI</span></div>
       <div class="nav-item" id="nav-reports" onclick="switchView('reports')"><i data-lucide="bar-chart-3" class="ico"></i> Hisobotlar</div>
       <div class="nav-item" id="nav-moderation" onclick="switchView('moderation')"><i data-lucide="shield-alert" class="ico"></i> Moderatsiya <span class="flag-badge" id="flagBadge" style="display:none;"></span></div>
       <div class="nav-label">Tizim</div>
@@ -809,6 +810,59 @@
             <div class="card">
               <div class="card-head"><span class="ch-ic"><i data-lucide="map-pin" class="ico-sm"></i></span> Eng faol viloyatlar</div>
               <div id="ovRegions"><div class="empty-sm">Yuklanmoqda...</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== TURNIRLAR (School Cup) ===== -->
+        <div id="view-tournaments" style="display:none;">
+          <div class="card" style="margin-bottom:18px;">
+            <div class="card-head"><span class="ch-ic"><i data-lucide="plus" class="ico-sm"></i></span> Yangi turnir yaratish (Tuman bosqichi)</div>
+            <div style="padding:18px 20px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                <div>
+                  <label>Turnir nomi</label>
+                  <input type="text" id="tName" placeholder="Masalan: Chust Maktablar Kubogi">
+                </div>
+                <div>
+                  <label>Jamoa hajmi (asosiy)</label>
+                  <input type="number" id="tTeamSize" value="5" min="1" max="10">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                <div>
+                  <label>Viloyat</label>
+                  <select id="tRegion" onchange="onTournRegionChange()"><option value="">Tanlang...</option></select>
+                </div>
+                <div>
+                  <label>Tuman</label>
+                  <select id="tDistrict" onchange="onTournDistrictChange()"><option value="">Avval viloyat tanlang</option></select>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
+                <div>
+                  <label>Zaxira o'yinchilar</label>
+                  <input type="number" id="tReserve" value="2" min="0" max="5">
+                </div>
+                <div>
+                  <label>Har matchda savol</label>
+                  <input type="number" id="tQpm" value="20" min="5" max="50">
+                </div>
+                <div>
+                  <label>Match vaqti (min)</label>
+                  <input type="number" id="tSpm" value="5" min="1" max="20">
+                </div>
+              </div>
+              <div id="tSchoolsPreview" style="margin-bottom:14px;font-size:13px;color:var(--text-dim);"></div>
+              <div id="tCreateMsg" class="message" style="display:none;margin-bottom:12px;"></div>
+              <button class="btn" id="tCreateBtn" onclick="createTournament()"><i data-lucide="trophy" class="ico-sm"></i> Turnir yaratish</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span class="ch-ic"><i data-lucide="list" class="ico-sm"></i></span> Mavjud turnirlar</div>
+            <div style="padding:8px 20px 20px;">
+              <div id="tournList"><div class="loading-row">Yuklanmoqda...</div></div>
             </div>
           </div>
         </div>
@@ -1418,10 +1472,123 @@
 
     // ===== VIEW ALMASHTIRISH (Question Bank ↔ Audit Logs ↔ ...) =====
     var currentView = "questions";
+    // ===== TURNIRLAR (School Cup) =====
+    var tournRegions = {};
+
+    async function loadTournaments() {
+      // Viloyat ro'yxatini bir marta yuklaymiz
+      if (Object.keys(tournRegions).length === 0) {
+        try {
+          var rr = await apiGet("/admin/tournaments/regions-list");
+          var rd = await rr.json();
+          tournRegions = rd.regions || {};
+          var sel = document.getElementById("tRegion");
+          sel.innerHTML = '<option value="">Tanlang...</option>' +
+            Object.keys(tournRegions).map(function (r) { return '<option value="' + r + '">' + r + '</option>'; }).join("");
+        } catch (e) {}
+      }
+      loadTournList();
+    }
+
+    function onTournRegionChange() {
+      var region = document.getElementById("tRegion").value;
+      var distSel = document.getElementById("tDistrict");
+      document.getElementById("tSchoolsPreview").innerHTML = "";
+      if (!region || !tournRegions[region]) {
+        distSel.innerHTML = '<option value="">Avval viloyat tanlang</option>';
+        return;
+      }
+      distSel.innerHTML = '<option value="">Tanlang...</option>' +
+        tournRegions[region].map(function (d) { return '<option value="' + d + '">' + d + '</option>'; }).join("");
+    }
+
+    async function onTournDistrictChange() {
+      var region = document.getElementById("tRegion").value;
+      var district = document.getElementById("tDistrict").value;
+      var box = document.getElementById("tSchoolsPreview");
+      if (!region || !district) { box.innerHTML = ""; return; }
+      box.innerHTML = "Tekshirilmoqda...";
+      try {
+        var r = await apiGet("/admin/tournaments/schools-in-district?region=" + encodeURIComponent(region) + "&district=" + encodeURIComponent(district));
+        var d = await r.json();
+        if (d.school_count === 0) {
+          box.innerHTML = '<span style="color:var(--gold);">⚠ Bu tumanda maktab topilmadi</span>';
+        } else {
+          var list = d.schools.map(function (s) { return s.school + " (" + s.student_count + " o'quvchi)"; }).join(", ");
+          box.innerHTML = '<b style="color:var(--accent);">' + d.school_count + ' ta maktab:</b> ' + list;
+        }
+      } catch (e) { box.innerHTML = '<span style="color:#f87171;">Xato</span>'; }
+    }
+
+    async function createTournament() {
+      var msg = document.getElementById("tCreateMsg");
+      var btn = document.getElementById("tCreateBtn");
+      var body = {
+        name: document.getElementById("tName").value.trim(),
+        region: document.getElementById("tRegion").value,
+        district: document.getElementById("tDistrict").value,
+        team_size: document.getElementById("tTeamSize").value,
+        reserve_size: document.getElementById("tReserve").value,
+        questions_per_match: document.getElementById("tQpm").value,
+        seconds_per_match: (parseInt(document.getElementById("tSpm").value) || 5) * 60,
+      };
+      if (!body.name) { showTournMsg("Turnir nomini kiriting", "error"); return; }
+      if (!body.region || !body.district) { showTournMsg("Viloyat va tuman tanlang", "error"); return; }
+      btn.disabled = true;
+      try {
+        var r = await apiPost("/admin/tournaments/create", body);
+        var d = await r.json();
+        if (d.success) {
+          showTournMsg("✓ Turnir yaratildi! (" + d.eligible_schools + " ta maktab ishtirok eta oladi)", "success");
+          document.getElementById("tName").value = "";
+          loadTournList();
+        } else {
+          showTournMsg(d.error || "Xato", "error");
+        }
+      } catch (e) {
+        showTournMsg("Server xatosi", "error");
+      }
+      btn.disabled = false;
+    }
+
+    function showTournMsg(text, type) {
+      var msg = document.getElementById("tCreateMsg");
+      msg.textContent = text;
+      msg.className = "message " + type;
+      msg.style.display = "block";
+    }
+
+    async function loadTournList() {
+      var box = document.getElementById("tournList");
+      try {
+        var r = await apiGet("/admin/tournaments/list");
+        var d = await r.json();
+        var list = d.tournaments || [];
+        if (list.length === 0) {
+          box.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-faint);">Hali turnir yaratilmagan</div>';
+          return;
+        }
+        var statusLabels = { draft: "Qoralama", registration: "Ro'yxat", bracket: "Setka", live: "Jonli", finished: "Tugagan" };
+        box.innerHTML = list.map(function (t) {
+          return '<div style="display:flex;align-items:center;gap:14px;padding:14px;border-bottom:1px solid var(--border);">' +
+            '<div style="width:40px;height:40px;border-radius:10px;background:rgba(251,191,36,0.12);display:grid;place-items:center;"><i data-lucide="trophy" style="width:20px;height:20px;color:var(--gold);"></i></div>' +
+            '<div style="flex:1;">' +
+              '<div style="font-weight:700;font-size:14px;">' + esc(t.name) + '</div>' +
+              '<div style="font-size:12px;color:var(--text-dim);margin-top:2px;">' + esc(t.scope_value || "") + (t.region ? ", " + esc(t.region) : "") + ' · ' + (t.school_count || 0) + ' maktab · Jamoa: ' + t.team_size + '+' + t.reserve_size + '</div>' +
+            '</div>' +
+            '<span style="font-size:11px;padding:4px 10px;border-radius:999px;background:rgba(91,140,255,0.12);color:var(--accent);font-weight:600;">' + (statusLabels[t.status] || t.status) + '</span>' +
+          '</div>';
+        }).join("");
+        if (window.lucide) lucide.createIcons();
+      } catch (e) {
+        box.innerHTML = '<div style="padding:20px;text-align:center;color:#f87171;">Yuklab bo\'lmadi</div>';
+      }
+    }
+
     function switchView(view) {
       currentView = view;
       // Barcha view'larni yashiramiz
-      var views = ["questions", "audit", "overview", "users", "schools", "settings", "moderation", "reports"];
+      var views = ["questions", "audit", "overview", "users", "schools", "settings", "moderation", "reports", "tournaments"];
       views.forEach(function (v) {
         var el = document.getElementById("view-" + v);
         if (el) el.style.display = (v === view) ? "block" : "none";
@@ -1436,6 +1603,7 @@
       if (view === "settings") loadSettings();
       if (view === "moderation") loadFlags(1);
       if (view === "reports") loadReports();
+      if (view === "tournaments") loadTournaments();
     }
 
     // ===== AUDIT LOGS =====

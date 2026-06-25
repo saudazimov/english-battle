@@ -191,3 +191,94 @@ CREATE TABLE IF NOT EXISTS class_students (
 CREATE INDEX IF NOT EXISTS idx_class_students_class_id ON class_students(class_id);
 -- O'quvchi qaysi sinflarda ekanini tez topish uchun indeks
 CREATE INDEX IF NOT EXISTS idx_class_students_student_id ON class_students(student_id);
+
+-- ============================================================
+-- SCHOOL CUP — TURNIR TIZIMI (Maktablar Kubogi)
+-- 3 daraja: Tuman -> Viloyat -> Respublika
+-- ============================================================
+
+-- 1. Turnirlar — har bir turnir bitta darajada, bitta hududda
+CREATE TABLE IF NOT EXISTS tournaments (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(150) NOT NULL,
+  level VARCHAR(20) NOT NULL DEFAULT 'district',   -- district | region | country
+  scope_value VARCHAR(100),                        -- qaysi tuman/viloyat nomi (country uchun NULL)
+  region VARCHAR(100),                             -- kontekst uchun (tuman turniri qaysi viloyatda)
+  parent_tournament_id INTEGER REFERENCES tournaments(id), -- promotion zanjiri (NULL bo'lishi mumkin)
+  status VARCHAR(20) NOT NULL DEFAULT 'draft',     -- draft | registration | bracket | live | finished
+  team_size INTEGER NOT NULL DEFAULT 5,            -- asosiy a'zo soni
+  reserve_size INTEGER NOT NULL DEFAULT 2,         -- zaxira a'zo soni
+  bracket_size INTEGER,                            -- 4 | 8 | 16 (setka hajmi, generatsiyada to'ladi)
+  questions_per_match INTEGER NOT NULL DEFAULT 20, -- har matchda savol soni
+  seconds_per_match INTEGER NOT NULL DEFAULT 300,  -- match vaqti (sek)
+  registration_deadline TIMESTAMP,                 -- jamoa tuzish muddati
+  created_by INTEGER REFERENCES users(id),
+  starts_at TIMESTAMP,                             -- birinchi match vaqti
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 2. Turnirda qatnashuvchi maktablar
+CREATE TABLE IF NOT EXISTS tournament_schools (
+  id SERIAL PRIMARY KEY,
+  tournament_id INTEGER NOT NULL REFERENCES tournaments(id),
+  school VARCHAR(200) NOT NULL,
+  region VARCHAR(100),
+  district VARCHAR(100),
+  seed INTEGER,                                    -- setkadagi joy (1 = eng kuchli)
+  avg_rating INTEGER DEFAULT 1000,                 -- seeding uchun maktab o'rtacha reytingi
+  placement INTEGER,                               -- yakuniy o'rin (1 = chempion)
+  eliminated BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (tournament_id, school)
+);
+
+-- 3. Maktab jamoasi (qotgan tarkib — school_admin tuzadi)
+CREATE TABLE IF NOT EXISTS tournament_team_members (
+  id SERIAL PRIMARY KEY,
+  tournament_id INTEGER NOT NULL REFERENCES tournaments(id),
+  school VARCHAR(200) NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  member_role VARCHAR(10) NOT NULL DEFAULT 'starter', -- starter | reserve
+  slot_order INTEGER,                                  -- 1..N tartib
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (tournament_id, user_id)
+);
+
+-- 4. Setkadagi matchlar
+CREATE TABLE IF NOT EXISTS tournament_matches (
+  id SERIAL PRIMARY KEY,
+  tournament_id INTEGER NOT NULL REFERENCES tournaments(id),
+  round INTEGER NOT NULL,                          -- 1 = birinchi raund, oxirgi = final
+  match_no INTEGER NOT NULL,                       -- raund ichidagi tartib
+  school_a VARCHAR(200),
+  school_b VARCHAR(200),
+  score_a INTEGER DEFAULT 0,
+  score_b INTEGER DEFAULT 0,
+  winner_school VARCHAR(200),
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',   -- pending | checkin | live | done
+  scheduled_at TIMESTAMP,
+  started_at TIMESTAMP,
+  finished_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 5. Matchda kim o'ynaydi va qancha ball to'pladi
+CREATE TABLE IF NOT EXISTS tournament_match_players (
+  id SERIAL PRIMARY KEY,
+  match_id INTEGER NOT NULL REFERENCES tournament_matches(id),
+  user_id INTEGER REFERENCES users(id),            -- bot bo'lsa NULL
+  school VARCHAR(200) NOT NULL,
+  is_bot BOOLEAN DEFAULT false,
+  checked_in BOOLEAN DEFAULT false,
+  score INTEGER DEFAULT 0,
+  finished BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Indekslar (tez qidirish uchun)
+CREATE INDEX IF NOT EXISTS idx_tournaments_status ON tournaments(status);
+CREATE INDEX IF NOT EXISTS idx_tournaments_level_scope ON tournaments(level, scope_value);
+CREATE INDEX IF NOT EXISTS idx_tour_schools_tid ON tournament_schools(tournament_id);
+CREATE INDEX IF NOT EXISTS idx_tour_team_tid_school ON tournament_team_members(tournament_id, school);
+CREATE INDEX IF NOT EXISTS idx_tour_matches_tid ON tournament_matches(tournament_id);
+CREATE INDEX IF NOT EXISTS idx_tour_match_players_mid ON tournament_match_players(match_id);
