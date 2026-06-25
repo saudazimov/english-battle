@@ -339,6 +339,20 @@
     .fp-rank-rp { font-size: 13px; color: var(--text-dim); text-align: center; margin-top: 8px; }
     .fp-rank-next { font-size: 12px; color: var(--accent); text-align: center; margin-top: 2px; }
 
+    .fp-rank-next { font-size: 12px; color: var(--accent); text-align: center; margin-top: 2px; }
+
+    /* Mutual friends */
+    .fp-mutual-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+    .fp-mutual-item { display: flex; align-items: center; gap: 10px; padding: 7px 9px; border-radius: 10px; cursor: pointer; transition: background 0.15s; }
+    .fp-mutual-item:hover { background: var(--panel); }
+    .fp-mutual-ava { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; position: relative; overflow: hidden; }
+    .fp-mutual-ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .fp-mutual-ava .fp-mutual-init { width: 100%; height: 100%; display: grid; place-items: center; font-weight: 700; font-size: 14px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
+    .fp-mutual-name { font-size: 14px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fp-mutual-rp { font-size: 12px; color: var(--text-dim); }
+    .fp-mutual-more { text-align: center; font-size: 13px; color: var(--accent); padding: 8px; cursor: pointer; }
+    .fp-mutual-empty { color: var(--text-faint); font-size: 13px; text-align: center; padding: 16px; }
+
     /* CEFR */
     .fp-cefr-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
     .fp-cefr-top b { color: var(--accent); }
@@ -900,6 +914,12 @@
       }
     }
 
+    function mutualAvatar(firstName, pic) {
+      if (pic) return '<img src="' + pic + '" alt="">';
+      const init = (firstName || "?").charAt(0).toUpperCase();
+      return '<div class="fp-mutual-init">' + init + '</div>';
+    }
+
     function renderFpSide(data) {
       const u = data.user || {};
       const rating = u.rating || 1000;
@@ -943,11 +963,32 @@
         '<div class="fp-rank-bar"><div class="fp-cefr-fill" style="width:' + cProg + '%;"></div></div>' +
         '<div class="fp-cefr-msg">' + cProg + '% — Zo\'r ketyapsiz!</div>';
 
-      // Mutual Friends - tez kunda
+      // Mutual Friends — umumiy do'stlar
+      const mutual = data.mutual_friends || [];
+      const mutualCount = data.mutual_count || 0;
+      let mutualHtml = '<div class="fp-block-title"><i data-lucide="users"></i> Umumiy do\'stlar';
+      if (mutualCount > 0) mutualHtml += ' <span style="margin-left:auto;color:var(--text-dim);font-size:13px;">' + mutualCount + '</span>';
+      mutualHtml += '</div>';
+      if (mutual.length === 0) {
+        mutualHtml += '<div class="fp-mutual-empty">Umumiy do\'stlar yo\'q</div>';
+      } else {
+        mutualHtml += '<div class="fp-mutual-list">';
+        mutual.forEach(m => {
+          const mName = ((m.first_name || "") + " " + (m.last_name || "")).trim();
+          mutualHtml +=
+            '<div class="fp-mutual-item" onclick="viewProfile(' + m.id + ')">' +
+              '<div class="fp-mutual-ava">' + mutualAvatar(m.first_name, m.profile_picture) + '</div>' +
+              '<div class="fp-mutual-name">' + mName + '</div>' +
+              '<div class="fp-mutual-rp">' + (m.rating || 1000) + '</div>' +
+            '</div>';
+        });
+        mutualHtml += '</div>';
+        if (mutualCount > mutual.length) {
+          mutualHtml += '<div class="fp-mutual-more">+' + (mutualCount - mutual.length) + ' ko\'proq</div>';
+        }
+      }
       document.getElementById("fpMutual").className = "fp-block";
-      document.getElementById("fpMutual").innerHTML =
-        '<div class="fp-block-title"><i data-lucide="users"></i> Mutual Friends <span class="soon-badge" style="margin-left:auto;">Tez kunda</span></div>' +
-        '<div style="color:var(--text-faint);font-size:13px;text-align:center;padding:16px;">Umumiy do\'stlar tez kunda shu yerda ko\'rinadi.</div>';
+      document.getElementById("fpMutual").innerHTML = mutualHtml;
 
       lucide.createIcons();
     }

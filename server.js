@@ -1942,9 +1942,9 @@ async function finishTeamBattle(roomId) {
         var enemyLabel = (battle.teamMode === "squad" ? "Squad" : "Duo") + " jamoa";
         await pool.query(
           `INSERT INTO battle_history
-           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [me.userId, enemyLabel, null, myTeamScore, enemyTeamScore, outcome, xpEarned, ratingDelta, battle.level || "A1"]
+           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level, mode)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          [me.userId, enemyLabel, null, myTeamScore, enemyTeamScore, outcome, xpEarned, ratingDelta, battle.level || "A1", "school"]
         );
         await updateQuestProgress(me.userId, { won: outcome === "win", correctAnswers: me.score, xpEarned: xpEarned });
 
@@ -2074,9 +2074,9 @@ async function finishBattle(roomId) {
         // Jang tarixiga yozish
         await pool.query(
           `INSERT INTO battle_history
-           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [me.userId, opp.name, opp.userId || null, me.score, opp.score, outcome, xpEarned, ratingDelta, battle.level || "A1"]
+           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level, mode)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          [me.userId, opp.name, opp.userId || null, me.score, opp.score, outcome, xpEarned, ratingDelta, battle.level || "A1", (battle.mode === "casual" ? "casual" : "ranked")]
         );
         // Topshiriqlar progressini yangilash
         await updateQuestProgress(me.userId, {
@@ -3605,7 +3605,7 @@ app.get("/history/:userId", authMiddleware, async (req, res) => {
     const result = await pool.query(
       `SELECT bh.opponent_name, bh.my_score, bh.opponent_score, bh.outcome,
               bh.xp_earned, bh.rating_change, bh.played_at, bh.cefr_level,
-              bh.opponent_id,
+              bh.opponent_id, bh.mode,
               opp.profile_picture AS opponent_picture,
               opp.rating AS opponent_rating
        FROM battle_history bh
@@ -3819,9 +3819,39 @@ app.get("/profile/:userId", authMiddleware, async (req, res) => {
       } catch (e) {}
     }
 
+    // Umumiy do'stlar (mutual friends) — viewer va ko'rilayotgan profil orasidagi
+    let mutualFriends = [];
+    let mutualCount = 0;
+    if (friendStatus !== "self") {
+      try {
+        const mutualQ = await pool.query(
+          `WITH viewer_friends AS (
+             SELECT CASE WHEN requester_id = $1 THEN receiver_id ELSE requester_id END AS fid
+             FROM friendships
+             WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'
+           ),
+           target_friends AS (
+             SELECT CASE WHEN requester_id = $2 THEN receiver_id ELSE requester_id END AS fid
+             FROM friendships
+             WHERE (requester_id = $2 OR receiver_id = $2) AND status = 'accepted'
+           )
+           SELECT u.id, u.first_name, u.last_name, u.profile_picture, u.rating
+           FROM viewer_friends vf
+           JOIN target_friends tf ON vf.fid = tf.fid
+           JOIN users u ON u.id = vf.fid
+           ORDER BY u.rating DESC`,
+          [viewerId, userId]
+        );
+        mutualCount = mutualQ.rows.length;
+        mutualFriends = mutualQ.rows.slice(0, 8); // birinchi 8 tasi
+      } catch (e) {}
+    }
+
     res.json({
       user: user,
       friendStatus: friendStatus,
+      mutual_friends: mutualFriends,
+      mutual_count: mutualCount,
       stats: {
         total_battles: totalBattles,
         wins: wins,

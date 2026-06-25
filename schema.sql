@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS battle_history (
   xp_earned INTEGER DEFAULT 0,
   rating_change INTEGER DEFAULT 0,
   cefr_level VARCHAR(5),
+  mode VARCHAR(20) DEFAULT 'ranked',
   played_at TIMESTAMP DEFAULT NOW()
 );
 

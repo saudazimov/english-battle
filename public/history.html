@@ -121,17 +121,16 @@
 
       <div class="card filter-card">
         <div class="mode-tabs">
-          <div class="mtab active"><i data-lucide="list"></i> Barchasi</div>
-          <div class="mtab soon"><i data-lucide="swords"></i> 1v1 Ranked</div>
-          <div class="mtab soon"><i data-lucide="gamepad-2"></i> Casual</div>
-          <div class="mtab soon"><i data-lucide="graduation-cap"></i> Practice</div>
-          <div class="mtab soon"><i data-lucide="building-2"></i> School Battle</div>
+          <div class="mtab active" data-mode="all" onclick="switchMode('all')"><i data-lucide="list"></i> Barchasi</div>
+          <div class="mtab" data-mode="ranked" onclick="switchMode('ranked')"><i data-lucide="swords"></i> 1v1 Ranked</div>
+          <div class="mtab" data-mode="casual" onclick="switchMode('casual')"><i data-lucide="gamepad-2"></i> Casual</div>
+          <div class="mtab" data-mode="school" onclick="switchMode('school')"><i data-lucide="building-2"></i> School Battle</div>
         </div>
         <div class="filter-row">
-          <div class="ttab active"><i data-lucide="calendar"></i> Barcha vaqt</div>
-          <div class="ttab soon"><i data-lucide="sun"></i> Bugun</div>
-          <div class="ttab soon"><i data-lucide="calendar-days"></i> Shu hafta</div>
-          <div class="ttab soon"><i data-lucide="calendar-range"></i> Shu oy</div>
+          <div class="ttab active" data-period="all" onclick="switchPeriod('all')"><i data-lucide="calendar"></i> Barcha vaqt</div>
+          <div class="ttab" data-period="today" onclick="switchPeriod('today')"><i data-lucide="sun"></i> Bugun</div>
+          <div class="ttab" data-period="week" onclick="switchPeriod('week')"><i data-lucide="calendar-days"></i> Shu hafta</div>
+          <div class="ttab" data-period="month" onclick="switchPeriod('month')"><i data-lucide="calendar-range"></i> Shu oy</div>
           <button class="btn btn-ghost export-btn"><i data-lucide="download" style="width:15px;height:15px;"></i> Eksport</button>
         </div>
       </div>
@@ -208,6 +207,9 @@
 
     let allHistory = [];
 
+    let currentMode = "all";
+    let currentPeriod = "all";
+
     async function loadHistory() {
       try {
         const res = await authFetch("/history/" + user.id);
@@ -219,6 +221,44 @@
       } catch (err) {
         document.getElementById("histList").innerHTML = '<div class="hist-empty"><div class="note-txt">Yuklab bo\'lmadi</div></div>';
       }
+    }
+
+    // Mode + time filtriga mos yozuvlarni qaytaradi
+    function getFilteredHistory() {
+      const now = new Date();
+      return allHistory.filter(h => {
+        // Mode filtri
+        if (currentMode !== "all") {
+          const m = h.mode || "ranked";
+          if (m !== currentMode) return false;
+        }
+        // Time filtri
+        if (currentPeriod !== "all") {
+          const d = new Date(h.played_at);
+          if (currentPeriod === "today") {
+            if (d.toDateString() !== now.toDateString()) return false;
+          } else if (currentPeriod === "week") {
+            const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
+            if (d < weekAgo) return false;
+          } else if (currentPeriod === "month") {
+            const monthAgo = new Date(now); monthAgo.setMonth(now.getMonth() - 1);
+            if (d < monthAgo) return false;
+          }
+        }
+        return true;
+      });
+    }
+
+    function switchMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll(".mtab").forEach(t => t.classList.toggle("active", t.getAttribute("data-mode") === mode));
+      renderList();
+    }
+
+    function switchPeriod(period) {
+      currentPeriod = period;
+      document.querySelectorAll(".ttab").forEach(t => t.classList.toggle("active", t.getAttribute("data-period") === period));
+      renderList();
     }
 
     // refreshUser() bazadan yangi ma'lumot olganda — panelni qayta chizamiz
@@ -234,19 +274,21 @@
 
     function renderList() {
       const list = document.getElementById("histList");
-      if (allHistory.length === 0) {
+      const filtered = getFilteredHistory();
+      if (filtered.length === 0) {
+        const isFiltered = (currentMode !== "all" || currentPeriod !== "all");
         list.innerHTML =
           '<div class="hist-empty">' +
             '<div class="hist-empty-ic"><i data-lucide="swords"></i></div>' +
-            '<div class="hist-empty-txt">Hali jang tarixi yo\'q</div>' +
-            '<div class="hist-empty-sub">Birinchi jangingizni boshlang — natijalar shu yerda ko\'rinadi.</div>' +
-            '<button class="btn btn-primary" onclick="window.location.href=\'/lobby.html\'"><i data-lucide="swords" style="width:16px;height:16px;"></i> Jang boshlash</button>' +
+            '<div class="hist-empty-txt">' + (isFiltered ? "Bu filtrga mos jang yo'q" : "Hali jang tarixi yo'q") + '</div>' +
+            '<div class="hist-empty-sub">' + (isFiltered ? "Boshqa filtrni tanlab ko'ring." : "Birinchi jangingizni boshlang — natijalar shu yerda ko'rinadi.") + '</div>' +
+            (isFiltered ? "" : '<button class="btn btn-primary" onclick="window.location.href=\'/lobby.html\'"><i data-lucide="swords" style="width:16px;height:16px;"></i> Jang boshlash</button>') +
           '</div>';
         lucide.createIcons();
         return;
       }
       list.innerHTML = "";
-      allHistory.forEach(h => {
+      filtered.forEach(h => {
         let res = "draw", icon = "minus", resText = "Durang";
         if (h.outcome === "win") { res = "win"; icon = "trophy"; resText = "G'alaba"; }
         else if (h.outcome === "lose") { res = "lose"; icon = "x"; resText = "Mag'lub"; }
