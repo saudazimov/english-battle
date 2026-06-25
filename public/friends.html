@@ -1068,13 +1068,14 @@
 
     // ===== DO'STLAR RO'YXATI =====
     function leagueOf(rating) {
-      if (rating >= 2000) return { name: "Grandmaster", medal: "👑" };
-      if (rating >= 1800) return { name: "Master", medal: "🔱" };
-      if (rating >= 1600) return { name: "Diamond", medal: "💠" };
-      if (rating >= 1400) return { name: "Platinum", medal: "💎" };
-      if (rating >= 1200) return { name: "Gold", medal: "🥇" };
-      if (rating >= 1000) return { name: "Silver", medal: "🥈" };
-      return { name: "Bronze", medal: "🥉" };
+      const ic = (name, color) => '<i data-lucide="' + name + '" style="width:15px;height:15px;color:' + color + ';vertical-align:-3px;"></i>';
+      if (rating >= 2000) return { name: "Grandmaster", medal: "👑", icon: ic("crown", "#fbbf24") };
+      if (rating >= 1800) return { name: "Master", medal: "🔱", icon: ic("crown", "#a855f7") };
+      if (rating >= 1600) return { name: "Diamond", medal: "💠", icon: ic("gem", "#38e1ff") };
+      if (rating >= 1400) return { name: "Platinum", medal: "💎", icon: ic("gem", "#5b8cff") };
+      if (rating >= 1200) return { name: "Gold", medal: "🥇", icon: ic("medal", "#fbbf24") };
+      if (rating >= 1000) return { name: "Silver", medal: "🥈", icon: ic("shield", "#cbd5e1") };
+      return { name: "Bronze", medal: "🥉", icon: ic("shield", "#cd7f32") };
     }
 
     async function loadFriends() {
