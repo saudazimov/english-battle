@@ -6226,7 +6226,7 @@ app.post("/tournament/match/:id/finish", authMiddleware, async (req, res) => {
     if (!me) return res.status(403).json({ error: "Ishtirokchi emassiz" });
 
     await pool.query(
-      "UPDATE tournament_match_players SET finished = true WHERE match_id = $1 AND user_id = $2",
+      "UPDATE tournament_match_players SET finished = true, finished_at = NOW() WHERE match_id = $1 AND user_id = $2",
       [matchId, uid]
     );
 
@@ -6268,7 +6268,32 @@ async function checkMatchCompletion(matchId) {
     let winner = null;
     if (scoreA > scoreB) winner = match.school_a;
     else if (scoreB > scoreA) winner = match.school_b;
-    // Teng bo'lsa winner = null (keyin hal qilamiz — hozircha durang)
+    else {
+      // DURANG — tezroq tugatgan jamoa yutadi (jamoaning oxirgi a'zosi qachon tugatdi)
+      // Har maktab uchun eng oxirgi finished_at ni topamiz (jamoa to'liq tugagan vaqti)
+      const timeQ = await client.query(
+        `SELECT school, MAX(finished_at) AS last_finish
+         FROM tournament_match_players
+         WHERE match_id = $1 AND checked_in = true AND finished = true
+         GROUP BY school`,
+        [matchId]
+      );
+      let timeA = null, timeB = null;
+      timeQ.rows.forEach(r => {
+        if (r.school === match.school_a) timeA = r.last_finish;
+        else if (r.school === match.school_b) timeB = r.last_finish;
+      });
+      if (timeA && timeB) {
+        // Ertaroq tugatgan (kichikroq vaqt) yutadi
+        winner = (new Date(timeA) <= new Date(timeB)) ? match.school_a : match.school_b;
+        console.log(`[Turnir] Match #${matchId} DURANG (${scoreA}-${scoreB}) → tezlik bo'yicha g'olib: ${winner}`);
+      } else if (timeA) {
+        winner = match.school_a;
+      } else if (timeB) {
+        winner = match.school_b;
+      }
+      // Agar ikkalasi ham null bo'lsa (kam ehtimol) — winner null qoladi
+    }
 
     await client.query("BEGIN");
     await client.query(
@@ -6521,6 +6546,27 @@ async function advanceWinner(client, tid, round, matchNo, winnerSchool) {
       "UPDATE tournament_schools SET placement = 1 WHERE tournament_id = $1 AND school = $2",
       [tid, winnerSchool]
     );
+    // Final mag'lubi → 2-o'rin
+    const finalMatch = await client.query(
+      "SELECT school_a, school_b FROM tournament_matches WHERE tournament_id = $1 AND round = $2 AND match_no = $3",
+      [tid, round, matchNo]
+    );
+    if (finalMatch.rows.length > 0) {
+      const fm = finalMatch.rows[0];
+      const runnerUp = (fm.school_a === winnerSchool) ? fm.school_b : fm.school_a;
+      if (runnerUp) {
+        await client.query(
+          "UPDATE tournament_schools SET placement = 2 WHERE tournament_id = $1 AND school = $2",
+          [tid, runnerUp]
+        );
+      }
+    }
+    // Turnir yakunlandi → 'finished' holatiga
+    await client.query(
+      "UPDATE tournaments SET status = 'finished' WHERE id = $1",
+      [tid]
+    );
+    console.log(`[Turnir] Turnir #${tid} YAKUNLANDI — Chempion: ${winnerSchool}`);
   }
 }
 
@@ -6542,6 +6588,8 @@ async function notifyMatchPlayers(matchId, event, payload) {
 
 // Watcher'ni har 30 soniyada ishga tushiramiz
 setInterval(tournamentMatchWatcher, 30000);
+
+
 
 // ⚠️ VAQTINCHALIK TEST ENDPOINT — test tugagach O'CHIRILADI!
 // Test o'quvchi parolini "test123" ga o'rnatadi
