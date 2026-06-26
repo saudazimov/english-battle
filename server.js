@@ -5848,6 +5848,125 @@ async function getMatchPlayer(matchId, userId) {
   return r.rows[0] || null;
 }
 
+// ============================================================
+// SCHOOL CUP — Bosqich 7: O'quvchi turnir markazi
+// ============================================================
+
+// O'quvchining turnirlari (jamoa a'zosi bo'lgan)
+app.get("/student/tournaments", authMiddleware, async (req, res) => {
+  try {
+    const uid = req.user.id;
+
+    // Foydalanuvchi ma'lumoti (maktab)
+    const uq = await pool.query("SELECT school FROM users WHERE id = $1", [uid]);
+    const mySchool = uq.rows[0] ? uq.rows[0].school : null;
+
+    // O'quvchi jamoa a'zosi bo'lgan turnirlar
+    const tq = await pool.query(
+      `SELECT DISTINCT t.id, t.name, t.status, t.level, t.scope_value, t.region,
+              t.bracket_size, t.team_size, t.created_at,
+              tm.member_role, tm.school
+       FROM tournament_team_members tm
+       JOIN tournaments t ON t.id = tm.tournament_id
+       WHERE tm.user_id = $1
+       ORDER BY t.created_at DESC`,
+      [uid]
+    );
+
+    // Har turnir uchun mening keyingi/joriy matchimni topamiz
+    const tournaments = [];
+    for (const t of tq.rows) {
+      // Mening maktabim ishtirok etgan matchlar
+      const mq = await pool.query(
+        `SELECT id, round, match_no, school_a, school_b, score_a, score_b,
+                winner_school, status, scheduled_at
+         FROM tournament_matches
+         WHERE tournament_id = $1
+           AND (school_a = $2 OR school_b = $2)
+         ORDER BY round ASC, match_no ASC`,
+        [t.id, t.school]
+      );
+
+      // Joriy/keyingi match (live > checkin > pending > done tartibida muhimligi)
+      let activeMatch = null;
+      const priority = { live: 4, checkin: 3, pending: 2, done: 1 };
+      mq.rows.forEach(m => {
+        if (!activeMatch || priority[m.status] > priority[activeMatch.status]) {
+          activeMatch = m;
+        }
+      });
+
+      tournaments.push({
+        id: t.id,
+        name: t.name,
+        status: t.status,
+        level: t.level,
+        scope_value: t.scope_value,
+        region: t.region,
+        my_school: t.school,
+        my_role: t.member_role,
+        bracket_size: t.bracket_size,
+        active_match: activeMatch,
+        my_matches: mq.rows,
+      });
+    }
+
+    res.json({ my_school: mySchool, tournaments: tournaments });
+  } catch (err) {
+    console.error("Student tournaments xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// O'quvchi uchun turnir setkasi (school bracket bilan bir xil, lekin user a'zoligi orqali)
+app.get("/student/tournaments/:id/bracket", authMiddleware, async (req, res) => {
+  try {
+    const uid = req.user.id;
+    const tid = req.params.id;
+
+    // O'quvchi shu turnirda a'zomi?
+    const memQ = await pool.query(
+      "SELECT school FROM tournament_team_members WHERE tournament_id = $1 AND user_id = $2 LIMIT 1",
+      [tid, uid]
+    );
+    if (memQ.rows.length === 0) return res.status(403).json({ error: "Siz bu turnir ishtirokchisi emassiz" });
+    const mySchool = memQ.rows[0].school;
+
+    const tr = await pool.query("SELECT * FROM tournaments WHERE id = $1", [tid]);
+    if (tr.rows.length === 0) return res.status(404).json({ error: "Turnir topilmadi" });
+    const t = tr.rows[0];
+
+    const schoolsQ = await pool.query(
+      "SELECT school, seed, avg_rating, eliminated, placement FROM tournament_schools WHERE tournament_id = $1 ORDER BY seed ASC",
+      [tid]
+    );
+    const matchesQ = await pool.query(
+      `SELECT id, round, match_no, school_a, school_b, score_a, score_b,
+              winner_school, status, scheduled_at
+       FROM tournament_matches WHERE tournament_id = $1
+       ORDER BY round ASC, match_no ASC`,
+      [tid]
+    );
+    const rounds = {};
+    matchesQ.rows.forEach(m => {
+      if (!rounds[m.round]) rounds[m.round] = [];
+      m.is_mine = (m.school_a === mySchool || m.school_b === mySchool);
+      rounds[m.round].push(m);
+    });
+
+    res.json({
+      tournament: { id: t.id, name: t.name, status: t.status, bracket_size: t.bracket_size, scope_value: t.scope_value, region: t.region },
+      my_school: mySchool,
+      schools: schoolsQ.rows,
+      rounds: rounds,
+      total_rounds: t.bracket_size ? Math.log2(t.bracket_size) : 0,
+    });
+  } catch (err) {
+    console.error("Student bracket xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // Match check-in holati: a'zolar, kim tayyor, match holati
 app.get("/tournament/match/:id/checkin-state", authMiddleware, async (req, res) => {
   try {

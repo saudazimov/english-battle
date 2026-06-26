@@ -61,6 +61,7 @@ function renderSidebar(activePage) {
     { id: "myclasses", icon: "book-open", label: "Sinflarim", href: "/student-classes.html", ready: true },
     { id: "exam", icon: "graduation-cap", label: "Imtihon", href: "/exam.html", ready: true },
     { id: "ranking", icon: "trophy", label: "Ranking", href: "/leaderboard.html", ready: true },
+    { id: "tournaments", icon: "swords", label: "Turnirlar", href: "/student-tournaments.html", ready: true },
     { id: "friends", icon: "users", label: "Do'stlar", href: "/friends.html", ready: true },
     { id: "history", icon: "scroll-text", label: "Tarix", href: "/history.html", ready: true },
     { id: "progress", icon: "trending-up", label: "Progress", href: "/progress.html", ready: false },
