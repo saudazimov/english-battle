@@ -61,6 +61,40 @@
     .tb-ready-btn.done:hover { transform: none; box-shadow: none; }
     .tb-ready-hint { font-size: 13px; color: var(--text-dim); margin-top: 12px; }
 
+    /* ===== JANG EKRANI ===== */
+    .tb-scoreboard { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; padding: 16px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 16px; position: sticky; top: 10px; z-index: 10; }
+    .tb-sb-team { text-align: center; }
+    .tb-sb-team.mine .tb-sb-name { color: var(--accent); }
+    .tb-sb-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tb-sb-score { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin-top: 4px; }
+    .tb-sb-vs { font-size: 14px; color: var(--text-faint); font-weight: 700; }
+    .tb-sb-timer { text-align: center; }
+    .tb-sb-timer-time { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--gold); }
+    .tb-sb-timer-label { font-size: 10px; color: var(--text-faint); }
+
+    .tb-progress { font-size: 13px; color: var(--text-dim); text-align: center; margin-bottom: 14px; }
+    .tb-qcard { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 26px 24px; margin-bottom: 16px; }
+    .tb-qnum { font-size: 12px; color: var(--text-faint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .tb-qtext { font-size: 20px; font-weight: 600; line-height: 1.4; margin-bottom: 22px; }
+    .tb-options { display: grid; gap: 11px; }
+    .tb-option { display: flex; align-items: center; gap: 12px; padding: 15px 18px; border: 1.5px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.12s; font-size: 15px; }
+    .tb-option:hover { border-color: var(--border-bright); background: var(--panel-2); }
+    .tb-option-letter { width: 28px; height: 28px; border-radius: 7px; background: var(--panel-2); display: grid; place-items: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+    .tb-option.correct { border-color: var(--green); background: rgba(52,211,153,0.12); }
+    .tb-option.correct .tb-option-letter { background: var(--green); color: #fff; }
+    .tb-option.wrong { border-color: #f87171; background: rgba(239,68,68,0.1); }
+    .tb-option.wrong .tb-option-letter { background: #f87171; color: #fff; }
+    .tb-option.disabled { pointer-events: none; opacity: 0.7; }
+
+    .tb-finished-box { text-align: center; padding: 50px 20px; }
+    .tb-finished-ic { width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 18px; display: grid; place-items: center; }
+    .tb-finished-ic.win { background: rgba(52,211,153,0.15); } .tb-finished-ic.win i { color: var(--green); width: 32px; height: 32px; }
+    .tb-finished-ic.lose { background: rgba(239,68,68,0.12); } .tb-finished-ic.lose i { color: #f87171; width: 32px; height: 32px; }
+    .tb-finished-ic.wait { background: rgba(251,191,36,0.12); } .tb-finished-ic.wait i { color: var(--gold); width: 32px; height: 32px; }
+    .tb-finished-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .tb-finished-sub { font-size: 14px; color: var(--text-dim); }
+    .tb-final-score { font-size: 28px; font-weight: 800; margin: 16px 0; }
+
     .tb-loading { text-align: center; padding: 80px 20px; color: var(--text-faint); }
     .tb-error { text-align: center; padding: 60px 20px; color: #f87171; }
     .tb-back { display: inline-flex; align-items: center; gap: 6px; color: var(--text-dim); text-decoration: none; font-size: 14px; margin-bottom: 16px; }
@@ -105,10 +139,29 @@
     socket.on("checkinUpdate", (data) => {
       if (String(data.matchId) === String(matchId)) loadState();
     });
-    // Match live ga o'tdi → jangga (6.4 da to'liq)
+    // Match live ga o'tdi → jang ekraniga
     socket.on("matchLiveStart", (data) => {
+      if (String(data.matchId) === String(matchId)) loadState();
+    });
+    // Real-time jamoa ballari (boshqa o'yinchi javob berdi)
+    socket.on("scoreUpdate", (data) => {
+      if (String(data.matchId) === String(matchId) && battle) {
+        battle.team_scores = data.team_scores;
+        updateScoreboard();
+      }
+    });
+    // Match yakunlandi → natija
+    socket.on("matchFinished", (data) => {
       if (String(data.matchId) === String(matchId)) {
-        loadState(); // hozircha holatni yangilaymiz; 6.4 da jang ekraniga o'tkazamiz
+        if (battle) {
+          battle.status = "done";
+          battle.match.winner_school = data.winner;
+          battle.team_scores[data.school_a] = data.score_a;
+          battle.team_scores[data.school_b] = data.score_b;
+          renderResult();
+        } else {
+          loadState();
+        }
       }
     });
 
@@ -124,10 +177,230 @@
           return;
         }
         state = await r.json();
-        render();
+
+        // Jang boshlangan (live) yoki tugagan (done) bo'lsa — jang ekranini ochamiz
+        if (state.match.status === "live" || state.match.status === "done") {
+          loadBattle();
+        } else {
+          render();
+        }
       } catch (e) {
         document.getElementById("tbContent").innerHTML = '<div class="tb-error">Xatolik yuz berdi</div>';
       }
+    }
+
+    // ===== JANG EKRANI =====
+    var battle = null;        // battle-state javobi
+    var qIndex = 0;           // joriy savol indeksi
+    var answeredMap = {};     // {questionId: true} — javob berilgan savollar
+    var battleTimer = null;
+
+    async function loadBattle() {
+      try {
+        var r = await authFetch("/tournament/match/" + matchId + "/battle-state");
+        var d = await r.json();
+        if (d.status === "live" || d.status === "done") {
+          battle = d;
+          renderBattle();
+        } else {
+          render(); // hali live emas
+        }
+      } catch (e) {
+        document.getElementById("tbContent").innerHTML = '<div class="tb-error">Jang yuklanmadi</div>';
+      }
+    }
+
+    function renderBattle() {
+      var m = battle.match;
+      var mySchool = battle.my_school;
+
+      // Match tugagan bo'lsa — natija ekrani
+      if (battle.status === "done") {
+        renderResult();
+        return;
+      }
+
+      // Men tugatdimmi — kutish ekrani
+      if (battle.my_finished) {
+        renderWaiting();
+        return;
+      }
+
+      var scoreA = battle.team_scores[m.school_a] || 0;
+      var scoreB = battle.team_scores[m.school_b] || 0;
+      var total = battle.questions.length;
+
+      // Joriy savolga o'tamiz (javob berilmaganini topamiz)
+      while (qIndex < total && answeredMap[battle.questions[qIndex].id]) qIndex++;
+
+      // Hamma savol tugadi → finish
+      if (qIndex >= total) {
+        finishBattle();
+        return;
+      }
+
+      var q = battle.questions[qIndex];
+
+      var html = '';
+      // Scoreboard
+      html += '<div class="tb-scoreboard">' +
+        '<div class="tb-sb-team' + (m.school_a === mySchool ? " mine" : "") + '"><div class="tb-sb-name">' + esc(m.school_a) + '</div><div class="tb-sb-score">' + scoreA + '</div></div>' +
+        '<div><div class="tb-sb-timer"><div class="tb-sb-timer-time" id="battleTimer">--:--</div><div class="tb-sb-timer-label">qolgan vaqt</div></div></div>' +
+        '<div class="tb-sb-team' + (m.school_b === mySchool ? " mine" : "") + '"><div class="tb-sb-name">' + esc(m.school_b) + '</div><div class="tb-sb-score">' + scoreB + '</div></div>' +
+      '</div>';
+
+      // Progress
+      html += '<div class="tb-progress">Savol ' + (qIndex + 1) + ' / ' + total + '</div>';
+
+      // Savol
+      html += '<div class="tb-qcard">' +
+        '<div class="tb-qnum">Savol ' + (qIndex + 1) + '</div>' +
+        '<div class="tb-qtext">' + esc(q.question_text) + '</div>' +
+        '<div class="tb-options" id="optionsBox">';
+      ['a', 'b', 'c', 'd'].forEach(function (letter) {
+        var optText = q['option_' + letter];
+        if (optText == null || optText === '') return;
+        html += '<div class="tb-option" data-letter="' + letter + '" onclick="answerQuestion(\'' + q.id + '\', \'' + letter + '\')">' +
+          '<div class="tb-option-letter">' + letter.toUpperCase() + '</div>' +
+          '<div>' + esc(optText) + '</div>' +
+        '</div>';
+      });
+      html += '</div></div>';
+
+      document.getElementById("tbContent").innerHTML = html;
+      lucide.createIcons();
+
+      // Timer (started_at + seconds_per_match)
+      startBattleTimer();
+    }
+
+    async function answerQuestion(questionId, letter) {
+      if (answeredMap[questionId]) return;
+      answeredMap[questionId] = true;
+
+      // Variantlarni bloklaymiz
+      var box = document.getElementById("optionsBox");
+      if (box) box.querySelectorAll(".tb-option").forEach(function (el) { el.classList.add("disabled"); });
+
+      try {
+        var r = await authFetch("/tournament/match/" + matchId + "/answer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ questionId: questionId, answer: letter }),
+        });
+        var d = await r.json();
+        if (!d.success) {
+          // Xato — keyingi savolga o'tamiz baribir
+          nextQuestion();
+          return;
+        }
+
+        // To'g'ri javobni ko'rsatamiz
+        if (box) {
+          var chosen = box.querySelector('[data-letter="' + letter + '"]');
+          var correctEl = box.querySelector('[data-letter="' + d.correct_option + '"]');
+          if (d.correct) {
+            if (chosen) chosen.classList.add("correct");
+          } else {
+            if (chosen) chosen.classList.add("wrong");
+            if (correctEl) correctEl.classList.add("correct");
+          }
+        }
+
+        // Jamoa ballarini yangilaymiz (scoreboard)
+        if (d.team_scores) {
+          battle.team_scores = d.team_scores;
+          updateScoreboard();
+        }
+
+        // 1.2 soniyadan keyin keyingi savolga
+        setTimeout(nextQuestion, 1200);
+      } catch (e) {
+        setTimeout(nextQuestion, 600);
+      }
+    }
+
+    function nextQuestion() {
+      qIndex++;
+      renderBattle();
+    }
+
+    function updateScoreboard() {
+      var m = battle.match;
+      var sbScores = document.querySelectorAll(".tb-sb-score");
+      if (sbScores.length === 2) {
+        sbScores[0].textContent = battle.team_scores[m.school_a] || 0;
+        sbScores[1].textContent = battle.team_scores[m.school_b] || 0;
+      }
+    }
+
+    async function finishBattle() {
+      try {
+        await authFetch("/tournament/match/" + matchId + "/finish", { method: "POST" });
+      } catch (e) {}
+      battle.my_finished = true;
+      renderWaiting();
+    }
+
+    function renderWaiting() {
+      if (battleTimer) clearInterval(battleTimer);
+      var m = battle.match;
+      var html = '<div class="tb-head"><div class="tb-tournament">' + esc(m.tournament_name) + '</div>' +
+        '<div class="tb-vs-title">' + esc(m.school_a) + ' vs ' + esc(m.school_b) + '</div></div>';
+      html += '<div class="tb-finished-box">' +
+        '<div class="tb-finished-ic wait"><i data-lucide="hourglass"></i></div>' +
+        '<div class="tb-finished-title">Siz tugatdingiz!</div>' +
+        '<div class="tb-final-score">' + esc(m.school_a) + ' ' + (battle.team_scores[m.school_a] || 0) + ' — ' + (battle.team_scores[m.school_b] || 0) + ' ' + esc(m.school_b) + '</div>' +
+        '<div class="tb-finished-sub">Boshqa o\'yinchilar tugatishini kuting. Natija avtomatik chiqadi.</div>' +
+      '</div>';
+      document.getElementById("tbContent").innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function renderResult() {
+      if (battleTimer) clearInterval(battleTimer);
+      var m = battle.match;
+      var scoreA = battle.team_scores[m.school_a] || 0;
+      var scoreB = battle.team_scores[m.school_b] || 0;
+      var winner = m.winner_school;
+      var iWon = (winner === battle.my_school);
+      var isDraw = !winner;
+
+      var icCls = isDraw ? "wait" : (iWon ? "win" : "lose");
+      var icName = isDraw ? "minus" : (iWon ? "trophy" : "x");
+      var title = isDraw ? "Durang!" : (iWon ? "G'alaba! 🎉" : "Mag'lubiyat");
+
+      var html = '<div class="tb-head"><div class="tb-tournament">' + esc(m.tournament_name) + '</div>' +
+        '<div class="tb-vs-title">' + esc(m.school_a) + ' vs ' + esc(m.school_b) + '</div></div>';
+      html += '<div class="tb-finished-box">' +
+        '<div class="tb-finished-ic ' + icCls + '"><i data-lucide="' + icName + '"></i></div>' +
+        '<div class="tb-finished-title">' + title + '</div>' +
+        '<div class="tb-final-score">' + esc(m.school_a) + ' ' + scoreA + ' — ' + scoreB + ' ' + esc(m.school_b) + '</div>' +
+        (winner ? '<div class="tb-finished-sub">G\'olib: <b>' + esc(winner) + '</b></div>' : '<div class="tb-finished-sub">Natija teng yakunlandi</div>') +
+        '<div style="margin-top:24px;"><a href="/school-tournaments.html" class="tb-ready-btn" style="text-decoration:none;display:inline-block;background:var(--panel-2);color:var(--text);">Turnirlarga qaytish</a></div>' +
+      '</div>';
+      document.getElementById("tbContent").innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function startBattleTimer() {
+      if (battleTimer) clearInterval(battleTimer);
+      var m = battle.match;
+      if (!m.started_at || !m.seconds_per_match) return;
+      var endTime = new Date(m.started_at).getTime() + m.seconds_per_match * 1000;
+      function tick() {
+        var diff = Math.max(0, endTime - Date.now());
+        var mins = Math.floor(diff / 60000);
+        var secs = Math.floor((diff % 60000) / 1000);
+        var el = document.getElementById("battleTimer");
+        if (el) el.textContent = String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+        if (diff <= 0) {
+          clearInterval(battleTimer);
+          finishBattle(); // vaqt tugadi
+        }
+      }
+      tick();
+      battleTimer = setInterval(tick, 1000);
     }
 
     function render() {
@@ -171,10 +444,6 @@
           html += '<div class="tb-action"><button class="tb-ready-btn" onclick="doCheckin()"><i data-lucide="swords" style="width:18px;height:18px;vertical-align:-3px;"></i> Tayyorman!</button>' +
             '<div class="tb-ready-hint">"Tayyorman" bosib, jangga qatnashishingizni tasdiqlang.</div></div>';
         }
-      } else if (m.status === "live") {
-        html += '<div class="tb-action"><div class="tb-ready-hint">Jang davom etmoqda... (jang ekrani keyingi bosqichda)</div></div>';
-      } else if (m.status === "done") {
-        html += '<div class="tb-action"><div class="tb-ready-hint">Bu match yakunlangan.</div></div>';
       }
 
       document.getElementById("tbContent").innerHTML = html;

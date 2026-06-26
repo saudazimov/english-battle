@@ -5954,6 +5954,231 @@ app.post("/tournament/match/:id/checkin", authMiddleware, async (req, res) => {
   }
 });
 
+// Jang holati + savollar (o'quvchi jang ekranida)
+app.get("/tournament/match/:id/battle-state", authMiddleware, async (req, res) => {
+  try {
+    const matchId = req.params.id;
+    const uid = req.user.id;
+
+    // A'zomi?
+    const me = await getMatchPlayer(matchId, uid);
+    if (!me) return res.status(403).json({ error: "Siz bu matchning ishtirokchisi emassiz" });
+
+    const mq = await pool.query(
+      `SELECT m.*, t.name AS tournament_name, t.seconds_per_match, t.questions_per_match
+       FROM tournament_matches m JOIN tournaments t ON t.id = m.tournament_id
+       WHERE m.id = $1`,
+      [matchId]
+    );
+    const match = mq.rows[0];
+    if (!match) return res.status(404).json({ error: "Match topilmadi" });
+
+    // Faqat live yoki done holatida savol beriladi
+    if (match.status !== "live" && match.status !== "done") {
+      return res.json({ status: match.status, message: "Jang hali boshlanmagan" });
+    }
+
+    // Savollar (correct_option ni olib tashlaymiz — xavfsizlik)
+    let questions = [];
+    if (match.questions_data) {
+      const raw = typeof match.questions_data === "string" ? JSON.parse(match.questions_data) : match.questions_data;
+      questions = raw.map(q => ({
+        id: q.id,
+        question_text: q.question_text,
+        option_a: q.option_a, option_b: q.option_b,
+        option_c: q.option_c, option_d: q.option_d,
+      }));
+    }
+
+    // Mening hozirgi ballim va javob bergan savollarim
+    const myProgress = await pool.query(
+      "SELECT score, finished FROM tournament_match_players WHERE match_id = $1 AND user_id = $2",
+      [matchId, uid]
+    );
+
+    // Real-time jamoa ballari
+    const teamScores = await pool.query(
+      `SELECT school, COALESCE(SUM(score),0) AS total
+       FROM tournament_match_players WHERE match_id = $1 GROUP BY school`,
+      [matchId]
+    );
+    const scores = {};
+    teamScores.rows.forEach(r => { scores[r.school] = parseInt(r.total) || 0; });
+
+    res.json({
+      status: match.status,
+      match: {
+        id: match.id,
+        school_a: match.school_a, school_b: match.school_b,
+        tournament_name: match.tournament_name,
+        seconds_per_match: match.seconds_per_match,
+        started_at: match.started_at,
+        winner_school: match.winner_school,
+      },
+      my_school: me.school,
+      my_score: myProgress.rows[0] ? myProgress.rows[0].score : 0,
+      my_finished: myProgress.rows[0] ? myProgress.rows[0].finished : false,
+      questions: questions,
+      team_scores: scores,
+    });
+  } catch (err) {
+    console.error("Battle-state xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Jangda javob yuborish — ball hisoblash
+app.post("/tournament/match/:id/answer", authMiddleware, async (req, res) => {
+  try {
+    const matchId = req.params.id;
+    const uid = req.user.id;
+    const { questionId, answer } = req.body; // answer: 'a'|'b'|'c'|'d'
+
+    // A'zomi?
+    const me = await getMatchPlayer(matchId, uid);
+    if (!me) return res.status(403).json({ error: "Siz bu matchning ishtirokchisi emassiz" });
+
+    // Match live mi?
+    const mq = await pool.query("SELECT status, questions_data FROM tournament_matches WHERE id = $1", [matchId]);
+    const match = mq.rows[0];
+    if (!match || match.status !== "live") {
+      return res.status(400).json({ error: "Jang faol emas" });
+    }
+
+    // Bu o'quvchi allaqachon javob bergan savollarni kuzatamiz (tournament_match_answers)
+    const already = await pool.query(
+      "SELECT id FROM tournament_match_answers WHERE match_id = $1 AND user_id = $2 AND question_id = $3",
+      [matchId, uid, questionId]
+    );
+    if (already.rows.length > 0) {
+      return res.status(400).json({ error: "Bu savolga allaqachon javob bergansiz" });
+    }
+
+    // To'g'ri javobni topamiz (questions_data dan)
+    const raw = typeof match.questions_data === "string" ? JSON.parse(match.questions_data) : match.questions_data;
+    const q = raw.find(x => String(x.id) === String(questionId));
+    if (!q) return res.status(400).json({ error: "Savol topilmadi" });
+
+    const isCorrect = (String(answer).toLowerCase() === String(q.correct_option).toLowerCase());
+
+    // Javobni yozamiz
+    await pool.query(
+      "INSERT INTO tournament_match_answers (match_id, user_id, question_id, answer, is_correct) VALUES ($1, $2, $3, $4, $5)",
+      [matchId, uid, questionId, answer, isCorrect]
+    );
+
+    // To'g'ri bo'lsa, ballni oshiramiz
+    if (isCorrect) {
+      await pool.query(
+        "UPDATE tournament_match_players SET score = score + 1 WHERE match_id = $1 AND user_id = $2",
+        [matchId, uid]
+      );
+    }
+
+    // Yangilangan jamoa ballari
+    const teamScores = await pool.query(
+      `SELECT school, COALESCE(SUM(score),0) AS total FROM tournament_match_players WHERE match_id = $1 GROUP BY school`,
+      [matchId]
+    );
+    const scores = {};
+    teamScores.rows.forEach(r => { scores[r.school] = parseInt(r.total) || 0; });
+
+    // Real-time: barcha o'yinchilarga yangi ballarni yuboramiz
+    notifyMatchPlayers(matchId, "scoreUpdate", { matchId: parseInt(matchId), team_scores: scores });
+
+    res.json({
+      success: true,
+      correct: isCorrect,
+      correct_option: q.correct_option, // o'quvchi javob bergach to'g'risini ko'rsatamiz
+      team_scores: scores,
+    });
+  } catch (err) {
+    console.error("Answer xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Jangni yakunlash (o'quvchi barcha savollarni tugatganda)
+app.post("/tournament/match/:id/finish", authMiddleware, async (req, res) => {
+  try {
+    const matchId = req.params.id;
+    const uid = req.user.id;
+    const me = await getMatchPlayer(matchId, uid);
+    if (!me) return res.status(403).json({ error: "Ishtirokchi emassiz" });
+
+    await pool.query(
+      "UPDATE tournament_match_players SET finished = true WHERE match_id = $1 AND user_id = $2",
+      [matchId, uid]
+    );
+
+    // Hamma tugatdimi tekshiramiz → match natijasini hisoblaymiz
+    await checkMatchCompletion(matchId);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Finish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Match tugadimi (hamma o'yinchi finished) → natijani hisoblash
+async function checkMatchCompletion(matchId) {
+  const client = await pool.connect();
+  try {
+    // Faqat check-in qilganlar (haqiqiy o'yinchilar) hisobga olinadi
+    const playersQ = await client.query(
+      "SELECT user_id, school, score, finished, checked_in FROM tournament_match_players WHERE match_id = $1 AND checked_in = true",
+      [matchId]
+    );
+    const players = playersQ.rows;
+    if (players.length === 0) { client.release(); return; }
+
+    // Hamma tugatdimi?
+    const allFinished = players.every(p => p.finished);
+    if (!allFinished) { client.release(); return; }
+
+    // Jamoa ballari
+    const matchQ = await client.query("SELECT * FROM tournament_matches WHERE id = $1", [matchId]);
+    const match = matchQ.rows[0];
+    let scoreA = 0, scoreB = 0;
+    players.forEach(p => {
+      if (p.school === match.school_a) scoreA += p.score;
+      else if (p.school === match.school_b) scoreB += p.score;
+    });
+
+    let winner = null;
+    if (scoreA > scoreB) winner = match.school_a;
+    else if (scoreB > scoreA) winner = match.school_b;
+    // Teng bo'lsa winner = null (keyin hal qilamiz — hozircha durang)
+
+    await client.query("BEGIN");
+    await client.query(
+      "UPDATE tournament_matches SET status = 'done', score_a = $1, score_b = $2, winner_school = $3, finished_at = NOW() WHERE id = $4",
+      [scoreA, scoreB, winner, matchId]
+    );
+    // G'olibni keyingi raundga
+    if (winner) {
+      await advanceWinner(client, match.tournament_id, match.round, match.match_no, winner);
+    }
+    await client.query("COMMIT");
+
+    console.log(`[Turnir] Match #${matchId} TUGADI: ${match.school_a} ${scoreA} — ${scoreB} ${match.school_b}, g'olib: ${winner || "durang"}`);
+
+    // Barcha o'yinchilarga natija
+    notifyMatchPlayers(matchId, "matchFinished", {
+      matchId: parseInt(matchId),
+      score_a: scoreA, score_b: scoreB,
+      school_a: match.school_a, school_b: match.school_b,
+      winner: winner,
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("checkMatchCompletion xatosi:", err.message);
+  } finally {
+    client.release();
+  }
+}
+
 // ============================================================
 // SCHOOL CUP — Bosqich 6.1: Match holat kuzatuvchisi
 // scheduled_at ni kuzatib, matchlarni avtomatik o'tkazadi:
@@ -6098,14 +6323,42 @@ async function startMatchLive(match) {
     }
 
     // Ikkala maktabdan ham kamida 1 o'yinchi bor → JANG boshlanadi
+    // Savollarni tanlaymiz (ikkala maktab bir xil savollarni oladi — Model B)
+    const tq = await client.query("SELECT questions_per_match, cefr_level FROM tournaments WHERE id = $1", [match.tournament_id]);
+    const qCount = tq.rows[0] ? tq.rows[0].questions_per_match : 20;
+    const cefr = tq.rows[0] ? tq.rows[0].cefr_level : "mixed";
+
+    let qRes;
+    if (cefr && cefr !== "mixed") {
+      qRes = await client.query(
+        "SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2",
+        [cefr, qCount]
+      );
+      // Yetarli savol bo'lmasa, aralashdan to'ldiramiz
+      if (qRes.rows.length < qCount) {
+        const extra = await client.query(
+          "SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option FROM questions WHERE cefr_level <> $1 ORDER BY RANDOM() LIMIT $2",
+          [cefr, qCount - qRes.rows.length]
+        );
+        qRes.rows = qRes.rows.concat(extra.rows);
+      }
+    } else {
+      qRes = await client.query(
+        "SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option FROM questions ORDER BY RANDOM() LIMIT $1",
+        [qCount]
+      );
+    }
+    const questions = qRes.rows;
+
+    // Savollarni match bilan saqlaymiz (JSON) — hamma bir xil ko'radi
     await client.query(
-      "UPDATE tournament_matches SET status = 'live', started_at = NOW() WHERE id = $1",
-      [match.id]
+      "UPDATE tournament_matches SET status = 'live', started_at = NOW(), questions_data = $1 WHERE id = $2",
+      [JSON.stringify(questions), match.id]
     );
     await client.query("COMMIT");
-    console.log(`[Turnir] Match #${match.id} (${match.school_a} ${aReady} vs ${bReady} ${match.school_b}) — JANG BOSHLANDI`);
+    console.log(`[Turnir] Match #${match.id} (${match.school_a} ${aReady} vs ${bReady} ${match.school_b}) — JANG BOSHLANDI, ${questions.length} savol`);
 
-    // Socket orqali jang boshlanganini bildiramiz (6.4 da to'liq ishlatamiz)
+    // Socket orqali jang boshlanganini bildiramiz
     notifyMatchPlayers(match.id, "matchLiveStart", { matchId: match.id });
   } catch (err) {
     await client.query("ROLLBACK");
