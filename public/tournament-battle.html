@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Battle — Turnir jangi</title>
+  <link rel="stylesheet" href="/app.css">
+  <style>
+    body { display: block; }
+    .tb-wrap { max-width: 920px; margin: 0 auto; padding: 24px 20px; min-height: 100vh; }
+
+    /* Sarlavha */
+    .tb-head { text-align: center; margin-bottom: 8px; }
+    .tb-tournament { font-size: 13px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+    .tb-vs-title { font-size: 26px; font-weight: 800; margin-top: 6px; }
+
+    /* Holat banneri */
+    .tb-status-banner { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 12px; margin: 18px 0; font-weight: 600; font-size: 14px; }
+    .tb-status-banner.checkin { background: rgba(251,191,36,0.12); color: var(--gold); }
+    .tb-status-banner.live { background: rgba(239,68,68,0.12); color: #f87171; }
+    .tb-status-banner.done { background: rgba(52,211,153,0.12); color: var(--green); }
+    .tb-status-banner i { width: 18px; height: 18px; }
+
+    /* Countdown */
+    .tb-countdown { text-align: center; margin: 6px 0 20px; }
+    .tb-countdown-label { font-size: 12px; color: var(--text-faint); }
+    .tb-countdown-time { font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--gold); margin-top: 2px; }
+
+    /* Ikki jamoa */
+    .tb-teams { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: start; margin-bottom: 24px; }
+    @media (max-width: 680px) { .tb-teams { grid-template-columns: 1fr; } .tb-vs-divider { display: none; } }
+
+    .tb-team { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+    .tb-team.mine { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(91,140,255,0.2); }
+    .tb-team-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .tb-team-ic { width: 40px; height: 40px; border-radius: 10px; background: rgba(91,140,255,0.12); display: grid; place-items: center; flex-shrink: 0; }
+    .tb-team-ic i { width: 20px; height: 20px; color: var(--accent); }
+    .tb-team-name { font-size: 16px; font-weight: 700; flex: 1; }
+    .tb-team-ready { font-size: 12px; color: var(--text-dim); }
+    .tb-team-ready b { color: var(--green); }
+
+    .tb-member { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .tb-member:last-child { border-bottom: none; }
+    .tb-member-ava { width: 34px; height: 34px; border-radius: 50%; position: relative; overflow: hidden; flex-shrink: 0; }
+    .tb-member-ava img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .tb-member-ava-init { width: 100%; height: 100%; display: grid; place-items: center; font-weight: 700; font-size: 13px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
+    .tb-member-name { flex: 1; font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tb-member-name.me { color: var(--accent); font-weight: 700; }
+    .tb-member-status { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; flex-shrink: 0; }
+    .tb-member-status.ready { background: rgba(52,211,153,0.18); color: var(--green); }
+    .tb-member-status.waiting { background: rgba(148,163,184,0.15); color: var(--text-dim); }
+    .tb-member-role { font-size: 10px; color: var(--text-faint); }
+
+    .tb-vs-divider { display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: var(--text-faint); padding-top: 40px; }
+
+    /* Tayyorman tugma */
+    .tb-action { text-align: center; margin: 10px 0 30px; }
+    .tb-ready-btn { font-size: 17px; font-weight: 700; padding: 16px 48px; border-radius: 14px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--green), #16a34a); color: #fff; transition: all 0.15s; }
+    .tb-ready-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(52,211,153,0.3); }
+    .tb-ready-btn.done { background: var(--panel-2); color: var(--green); cursor: default; }
+    .tb-ready-btn.done:hover { transform: none; box-shadow: none; }
+    .tb-ready-hint { font-size: 13px; color: var(--text-dim); margin-top: 12px; }
+
+    .tb-loading { text-align: center; padding: 80px 20px; color: var(--text-faint); }
+    .tb-error { text-align: center; padding: 60px 20px; color: #f87171; }
+    .tb-back { display: inline-flex; align-items: center; gap: 6px; color: var(--text-dim); text-decoration: none; font-size: 14px; margin-bottom: 16px; }
+    .tb-back:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="tb-wrap">
+    <a href="/school-tournaments.html" class="tb-back"><i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Turnirlar</a>
+    <div id="tbContent">
+      <div class="tb-loading">Yuklanmoqda...</div>
+    </div>
+  </div>
+
+  <script src="/api.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const userData = localStorage.getItem("user");
+    if (!userData) window.location.href = "/index.html";
+    const user = JSON.parse(userData);
+
+    // Match ID ni URL dan olamiz: tournament-battle.html?match=1
+    const params = new URLSearchParams(window.location.search);
+    const matchId = params.get("match");
+    if (!matchId) document.getElementById("tbContent").innerHTML = '<div class="tb-error">Match ID topilmadi</div>';
+
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function avatarHtml(name, pic) {
+      if (pic) return '<img src="' + esc(pic) + '" alt="">';
+      return '<div class="tb-member-ava-init">' + esc((name || "?").charAt(0).toUpperCase()) + '</div>';
+    }
+
+    var state = null;          // checkin-state javobi
+    var countdownTimer = null;
+
+    // Socket
+    const socket = io();
+    socket.on("connect", () => { socket.emit("registerUser", user.id); });
+
+    // Real-time: kimdir check-in qildi
+    socket.on("checkinUpdate", (data) => {
+      if (String(data.matchId) === String(matchId)) loadState();
+    });
+    // Match live ga o'tdi → jangga (6.4 da to'liq)
+    socket.on("matchLiveStart", (data) => {
+      if (String(data.matchId) === String(matchId)) {
+        loadState(); // hozircha holatni yangilaymiz; 6.4 da jang ekraniga o'tkazamiz
+      }
+    });
+
+    async function loadState() {
+      try {
+        var r = await authFetch("/tournament/match/" + matchId + "/checkin-state");
+        if (r.status === 403) {
+          document.getElementById("tbContent").innerHTML = '<div class="tb-error">Siz bu matchning ishtirokchisi emassiz</div>';
+          return;
+        }
+        if (!r.ok) {
+          document.getElementById("tbContent").innerHTML = '<div class="tb-error">Match topilmadi yoki yuklab bo\'lmadi</div>';
+          return;
+        }
+        state = await r.json();
+        render();
+      } catch (e) {
+        document.getElementById("tbContent").innerHTML = '<div class="tb-error">Xatolik yuz berdi</div>';
+      }
+    }
+
+    function render() {
+      var m = state.match;
+      var mySchool = state.my_school;
+
+      // Status banner
+      var statusMap = {
+        checkin: { cls: "checkin", icon: "clock", text: "Check-in ochiq — jangga tayyorlaning" },
+        live: { cls: "live", icon: "swords", text: "Jang boshlandi!" },
+        done: { cls: "done", icon: "flag", text: "Match yakunlandi" },
+        pending: { cls: "checkin", icon: "clock", text: "Match hali boshlanmagan" },
+      };
+      var stt = statusMap[m.status] || statusMap.pending;
+
+      var html = '<div class="tb-head">' +
+        '<div class="tb-tournament">' + esc(m.tournament_name) + '</div>' +
+        '<div class="tb-vs-title">' + esc(m.school_a) + ' <span style="color:var(--text-faint);">vs</span> ' + esc(m.school_b) + '</div>' +
+      '</div>';
+
+      html += '<div class="tb-status-banner ' + stt.cls + '"><i data-lucide="' + stt.icon + '"></i> ' + stt.text + '</div>';
+
+      // Countdown (faqat checkin holatida, scheduled_at gacha)
+      if (m.status === "checkin" && m.scheduled_at) {
+        html += '<div class="tb-countdown"><div class="tb-countdown-label">Jang boshlanishigacha</div><div class="tb-countdown-time" id="cdTime">--:--</div></div>';
+      }
+
+      // Ikki jamoa
+      html += '<div class="tb-teams">';
+      html += renderTeam(m.school_a, mySchool);
+      html += '<div class="tb-vs-divider">VS</div>';
+      html += renderTeam(m.school_b, mySchool);
+      html += '</div>';
+
+      // Tayyorman tugma (faqat checkin va men hali tayyor bo'lmagan bo'lsam)
+      if (m.status === "checkin") {
+        if (state.my_checked_in) {
+          html += '<div class="tb-action"><button class="tb-ready-btn done"><i data-lucide="check" style="width:18px;height:18px;vertical-align:-3px;"></i> Siz tayyorsiz</button>' +
+            '<div class="tb-ready-hint">Boshqa o\'yinchilar tayyor bo\'lishini kuting. Jang belgilangan vaqtda avtomatik boshlanadi.</div></div>';
+        } else {
+          html += '<div class="tb-action"><button class="tb-ready-btn" onclick="doCheckin()"><i data-lucide="swords" style="width:18px;height:18px;vertical-align:-3px;"></i> Tayyorman!</button>' +
+            '<div class="tb-ready-hint">"Tayyorman" bosib, jangga qatnashishingizni tasdiqlang.</div></div>';
+        }
+      } else if (m.status === "live") {
+        html += '<div class="tb-action"><div class="tb-ready-hint">Jang davom etmoqda... (jang ekrani keyingi bosqichda)</div></div>';
+      } else if (m.status === "done") {
+        html += '<div class="tb-action"><div class="tb-ready-hint">Bu match yakunlangan.</div></div>';
+      }
+
+      document.getElementById("tbContent").innerHTML = html;
+      lucide.createIcons();
+
+      // Countdown ishga tushiramiz
+      if (m.status === "checkin" && m.scheduled_at) startCountdown(m.scheduled_at);
+    }
+
+    function renderTeam(school, mySchool) {
+      if (!school) return '<div class="tb-team"></div>';
+      var members = state.teams[school] || [];
+      var readyCount = members.filter(function (p) { return p.checked_in; }).length;
+      var isMine = (school === mySchool);
+
+      var html = '<div class="tb-team' + (isMine ? " mine" : "") + '">' +
+        '<div class="tb-team-head">' +
+          '<div class="tb-team-ic"><i data-lucide="building-2"></i></div>' +
+          '<div class="tb-team-name">' + esc(school) + '</div>' +
+        '</div>' +
+        '<div class="tb-team-ready" style="margin-bottom:10px;"><b>' + readyCount + '</b> / ' + members.length + ' tayyor</div>';
+
+      members.forEach(function (p) {
+        html += '<div class="tb-member">' +
+          '<div class="tb-member-ava">' + avatarHtml(p.name, p.profile_picture) + '</div>' +
+          '<div style="flex:1;min-width:0;"><div class="tb-member-name' + (p.is_me ? " me" : "") + '">' + esc(p.name) + (p.is_me ? " (siz)" : "") + '</div>' +
+          '<div class="tb-member-role">' + (p.role === "reserve" ? "Zaxira" : "Asosiy") + '</div></div>' +
+          '<span class="tb-member-status ' + (p.checked_in ? "ready" : "waiting") + '">' + (p.checked_in ? "✓ Tayyor" : "Kutilmoqda") + '</span>' +
+        '</div>';
+      });
+
+      html += '</div>';
+      return html;
+    }
+
+    function startCountdown(scheduledAt) {
+      if (countdownTimer) clearInterval(countdownTimer);
+      var target = new Date(scheduledAt).getTime();
+      function tick() {
+        var now = Date.now();
+        var diff = Math.max(0, target - now);
+        var mins = Math.floor(diff / 60000);
+        var secs = Math.floor((diff % 60000) / 1000);
+        var el = document.getElementById("cdTime");
+        if (el) el.textContent = String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+        if (diff <= 0) {
+          clearInterval(countdownTimer);
+          // Vaqt tugadi — holatni qayta yuklaymiz (live ga o'tgan bo'lishi mumkin)
+          setTimeout(loadState, 2000);
+        }
+      }
+      tick();
+      countdownTimer = setInterval(tick, 1000);
+    }
+
+    async function doCheckin() {
+      try {
+        var r = await authFetch("/tournament/match/" + matchId + "/checkin", { method: "POST" });
+        var d = await r.json();
+        if (d.success) {
+          loadState();
+        } else {
+          alert(d.error || "Check-in xatosi");
+        }
+      } catch (e) {
+        alert("Server xatosi");
+      }
+    }
+
+    if (matchId) loadState();
+    lucide.createIcons();
+  </script>
+</body>
+</html>

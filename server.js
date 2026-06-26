@@ -5829,6 +5829,367 @@ app.delete("/teacher/classes/:classId/students/:studentId", authMiddleware, requ
   }
 });
 
+// ============================================================
+// SCHOOL CUP — Bosqich 6.2: Check-in backend
+// ============================================================
+
+// Yordamchi: foydalanuvchi shu matchda o'ynashga haqlimi (jamoa a'zosimi)
+async function getMatchPlayer(matchId, userId) {
+  const r = await pool.query(
+    `SELECT mp.id, mp.match_id, mp.user_id, mp.school, mp.checked_in, mp.score, mp.finished,
+            tm.member_role, tm.slot_order
+     FROM tournament_match_players mp
+     LEFT JOIN tournament_team_members tm
+       ON tm.tournament_id = (SELECT tournament_id FROM tournament_matches WHERE id = mp.match_id)
+       AND tm.user_id = mp.user_id
+     WHERE mp.match_id = $1 AND mp.user_id = $2`,
+    [matchId, userId]
+  );
+  return r.rows[0] || null;
+}
+
+// Match check-in holati: a'zolar, kim tayyor, match holati
+app.get("/tournament/match/:id/checkin-state", authMiddleware, async (req, res) => {
+  try {
+    const matchId = req.params.id;
+    const uid = req.user.id;
+
+    // Match
+    const mq = await pool.query(
+      `SELECT m.*, t.name AS tournament_name, t.team_size, t.questions_per_match, t.seconds_per_match
+       FROM tournament_matches m
+       JOIN tournaments t ON t.id = m.tournament_id
+       WHERE m.id = $1`,
+      [matchId]
+    );
+    if (mq.rows.length === 0) return res.status(404).json({ error: "Match topilmadi" });
+    const match = mq.rows[0];
+
+    // Bu foydalanuvchi shu matchning a'zosimi?
+    const me = await getMatchPlayer(matchId, uid);
+    if (!me) return res.status(403).json({ error: "Siz bu matchning ishtirokchisi emassiz" });
+
+    // Ikkala maktab a'zolari (checked_in holati bilan)
+    const playersQ = await pool.query(
+      `SELECT mp.user_id, mp.school, mp.checked_in,
+              u.first_name, u.last_name, u.profile_picture, u.rating,
+              tm.member_role, tm.slot_order
+       FROM tournament_match_players mp
+       JOIN users u ON u.id = mp.user_id
+       LEFT JOIN tournament_team_members tm
+         ON tm.tournament_id = $2 AND tm.user_id = mp.user_id
+       WHERE mp.match_id = $1
+       ORDER BY mp.school ASC, tm.member_role DESC, tm.slot_order ASC`,
+      [matchId, match.tournament_id]
+    );
+
+    // Maktablarga ajratamiz
+    const teams = {};
+    [match.school_a, match.school_b].forEach(s => { if (s) teams[s] = []; });
+    playersQ.rows.forEach(p => {
+      if (!teams[p.school]) teams[p.school] = [];
+      teams[p.school].push({
+        user_id: p.user_id,
+        name: ((p.first_name || "") + " " + (p.last_name || "")).trim(),
+        profile_picture: p.profile_picture,
+        rating: p.rating,
+        role: p.member_role || "starter",
+        checked_in: p.checked_in,
+        is_me: (p.user_id === uid),
+      });
+    });
+
+    res.json({
+      match: {
+        id: match.id,
+        status: match.status,
+        school_a: match.school_a,
+        school_b: match.school_b,
+        scheduled_at: match.scheduled_at,
+        tournament_name: match.tournament_name,
+        questions_per_match: match.questions_per_match,
+        seconds_per_match: match.seconds_per_match,
+      },
+      my_school: me.school,
+      my_checked_in: me.checked_in,
+      teams: teams,
+    });
+  } catch (err) {
+    console.error("Checkin-state xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// "Tayyorman" — check-in qilish
+app.post("/tournament/match/:id/checkin", authMiddleware, async (req, res) => {
+  try {
+    const matchId = req.params.id;
+    const uid = req.user.id;
+
+    // Match holati checkin yoki live bo'lishi kerak
+    const mq = await pool.query("SELECT status FROM tournament_matches WHERE id = $1", [matchId]);
+    if (mq.rows.length === 0) return res.status(404).json({ error: "Match topilmadi" });
+    const status = mq.rows[0].status;
+    if (status !== "checkin" && status !== "live") {
+      return res.status(400).json({ error: "Check-in hozir ochiq emas (holat: " + status + ")" });
+    }
+
+    // A'zomi?
+    const me = await getMatchPlayer(matchId, uid);
+    if (!me) return res.status(403).json({ error: "Siz bu matchning ishtirokchisi emassiz" });
+
+    // Check-in belgilash
+    await pool.query(
+      "UPDATE tournament_match_players SET checked_in = true WHERE match_id = $1 AND user_id = $2",
+      [matchId, uid]
+    );
+
+    // Boshqa a'zolarga "kimdir tayyor bo'ldi" xabari (real-time yangilanish)
+    notifyMatchPlayers(matchId, "checkinUpdate", { matchId: parseInt(matchId), userId: uid });
+
+    res.json({ success: true, checked_in: true });
+  } catch (err) {
+    console.error("Checkin xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============================================================
+// SCHOOL CUP — Bosqich 6.1: Match holat kuzatuvchisi
+// scheduled_at ni kuzatib, matchlarni avtomatik o'tkazadi:
+//   pending → checkin (15 daqiqa oldin) → live (vaqt kelganda)
+// ============================================================
+
+const CHECKIN_LEAD_MIN = 15; // necha daqiqa oldin check-in ochiladi
+
+async function tournamentMatchWatcher() {
+  try {
+    const now = new Date();
+
+    // 1) pending → checkin: scheduled_at dan 15 daqiqa qolganlar
+    const checkinThreshold = new Date(now.getTime() + CHECKIN_LEAD_MIN * 60000);
+    const toCheckin = await pool.query(
+      `SELECT id, tournament_id, round, match_no, school_a, school_b, scheduled_at
+       FROM tournament_matches
+       WHERE status = 'pending'
+         AND school_a IS NOT NULL AND school_b IS NOT NULL
+         AND scheduled_at IS NOT NULL
+         AND scheduled_at <= $1
+         AND scheduled_at > $2`,
+      [checkinThreshold, now]
+    );
+    for (const m of toCheckin.rows) {
+      await openMatchCheckin(m);
+    }
+
+    // 2) checkin → live: scheduled_at vaqti kelgan matchlar
+    const toLive = await pool.query(
+      `SELECT id, tournament_id, round, match_no, school_a, school_b, scheduled_at
+       FROM tournament_matches
+       WHERE status = 'checkin'
+         AND scheduled_at IS NOT NULL
+         AND scheduled_at <= $1`,
+      [now]
+    );
+    for (const m of toLive.rows) {
+      await startMatchLive(m);
+    }
+  } catch (err) {
+    console.error("Match watcher xatosi:", err.message);
+  }
+}
+
+// Matchni checkin holatiga o'tkazish + a'zolar ro'yxatini tayyorlash
+async function openMatchCheckin(match) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // Holatni checkin ga o'tkazamiz
+    await client.query("UPDATE tournament_matches SET status = 'checkin' WHERE id = $1", [match.id]);
+
+    // Ikkala maktab jamoasi a'zolarini tournament_match_players ga yozamiz (agar yo'q bo'lsa)
+    // Faqat starter va reserve — checked_in = false bilan
+    for (const school of [match.school_a, match.school_b]) {
+      if (!school) continue;
+      const members = await client.query(
+        `SELECT user_id, member_role FROM tournament_team_members
+         WHERE tournament_id = $1 AND school = $2
+         ORDER BY member_role DESC, slot_order ASC`,
+        [match.tournament_id, school]
+      );
+      for (const mem of members.rows) {
+        // Allaqachon yozilganmi?
+        const exists = await client.query(
+          "SELECT id FROM tournament_match_players WHERE match_id = $1 AND user_id = $2",
+          [match.id, mem.user_id]
+        );
+        if (exists.rows.length === 0) {
+          await client.query(
+            `INSERT INTO tournament_match_players (match_id, user_id, school, is_bot, checked_in, score, finished)
+             VALUES ($1, $2, $3, false, false, 0, false)`,
+            [match.id, mem.user_id, school]
+          );
+        }
+      }
+    }
+
+    await client.query("COMMIT");
+    console.log(`[Turnir] Match #${match.id} (${match.school_a} vs ${match.school_b}) — CHECK-IN ochildi`);
+
+    // Socket orqali a'zolarga xabar (agar onlayn bo'lsa)
+    notifyMatchPlayers(match.id, "matchCheckinOpen", {
+      matchId: match.id,
+      scheduledAt: match.scheduled_at,
+      schoolA: match.school_a,
+      schoolB: match.school_b,
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("openMatchCheckin xatosi:", err.message);
+  } finally {
+    client.release();
+  }
+}
+
+// Matchni live holatiga o'tkazish (jang boshlanadi) yoki walkover
+async function startMatchLive(match) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // Har maktabdan nechta o'yinchi check-in qilgan?
+    const checkedQ = await client.query(
+      `SELECT school, COUNT(*) FILTER (WHERE checked_in = true) AS ready
+       FROM tournament_match_players
+       WHERE match_id = $1
+       GROUP BY school`,
+      [match.id]
+    );
+    const readyMap = {};
+    checkedQ.rows.forEach(r => { readyMap[r.school] = parseInt(r.ready) || 0; });
+    const aReady = readyMap[match.school_a] || 0;
+    const bReady = readyMap[match.school_b] || 0;
+
+    // WALKOVER holatlari (bot yo'q — hech kim kelmasa raqib o'tadi)
+    if (aReady === 0 && bReady === 0) {
+      // Ikkalasidan ham hech kim yo'q → match bekor (durang, hech kim o'tmaydi)
+      await client.query(
+        "UPDATE tournament_matches SET status = 'done', winner_school = NULL, finished_at = NOW() WHERE id = $1",
+        [match.id]
+      );
+      await client.query("COMMIT");
+      console.log(`[Turnir] Match #${match.id} — ikkala maktab ham kelmadi, bekor qilindi`);
+      return;
+    }
+    if (aReady === 0) {
+      // A kelmadi → B walkover
+      await finishMatchWithWinner(client, match, match.school_b, 0, 0, true);
+      await client.query("COMMIT");
+      console.log(`[Turnir] Match #${match.id} — ${match.school_a} kelmadi, ${match.school_b} walkover g'olib`);
+      return;
+    }
+    if (bReady === 0) {
+      // B kelmadi → A walkover
+      await finishMatchWithWinner(client, match, match.school_a, 0, 0, true);
+      await client.query("COMMIT");
+      console.log(`[Turnir] Match #${match.id} — ${match.school_b} kelmadi, ${match.school_a} walkover g'olib`);
+      return;
+    }
+
+    // Ikkala maktabdan ham kamida 1 o'yinchi bor → JANG boshlanadi
+    await client.query(
+      "UPDATE tournament_matches SET status = 'live', started_at = NOW() WHERE id = $1",
+      [match.id]
+    );
+    await client.query("COMMIT");
+    console.log(`[Turnir] Match #${match.id} (${match.school_a} ${aReady} vs ${bReady} ${match.school_b}) — JANG BOSHLANDI`);
+
+    // Socket orqali jang boshlanganini bildiramiz (6.4 da to'liq ishlatamiz)
+    notifyMatchPlayers(match.id, "matchLiveStart", { matchId: match.id });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("startMatchLive xatosi:", err.message);
+  } finally {
+    client.release();
+  }
+}
+
+// G'olibni belgilab matchni tugatish (walkover yoki normal)
+async function finishMatchWithWinner(client, match, winnerSchool, scoreA, scoreB, isWalkover) {
+  await client.query(
+    `UPDATE tournament_matches
+     SET status = 'done', winner_school = $1, score_a = $2, score_b = $3, finished_at = NOW()
+     WHERE id = $4`,
+    [winnerSchool, scoreA, scoreB, match.id]
+  );
+  // G'olibni keyingi raundga ko'chirish (6.8 da to'liq, hozir asos)
+  await advanceWinner(client, match.tournament_id, match.round, match.match_no, winnerSchool);
+}
+
+// G'olibni keyingi raundga joylashtirish
+async function advanceWinner(client, tid, round, matchNo, winnerSchool) {
+  if (!winnerSchool) return;
+  const nextMatchNo = Math.ceil(matchNo / 2);
+  const isA = (matchNo % 2 === 1);
+  const col = isA ? "school_a" : "school_b";
+  // Keyingi raund mavjudmi?
+  const next = await client.query(
+    "SELECT id FROM tournament_matches WHERE tournament_id = $1 AND round = $2 AND match_no = $3",
+    [tid, round + 1, nextMatchNo]
+  );
+  if (next.rows.length > 0) {
+    await client.query(
+      `UPDATE tournament_matches SET ${col} = $1 WHERE id = $2`,
+      [winnerSchool, next.rows[0].id]
+    );
+  } else {
+    // Keyingi raund yo'q → bu final edi → g'olib chempion
+    await client.query(
+      "UPDATE tournament_schools SET placement = 1 WHERE tournament_id = $1 AND school = $2",
+      [tid, winnerSchool]
+    );
+  }
+}
+
+// Match a'zolariga socket xabar yuborish (onlayn bo'lganlarga)
+async function notifyMatchPlayers(matchId, event, payload) {
+  try {
+    const players = await pool.query(
+      "SELECT user_id FROM tournament_match_players WHERE match_id = $1 AND user_id IS NOT NULL",
+      [matchId]
+    );
+    for (const p of players.rows) {
+      const socketId = onlineUsers[String(p.user_id)];
+      if (socketId) io.to(socketId).emit(event, payload);
+    }
+  } catch (err) {
+    console.error("notifyMatchPlayers xatosi:", err.message);
+  }
+}
+
+// Watcher'ni har 30 soniyada ishga tushiramiz
+setInterval(tournamentMatchWatcher, 30000);
+
+// ⚠️ VAQTINCHALIK TEST ENDPOINT — test tugagach O'CHIRILADI!
+// Test o'quvchi parolini "test123" ga o'rnatadi
+app.post("/dev/set-test-password", async (req, res) => {
+  try {
+    const { phone, newPassword } = req.body;
+    if (!phone) return res.status(400).json({ error: "phone kerak" });
+    const pw = newPassword || "test123";
+    const hashed = await bcrypt.hash(pw, 10);
+    const r = await pool.query(
+      "UPDATE users SET password = $1 WHERE phone = $2 RETURNING id, first_name, phone",
+      [hashed, phone]
+    );
+    if (r.rows.length === 0) return res.status(404).json({ error: "Bu telefon bilan foydalanuvchi topilmadi" });
+    res.json({ success: true, user: r.rows[0], password: pw });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DIQQAT: app.listen emas, server.listen!
 server.listen(PORT, () => {
   console.log("Server ishga tushdi: http://localhost:3000");
