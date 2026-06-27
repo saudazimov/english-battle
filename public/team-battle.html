@@ -142,14 +142,14 @@
     .bt-team-panel.mine .bt-pl-progfill { background: linear-gradient(90deg, #38bdf8, #5b8cff); }
     .bt-team-panel.enemy .bt-pl-progfill { background: linear-gradient(90deg, #ec4899, #f472b6); }
     .bt-pl-right { text-align: right; flex-shrink: 0; }
-    .bt-pl-score { font-size: 25px; font-weight: 800; line-height: 1; }
+    .bt-pl-score { font-size: 25px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; display: inline-block; min-width: 1.5em; text-align: right; }
     .bt-team-panel.mine .bt-pl-score { color: var(--teamA); }
     .bt-team-panel.enemy .bt-pl-score { color: var(--teamB); }
     .bt-pl-count { font-size: 11.5px; color: var(--text-faint); margin-top: 5px; }
 
     .bt-vs { text-align: center; padding: 0 6px; }
     .bt-vs-row { display: flex; align-items: center; gap: 14px; }
-    .bt-vs-num { font-size: 26px; font-weight: 800; }
+    .bt-vs-num { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; display: inline-block; min-width: 1.8em; text-align: center; }
     .bt-vs-num.mine { color: var(--teamA); }
     .bt-vs-num.enemy { color: var(--teamB); }
     .bt-vs-badge { font-size: 26px; font-weight: 900; color: #fff; text-shadow: 0 0 18px rgba(255,255,255,0.3); }
@@ -211,7 +211,7 @@
     .rs-ava.mine { background: linear-gradient(135deg, #1e3a8a, #38bdf8); }
     .rs-ava.enemy { background: linear-gradient(135deg, #7c2d12, #ec4899); }
     .rs.winner .rs-ava { border-color: var(--gold); box-shadow: 0 0 20px rgba(251,191,36,0.5); }
-    .rs-num { font-size: 46px; font-weight: 800; }
+    .rs-num { font-size: 46px; font-weight: 800; font-variant-numeric: tabular-nums; }
     .rs.you .rs-num { color: var(--teamA); }
     .rs.opp .rs-num { color: var(--teamB); }
     .rs-lbl { font-size: 12px; color: var(--text-dim); margin-top: 4px; letter-spacing: 1px; font-weight: 700; }
@@ -449,7 +449,7 @@
     var needed = teamSize * 2;
     var partyId = params.get("party") || null;
 
-    var SCORE_MULT = 40;
+    var SCORE_MULT = 1;
 
     var socket = io();
     var roomId = null;

@@ -112,6 +112,33 @@ function requireStudent(req, res, next) {
     });
 }
 
+// 5. OTA-ONA TEKSHIRUVI (MIDDLEWARE)
+// Faqat role="parent" bo'lgan foydalanuvchilarni o'tkazadi.
+// MUHIM: rolni bazadan tekshiradi (frontend yoki eski tokenga ishonmaydi).
+// Avval authMiddleware ishlashi kerak (req.user.id bo'lishi uchun).
+function requireParent(req, res, next) {
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({ error: "Avtorizatsiya kerak" });
+  }
+
+  pool.query("SELECT role FROM users WHERE id = $1", [req.user.id])
+    .then((result) => {
+      if (result.rows.length === 0) {
+        return res.status(401).json({ error: "Foydalanuvchi topilmadi" });
+      }
+      const role = result.rows[0].role;
+      if (role !== "parent") {
+        return res.status(403).json({ error: "Bu amal faqat ota-onalar uchun" });
+      }
+      req.user.role = role;
+      next();
+    })
+    .catch((err) => {
+      console.error("requireParent xatosi:", err.message);
+      return res.status(500).json({ error: "Server xatosi" });
+    });
+}
+
 // ===== ADMIN AUTH =====
 // Admin uchun alohida token — ichida isAdmin belgisi bor.
 // Oddiy user tokenidan farq qiladi (admin huquqlari uchun).
@@ -151,4 +178,4 @@ function requireAdmin(req, res, next) {
   }
 }
 
-module.exports = { signToken, authMiddleware, requireTeacher, requireStudent, signAdminToken, requireAdmin };
+module.exports = { signToken, authMiddleware, requireTeacher, requireStudent, requireParent, signAdminToken, requireAdmin };

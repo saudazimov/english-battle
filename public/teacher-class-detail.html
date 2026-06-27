@@ -301,6 +301,101 @@
       tbody td { display: block; padding: 8px 16px; border: none; }
       tbody tr { display: block; padding: 12px 0; border-bottom: 1px solid var(--border); }
     }
+
+    /* === TOPSHIRIQLAR (Assignments) === */
+    .tabs-bar { display:flex; gap:6px; border-bottom:1px solid var(--border); margin-bottom:22px; }
+    .tab-btn { padding:11px 18px; background:none; border:none; cursor:pointer; color:var(--text-muted);
+      font-size:14.5px; font-weight:600; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px;
+      transition:color .15s, border-color .15s; display:flex; align-items:center; gap:8px; }
+    .tab-btn:hover { color:var(--text-main); }
+    .tab-btn.active { color:var(--text-main); border-bottom-color:var(--primary); }
+    .tab-btn svg { width:17px; height:17px; }
+    .tab-num { font-size:11px; font-weight:700; background:var(--bg-soft); color:var(--text-muted);
+      padding:1px 8px; border-radius:999px; border:1px solid var(--border); }
+    .tab-btn.active .tab-num { background:rgba(59,130,246,.18); color:#bfdbfe; border-color:transparent; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    .assign-head { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+    .assign-head .section-title { font-size:18px; font-weight:700; }
+    .btn-primary { display:inline-flex; align-items:center; gap:8px; padding:11px 18px;
+      background:linear-gradient(135deg, var(--primary), var(--secondary)); color:#fff; border:none;
+      border-radius:var(--radius-sm); font-size:14px; font-weight:600; font-family:inherit; cursor:pointer;
+      box-shadow:0 4px 14px rgba(59,130,246,.35); transition:transform .12s, box-shadow .12s; }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(59,130,246,.45); }
+    .btn-primary:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+    .btn-primary svg { width:17px; height:17px; }
+
+    .assign-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:16px; }
+    .assign-card { background:linear-gradient(160deg, rgba(16,23,42,.95), rgba(14,21,38,.85));
+      border:1px solid var(--border); border-radius:var(--radius); padding:20px; display:flex; flex-direction:column; gap:14px;
+      transition:border-color .15s, transform .12s; }
+    .assign-card:hover { border-color:#2a3a5c; transform:translateY(-2px); }
+    .assign-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .assign-title { font-size:16px; font-weight:700; line-height:1.3; }
+    .assign-desc { font-size:13px; color:var(--text-muted); margin-top:3px; }
+    .assign-badge { font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap; flex:0 0 auto;
+      text-transform:uppercase; letter-spacing:.4px; }
+    .assign-badge.active { background:rgba(34,197,94,.14); color:#86efac; border:1px solid rgba(34,197,94,.3); }
+    .assign-badge.archived { background:var(--bg-soft); color:var(--text-dim); border:1px solid var(--border); }
+    .assign-chips { display:flex; flex-wrap:wrap; gap:7px; }
+    .a-chip { font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:8px; background:var(--bg-soft);
+      border:1px solid var(--border); color:var(--text-muted); display:inline-flex; align-items:center; gap:5px; }
+    .a-chip.lvl { color:#bfdbfe; border-color:rgba(59,130,246,.3); background:rgba(59,130,246,.1); }
+    .a-chip.due-over { color:#fca5a5; border-color:rgba(239,68,68,.3); background:rgba(239,68,68,.1); }
+    .assign-progress-info { display:flex; justify-content:space-between; font-size:12.5px; color:var(--text-muted); margin-bottom:6px; }
+    .assign-progress-info b { color:var(--text-main); }
+    .assign-bar { height:7px; border-radius:999px; background:var(--bg-input); overflow:hidden; }
+    .assign-bar > span { display:block; height:100%; border-radius:999px;
+      background:linear-gradient(90deg, var(--primary), var(--accent)); transition:width .4s; }
+    .assign-meta { display:flex; gap:14px; font-size:12px; color:var(--text-dim); }
+    .assign-meta .late { color:var(--orange); }
+    .assign-actions { display:flex; gap:8px; }
+    .btn-ghost { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:9px 12px;
+      background:var(--bg-soft); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main);
+      font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:border-color .15s, color .15s; }
+    .btn-ghost:hover { border-color:var(--border-focus); }
+    .btn-ghost.danger:hover { border-color:var(--red); color:#fca5a5; }
+    .btn-ghost svg { width:15px; height:15px; }
+
+    .modal-overlay { position:fixed; inset:0; background:rgba(3,6,15,.72); backdrop-filter:blur(4px);
+      display:none; align-items:center; justify-content:center; padding:20px; z-index:50; }
+    .modal-overlay.show { display:flex; }
+    .modal-box { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius);
+      width:100%; max-width:520px; max-height:90vh; overflow-y:auto; padding:26px; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+    .modal-box.wide { max-width:780px; }
+    .modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .modal-title { font-size:18px; font-weight:700; }
+    .modal-close { width:34px; height:34px; border-radius:9px; background:var(--bg-soft); border:1px solid var(--border);
+      color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .modal-close:hover { color:var(--text-main); border-color:var(--border-focus); }
+    .modal-close svg { width:16px; height:16px; }
+    .form-row { margin-bottom:16px; }
+    .form-row.two { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-label { display:block; font-size:12.5px; font-weight:600; color:var(--text-muted); margin-bottom:7px; }
+    .form-input, .form-select, .form-textarea { width:100%; padding:11px 13px; background:var(--bg-input);
+      border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:14px;
+      font-family:inherit; transition:border-color .15s; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { outline:none; border-color:var(--border-focus); }
+    .form-textarea { resize:vertical; min-height:64px; }
+    .form-hint { font-size:11.5px; color:var(--text-dim); margin-top:6px; }
+    .form-error { font-size:13px; color:#fca5a5; background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.3);
+      border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:14px; display:none; }
+    .form-error.show { display:block; }
+    .modal-foot { display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+
+    .res-summary { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:20px; }
+    .res-stat { background:var(--bg-soft); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; }
+    .res-stat-label { font-size:11.5px; color:var(--text-muted); margin-bottom:6px; }
+    .res-stat-value { font-size:22px; font-weight:800; }
+    .res-stat-value.green { color:var(--green); }
+    .res-stat-value.orange { color:var(--orange); }
+    .st-badge { font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; display:inline-flex; align-items:center; gap:5px; }
+    .st-badge.submitted { background:rgba(34,197,94,.14); color:#86efac; }
+    .st-badge.late_submitted { background:rgba(245,158,11,.14); color:#fcd34d; }
+    .st-badge.not_started { background:var(--bg-soft); color:var(--text-dim); border:1px solid var(--border); }
+    .st-badge.in_progress { background:rgba(59,130,246,.14); color:#bfdbfe; }
+    @media (max-width:680px){ .res-summary { grid-template-columns:repeat(2,1fr); } .form-row.two { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -425,40 +520,73 @@
             </div>
           </div>
 
-          <!-- O'quvchilar -->
-          <div class="section-head">
-            <span class="section-title">O'quvchilar</span>
-            <span class="section-count" id="sectionCount">0</span>
-          </div>
-
-          <!-- Jadval (o'quvchi bor bo'lsa) -->
-          <div class="table-card" id="studentsTable" style="display:none;">
-            <table>
-              <thead>
-                <tr>
-                  <th>O'quvchi</th>
-                  <th>Daraja</th>
-                  <th>Reyting</th>
-                  <th>Qo'shilgan</th>
-                  <th>Holat</th>
-                  <th style="text-align:right">Amal</th>
-                </tr>
-              </thead>
-              <tbody id="studentsBody"></tbody>
-            </table>
-          </div>
-
-          <!-- Bo'sh holat (o'quvchi yo'q) -->
-          <div class="state-box" id="emptyStudents" style="display:none;">
-            <div class="state-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-            </div>
-            <h2>Hali o'quvchi qo'shilmagan</h2>
-            <p>Yuqoridagi qo'shilish kodini o'quvchilarga yuboring. Ular kod orqali sinfingizga qo'shiladi.</p>
-            <button class="state-btn" onclick="copyCode()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Kodni nusxalash
+          <!-- TABLAR -->
+          <div class="tabs-bar">
+            <button class="tab-btn active" id="tabBtnStudents" onclick="switchTab('students')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              O'quvchilar <span class="tab-num" id="sectionCount">0</span>
             </button>
+            <button class="tab-btn" id="tabBtnAssignments" onclick="switchTab('assignments')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Topshiriqlar <span class="tab-num" id="tabCountAssignments">0</span>
+            </button>
+          </div>
+
+          <!-- PANEL: O'quvchilar -->
+          <div class="tab-panel active" id="tabStudents">
+            <div class="table-card" id="studentsTable" style="display:none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>O'quvchi</th>
+                    <th>Daraja</th>
+                    <th>Reyting</th>
+                    <th>Qo'shilgan</th>
+                    <th>Holat</th>
+                    <th style="text-align:right">Amal</th>
+                  </tr>
+                </thead>
+                <tbody id="studentsBody"></tbody>
+              </table>
+            </div>
+            <div class="state-box" id="emptyStudents" style="display:none;">
+              <div class="state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              </div>
+              <h2>Hali o'quvchi qo'shilmagan</h2>
+              <p>Yuqoridagi qo'shilish kodini o'quvchilarga yuboring. Ular kod orqali sinfingizga qo'shiladi.</p>
+              <button class="state-btn" onclick="copyCode()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Kodni nusxalash
+              </button>
+            </div>
+          </div>
+
+          <!-- PANEL: Topshiriqlar -->
+          <div class="tab-panel" id="tabAssignments">
+            <div class="assign-head">
+              <span class="section-title">Topshiriqlar</span>
+              <button class="btn-primary" onclick="openCreateModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Yangi topshiriq
+              </button>
+            </div>
+            <div id="assignLoading" style="display:none;">
+              <div class="sk" style="width:100%;height:150px;border-radius:16px;margin-bottom:14px"></div>
+              <div class="sk" style="width:100%;height:150px;border-radius:16px"></div>
+            </div>
+            <div class="assign-grid" id="assignGrid"></div>
+            <div class="state-box" id="emptyAssignments" style="display:none;">
+              <div class="state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <h2>Bu sinf uchun hali topshiriq yo'q</h2>
+              <p>Yangi topshiriq yaratib, o'quvchilarga vazifa bering. Tizim avtomatik baholaydi.</p>
+              <button class="state-btn" onclick="openCreateModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Yangi topshiriq
+              </button>
+            </div>
           </div>
         </div>
 
@@ -496,6 +624,65 @@
         <button class="confirm-cancel" onclick="closeConfirm()">Bekor qilish</button>
         <button class="confirm-delete" id="confirmDeleteBtn" onclick="confirmRemove()">Olib tashlash</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Yangi topshiriq -->
+  <div class="modal-overlay" id="createOverlay">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="modal-title">Yangi topshiriq</span>
+        <button class="modal-close" onclick="closeCreateModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="form-error" id="createError"></div>
+      <div class="form-row">
+        <label class="form-label">Sarlavha *</label>
+        <input class="form-input" id="fTitle" maxlength="150" placeholder="Masalan: Present Simple — 1-dars" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Tavsif (ixtiyoriy)</label>
+        <textarea class="form-textarea" id="fDesc" maxlength="500" placeholder="Topshiriq haqida qisqa izoh"></textarea>
+      </div>
+      <div class="form-row two">
+        <div>
+          <label class="form-label">CEFR daraja *</label>
+          <select class="form-select" id="fLevel"><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select>
+        </div>
+        <div>
+          <label class="form-label">Bo'lim (skill)</label>
+          <select class="form-select" id="fSkill"><option value="mixed">Aralash</option><option value="grammar">Grammatika</option><option value="vocabulary">Lug'at</option><option value="reading">O'qish</option><option value="listening">Tinglash</option><option value="speaking">Gapirish</option><option value="writing">Yozish</option></select>
+        </div>
+      </div>
+      <div class="form-row two">
+        <div>
+          <label class="form-label">Savollar soni *</label>
+          <select class="form-select" id="fCount"><option value="5">5 ta</option><option value="10" selected>10 ta</option><option value="15">15 ta</option><option value="20">20 ta</option></select>
+        </div>
+        <div>
+          <label class="form-label">Urinishlar soni</label>
+          <select class="form-select" id="fAttempts"><option value="1" selected>1 marta</option><option value="2">2 marta</option><option value="3">3 marta</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Topshirish muddati (ixtiyoriy)</label>
+        <input class="form-input" id="fDue" type="datetime-local" />
+        <div class="form-hint">Bo'sh qoldirilsa — muddatsiz. Muddatdan keyin topshirilsa "kechikkan" deb belgilanadi.</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-ghost" style="flex:0 0 auto;padding:11px 18px" onclick="closeCreateModal()">Bekor qilish</button>
+        <button class="btn-primary" id="createSubmitBtn" onclick="submitCreateAssignment()">Yaratish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Natijalar (Stage 5B) -->
+  <div class="modal-overlay" id="resultsOverlay">
+    <div class="modal-box wide">
+      <div class="modal-head">
+        <span class="modal-title" id="resultsTitle">Natijalar</span>
+        <button class="modal-close" onclick="closeResults()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div id="resultsBody"></div>
     </div>
   </div>
 
@@ -698,6 +885,239 @@
         btn.textContent = "Olib tashlash";
       }
     }
+
+    // ============ TOPSHIRIQLAR (Assignments) ============
+    let assignmentsLoaded = false;
+    const SKILL_LABELS = { mixed:"Aralash", grammar:"Grammatika", vocabulary:"Lug'at", reading:"O'qish", listening:"Tinglash", speaking:"Gapirish", writing:"Yozish" };
+
+    function switchTab(tab) {
+      const isStudents = tab === "students";
+      document.getElementById("tabBtnStudents").classList.toggle("active", isStudents);
+      document.getElementById("tabBtnAssignments").classList.toggle("active", !isStudents);
+      document.getElementById("tabStudents").classList.toggle("active", isStudents);
+      document.getElementById("tabAssignments").classList.toggle("active", !isStudents);
+      if (!isStudents && !assignmentsLoaded) loadAssignments();
+    }
+
+    function fmtDateTime(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      return d.toLocaleDateString("uz-UZ", { day:"numeric", month:"short" }) + ", " + d.toLocaleTimeString("uz-UZ", { hour:"2-digit", minute:"2-digit" });
+    }
+
+    async function loadAssignments() {
+      const grid = document.getElementById("assignGrid");
+      const empty = document.getElementById("emptyAssignments");
+      const loading = document.getElementById("assignLoading");
+      grid.innerHTML = ""; empty.style.display = "none"; loading.style.display = "block";
+      try {
+        const res = await authFetch("/teacher/classes/" + encodeURIComponent(classId) + "/assignments");
+        const data = await res.json();
+        loading.style.display = "none";
+        if (!res.ok) { empty.style.display = "block"; empty.querySelector("h2").textContent = data.error || "Yuklashda xatolik"; return; }
+        assignmentsLoaded = true;
+        const list = data.assignments || [];
+        document.getElementById("tabCountAssignments").textContent = list.length;
+        if (list.length === 0) { empty.style.display = "block"; return; }
+        grid.innerHTML = list.map(renderAssignmentCard).join("");
+      } catch (e) {
+        loading.style.display = "none";
+        empty.style.display = "block";
+        empty.querySelector("h2").textContent = "Server bilan aloqa yo'q";
+      }
+    }
+
+    function renderAssignmentCard(a) {
+      const total = a.total_students || 0;
+      const sub = a.submitted_count || 0;
+      const pct = total ? Math.round((sub / total) * 100) : 0;
+      const skill = SKILL_LABELS[a.skill] || a.skill || "Aralash";
+      const due = fmtDateTime(a.due_at);
+      const overdue = a.due_at && new Date(a.due_at) < new Date();
+      const desc = a.description ? `<div class="assign-desc">${esc(a.description)}</div>` : "";
+      const lateChip = a.late_count ? `<span class="late">${a.late_count} kechikkan</span>` : "";
+      return `
+        <div class="assign-card">
+          <div class="assign-card-top">
+            <div style="min-width:0">
+              <div class="assign-title">${esc(a.title)}</div>
+              ${desc}
+            </div>
+            <span class="assign-badge ${a.status === "archived" ? "archived" : "active"}">${a.status === "archived" ? "Arxiv" : "Faol"}</span>
+          </div>
+          <div class="assign-chips">
+            <span class="a-chip lvl">${esc(a.cefr_level)}</span>
+            <span class="a-chip">${esc(skill)}</span>
+            <span class="a-chip">${a.question_count} savol</span>
+            ${due ? `<span class="a-chip ${overdue ? "due-over" : ""}">${overdue ? "Muddat o'tgan" : "Muddat"}: ${due}</span>` : `<span class="a-chip">Muddatsiz</span>`}
+          </div>
+          <div>
+            <div class="assign-progress-info"><span>Topshirgan: <b>${sub}/${total}</b></span><span>O'rtacha: <b>${a.average_percent || 0}%</b></span></div>
+            <div class="assign-bar"><span style="width:${pct}%"></span></div>
+          </div>
+          <div class="assign-meta">
+            <span>Boshlamagan: ${a.not_started_count || 0}</span>
+            ${lateChip}
+          </div>
+          <div class="assign-actions">
+            <button class="btn-ghost" onclick="openResults(${a.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Natijalar</button>
+            ${a.status === "archived" ? "" : `<button class="btn-ghost danger" onclick="archiveAssignment(${a.id}, this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Arxiv</button>`}
+          </div>
+        </div>`;
+    }
+
+    function openCreateModal() {
+      document.getElementById("createError").classList.remove("show");
+      document.getElementById("fTitle").value = "";
+      document.getElementById("fDesc").value = "";
+      document.getElementById("fLevel").value = "A1";
+      document.getElementById("fSkill").value = "mixed";
+      document.getElementById("fCount").value = "10";
+      document.getElementById("fAttempts").value = "1";
+      document.getElementById("fDue").value = "";
+      document.getElementById("createOverlay").classList.add("show");
+      setTimeout(() => document.getElementById("fTitle").focus(), 50);
+    }
+    function closeCreateModal() { document.getElementById("createOverlay").classList.remove("show"); }
+    document.getElementById("createOverlay").addEventListener("click", e => { if (e.target.id === "createOverlay") closeCreateModal(); });
+    function showCreateError(msg) { const el = document.getElementById("createError"); el.textContent = msg; el.classList.add("show"); }
+
+    async function submitCreateAssignment() {
+      const title = document.getElementById("fTitle").value.trim();
+      if (title.length < 3) { showCreateError("Sarlavha kamida 3 belgi bo'lishi kerak"); return; }
+      const payload = {
+        title,
+        description: document.getElementById("fDesc").value.trim(),
+        cefr_level: document.getElementById("fLevel").value,
+        skill: document.getElementById("fSkill").value,
+        question_count: parseInt(document.getElementById("fCount").value, 10),
+        max_attempts: parseInt(document.getElementById("fAttempts").value, 10),
+        due_at: document.getElementById("fDue").value ? new Date(document.getElementById("fDue").value).toISOString() : null
+      };
+      const btn = document.getElementById("createSubmitBtn");
+      btn.disabled = true; btn.textContent = "Yaratilmoqda...";
+      document.getElementById("createError").classList.remove("show");
+      try {
+        const res = await authFetch("/teacher/classes/" + encodeURIComponent(classId) + "/assignments", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) { showCreateError(data.error || "Topshiriq yaratilmadi"); return; }
+        closeCreateModal();
+        showToast("Topshiriq yaratildi");
+        assignmentsLoaded = false;
+        await loadAssignments();
+      } catch (e) { showCreateError("Server bilan aloqa yo'q"); }
+      finally { btn.disabled = false; btn.textContent = "Yaratish"; }
+    }
+
+    async function archiveAssignment(id, btnEl) {
+      if (btnEl) btnEl.disabled = true;
+      try {
+        const res = await authFetch("/teacher/assignments/" + encodeURIComponent(id) + "/archive", { method: "POST" });
+        const data = await res.json();
+        if (!res.ok) { showToast(data.error || "Arxivlashda xatolik"); if (btnEl) btnEl.disabled = false; return; }
+        showToast("Topshiriq arxivlandi");
+        assignmentsLoaded = false;
+        await loadAssignments();
+      } catch (e) { showToast("Server bilan aloqa yo'q"); if (btnEl) btnEl.disabled = false; }
+    }
+
+    // === Natijalar modali ===
+    const ST_LABEL = { submitted:"Topshirgan", late_submitted:"Kechikkan", not_started:"Boshlamagan", in_progress:"Jarayonda" };
+
+    async function openResults(id) {
+      const overlay = document.getElementById("resultsOverlay");
+      const body = document.getElementById("resultsBody");
+      document.getElementById("resultsTitle").textContent = "Natijalar";
+      body.innerHTML = `<div class="sk" style="width:100%;height:90px;border-radius:12px;margin-bottom:14px"></div><div class="sk" style="width:100%;height:200px;border-radius:12px"></div>`;
+      overlay.classList.add("show");
+      try {
+        const res = await authFetch("/teacher/assignments/" + encodeURIComponent(id) + "/results");
+        const data = await res.json();
+        if (!res.ok) { body.innerHTML = `<p style="color:#fca5a5;text-align:center;padding:30px 0">${esc(data.error || "Natijalarni yuklab bo'lmadi")}</p>`; return; }
+        renderResults(data);
+      } catch (e) {
+        body.innerHTML = `<p style="color:#fca5a5;text-align:center;padding:30px 0">Server bilan aloqa yo'q</p>`;
+      }
+    }
+
+    function renderResults(data) {
+      const a = data.assignment || {};
+      const s = data.summary || {};
+      const students = data.students || [];
+      document.getElementById("resultsTitle").textContent = (a.title || "Topshiriq") + " — natijalar";
+
+      const summaryHtml = `
+        <div class="res-summary">
+          <div class="res-stat">
+            <div class="res-stat-label">Bajarish</div>
+            <div class="res-stat-value">${s.completion_percent || 0}%</div>
+            <div class="res-stat-label" style="margin:6px 0 0">${s.submitted_count || 0}/${s.total_students || 0} o'quvchi</div>
+          </div>
+          <div class="res-stat">
+            <div class="res-stat-label">O'rtacha ball</div>
+            <div class="res-stat-value green">${s.average_percent || 0}%</div>
+            <div class="res-stat-label" style="margin:6px 0 0">Eng yuqori ${s.highest_percent || 0}% · past ${s.lowest_percent || 0}%</div>
+          </div>
+          <div class="res-stat">
+            <div class="res-stat-label">Kechikkan</div>
+            <div class="res-stat-value orange">${s.late_count || 0}</div>
+          </div>
+          <div class="res-stat">
+            <div class="res-stat-label">Boshlamagan</div>
+            <div class="res-stat-value">${s.not_started_count || 0}</div>
+          </div>
+        </div>`;
+
+      let tableHtml;
+      if (students.length === 0) {
+        tableHtml = `<p style="color:var(--text-muted);text-align:center;padding:24px 0">Bu sinfda faol o'quvchi yo'q.</p>`;
+      } else {
+        const rows = students.map(st => {
+          const name = esc(st.name || "Noma'lum");
+          const initials = esc((st.name || "?").trim().substring(0,1).toUpperCase());
+          const label = ST_LABEL[st.status] || st.status;
+          const done = st.status === "submitted" || st.status === "late_submitted";
+          const score = done ? `${st.score}/${st.total}` : "—";
+          const pct = done ? `${st.percent}%` : "—";
+          const when = done ? (fmtDateTime(st.submitted_at) || "—") : "—";
+          return `
+            <tr>
+              <td>
+                <div class="student-cell">
+                  <div class="student-avatar">${initials}</div>
+                  <span class="student-name">${name}</span>
+                </div>
+              </td>
+              <td><span class="st-badge ${st.status}">${label}</span></td>
+              <td><span class="rating-val">${score}</span></td>
+              <td><b>${pct}</b></td>
+              <td class="muted-cell">${when}</td>
+            </tr>`;
+        }).join("");
+        tableHtml = `
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>O'quvchi</th>
+                  <th>Holat</th>
+                  <th>Ball</th>
+                  <th>Foiz</th>
+                  <th>Topshirgan vaqti</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>`;
+      }
+
+      document.getElementById("resultsBody").innerHTML = summaryHtml + tableHtml;
+    }
+
+    function closeResults() { document.getElementById("resultsOverlay").classList.remove("show"); }
+    document.getElementById("resultsOverlay").addEventListener("click", e => { if (e.target.id === "resultsOverlay") closeResults(); });
 
     loadDetail();
 

@@ -282,3 +282,148 @@ CREATE INDEX IF NOT EXISTS idx_tour_schools_tid ON tournament_schools(tournament
 CREATE INDEX IF NOT EXISTS idx_tour_team_tid_school ON tournament_team_members(tournament_id, school);
 CREATE INDEX IF NOT EXISTS idx_tour_matches_tid ON tournament_matches(tournament_id);
 CREATE INDEX IF NOT EXISTS idx_tour_match_players_mid ON tournament_match_players(match_id);
+
+-- ============================================================
+-- TEACHER ASSIGNMENTS (Topshiriqlar tizimi — V1)
+-- Savollar yaratishda SNAPSHOT qilinadi: admin bankni o'zgartirsa/o'chirsa ham
+-- eski topshiriq natijalari va review buzilmaydi.
+-- ============================================================
+
+-- 1. Topshiriqlar
+CREATE TABLE IF NOT EXISTS assignments (
+  id SERIAL PRIMARY KEY,
+  class_id INTEGER NOT NULL REFERENCES classes(id),
+  teacher_id INTEGER NOT NULL REFERENCES users(id),
+  title VARCHAR(150) NOT NULL,
+  description TEXT,
+  cefr_level VARCHAR(5) NOT NULL,
+  skill VARCHAR(50) NOT NULL DEFAULT 'mixed',
+  question_count INTEGER NOT NULL,
+  due_at TIMESTAMP,                                      -- NULL = muddatsiz
+  max_attempts INTEGER NOT NULL DEFAULT 1,
+  late_policy VARCHAR(20) NOT NULL DEFAULT 'allow_late', -- allow_late | block_late (keyin)
+  status VARCHAR(20) NOT NULL DEFAULT 'active',          -- draft | active | archived
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  archived_at TIMESTAMP
+);
+
+-- 2. Topshiriq savollari — SNAPSHOT (matn shu yerda; original_question_id faqat havola)
+CREATE TABLE IF NOT EXISTS assignment_questions (
+  id SERIAL PRIMARY KEY,
+  assignment_id INTEGER NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+  original_question_id INTEGER REFERENCES questions(id) ON DELETE SET NULL,
+  q_order INTEGER NOT NULL,
+  question_text TEXT NOT NULL,
+  option_a TEXT NOT NULL,
+  option_b TEXT NOT NULL,
+  option_c TEXT NOT NULL,
+  option_d TEXT NOT NULL,
+  correct_answer CHAR(1) NOT NULL,
+  explanation TEXT,
+  cefr_level VARCHAR(5),
+  skill VARCHAR(50),
+  difficulty VARCHAR(30),
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (assignment_id, q_order)
+);
+
+-- 3. O'quvchi topshirishlari (V1: bitta urinish; attempt_number kelajak uchun)
+CREATE TABLE IF NOT EXISTS assignment_submissions (
+  id SERIAL PRIMARY KEY,
+  assignment_id INTEGER NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+  student_id INTEGER NOT NULL REFERENCES users(id),
+  attempt_number INTEGER NOT NULL DEFAULT 1,
+  score INTEGER DEFAULT 0,
+  total INTEGER DEFAULT 0,
+  percent INTEGER DEFAULT 0,
+  correct_count INTEGER DEFAULT 0,
+  wrong_count INTEGER DEFAULT 0,
+  unanswered_count INTEGER DEFAULT 0,
+  is_late BOOLEAN DEFAULT false,
+  status VARCHAR(20) NOT NULL DEFAULT 'in_progress',     -- in_progress | submitted | abandoned
+  started_at TIMESTAMP DEFAULT NOW(),
+  submitted_at TIMESTAMP,
+  UNIQUE (assignment_id, student_id, attempt_number)
+);
+
+-- 4. Har savol bo'yicha javob (review + zaif mavzu tahlili uchun)
+CREATE TABLE IF NOT EXISTS submission_answers (
+  id SERIAL PRIMARY KEY,
+  submission_id INTEGER NOT NULL REFERENCES assignment_submissions(id) ON DELETE CASCADE,
+  assignment_question_id INTEGER NOT NULL REFERENCES assignment_questions(id),
+  selected_option CHAR(1),                               -- NULL = tashlab ketilgan
+  correct_answer CHAR(1) NOT NULL,
+  is_correct BOOLEAN DEFAULT false,
+  answered_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (submission_id, assignment_question_id)
+);
+
+-- Indekslar
+CREATE INDEX IF NOT EXISTS idx_assignments_class ON assignments(class_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_teacher ON assignments(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_status ON assignments(status);
+CREATE INDEX IF NOT EXISTS idx_aq_assignment ON assignment_questions(assignment_id);
+CREATE INDEX IF NOT EXISTS idx_asub_assignment ON assignment_submissions(assignment_id);
+CREATE INDEX IF NOT EXISTS idx_asub_student ON assignment_submissions(student_id);
+CREATE INDEX IF NOT EXISTS idx_asub_status ON assignment_submissions(status);
+CREATE INDEX IF NOT EXISTS idx_sanswers_submission ON submission_answers(submission_id);
+
+-- ============================================================
+-- PARENT DASHBOARD (Ota-ona paneli — V1)
+-- Ulanish: bola yaratgan qisqa muddatli kod orqali (rozilik).
+-- Kod raw saqlanadi (qidirish + qayta ko'rsatish uchun), lekin
+-- 7 kun muddat + unique + rate-limit + revocation bilan himoyalanadi.
+-- ============================================================
+
+-- O'quvchining ota-ona ulash kodi (talab bo'lganda generatsiya qilinadi)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_connect_code VARCHAR(12);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_connect_code_expires_at TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_connect_code_created_at TIMESTAMP;
+
+-- Bitta kod bir vaqtning o'zida faqat bitta o'quvchiniki bo'lsin (NULL'lar cheklanmaydi)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_parent_code
+  ON users(parent_connect_code) WHERE parent_connect_code IS NOT NULL;
+
+-- Ota-ona ↔ bola bog'lanishi
+CREATE TABLE IF NOT EXISTS parent_links (
+  id SERIAL PRIMARY KEY,
+  parent_id INTEGER NOT NULL REFERENCES users(id),
+  student_id INTEGER NOT NULL REFERENCES users(id),
+  relationship VARCHAR(30) DEFAULT 'guardian',   -- mother | father | guardian | other
+  status VARCHAR(20) NOT NULL DEFAULT 'active',   -- active | revoked
+  linked_at TIMESTAMP DEFAULT NOW(),
+  revoked_at TIMESTAMP,
+  revoked_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (parent_id, student_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_plink_parent ON parent_links(parent_id);
+CREATE INDEX IF NOT EXISTS idx_plink_student ON parent_links(student_id);
+CREATE INDEX IF NOT EXISTS idx_plink_status ON parent_links(status);
+
+-- ============================================================
+-- EXAM HISTORY (Imtihon tarixi — V1)
+-- Har Ultimate Exam urinishi to'liq saqlanadi (umumiy + skill bo'yicha).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS exam_attempts (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  exam_type VARCHAR(30) NOT NULL DEFAULT 'ultimate',  -- ultimate (A1→A2, ...)
+  from_level VARCHAR(5) NOT NULL,        -- sinaladigan (joriy) daraja
+  to_level VARCHAR(5),                   -- maqsadli (keyingi) daraja; NULL = yo'q
+  total_questions INTEGER NOT NULL DEFAULT 0,
+  total_correct INTEGER NOT NULL DEFAULT 0,
+  overall_percent INTEGER NOT NULL DEFAULT 0,
+  pass_overall_required INTEGER,         -- o'sha paytdagi o'tish chegarasi (75)
+  pass_skill_required INTEGER,           -- har skill chegarasi (60)
+  skill_results JSONB,                   -- { grammar:{correct,total,percent}, ... }
+  passed BOOLEAN NOT NULL DEFAULT false,
+  level_changed BOOLEAN NOT NULL DEFAULT false,
+  taken_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_exam_attempts_user ON exam_attempts(user_id);
+CREATE INDEX IF NOT EXISTS idx_exam_attempts_taken ON exam_attempts(taken_at);

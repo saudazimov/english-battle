@@ -167,6 +167,58 @@
       background: linear-gradient(180deg, #1eb53a 33%, #fff 33%, #fff 66%, #0099b5 66%);
       display: inline-block;
     }
+    .phone-country {
+      border: none; outline: none; cursor: pointer;
+      background: var(--bg-soft); border-right: 1px solid var(--border);
+      padding: 0 12px; font-size: 15px; font-weight: 600; color: inherit;
+      -webkit-appearance: none; appearance: none;
+    }
+    .phone-country { position: relative; display: flex; }
+    .cc-trigger {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--bg-soft); border: none; border-right: 1px solid var(--border);
+      padding: 0 12px; font-size: 15px; font-weight: 600; color: inherit; cursor: pointer; white-space: nowrap;
+    }
+    .cc-trigger .cc-caret { width: 13px; height: 13px; opacity: 0.55; transition: transform 0.15s; }
+    .phone-country.open .cc-caret { transform: rotate(180deg); }
+    .cc-menu {
+      position: absolute; top: calc(100% + 8px); left: 0; z-index: 60;
+      min-width: 220px; max-width: calc(100vw - 48px);
+      background: var(--bg-soft); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,0.45); padding: 6px; display: none;
+    }
+    .phone-country.open .cc-menu { display: block; }
+    .cc-item {
+      display: flex; align-items: center; gap: 11px; width: 100%;
+      background: transparent; border: none; border-radius: 9px; padding: 10px 11px;
+      font-size: 14px; font-weight: 600; color: inherit; cursor: pointer; text-align: left;
+    }
+    .cc-item:hover { background: rgba(255,255,255,0.06); }
+    .cc-item .cc-name { flex: 1; }
+    .cc-item .cc-dial { opacity: 0.6; }
+    .phone-country { position: relative; display: flex; }
+    .cc-trigger {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--bg-soft); border: none; border-right: 1px solid var(--border);
+      padding: 0 12px; font-size: 15px; font-weight: 600; color: inherit; cursor: pointer; white-space: nowrap;
+    }
+    .cc-trigger .cc-caret { width: 13px; height: 13px; opacity: 0.55; transition: transform 0.15s; }
+    .phone-country.open .cc-caret { transform: rotate(180deg); }
+    .cc-menu {
+      position: absolute; top: calc(100% + 8px); left: 0; z-index: 60;
+      min-width: 220px; max-width: calc(100vw - 48px);
+      background: var(--bg-soft); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,0.45); padding: 6px; display: none;
+    }
+    .phone-country.open .cc-menu { display: block; }
+    .cc-item {
+      display: flex; align-items: center; gap: 11px; width: 100%;
+      background: transparent; border: none; border-radius: 9px; padding: 10px 11px;
+      font-size: 14px; font-weight: 600; color: inherit; cursor: pointer; text-align: left;
+    }
+    .cc-item:hover { background: rgba(255,255,255,0.06); }
+    .cc-item .cc-name { flex: 1; }
+    .cc-item .cc-dial { opacity: 0.6; }
     .phone-input input { border: none; border-radius: 0; background: transparent; flex: 1; }
     .phone-input input:focus { box-shadow: none; }
 
@@ -328,8 +380,16 @@
 
         <label>Telefon raqami</label>
         <div class="phone-input">
-          <div class="phone-prefix"><span class="flag"></span> +998</div>
-          <input type="tel" id="loginPhone" placeholder="90 123 45 67" />
+          <div class="phone-country" id="countrySelect">
+            <button type="button" class="cc-trigger" onclick="toggleCountryMenu(event)">
+              <span class="flag"></span> <span id="ccDial">+998</span>
+              <svg class="cc-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="cc-menu" id="ccMenu">
+              <button type="button" class="cc-item" onclick="selectCountry('UZ')"><span class="flag"></span> <span class="cc-name">O'zbekiston</span> <span class="cc-dial">+998</span></button>
+            </div>
+          </div>
+          <input type="tel" id="loginPhone" inputmode="numeric" autocomplete="tel-national" placeholder="90 123 45 67" oninput="onPhoneInput(event)" />
         </div>
 
         <label>Parol</label>
@@ -426,11 +486,50 @@
       }
     }
 
-    // ===== LOGIN (mantiq o'zgarmaydi) =====
+    // ===== MAMLAKAT + TELEFON FORMAT (hozircha faqat O'zbekiston) =====
+    // Yangi mamlakat qo'shish: shu ro'yxatga qator + <select>ga <option>.
+    const COUNTRIES = {
+      UZ: { name: "O'zbekiston", flag: "🇺🇿", dial: "998", natLen: 9, groups: [2,3,2,2], placeholder: "90 123 45 67" },
+    };
+    let currentCountry = COUNTRIES.UZ;
+    function normalizeNational(raw) {
+      let d = String(raw).replace(/\D/g, "");
+      const dial = currentCountry.dial;
+      if (d.length > currentCountry.natLen && d.startsWith(dial)) d = d.slice(dial.length);
+      return d.slice(0, currentCountry.natLen); // 9 tadan ko'p yozdirmaymiz
+    }
+    function formatNational(d) {
+      const g = currentCountry.groups; const out = []; let i = 0;
+      for (const len of g) { if (i >= d.length) break; out.push(d.slice(i, i + len)); i += len; }
+      return out.join(" ");
+    }
+    function onPhoneInput(e) { e.target.value = formatNational(normalizeNational(e.target.value)); }
+    function getNationalDigits() { return String(document.getElementById("loginPhone").value).replace(/\D/g, ""); }
+    function getFullPhone() { return "+" + currentCountry.dial + getNationalDigits(); } // +998901234567
+    function toggleCountryMenu(e) {
+      if (e) e.stopPropagation();
+      document.getElementById("countrySelect").classList.toggle("open");
+    }
+    function selectCountry(code) {
+      currentCountry = COUNTRIES[code] || COUNTRIES.UZ;
+      document.getElementById("ccDial").textContent = "+" + currentCountry.dial;
+      document.getElementById("countrySelect").classList.remove("open");
+      const inp = document.getElementById("loginPhone");
+      inp.placeholder = currentCountry.placeholder;
+      inp.value = "";
+      inp.focus();
+    }
+    document.addEventListener("click", function (e) {
+      const sel = document.getElementById("countrySelect");
+      if (sel && !sel.contains(e.target)) sel.classList.remove("open");
+    });
+
+    // ===== LOGIN =====
     async function login() {
-      const phone = document.getElementById("loginPhone").value.trim();
+      const nat = getNationalDigits();
       const password = document.getElementById("loginPassword").value;
-      if (!phone || !password) return showModal("Telefon va parolni kiriting", "error");
+      if (nat.length !== currentCountry.natLen || !password) return showModal("Telefon raqamini to'liq va parolni kiriting", "error");
+      const phone = getFullPhone(); // +998901234567
 
       const btn = document.getElementById("loginBtn");
       btn.disabled = true;
@@ -454,6 +553,8 @@
           window.location.href = "/teacher.html";
         } else if (result.user.role === "student") {
           window.location.href = "/lobby.html";
+        } else if (result.user.role === "parent") {
+          window.location.href = "/parent.html";
         } else {
           window.location.href = "/dashboard.html";
         }

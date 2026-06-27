@@ -207,6 +207,10 @@
       } catch (err) { alert("Server xatosi"); }
     }
 
+    function escapeHtml(s) {
+      return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
     function showQuestion() {
       const q = questions[currentIndex];
       document.getElementById("progressText").textContent = "Savol " + (currentIndex + 1) + " / " + questions.length;
@@ -219,7 +223,7 @@
       ["A","B","C","D"].forEach(letter => {
         const btn = document.createElement("button");
         btn.className = "opt" + (userAnswers[q.id] === letter ? " selected" : "");
-        btn.innerHTML = '<span class="opt-radio"></span><span class="opt-letter">' + letter + '</span><span>' + q["option_" + letter.toLowerCase()] + '</span>';
+        btn.innerHTML = '<span class="opt-radio"></span><span class="opt-letter">' + letter + '</span><span>' + escapeHtml(q["option_" + letter.toLowerCase()] || "") + '</span>';
         btn.onclick = () => selectAnswer(q.id, letter, btn);
         optionsDiv.appendChild(btn);
       });

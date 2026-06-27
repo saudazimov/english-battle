@@ -49,6 +49,96 @@
     .sk { background: var(--panel-2); border-radius: 8px; position: relative; overflow: hidden; }
     .sk::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); animation: shimmer 1.4s infinite; }
     @keyframes shimmer { to { transform: translateX(100%); } }
+
+    /* === Topshiriqlar ro'yxati === */
+    .assign-list { display: grid; gap: 14px; }
+    .a-card { display:flex; align-items:center; gap:16px; padding:18px 20px; background:linear-gradient(165deg, rgba(20,28,56,.7), rgba(12,17,33,.85)); border:1px solid var(--border); border-radius:16px; transition:border-color .15s, transform .12s; }
+    .a-card:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+    .a-card-ic { width:48px;height:48px;border-radius:13px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:var(--panel-2);border:1px solid var(--border);color:var(--accent); }
+    .a-card-ic i { width:24px;height:24px; }
+    .a-card-main { flex:1; min-width:0; }
+    .a-card-title { font-size:16px;font-weight:700;margin-bottom:5px; }
+    .a-card-chips { display:flex;flex-wrap:wrap;gap:7px; }
+    .a-chip { font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:7px;background:var(--panel-2);border:1px solid var(--border);color:var(--text-dim); }
+    .a-chip.lvl { color:#a9c1ff;border-color:rgba(91,140,255,.35);background:rgba(91,140,255,.12); }
+    .a-chip.over { color:#fca5a5;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.1); }
+    .a-card-right { display:flex;flex-direction:column;align-items:flex-end;gap:9px;flex:0 0 auto; }
+    .a-status { font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px; }
+    .a-status.not_started { background:var(--panel-2);color:var(--text-dim);border:1px solid var(--border); }
+    .a-status.submitted { background:rgba(34,197,94,.14);color:#86efac; }
+    .a-status.late_submitted { background:rgba(245,158,11,.14);color:#fcd34d; }
+    .a-status.in_progress { background:rgba(91,140,255,.14);color:#a9c1ff; }
+    .a-btn { display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border:none;border-radius:10px;background:linear-gradient(95deg,var(--accent),var(--accent-2));color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s; }
+    .a-btn:hover { opacity:.92; }
+    .a-btn.ghost { background:var(--panel-2);border:1px solid var(--border);color:var(--text); }
+    .a-btn i { width:15px;height:15px; }
+    @media (max-width:620px){ .a-card{flex-wrap:wrap} .a-card-right{width:100%;flex-direction:row;justify-content:space-between;align-items:center} }
+
+    /* === Quiz ekrani === */
+    .quiz-wrap { background:linear-gradient(180deg,var(--panel),var(--bg-2));border:1px solid var(--border);border-radius:18px;padding:28px; }
+    .quiz-top { display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px; }
+    .quiz-title { font-size:17px;font-weight:800; }
+    .quiz-counter { font-size:13px;color:var(--text-dim);font-weight:600; }
+    .quiz-bar { height:8px;border-radius:999px;background:var(--panel-2);overflow:hidden;margin-bottom:26px; }
+    .quiz-bar > span { display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .3s; }
+    .q-text { font-size:22px;font-weight:600;line-height:1.4;margin-bottom:28px; }
+    .opt { display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:12px 0;padding:18px 20px;background:var(--panel);border:1px solid var(--border);border-radius:14px;color:var(--text);font-size:16px;cursor:pointer;transition:all .2s;font-family:inherit; }
+    .opt:hover { border-color:var(--border-bright);transform:translateX(4px); }
+    .opt.selected { background:rgba(91,140,255,.15);border-color:var(--accent); }
+    .opt-radio { width:22px;height:22px;border-radius:50%;border:2px solid var(--border-bright);flex-shrink:0;display:grid;place-items:center;transition:all .2s; }
+    .opt.selected .opt-radio { border-color:var(--accent); }
+    .opt.selected .opt-radio::after { content:"";width:11px;height:11px;border-radius:50%;background:var(--accent); }
+    .opt-letter { font-weight:800;color:var(--text-dim);width:20px;flex-shrink:0; }
+    .opt.selected .opt-letter { color:var(--accent); }
+    .quiz-nav { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:26px; }
+    .quiz-dots { display:flex;flex-wrap:wrap;gap:6px;justify-content:center;flex:1; }
+    .qdot { width:11px;height:11px;border-radius:50%;background:var(--panel-2);border:1px solid var(--border);cursor:pointer;transition:all .15s; }
+    .qdot.answered { background:var(--accent);border-color:var(--accent); }
+    .qdot.current { box-shadow:0 0 0 3px rgba(91,140,255,.3); transform:scale(1.2); }
+    .nav-btn { display:inline-flex;align-items:center;gap:7px;padding:11px 18px;border:1px solid var(--border);border-radius:11px;background:var(--panel-2);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:border-color .15s,opacity .15s; }
+    .nav-btn:hover { border-color:var(--border-bright); }
+    .nav-btn:disabled { opacity:.4;cursor:not-allowed; }
+    .nav-btn.primary { background:linear-gradient(95deg,var(--accent),var(--accent-2));border:none;color:#fff; }
+    .nav-btn i { width:16px;height:16px; }
+
+    /* === Natija ekrani === */
+    .result-hero { text-align:center;padding:30px 20px;background:linear-gradient(180deg,var(--panel),var(--bg-2));border:1px solid var(--border);border-radius:18px;margin-bottom:20px; }
+    .result-ring { width:130px;height:130px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center; }
+    .result-pct { font-size:34px;font-weight:800; }
+    .result-sub { font-size:14px;color:var(--text-dim);margin-top:4px; }
+    .result-stats { display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px; }
+    .r-stat { padding:10px 16px;border-radius:12px;background:var(--panel-2);border:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text-dim); }
+    .r-stat b { display:block;font-size:20px;font-weight:800;margin-top:2px;color:var(--text); }
+    .r-stat.ok b { color:#86efac; } .r-stat.no b { color:#fca5a5; } .r-stat.skip b { color:var(--text-dim); }
+    .late-pill { display:inline-flex;align-items:center;gap:7px;margin-top:14px;padding:6px 14px;border-radius:999px;background:rgba(245,158,11,.14);color:#fcd34d;font-size:13px;font-weight:700; }
+    .late-pill i { width:15px;height:15px; }
+    .review-title { font-size:17px;font-weight:800;margin:24px 0 14px; }
+    .rev-card { background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:12px; }
+    .rev-q { font-size:15.5px;font-weight:600;margin-bottom:14px;display:flex;gap:10px; }
+    .rev-qnum { color:var(--text-dim);font-weight:800;flex:0 0 auto; }
+    .rev-opt { display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;border:1px solid var(--border);margin:7px 0;font-size:14.5px;color:var(--text-dim); }
+    .rev-opt .rl { font-weight:800;width:18px;color:var(--text-dim); }
+    .rev-opt.correct { background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.4);color:#bbf7d0; }
+    .rev-opt.correct .rl { color:#86efac; }
+    .rev-opt.wrong { background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.4);color:#fecaca; }
+    .rev-opt.wrong .rl { color:#fca5a5; }
+    .rev-tag { margin-left:auto;font-size:11px;font-weight:700; }
+    .rev-expl { margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--panel-2);border:1px solid var(--border);font-size:13.5px;color:var(--text-dim);line-height:1.6; }
+    .rev-expl b { color:var(--text); }
+
+    /* Modal */
+    .ov { position:fixed;inset:0;background:rgba(3,6,15,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px;z-index:2000; }
+    .ov.show { display:flex; }
+    .ov-box { background:var(--panel);border:1px solid var(--border);border-radius:18px;width:100%;max-width:420px;padding:28px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.6); }
+    .ov-ic { width:60px;height:60px;margin:0 auto 18px;border-radius:16px;background:rgba(91,140,255,.14);color:var(--accent);display:grid;place-items:center; }
+    .ov-ic i { width:28px;height:28px; }
+    .ov-title { font-size:19px;font-weight:800;margin-bottom:8px; }
+    .ov-text { font-size:14px;color:var(--text-dim);line-height:1.5;margin-bottom:22px; }
+    .ov-foot { display:flex;gap:12px; }
+    .ov-foot button { flex:1;padding:13px;border-radius:12px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid var(--border); }
+    .ov-cancel { background:var(--panel-2);color:var(--text-dim); }
+    .ov-confirm { background:linear-gradient(95deg,var(--accent),var(--accent-2));color:#fff;border:none; }
+    .ov-confirm:disabled { opacity:.6;cursor:not-allowed; }
   </style>
 </head>
 <body>
@@ -82,20 +172,29 @@
           </div>
         </div>
 
-        <div class="filters">
-          <div class="filter-chip active">Hammasi</div>
-          <div class="filter-chip">Boshlanmagan</div>
-          <div class="filter-chip">Jarayonda</div>
-          <div class="filter-chip">Bajarilgan</div>
-          <div class="filter-chip">Muddati o'tgan</div>
+        <div class="filters" id="filters">
+          <div class="filter-chip active" onclick="setFilter('all', this)">Hammasi</div>
+          <div class="filter-chip" onclick="setFilter('not_started', this)">Boshlanmagan</div>
+          <div class="filter-chip" onclick="setFilter('submitted', this)">Bajarilgan</div>
+          <div class="filter-chip" onclick="setFilter('overdue', this)">Muddati o'tgan</div>
         </div>
 
-        <!-- Professional empty state (assignment tizimi hali yo'q) -->
-        <div class="state-box">
+        <!-- Topshiriqlar ro'yxati -->
+        <div class="assign-list" id="assignList"></div>
+
+        <!-- Bo'sh holat: topshiriq yo'q -->
+        <div class="state-box" id="emptyAssign" style="display:none;">
           <div class="state-ic"><i data-lucide="clipboard-list"></i></div>
           <h2>Bu sinf uchun hali topshiriqlar berilmagan</h2>
-          <p>O'qituvchingiz topshiriq berishni boshlaganda, ular shu yerda paydo bo'ladi. Hozircha sinfingizdagi yangiliklarni kuzatib boring.</p>
+          <p>O'qituvchingiz topshiriq berishni boshlaganda, ular shu yerda paydo bo'ladi.</p>
           <a class="state-btn ghost" href="/student-classes.html"><i data-lucide="arrow-left"></i> Sinflarimga qaytish</a>
+        </div>
+
+        <!-- Bo'sh holat: filtrga mos yo'q -->
+        <div class="state-box" id="emptyFilter" style="display:none;">
+          <div class="state-ic"><i data-lucide="filter"></i></div>
+          <h2>Bu filtrda topshiriq yo'q</h2>
+          <p>Boshqa filtrni tanlab ko'ring.</p>
         </div>
       </div>
 
@@ -105,6 +204,52 @@
         <h2>Sinf topilmadi</h2>
         <p id="errMsg">Bu sinf mavjud emas yoki siz unga a'zo emassiz.</p>
         <a class="state-btn" href="/student-classes.html"><i data-lucide="arrow-left"></i> Sinflarimga qaytish</a>
+      </div>
+
+      <!-- QUIZ EKRANI -->
+      <div class="quiz-wrap" id="quizScreen" style="display:none;">
+        <div class="quiz-top">
+          <div class="quiz-title" id="quizTitle">Topshiriq</div>
+          <div class="quiz-counter"><span id="qCur">1</span> / <span id="qTotal">5</span></div>
+        </div>
+        <div class="quiz-bar"><span id="quizBar" style="width:0%"></span></div>
+        <div class="q-text" id="qText">—</div>
+        <div id="qOptions"></div>
+        <div class="quiz-nav">
+          <button class="nav-btn" id="prevBtn" onclick="prevQ()"><i data-lucide="chevron-left"></i> Oldingi</button>
+          <div class="quiz-dots" id="quizDots"></div>
+          <button class="nav-btn primary" id="nextBtn" onclick="nextQ()">Keyingi <i data-lucide="chevron-right"></i></button>
+        </div>
+      </div>
+
+      <!-- NATIJA EKRANI -->
+      <div id="resultScreen" style="display:none;">
+        <div class="result-hero">
+          <div class="result-ring" id="resultRing"></div>
+          <div class="result-sub" id="resultSub">—</div>
+          <div class="result-stats">
+            <div class="r-stat ok">To'g'ri <b id="rOk">0</b></div>
+            <div class="r-stat no">Xato <b id="rNo">0</b></div>
+            <div class="r-stat skip">Javobsiz <b id="rSkip">0</b></div>
+          </div>
+          <div id="lateWrap"></div>
+        </div>
+        <div class="review-title">Javoblar tahlili</div>
+        <div id="reviewList"></div>
+        <button class="state-btn ghost" style="margin-top:18px" onclick="backToList()"><i data-lucide="arrow-left"></i> Topshiriqlarga qaytish</button>
+      </div>
+
+      <!-- TASDIQLASH MODALI -->
+      <div class="ov" id="confirmOv">
+        <div class="ov-box">
+          <div class="ov-ic"><i data-lucide="send"></i></div>
+          <div class="ov-title">Topshiriqni topshirmoqchimisiz?</div>
+          <div class="ov-text" id="confirmText">Topshirganingizdan keyin javoblarni qayta o'zgartira olmaysiz.</div>
+          <div class="ov-foot">
+            <button class="ov-cancel" onclick="closeConfirm()">Bekor qilish</button>
+            <button class="ov-confirm" id="confirmBtn" onclick="doSubmit()">Topshirish</button>
+          </div>
+        </div>
       </div>
 
     </main>
@@ -164,6 +309,220 @@
       document.getElementById("cbTeacher").textContent = teacher;
       showState("content");
       if (window.lucide) lucide.createIcons();
+      loadAssignments();
+    }
+
+    // ===== Topshiriqlar ro'yxati =====
+    var SKILL_LABELS = { mixed:"Aralash", grammar:"Grammatika", vocabulary:"Lug'at", reading:"O'qish", listening:"Tinglash", speaking:"Gapirish", writing:"Yozish" };
+    var ST_LABEL = { not_started:"Boshlanmagan", in_progress:"Jarayonda", submitted:"Bajarilgan", late_submitted:"Kechikib topshirilgan" };
+    var allAssignments = [];
+    var curFilter = "all";
+
+    function fmtDue(iso) {
+      if (!iso) return null;
+      var d = new Date(iso);
+      return d.toLocaleDateString("uz-UZ", { day:"numeric", month:"short" }) + ", " + d.toLocaleTimeString("uz-UZ", { hour:"2-digit", minute:"2-digit" });
+    }
+    function isOverdue(a) {
+      return a.due_at && new Date(a.due_at) < new Date() && a.submission_status !== "submitted" && a.submission_status !== "late_submitted";
+    }
+
+    async function loadAssignments() {
+      try {
+        var res = await authFetch("/student/assignments");
+        if (!res.ok) return;
+        var data = await res.json();
+        allAssignments = (data.assignments || []).filter(function(a){ return String(a.class_id) === String(classId); });
+        applyFilter();
+      } catch (e) { /* jim */ }
+    }
+
+    function setFilter(f, el) {
+      curFilter = f;
+      var chips = document.querySelectorAll("#filters .filter-chip");
+      for (var i=0;i<chips.length;i++) chips[i].classList.remove("active");
+      if (el) el.classList.add("active");
+      applyFilter();
+    }
+
+    function applyFilter() {
+      var list = allAssignments.filter(function(a){
+        if (curFilter === "all") return true;
+        if (curFilter === "overdue") return isOverdue(a);
+        if (curFilter === "submitted") return a.submission_status === "submitted" || a.submission_status === "late_submitted";
+        if (curFilter === "not_started") return a.submission_status === "not_started";
+        return true;
+      });
+      var wrap = document.getElementById("assignList");
+      var empty = document.getElementById("emptyAssign");
+      var emptyF = document.getElementById("emptyFilter");
+      empty.style.display = "none"; emptyF.style.display = "none";
+      if (allAssignments.length === 0) { wrap.innerHTML = ""; empty.style.display = "block"; return; }
+      if (list.length === 0) { wrap.innerHTML = ""; emptyF.style.display = "block"; return; }
+      wrap.innerHTML = list.map(cardHtml).join("");
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function cardHtml(a) {
+      var skill = SKILL_LABELS[a.skill] || a.skill || "Aralash";
+      var over = isOverdue(a);
+      var due = fmtDue(a.due_at);
+      var st = a.submission_status;
+      var statusLabel = over ? "Muddati o'tgan" : (ST_LABEL[st] || st);
+      var statusCls = over ? "late_submitted" : st;
+      var done = (st === "submitted" || st === "late_submitted");
+      var btn = done
+        ? '<button class="a-btn ghost" onclick="openAssignment('+a.id+')"><i data-lucide="eye"></i> Natija</button>'
+        : '<button class="a-btn" onclick="openAssignment('+a.id+')"><i data-lucide="play"></i> '+(st==="in_progress"?"Davom ettirish":"Boshlash")+'</button>';
+      var scoreLine = done ? '<span class="a-chip">Ball: '+a.percent+'%</span>' : '';
+      return '<div class="a-card">' +
+          '<div class="a-card-ic"><i data-lucide="file-text"></i></div>' +
+          '<div class="a-card-main">' +
+            '<div class="a-card-title">'+esc(a.title)+'</div>' +
+            '<div class="a-card-chips">' +
+              '<span class="a-chip lvl">'+esc(a.cefr_level)+'</span>' +
+              '<span class="a-chip">'+esc(skill)+'</span>' +
+              '<span class="a-chip">'+a.question_count+' savol</span>' +
+              (due ? '<span class="a-chip '+(over?"over":"")+'">'+(over?"Muddat o\'tgan: ":"Muddat: ")+due+'</span>' : '<span class="a-chip">Muddatsiz</span>') +
+              scoreLine +
+            '</div>' +
+          '</div>' +
+          '<div class="a-card-right">' +
+            '<span class="a-status '+statusCls+'">'+statusLabel+'</span>' +
+            btn +
+          '</div>' +
+        '</div>';
+    }
+
+    // ===== Quiz =====
+    var quiz = { id:null, title:"", questions:[], answers:{}, idx:0 };
+
+    async function openAssignment(id) {
+      try {
+        var res = await authFetch("/student/assignments/" + encodeURIComponent(id) + "/start");
+        var data = await res.json();
+        if (!res.ok) { alert(data.error || "Topshiriqni ochib bo'lmadi"); return; }
+        if (data.locked) { showResultFromReview(data); return; }
+        quiz = { id: id, title: (data.assignment && data.assignment.title) || "Topshiriq", questions: data.questions || [], answers: {}, idx: 0 };
+        startQuiz();
+      } catch (e) { alert("Server bilan aloqa yo'q"); }
+    }
+
+    function startQuiz() {
+      document.getElementById("content").style.display = "none";
+      document.getElementById("resultScreen").style.display = "none";
+      document.getElementById("quizScreen").style.display = "block";
+      document.getElementById("quizTitle").textContent = quiz.title;
+      document.getElementById("qTotal").textContent = quiz.questions.length;
+      renderQuestion();
+      window.scrollTo(0,0);
+    }
+
+    function renderQuestion() {
+      var q = quiz.questions[quiz.idx];
+      document.getElementById("qCur").textContent = quiz.idx + 1;
+      document.getElementById("quizBar").style.width = (quiz.idx / quiz.questions.length * 100) + "%";
+      document.getElementById("qText").textContent = q.question_text;
+      var sel = quiz.answers[q.assignment_question_id];
+      document.getElementById("qOptions").innerHTML = q.options.map(function(o){
+        var on = sel === o.key;
+        return '<button class="opt'+(on?" selected":"")+'" onclick="pick('+q.assignment_question_id+",'"+o.key+"')\">" +
+          '<span class="opt-letter">'+o.key+'</span>' +
+          '<span class="opt-radio"></span>' +
+          '<span>'+esc(o.text)+'</span>' +
+        '</button>';
+      }).join("");
+      document.getElementById("quizDots").innerHTML = quiz.questions.map(function(qq, i){
+        var answered = quiz.answers[qq.assignment_question_id] != null;
+        return '<span class="qdot'+(answered?" answered":"")+(i===quiz.idx?" current":"")+'" onclick="goQ('+i+')"></span>';
+      }).join("");
+      document.getElementById("prevBtn").disabled = quiz.idx === 0;
+      var isLast = quiz.idx === quiz.questions.length - 1;
+      var nextBtn = document.getElementById("nextBtn");
+      if (isLast) { nextBtn.innerHTML = 'Topshirish <i data-lucide="check"></i>'; nextBtn.onclick = openConfirm; }
+      else { nextBtn.innerHTML = 'Keyingi <i data-lucide="chevron-right"></i>'; nextBtn.onclick = nextQ; }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function pick(aqId, key) { quiz.answers[aqId] = key; renderQuestion(); }
+    function nextQ() { if (quiz.idx < quiz.questions.length - 1) { quiz.idx++; renderQuestion(); window.scrollTo(0,0); } }
+    function prevQ() { if (quiz.idx > 0) { quiz.idx--; renderQuestion(); window.scrollTo(0,0); } }
+    function goQ(i) { quiz.idx = i; renderQuestion(); window.scrollTo(0,0); }
+
+    // ===== Submit =====
+    function openConfirm() {
+      var answered = Object.keys(quiz.answers).length;
+      var total = quiz.questions.length;
+      var txt = "Topshirganingizdan keyin javoblarni qayta o'zgartira olmaysiz.";
+      if (answered < total) txt = (total - answered) + " ta savol javobsiz qoladi. " + txt;
+      document.getElementById("confirmText").textContent = txt;
+      document.getElementById("confirmOv").classList.add("show");
+    }
+    function closeConfirm() { document.getElementById("confirmOv").classList.remove("show"); }
+    document.getElementById("confirmOv").addEventListener("click", function(e){ if (e.target.id === "confirmOv") closeConfirm(); });
+
+    async function doSubmit() {
+      var btn = document.getElementById("confirmBtn");
+      btn.disabled = true; btn.textContent = "Topshirilmoqda...";
+      var answers = quiz.questions.map(function(q){ return { assignment_question_id: q.assignment_question_id, answer: quiz.answers[q.assignment_question_id] || null }; });
+      try {
+        var res = await authFetch("/student/assignments/" + encodeURIComponent(quiz.id) + "/submit", {
+          method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ answers: answers })
+        });
+        var data = await res.json();
+        if (!res.ok) { alert(data.error || "Topshirishda xatolik"); closeConfirm(); return; }
+        closeConfirm();
+        showResult(data.result, data.review);
+      } catch (e) { alert("Server bilan aloqa yo'q"); }
+      finally { btn.disabled = false; btn.textContent = "Topshirish"; }
+    }
+
+    // ===== Natija + review =====
+    function showResultFromReview(data) {
+      var sub = data.submission || {};
+      var result = { percent: sub.percent, score: sub.score, total: sub.total, correct_count: sub.correct_count, wrong_count: sub.wrong_count, unanswered_count: sub.unanswered_count, is_late: sub.is_late };
+      showResult(result, data.review || []);
+    }
+
+    function showResult(result, review) {
+      document.getElementById("content").style.display = "none";
+      document.getElementById("quizScreen").style.display = "none";
+      document.getElementById("resultScreen").style.display = "block";
+      var pct = result.percent || 0;
+      var col = pct >= 80 ? "#22c55e" : (pct >= 50 ? "#f59e0b" : "#ef4444");
+      var ring = document.getElementById("resultRing");
+      ring.style.background = "conic-gradient(" + col + " " + (pct*3.6) + "deg, var(--panel-2) 0deg)";
+      ring.innerHTML = '<div style="width:104px;height:104px;border-radius:50%;background:var(--bg-2);display:grid;place-items:center"><div class="result-pct" style="color:'+col+'">'+pct+'%</div></div>';
+      document.getElementById("resultSub").textContent = (result.score||0) + " / " + (result.total||0) + " to'g'ri javob";
+      document.getElementById("rOk").textContent = result.correct_count || 0;
+      document.getElementById("rNo").textContent = result.wrong_count || 0;
+      document.getElementById("rSkip").textContent = result.unanswered_count || 0;
+      document.getElementById("lateWrap").innerHTML = result.is_late ? '<div class="late-pill"><i data-lucide="clock"></i> Kechikib topshirilgan</div>' : '';
+
+      document.getElementById("reviewList").innerHTML = (review || []).map(function(r){
+        var opts = r.options.map(function(o){
+          var cls = "", tag = "";
+          if (o.key === r.correct_answer) { cls = "correct"; tag = '<span class="rev-tag" style="color:#86efac">To\'g\'ri javob</span>'; }
+          else if (o.key === r.user_answer) { cls = "wrong"; tag = '<span class="rev-tag" style="color:#fca5a5">Sizning javobingiz</span>'; }
+          return '<div class="rev-opt '+cls+'"><span class="rl">'+o.key+'</span><span>'+esc(o.text)+'</span>'+tag+'</div>';
+        }).join("");
+        var unanswered = !r.user_answer ? '<div class="rev-tag" style="color:var(--text-dim);margin:6px 0 0">Javob berilmagan</div>' : '';
+        var expl = r.explanation ? '<div class="rev-expl"><b>Izoh:</b> '+esc(r.explanation)+'</div>' : '';
+        return '<div class="rev-card">' +
+          '<div class="rev-q"><span class="rev-qnum">'+r.q_order+'.</span><span>'+esc(r.question_text)+'</span></div>' +
+          opts + unanswered + expl +
+        '</div>';
+      }).join("");
+      if (window.lucide) lucide.createIcons();
+      window.scrollTo(0,0);
+    }
+
+    function backToList() {
+      document.getElementById("resultScreen").style.display = "none";
+      document.getElementById("quizScreen").style.display = "none";
+      showState("content");
+      loadAssignments();
+      window.scrollTo(0,0);
     }
 
     if (window.lucide) lucide.createIcons();

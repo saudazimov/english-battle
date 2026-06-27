@@ -166,6 +166,29 @@
       background: linear-gradient(180deg, #1eb53a 33%, #fff 33%, #fff 66%, #0099b5 66%);
       display: inline-block;
     }
+    .phone-country { position: relative; display: flex; }
+    .cc-trigger {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--bg-soft); border: none; border-right: 1px solid var(--border);
+      padding: 0 12px; font-size: 15px; font-weight: 600; color: inherit; cursor: pointer; white-space: nowrap;
+    }
+    .cc-trigger .cc-caret { width: 13px; height: 13px; opacity: 0.55; transition: transform 0.15s; }
+    .phone-country.open .cc-caret { transform: rotate(180deg); }
+    .cc-menu {
+      position: absolute; top: calc(100% + 8px); left: 0; z-index: 60;
+      min-width: 220px; max-width: calc(100vw - 48px);
+      background: var(--bg-soft); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,0.45); padding: 6px; display: none;
+    }
+    .phone-country.open .cc-menu { display: block; }
+    .cc-item {
+      display: flex; align-items: center; gap: 11px; width: 100%;
+      background: transparent; border: none; border-radius: 9px; padding: 10px 11px;
+      font-size: 14px; font-weight: 600; color: inherit; cursor: pointer; text-align: left;
+    }
+    .cc-item:hover { background: rgba(255,255,255,0.06); }
+    .cc-item .cc-name { flex: 1; }
+    .cc-item .cc-dial { opacity: 0.6; }
     .phone-input input { border: none; border-radius: 0; background: transparent; flex: 1; }
     .phone-input input:focus { box-shadow: none; }
     .btn {
@@ -369,7 +392,6 @@
               <p>Sinflar yarat, natijalarni kuzat</p>
             </div>
             <div class="role-card" data-role="parent" onclick="selectRole(this)">
-              <span class="role-soon">Tez orada</span>
               <div class="role-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
               <h3>Ota-ona</h3>
               <p>Farzandingiz natijasini kuzating</p>
@@ -406,8 +428,16 @@
           <p class="subtitle">Telefon raqamingizni kiriting. Tasdiqlash kodi yuboriladi.</p>
           <label>Telefon raqami</label>
           <div class="phone-input">
-            <div class="phone-prefix"><span class="flag"></span> +998</div>
-            <input type="tel" id="phone" placeholder="90 123 45 67" />
+            <div class="phone-country" id="countrySelect">
+              <button type="button" class="cc-trigger" onclick="toggleCountryMenu(event)">
+                <span class="flag"></span> <span id="ccDial">+998</span>
+                <svg class="cc-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              <div class="cc-menu" id="ccMenu">
+                <button type="button" class="cc-item" onclick="selectCountry('UZ')"><span class="flag"></span> <span class="cc-name">O'zbekiston</span> <span class="cc-dial">+998</span></button>
+              </div>
+            </div>
+            <input type="tel" id="phone" inputmode="numeric" autocomplete="tel-national" placeholder="90 123 45 67" oninput="onPhoneInput(event)" />
           </div>
           <button class="btn" id="sendBtn" onclick="sendCode()">Kod yuborish ✈</button>
           <div class="back-link">
@@ -462,27 +492,28 @@
               <input type="text" id="lastName" placeholder="Familiyangiz" />
             </div>
           </div>
-          <label>Tug'ilgan sana</label>
-          <div class="row">
-            <select id="bDay"><option value="">Kun</option></select>
-            <select id="bMonth"><option value="">Oy</option></select>
-            <select id="bYear"><option value="">Yil</option></select>
-          </div>
-          <label>Viloyat</label>
-          <select id="region" onchange="loadDistricts()"><option value="">Viloyatni tanlang</option></select>
-          <label>Tuman</label>
-          <select id="district"><option value="">Avval viloyatni tanlang</option></select>
-          <label>Maktab</label>
-          <select id="school" onchange="toggleCustomSchool()">
-            <option value="">Maktabni tanlang</option>
-          </select>
-
-          <div id="customSchoolBox" style="display:none;">
-            <label>Xususiy maktab nomi</label>
-            <input type="text" id="customSchool" placeholder="Maktab to'liq nomini yozing" />
-            <p class="terms-note" style="text-align:left; margin-top:8px;">
-              Bu maktab adminga tekshirish uchun yuboriladi.
-            </p>
+          <div id="studentFields">
+            <label>Tug'ilgan sana</label>
+            <div class="row">
+              <select id="bDay"><option value="">Kun</option></select>
+              <select id="bMonth"><option value="">Oy</option></select>
+              <select id="bYear"><option value="">Yil</option></select>
+            </div>
+            <label>Viloyat</label>
+            <select id="region" onchange="loadDistricts()"><option value="">Viloyatni tanlang</option></select>
+            <label>Tuman</label>
+            <select id="district"><option value="">Avval viloyatni tanlang</option></select>
+            <label>Maktab</label>
+            <select id="school" onchange="toggleCustomSchool()">
+              <option value="">Maktabni tanlang</option>
+            </select>
+            <div id="customSchoolBox" style="display:none;">
+              <label>Xususiy maktab nomi</label>
+              <input type="text" id="customSchool" placeholder="Maktab to'liq nomini yozing" />
+              <p class="terms-note" style="text-align:left; margin-top:8px;">
+                Bu maktab adminga tekshirish uchun yuboriladi.
+              </p>
+            </div>
           </div>
           <label>Parol</label>
           <input type="password" id="password" placeholder="Parol yarating" />
@@ -632,6 +663,8 @@
 
     function roleNext() {
       if (!selectedRole) return;
+      var sf = document.getElementById("studentFields");
+      if (sf) sf.style.display = (selectedRole === "parent") ? "none" : "block";
       document.getElementById("stage0").classList.remove("active");
       document.getElementById("progressSteps").style.display = "flex";
       goToStage(1);
@@ -669,9 +702,45 @@
       }
     }
 
+    // ===== MAMLAKAT + TELEFON FORMAT (hozircha faqat O'zbekiston) =====
+    // Yangi mamlakat qo'shish: shu ro'yxatga qator + <select>ga <option> qo'shing.
+    const COUNTRIES = {
+      UZ: { name: "O'zbekiston", flag: "🇺🇿", dial: "998", natLen: 9, groups: [2,3,2,2], placeholder: "90 123 45 67" },
+      // KZ: { name: "Qozog'iston", flag: "🇰🇿", dial: "7", natLen: 10, groups: [3,3,2,2], placeholder: "700 123 45 67" },
+    };
+    let currentCountry = COUNTRIES.UZ;
+
+    // Faqat raqam qoldiramiz, mamlakat kodini (998) olib tashlaymiz, natLen gacha qisqartiramiz
+    function normalizeNational(raw) {
+      let d = String(raw).replace(/\D/g, "");
+      const dial = currentCountry.dial;
+      // Foydalanuvchi 998 ni ham yozsa/paste qilsa — olib tashlaymiz
+      if (d.length > currentCountry.natLen && d.startsWith(dial)) d = d.slice(dial.length);
+      return d.slice(0, currentCountry.natLen); // 9 tadan ko'p yozdirmaymiz
+    }
+    // Guruhlab formatlash: 90 123 45 67
+    function formatNational(d) {
+      const g = currentCountry.groups; const out = []; let i = 0;
+      for (const len of g) { if (i >= d.length) break; out.push(d.slice(i, i + len)); i += len; }
+      return out.join(" ");
+    }
+    function onPhoneInput(e) { e.target.value = formatNational(normalizeNational(e.target.value)); }
+    function getNationalDigits() { return String(document.getElementById("phone").value).replace(/\D/g, ""); }
+    function getFullPhone() { return "+" + currentCountry.dial + getNationalDigits(); } // +998901234567
+    function formatFullDisplay() { return "+" + currentCountry.dial + " " + formatNational(getNationalDigits()); }
+    function updateCountry() {
+      currentCountry = COUNTRIES[document.getElementById("countryCode").value] || COUNTRIES.UZ;
+      const inp = document.getElementById("phone");
+      inp.placeholder = currentCountry.placeholder;
+      inp.value = ""; // mamlakat o'zgarsa tozalaymiz
+    }
+
     async function sendCode() {
-      const phone = document.getElementById("phone").value.trim();
-      if (!phone || phone.length < 9) { return showModal("To'g'ri telefon raqamini kiriting", "error"); }
+      const nat = getNationalDigits();
+      if (nat.length !== currentCountry.natLen) {
+        return showModal("Telefon raqamini to'liq kiriting: +" + currentCountry.dial + " dan keyin " + currentCountry.natLen + " ta raqam.", "error");
+      }
+      const phone = getFullPhone(); // to'liq: +998901234567
       const btn = document.getElementById("sendBtn");
       btn.disabled = true;
       btn.textContent = "Yuborilmoqda...";
@@ -683,8 +752,8 @@
         const data = await res.json();
         if (!res.ok) { showModal(data.error || "Xato", "error"); return; }
         verifiedPhone = phone;
-        document.getElementById("phoneDisplay").textContent = phone;
-        document.getElementById("phoneConfirmed").textContent = phone;
+        document.getElementById("phoneDisplay").textContent = formatFullDisplay();
+        document.getElementById("phoneConfirmed").textContent = formatFullDisplay();
         goToStage(2);
         startResendTimer();
         document.querySelector(".otp").focus();
@@ -789,29 +858,36 @@
       if (day && month && year) {
         birthDate = year + "-" + String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
       }
+      const isParent = selectedRole === "parent";
       const data = {
         first_name: document.getElementById("firstName").value,
         last_name: document.getElementById("lastName").value,
-        birth_date: birthDate,
-        region: document.getElementById("region").value,
-        district: document.getElementById("district").value,
-        school: getSchoolValue(),
+        birth_date: isParent ? null : birthDate,
+        region: isParent ? null : document.getElementById("region").value,
+        district: isParent ? null : document.getElementById("district").value,
+        school: isParent ? null : getSchoolValue(),
         password: document.getElementById("password").value,
         phone: verifiedPhone,
         code: verifiedCode,
         role: selectedRole
       };
-      const required = [
-        { id: "firstName", val: data.first_name },
-        { id: "lastName", val: data.last_name },
-        { id: "bDay", val: day },
-        { id: "bMonth", val: month },
-        { id: "bYear", val: year },
-        { id: "region", val: data.region },
-        { id: "district", val: data.district },
-        { id: "school", val: data.school },
-        { id: "password", val: data.password }
-      ];
+      const required = isParent
+        ? [
+            { id: "firstName", val: data.first_name },
+            { id: "lastName", val: data.last_name },
+            { id: "password", val: data.password }
+          ]
+        : [
+            { id: "firstName", val: data.first_name },
+            { id: "lastName", val: data.last_name },
+            { id: "bDay", val: day },
+            { id: "bMonth", val: month },
+            { id: "bYear", val: year },
+            { id: "region", val: data.region },
+            { id: "district", val: data.district },
+            { id: "school", val: data.school },
+            { id: "password", val: data.password }
+          ];
       document.querySelectorAll(".invalid").forEach(el => el.classList.remove("invalid"));
       let hasError = false;
       required.forEach(f => {
@@ -834,6 +910,8 @@
         // Rol bo'yicha yo'naltirish
         if (result.user.role === "student") {
           window.location.href = "/lobby.html";
+        } else if (result.user.role === "parent") {
+          window.location.href = "/parent.html";
         } else {
           window.location.href = "/dashboard.html";
         }

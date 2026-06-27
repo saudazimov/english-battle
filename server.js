@@ -6,7 +6,7 @@ const { Server } = require("socket.io");
 
 const multer = require("multer");
 const path = require("path");
-const { signToken, authMiddleware, requireTeacher, requireStudent, signAdminToken, requireAdmin } = require("./auth");
+const { signToken, authMiddleware, requireTeacher, requireStudent, requireParent, signAdminToken, requireAdmin } = require("./auth");
 const { validateRegionDistrict, REGIONS } = require("./regions");
 
 const app = express();
@@ -16,6 +16,13 @@ const PORT = 3000;
 
 // JSON ma'lumotlarni o'qiy olish uchun
 app.use(express.json());
+// Xavfsizlik headerlari (paketsiz, CSP'siz — mavjud sahifalarni buzmaydi)
+app.use(function (req, res, next) {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  next();
+});
 app.use(express.static("public"));
 // Asosiy sahifa
 app.get("/", (req, res) => {
@@ -25,18 +32,64 @@ app.get("/", (req, res) => {
 
 // ============ OTP (TELEFON TASDIQLASH) ============
 
-// Mock SMS yuborish funksiyasi.
-// HOZIR: kodni terminalga chiqaradi.
-// KEYIN: bu yerga Eskiz yoki Play Mobile SMS kodini qo'shamiz.
+// ===== SMS yuborish (Eskiz.uz) =====
+// .env: ESKIZ_EMAIL, ESKIZ_PASSWORD, ESKIZ_FROM (ixtiyoriy; default "4546" = test sender)
+// Kredensial yo'q bo'lsa — DEV rejim: kodni terminalga chiqaradi (SMS ketmaydi).
+const ESKIZ_BASE = "https://notify.eskiz.uz/api";
+let _eskizToken = null; // token keshda (~30 kun amal qiladi)
+
+async function eskizLogin() {
+  const res = await fetch(ESKIZ_BASE + "/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: process.env.ESKIZ_EMAIL, password: process.env.ESKIZ_PASSWORD }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !(data.data && data.data.token)) {
+    throw new Error("Eskiz login xatosi: " + (data.message || res.status));
+  }
+  _eskizToken = data.data.token;
+  return _eskizToken;
+}
+
+async function eskizSend(token, to, message) {
+  return fetch(ESKIZ_BASE + "/message/sms/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+    body: JSON.stringify({ mobile_phone: to, message: message, from: process.env.ESKIZ_FROM || "4546" }),
+  });
+}
+
 async function sendSms(phone, code) {
-  console.log("========================================");
-  console.log("📱 SMS YUBORILDI (mock rejim)");
-  console.log("   Telefon: " + phone);
-  console.log("   Kod: " + code);
-  console.log("   (5 daqiqa amal qiladi)");
-  console.log("========================================");
-  // KELAJAKDA: bu yerda real SMS API chaqiriladi. Masalan:
-  // await eskizApi.send(phone, "Sizning kodingiz: " + code);
+  const to = String(phone).replace(/\D/g, ""); // faqat raqam: 998901234567
+  const message = "English Battle: tasdiqlash kodingiz " + code + ". Kodni hech kimga bermang.";
+
+  // DEV REJIM (kredensialsiz) — terminalga chiqaramiz, SMS ketmaydi
+  if (!process.env.ESKIZ_EMAIL || !process.env.ESKIZ_PASSWORD) {
+    console.log("========================================");
+    console.log("📱 SMS (DEV rejim — Eskiz kredensiali yo'q)");
+    console.log("   Telefon: +" + to);
+    console.log("   Kod: " + code);
+    console.log("========================================");
+    return;
+  }
+
+  // PRODUKSIYA — Eskiz orqali
+  if (!_eskizToken) await eskizLogin();
+  let res = await eskizSend(_eskizToken, to, message);
+
+  // Token eskirgan bo'lsa (401) — qayta login qilib bir marta urinamiz
+  if (res.status === 401) {
+    await eskizLogin();
+    res = await eskizSend(_eskizToken, to, message);
+  }
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.status === "error") {
+    console.error("Eskiz SMS xatosi:", data.message || res.status);
+    throw new Error("SMS yuborib bo'lmadi");
+  }
+  console.log("SMS yuborildi:", to, "(Eskiz:", data.id || data.status || "ok", ")");
 }
 
 // 6 xonali tasodifiy kod yaratish
@@ -44,8 +97,63 @@ function generateOtpCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-// KOD YUBORISH endpoint
-app.post("/otp/send", async (req, res) => {
+// ============ RATE LIMIT (auth himoyasi — in-memory, tashqi paketsiz) ============
+// Maqsad: OTP spam / SMS xarajat suiiste'moli / parol-kod brute-force'ini cheklash.
+// Ikki mexanizm: countLimiter (har chaqiruvni sanaydi) + failGate/noteFail/noteOk (faqat noto'g'ri urinish).
+var _rl = {}; // { bucket: { key: { count, firstAt, blockedUntil } } }
+function _bucket(n) { if (!_rl[n]) _rl[n] = {}; return _rl[n]; }
+function _ipOf(req) { return (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.socket.remoteAddress || "unknown"; }
+function _phoneIpKey(req) { return (req.body && req.body.phone ? String(req.body.phone).trim() : "no-phone") + "|" + _ipOf(req); }
+
+// 1) Har chaqiruvni sanaydigan limiter (OTP yuborish uchun)
+function countLimiter(name, opts) {
+  return function (req, res, next) {
+    var store = _bucket(name), key = opts.keyFn(req), now = Date.now(), rec = store[key];
+    if (rec && rec.blockedUntil && now > rec.blockedUntil) { delete store[key]; rec = null; }
+    if (rec && rec.blockedUntil) {
+      var w = Math.ceil((rec.blockedUntil - now) / 60000);
+      return res.status(429).json({ error: (opts.message || "Juda ko'p so'rov.") + " " + w + " daqiqadan keyin urinib ko'ring." });
+    }
+    if (rec && (now - rec.firstAt) > opts.windowMs) { delete store[key]; rec = null; }
+    if (!rec) rec = store[key] = { count: 0, firstAt: now };
+    rec.count++;
+    if (rec.count > opts.max) {
+      rec.blockedUntil = now + opts.blockMs;
+      var w2 = Math.ceil(opts.blockMs / 60000);
+      return res.status(429).json({ error: (opts.message || "Juda ko'p so'rov.") + " " + w2 + " daqiqadan keyin urinib ko'ring." });
+    }
+    next();
+  };
+}
+
+// 2) Faqat NOTO'G'RI urinishni cheklaydigan gate (login / kod uchun — muvaffaqiyatli user bloklanmaydi)
+function failGate(name, opts) {
+  return function (req, res, next) {
+    var store = _bucket(name), key = opts.keyFn(req), now = Date.now(), rec = store[key];
+    if (rec && rec.blockedUntil && now > rec.blockedUntil) { delete store[key]; rec = null; }
+    if (rec && rec.blockedUntil) {
+      var w = Math.ceil((rec.blockedUntil - now) / 60000);
+      return res.status(429).json({ error: (opts.message || "Juda ko'p noto'g'ri urinish.") + " " + w + " daqiqadan keyin urinib ko'ring." });
+    }
+    next();
+  };
+}
+function noteFail(name, key, max, blockMs) {
+  var store = _bucket(name), now = Date.now();
+  if (!store[key]) store[key] = { count: 0, firstAt: now };
+  store[key].count++;
+  if (store[key].count >= max) store[key].blockedUntil = now + blockMs;
+}
+function noteOk(name, key) { delete _bucket(name)[key]; }
+
+// ----- Maxsus limiterlar -----
+var otpSendPerPhone = countLimiter("otp_send_phone", { keyFn: _phoneIpKey, max: 5,  windowMs: 15*60*1000, blockMs: 30*60*1000, message: "Bu raqamga juda ko'p kod yuborildi." });
+var otpSendPerIp    = countLimiter("otp_send_ip",    { keyFn: _ipOf,       max: 60, windowMs: 60*60*1000, blockMs: 30*60*1000, message: "Juda ko'p so'rov." });
+var otpVerifyGate   = failGate("otp_verify", { keyFn: _phoneIpKey, message: "Juda ko'p noto'g'ri kod urinishi." });
+var loginGate       = failGate("login",      { keyFn: _phoneIpKey, message: "Juda ko'p noto'g'ri kirish urinishi." });
+
+// KOD YUBORISH endpoint (rate-limit: IP + telefon)
+app.post("/otp/send", otpSendPerIp, otpSendPerPhone, async (req, res) => {
   try {
     const { phone } = req.body;
 
@@ -81,8 +189,13 @@ app.post("/otp/send", async (req, res) => {
       [phone, hashedCode, expiresAt]
     );
 
-    // SMS yuborish (hozir: terminalga)
-    await sendSms(phone, code);
+    // SMS yuborish (dev rejimda terminalga, produksiyada Eskiz)
+    try {
+      await sendSms(phone, code);
+    } catch (smsErr) {
+      console.error("SMS yuborish xatosi:", smsErr.message);
+      return res.status(502).json({ error: "SMS yuborib bo'lmadi. Birozdan keyin qayta urinib ko'ring." });
+    }
 
     // Javob — kodning O'ZINI yubormaymiz, faqat "yuborildi" deymiz
     res.json({ message: "Tasdiqlash kodi yuborildi" });
@@ -93,7 +206,7 @@ app.post("/otp/send", async (req, res) => {
 });
 
 // KOD TEKSHIRISH endpoint (2-bosqich: "Tasdiqlash" bosilganda)
-app.post("/otp/verify", async (req, res) => {
+app.post("/otp/verify", otpVerifyGate, async (req, res) => {
   try {
     const { phone, code } = req.body;
 
@@ -122,10 +235,12 @@ app.post("/otp/verify", async (req, res) => {
     // Kod to'g'rimi? (hashlangan kod bilan solishtirish)
     const codeValid = await bcrypt.compare(String(code), otpRecord.code);
     if (!codeValid) {
+      noteFail("otp_verify", _phoneIpKey(req), 5, 15*60*1000); // 5 noto'g'ri => 15 daqiqa blok
       return res.status(400).json({ error: "Kod noto'g'ri" });
     }
 
-    // To'g'ri! Lekin kodni O'CHIRMAYMIZ — u /register'da yana kerak bo'ladi.
+    noteOk("otp_verify", _phoneIpKey(req)); // to'g'ri kod — urinishlar tozalanadi
+    // Kodni O'CHIRMAYMIZ — u /register'da yana kerak bo'ladi.
     res.json({ verified: true, message: "Telefon tasdiqlandi" });
   } catch (err) {
     console.error("OTP tekshirish xatosi:", err.message);
@@ -134,7 +249,7 @@ app.post("/otp/verify", async (req, res) => {
 });
 
 // RO'YXATDAN O'TISH (register)
-app.post("/register", async (req, res) => {
+app.post("/register", otpVerifyGate, async (req, res) => {
   try {
     const {
       first_name, last_name, phone, password,
@@ -186,14 +301,19 @@ app.post("/register", async (req, res) => {
     // Yuborilgan kod to'g'rimi? (hashlangan kod bilan solishtirish)
     const codeValid = await bcrypt.compare(String(code), otpRecord.code);
     if (!codeValid) {
+      noteFail("otp_verify", _phoneIpKey(req), 5, 15*60*1000);
       return res.status(400).json({ error: "Kod noto'g'ri" });
     }
+    noteOk("otp_verify", _phoneIpKey(req));
     // ============ OTP TEKSHIRUVI TUGADI ============
 
     // Viloyat-tuman juftligini tekshiramiz (frontendga ishonmaymiz — anti-abuse)
-    const regionCheck = validateRegionDistrict(region, district);
-    if (!regionCheck.valid) {
-      return res.status(400).json({ error: regionCheck.error });
+    // Ota-ona uchun viloyat/tuman shart emas (faqat farzand kuzatuvi)
+    if (userRole !== "parent") {
+      const regionCheck = validateRegionDistrict(region, district);
+      if (!regionCheck.valid) {
+        return res.status(400).json({ error: regionCheck.error });
+      }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -205,9 +325,9 @@ app.post("/register", async (req, res) => {
        RETURNING id, first_name, last_name, phone, cefr_level, xp, rating, coins,
                  region, district, school, role, created_at`,
       [
-        first_name, last_name, phone, hashedPassword,
+        stripUnsafe(first_name, 100), stripUnsafe(last_name, 100), phone, hashedPassword,
         birth_date || null, birth_year || null,
-        region || null, district || null, village || null, normalizeSchool(school),
+        region || null, district || null, stripUnsafe(village, 150), normalizeSchool(school),
         userRole
       ]
     );
@@ -229,7 +349,7 @@ app.post("/register", async (req, res) => {
 });
 
 // TIZIMGA KIRISH (login)
-app.post("/login", async (req, res) => {
+app.post("/login", loginGate, async (req, res) => {
   try {
     const { phone, password } = req.body;
 
@@ -243,6 +363,7 @@ app.post("/login", async (req, res) => {
     );
 
     if (result.rows.length === 0) {
+      noteFail("login", _phoneIpKey(req), 8, 15*60*1000); // 8 noto'g'ri => 15 daqiqa blok
       return res.status(400).json({ error: "Telefon yoki parol noto'g'ri" });
     }
 
@@ -250,6 +371,7 @@ app.post("/login", async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
+      noteFail("login", _phoneIpKey(req), 8, 15*60*1000);
       return res.status(400).json({ error: "Telefon yoki parol noto'g'ri" });
     }
 
@@ -257,6 +379,8 @@ app.post("/login", async (req, res) => {
     if (user.is_banned) {
       return res.status(403).json({ error: "Hisobingiz bloklangan. Administrator bilan bog'laning." });
     }
+
+    noteOk("login", _phoneIpKey(req)); // muvaffaqiyatli kirish — urinishlar tozalanadi
 
     const token = signToken(user);
 
@@ -383,16 +507,20 @@ function getRandomBotName() {
 
 // ============ BATTLE FORMATLARI (savol soni / vaqt / XP) ============
 const BATTLE_LENGTHS = {
-  quick:    { label: "Quick",    questions: 10, secondsPerQuestion: 15, totalSeconds: 150, xp: 4 },
-  standard: { label: "Standard", questions: 20, secondsPerQuestion: 15, totalSeconds: 300, xp: 8 },
-  extended: { label: "Extended", questions: 30, secondsPerQuestion: 15, totalSeconds: 450, xp: 12 },
-  marathon: { label: "Marathon", questions: 40, secondsPerQuestion: 15, totalSeconds: 600, xp: 16 },
+  quick:    { label: "Quick",    questions: 10, secondsPerQuestion: 15, totalSeconds: 150, xp: 4,  coins: 1 },
+  standard: { label: "Standard", questions: 20, secondsPerQuestion: 15, totalSeconds: 300, xp: 8,  coins: 2 },
+  extended: { label: "Extended", questions: 30, secondsPerQuestion: 15, totalSeconds: 450, xp: 12, coins: 3 },
+  marathon: { label: "Marathon", questions: 40, secondsPerQuestion: 15, totalSeconds: 600, xp: 16, coins: 4 },
 };
 // Format kalitidan savol sonini olamiz (noto'g'ri bo'lsa — standard)
 function lengthConfig(key) {
   return BATTLE_LENGTHS[key] || BATTLE_LENGTHS.standard;
 }
 
+// ===== SERVER-AUTHORITATIVE TIMER (har savol uchun) =====
+const TIME_PER_QUESTION_MS = 15000; // har savolga 15 sekund
+const ANSWER_GRACE_MS = 2000;       // tarmoq kechikishi uchun zaxira (2+ savollar)
+const FIRST_Q_GRACE_MS = 6000;      // 1-savol uchun qo'shimcha zaxira (countdown/render)
 // Bot bilan jang boshlash
 async function startBotBattle(roomId, humanPlayer) {
   try {
@@ -435,7 +563,7 @@ async function startBotBattle(roomId, humanPlayer) {
       lengthKey: humanPlayer.lengthKey || "standard",
       mode: humanPlayer.mode || "ranked",
       players: {
-        [humanPlayer.socketId]: { userId: humanPlayer.userId, name: humanPlayer.name, score: 0, finished: false, answeredCount: 0 },
+        [humanPlayer.socketId]: { userId: humanPlayer.userId, name: humanPlayer.name, score: 0, finished: false, answeredCount: 0, answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS },
         [botId]: { userId: null, name: humanPlayer.botName, score: 0, finished: false, answeredCount: 0, isBot: true },
       },
     };
@@ -480,6 +608,14 @@ function getLeagueName(rating) {
 }
 
 // ============ MAKTAB NOMINI BIR XIL QILISH (normalizatsiya) ============
+// XSS himoyasi: foydalanuvchi matnidan HTML/skript belgilarini olib tashlaydi (ism, maktab, chat)
+// Apostrof (') va o'zbekcha ʻ saqlanadi — faqat < > " ` \ olib tashlanadi.
+function stripUnsafe(s, maxLen) {
+  if (s == null) return s;
+  var out = String(s).replace(/[<>"`\\]/g, "").replace(/\s+/g, " ").trim();
+  return maxLen ? out.slice(0, maxLen) : out;
+}
+
 function normalizeSchool(school) {
   if (!school) return null;
 
@@ -497,9 +633,8 @@ function normalizeSchool(school) {
     return number + "-maktab";
   }
 
-  // 3. Raqam yo'q bo'lsa (masalan nom bilan) - faqat ortiqcha bo'shliqlarni tozalash
-  s = s.replace(/\s+/g, " "); // ko'p bo'shliqni bitta qilish
-  return s;
+  // 3. Raqam yo'q bo'lsa (masalan nom bilan) - bo'shliq + xavfli belgilarni tozalash
+  return stripUnsafe(s, 200);
 }
 
 // ============ BILDIRISHNOMA YARATISH ============
@@ -579,7 +714,72 @@ function simulateBotAnswers(roomId, botId, questions) {
   setTimeout(answerNext, 2000 + Math.random() * 3000);
 }
 
-let waitingPlayer = null;
+// ===== 1v1 MATCHMAKING QUEUE (V1) =====
+let waitingQueue = []; // entry: { socketId, userId, name, level, rating, mode, lengthKey, joinedAt, botName, botTimer, expandTimers }
+
+// rating oynasi kutish vaqtiga qarab kengayadi
+function mmRatingWindow(joinedAt) {
+  const waited = Date.now() - joinedAt;
+  if (waited >= 45000) return 200;
+  if (waited >= 20000) return 150;
+  return 100;
+}
+
+// ikki entry mos keladimi (mode + level + rating oynasi)
+function mmCompatible(a, b) {
+  if (a.mode !== b.mode) return false;
+  if (a.level !== b.level) return false;
+  const window = Math.max(mmRatingWindow(a.joinedAt), mmRatingWindow(b.joinedAt));
+  return Math.abs((a.rating || 1000) - (b.rating || 1000)) <= window;
+}
+
+// navbatdan o'chirish + timerlarni tozalash
+function removeFromQueue(socketId) {
+  const idx = waitingQueue.findIndex((e) => e.socketId === socketId);
+  if (idx === -1) return null;
+  const entry = waitingQueue[idx];
+  if (entry.botTimer) clearTimeout(entry.botTimer);
+  if (entry.expandTimers) entry.expandTimers.forEach((t) => clearTimeout(t));
+  waitingQueue.splice(idx, 1);
+  return entry;
+}
+
+// ikki o'yinchini juftlash (xona + kartalar + battleStart)
+async function pairPlayers(a, b) {
+  const roomId = "battle_" + a.socketId + "_" + b.socketId;
+  io.sockets.sockets.get(a.socketId)?.join(roomId);
+  io.sockets.sockets.get(b.socketId)?.join(roomId);
+
+  const aCard = await getOpponentCardInfo(a.userId);
+  const bCard = await getOpponentCardInfo(b.userId);
+  let aPic = null, bPic = null;
+  try {
+    const picRes = await pool.query("SELECT id, profile_picture FROM users WHERE id = ANY($1)", [[a.userId, b.userId]]);
+    picRes.rows.forEach((r) => {
+      if (String(r.id) === String(a.userId)) aPic = r.profile_picture;
+      if (String(r.id) === String(b.userId)) bPic = r.profile_picture;
+    });
+  } catch (e) {}
+
+  const foundForA = { roomId, opponent: { name: b.name, profile_picture: bPic, rating: bCard.rating, win_rate: bCard.win_rate, level: b.level }, message: "Raqib topildi!" };
+  const foundForB = { roomId, opponent: { name: a.name, profile_picture: aPic, rating: aCard.rating, win_rate: aCard.win_rate, level: a.level }, message: "Raqib topildi!" };
+  io.to(a.socketId).emit("matchFound", foundForA); io.to(a.socketId).emit("matchmaking:found", foundForA);
+  io.to(b.socketId).emit("matchFound", foundForB); io.to(b.socketId).emit("matchmaking:found", foundForB);
+
+  setTimeout(() => startBattle(roomId, a, b), 6000);
+}
+
+// navbatdagi bitta o'yinchiga mos raqib izlash
+function tryQueueMatch(socketId) {
+  const me = waitingQueue.find((e) => e.socketId === socketId);
+  if (!me) return false;
+  const opp = waitingQueue.find((e) => e.socketId !== socketId && mmCompatible(e, me));
+  if (!opp) return false;
+  removeFromQueue(me.socketId);
+  removeFromQueue(opp.socketId);
+  pairPlayers(opp, me);
+  return true;
+}
 const battles = {}; // Faol janglar: roomId -> jang ma'lumoti
 
 // Jamoa janglar navbati (eski — endi ishlatilmaydi, xavfsizlik uchun qoldirildi)
@@ -851,8 +1051,8 @@ async function startBattle(roomId, player1, player2) {
       lengthKey: player1.lengthKey || "standard",
       mode: player1.mode || "ranked",
       players: {
-        [player1.socketId]: { userId: player1.userId, name: player1.name, score: 0, finished: false, answeredCount: 0 },
-        [player2.socketId]: { userId: player2.userId, name: player2.name, score: 0, finished: false, answeredCount: 0 },
+        [player1.socketId]: { userId: player1.userId, name: player1.name, score: 0, finished: false, answeredCount: 0, answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS },
+        [player2.socketId]: { userId: player2.userId, name: player2.name, score: 0, finished: false, answeredCount: 0, answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS },
       },
     };
 
@@ -960,7 +1160,7 @@ io.on("connection", (socket) => {
     if (!battle || !battle.players[socket.id]) return; // bu battle ichidagi o'yinchi emas
     if (!message || typeof message !== "string") return;
 
-    let text = message.trim().slice(0, 120); // uzunlik 120 belgi
+    let text = stripUnsafe(message, 120); // uzunlik 120 belgi + xavfli belgilarni olib tashlaymiz
     if (!text) return;
 
     // Spam cooldown: 2 soniyada bir marta
@@ -1319,104 +1519,56 @@ io.on("connection", (socket) => {
 
   socket.on("findMatch", async (playerData) => {
     console.log("Jang qidirilyapti:", socket.id);
+    removeFromQueue(socket.id); // bitta socket bir vaqtda bir marta
 
-    if (waitingPlayer === null) {
-      const botName = getRandomBotName();
-      waitingPlayer = {
-        socketId: socket.id,
-        userId: playerData.userId,
-        name: playerData.name || "O'yinchi",
-        level: playerData.level || "A1",
-        lengthKey: playerData.lengthKey || "standard",
-        mode: playerData.mode || "ranked",
-        botName: botName,
-      };
-      socket.emit("waiting", { message: "Raqib qidirilmoqda..." });
+    const me = {
+      socketId: socket.id,
+      userId: playerData.userId,
+      name: playerData.name || "O'yinchi",
+      level: playerData.level || "A1",
+      rating: playerData.rating || 1000,
+      mode: playerData.mode || "ranked",
+      lengthKey: playerData.lengthKey || "standard",
+      joinedAt: Date.now(),
+      botName: getRandomBotName(),
+    };
 
-      // 10 soniyadan keyin haqiqiy raqib topilmasa, bot qo'shamiz
-      const waitingSocketId = socket.id;
-      setTimeout(() => {
-        // Agar shu o'yinchi hali ham kutayotgan bo'lsa (raqib topilmagan)
-        if (waitingPlayer && waitingPlayer.socketId === waitingSocketId) {
-          const player = waitingPlayer;
-          waitingPlayer = null;
+    waitingQueue.push(me);
 
-          const roomId = "battle_bot_" + player.socketId;
-          io.sockets.sockets.get(player.socketId)?.join(roomId);
+    // 1) Mos raqib bormi? (rating oynasi vaqt bilan kengayadi)
+    if (tryQueueMatch(me.socketId)) return;
 
-          // O'yinchiga "raqib topildi" (aslida bot — botга taxminiy karta)
-          io.to(player.socketId).emit("matchFound", {
-            roomId: roomId,
-            opponent: { name: player.botName, rating: player.rating || 1000, win_rate: 50 + Math.floor(Math.random() * 20), level: player.level },
-            message: "Raqib topildi!",
-          });
+    // 2) Topilmadi — navbatda kutamiz
+    socket.emit("waiting", { message: "Raqib qidirilmoqda..." });
+    socket.emit("matchmaking:searching", { message: "Raqib qidirilmoqda..." });
 
-          // 7 soniyadan keyin bot bilan jang boshlanadi (countdown bilan mos)
-          setTimeout(() => startBotBattle(roomId, player), 6000);
-        }
-      }, 10000); // 10 soniya
-    } else {
-      // Daraja mosligini tekshirish
-      const myLevel = playerData.level || "A1";
-      if (waitingPlayer.level !== myLevel) {
-        // Daraja mos kelmadi — bu o'yinchi ham navbatga turadi (o'z darajasi bilan)
-        // Eski kutayotgan o'yinchini saqlab qolamiz, yangisini ham qo'shamiz
-        // Sodda yechim: yangi o'yinchini kutishga qo'yamiz (eski o'rniga)
-        // Lekin eski o'yinchi ham kerak — shuning uchun massivga o'tamiz
-        // Hozircha: agar daraja mos kelmasa, yangi o'yinchi botga o'tadi (10s kutmasdan)
-        const botName2 = getRandomBotName();
-        const roomIdBot = "battle_bot_" + socket.id;
-        socket.join(roomIdBot);
-        socket.emit("matchFound", {
-          roomId: roomIdBot,
-          opponent: { name: botName2, rating: playerData.rating || 1000, win_rate: 50 + Math.floor(Math.random() * 20), level: myLevel },
-          message: "Raqib topildi!",
-        });
-        const botPlayer = { socketId: socket.id, userId: playerData.userId, name: playerData.name || "O'yinchi", level: myLevel, lengthKey: playerData.lengthKey || "standard", botName: botName2 };
-        setTimeout(() => startBotBattle(roomIdBot, botPlayer), 6000);
-        return;
-      }
+    // rating oynasi kengayganda qayta urinish + UI signali
+    me.expandTimers = [
+      setTimeout(() => { if (waitingQueue.find((e) => e.socketId === me.socketId)) { socket.emit("matchmaking:expanded", { window: 150 }); tryQueueMatch(me.socketId); } }, 20000),
+      setTimeout(() => { if (waitingQueue.find((e) => e.socketId === me.socketId)) { socket.emit("matchmaking:expanded", { window: 200 }); tryQueueMatch(me.socketId); } }, 45000),
+    ];
 
-      const opponent = waitingPlayer;
-      waitingPlayer = null;
-
-      const roomId = "battle_" + opponent.socketId + "_" + socket.id;
+    // 3) 60s ichida hech kim topilmasa — bot fallback (FAKE statistikasiz)
+    me.botTimer = setTimeout(() => {
+      const still = removeFromQueue(me.socketId);
+      if (!still) return; // allaqachon match bo'lgan
+      const roomId = "battle_bot_" + me.socketId;
       socket.join(roomId);
-      io.sockets.sockets.get(opponent.socketId)?.join(roomId);
-
-      const player1 = opponent;
-      const player2 = { socketId: socket.id, userId: playerData.userId, name: playerData.name || "O'yinchi", level: playerData.level || "A1", lengthKey: playerData.lengthKey || "standard", mode: playerData.mode || "ranked" };
-
-      // Ikki o'yinchi rasmini bazadan olish
-      let p1Pic = null, p2Pic = null;
-      try {
-        const picRes = await pool.query("SELECT id, profile_picture FROM users WHERE id = ANY($1)", [[player1.userId, player2.userId]]);
-        picRes.rows.forEach(r => {
-          if (String(r.id) === String(player1.userId)) p1Pic = r.profile_picture;
-          if (String(r.id) === String(player2.userId)) p2Pic = r.profile_picture;
-        });
-      } catch (e) {}
-
-      // Raqib kartasi uchun rating + win rate
-      const p1Card = await getOpponentCardInfo(player1.userId);
-      const p2Card = await getOpponentCardInfo(player2.userId);
-
-      // player1'ga player2 raqib sifatida ko'rinadi
-      io.to(opponent.socketId).emit("matchFound", {
+      const botFound = {
         roomId,
-        opponent: { name: player2.name, profile_picture: p2Pic, rating: p2Card.rating, win_rate: p2Card.win_rate, level: player2.level },
-        message: "Raqib topildi!",
-      });
-      // player2 (socket)'ga player1 raqib sifatida ko'rinadi
-      socket.emit("matchFound", {
-        roomId,
-        opponent: { name: player1.name, profile_picture: p1Pic, rating: p1Card.rating, win_rate: p1Card.win_rate, level: player1.level },
-        message: "Raqib topildi!",
-      });
+        opponent: { name: me.botName, isBot: true, rating: null, win_rate: null, level: me.level },
+        message: "Mashqlovchi raqib topildi",
+      };
+      socket.emit("matchFound", botFound);
+      socket.emit("matchmaking:found", botFound);
+      setTimeout(() => startBotBattle(roomId, me), 6000);
+    }, 20000); // 20 sekunddan keyin bot
+  });
 
-      // 6 soniyadan keyin jangni boshlaymiz (countdown bilan mos)
-      setTimeout(() => startBattle(roomId, player1, player2), 6000);
-    }
+  // Foydalanuvchi qidiruvni bekor qildi
+  socket.on("cancelMatch", () => {
+    removeFromQueue(socket.id);
+    socket.emit("matchmaking:cancelled", {});
   });
 
   // ============ JAMOA MATCHMAKING (Duo 2v2 / Squad 4v4) — yagona pool ============
@@ -1463,29 +1615,50 @@ io.on("connection", (socket) => {
     var player = battle.players[socket.id];
     if (!player || player.finished) return;
 
-    // Savolni topamiz
+    if (!player.answeredIds) player.answeredIds = {};
+
+    // ===== DEDUPE: shu savolga allaqachon javob berilganmi? =====
+    if (player.answeredIds[questionId]) {
+      io.to(socket.id).emit("teamAnswerResult", {
+        already_answered: true,
+        answeredCount: player.answeredCount,
+        total: battle.questions.length,
+        myScore: player.score,
+      });
+      return; // ball ham, jamoa progressi ham o'zgarmaydi
+    }
+
     var q = battle.questions.find(function (x) { return x.id === questionId; });
     if (!q) return;
 
-    var isCorrect = (answer === q.correct_option);
-    if (isCorrect) player.score++;
-    player.answers.push({ questionId: q.id, selected: answer, correct: q.correct_option, isCorrect: isCorrect });
+    // ===== SERVER-AUTHORITATIVE 15s OYNA =====
+    var now = Date.now();
+    var deadline = player.qDeadline || (now + TIME_PER_QUESTION_MS);
+    var timedOut = now > deadline;
+
+    var isCorrect = false;
+    if (!timedOut) {
+      isCorrect = (answer === q.correct_option);
+      if (isCorrect) player.score++; // faqat vaqtida + to'g'ri bo'lsa ball
+    }
+
     player.answeredCount++;
+    player.answeredIds[questionId] = true;
+    player.qDeadline = now + TIME_PER_QUESTION_MS + ANSWER_GRACE_MS; // keyingi savol uchun
+
+    player.answers.push({ questionId: q.id, selected: timedOut ? null : answer, correct: q.correct_option, isCorrect: isCorrect, timedOut: timedOut });
     if (player.answeredCount >= battle.questions.length) player.finished = true;
 
-    // O'yinchiga javob natijasini yuboramiz
     io.to(socket.id).emit("teamAnswerResult", {
       isCorrect: isCorrect,
+      timed_out: timedOut,
       correct_option: q.correct_option,
       answeredCount: player.answeredCount,
       total: battle.questions.length,
       myScore: player.score,
     });
 
-    // Jamoa progressini hammaga yuboramiz
     emitTeamProgress(roomId);
-
-    // Hamma tugatdimi?
     checkTeamFinish(roomId);
   });
 
@@ -1497,64 +1670,76 @@ io.on("connection", (socket) => {
     const player = battle.players[socket.id];
     if (player.finished) return;
 
-    // O'yinchining javoblarini saqlash (xatolar tahlili uchun)
     if (!player.answers) player.answers = [];
+    if (!player.answeredIds) player.answeredIds = {};
 
-    // To'g'ri javobni serverda tekshirish
-    const question = battle.questions.find((q) => q.id === questionId);
-    const isCorrect = question && question.correct_option === answer;
-    if (isCorrect) {
-      player.score++;
-    }
-    player.answeredCount++;
-
-    // Javobni eslab qolish
-    if (question) {
-      player.answers.push({
-        question_id: questionId,
-        question_text: question.question_text,
-        option_a: question.option_a,
-        option_b: question.option_b,
-        option_c: question.option_c,
-        option_d: question.option_d,
-        your_answer: answer,
-        correct_answer: question.correct_option,
-        is_correct: isCorrect,
-        explanation: question.explanation || "",
+    // ===== DEDUPE: shu savolga allaqachon javob berilganmi? =====
+    if (player.answeredIds[questionId]) {
+      socket.emit("answerResult", {
+        already_answered: true,
+        my_score: player.score,
+        answered: player.answeredCount,
       });
+      return; // score ham, opponent progress ham o'zgarmaydi
     }
 
-    // Javob bergan o'yinchining O'ZIGA natijani qaytaramiz (to'g'ri/xato + jonli stat)
-    // Server-authoritative: frontend faqat ko'rsatadi, aldab bo'lmaydi
+    const question = battle.questions.find((q) => q.id === questionId);
+    if (!question) return; // noma'lum savol — progressni buzmaymiz
+
+    // ===== SERVER-AUTHORITATIVE 15s OYNA =====
+    const now = Date.now();
+    const deadline = player.qDeadline || (now + TIME_PER_QUESTION_MS); // zaxira (deadline o'rnatilmagan bo'lsa)
+    const timedOut = now > deadline;
+
+    let isCorrect = false;
+    if (!timedOut) {
+      isCorrect = question.correct_option === answer;
+      if (isCorrect) player.score++; // faqat vaqtida + to'g'ri bo'lsa ball
+    }
+    // timeout bo'lsa: ball oshmaydi, javob xato/timeout deb yoziladi
+
+    player.answeredCount++;
+    player.answeredIds[questionId] = true;
+
+    // keyingi savol uchun yangi deadline (shu javob kelgan paytdan + 15s + grace)
+    player.qDeadline = now + TIME_PER_QUESTION_MS + ANSWER_GRACE_MS;
+
+    player.answers.push({
+      question_id: questionId,
+      question_text: question.question_text,
+      option_a: question.option_a,
+      option_b: question.option_b,
+      option_c: question.option_c,
+      option_d: question.option_d,
+      your_answer: timedOut ? null : answer,
+      correct_answer: question.correct_option,
+      is_correct: isCorrect,
+      timed_out: timedOut,
+      explanation: question.explanation || "",
+    });
+
     socket.emit("answerResult", {
       is_correct: isCorrect,
-      correct_answer: question ? question.correct_option : null,
-      my_score: player.score,          // jami to'g'ri javoblar
-      answered: player.answeredCount,  // jami javob berilgan
+      timed_out: timedOut,
+      correct_answer: question.correct_option,
+      my_score: player.score,
+      answered: player.answeredCount,
     });
+    if (timedOut) socket.emit("battle:answerTimeout", { questionId: questionId });
 
-    // Raqibga jonli progress yuborish
-    socket.to(roomId).emit("opponentProgress", {
-      answeredCount: player.answeredCount,
-    });
+    // Raqibga jonli progress — faqat birinchi valid javobda
+    socket.to(roomId).emit("opponentProgress", { answeredCount: player.answeredCount });
 
-    // Bu o'yinchi hamma savolga javob berdimi?
     if (player.answeredCount >= battle.questions.length) {
       player.finished = true;
-
-      // Ikkala o'yinchi ham tugatdimi?
       const allFinished = Object.values(battle.players).every((p) => p.finished);
-      if (allFinished) {
-        finishBattle(roomId);
-      }
+      if (allFinished) finishBattle(roomId);
     }
   });
 
   socket.on("disconnect", () => {
     console.log("O'yinchi uzildi:", socket.id);
-    if (waitingPlayer && waitingPlayer.socketId === socket.id) {
-      waitingPlayer = null;
-    }
+    removeFromQueue(socket.id); // navbatda qolib ketmasin
     // Onlayn ro'yxatdan o'chirish
     if (socket.userId && onlineUsers[socket.userId] === socket.id) {
       delete onlineUsers[socket.userId];
@@ -1746,11 +1931,11 @@ async function startTeamBattle(group, teamMode, teamSize) {
     var teamAIds = [], teamBIds = [];
 
     teamA.forEach(function (p) {
-      players[p.socketId] = { userId: p.userId, name: p.name, level: p.level || "A1", rating: p.rating || 1000, profile_picture: p.profile_picture || null, score: 0, finished: false, answeredCount: 0, answers: [], team: "A", isBot: !!p.isBot };
+      players[p.socketId] = { userId: p.userId, name: p.name, level: p.level || "A1", rating: p.rating || 1000, profile_picture: p.profile_picture || null, score: 0, finished: false, answeredCount: 0, answers: [], answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS, team: "A", isBot: !!p.isBot };
       teamAIds.push(p.socketId);
     });
     teamB.forEach(function (p) {
-      players[p.socketId] = { userId: p.userId, name: p.name, level: p.level || "A1", rating: p.rating || 1000, profile_picture: p.profile_picture || null, score: 0, finished: false, answeredCount: 0, answers: [], team: "B", isBot: !!p.isBot };
+      players[p.socketId] = { userId: p.userId, name: p.name, level: p.level || "A1", rating: p.rating || 1000, profile_picture: p.profile_picture || null, score: 0, finished: false, answeredCount: 0, answers: [], answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS, team: "B", isBot: !!p.isBot };
       teamBIds.push(p.socketId);
     });
 
@@ -1880,6 +2065,7 @@ async function finishTeamBattle(roomId) {
 
   var RATING_CHANGE = 20;
   var fmtXp = lengthConfig(battle.lengthKey).xp;
+  var coinsEarned = lengthConfig(battle.lengthKey).coins; // format bo'yicha coin (Quick=1 ... Marathon=4)
 
   // Jamoa tarkiblari (natijada ko'rsatish uchun)
   function teamRoster(ids) {
@@ -1924,10 +2110,10 @@ async function finishTeamBattle(roomId) {
         else streakSql = "win_streak = win_streak";
 
         var result = await pool.query(
-          `UPDATE users SET xp = xp + $1, rating = GREATEST(0, rating + $2), ${streakSql}
-           WHERE id = $3
+          `UPDATE users SET xp = xp + $1, coins = coins + $2, rating = GREATEST(0, rating + $3), ${streakSql}
+           WHERE id = $4
            RETURNING id, first_name, last_name, email, cefr_level, xp, rating, coins, win_streak, best_win_streak`,
-          [xpEarned, ratingDelta, me.userId]
+          [xpEarned, coinsEarned, ratingDelta, me.userId]
         );
         if (result.rows.length > 0) {
           updatedUser = result.rows[0];
@@ -1969,6 +2155,8 @@ async function finishTeamBattle(roomId) {
       total: battle.questions.length,
       lengthKey: battle.lengthKey || "standard",
       xp_earned: xpEarned,
+      coins_earned: coinsEarned,
+      rewards: { xp: xpEarned, coins: coinsEarned, ratingChange: ratingDelta },
       rating_change: ratingDelta,
       updated_user: updatedUser,
       answers: me.answers || [],
@@ -2015,8 +2203,10 @@ async function finishBattle(roomId) {
     var isCasual = battle.mode === "casual";
     if (isCasual) ratingDelta = 0;
 
-    // Tanlangan format bo'yicha XP (Quick=4, Standard=8, Extended=12, Marathon=16)
-    const fmtXp = lengthConfig(battle.lengthKey).xp;
+    // Tanlangan format bo'yicha XP va COIN (Quick=4/1 ... Marathon=16/4)
+    const fmtCfg = lengthConfig(battle.lengthKey);
+    const fmtXp = fmtCfg.xp;
+    const coinsEarned = fmtCfg.coins; // format bo'yicha qat'iy coin (ishtirok uchun)
     let xpEarned;
     if (outcome === "win") xpEarned = fmtXp;              // g'alaba — to'liq format XP
     else if (outcome === "draw") xpEarned = Math.round(fmtXp / 2); // durang — yarmi
@@ -2050,11 +2240,12 @@ async function finishBattle(roomId) {
         const result = await pool.query(
           `UPDATE users
            SET xp = xp + $1,
-               rating = GREATEST(0, rating + $2),
+               coins = coins + $2,
+               rating = GREATEST(0, rating + $3),
                ${streakSql}
-           WHERE id = $3
+           WHERE id = $4
            RETURNING id, first_name, last_name, email, cefr_level, xp, rating, coins, win_streak, best_win_streak`,
-          [xpEarned, ratingDelta, me.userId]
+          [xpEarned, coinsEarned, ratingDelta, me.userId]
         );
         if (result.rows.length > 0) {
           updatedUser = result.rows[0];
@@ -2074,9 +2265,9 @@ async function finishBattle(roomId) {
         // Jang tarixiga yozish
         await pool.query(
           `INSERT INTO battle_history
-           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level, mode)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-          [me.userId, opp.name, opp.userId || null, me.score, opp.score, outcome, xpEarned, ratingDelta, battle.level || "A1", (battle.mode === "casual" ? "casual" : "ranked")]
+           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level, mode, total_questions)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+          [me.userId, opp.name, opp.userId || null, me.score, opp.score, outcome, xpEarned, ratingDelta, battle.level || "A1", (battle.mode === "casual" ? "casual" : "ranked"), battle.questions.length]
         );
         // Topshiriqlar progressini yangilash
         await updateQuestProgress(me.userId, {
@@ -2105,6 +2296,8 @@ async function finishBattle(roomId) {
       lengthKey: battle.lengthKey || "standard",
       mode: battle.mode || "ranked",
       xp_earned: xpEarned,
+      coins_earned: coinsEarned,
+      rewards: { xp: xpEarned, coins: coinsEarned, ratingChange: ratingDelta },
       rating_change: ratingDelta,
       updated_user: updatedUser,
       answers: me.answers || [],
@@ -4352,16 +4545,17 @@ app.get("/exam/status/:userId", authMiddleware, async (req, res) => {
     const statsResult = await pool.query(
       `SELECT
          COUNT(*) AS battles,
-         COALESCE(SUM(my_score), 0) AS total_correct
+         COALESCE(SUM(my_score), 0) AS total_correct,
+         COALESCE(SUM(total_questions), 0) AS total_questions
        FROM battle_history
-       WHERE user_id = $1 AND cefr_level = $2`,
+       WHERE user_id = $1 AND cefr_level = $2 AND mode IN ('ranked','casual')`,
       [userId, currentLevel]
     );
 
     const battles = parseInt(statsResult.rows[0].battles);
     const totalCorrect = parseInt(statsResult.rows[0].total_correct);
-    // Har jangda 5 savol bor edi, shuning uchun jami savollar = battles * 5
-    const totalQuestions = battles * 5;
+    // Real javob berilgan savollar soni (10/20/30/40 — qat'iy 5 emas)
+    const totalQuestions = parseInt(statsResult.rows[0].total_questions);
     const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 
     // Shartlar
@@ -4486,12 +4680,34 @@ app.post("/exam/submit", authMiddleware, async (req, res) => {
     }
 
     const passed = overallPercent >= PASS_OVERALL && allSkillsPassed;
+    const levelChanged = passed && nextLevel !== null && nextLevel !== undefined;
 
-    // O'tsa - darajani oshirish
+    // Daraja oshirish + imtihon urinishini saqlash — bitta transaction ichida
     let newLevel = currentLevel;
-    if (passed && nextLevel) {
-      await pool.query("UPDATE users SET cefr_level = $1 WHERE id = $2", [nextLevel, userId]);
-      newLevel = nextLevel;
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      if (levelChanged) {
+        await client.query("UPDATE users SET cefr_level = $1 WHERE id = $2", [nextLevel, userId]);
+        newLevel = nextLevel;
+      }
+
+      await client.query(
+        `INSERT INTO exam_attempts
+         (user_id, exam_type, from_level, to_level, total_questions, total_correct, overall_percent,
+          pass_overall_required, pass_skill_required, skill_results, passed, level_changed)
+         VALUES ($1, 'ultimate', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [userId, currentLevel, nextLevel || null, total, totalCorrect, overallPercent,
+         PASS_OVERALL, PASS_SKILL, JSON.stringify(skillResults), passed, levelChanged]
+      );
+
+      await client.query("COMMIT");
+    } catch (txErr) {
+      await client.query("ROLLBACK");
+      throw txErr;
+    } finally {
+      client.release();
     }
 
     // Yangilangan foydalanuvchi
@@ -4517,6 +4733,47 @@ app.post("/exam/submit", authMiddleware, async (req, res) => {
     });
   } catch (err) {
     console.error("Imtihon submit xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Imtihon tarixi (faqat o'z tarixi) ---
+app.get("/exam/history/:userId", authMiddleware, async (req, res) => {
+  try {
+    const targetId = parseInt(req.params.userId, 10);
+    if (isNaN(targetId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+    // Maxfiylik: faqat o'z tarixini ko'radi
+    if (targetId !== req.user.id) return res.status(403).json({ error: "Ruxsat yo'q" });
+
+    const rows = await pool.query(
+      `SELECT id, exam_type, from_level, to_level, total_questions, total_correct, overall_percent,
+              pass_overall_required, pass_skill_required, skill_results, passed, level_changed, taken_at
+       FROM exam_attempts
+       WHERE user_id = $1
+       ORDER BY taken_at DESC
+       LIMIT 50`,
+      [targetId]
+    );
+
+    res.json({
+      attempts: rows.rows.map(r => ({
+        id: r.id,
+        exam_type: r.exam_type,
+        from_level: r.from_level,
+        to_level: r.to_level,
+        total_questions: r.total_questions,
+        total_correct: r.total_correct,
+        overall_percent: r.overall_percent,
+        pass_overall_required: r.pass_overall_required,
+        pass_skill_required: r.pass_skill_required,
+        skill_results: r.skill_results || {},
+        passed: r.passed,
+        level_changed: r.level_changed,
+        taken_at: r.taken_at
+      }))
+    });
+  } catch (err) {
+    console.error("Imtihon tarixi xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });
@@ -5745,6 +6002,719 @@ app.get("/student/classes", authMiddleware, requireStudent, async (req, res) => 
   }
 });
 
+// ============================================================
+// STUDENT ASSIGNMENTS — Stage 3: O'quvchi backend
+// ============================================================
+
+// --- O'quvchining topshiriqlari (barcha faol sinflari bo'yicha) ---
+app.get("/student/assignments", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const rows = await pool.query(
+      `SELECT a.id, a.title, a.class_id, c.name AS class_name,
+              t.first_name AS teacher_first_name, t.last_name AS teacher_last_name,
+              a.cefr_level, a.skill, a.question_count, a.due_at, a.status,
+              s.status AS submission_status, s.score, s.total, s.percent, s.is_late, s.submitted_at
+       FROM class_students cs
+       JOIN classes c ON c.id = cs.class_id
+       JOIN users t ON t.id = c.teacher_id
+       JOIN assignments a ON a.class_id = c.id AND a.status = 'active'
+       LEFT JOIN assignment_submissions s ON s.assignment_id = a.id AND s.student_id = $1
+       WHERE cs.student_id = $1 AND cs.status = 'active' AND c.archived_at IS NULL
+       ORDER BY a.due_at NULLS LAST, a.created_at DESC`,
+      [studentId]
+    );
+
+    const assignments = rows.rows.map(r => {
+      let display = "not_started";
+      if (r.submission_status === "in_progress") display = "in_progress";
+      else if (r.submission_status === "submitted") display = r.is_late ? "late_submitted" : "submitted";
+      return {
+        id: r.id, title: r.title, class_id: r.class_id, class_name: r.class_name,
+        teacher_name: ((r.teacher_first_name||"") + " " + (r.teacher_last_name||"")).trim(),
+        cefr_level: r.cefr_level, skill: r.skill, question_count: r.question_count,
+        due_at: r.due_at, status: r.status,
+        submission_status: display,
+        score: r.score, total: r.total, percent: r.percent,
+        is_late: r.is_late || false, submitted_at: r.submitted_at
+      };
+    });
+
+    res.json({ assignments });
+  } catch (err) {
+    console.error("O'quvchi topshiriqlari xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Topshiriqni boshlash (savollar, correct_answer YUBORILMAYDI) ---
+app.get("/student/assignments/:id/start", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const assignmentId = parseInt(req.params.id, 10);
+    if (isNaN(assignmentId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    // Assignment + a'zolik + faollik (bittada)
+    const aRes = await pool.query(
+      `SELECT a.id, a.title, a.description, a.cefr_level, a.skill, a.question_count, a.due_at, a.status, a.max_attempts
+       FROM assignments a
+       JOIN class_students cs ON cs.class_id = a.class_id AND cs.student_id = $2 AND cs.status='active'
+       JOIN classes c ON c.id = a.class_id AND c.archived_at IS NULL
+       WHERE a.id = $1 AND a.status = 'active'`,
+      [assignmentId, studentId]
+    );
+    if (aRes.rows.length === 0) return res.status(404).json({ error: "Topshiriq topilmadi" });
+    const assignment = aRes.rows[0];
+
+    // Mavjud submission?
+    const sRes = await pool.query(
+      "SELECT * FROM assignment_submissions WHERE assignment_id=$1 AND student_id=$2 ORDER BY attempt_number DESC LIMIT 1",
+      [assignmentId, studentId]
+    );
+    let submission = sRes.rows[0] || null;
+
+    // Allaqachon topshirilgan → qulflangan + review
+    if (submission && submission.status === "submitted") {
+      const review = await pool.query(
+        `SELECT aq.q_order, aq.question_text, aq.option_a, aq.option_b, aq.option_c, aq.option_d, aq.explanation,
+                sa.selected_option, sa.correct_answer, sa.is_correct
+         FROM submission_answers sa
+         JOIN assignment_questions aq ON aq.id = sa.assignment_question_id
+         WHERE sa.submission_id = $1 ORDER BY aq.q_order`,
+        [submission.id]
+      );
+      return res.json({
+        assignment, submission, locked: true,
+        review: review.rows.map(r => ({
+          q_order: r.q_order, question_text: r.question_text,
+          options: [{key:"A",text:r.option_a},{key:"B",text:r.option_b},{key:"C",text:r.option_c},{key:"D",text:r.option_d}],
+          user_answer: r.selected_option, correct_answer: r.correct_answer, is_correct: r.is_correct, explanation: r.explanation
+        }))
+      });
+    }
+
+    // Submission yo'q → in_progress yaratamiz
+    if (!submission) {
+      const ins = await pool.query(
+        `INSERT INTO assignment_submissions (assignment_id, student_id, total, status)
+         VALUES ($1, $2, $3, 'in_progress') RETURNING *`,
+        [assignmentId, studentId, assignment.question_count]
+      );
+      submission = ins.rows[0];
+    }
+
+    // Savollar (correct_answer YO'Q)
+    const qRes = await pool.query(
+      `SELECT id AS assignment_question_id, q_order, question_text, option_a, option_b, option_c, option_d
+       FROM assignment_questions WHERE assignment_id=$1 ORDER BY q_order`,
+      [assignmentId]
+    );
+
+    res.json({
+      assignment, submission, locked: false,
+      questions: qRes.rows.map(q => ({
+        assignment_question_id: q.assignment_question_id, q_order: q.q_order, question_text: q.question_text,
+        options: [{key:"A",text:q.option_a},{key:"B",text:q.option_b},{key:"C",text:q.option_c},{key:"D",text:q.option_d}]
+      }))
+    });
+  } catch (err) {
+    console.error("Topshiriqni boshlash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Topshiriqni topshirish (transaction + server-side baholash) ---
+app.post("/student/assignments/:id/submit", authMiddleware, requireStudent, async (req, res) => {
+  const studentId = req.user.id;
+  const assignmentId = parseInt(req.params.id, 10);
+  if (isNaN(assignmentId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+  const answers = Array.isArray(req.body.answers) ? req.body.answers : [];
+
+  try {
+    // A'zolik + faollik + due_at
+    const aRes = await pool.query(
+      `SELECT a.id, a.due_at, a.question_count
+       FROM assignments a
+       JOIN class_students cs ON cs.class_id = a.class_id AND cs.student_id = $2 AND cs.status='active'
+       JOIN classes c ON c.id = a.class_id AND c.archived_at IS NULL
+       WHERE a.id = $1 AND a.status = 'active'`,
+      [assignmentId, studentId]
+    );
+    if (aRes.rows.length === 0) return res.status(404).json({ error: "Topshiriq topilmadi" });
+    const assignment = aRes.rows[0];
+
+    // Submission
+    const sRes = await pool.query(
+      "SELECT * FROM assignment_submissions WHERE assignment_id=$1 AND student_id=$2 ORDER BY attempt_number DESC LIMIT 1",
+      [assignmentId, studentId]
+    );
+    let submission = sRes.rows[0] || null;
+    if (submission && submission.status === "submitted") {
+      return res.status(409).json({ error: "Bu topshiriq allaqachon topshirilgan" });
+    }
+
+    // Snapshot savollar + to'g'ri javoblar
+    const qRes = await pool.query(
+      "SELECT id, q_order, correct_answer FROM assignment_questions WHERE assignment_id=$1 ORDER BY q_order",
+      [assignmentId]
+    );
+    const questions = qRes.rows;
+
+    // Javoblar xaritasi (faqat shu assignment aq_id; A-D yoki null)
+    const valid = new Set(["A","B","C","D"]);
+    const ansMap = {};
+    for (const a of answers) {
+      const aqId = parseInt(a.assignment_question_id, 10);
+      let ch = (a.answer || "").toString().toUpperCase();
+      if (!valid.has(ch)) ch = null;
+      if (!isNaN(aqId)) ansMap[aqId] = ch;
+    }
+
+    // Baholash (assignment savollari bo'yicha — javobsiz = unanswered)
+    let correct = 0, wrong = 0, unanswered = 0;
+    const gradeRows = [];
+    for (const q of questions) {
+      const sel = Object.prototype.hasOwnProperty.call(ansMap, q.id) ? ansMap[q.id] : null;
+      const isCorrect = sel !== null && sel === q.correct_answer;
+      if (sel === null) unanswered++; else if (isCorrect) correct++; else wrong++;
+      gradeRows.push({ aqId: q.id, sel, correct_answer: q.correct_answer, isCorrect });
+    }
+    const total = questions.length;
+    const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const isLate = !!(assignment.due_at && new Date() > new Date(assignment.due_at));
+
+    // Transaction
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      if (!submission) {
+        const ins = await client.query(
+          `INSERT INTO assignment_submissions (assignment_id, student_id, total, status)
+           VALUES ($1, $2, $3, 'in_progress') RETURNING *`,
+          [assignmentId, studentId, total]
+        );
+        submission = ins.rows[0];
+      }
+
+      await client.query("DELETE FROM submission_answers WHERE submission_id=$1", [submission.id]);
+
+      for (const r of gradeRows) {
+        await client.query(
+          `INSERT INTO submission_answers (submission_id, assignment_question_id, selected_option, correct_answer, is_correct)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [submission.id, r.aqId, r.sel, r.correct_answer, r.isCorrect]
+        );
+      }
+
+      const upd = await client.query(
+        `UPDATE assignment_submissions
+         SET score=$1, total=$2, percent=$3, correct_count=$4, wrong_count=$5, unanswered_count=$6,
+             is_late=$7, status='submitted', submitted_at=NOW()
+         WHERE id=$8
+         RETURNING score, total, percent, correct_count, wrong_count, unanswered_count, is_late, submitted_at`,
+        [correct, total, percent, correct, wrong, unanswered, isLate, submission.id]
+      );
+
+      await client.query("COMMIT");
+
+      const review = await pool.query(
+        `SELECT aq.q_order, aq.question_text, aq.option_a, aq.option_b, aq.option_c, aq.option_d, aq.explanation,
+                sa.selected_option, sa.correct_answer, sa.is_correct
+         FROM submission_answers sa
+         JOIN assignment_questions aq ON aq.id = sa.assignment_question_id
+         WHERE sa.submission_id = $1 ORDER BY aq.q_order`,
+        [submission.id]
+      );
+
+      res.json({
+        success: true,
+        result: upd.rows[0],
+        review: review.rows.map(r => ({
+          q_order: r.q_order, question_text: r.question_text,
+          options: [{key:"A",text:r.option_a},{key:"B",text:r.option_b},{key:"C",text:r.option_c},{key:"D",text:r.option_d}],
+          user_answer: r.selected_option, correct_answer: r.correct_answer, is_correct: r.is_correct, explanation: r.explanation
+        }))
+      });
+    } catch (txErr) {
+      await client.query("ROLLBACK");
+      throw txErr;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error("Topshiriq topshirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Topshirilgan topshiriq review (faqat submitted) ---
+app.get("/student/assignments/:id/review", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const assignmentId = parseInt(req.params.id, 10);
+    if (isNaN(assignmentId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    const aRes = await pool.query(
+      `SELECT a.id, a.title, a.description, a.cefr_level, a.skill, a.question_count, a.due_at, a.status
+       FROM assignments a
+       JOIN class_students cs ON cs.class_id = a.class_id AND cs.student_id = $2 AND cs.status='active'
+       JOIN classes c ON c.id = a.class_id
+       WHERE a.id = $1`,
+      [assignmentId, studentId]
+    );
+    if (aRes.rows.length === 0) return res.status(404).json({ error: "Topshiriq topilmadi" });
+    const assignment = aRes.rows[0];
+
+    const sRes = await pool.query(
+      "SELECT * FROM assignment_submissions WHERE assignment_id=$1 AND student_id=$2 AND status='submitted' ORDER BY attempt_number DESC LIMIT 1",
+      [assignmentId, studentId]
+    );
+    if (sRes.rows.length === 0) return res.status(409).json({ error: "Topshiriq hali topshirilmagan" });
+    const submission = sRes.rows[0];
+
+    const review = await pool.query(
+      `SELECT aq.q_order, aq.question_text, aq.option_a, aq.option_b, aq.option_c, aq.option_d, aq.explanation,
+              sa.selected_option, sa.correct_answer, sa.is_correct
+       FROM submission_answers sa
+       JOIN assignment_questions aq ON aq.id = sa.assignment_question_id
+       WHERE sa.submission_id = $1 ORDER BY aq.q_order`,
+      [submission.id]
+    );
+
+    res.json({
+      assignment,
+      result: {
+        score: submission.score, total: submission.total, percent: submission.percent,
+        correct_count: submission.correct_count, wrong_count: submission.wrong_count,
+        unanswered_count: submission.unanswered_count, is_late: submission.is_late, submitted_at: submission.submitted_at
+      },
+      review: review.rows.map(r => ({
+        q_order: r.q_order, question_text: r.question_text,
+        options: [{key:"A",text:r.option_a},{key:"B",text:r.option_b},{key:"C",text:r.option_c},{key:"D",text:r.option_d}],
+        user_answer: r.selected_option, correct_answer: r.correct_answer, is_correct: r.is_correct, explanation: r.explanation
+      }))
+    });
+  } catch (err) {
+    console.error("Topshiriq review xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============================================================
+// PARENT LINKING — Stage 3: O'quvchi tomoni (ota-ona ulanishi)
+// ============================================================
+const PARENT_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // chalkash O,0,I,1 yo'q
+const PARENT_CODE_TTL_DAYS = 7;
+
+function genParentCodeString(len) {
+  let s = "";
+  for (let i = 0; i < (len || 8); i++) s += PARENT_CODE_CHARS[Math.floor(Math.random() * PARENT_CODE_CHARS.length)];
+  return s;
+}
+
+// Unique kod yaratib o'quvchiga yozadi (collision bo'lsa qayta urinadi)
+async function assignNewParentCode(studentId) {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const code = genParentCodeString(8);
+    try {
+      const r = await pool.query(
+        `UPDATE users
+         SET parent_connect_code = $1,
+             parent_connect_code_created_at = NOW(),
+             parent_connect_code_expires_at = NOW() + INTERVAL '${PARENT_CODE_TTL_DAYS} days'
+         WHERE id = $2
+         RETURNING parent_connect_code, parent_connect_code_created_at, parent_connect_code_expires_at`,
+        [code, studentId]
+      );
+      return r.rows[0];
+    } catch (e) {
+      if (e.code === "23505") continue; // unique violation — boshqa o'quvchida shu kod, qayta urinamiz
+      throw e;
+    }
+  }
+  throw new Error("Kod yaratib bo'lmadi (collision)");
+}
+
+function maskParentPhone(phone) {
+  if (!phone) return "";
+  const d = String(phone).replace(/\D/g, "");
+  if (d.length < 4) return "***";
+  return "+" + d.slice(0, 3) + " ** *** ** " + d.slice(-2);
+}
+
+// --- Kod holatini olish (yo'q yoki eskirgan bo'lsa yangi yaratadi) ---
+app.get("/student/parent-code", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const cur = await pool.query(
+      "SELECT parent_connect_code, parent_connect_code_created_at, parent_connect_code_expires_at FROM users WHERE id = $1",
+      [studentId]
+    );
+    let row = cur.rows[0];
+    const valid = row && row.parent_connect_code && row.parent_connect_code_expires_at &&
+                  new Date(row.parent_connect_code_expires_at) > new Date();
+    if (!valid) row = await assignNewParentCode(studentId);
+    res.json({
+      code: row.parent_connect_code,
+      created_at: row.parent_connect_code_created_at,
+      expires_at: row.parent_connect_code_expires_at
+    });
+  } catch (err) {
+    console.error("Parent kod olish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Kodni yangilash (eski bekor bo'ladi) ---
+app.post("/student/parent-code/regenerate", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const row = await assignNewParentCode(req.user.id);
+    res.json({ success: true, code: row.parent_connect_code, expires_at: row.parent_connect_code_expires_at });
+  } catch (err) {
+    console.error("Parent kod yangilash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Ulangan ota-onalar ro'yxati (telefon maskalanadi) ---
+app.get("/student/parents", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const rows = await pool.query(
+      `SELECT pl.parent_id, pl.relationship, pl.linked_at, u.first_name, u.last_name, u.phone
+       FROM parent_links pl
+       JOIN users u ON u.id = pl.parent_id
+       WHERE pl.student_id = $1 AND pl.status = 'active'
+       ORDER BY pl.linked_at DESC`,
+      [studentId]
+    );
+    res.json({
+      parents: rows.rows.map(r => ({
+        parent_id: r.parent_id,
+        name: ((r.first_name || "") + " " + (r.last_name || "")).trim() || "Ota-ona",
+        relationship: r.relationship || "guardian",
+        phone_masked: maskParentPhone(r.phone),
+        linked_at: r.linked_at
+      }))
+    });
+  } catch (err) {
+    console.error("Ota-onalar ro'yxati xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Ota-onani uzish (o'quvchi bekor qiladi) ---
+app.delete("/student/parents/:parentId", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const parentId = parseInt(req.params.parentId, 10);
+    if (isNaN(parentId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+    const r = await pool.query(
+      `UPDATE parent_links
+       SET status='revoked', revoked_at=NOW(), revoked_by=$1, updated_at=NOW()
+       WHERE student_id=$1 AND parent_id=$2 AND status='active'
+       RETURNING id`,
+      [studentId, parentId]
+    );
+    if (r.rows.length === 0) return res.status(404).json({ error: "Bog'lanish topilmadi" });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Ota-onani uzish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============================================================
+// PARENT DASHBOARD — Stage 4: Ota-ona backend
+// ============================================================
+const MAX_PARENTS_PER_STUDENT = 5;
+const MAX_CHILDREN_PER_PARENT = 10;
+const REL_ALLOWED = ["mother", "father", "guardian", "other"];
+
+function parentLeagueName(rating) {
+  const r = rating || 0;
+  if (r >= 2000) return "Grandmaster";
+  if (r >= 1800) return "Master";
+  if (r >= 1600) return "Diamond";
+  if (r >= 1400) return "Platinum";
+  if (r >= 1200) return "Gold";
+  if (r >= 1000) return "Silver";
+  return "Bronze";
+}
+function activityLabel(ts) {
+  if (!ts) return "Hali faollik yo'q";
+  const days = Math.floor((Date.now() - new Date(ts).getTime()) / 86400000);
+  if (days <= 0) return "Bugun";
+  if (days === 1) return "Kecha";
+  if (days <= 7) return "Shu hafta";
+  if (days <= 30) return "Shu oy";
+  return "30 kundan oldin";
+}
+
+// Ulanish urinishlari uchun oddiy in-memory rate-limit (brute-force'ga qarshi)
+const _parentLinkFails = new Map();
+function _plKey(req) { return req.user.id + "|" + (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "ip"); }
+function parentLinkBlocked(req) {
+  const rec = _parentLinkFails.get(_plKey(req));
+  if (!rec) return false;
+  if (Date.now() - rec.first > 10 * 60 * 1000) { _parentLinkFails.delete(_plKey(req)); return false; }
+  return rec.count >= 5;
+}
+function parentLinkNoteFail(req) {
+  const k = _plKey(req); const rec = _parentLinkFails.get(k);
+  if (!rec || Date.now() - rec.first > 10 * 60 * 1000) _parentLinkFails.set(k, { count: 1, first: Date.now() });
+  else rec.count++;
+}
+function parentLinkNoteOk(req) { _parentLinkFails.delete(_plKey(req)); }
+
+// --- Farzandga ulanish (kod orqali) ---
+app.post("/parent/link", authMiddleware, requireParent, async (req, res) => {
+  const parentId = req.user.id;
+  if (parentLinkBlocked(req)) return res.status(429).json({ error: "Juda ko'p urinish. 10 daqiqadan keyin qayta urinib ko'ring." });
+
+  let { code, relationship } = req.body;
+  code = (code || "").toString().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  relationship = REL_ALLOWED.includes(relationship) ? relationship : "guardian";
+  if (code.length < 6 || code.length > 12) { parentLinkNoteFail(req); return res.status(400).json({ error: "Kod noto'g'ri" }); }
+
+  try {
+    const stu = await pool.query(
+      `SELECT id, first_name, last_name, cefr_level, rating, role
+       FROM users
+       WHERE parent_connect_code = $1
+         AND parent_connect_code_expires_at IS NOT NULL
+         AND parent_connect_code_expires_at > NOW()`,
+      [code]
+    );
+    if (stu.rows.length === 0 || stu.rows[0].role !== "student") {
+      parentLinkNoteFail(req);
+      return res.status(404).json({ error: "Kod noto'g'ri yoki muddati o'tgan" });
+    }
+    const child = stu.rows[0];
+    if (child.id === parentId) return res.status(400).json({ error: "O'zingizga ulanib bo'lmaydi" });
+
+    const pc = await pool.query("SELECT COUNT(*)::int AS c FROM parent_links WHERE student_id=$1 AND status='active'", [child.id]);
+    if (pc.rows[0].c >= MAX_PARENTS_PER_STUDENT) return res.status(400).json({ error: "Bu o'quvchiga ulangan ota-onalar soni to'lgan" });
+    const cc = await pool.query("SELECT COUNT(*)::int AS c FROM parent_links WHERE parent_id=$1 AND status='active'", [parentId]);
+    if (cc.rows[0].c >= MAX_CHILDREN_PER_PARENT) return res.status(400).json({ error: "Ulangan farzandlar soni to'lgan" });
+
+    const ex = await pool.query("SELECT id, status FROM parent_links WHERE parent_id=$1 AND student_id=$2", [parentId, child.id]);
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      if (ex.rows.length === 0) {
+        await client.query(
+          "INSERT INTO parent_links (parent_id, student_id, relationship, status, linked_at) VALUES ($1,$2,$3,'active',NOW())",
+          [parentId, child.id, relationship]
+        );
+      } else if (ex.rows[0].status === "revoked") {
+        await client.query(
+          "UPDATE parent_links SET status='active', relationship=$3, linked_at=NOW(), revoked_at=NULL, revoked_by=NULL, updated_at=NOW() WHERE id=$1 AND parent_id=$2",
+          [ex.rows[0].id, parentId, relationship]
+        );
+      } // active bo'lsa — idempotent
+      await client.query("COMMIT");
+    } catch (txe) { await client.query("ROLLBACK"); throw txe; }
+    finally { client.release(); }
+
+    parentLinkNoteOk(req);
+    res.json({
+      success: true,
+      child: { id: child.id, name: ((child.first_name||"")+" "+(child.last_name||"")).trim() || "Farzand", cefr_level: child.cefr_level || "A1", rating: child.rating || 0 }
+    });
+  } catch (err) {
+    console.error("Parent link xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Ulangan bolalar ro'yxati ---
+app.get("/parent/children", authMiddleware, requireParent, async (req, res) => {
+  try {
+    const parentId = req.user.id;
+    const rows = await pool.query(
+      `SELECT pl.student_id, pl.relationship, pl.linked_at,
+              u.first_name, u.last_name, u.cefr_level, u.rating, u.xp, u.is_banned,
+              (SELECT MAX(played_at) FROM battle_history bh WHERE bh.user_id = u.id) AS last_played
+       FROM parent_links pl
+       JOIN users u ON u.id = pl.student_id
+       WHERE pl.parent_id = $1 AND pl.status = 'active'
+       ORDER BY pl.linked_at DESC`,
+      [parentId]
+    );
+    res.json({
+      children: rows.rows.map(r => ({
+        student_id: r.student_id,
+        name: ((r.first_name||"")+" "+(r.last_name||"")).trim() || "Farzand",
+        cefr_level: r.cefr_level || "A1",
+        league: parentLeagueName(r.rating),
+        rating: r.rating || 0,
+        xp: r.xp || 0,
+        relationship: r.relationship || "guardian",
+        is_banned: !!r.is_banned,
+        last_activity_label: activityLabel(r.last_played),
+        linked_at: r.linked_at
+      }))
+    });
+  } catch (err) {
+    console.error("Bolalar ro'yxati xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Bitta bola: batafsil panel (read-only) ---
+app.get("/parent/children/:studentId", authMiddleware, requireParent, async (req, res) => {
+  try {
+    const parentId = req.user.id;
+    const studentId = parseInt(req.params.studentId, 10);
+    if (isNaN(studentId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    const link = await pool.query(
+      "SELECT relationship, linked_at FROM parent_links WHERE parent_id=$1 AND student_id=$2 AND status='active'",
+      [parentId, studentId]
+    );
+    if (link.rows.length === 0) return res.status(403).json({ error: "Bu farzandga ruxsatingiz yo'q" });
+
+    const up = await pool.query(
+      `SELECT u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.xp, u.school, u.is_banned, u.current_streak,
+              (SELECT COUNT(*) FROM class_students cs WHERE cs.student_id=u.id AND cs.status='active')::int AS class_count
+       FROM users u WHERE u.id = $1`,
+      [studentId]
+    );
+    if (up.rows.length === 0) return res.status(404).json({ error: "Farzand topilmadi" });
+    const u = up.rows[0];
+
+    const bs = await pool.query(
+      `SELECT COUNT(*)::int AS total,
+              SUM(CASE WHEN outcome='win' THEN 1 ELSE 0 END)::int AS wins,
+              COALESCE(SUM(my_score),0)::int AS correct_sum,
+              COALESCE(SUM(total_questions),0)::int AS q_sum,
+              SUM(CASE WHEN played_at >= NOW() - INTERVAL '7 days' THEN 1 ELSE 0 END)::int AS weekly,
+              MAX(played_at) AS last_played
+       FROM battle_history WHERE user_id = $1`,
+      [studentId]
+    );
+    const b = bs.rows[0];
+    const winRate = b.total > 0 ? Math.round((b.wins / b.total) * 100) : 0;
+    const accuracy = b.q_sum > 0 ? Math.min(100, Math.round((b.correct_sum / b.q_sum) * 100)) : null;
+
+    const bh = await pool.query(
+      "SELECT played_at, outcome, my_score, opponent_score, mode, total_questions FROM battle_history WHERE user_id=$1 ORDER BY played_at DESC LIMIT 10",
+      [studentId]
+    );
+
+    const asg = await pool.query(
+      `SELECT a.id, a.title, c.name AS class_name, t.first_name AS tf, t.last_name AS tl,
+              a.cefr_level, a.skill, a.question_count, a.due_at,
+              s.status AS sub_status, s.score, s.total, s.percent, s.is_late, s.submitted_at
+       FROM class_students cs
+       JOIN classes c ON c.id = cs.class_id
+       JOIN users t ON t.id = c.teacher_id
+       JOIN assignments a ON a.class_id = c.id AND a.status='active'
+       LEFT JOIN assignment_submissions s ON s.assignment_id = a.id AND s.student_id = $1
+       WHERE cs.student_id = $1 AND cs.status='active' AND c.archived_at IS NULL
+       ORDER BY a.due_at NULLS LAST, a.created_at DESC LIMIT 30`,
+      [studentId]
+    );
+
+    const wa = await pool.query(
+      `SELECT aq.skill, COUNT(*)::int AS attempts, SUM(CASE WHEN sa.is_correct THEN 1 ELSE 0 END)::int AS correct
+       FROM submission_answers sa
+       JOIN assignment_submissions s ON s.id = sa.submission_id AND s.student_id = $1 AND s.status='submitted'
+       JOIN assignment_questions aq ON aq.id = sa.assignment_question_id
+       WHERE aq.skill IS NOT NULL AND aq.skill <> ''
+       GROUP BY aq.skill
+       HAVING COUNT(*) >= 3
+       ORDER BY (SUM(CASE WHEN sa.is_correct THEN 1 ELSE 0 END)::float / COUNT(*)) ASC`,
+      [studentId]
+    );
+
+    const examRows = await pool.query(
+      `SELECT from_level, to_level, overall_percent, passed, level_changed, taken_at
+       FROM exam_attempts WHERE user_id = $1 ORDER BY taken_at DESC LIMIT 20`,
+      [studentId]
+    );
+
+    res.json({
+      child: {
+        id: u.id,
+        name: ((u.first_name||"")+" "+(u.last_name||"")).trim() || "Farzand",
+        cefr_level: u.cefr_level || "A1",
+        league: parentLeagueName(u.rating),
+        rating: u.rating || 0,
+        xp: u.xp || 0,
+        school_name: u.school || null,
+        class_count: u.class_count,
+        is_banned: !!u.is_banned,
+        relationship: link.rows[0].relationship,
+        linked_at: link.rows[0].linked_at
+      },
+      overview: {
+        total_battles: b.total,
+        win_rate: winRate,
+        accuracy: accuracy,
+        current_streak: u.current_streak || 0,
+        weekly_activity_count: b.weekly,
+        last_activity_label: activityLabel(b.last_played)
+      },
+      battles: bh.rows.map(x => ({
+        played_at: x.played_at,
+        result: x.outcome,
+        score: (x.my_score != null ? x.my_score : 0) + " : " + (x.opponent_score != null ? x.opponent_score : 0),
+        opponent_label: "Raqib",
+        mode: x.mode,
+        question_count: x.total_questions || null
+      })),
+      exams: examRows.rows.map(e => ({
+        from_level: e.from_level,
+        to_level: e.to_level,
+        overall_percent: e.overall_percent,
+        passed: e.passed,
+        level_changed: e.level_changed,
+        taken_at: e.taken_at
+      })),
+      assignments: asg.rows.map(a => {
+        let st = "not_started";
+        if (a.sub_status === "in_progress") st = "in_progress";
+        else if (a.sub_status === "submitted") st = a.is_late ? "late_submitted" : "submitted";
+        return {
+          title: a.title, class_name: a.class_name,
+          teacher_name: ((a.tf||"")+" "+(a.tl||"")).trim(),
+          due_at: a.due_at, status: st,
+          score: a.score, percent: a.percent, is_late: !!a.is_late, submitted_at: a.submitted_at
+        };
+      }),
+      weak_areas: wa.rows.map(w => ({
+        skill: w.skill,
+        accuracy: w.attempts > 0 ? Math.round((w.correct / w.attempts) * 100) : 0,
+        attempts: w.attempts
+      }))
+    });
+  } catch (err) {
+    console.error("Bola paneli xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Farzandni uzish (ota-ona o'z ro'yxatidan) ---
+app.delete("/parent/children/:studentId", authMiddleware, requireParent, async (req, res) => {
+  try {
+    const parentId = req.user.id;
+    const studentId = parseInt(req.params.studentId, 10);
+    if (isNaN(studentId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+    const r = await pool.query(
+      "UPDATE parent_links SET status='revoked', revoked_at=NOW(), revoked_by=$1, updated_at=NOW() WHERE parent_id=$1 AND student_id=$2 AND status='active' RETURNING id",
+      [parentId, studentId]
+    );
+    if (r.rows.length === 0) return res.status(404).json({ error: "Bog'lanish topilmadi" });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Farzandni uzish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // SINF O'QUVCHILARI RO'YXATI (o'qituvchi ko'radi)
 app.get("/teacher/classes/:classId/students", authMiddleware, requireTeacher, async (req, res) => {
   try {
@@ -5825,6 +6795,233 @@ app.delete("/teacher/classes/:classId/students/:studentId", authMiddleware, requ
     res.json({ message: "O'quvchi sinfdan olib tashlandi" });
   } catch (err) {
     console.error("O'quvchini olib tashlash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============================================================
+// TEACHER ASSIGNMENTS — Stage 2: O'qituvchi backend
+// ============================================================
+const ASSIGN_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
+const ASSIGN_SKILLS = ["mixed", "grammar", "vocabulary", "reading", "listening", "speaking", "writing"];
+
+// --- Topshiriq yaratish (transaction + savol snapshot) ---
+app.post("/teacher/classes/:classId/assignments", authMiddleware, requireTeacher, async (req, res) => {
+  const teacherId = req.user.id;
+  const classId = parseInt(req.params.classId, 10);
+  if (isNaN(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
+
+  let { title, description, cefr_level, skill, question_count, due_at, max_attempts } = req.body;
+
+  // Validatsiya
+  title = (title || "").trim();
+  if (title.length < 3 || title.length > 150) return res.status(400).json({ error: "Sarlavha 3–150 belgi bo'lishi kerak" });
+  if (!ASSIGN_LEVELS.includes(cefr_level)) return res.status(400).json({ error: "Noto'g'ri CEFR daraja" });
+  skill = ASSIGN_SKILLS.includes(skill) ? skill : "mixed";
+  question_count = parseInt(question_count, 10);
+  if (isNaN(question_count) || question_count < 1 || question_count > 50) return res.status(400).json({ error: "Savol soni 1–50 oralig'ida bo'lishi kerak" });
+  max_attempts = parseInt(max_attempts, 10);
+  if (isNaN(max_attempts) || max_attempts < 1 || max_attempts > 5) max_attempts = 1;
+  let dueAt = null;
+  if (due_at) {
+    const d = new Date(due_at);
+    if (isNaN(d.getTime())) return res.status(400).json({ error: "Muddat sanasi noto'g'ri" });
+    dueAt = d;
+  }
+
+  try {
+    // Egalik: sinf shu o'qituvchiniki va arxivlanmagan
+    const cls = await pool.query(
+      "SELECT id FROM classes WHERE id = $1 AND teacher_id = $2 AND archived_at IS NULL",
+      [classId, teacherId]
+    );
+    if (cls.rows.length === 0) return res.status(404).json({ error: "Sinf topilmadi" });
+
+    // Savol tanlash: faqat published, daraja (+ skill agar mixed bo'lmasa)
+    let qSql = "SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, cefr_level, skill, difficulty FROM questions WHERE status = 'published' AND cefr_level = $1";
+    const qParams = [cefr_level];
+    if (skill !== "mixed") { qParams.push(skill); qSql += " AND skill = $2"; }
+    qSql += " ORDER BY RANDOM() LIMIT " + question_count;
+    const qRes = await pool.query(qSql, qParams);
+
+    if (qRes.rows.length < question_count) {
+      return res.status(400).json({ error: "Yetarli savol yo'q (kerak: " + question_count + ", mavjud: " + qRes.rows.length + "). Daraja yoki skill'ni o'zgartiring." });
+    }
+
+    // Transaction: assignment + snapshot savollar birga
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      const aRes = await client.query(
+        `INSERT INTO assignments (class_id, teacher_id, title, description, cefr_level, skill, question_count, due_at, max_attempts)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING id, title, description, cefr_level, skill, question_count, due_at, max_attempts, status, created_at`,
+        [classId, teacherId, title, (description || "").trim() || null, cefr_level, skill, question_count, dueAt, max_attempts]
+      );
+      const assignment = aRes.rows[0];
+
+      for (let i = 0; i < qRes.rows.length; i++) {
+        const q = qRes.rows[i];
+        await client.query(
+          `INSERT INTO assignment_questions
+           (assignment_id, original_question_id, q_order, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, cefr_level, skill, difficulty)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+          [assignment.id, q.id, i + 1, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_option, q.explanation, q.cefr_level, q.skill, q.difficulty]
+        );
+      }
+
+      await client.query("COMMIT");
+      res.status(201).json({ success: true, assignment });
+    } catch (txErr) {
+      await client.query("ROLLBACK");
+      throw txErr;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error("Topshiriq yaratish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Sinf topshiriqlari ro'yxati (statistika bilan) ---
+app.get("/teacher/classes/:classId/assignments", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const classId = parseInt(req.params.classId, 10);
+    if (isNaN(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
+
+    const cls = await pool.query("SELECT id FROM classes WHERE id = $1 AND teacher_id = $2", [classId, teacherId]);
+    if (cls.rows.length === 0) return res.status(404).json({ error: "Sinf topilmadi" });
+
+    const statusFilter = req.query.status; // active(default) | archived | all
+    let where = "a.class_id = $1";
+    if (statusFilter === "archived") where += " AND a.status = 'archived'";
+    else if (statusFilter !== "all") where += " AND a.status = 'active'";
+
+    const rows = await pool.query(
+      `SELECT a.id, a.title, a.description, a.cefr_level, a.skill, a.question_count, a.due_at, a.status, a.created_at,
+              (SELECT COUNT(*) FROM class_students cs WHERE cs.class_id = a.class_id AND cs.status='active') AS total_students,
+              (SELECT COUNT(*) FROM assignment_submissions s WHERE s.assignment_id = a.id AND s.status='submitted') AS submitted_count,
+              (SELECT COUNT(*) FROM assignment_submissions s WHERE s.assignment_id = a.id AND s.status='submitted' AND s.is_late) AS late_count,
+              (SELECT COUNT(DISTINCT s.student_id) FROM assignment_submissions s WHERE s.assignment_id = a.id) AS started_count,
+              (SELECT COALESCE(ROUND(AVG(s.percent)),0) FROM assignment_submissions s WHERE s.assignment_id = a.id AND s.status='submitted') AS average_percent
+       FROM assignments a
+       WHERE ${where}
+       ORDER BY a.created_at DESC`,
+      [classId]
+    );
+
+    const assignments = rows.rows.map(r => {
+      const total = parseInt(r.total_students), started = parseInt(r.started_count);
+      return {
+        id: r.id, title: r.title, description: r.description, cefr_level: r.cefr_level, skill: r.skill,
+        question_count: r.question_count, due_at: r.due_at, status: r.status, created_at: r.created_at,
+        total_students: total,
+        submitted_count: parseInt(r.submitted_count),
+        late_count: parseInt(r.late_count),
+        not_started_count: Math.max(0, total - started),
+        average_percent: parseInt(r.average_percent),
+      };
+    });
+
+    res.json({ assignments });
+  } catch (err) {
+    console.error("Topshiriqlar ro'yxati xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Topshiriqni arxivlash (yumshoq) ---
+app.post("/teacher/assignments/:id/archive", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    const r = await pool.query(
+      "UPDATE assignments SET status='archived', archived_at=NOW(), updated_at=NOW() WHERE id=$1 AND teacher_id=$2 RETURNING id",
+      [id, teacherId]
+    );
+    if (r.rows.length === 0) return res.status(404).json({ error: "Topshiriq topilmadi" });
+    res.json({ success: true, message: "Topshiriq arxivlandi" });
+  } catch (err) {
+    console.error("Topshiriq arxivlash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Topshiriq natijalari (sinf xulosasi + har o'quvchi jadvali) ---
+app.get("/teacher/assignments/:id/results", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const assignmentId = parseInt(req.params.id, 10);
+    if (isNaN(assignmentId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    // Egalik: topshiriq shu o'qituvchiniki
+    const aRes = await pool.query(
+      `SELECT id, class_id, title, description, cefr_level, skill, question_count, due_at, status, created_at
+       FROM assignments WHERE id = $1 AND teacher_id = $2`,
+      [assignmentId, teacherId]
+    );
+    if (aRes.rows.length === 0) return res.status(404).json({ error: "Topshiriq topilmadi" });
+    const assignment = aRes.rows[0];
+
+    // Har bir FAOL o'quvchi + uning topshirishi (boshlamaganlar ham chiqsin -> LEFT JOIN)
+    const rows = await pool.query(
+      `SELECT u.id AS student_id, u.first_name, u.last_name, u.profile_picture,
+              s.status AS submission_status, s.score, s.total, s.percent,
+              s.correct_count, s.wrong_count, s.unanswered_count,
+              s.is_late, s.started_at, s.submitted_at
+       FROM class_students cs
+       JOIN users u ON u.id = cs.student_id
+       LEFT JOIN assignment_submissions s
+         ON s.assignment_id = $1 AND s.student_id = u.id
+       WHERE cs.class_id = $2 AND cs.status = 'active'
+       ORDER BY (s.percent IS NULL), s.percent DESC, u.first_name ASC`,
+      [assignmentId, assignment.class_id]
+    );
+
+    // Har o'quvchi uchun ko'rsatiladigan holat
+    const students = rows.rows.map(r => {
+      let display = "not_started";
+      if (r.submission_status === "in_progress") display = "in_progress";
+      else if (r.submission_status === "submitted") display = r.is_late ? "late_submitted" : "submitted";
+      return {
+        student_id: r.student_id,
+        name: ((r.first_name || "") + " " + (r.last_name || "")).trim(),
+        profile_picture: r.profile_picture || null,
+        status: display,
+        score: r.score, total: r.total, percent: r.percent,
+        correct_count: r.correct_count, wrong_count: r.wrong_count, unanswered_count: r.unanswered_count,
+        is_late: r.is_late || false,
+        started_at: r.started_at, submitted_at: r.submitted_at
+      };
+    });
+
+    // Sinf xulosasi
+    const total_students = students.length;
+    const submittedList = students.filter(s => s.status === "submitted" || s.status === "late_submitted");
+    const submitted_count = submittedList.length;
+    const late_count = students.filter(s => s.is_late).length;
+    const not_started_count = students.filter(s => s.status === "not_started").length;
+    const percents = submittedList.map(s => s.percent).filter(p => p !== null && p !== undefined);
+    const average_percent = percents.length ? Math.round(percents.reduce((a, b) => a + b, 0) / percents.length) : 0;
+    const highest_percent = percents.length ? Math.max(...percents) : 0;
+    const lowest_percent = percents.length ? Math.min(...percents) : 0;
+    const completion_percent = total_students ? Math.round((submitted_count / total_students) * 100) : 0;
+
+    res.json({
+      assignment,
+      summary: {
+        total_students, submitted_count, late_count, not_started_count,
+        completion_percent, average_percent, highest_percent, lowest_percent
+      },
+      students
+    });
+  } catch (err) {
+    console.error("Topshiriq natijalari xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });
@@ -6588,27 +7785,6 @@ async function notifyMatchPlayers(matchId, event, payload) {
 
 // Watcher'ni har 30 soniyada ishga tushiramiz
 setInterval(tournamentMatchWatcher, 30000);
-
-
-
-// ⚠️ VAQTINCHALIK TEST ENDPOINT — test tugagach O'CHIRILADI!
-// Test o'quvchi parolini "test123" ga o'rnatadi
-app.post("/dev/set-test-password", async (req, res) => {
-  try {
-    const { phone, newPassword } = req.body;
-    if (!phone) return res.status(400).json({ error: "phone kerak" });
-    const pw = newPassword || "test123";
-    const hashed = await bcrypt.hash(pw, 10);
-    const r = await pool.query(
-      "UPDATE users SET password = $1 WHERE phone = $2 RETURNING id, first_name, phone",
-      [hashed, phone]
-    );
-    if (r.rows.length === 0) return res.status(404).json({ error: "Bu telefon bilan foydalanuvchi topilmadi" });
-    res.json({ success: true, user: r.rows[0], password: pw });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // DIQQAT: app.listen emas, server.listen!
 server.listen(PORT, () => {
