@@ -197,7 +197,7 @@ function doLogout() {
       return;
     }
     if (typeof io === "undefined") return;
-    window.globalSocket = io();
+    window.globalSocket = io({ auth: { token: localStorage.getItem("token") } });
     window.globalSocket.on("connect", () => {
       window.globalSocket.emit("registerUser", user.id);
     });

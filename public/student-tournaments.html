@@ -129,7 +129,7 @@
     var statusLabels = { registration: "Ro'yxat", bracket: "Setka", live: "Jonli", finished: "Tugagan" };
 
     // Socket — match holati o'zgarsa yangilash
-    const socket = io();
+    const socket = io({ auth: { token: localStorage.getItem("token") } });
     socket.on("connect", () => { socket.emit("registerUser", user.id); });
     socket.on("matchCheckinOpen", () => loadTournaments());
     socket.on("matchLiveStart", () => loadTournaments());

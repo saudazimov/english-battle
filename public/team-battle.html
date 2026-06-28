@@ -131,6 +131,7 @@
     .bt-pl-cefr { position: absolute; bottom: -3px; left: -3px; font-size: 9.5px; font-weight: 800; padding: 1px 5px; border-radius: 6px; background: var(--accent); color: #fff; border: 1.5px solid var(--panel); }
     .bt-team-panel.enemy .bt-pl-cefr { background: var(--accent-2); }
     .bt-pl-online { position: absolute; bottom: 1px; right: 1px; width: 12px; height: 12px; border-radius: 50%; background: var(--green); border: 2px solid var(--panel); }
+    .bt-pl-online.offline { background: #94a3b8; }
     .bt-pl-mid { flex: 1; min-width: 0; }
     .bt-pl-namerow { display: flex; align-items: center; gap: 8px; }
     .bt-pl-name { font-size: 14.5px; font-weight: 700; }
@@ -390,7 +391,7 @@
           </div>
           <div class="result-actions">
             <button class="btn-again" onclick="playAgain()"><i data-lucide="rotate-ccw"></i> Yana o'ynash</button>
-            <button class="btn-lobby" onclick="window.location.href='/lobby.html'"><i data-lucide="home"></i> Lobbyga</button>
+            <button class="btn-lobby" onclick="goLobby()"><i data-lucide="home"></i> Lobbyga</button>
           </div>
         </div>
       </div>
@@ -400,7 +401,7 @@
         <div class="card err-box">
           <div><i data-lucide="alert-circle"></i></div>
           <div class="mm-title" style="font-size:20px;" id="errText">Xato yuz berdi</div>
-          <button class="btn-lobby" style="margin-top:18px;padding:13px 26px;border-radius:12px;font-weight:700;cursor:pointer;" onclick="window.location.href='/lobby.html'">Lobbyga qaytish</button>
+          <button class="btn-lobby" style="margin-top:18px;padding:13px 26px;border-radius:12px;font-weight:700;cursor:pointer;" onclick="goLobby()">Lobbyga qaytish</button>
         </div>
       </div>
 
@@ -443,6 +444,23 @@
     var user = {};
     try { user = JSON.parse(localStorage.getItem("user") || "{}"); } catch (e) {}
 
+    // RASM TUZATISH: foydalanuvchi rasmini serverdan yangilaymiz (localStorage'da eski/bo'sh bo'lishi mumkin)
+    (async function refreshMyProfilePicture() {
+      try {
+        var res = await fetch("/profile/" + user.id, { headers: { "Authorization": "Bearer " + token } });
+        if (!res.ok) return;
+        var d = await res.json();
+        if (d.user && d.user.profile_picture) {
+          user.profile_picture = d.user.profile_picture;
+          try {
+            var stored = JSON.parse(localStorage.getItem("user") || "{}");
+            stored.profile_picture = d.user.profile_picture;
+            localStorage.setItem("user", JSON.stringify(stored));
+          } catch (e) {}
+        }
+      } catch (e) {}
+    })();
+
     var params = new URLSearchParams(window.location.search);
     var teamMode = params.get("mode") === "squad" ? "squad" : "duo";
     var teamSize = teamMode === "squad" ? 4 : 2;
@@ -451,7 +469,7 @@
 
     var SCORE_MULT = 1;
 
-    var socket = io();
+    var socket = io({ auth: { token: localStorage.getItem("token") } });
     var roomId = null;
     var battleLevel = "A1";
     var questions = [];
@@ -483,6 +501,38 @@
 
     // ===== MATCHMAKING =====
     socket.on("connect", function () {
+      socket.emit("registerUser", user.id);
+
+      var activeRoom = sessionStorage.getItem("teamBattleActiveRoom");
+      var resultRoom = sessionStorage.getItem("teamBattleResultRoom");
+
+      // JANG DAVOM ETMOQDA edi (F5) — reconnect. Bu party uchun ham, solo uchun ham.
+      if (activeRoom) {
+        window.__teamReconnecting = true;
+        socket.emit("battle:reconnectCheck", { userId: user.id, expectedRoom: activeRoom });
+        return;
+      }
+
+      // PARTY (do'st bilan), jang HALI boshlanmagan = yangi jang.
+      // Eski natija belgisi (agar bo'lsa) tozalanadi, darrov party qidiruv.
+      if (partyId) {
+        sessionStorage.removeItem("teamBattleResultRoom");
+        startTeamSearch();
+        return;
+      }
+
+      // SOLO/RANDOM: natija ekranida edikmi (F5)?
+      if (resultRoom) {
+        window.__teamReconnecting = true;
+        loadTeamResultFromServer(resultRoom);
+      } else {
+        // Yangi ochilish (lobby'dan) → darrov qidiruv
+        startTeamSearch();
+      }
+    });
+
+    // Reconnect topilmadi — endi qidiruv boshlaymiz (yangi jang)
+    function startTeamSearch() {
       if (partyId) {
         socket.emit("joinPartyMatch", { partyId: partyId, userId: user.id, name: user.first_name || "O'yinchi", level: user.cefr_level || "A1", lengthKey: "standard", profile_picture: user.profile_picture || null });
         document.getElementById("mmTitle").textContent = "Party yig'ilmoqda...";
@@ -491,6 +541,15 @@
         socket.emit("findTeamMatch", { userId: user.id, name: user.first_name || "O'yinchi", level: user.cefr_level || "A1", rating: user.rating || 1000, lengthKey: "standard", teamMode: teamMode, profile_picture: user.profile_picture || null });
       }
       startSearchTimer();
+    }
+
+    // RECONNECT: aktiv jamoa jang yo'q — yangi qidiruv (yoki eski belgi noto'g'ri)
+    socket.on("battle:noActive", function () {
+      if (window.__teamReconnecting) {
+        window.__teamReconnecting = false;
+        sessionStorage.removeItem("teamBattleActiveRoom"); // eski belgi noto'g'ri — tozalaymiz
+        startTeamSearch();
+      }
     });
 
     function startSearchTimer() {
@@ -517,6 +576,8 @@
     socket.on("teamBattleStart", function (data) {
       stopSearchTimer();
       roomId = data.roomId;
+      sessionStorage.setItem("teamBattleActiveRoom", roomId); // F5 reconnect uchun belgi
+      sessionStorage.removeItem("teamBattleResultRoom"); // eski natija belgisi (agar bo'lsa) tozalanadi
       battleLevel = data.level || "A1";
       questions = data.questions || [];
       myScore = 0; currentQ = 0;
@@ -531,8 +592,8 @@
       document.getElementById("mmActionFound").style.display = "block";
       renderMMTeams(data.myTeamPlayers, data.enemyTeamPlayers);
 
-      lastProgress.my = data.myTeamPlayers.map(function (p) { return { name: p.name, score: 0, answeredCount: 0, isBot: p.isBot, level: p.level, rating: p.rating, profile_picture: p.profile_picture }; });
-      lastProgress.enemy = data.enemyTeamPlayers.map(function (p) { return { name: p.name, score: 0, answeredCount: 0, isBot: p.isBot, level: p.level, rating: p.rating, profile_picture: p.profile_picture }; });
+      lastProgress.my = data.myTeamPlayers.map(function (p) { return { name: p.name, userId: p.userId, score: 0, answeredCount: 0, isBot: p.isBot, level: p.level, rating: p.rating, profile_picture: p.profile_picture, offline: false }; });
+      lastProgress.enemy = data.enemyTeamPlayers.map(function (p) { return { name: p.name, userId: p.userId, score: 0, answeredCount: 0, isBot: p.isBot, level: p.level, rating: p.rating, profile_picture: p.profile_picture, offline: false }; });
 
       document.getElementById("btRoomSub").textContent = (teamMode === "squad" ? "4v4 Squad Battle" : "2v2 Duo Battle") + " · English";
       document.getElementById("btVsMode").textContent = teamMode === "squad" ? "4v4" : "2v2";
@@ -580,12 +641,14 @@
         var initial = (p.name || "?").charAt(0).toUpperCase();
         var pct = Math.round((p.answeredCount / total) * 100);
         var ord = (i === 0 ? "1st" : i === 1 ? "2nd" : i === 2 ? "3rd" : (i + 1) + "th");
-        return '<div class="bt-pl">' +
+        var dotClass = p.offline ? "bt-pl-online offline" : "bt-pl-online";
+        var nameExtra = p.offline ? ' <span style="color:#f87171;font-size:11px;font-weight:600;">(oflayn)</span>' : "";
+        return '<div class="bt-pl"' + (p.offline ? ' style="opacity:0.6;"' : '') + '>' +
           '<div class="bt-pl-ava-wrap"><div class="bt-pl-ava">' + avaInner(p) + '</div>' +
             '<span class="bt-pl-cefr">' + esc(p.level || "A1") + '</span>' +
-            '<span class="bt-pl-online"></span></div>' +
+            '<span class="' + dotClass + '"></span></div>' +
           '<div class="bt-pl-mid">' +
-            '<div class="bt-pl-namerow"><span class="bt-pl-name">' + esc(p.name) + '</span>' +
+            '<div class="bt-pl-namerow"><span class="bt-pl-name">' + esc(p.name) + nameExtra + '</span>' +
               '<span class="bt-pl-rating"><svg class="bolt-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg> ' + (p.rating || 1000) + '</span></div>' +
             '<div class="bt-pl-proglabel">' + ord + ' Player Progress</div>' +
             '<div class="bt-pl-progbar"><div class="bt-pl-progfill" style="width:' + pct + '%"></div></div>' +
@@ -676,6 +739,26 @@
     }
 
     // Jamoa progressi (real-time)
+    // RAQIB/JAMOADOSH offline/online (real-time, jang davomida)
+    function setPlayerOffline(uid, isOffline) {
+      var changed = false;
+      ["my", "enemy"].forEach(function (side) {
+        lastProgress[side].forEach(function (p) {
+          if (p.userId != null && String(p.userId) === String(uid)) {
+            p.offline = isOffline;
+            changed = true;
+          }
+        });
+      });
+      if (changed) renderScoreboard();
+    }
+    socket.on("playerOffline", function (data) {
+      if (data && data.userId != null) setPlayerOffline(data.userId, true);
+    });
+    socket.on("playerOnline", function (data) {
+      if (data && data.userId != null) setPlayerOffline(data.userId, false);
+    });
+
     socket.on("teamProgress", function (data) {
       // Faqat ball/progress yangilanadi — rasm/level/rating boshlang'ich keshdan saqlanadi
       data.myTeamPlayers.forEach(function (p, i) { if (lastProgress.my[i]) { lastProgress.my[i].score = p.score; lastProgress.my[i].answeredCount = p.answeredCount; } });
@@ -686,9 +769,66 @@
     });
 
     // ===== NATIJA =====
+    // ===== RECONNECT: jamoa jangini o'sha nuqtadan tiklash =====
+    socket.on("team:resumeState", function (data) {
+      window.__teamReconnecting = false;
+      stopSearchTimer();
+
+      // Jang holatini tiklaymiz
+      roomId = data.roomId;
+      sessionStorage.setItem("teamBattleActiveRoom", roomId); // belgini saqlaymiz
+      battleLevel = data.level || "A1";
+      questions = data.questions || [];
+      currentQ = data.answeredCount;   // javob berilganlardan keyingisidan davom
+      myScore = data.myScore || 0;
+
+      // Jamoa progressini tiklaymiz (lastProgress)
+      lastProgress.my = (data.myTeamPlayers || []).map(function (p) {
+        return { name: p.name, userId: p.userId, score: p.score || 0, answeredCount: p.answeredCount || 0, isBot: p.isBot, level: p.level, rating: p.rating, profile_picture: p.profile_picture, offline: false };
+      });
+      lastProgress.enemy = (data.enemyTeamPlayers || []).map(function (p) {
+        return { name: p.name, userId: p.userId, score: p.score || 0, answeredCount: p.answeredCount || 0, isBot: p.isBot, level: p.level, rating: p.rating, profile_picture: p.profile_picture, offline: false };
+      });
+
+      // Sarlavhalar
+      document.getElementById("btRoomSub").textContent = (data.teamMode === "squad" ? "4v4 Squad Battle" : "2v2 Duo Battle") + " · English";
+      document.getElementById("btVsMode").textContent = data.teamMode === "squad" ? "4v4" : "2v2";
+      document.getElementById("btVsModeSub").textContent = data.teamMode === "squad" ? "SQUAD BATTLE" : "DUO BATTLE";
+
+      // Jang ekranini ko'rsatamiz
+      showScreen("battleScreen");
+      renderScoreboard();
+
+      // Men allaqachon tugatganmanmi?
+      if (data.finished || currentQ >= questions.length) {
+        showWaiting();
+      } else {
+        renderQuestion();
+      }
+
+      icons();
+      console.log("Jamoa jang tiklandi: savol " + (currentQ + 1) + "/" + questions.length + ", skor " + myScore);
+    });
+
     socket.on("teamBattleEnd", function (data) {
       if (qTimer) clearTimeout(qTimer);
       if (qTick) clearInterval(qTick);
+      sessionStorage.removeItem("teamBattleActiveRoom"); // jang tugadi — belgini tozalaymiz
+      sessionStorage.setItem("teamBattleResultRoom", roomId); // F5 natija refresh uchun
+      renderTeamResult(data);
+      // localStorage yangilash (faqat live tugashda — F5 da kerak emas)
+      if (data.updated_user) {
+        try {
+          var u = JSON.parse(localStorage.getItem("user") || "{}");
+          u.xp = data.updated_user.xp; u.rating = data.updated_user.rating;
+          u.win_streak = data.updated_user.win_streak; u.coins = data.updated_user.coins;
+          localStorage.setItem("user", JSON.stringify(u));
+        } catch (e) {}
+      }
+    });
+
+    // Natija ekranini quradi (ham live teamBattleEnd, ham F5 refresh ishlatadi)
+    function renderTeamResult(data) {
       showScreen("resultScreen");
 
       var ic = document.getElementById("resultIc");
@@ -713,32 +853,55 @@
 
       animateScore("resMyScore", data.myTeamScore * SCORE_MULT, 800);
       animateScore("resEnemyScore", data.enemyTeamScore * SCORE_MULT, 800);
-      renderResultRoster("resMyRoster", data.myTeamPlayers, lastProgress.my);
-      renderResultRoster("resEnemyRoster", data.enemyTeamPlayers, lastProgress.enemy);
+      // Cache: live'da lastProgress, F5'da data ichidagi player ro'yxati
+      var myCache = (lastProgress.my && lastProgress.my.length) ? lastProgress.my : data.myTeamPlayers;
+      var enCache = (lastProgress.enemy && lastProgress.enemy.length) ? lastProgress.enemy : data.enemyTeamPlayers;
+      renderResultRoster("resMyRoster", data.myTeamPlayers, myCache);
+      renderResultRoster("resEnemyRoster", data.enemyTeamPlayers, enCache);
 
-      // Katta jamoa avatarlari: sizniki = joriy foydalanuvchi, raqibniki = raqib jamoaning birinchi rasmi
+      // Katta jamoa avatarlari
       var myAva = document.querySelector("#rsMy .rs-ava");
       var enAva = document.querySelector("#rsEnemy .rs-ava");
       if (myAva) myAva.innerHTML = user.profile_picture ? '<img src="' + esc(user.profile_picture) + '">' : '<i data-lucide="users"></i>';
-      var enemyPic = (lastProgress.enemy.find(function (p) { return p.profile_picture; }) || {}).profile_picture;
+      var enemyPic = (data.enemyTeamPlayers || []).find(function (p) { return p.profile_picture; });
+      enemyPic = enemyPic ? enemyPic.profile_picture : null;
       if (enAva) enAva.innerHTML = enemyPic ? '<img src="' + esc(enemyPic) + '">' : '<i data-lucide="users"></i>';
 
-      // XP + reyting (bitta badge'da, 1v1 kabi)
+      // XP + reyting
       var rp = data.rating_change || 0;
       var ratingText = rp > 0 ? " · +" + rp + " reyting" : (rp < 0 ? " · " + rp + " reyting" : "");
       document.getElementById("xpEarned").innerHTML = '<i data-lucide="zap"></i> +' + (data.xp_earned || 0) + " XP" + ratingText;
 
-      if (data.updated_user) {
-        try {
-          var u = JSON.parse(localStorage.getItem("user") || "{}");
-          u.xp = data.updated_user.xp; u.rating = data.updated_user.rating;
-          u.win_streak = data.updated_user.win_streak; u.coins = data.updated_user.coins;
-          localStorage.setItem("user", JSON.stringify(u));
-        } catch (e) {}
-      }
       renderLeagueProgress(data);
       icons();
-    });
+    }
+
+    // F5 REFRESH: natija ekranini serverdan tiklash
+    async function loadTeamResultFromServer(rId) {
+      try {
+        var res = await fetch("/team-battle/result/" + encodeURIComponent(rId), {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        if (!res.ok) {
+          // Natija topilmadi — qidiruv ekraniga qaytaramiz (eski belgi tozalanadi)
+          sessionStorage.removeItem("teamBattleResultRoom");
+          window.__teamReconnecting = false;
+          startTeamSearch();
+          return;
+        }
+        var data = await res.json();
+        stopSearchTimer();
+        window.__teamReconnecting = false;
+        // lastProgress'ni snapshot bilan to'ldiramiz (roster rasmlari uchun)
+        lastProgress.my = (data.myTeamPlayers || []).map(function (p) { return { name: p.name, userId: p.userId, score: p.score, profile_picture: p.profile_picture, level: p.level, rating: p.rating, isBot: p.isBot }; });
+        lastProgress.enemy = (data.enemyTeamPlayers || []).map(function (p) { return { name: p.name, userId: p.userId, score: p.score, profile_picture: p.profile_picture, level: p.level, rating: p.rating, isBot: p.isBot }; });
+        renderTeamResult(data);
+      } catch (e) {
+        console.error("Jamoa natija yuklash xato:", e);
+        sessionStorage.removeItem("teamBattleResultRoom");
+        startTeamSearch();
+      }
+    }
 
     function renderResultRoster(box, players, cached) {
       document.getElementById(box).innerHTML = players.map(function (p, i) {
@@ -819,10 +982,27 @@
     // ===== LEAVE (modal) =====
     function leaveBattle() { document.getElementById("leaveOverlay").classList.add("show"); icons(); }
     function closeLeave() { document.getElementById("leaveOverlay").classList.remove("show"); }
-    function confirmLeave() { window.location.href = "/lobby.html"; }
+    function confirmLeave() {
+      // Serverga "jangni tark etyapman" — forfeit (mag'lubiyat), jang qotib qolmaydi
+      if (roomId) socket.emit("battle:leave", { roomId: roomId });
+      sessionStorage.removeItem("teamBattleActiveRoom");
+      sessionStorage.removeItem("teamBattleResultRoom");
+      setTimeout(function () { window.location.href = "/lobby.html"; }, 150);
+    }
 
     function cancelSearch() { socket.emit("cancelTeamMatch"); window.location.href = "/lobby.html"; }
-    function playAgain() { window.location.href = "/team-battle.html?mode=" + teamMode; }
+    function playAgain() {
+      // Yangi o'yin — eski natija belgisini tozalaymiz (aks holda yangi sahifada eski natija chiqadi)
+      sessionStorage.removeItem("teamBattleResultRoom");
+      sessionStorage.removeItem("teamBattleActiveRoom");
+      window.location.href = "/team-battle.html?mode=" + teamMode;
+    }
+    // Lobbyga qaytish — natija/jang belgilarini tozalab ketamiz
+    function goLobby() {
+      sessionStorage.removeItem("teamBattleResultRoom");
+      sessionStorage.removeItem("teamBattleActiveRoom");
+      window.location.href = "/lobby.html";
+    }
 
     socket.on("battleError", function (data) {
       document.getElementById("errText").textContent = (data && data.message) || "Xato yuz berdi";

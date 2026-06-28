@@ -178,4 +178,19 @@ function requireAdmin(req, res, next) {
   }
 }
 
-module.exports = { signToken, authMiddleware, requireTeacher, requireStudent, requireParent, signAdminToken, requireAdmin };
+// SOCKET TOKEN TEKSHIRUVI
+// Socket.io ulanishida JWT tokenni tekshiradi. Token to'g'ri bo'lsa — { id, phone } qaytaradi.
+// Noto'g'ri/yo'q bo'lsa — null. Bu HTTP authMiddleware bilan bir xil JWT_SECRET'ni ishlatadi.
+function verifySocketToken(token) {
+  try {
+    if (!token || typeof token !== "string") return null;
+    // "Bearer xxx" formatida kelsa, prefiksni olib tashlaymiz
+    if (token.startsWith("Bearer ")) token = token.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return { id: decoded.id, phone: decoded.phone };
+  } catch (err) {
+    return null; // muddati o'tgan yoki soxta
+  }
+}
+
+module.exports = { signToken, authMiddleware, requireTeacher, requireStudent, requireParent, signAdminToken, requireAdmin, verifySocketToken };

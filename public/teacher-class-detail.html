@@ -1126,7 +1126,7 @@
     function setupRealtime() {
       if (!classId || typeof io === "undefined") return;
       try {
-        classSocket = io();
+        classSocket = io({ auth: { token: localStorage.getItem("token") } });
         classSocket.on("connect", function () {
           // Shu sinfni kuzatishni boshlaymiz
           classSocket.emit("watchClass", classId);

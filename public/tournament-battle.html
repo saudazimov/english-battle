@@ -132,7 +132,7 @@
     var countdownTimer = null;
 
     // Socket
-    const socket = io();
+    const socket = io({ auth: { token: localStorage.getItem("token") } });
     socket.on("connect", () => { socket.emit("registerUser", user.id); });
 
     // Real-time: kimdir check-in qildi

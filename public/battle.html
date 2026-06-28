@@ -65,6 +65,8 @@
     .br-pava-img img { width: 100%; height: 100%; object-fit: cover; }
     .br-pava.opp .br-pava-img { background: linear-gradient(135deg, #c026d3, #f472b6); border-color: rgba(244,114,182,0.6); box-shadow: 0 0 22px rgba(244,114,182,0.4); }
     .br-pava-dot { position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--green); border: 2.5px solid #0a142d; z-index: 2; }
+    .br-pava-dot.offline { background: #94a3b8; }
+    .opp-offline-badge { display: none; margin-top: 4px; font-size: 11px; color: #f87171; font-weight: 600; }
     .br-pcard-info { flex: 1; min-width: 0; }
     .br-pname { font-size: 19px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
     .br-pscore-row { display: flex; align-items: center; gap: 14px; }
@@ -782,7 +784,7 @@
                 <span class="br-pscore opp" id="oppScore">0</span>
               </div>
             </div>
-            <div class="br-pava opp"><div class="br-pava-img" id="oppAva">R</div><span class="br-pava-dot"></span></div>
+            <div class="br-pava opp"><div class="br-pava-img" id="oppAva">R</div><span class="br-pava-dot" id="oppOnlineDot"></span></div>
           </div>
           <!-- Opponent progress -->
           <div class="br-progress">
@@ -1044,23 +1046,32 @@
         } catch (e) {}
       }
       if (!hasRoom && !validIntent) {
-        var box = document.getElementById("noBattleState");
-        if (box) { box.style.display = "flex"; }
-        document.querySelector(".battle-wrap").style.display = "none";
-        if (window.lucide) lucide.createIcons();
-        // Skriptning qolganini to'xtatamiz
-        throw new Error("no-active-battle");
+        // Reconnect ehtimoli bor — darrov to'xtatmaymiz.
+        // Serverdan "aktiv jangdamisiz?" javobini kutamiz (battle:reconnectCheck).
+        // Agar 4 soniyada javob kelmasa yoki "yo'q" desa — o'shanda "no active battle".
+        window.__maybeReconnect = true;
+        // Vaqtinchalik: ekranni bo'sh holatda ushlab turamiz (loading)
+        var wrap = document.querySelector(".battle-wrap");
+        if (wrap) wrap.style.display = "none";
+        // 4 soniyalik fallback — reconnect bo'lmasa "no active battle" ko'rsatamiz
+        window.__reconnectTimeout = setTimeout(function () {
+          var box = document.getElementById("noBattleState");
+          if (box) { box.style.display = "flex"; }
+          if (window.lucide) lucide.createIcons();
+        }, 4000);
+        return; // guardBattle'dan chiqamiz, lekin skript davom etadi (throw EMAS)
       }
       // Belgi ishlatildi — tozalaymiz (qayta yuklashda yana tekshirilsin)
       // (do'st jangida room URL'da qoladi, shuning uchun faqat intent'ni o'chiramiz)
       sessionStorage.removeItem("battleIntent");
     })();
 
-    const socket = io();
+    const socket = io({ auth: { token: localStorage.getItem("token") } });
     let currentRoom = null;
     let questions = [];
     let currentIndex = 0;
     let timerInterval = null;
+    let resumeMsLeft = null; // reconnect: tiklangan savolda qolgan vaqt
 
     function avatarHTML(firstName, picPath) {
       const letter = (firstName || "?").charAt(0).toUpperCase();
@@ -1081,6 +1092,28 @@
       if (ratingEl) ratingEl.textContent = myRating;
       // "EduPlayer" o'rniga — o'yinchining rank/ligasi (Bronze, Silver, ... Grandmaster)
       if (handleEl) handleEl.textContent = leagueFromRating(myRating);
+    })();
+
+    // RASM TUZATISH: foydalanuvchi rasmini serverdan yangilaymiz (localStorage'da eski/bo'sh bo'lishi mumkin)
+    (async function refreshMyProfilePicture() {
+      try {
+        var token = localStorage.getItem("token");
+        var res = await fetch("/profile/" + user.id, { headers: { "Authorization": "Bearer " + token } });
+        if (!res.ok) return;
+        var d = await res.json();
+        if (d.user && d.user.profile_picture) {
+          // localStorage va joriy user obyektini yangilaymiz
+          user.profile_picture = d.user.profile_picture;
+          try {
+            var stored = JSON.parse(localStorage.getItem("user") || "{}");
+            stored.profile_picture = d.user.profile_picture;
+            localStorage.setItem("user", JSON.stringify(stored));
+          } catch (e) {}
+          // Matchmaking kartasidagi rasmni yangilaymiz
+          var avaEl2 = document.getElementById("mmMeAvaSearch");
+          if (avaEl2) avaEl2.innerHTML = avatarHTML(user.first_name, user.profile_picture);
+        }
+      } catch (e) {}
     })();
 
     function showScreen(id) {
@@ -1124,6 +1157,12 @@
 
     socket.on("connect", () => {
       socket.emit("registerUser", user.id);
+
+      // RECONNECT: faqat refresh holatida tekshiramiz (lobby'dan yangi jang bo'lsa — yo'q).
+      // __maybeReconnect = URL'da room yo'q VA battleIntent yo'q (ya'ni refresh).
+      if (window.__maybeReconnect) {
+        socket.emit("battle:reconnectCheck", { userId: user.id });
+      }
 
       // Qidirish ekranidagi level va rating oralig'ini to'ldiramiz
       const myLevel = user.cefr_level || "A1";
@@ -1212,9 +1251,18 @@
           }
         }, 1000);
 
-        socket.emit("joinFriendBattle", { roomId: friendRoom, userId: user.id });
+        // DO'ST JANGI: avval reconnect tekshiramiz (F5 bo'lsa, jang allaqachon boshlangan bo'lishi mumkin).
+        // expectedRoom = URL'dagi room — agar bu YANGI jang bo'lsa (eski jangdan farqli),
+        // server "noActive" qaytaradi va biz joinFriendBattle qilamiz (yangi jangga kiramiz).
+        window.__friendRoomPending = friendRoom; // battle:noActive kelsa, shu room'ga join qilamiz
+        socket.emit("battle:reconnectCheck", { userId: user.id, expectedRoom: friendRoom });
+      } else if (window.__maybeReconnect) {
+        // Refresh holati: avval reconnect'ni tekshiramiz. findMatch'ni DARROV chaqirmaymiz.
+        // Agar reconnect bo'lmasa (battle:noActive), o'shanda findMatch chaqiriladi (pastda).
+        fillBattleChips(battleLengthKey, user.cefr_level, user.rating, battleMode === "casual" ? "1v1 Casual" : "1v1 Ranked");
+        // findMatch YO'Q — battle:noActive yoki battle:resumeState javobini kutamiz
       } else {
-        // 1v1: chiplarni tanlangan format + rejim bilan to'ldiramiz
+        // Oddiy yangi jang (lobby'dan kelgan): darrov findMatch
         fillBattleChips(battleLengthKey, user.cefr_level, user.rating, battleMode === "casual" ? "1v1 Casual" : "1v1 Ranked");
         socket.emit("findMatch", { userId: user.id, name: user.first_name, level: user.cefr_level, lengthKey: battleLengthKey, mode: battleMode });
       }
@@ -1373,6 +1421,262 @@
       }
     });
 
+    // ===== RECONNECT: aktiv jang yo'q =====
+    socket.on("battle:noActive", () => {
+      // DO'ST JANGI: reconnect topilmadi, demak jang hali boshlanmagan — joinFriendBattle qilamiz
+      if (window.__friendRoomPending) {
+        var fr = window.__friendRoomPending;
+        window.__friendRoomPending = null;
+        socket.emit("joinFriendBattle", { roomId: fr, userId: user.id });
+        return;
+      }
+      // Reconnect bo'lmadi. Agar bu refresh holati bo'lsa (__maybeReconnect),
+      // endi yangi jang qidiramiz (chunki connect'da findMatch'ni kutib turgandik).
+      if (window.__maybeReconnect) {
+        window.__maybeReconnect = false;
+        if (window.__reconnectTimeout) clearTimeout(window.__reconnectTimeout);
+        // Yangi jang qidirishni boshlaymiz
+        socket.emit("findMatch", { userId: user.id, name: user.first_name, level: user.cefr_level, lengthKey: battleLengthKey, mode: battleMode });
+      }
+    });
+
+    // ===== RECONNECT: men tugatdim, raqib hali o'ynayapti ("Raqib kutilmoqda") =====
+    socket.on("battle:waitingOpponent", (data) => {
+      window.__maybeReconnect = false; // reconnect bo'ldi — findMatch chaqirmaymiz
+      window.__friendRoomPending = null; // do'st jangi reconnect bo'ldi
+      if (window.__reconnectTimeout) clearTimeout(window.__reconnectTimeout); // fallback bekor
+
+      // "no active battle" ekranini yashiramiz, jang ekranini ko'rsatamiz
+      var noBox = document.getElementById("noBattleState");
+      if (noBox) noBox.style.display = "none";
+      var wrap = document.querySelector(".battle-wrap");
+      if (wrap) wrap.style.display = "";
+
+      // Jang holatini tiklaymiz, lekin hamma savol tugagan holatda
+      currentRoom = data.roomId;
+      // Raqib ID/ism (rematch tugmasi va natija uchun)
+      if (data.opponentId) oppIdGlobal = data.opponentId;
+      if (data.opponentName) oppNameGlobal = data.opponentName;
+      if (!questions || !questions.length) {
+        // Savollar yo'q bo'lsa, bo'sh massiv yaratamiz (faqat son muhim)
+        questions = new Array(data.total).fill({});
+      }
+      currentIndex = data.total;       // hamma savol tugagan — showQuestion "Raqib kutilmoqda" ko'rsatadi
+      countdownDone = true;
+
+      // Skorni tiklaymiz
+      var msEl = document.getElementById("myScore");
+      if (msEl) msEl.textContent = data.myScore;
+      var nmEl = document.getElementById("myName");
+      if (nmEl) nmEl.textContent = user.first_name;
+      var avEl = document.getElementById("myAva");
+      if (avEl) avEl.innerHTML = avatarHTML(user.first_name, user.profile_picture);
+
+      // STATISTIKA TIKLASH: accuracy, streak, best streak (resumeState bilan bir xil)
+      myCorrect = data.correctCount != null ? data.correctCount : 0;
+      myAnswered = data.answeredCount != null ? data.answeredCount : data.total;
+      myStreak = data.currentStreak != null ? data.currentStreak : 0;
+      myBestStreak = data.bestStreak != null ? data.bestStreak : 0;
+      var wAcc = myAnswered > 0 ? Math.round((myCorrect / myAnswered) * 100) : 0;
+      var wAccEl = document.getElementById("brAccuracy");
+      if (wAccEl) wAccEl.textContent = wAcc + "%";
+      var wAccBar = document.getElementById("brAccBar");
+      if (wAccBar) wAccBar.style.width = wAcc + "%";
+      var wStEl = document.getElementById("brStreak");
+      if (wStEl) wStEl.textContent = myStreak;
+      var wBestEl = document.getElementById("brBestStreak");
+      if (wBestEl) wBestEl.textContent = "Best: " + myBestStreak;
+
+      // PROGRESS BAR TIKLASH: hamma savol tugagan — 100% (oxirgi savolda)
+      var wTotal = data.total || (questions ? questions.length : 0);
+      var wProgLbl = document.getElementById("myProgLabel");
+      if (wProgLbl) wProgLbl.textContent = wTotal + " / " + wTotal;
+      var wProgFill = document.getElementById("myProgFill");
+      if (wProgFill) wProgFill.style.width = "100%";
+      var wProgMarker = document.getElementById("myProgMarker");
+      if (wProgMarker) { wProgMarker.style.left = "100%"; wProgMarker.textContent = wTotal; }
+
+      // RAQIB ma'lumotini tiklaymiz (ism, rasm, rating, progress)
+      if (data.opponentName) {
+        oppNameGlobal = data.opponentName;
+        var oNm = document.getElementById("oppName");
+        if (oNm) oNm.textContent = data.opponentName;
+        var oAv = document.getElementById("oppAva");
+        if (oAv) oAv.innerHTML = avatarHTML(data.opponentName, data.opponentPicture);
+      }
+      var oRt = document.getElementById("oppRatingBr");
+      if (oRt && data.opponentRating != null) oRt.textContent = data.opponentRating;
+      var oScEl = document.getElementById("oppScore");
+      if (oScEl) oScEl.textContent = data.opponentScore != null ? data.opponentScore : 0;
+      // Raqib progress bari (nechta savolga javob bergan)
+      var oAns = data.opponentAnswered != null ? data.opponentAnswered : 0;
+      var oPct = wTotal > 1 ? (Math.max(0, oAns - 1) / (wTotal - 1)) * 100 : 0;
+      oPct = Math.max(0, Math.min(100, oPct));
+      var oProgLbl = document.getElementById("oppProgLabel");
+      if (oProgLbl) oProgLbl.textContent = oAns + " / " + wTotal;
+      var oProgFill = document.getElementById("oppProgFill");
+      if (oProgFill) oProgFill.style.width = oPct + "%";
+      var oProgMarker = document.getElementById("oppProgMarker");
+      if (oProgMarker) { oProgMarker.style.left = oPct + "%"; oProgMarker.textContent = oAns; }
+
+      showScreen("battleScreen");
+      showQuestion(); // currentIndex >= questions.length => "Tugatdingiz! Raqib kutilmoqda..."
+
+      console.log("Reconnect: test tugagan, raqib kutilmoqda (skor " + data.myScore + ")");
+    });
+
+    // ===== RECONNECT: jang allaqachon tugagan — natijani DB'dan tiklaymiz =====
+    socket.on("battle:alreadyFinished", (data) => {
+      if (window.__reconnectTimeout) clearTimeout(window.__reconnectTimeout);
+      window.__maybeReconnect = false;
+      // Natijani DB'dan olib, natija ekranini ko'rsatamiz
+      var rid = (data && data.roomId) ? data.roomId : currentRoom;
+      if (rid) {
+        loadResultFromServer(rid);
+      } else {
+        window.location.href = "/dashboard.html";
+      }
+    });
+
+    // Natijani serverdan (DB'dan) yuklab, natija ekranini to'ldiradi
+    async function loadResultFromServer(roomId) {
+      try {
+        var noBox = document.getElementById("noBattleState");
+        if (noBox) noBox.style.display = "none";
+        var wrap = document.querySelector(".battle-wrap");
+        if (wrap) wrap.style.display = "";
+
+        var token = localStorage.getItem("token");
+        var res = await fetch("/battle/result/" + encodeURIComponent(roomId), {
+          headers: { "Authorization": "Bearer " + token },
+        });
+        if (!res.ok) { window.location.href = "/dashboard.html"; return; }
+        var d = await res.json();
+        var r = d.result;
+
+        // Natija ekranini to'ldiramiz (battleEnd bilan bir xil)
+        window.battleAnswers = d.answers || [];
+        // Raqib ID/ism (rematch tugmasi natija refresh'dan keyin ham ishlashi uchun)
+        if (r.opponent_id) oppIdGlobal = r.opponent_id;
+        if (r.opponent_name) oppNameGlobal = r.opponent_name;
+        document.getElementById("resMyAva").innerHTML = avatarHTML(user.first_name, r.my_picture || user.profile_picture);
+        document.getElementById("resOppAva").innerHTML = avatarHTML(r.opponent_name || "Raqib", r.opponent_picture);
+        document.getElementById("myCorrect").textContent = r.my_score;
+        document.getElementById("oppCorrect").textContent = r.opponent_score;
+        var totalQ = r.total_questions || 0;
+        var myT = document.getElementById("myTotal"); if (myT) myT.textContent = totalQ;
+        var oppT = document.getElementById("oppTotal"); if (oppT) oppT.textContent = totalQ;
+        document.getElementById("myLbl").textContent = user.first_name + " " + (user.last_name || "");
+        document.getElementById("oppLbl").textContent = r.opponent_name || "Raqib";
+        document.getElementById("finalMyScore").textContent = r.my_score;
+        document.getElementById("finalOppScore").textContent = r.opponent_score;
+
+        document.getElementById("rsYou").classList.remove("winner");
+        document.getElementById("rsOpp").classList.remove("winner");
+        if (r.outcome === "win") document.getElementById("rsYou").classList.add("winner");
+        else if (r.outcome === "lose") document.getElementById("rsOpp").classList.add("winner");
+
+        var ratingText = "";
+        if (r.mode !== "casual") {
+          if (r.rating_change > 0) ratingText = " · +" + r.rating_change + " reyting";
+          else if (r.rating_change < 0) ratingText = " · " + r.rating_change + " reyting";
+        }
+        document.getElementById("xpEarned").innerHTML = '<i data-lucide="zap"></i> +' + r.xp_earned + " XP" + ratingText;
+
+        var title = document.getElementById("resultTitle");
+        var ic = document.getElementById("resultIc");
+        if (r.outcome === "win") {
+          title.textContent = "G'alaba!"; title.className = "win";
+          ic.className = "result-ic win"; ic.innerHTML = '<i data-lucide="trophy"></i>';
+        } else if (r.outcome === "lose") {
+          title.textContent = "Mag'lubiyat"; title.className = "lose";
+          ic.className = "result-ic lose"; ic.innerHTML = '<i data-lucide="frown"></i>';
+        } else {
+          title.textContent = "Durang!"; title.className = "draw";
+          ic.className = "result-ic draw"; ic.innerHTML = '<i data-lucide="handshake"></i>';
+        }
+
+        showScreen("resultScreen");
+        if (window.lucide) lucide.createIcons();
+      } catch (e) {
+        window.location.href = "/dashboard.html";
+      }
+    }
+
+    // ===== RECONNECT: jangni o'sha nuqtadan tiklash =====
+    socket.on("battle:resumeState", (data) => {
+      window.__maybeReconnect = false; // reconnect bo'ldi — findMatch chaqirmaymiz
+      window.__friendRoomPending = null; // do'st jangi reconnect bo'ldi
+      if (window.__reconnectTimeout) clearTimeout(window.__reconnectTimeout); // fallback bekor
+
+      // "no active battle" ekranini yashiramiz, jang ekranini ko'rsatamiz
+      var noBox = document.getElementById("noBattleState");
+      if (noBox) noBox.style.display = "none";
+      var wrap = document.querySelector(".battle-wrap");
+      if (wrap) wrap.style.display = "";
+
+      // Jang holatini tiklaymiz
+      currentRoom = data.roomId;
+      questions = data.questions;
+      // Raqib ID/ism (rematch tugmasi va natija uchun)
+      if (data.opponentId) oppIdGlobal = data.opponentId;
+      if (data.opponentName) oppNameGlobal = data.opponentName;
+      currentIndex = data.answeredCount;   // javob berilgan savollardan KEYINGISIdan davom
+      levelGlobal = data.level || "A1";
+      countdownDone = true;                // countdown'ni o'tkazib yuboramiz
+
+      // Skor va progressni tiklaymiz
+      var msEl = document.getElementById("myScore");
+      if (msEl) msEl.textContent = data.myScore;
+      document.getElementById("myName").textContent = user.first_name;
+      document.getElementById("myAva").innerHTML = avatarHTML(user.first_name, user.profile_picture);
+
+      // RAQIB ism + avatarini tiklaymiz (refresh'dan keyin "Do'st" bo'lib qolmasin)
+      if (data.opponentName) {
+        var oppNmEl = document.getElementById("oppName");
+        if (oppNmEl) oppNmEl.textContent = data.opponentName;
+      }
+      var oppAvEl = document.getElementById("oppAva");
+      if (oppAvEl) oppAvEl.innerHTML = avatarHTML(data.opponentName || "Raqib", data.opponentPicture);
+
+      // STATISTIKA TIKLASH: streak, correct, accuracy (refresh'dan keyin yo'qolmasin)
+      myCorrect = data.correctCount != null ? data.correctCount : 0;
+      myAnswered = data.answeredCount != null ? data.answeredCount : 0;
+      myStreak = data.currentStreak != null ? data.currentStreak : 0;
+      myBestStreak = data.bestStreak != null ? data.bestStreak : 0;
+      // Ekrandagi statistikani yangilaymiz
+      // Battle Room statlarini yangilaymiz (answerResult bilan bir xil ID'lar)
+      var rAcc = myAnswered > 0 ? Math.round((myCorrect / myAnswered) * 100) : 0;
+      var rAccEl = document.getElementById("brAccuracy");
+      if (rAccEl) rAccEl.textContent = rAcc + "%";
+      var rAccBar = document.getElementById("brAccBar");
+      if (rAccBar) rAccBar.style.width = rAcc + "%";
+      var rStEl = document.getElementById("brStreak");
+      if (rStEl) rStEl.textContent = myStreak;
+      var rBestEl = document.getElementById("brBestStreak");
+      if (rBestEl) rBestEl.textContent = "Best: " + myBestStreak;
+
+      // RAQIB progressini tiklaymiz (nechta savolga javob bergan)
+      var rsTotal = data.total_questions || (questions ? questions.length : 0);
+      var rsOAns = data.opponentAnswered != null ? data.opponentAnswered : 0;
+      var rsOPct = rsTotal > 1 ? (Math.max(0, rsOAns - 1) / (rsTotal - 1)) * 100 : 0;
+      rsOPct = Math.max(0, Math.min(100, rsOPct));
+      var rsOLbl = document.getElementById("oppProgLabel");
+      if (rsOLbl) rsOLbl.textContent = rsOAns + " / " + rsTotal;
+      var rsOFill = document.getElementById("oppProgFill");
+      if (rsOFill) rsOFill.style.width = rsOPct + "%";
+      var rsOMarker = document.getElementById("oppProgMarker");
+      if (rsOMarker) { rsOMarker.style.left = rsOPct + "%"; rsOMarker.textContent = rsOAns; }
+
+      // Qolgan vaqtni keyingi showQuestion'ga uzatamiz
+      resumeMsLeft = data.msLeft;
+
+      showScreen("battleScreen");
+      showQuestion();
+
+      console.log("Jang tiklandi: savol " + (currentIndex + 1) + "/" + questions.length + ", skor " + data.myScore);
+    });
+
     let answerLocked = false;
     let myStreak = 0, myBestStreak = 0, myCorrect = 0, myAnswered = 0;
 
@@ -1406,7 +1710,13 @@
         optionsDiv.appendChild(btn);
       });
       if (window.lucide) lucide.createIcons();
-      startTimer();
+      // Reconnect: birinchi savolda qolgan vaqtdan boshlaymiz, keyin normal 15s
+      if (resumeMsLeft != null) {
+        startTimer(Math.ceil(resumeMsLeft / 1000));
+        resumeMsLeft = null; // faqat bir marta ishlatiladi
+      } else {
+        startTimer();
+      }
     }
 
     // Mening progress barim
@@ -1422,14 +1732,14 @@
       if (marker) { marker.style.left = pct + "%"; marker.textContent = (idx + 1); }
     }
 
-    function startTimer() {
+    function startTimer(startFrom) {
       clearInterval(timerInterval);
-      let timeLeft = 15;
+      let timeLeft = (typeof startFrom === "number" && startFrom > 0) ? startFrom : 15;
       const fill = document.getElementById("timerFill");
       const tEl = document.getElementById("brTimer");
       const tWrap = document.getElementById("brTimerWrap");
-      if (fill) { fill.classList.remove("warning"); fill.style.width = "100%"; }
-      if (tEl) tEl.textContent = "15s";
+      if (fill) { fill.classList.remove("warning"); fill.style.width = ((timeLeft / 15) * 100) + "%"; }
+      if (tEl) tEl.textContent = timeLeft + "s";
       if (tWrap) tWrap.classList.remove("warning", "danger");
       timerInterval = setInterval(() => {
         timeLeft--;
@@ -1485,6 +1795,22 @@
       if (bestEl) bestEl.textContent = "Best: " + myBestStreak;
     });
 
+    // RAQIB offline/online (real-time, jang davomida)
+    socket.on("playerOffline", (data) => {
+      var dot = document.getElementById("oppOnlineDot");
+      if (dot) dot.classList.add("offline");
+      var nm = document.getElementById("oppName");
+      if (nm && nm.textContent.indexOf("(oflayn)") === -1) {
+        nm.textContent = nm.textContent + " (oflayn)";
+      }
+    });
+    socket.on("playerOnline", (data) => {
+      var dot = document.getElementById("oppOnlineDot");
+      if (dot) dot.classList.remove("offline");
+      var nm = document.getElementById("oppName");
+      if (nm) nm.textContent = nm.textContent.replace(" (oflayn)", "");
+    });
+
     socket.on("opponentProgress", (data) => {
       var count = data.answeredCount || 0;
       var total = questions.length || 10;
@@ -1511,8 +1837,8 @@
       window.battleAnswers = data.answers || [];
       // Joriy o'yin formatini saqlaymiz (rematch uchun)
       if (data.lengthKey) battleLengthKey = data.lengthKey;
-      document.getElementById("resMyAva").innerHTML = avatarHTML(user.first_name, myPic);
-      document.getElementById("resOppAva").innerHTML = avatarHTML(oppNameGlobal, oppPic);
+      document.getElementById("resMyAva").innerHTML = avatarHTML(user.first_name, myPic || user.profile_picture);
+      document.getElementById("resOppAva").innerHTML = avatarHTML(oppNameGlobal, oppPic || data.opponent_picture);
       document.getElementById("myCorrect").textContent = data.your_score;
       document.getElementById("oppCorrect").textContent = data.opponent_score;
       // Jami savol soni (formatdan) — ikki o'yinchida bir xil
@@ -1672,7 +1998,12 @@
     }
     function doLeaveBattle() {
       closeLeaveModal();
-      goLobby();
+      // Serverga "men jangni tark etdim" deb aytamiz (reconnect'ni to'xtatadi)
+      if (currentRoom) {
+        socket.emit("battle:leave", { roomId: currentRoom });
+      }
+      // Qisqa kechikish — emit yuborilishi uchun, keyin lobbyga
+      setTimeout(goLobby, 150);
     }
 
     // ===== BATTLE CHAT (V1) =====

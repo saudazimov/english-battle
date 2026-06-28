@@ -1,12 +1,23 @@
--- English Battle - ma'lumotlar bazasi tuzilmasi
+-- 001_baseline.sql — English Battle bazaviy tuzilma (kodga mos holat)
+-- ============================================================================
+-- DIQQAT: Bu baseline schema.sql'dagi tuzilmani takrorlaydi, LEKIN users jadvali
+-- jonli koddagi haqiqatga moslangan:
+--   • email YO'Q (endi telefon orqali ro'yxat — Telegram uslubi)
+--   • phone — asosiy identifikator (UNIQUE)
+--   • role — student | teacher | parent | school_admin
+--   • country — ranking uchun (kelajakda multi-davlat)
+-- Barcha CREATE'lar IF NOT EXISTS — mavjud bazani BUZMAYDI. Yangi bazada esa
+-- to'g'ridan-to'g'ri kodga mos jadval yaratadi.
+-- ============================================================================
 
--- Foydalanuvchilar jadvali
+-- ===== Foydalanuvchilar =====
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
+  phone VARCHAR(20) UNIQUE,                 -- asosiy identifikator (OTP orqali tasdiqlanadi)
   password VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'student', -- student | teacher | parent | school_admin
   cefr_level VARCHAR(5) DEFAULT 'A1',
   xp INTEGER DEFAULT 0,
   rating INTEGER DEFAULT 1000,
@@ -16,9 +27,9 @@ CREATE TABLE IF NOT EXISTS users (
   win_streak INTEGER DEFAULT 0,
   best_win_streak INTEGER DEFAULT 0,
   last_active_date DATE,
-  phone VARCHAR(20),
   birth_date DATE,
   birth_year INTEGER,
+  country VARCHAR(100) DEFAULT 'UZ',        -- ranking qamrovi (national/global)
   region VARCHAR(100),
   district VARCHAR(100),
   village VARCHAR(150),
@@ -27,7 +38,13 @@ CREATE TABLE IF NOT EXISTS users (
   is_banned BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW()
 );
--- Savollar jadvali
+
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_rating ON users(rating DESC);
+CREATE INDEX IF NOT EXISTS idx_users_region ON users(region, district, school);
+
+-- ===== Savollar =====
 CREATE TABLE IF NOT EXISTS questions (
   id SERIAL PRIMARY KEY,
   question_text TEXT NOT NULL,
@@ -45,11 +62,16 @@ CREATE TABLE IF NOT EXISTS questions (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Jang tarixi jadvali
+CREATE INDEX IF NOT EXISTS idx_questions_cefr ON questions(cefr_level);
+CREATE INDEX IF NOT EXISTS idx_questions_skill ON questions(skill);
+CREATE INDEX IF NOT EXISTS idx_questions_status ON questions(status);
+
+-- ===== Jang tarixi =====
 CREATE TABLE IF NOT EXISTS battle_history (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id),
   opponent_name VARCHAR(100),
+  opponent_id INTEGER,
   my_score INTEGER NOT NULL,
   opponent_score INTEGER NOT NULL,
   outcome VARCHAR(10) NOT NULL,
@@ -57,10 +79,15 @@ CREATE TABLE IF NOT EXISTS battle_history (
   rating_change INTEGER DEFAULT 0,
   cefr_level VARCHAR(5),
   mode VARCHAR(20) DEFAULT 'ranked',
+  total_questions INTEGER DEFAULT 0,
+  room_id VARCHAR(160),
   played_at TIMESTAMP DEFAULT NOW()
 );
 
--- Topshiriqlar katalogi (qanday topshiriqlar bor)
+CREATE INDEX IF NOT EXISTS idx_bhistory_user ON battle_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_bhistory_room ON battle_history(room_id);
+
+-- ===== Topshiriqlar katalogi (quests) =====
 CREATE TABLE IF NOT EXISTS quests (
   id SERIAL PRIMARY KEY,
   title VARCHAR(150) NOT NULL,
@@ -71,7 +98,6 @@ CREATE TABLE IF NOT EXISTS quests (
   is_active BOOLEAN DEFAULT true
 );
 
--- O'yinchining kunlik topshiriqlari
 CREATE TABLE IF NOT EXISTS user_quests (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id),
@@ -82,7 +108,8 @@ CREATE TABLE IF NOT EXISTS user_quests (
   quest_date DATE DEFAULT CURRENT_DATE,
   UNIQUE(user_id, quest_id, quest_date)
 );
--- Do'stlik jadvali (so'rovlar va do'stliklar)
+
+-- ===== Do'stlik =====
 CREATE TABLE IF NOT EXISTS friendships (
   id SERIAL PRIMARY KEY,
   requester_id INTEGER NOT NULL REFERENCES users(id),
@@ -92,7 +119,7 @@ CREATE TABLE IF NOT EXISTS friendships (
   UNIQUE(requester_id, receiver_id)
 );
 
--- Bildirishnomalar jadvali
+-- ===== Bildirishnomalar =====
 CREATE TABLE IF NOT EXISTS notifications (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id),
@@ -102,7 +129,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Audit log (admin amallari tarixi) — kim nima qildi
+-- ===== Audit log =====
 CREATE TABLE IF NOT EXISTS audit_logs (
   id SERIAL PRIMARY KEY,
   admin_id INTEGER,
@@ -115,7 +142,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Admin sozlamalari (parol va boshqa tizim sozlamalari)
+-- ===== Admin sozlamalari =====
 CREATE TABLE IF NOT EXISTS admin_settings (
   id SERIAL PRIMARY KEY,
   setting_key VARCHAR(50) UNIQUE NOT NULL,
@@ -123,7 +150,7 @@ CREATE TABLE IF NOT EXISTS admin_settings (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Shikoyatlar / flaglar (moderatsiya tizimi)
+-- ===== Shikoyatlar / flaglar (moderatsiya) =====
 CREATE TABLE IF NOT EXISTS flags (
   id SERIAL PRIMARY KEY,
   reporter_id INTEGER REFERENCES users(id),
@@ -138,7 +165,7 @@ CREATE TABLE IF NOT EXISTS flags (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Chat xabarlari (moderatsiya uchun saqlanadi)
+-- ===== Chat xabarlari =====
 CREATE TABLE IF NOT EXISTS chat_messages (
   id SERIAL PRIMARY KEY,
   room_id VARCHAR(120),
@@ -148,7 +175,7 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- OTP kodlar (telefon tasdiqlash uchun, vaqtincha saqlanadi)
+-- ===== OTP kodlar =====
 CREATE TABLE IF NOT EXISTS otp_codes (
   id SERIAL PRIMARY KEY,
   phone VARCHAR(20) NOT NULL,
@@ -157,8 +184,9 @@ CREATE TABLE IF NOT EXISTS otp_codes (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Sinflar (o'qituvchi yaratadigan sinflar — Teacher Panel Phase 2)
--- Har bir sinf bitta o'qituvchiga tegishli. join_code orqali o'quvchilar qo'shiladi.
+CREATE INDEX IF NOT EXISTS idx_otp_phone ON otp_codes(phone);
+
+-- ===== Sinflar (Teacher) =====
 CREATE TABLE IF NOT EXISTS classes (
   id SERIAL PRIMARY KEY,
   teacher_id INTEGER NOT NULL REFERENCES users(id),
@@ -170,14 +198,9 @@ CREATE TABLE IF NOT EXISTS classes (
   archived_at TIMESTAMP
 );
 
--- join_code bo'yicha tez qidirish uchun indeks (o'quvchi kod orqali qo'shilganda)
 CREATE INDEX IF NOT EXISTS idx_classes_join_code ON classes(join_code);
--- O'qituvchining sinflarini tez topish uchun indeks
 CREATE INDEX IF NOT EXISTS idx_classes_teacher_id ON classes(teacher_id);
 
--- Sinf o'quvchilari (qaysi o'quvchi qaysi sinfda — Teacher Panel Phase 2D)
--- O'quvchi join_code orqali sinfga qo'shiladi.
--- UNIQUE(class_id, student_id): bir o'quvchi bir sinfga 2 marta qo'shila olmaydi.
 CREATE TABLE IF NOT EXISTS class_students (
   id SERIAL PRIMARY KEY,
   class_id INTEGER NOT NULL REFERENCES classes(id),
@@ -187,86 +210,77 @@ CREATE TABLE IF NOT EXISTS class_students (
   UNIQUE (class_id, student_id)
 );
 
--- Sinf o'quvchilarini tez topish uchun indeks
 CREATE INDEX IF NOT EXISTS idx_class_students_class_id ON class_students(class_id);
--- O'quvchi qaysi sinflarda ekanini tez topish uchun indeks
 CREATE INDEX IF NOT EXISTS idx_class_students_student_id ON class_students(student_id);
 
--- ============================================================
--- SCHOOL CUP — TURNIR TIZIMI (Maktablar Kubogi)
--- 3 daraja: Tuman -> Viloyat -> Respublika
--- ============================================================
-
--- 1. Turnirlar — har bir turnir bitta darajada, bitta hududda
+-- ===== School Cup turnirlar =====
 CREATE TABLE IF NOT EXISTS tournaments (
   id SERIAL PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
-  level VARCHAR(20) NOT NULL DEFAULT 'district',   -- district | region | country
-  scope_value VARCHAR(100),                        -- qaysi tuman/viloyat nomi (country uchun NULL)
-  region VARCHAR(100),                             -- kontekst uchun (tuman turniri qaysi viloyatda)
-  parent_tournament_id INTEGER REFERENCES tournaments(id), -- promotion zanjiri (NULL bo'lishi mumkin)
-  status VARCHAR(20) NOT NULL DEFAULT 'draft',     -- draft | registration | bracket | live | finished
-  team_size INTEGER NOT NULL DEFAULT 5,            -- asosiy a'zo soni
-  reserve_size INTEGER NOT NULL DEFAULT 2,         -- zaxira a'zo soni
-  bracket_size INTEGER,                            -- 4 | 8 | 16 (setka hajmi, generatsiyada to'ladi)
-  questions_per_match INTEGER NOT NULL DEFAULT 20, -- har matchda savol soni
-  seconds_per_match INTEGER NOT NULL DEFAULT 300,  -- match vaqti (sek)
-  registration_deadline TIMESTAMP,                 -- jamoa tuzish muddati
+  level VARCHAR(20) NOT NULL DEFAULT 'district',
+  scope_value VARCHAR(100),
+  region VARCHAR(100),
+  parent_tournament_id INTEGER REFERENCES tournaments(id),
+  status VARCHAR(20) NOT NULL DEFAULT 'draft',
+  team_size INTEGER NOT NULL DEFAULT 5,
+  reserve_size INTEGER NOT NULL DEFAULT 2,
+  bracket_size INTEGER,
+  questions_per_match INTEGER NOT NULL DEFAULT 20,
+  seconds_per_match INTEGER NOT NULL DEFAULT 300,
+  cefr_level VARCHAR(20) DEFAULT 'mixed',
+  registration_deadline TIMESTAMP,
   created_by INTEGER REFERENCES users(id),
-  starts_at TIMESTAMP,                             -- birinchi match vaqti
+  starts_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 2. Turnirda qatnashuvchi maktablar
 CREATE TABLE IF NOT EXISTS tournament_schools (
   id SERIAL PRIMARY KEY,
   tournament_id INTEGER NOT NULL REFERENCES tournaments(id),
   school VARCHAR(200) NOT NULL,
   region VARCHAR(100),
   district VARCHAR(100),
-  seed INTEGER,                                    -- setkadagi joy (1 = eng kuchli)
-  avg_rating INTEGER DEFAULT 1000,                 -- seeding uchun maktab o'rtacha reytingi
-  placement INTEGER,                               -- yakuniy o'rin (1 = chempion)
+  seed INTEGER,
+  avg_rating INTEGER DEFAULT 1000,
+  placement INTEGER,
   eliminated BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW(),
   UNIQUE (tournament_id, school)
 );
 
--- 3. Maktab jamoasi (qotgan tarkib — school_admin tuzadi)
 CREATE TABLE IF NOT EXISTS tournament_team_members (
   id SERIAL PRIMARY KEY,
   tournament_id INTEGER NOT NULL REFERENCES tournaments(id),
   school VARCHAR(200) NOT NULL,
   user_id INTEGER NOT NULL REFERENCES users(id),
-  member_role VARCHAR(10) NOT NULL DEFAULT 'starter', -- starter | reserve
-  slot_order INTEGER,                                  -- 1..N tartib
+  member_role VARCHAR(10) NOT NULL DEFAULT 'starter',
+  slot_order INTEGER,
   created_at TIMESTAMP DEFAULT NOW(),
   UNIQUE (tournament_id, user_id)
 );
 
--- 4. Setkadagi matchlar
 CREATE TABLE IF NOT EXISTS tournament_matches (
   id SERIAL PRIMARY KEY,
   tournament_id INTEGER NOT NULL REFERENCES tournaments(id),
-  round INTEGER NOT NULL,                          -- 1 = birinchi raund, oxirgi = final
-  match_no INTEGER NOT NULL,                       -- raund ichidagi tartib
+  round INTEGER NOT NULL,
+  match_no INTEGER NOT NULL,
   school_a VARCHAR(200),
   school_b VARCHAR(200),
   score_a INTEGER DEFAULT 0,
   score_b INTEGER DEFAULT 0,
   winner_school VARCHAR(200),
-  status VARCHAR(20) NOT NULL DEFAULT 'pending',   -- pending | checkin | live | done
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  questions_data JSONB,
   scheduled_at TIMESTAMP,
   started_at TIMESTAMP,
   finished_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 5. Matchda kim o'ynaydi va qancha ball to'pladi
 CREATE TABLE IF NOT EXISTS tournament_match_players (
   id SERIAL PRIMARY KEY,
   match_id INTEGER NOT NULL REFERENCES tournament_matches(id),
-  user_id INTEGER REFERENCES users(id),            -- bot bo'lsa NULL
+  user_id INTEGER REFERENCES users(id),
   school VARCHAR(200) NOT NULL,
   is_bot BOOLEAN DEFAULT false,
   checked_in BOOLEAN DEFAULT false,
@@ -275,7 +289,6 @@ CREATE TABLE IF NOT EXISTS tournament_match_players (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Indekslar (tez qidirish uchun)
 CREATE INDEX IF NOT EXISTS idx_tournaments_status ON tournaments(status);
 CREATE INDEX IF NOT EXISTS idx_tournaments_level_scope ON tournaments(level, scope_value);
 CREATE INDEX IF NOT EXISTS idx_tour_schools_tid ON tournament_schools(tournament_id);
@@ -283,13 +296,7 @@ CREATE INDEX IF NOT EXISTS idx_tour_team_tid_school ON tournament_team_members(t
 CREATE INDEX IF NOT EXISTS idx_tour_matches_tid ON tournament_matches(tournament_id);
 CREATE INDEX IF NOT EXISTS idx_tour_match_players_mid ON tournament_match_players(match_id);
 
--- ============================================================
--- TEACHER ASSIGNMENTS (Topshiriqlar tizimi — V1)
--- Savollar yaratishda SNAPSHOT qilinadi: admin bankni o'zgartirsa/o'chirsa ham
--- eski topshiriq natijalari va review buzilmaydi.
--- ============================================================
-
--- 1. Topshiriqlar
+-- ===== Teacher Assignments (snapshot dizayn) =====
 CREATE TABLE IF NOT EXISTS assignments (
   id SERIAL PRIMARY KEY,
   class_id INTEGER NOT NULL REFERENCES classes(id),
@@ -299,16 +306,15 @@ CREATE TABLE IF NOT EXISTS assignments (
   cefr_level VARCHAR(5) NOT NULL,
   skill VARCHAR(50) NOT NULL DEFAULT 'mixed',
   question_count INTEGER NOT NULL,
-  due_at TIMESTAMP,                                      -- NULL = muddatsiz
+  due_at TIMESTAMP,
   max_attempts INTEGER NOT NULL DEFAULT 1,
-  late_policy VARCHAR(20) NOT NULL DEFAULT 'allow_late', -- allow_late | block_late (keyin)
-  status VARCHAR(20) NOT NULL DEFAULT 'active',          -- draft | active | archived
+  late_policy VARCHAR(20) NOT NULL DEFAULT 'allow_late',
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
   archived_at TIMESTAMP
 );
 
--- 2. Topshiriq savollari — SNAPSHOT (matn shu yerda; original_question_id faqat havola)
 CREATE TABLE IF NOT EXISTS assignment_questions (
   id SERIAL PRIMARY KEY,
   assignment_id INTEGER NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
@@ -328,7 +334,6 @@ CREATE TABLE IF NOT EXISTS assignment_questions (
   UNIQUE (assignment_id, q_order)
 );
 
--- 3. O'quvchi topshirishlari (V1: bitta urinish; attempt_number kelajak uchun)
 CREATE TABLE IF NOT EXISTS assignment_submissions (
   id SERIAL PRIMARY KEY,
   assignment_id INTEGER NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
@@ -341,25 +346,23 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
   wrong_count INTEGER DEFAULT 0,
   unanswered_count INTEGER DEFAULT 0,
   is_late BOOLEAN DEFAULT false,
-  status VARCHAR(20) NOT NULL DEFAULT 'in_progress',     -- in_progress | submitted | abandoned
+  status VARCHAR(20) NOT NULL DEFAULT 'in_progress',
   started_at TIMESTAMP DEFAULT NOW(),
   submitted_at TIMESTAMP,
   UNIQUE (assignment_id, student_id, attempt_number)
 );
 
--- 4. Har savol bo'yicha javob (review + zaif mavzu tahlili uchun)
 CREATE TABLE IF NOT EXISTS submission_answers (
   id SERIAL PRIMARY KEY,
   submission_id INTEGER NOT NULL REFERENCES assignment_submissions(id) ON DELETE CASCADE,
   assignment_question_id INTEGER NOT NULL REFERENCES assignment_questions(id),
-  selected_option CHAR(1),                               -- NULL = tashlab ketilgan
+  selected_option CHAR(1),
   correct_answer CHAR(1) NOT NULL,
   is_correct BOOLEAN DEFAULT false,
   answered_at TIMESTAMP DEFAULT NOW(),
   UNIQUE (submission_id, assignment_question_id)
 );
 
--- Indekslar
 CREATE INDEX IF NOT EXISTS idx_assignments_class ON assignments(class_id);
 CREATE INDEX IF NOT EXISTS idx_assignments_teacher ON assignments(teacher_id);
 CREATE INDEX IF NOT EXISTS idx_assignments_status ON assignments(status);
@@ -369,29 +372,13 @@ CREATE INDEX IF NOT EXISTS idx_asub_student ON assignment_submissions(student_id
 CREATE INDEX IF NOT EXISTS idx_asub_status ON assignment_submissions(status);
 CREATE INDEX IF NOT EXISTS idx_sanswers_submission ON submission_answers(submission_id);
 
--- ============================================================
--- PARENT DASHBOARD (Ota-ona paneli — V1)
--- Ulanish: bola yaratgan qisqa muddatli kod orqali (rozilik).
--- Kod raw saqlanadi (qidirish + qayta ko'rsatish uchun), lekin
--- 7 kun muddat + unique + rate-limit + revocation bilan himoyalanadi.
--- ============================================================
-
--- O'quvchining ota-ona ulash kodi (talab bo'lganda generatsiya qilinadi)
-ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_connect_code VARCHAR(12);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_connect_code_expires_at TIMESTAMP;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_connect_code_created_at TIMESTAMP;
-
--- Bitta kod bir vaqtning o'zida faqat bitta o'quvchiniki bo'lsin (NULL'lar cheklanmaydi)
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_parent_code
-  ON users(parent_connect_code) WHERE parent_connect_code IS NOT NULL;
-
--- Ota-ona ↔ bola bog'lanishi
+-- ===== Parent Dashboard =====
 CREATE TABLE IF NOT EXISTS parent_links (
   id SERIAL PRIMARY KEY,
   parent_id INTEGER NOT NULL REFERENCES users(id),
   student_id INTEGER NOT NULL REFERENCES users(id),
-  relationship VARCHAR(30) DEFAULT 'guardian',   -- mother | father | guardian | other
-  status VARCHAR(20) NOT NULL DEFAULT 'active',   -- active | revoked
+  relationship VARCHAR(30) DEFAULT 'guardian',
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
   linked_at TIMESTAMP DEFAULT NOW(),
   revoked_at TIMESTAMP,
   revoked_by INTEGER REFERENCES users(id),
@@ -404,22 +391,19 @@ CREATE INDEX IF NOT EXISTS idx_plink_parent ON parent_links(parent_id);
 CREATE INDEX IF NOT EXISTS idx_plink_student ON parent_links(student_id);
 CREATE INDEX IF NOT EXISTS idx_plink_status ON parent_links(status);
 
--- ============================================================
--- EXAM HISTORY (Imtihon tarixi — V1)
--- Har Ultimate Exam urinishi to'liq saqlanadi (umumiy + skill bo'yicha).
--- ============================================================
+-- ===== Exam history =====
 CREATE TABLE IF NOT EXISTS exam_attempts (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id),
-  exam_type VARCHAR(30) NOT NULL DEFAULT 'ultimate',  -- ultimate (A1→A2, ...)
-  from_level VARCHAR(5) NOT NULL,        -- sinaladigan (joriy) daraja
-  to_level VARCHAR(5),                   -- maqsadli (keyingi) daraja; NULL = yo'q
+  exam_type VARCHAR(30) NOT NULL DEFAULT 'ultimate',
+  from_level VARCHAR(5) NOT NULL,
+  to_level VARCHAR(5),
   total_questions INTEGER NOT NULL DEFAULT 0,
   total_correct INTEGER NOT NULL DEFAULT 0,
   overall_percent INTEGER NOT NULL DEFAULT 0,
-  pass_overall_required INTEGER,         -- o'sha paytdagi o'tish chegarasi (75)
-  pass_skill_required INTEGER,           -- har skill chegarasi (60)
-  skill_results JSONB,                   -- { grammar:{correct,total,percent}, ... }
+  pass_overall_required INTEGER,
+  pass_skill_required INTEGER,
+  skill_results JSONB,
   passed BOOLEAN NOT NULL DEFAULT false,
   level_changed BOOLEAN NOT NULL DEFAULT false,
   taken_at TIMESTAMP DEFAULT NOW()
@@ -428,23 +412,16 @@ CREATE TABLE IF NOT EXISTS exam_attempts (
 CREATE INDEX IF NOT EXISTS idx_exam_attempts_user ON exam_attempts(user_id);
 CREATE INDEX IF NOT EXISTS idx_exam_attempts_taken ON exam_attempts(taken_at);
 
--- ============================================================
--- BATTLE PERSISTENCE (Core Hardening — V1)
--- Aktiv janglarni server restart va disconnect'dan himoya qiladi.
--- HOZIR: Postgres. KELAJAKDA: battleStore.js ichi Redis bo'lishi mumkin.
--- ============================================================
-
--- 1. Live jang holati (RAM nusxasi DB'da — restart recovery + reconnect uchun)
--- DIQQAT: state ichida correct_option SAQLANMAYDI (xavfsizlik). Faqat question_ids.
+-- ===== Battle persistence (restart recovery) =====
 CREATE TABLE IF NOT EXISTS battle_sessions (
   room_id        VARCHAR(160) PRIMARY KEY,
-  mode           VARCHAR(20)  NOT NULL DEFAULT 'ranked',   -- ranked | casual
-  battle_type    VARCHAR(20)  NOT NULL DEFAULT '1v1',      -- 1v1 | duo | squad
+  mode           VARCHAR(20)  NOT NULL DEFAULT 'ranked',
+  battle_type    VARCHAR(20)  NOT NULL DEFAULT '1v1',
   cefr_level     VARCHAR(5),
-  length_key     VARCHAR(20),                              -- lengthConfig kaliti
-  question_ids   INTEGER[]    NOT NULL,                    -- savol tartibi (faqat ID)
-  state          JSONB        NOT NULL,                    -- players, scores, answeredIds, qDeadline
-  status         VARCHAR(20)  NOT NULL DEFAULT 'active',   -- active | finished | abandoned
+  length_key     VARCHAR(20),
+  question_ids   INTEGER[]    NOT NULL,
+  state          JSONB        NOT NULL,
+  status         VARCHAR(20)  NOT NULL DEFAULT 'active',
   created_at     TIMESTAMP    DEFAULT NOW(),
   updated_at     TIMESTAMP    DEFAULT NOW()
 );
@@ -452,21 +429,20 @@ CREATE TABLE IF NOT EXISTS battle_sessions (
 CREATE INDEX IF NOT EXISTS idx_bsessions_status ON battle_sessions(status);
 CREATE INDEX IF NOT EXISTS idx_bsessions_updated ON battle_sessions(updated_at);
 
--- 2. Har javob logi (review refresh-proof + weak-topic + question analytics uchun)
 CREATE TABLE IF NOT EXISTS battle_answers (
   id              SERIAL PRIMARY KEY,
   room_id         VARCHAR(160) NOT NULL,
-  user_id         INTEGER      REFERENCES users(id),   -- bot bo'lsa NULL
+  user_id         INTEGER      REFERENCES users(id),
   question_id     INTEGER      NOT NULL REFERENCES questions(id),
-  q_order         INTEGER      NOT NULL,               -- jangda nechanchi savol (1..N)
-  selected_option CHAR(1),                             -- NULL = timeout/javobsiz
+  q_order         INTEGER      NOT NULL,
+  selected_option CHAR(1),
   correct_option  CHAR(1)      NOT NULL,
   is_correct      BOOLEAN      NOT NULL DEFAULT false,
   timed_out       BOOLEAN      NOT NULL DEFAULT false,
-  skill           VARCHAR(50),                         -- questions.skill snapshot
+  skill           VARCHAR(50),
   cefr_level      VARCHAR(5),
   answered_at     TIMESTAMP    DEFAULT NOW(),
-  UNIQUE (room_id, user_id, question_id)               -- dedupe DB darajasida
+  UNIQUE (room_id, user_id, question_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_banswers_user ON battle_answers(user_id);
@@ -474,6 +450,27 @@ CREATE INDEX IF NOT EXISTS idx_banswers_room ON battle_answers(room_id);
 CREATE INDEX IF NOT EXISTS idx_banswers_skill ON battle_answers(user_id, skill);
 CREATE INDEX IF NOT EXISTS idx_banswers_question ON battle_answers(question_id);
 
--- Natija refresh-proof: battle_history'ga room_id (natijani roomId bo'yicha topish uchun)
-ALTER TABLE battle_history ADD COLUMN IF NOT EXISTS room_id VARCHAR(160);
-CREATE INDEX IF NOT EXISTS idx_bhistory_room ON battle_history(room_id);
+-- ===== School Battle points =====
+CREATE TABLE IF NOT EXISTS school_battle_points (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  region VARCHAR(100),
+  district VARCHAR(100),
+  school VARCHAR(200),
+  points INTEGER NOT NULL DEFAULT 0,
+  source VARCHAR(50),
+  season VARCHAR(20),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sbp_school ON school_battle_points(region, district, school);
+CREATE INDEX IF NOT EXISTS idx_sbp_user ON school_battle_points(user_id);
+CREATE INDEX IF NOT EXISTS idx_sbp_season ON school_battle_points(season);
+
+-- ===== Parent connect-code ustunlari (baseline'da raw — keyingi migration hash qiladi) =====
+ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_connect_code VARCHAR(12);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_connect_code_expires_at TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_connect_code_created_at TIMESTAMP;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_parent_code
+  ON users(parent_connect_code) WHERE parent_connect_code IS NOT NULL;

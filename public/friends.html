@@ -645,7 +645,7 @@
     renderSidebar("friends");
 
     // ===== SOCKET.IO (real-time) =====
-    const socket = io();
+    const socket = io({ auth: { token: localStorage.getItem("token") } });
     socket.on("connect", () => {
       socket.emit("registerUser", user.id);
     });

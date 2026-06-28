@@ -6,13 +6,34 @@ const { Server } = require("socket.io");
 
 const multer = require("multer");
 const path = require("path");
-const { signToken, authMiddleware, requireTeacher, requireStudent, requireParent, signAdminToken, requireAdmin } = require("./auth");
+const { signToken, authMiddleware, requireTeacher, requireStudent, requireParent, signAdminToken, requireAdmin, verifySocketToken } = require("./auth");
+const { saveBattleSession, loadBattleSession, finishBattleSession, loadActiveSessions } = require("./battleStore");
+const { recoverActiveBattles } = require("./battleRecovery");
+const parentCode = require("./parentCode");
 const { validateRegionDistrict, REGIONS } = require("./regions");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const PORT = 3000;
+
+// ===== SOCKET XAVFSIZLIGI: JWT autentifikatsiya =====
+// Har bir socket ulanishida tokenni tekshiramiz. Token to'g'ri bo'lsa, haqiqiy
+// userId'ni socket.authUserId'ga yozamiz. Bundan keyin client yuborgan userId'ga
+// EMAS, faqat socket.authUserId'ga ishonamiz (IDOR himoyasi).
+// Token yo'q bo'lsa ham ulanishga ruxsat beramiz (authUserId = null) — eski
+// xatti-harakat buzilmasin, lekin himoyalangan amallar authUserId'ni talab qiladi.
+io.use((socket, next) => {
+  try {
+    const token = (socket.handshake.auth && socket.handshake.auth.token) ||
+                  (socket.handshake.query && socket.handshake.query.token) || null;
+    const decoded = verifySocketToken(token);
+    socket.authUserId = decoded ? String(decoded.id) : null;
+  } catch (e) {
+    socket.authUserId = null;
+  }
+  next(); // ulanishga doimo ruxsat (authUserId orqali himoyalaymiz)
+});
 
 // JSON ma'lumotlarni o'qiy olish uchun
 app.use(express.json());
@@ -529,7 +550,7 @@ async function startBotBattle(roomId, humanPlayer) {
     const qCount = cfg.questions;
 
     let result = await pool.query(
-      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
+      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, skill
        FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
       [humanPlayer.level, qCount]
     );
@@ -562,6 +583,7 @@ async function startBotBattle(roomId, humanPlayer) {
       level: humanPlayer.level || "A1",
       lengthKey: humanPlayer.lengthKey || "standard",
       mode: humanPlayer.mode || "ranked",
+      createdAt: Date.now(),
       players: {
         [humanPlayer.socketId]: { userId: humanPlayer.userId, name: humanPlayer.name, score: 0, finished: false, answeredCount: 0, answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS },
         [botId]: { userId: null, name: humanPlayer.botName, score: 0, finished: false, answeredCount: 0, isBot: true },
@@ -575,12 +597,33 @@ async function startBotBattle(roomId, humanPlayer) {
       option_c: q.option_c, option_d: q.option_d,
     }));
 
+    // Foydalanuvchining rasmini DB'dan olamiz (natija + jang ekranida ko'rsatish uchun)
+    let myPic = null;
+    if (humanPlayer.userId) {
+      try {
+        const pr = await pool.query("SELECT profile_picture FROM users WHERE id = $1", [humanPlayer.userId]);
+        if (pr.rows[0]) myPic = pr.rows[0].profile_picture;
+      } catch (e) {}
+    }
+
     io.to(humanPlayer.socketId).emit("battleStart", {
       total_questions: safeQuestions.length,
       questions: safeQuestions,
+      myPicture: myPic,
+      opponentPicture: null,                 // bot — rasm yo'q
+      opponentName: humanPlayer.botName,
+      opponentId: null,                      // bot — userId yo'q
+      myName: humanPlayer.name,
+      level: humanPlayer.level || "A1",
     });
 
     console.log("Bot bilan jang boshlandi:", roomId);
+
+    // PERSISTENCE + RECONNECT (bot jangi)
+    battles[roomId].battleType = "1v1";
+    battles[roomId].players[humanPlayer.socketId].socketId = humanPlayer.socketId;
+    if (humanPlayer.userId) userToRoom[humanPlayer.userId] = roomId;
+    await saveBattleSession(roomId, battles[roomId]);
 
     // Botning javoblarini "simulyatsiya" qilish
     simulateBotAnswers(roomId, botId, questions);
@@ -614,6 +657,35 @@ function stripUnsafe(s, maxLen) {
   if (s == null) return s;
   var out = String(s).replace(/[<>"`\\]/g, "").replace(/\s+/g, " ").trim();
   return maxLen ? out.slice(0, maxLen) : out;
+}
+
+// ===== SO'KINISH FILTRI (bolalar xavfsizligi) =====
+// Yomon so'zlar ro'yxati. Topilsa — yulduzcha bilan almashtiriladi.
+// Ro'yxat to'liq emas, lekin eng keng tarqalganlarni qamrab oladi.
+// O'zbek, ingliz, rus tillarida. Yangi so'zlarni shu massivga qo'shish mumkin.
+const PROFANITY_LIST = [
+  // Ingliz
+  "fuck", "shit", "bitch", "asshole", "dick", "pussy", "cunt", "bastard", "whore", "slut", "fag", "nigger", "nigga", "retard",
+  // Rus (lotin va kirill)
+  "blyat", "blyad", "suka", "pizdec", "pizda", "khuy", "huy", "ebal", "yebat", "mudak", "gandon",
+  "блять", "блядь", "сука", "пизда", "хуй", "ебать", "мудак", "гандон", "ебал",
+  // O'zbek (keng tarqalgan haqoratlar)
+  "jalab", "qotoq", "qoToq", "ko'toq", "kotoq", "am ", "amini", "amaki seni", "enagni", "onangni", "dalbayob", "dolboyob", "tasqara",
+];
+
+// Matnda so'kinish bormi tekshiradi va yulduzcha bilan almashtiradi.
+function filterProfanity(text) {
+  if (!text) return text;
+  var filtered = text;
+  for (var i = 0; i < PROFANITY_LIST.length; i++) {
+    var word = PROFANITY_LIST[i];
+    if (!word) continue;
+    // So'z chegarasi bilan qidirish (katta-kichik harfsiz). Maxsus belgilarni ekran qilamiz.
+    var escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    var re = new RegExp(escaped, "gi");
+    filtered = filtered.replace(re, function (m) { return "*".repeat(m.length); });
+  }
+  return filtered;
 }
 
 function normalizeSchool(school) {
@@ -773,7 +845,13 @@ async function pairPlayers(a, b) {
 function tryQueueMatch(socketId) {
   const me = waitingQueue.find((e) => e.socketId === socketId);
   if (!me) return false;
-  const opp = waitingQueue.find((e) => e.socketId !== socketId && mmCompatible(e, me));
+  // Raqib: boshqa socket VA boshqa userId (o'zini o'ziga moslab qo'ymaslik uchun)
+  const opp = waitingQueue.find(
+    (e) =>
+      e.socketId !== socketId &&
+      String(e.userId) !== String(me.userId) &&
+      mmCompatible(e, me)
+  );
   if (!opp) return false;
   removeFromQueue(me.socketId);
   removeFromQueue(opp.socketId);
@@ -888,6 +966,8 @@ function addTeamEntry(mode, entry) {
 }
 const pendingBattles = {}; // Do'st janglari: battle.html'da tayyor bo'lishni kutayotgan
 const onlineUsers = {}; // { userId: socketId }
+const userToRoom = {}; // { userId: roomId } — reconnect uchun: kim qaysi aktiv jangda
+const recentlyFinished = {}; // { userId: roomId } — yaqinda tugagan jang (refresh natijani topishi uchun)
 
 // ============ PARTY (Do'stlar jamoasi) ============
 const parties = {};      // { partyId: { leader, teamMode, maxSize, members: [{userId, name, socketId, isLeader}], status } }
@@ -1010,6 +1090,38 @@ async function getOpponentCardInfo(userId) {
 
 
 // Jangni boshlash funksiyasi
+// ============ RECONNECT YORDAMCHILARI (Option B) ============
+// Jangdagi o'yinchini userId bo'yicha topish (socket.id kalit qoladi, faqat qidiramiz)
+function findPlayerKeyByUser(battle, userId) {
+  return Object.keys(battle.players).find(
+    (k) => String(battle.players[k].userId) === String(userId)
+  ) || null;
+}
+
+// Reconnect: eski socket.id yozuvini yangi socket.id'ga ko'chirish
+// (battle.players strukturasi o'zgarmaydi — faqat bitta yozuv yangi kalitga o'tadi)
+function rebindPlayerSocket(roomId, userId, newSocketId) {
+  const battle = battles[roomId];
+  if (!battle) return false;
+  const oldKey = findPlayerKeyByUser(battle, userId);
+  if (!oldKey) return false;
+  if (oldKey !== newSocketId) {
+    battle.players[newSocketId] = battle.players[oldKey];
+    delete battle.players[oldKey];
+    // JAMOA JANG: teams arraylaridagi eski socket ID'ni yangisiga almashtiramiz
+    if (battle.isTeam && battle.teams) {
+      ["A", "B"].forEach(function (t) {
+        if (!battle.teams[t]) return;
+        var idx = battle.teams[t].indexOf(oldKey);
+        if (idx !== -1) battle.teams[t][idx] = newSocketId;
+      });
+    }
+  }
+  // socketId maydonini ham yangilaymiz (agar ishlatilsa)
+  battle.players[newSocketId].socketId = newSocketId;
+  return true;
+}
+
 async function startBattle(roomId, player1, player2) {
   try {
     // Tanlangan format bo'yicha savol soni (player1 tanlovi)
@@ -1018,7 +1130,7 @@ async function startBattle(roomId, player1, player2) {
     console.log("[BATTLE DEBUG] startBattle. player1.lengthKey:", player1.lengthKey, "| qCount (kerakli):", qCount, "| level:", player1.level);
 
     let result = await pool.query(
-      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
+      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, skill
        FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
       [player1.level, qCount]
     );
@@ -1050,6 +1162,7 @@ async function startBattle(roomId, player1, player2) {
       level: player1.level || "A1",
       lengthKey: player1.lengthKey || "standard",
       mode: player1.mode || "ranked",
+      createdAt: Date.now(),
       players: {
         [player1.socketId]: { userId: player1.userId, name: player1.name, score: 0, finished: false, answeredCount: 0, answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS },
         [player2.socketId]: { userId: player2.userId, name: player2.name, score: 0, finished: false, answeredCount: 0, answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS },
@@ -1099,6 +1212,17 @@ async function startBattle(roomId, player1, player2) {
     });
 
     console.log("Jang boshlandi, xona:", roomId);
+
+    // PERSISTENCE: jang holatini DB'ga saqlash (restart/reconnect uchun)
+    battles[roomId].battleType = "1v1";
+    await saveBattleSession(roomId, battles[roomId]);
+
+    // RECONNECT: kim qaysi jangda — userToRoom'ga yozamiz
+    if (player1.userId) userToRoom[player1.userId] = roomId;
+    if (player2.userId) userToRoom[player2.userId] = roomId;
+    // socketId maydonini har o'yinchiga qo'shamiz (rebind uchun)
+    if (battles[roomId].players[player1.socketId]) battles[roomId].players[player1.socketId].socketId = player1.socketId;
+    if (battles[roomId].players[player2.socketId]) battles[roomId].players[player2.socketId].socketId = player2.socketId;
   } catch (err) {
     console.error("Jang boshlashda xato:", err.message);
   }
@@ -1124,21 +1248,36 @@ io.on("connection", (socket) => {
 
   // User online registration
   socket.on("registerUser", async (userId) => {
-    if (!userId) {
+    // XAVFSIZLIK: token bor bo'lsa — FAQAT token'dagi userId'ga ishonamiz.
+    // Client yuborgan userId e'tiborsiz qoldiriladi (IDOR himoyasi).
+    // Token yo'q (eski client) bo'lsa — orqaga moslik uchun client userId'ni olamiz.
+    const trustedUserId = socket.authUserId || (userId != null ? String(userId) : null);
+
+    if (!trustedUserId) {
       socket.emit("errorMessage", {
         message: "User ID is required.",
       });
       return;
     }
 
-    const normalizedUserId = String(userId);
+    const normalizedUserId = String(trustedUserId);
+
+    // XAVFSIZLIK: ban qilingan foydalanuvchi socketga ulanmasin (jang/chat qila olmasin)
+    try {
+      const banChk = await pool.query("SELECT is_banned FROM users WHERE id = $1", [normalizedUserId]);
+      if (banChk.rows[0] && banChk.rows[0].is_banned) {
+        socket.emit("accountBanned", { message: "Hisobingiz bloklangan." });
+        socket.disconnect(true);
+        return;
+      }
+    } catch (e) { console.error("ban check xato:", e.message); }
 
     socket.userId = normalizedUserId;
 
     // If you only allow one active socket per user:
     onlineUsers[normalizedUserId] = socket.id;
 
-    console.log("User online:", normalizedUserId);
+    console.log("User online:", normalizedUserId + (socket.authUserId ? " (token)" : " (token yo'q)"));
 
     // Notify user's friends that this user is online
     notifyFriendsStatus(normalizedUserId, true);
@@ -1162,6 +1301,7 @@ io.on("connection", (socket) => {
 
     let text = stripUnsafe(message, 120); // uzunlik 120 belgi + xavfli belgilarni olib tashlaymiz
     if (!text) return;
+    text = filterProfanity(text); // so'kinishlarni yulduzcha bilan almashtiramiz (bolalar xavfsizligi)
 
     // Spam cooldown: 2 soniyada bir marta
     const now = Date.now();
@@ -1196,23 +1336,6 @@ io.on("connection", (socket) => {
   });
 
   // User disconnect
-  socket.on("disconnect", () => {
-    const userId = socket.userId;
-
-    if (userId && onlineUsers[userId] === socket.id) {
-      delete onlineUsers[userId];
-
-      console.log("User offline:", userId);
-
-      notifyFriendsStatus(userId, false);
-
-      // Partydan ham chiqaramiz
-      removeFromParty(String(userId));
-    }
-
-    console.log("Socket disconnected:", socket.id);
-  });
-
   // Rematch: bir o'yinchi qayta jang so'raydi
   socket.on("requestRematch", ({ opponentId, myUserId, myName, level, lengthKey }) => {
     const targetSocketId = onlineUsers[String(opponentId)];
@@ -1609,7 +1732,7 @@ io.on("connection", (socket) => {
   });
 
   // Jamoa jangda javob berish
-  socket.on("submitTeamAnswer", ({ roomId, questionId, answer }) => {
+  socket.on("submitTeamAnswer", async ({ roomId, questionId, answer }) => {
     var battle = battles[roomId];
     if (!battle || !battle.isTeam) return;
     var player = battle.players[socket.id];
@@ -1634,7 +1757,9 @@ io.on("connection", (socket) => {
     // ===== SERVER-AUTHORITATIVE 15s OYNA =====
     var now = Date.now();
     var deadline = player.qDeadline || (now + TIME_PER_QUESTION_MS);
-    var timedOut = now > deadline;
+    // Javob bermadimi (null/bo'sh) YOKI vaqt o'tdimi — timeout
+    var noAnswer = (answer === null || answer === undefined || answer === "");
+    var timedOut = noAnswer || (now > deadline);
 
     var isCorrect = false;
     if (!timedOut) {
@@ -1648,6 +1773,20 @@ io.on("connection", (socket) => {
 
     player.answers.push({ questionId: q.id, selected: timedOut ? null : answer, correct: q.correct_option, isCorrect: isCorrect, timedOut: timedOut });
     if (player.answeredCount >= battle.questions.length) player.finished = true;
+
+    // PERSISTENCE: javobni DB'ga yozish (reconnect statistika + natija refresh uchun)
+    try {
+      await pool.query(
+        `INSERT INTO battle_answers
+           (room_id, user_id, question_id, q_order, selected_option,
+            correct_option, is_correct, timed_out, skill, cefr_level)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         ON CONFLICT (room_id, user_id, question_id) DO NOTHING`,
+        [roomId, player.userId || null, q.id, player.answeredCount,
+         timedOut ? null : answer, q.correct_option, isCorrect, timedOut,
+         q.skill || null, battle.level || null]
+      );
+    } catch (e) { console.error("team battle_answers yozish xato:", e.message); }
 
     io.to(socket.id).emit("teamAnswerResult", {
       isCorrect: isCorrect,
@@ -1663,7 +1802,7 @@ io.on("connection", (socket) => {
   });
 
   // O'yinchi javob yuboradi
-  socket.on("submitAnswer", ({ roomId, questionId, answer }) => {
+  socket.on("submitAnswer", async ({ roomId, questionId, answer }) => {
     const battle = battles[roomId];
     if (!battle || !battle.players[socket.id]) return;
 
@@ -1689,7 +1828,9 @@ io.on("connection", (socket) => {
     // ===== SERVER-AUTHORITATIVE 15s OYNA =====
     const now = Date.now();
     const deadline = player.qDeadline || (now + TIME_PER_QUESTION_MS); // zaxira (deadline o'rnatilmagan bo'lsa)
-    const timedOut = now > deadline;
+    // Javob bermadimi (null/bo'sh) YOKI vaqt o'tdimi — ikkalasi ham timeout hisoblanadi
+    const noAnswer = (answer === null || answer === undefined || answer === "");
+    const timedOut = noAnswer || (now > deadline);
 
     let isCorrect = false;
     if (!timedOut) {
@@ -1718,6 +1859,23 @@ io.on("connection", (socket) => {
       explanation: question.explanation || "",
     });
 
+    // PERSISTENCE: javobni DB'ga yozish (review refresh-proof + analytics)
+    try {
+      await pool.query(
+        `INSERT INTO battle_answers
+           (room_id, user_id, question_id, q_order, selected_option,
+            correct_option, is_correct, timed_out, skill, cefr_level)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         ON CONFLICT (room_id, user_id, question_id) DO NOTHING`,
+        [roomId, player.userId || null, question.id, player.answeredCount,
+         timedOut ? null : answer, question.correct_option, isCorrect, timedOut,
+         question.skill || null, battle.level || null]
+      );
+    } catch (e) { console.error("battle_answers yozish xato:", e.message); }
+
+    // PERSISTENCE: yangilangan jang holatini saqlash (score, qDeadline, answeredIds)
+    saveBattleSession(roomId, battle);
+
     socket.emit("answerResult", {
       is_correct: isCorrect,
       timed_out: timedOut,
@@ -1737,14 +1895,360 @@ io.on("connection", (socket) => {
     }
   });
 
+  // ===== RECONNECT: client ulanганda "men aktiv jangda bormanmi?" deb so'raydi =====
+ socket.on("battle:reconnectCheck", async ({ userId, expectedRoom }) => {
+    if (!userId) { socket.emit("battle:noActive", {}); return; }
+
+    // XAVFSIZLIK: token bor bo'lsa — FAQAT token'dagi userId'ga ishonamiz (IDOR himoyasi).
+    // Aks holda kimdir boshqa odamning userId'sini yuborib uning jangiga ulanishi mumkin.
+    if (socket.authUserId) userId = socket.authUserId;
+
+    const roomId = userToRoom[userId];
+    const battle = roomId ? battles[roomId] : null;
+
+    // DO'ST JANGI / REMATCH: client aniq bir room kutyapti (URL'dagi ?room=).
+    // Agar bu room joriy aktiv/tugagan jangdan FARQ qilsa — bu YANGI jang.
+    // Eski jangni qaytarmaymiz, "noActive" yuboramiz (client joinFriendBattle qiladi).
+    if (expectedRoom) {
+      const isActiveMatch = roomId && String(roomId) === String(expectedRoom);
+      const isFinishedMatch = recentlyFinished[userId] && String(recentlyFinished[userId]) === String(expectedRoom);
+      if (!isActiveMatch && !isFinishedMatch) {
+        // Kutilgan room boshqa (yangi jang) — eski jangni e'tiborsiz qoldiramiz
+        socket.emit("battle:noActive", {});
+        return;
+      }
+    }
+
+    // AVVAL: aktiv jang bormi? (jang o'rtasida refresh — bu ustuvor)
+    // Aktiv jang yo'q bo'lsa — yaqinda tugagan jangni tekshiramiz (natija refresh)
+    if (!roomId || !battle) {
+      if (recentlyFinished[userId]) {
+        socket.emit("battle:alreadyFinished", { roomId: recentlyFinished[userId] });
+        return;
+      }
+      socket.emit("battle:noActive", {});
+      return;
+    }
+
+    // Eski jangga reconnect qilmaymiz (10 daqiqadan oshган — tashlab ketilgan deb hisoblaymiz)
+    const MAX_RECONNECT_AGE_MS = 10 * 60 * 1000; // 10 daqiqa
+    if (battle.createdAt && (Date.now() - battle.createdAt) > MAX_RECONNECT_AGE_MS) {
+      // Eski jangni tozalaymiz
+      delete userToRoom[userId];
+      finishBattleSession(roomId).catch(() => {});
+      delete battles[roomId];
+      socket.emit("battle:noActive", {});
+      return;
+    }
+
+    // Eski socket.id yozuvini yangi socket'ga ko'chiramiz
+    rebindPlayerSocket(roomId, userId, socket.id);
+    socket.join(roomId);
+
+    const player = battle.players[socket.id];
+    if (!player) { socket.emit("battle:noActive", {}); return; }
+
+    // REAL-TIME: o'yinchi qaytdi — raqib(lar)ga "online" signali + disconnected bayrog'ini olib tashlash
+    player.disconnected = false;
+    socket.to(roomId).emit("playerOnline", { userId: String(userId) });
+
+    // ===== JAMOA JANG: alohida tiklash (1v1 mantig'iga tushmaydi) =====
+    if (battle.isTeam) {
+      player.disconnected = false; // qaytdi — disconnect bayrog'ini olib tashlaymiz
+
+      // Savollar (correct_option YO'Q)
+      var teamSafeQ = battle.questions.map(function (q) {
+        return { id: q.id, question_text: q.question_text, option_a: q.option_a, option_b: q.option_b, option_c: q.option_c, option_d: q.option_d };
+      });
+
+      // Mening jamoam va raqib jamoa ma'lumoti (progress bilan)
+      function rcTeamInfo(ids) {
+        return ids.map(function (sid) {
+          var p = battle.players[sid];
+          return { name: p.name, isBot: p.isBot, userId: p.userId, level: p.level, rating: p.rating, profile_picture: p.profile_picture, answeredCount: p.answeredCount, score: p.score, finished: p.finished };
+        });
+      }
+      var myTeam = player.team;
+      var myTeamInfo = rcTeamInfo(battle.teams[myTeam]);
+      var enemyTeamInfo = rcTeamInfo(battle.teams[myTeam === "A" ? "B" : "A"]);
+
+      // Jamoa ballari
+      function teamSum(ids) { return ids.reduce(function (s, sid) { return s + battle.players[sid].score; }, 0); }
+      var myTeamScore = teamSum(battle.teams[myTeam]);
+      var enemyTeamScore = teamSum(battle.teams[myTeam === "A" ? "B" : "A"]);
+
+      // Qancha vaqt qoldi
+      var tNow = Date.now();
+      var tMsLeft = Math.max(0, (player.qDeadline || tNow) - tNow);
+
+      socket.emit("team:resumeState", {
+        roomId: roomId,
+        teamMode: battle.teamMode,
+        level: battle.level || "A1",
+        questions: teamSafeQ,
+        total_questions: teamSafeQ.length,
+        answeredCount: player.answeredCount,
+        myScore: player.score,
+        myTeam: myTeam,
+        myTeamPlayers: myTeamInfo,
+        enemyTeamPlayers: enemyTeamInfo,
+        myTeamScore: myTeamScore,
+        enemyTeamScore: enemyTeamScore,
+        msLeft: tMsLeft,
+        finished: player.finished,   // men tugatganmanmi (Raqib kutilmoqda holati)
+      });
+      console.log("Jamoa reconnect: user " + userId + " → " + roomId + " (savol " + player.answeredCount + ")");
+      return;
+    }
+
+    // DIQQAT: bu yerga yetib kelsak, jang HALI AKTIV (battles{}'da bor).
+    // Agar player.finished = true bo'lsa — bu "men tugatdim, raqib hali o'ynayapti"
+    // degani (jang tugamagan). Natija EMAS — kutish holatini yuboramiz.
+    if (player.finished) {
+      // Statistikani battle_answers'dan hisoblaymiz (correct + streak)
+      let doneCorrect = 0, wCurrentStreak = 0, wBestStreak = 0;
+      try {
+        const ansRes = await pool.query(
+          `SELECT is_correct FROM battle_answers
+           WHERE room_id = $1 AND user_id = $2
+           ORDER BY q_order ASC`,
+          [roomId, userId]
+        );
+        let run = 0;
+        for (const row of ansRes.rows) {
+          if (row.is_correct) {
+            doneCorrect++;
+            run++;
+            if (run > wBestStreak) wBestStreak = run;
+          } else {
+            run = 0;
+          }
+        }
+        wCurrentStreak = run;
+      } catch (e) {}
+
+      // RAQIB ma'lumotini topamiz (jang ichidan — player'dan boshqasi)
+      let oppName = "Raqib", oppPicture = null, oppAnswered = 0, oppScore = 0, oppRating = null, oppId = null;
+      try {
+        const oppKey = Object.keys(battle.players).find((k) => k !== socket.id);
+        if (oppKey) {
+          const opp = battle.players[oppKey];
+          oppName = opp.name || "Raqib";
+          oppAnswered = opp.answeredCount || 0;
+          oppScore = opp.score || 0;
+          oppId = opp.userId || null;          // bot bo'lsa null
+          // Raqib rasm + rating (bot bo'lmasa DB'dan)
+          if (opp.userId) {
+            const oppRes = await pool.query("SELECT profile_picture, rating FROM users WHERE id = $1", [opp.userId]);
+            if (oppRes.rows[0]) {
+              oppPicture = oppRes.rows[0].profile_picture;
+              oppRating = oppRes.rows[0].rating;
+            }
+          }
+        }
+      } catch (e) {}
+
+      socket.emit("battle:waitingOpponent", {
+        roomId: roomId,
+        answeredCount: player.answeredCount,
+        total: battle.questions.length,
+        myScore: player.score,
+        correctCount: doneCorrect,
+        currentStreak: wCurrentStreak,
+        bestStreak: wBestStreak,
+        // Raqib ma'lumoti (F5'dan keyin tiklash uchun)
+        opponentName: oppName,
+        opponentPicture: oppPicture,
+        opponentAnswered: oppAnswered,
+        opponentScore: oppScore,
+        opponentRating: oppRating,
+        opponentId: oppId,                     // raqib ID (rematch tugmasi uchun)
+      });
+      return;
+    }
+    // To'g'ri javobsiz savollarni tayyorlaymiz (correct_option YUBORILMAYDI!)
+    const safeQuestions = battle.questions.map((q) => ({
+      id: q.id,
+      question_text: q.question_text,
+      option_a: q.option_a,
+      option_b: q.option_b,
+      option_c: q.option_c,
+      option_d: q.option_d,
+    }));
+
+    // Qancha vaqt qoldi (joriy savol uchun)
+    const now = Date.now();
+    const msLeft = Math.max(0, (player.qDeadline || now) - now);
+
+    // STATISTIKA TIKLASH: battle_answers'dan to'g'ri javoblar + streak hisoblaymiz
+    let correctCount = 0, currentStreak = 0, bestStreak = 0;
+    try {
+      const ansRes = await pool.query(
+        `SELECT is_correct FROM battle_answers
+         WHERE room_id = $1 AND user_id = $2
+         ORDER BY q_order ASC`,
+        [roomId, userId]
+      );
+      let run = 0;
+      for (const row of ansRes.rows) {
+        if (row.is_correct) {
+          correctCount++;
+          run++;
+          if (run > bestStreak) bestStreak = run;
+        } else {
+          run = 0;
+        }
+      }
+      currentStreak = run; // oxiridagi ketma-ket to'g'rilar (uzilmagan bo'lsa)
+    } catch (e) { console.error("reconnect statistika xato:", e.message); }
+
+    // RAQIB progressi + ID/ism + rasm (jang ichidan — player'dan boshqasi)
+    let rsOppAnswered = 0, rsOppId = null, rsOppName = "Raqib", rsOppPicture = null;
+    try {
+      const oppKey = Object.keys(battle.players).find((k) => k !== socket.id);
+      if (oppKey) {
+        rsOppAnswered = battle.players[oppKey].answeredCount || 0;
+        rsOppId = battle.players[oppKey].userId || null;   // bot bo'lsa null
+        rsOppName = battle.players[oppKey].name || "Raqib";
+        // Raqib rasmini DB'dan olamiz (bot bo'lmasa)
+        if (rsOppId) {
+          const oppPicRes = await pool.query("SELECT profile_picture FROM users WHERE id = $1", [rsOppId]);
+          if (oppPicRes.rows[0]) rsOppPicture = oppPicRes.rows[0].profile_picture;
+        }
+      }
+    } catch (e) {}
+
+    // Joriy holatni clientga yuboramiz — jang shu yerdan davom etadi
+    socket.emit("battle:resumeState", {
+      roomId: roomId,
+      questions: safeQuestions,
+      total_questions: safeQuestions.length,
+      answeredCount: player.answeredCount,   // nechta savolga javob bergan (keyingisidan davom etadi)
+      myScore: player.score,
+      correctCount: correctCount,            // to'g'ri javoblar (statistika)
+      currentStreak: currentStreak,          // hozirgi ketma-ket streak
+      bestStreak: bestStreak,                // eng uzun streak
+      msLeft: msLeft,                        // joriy savolda qolgan millisekund
+      level: battle.level || "A1",
+      opponentAnswered: rsOppAnswered,       // raqib nechta savolga javob bergan (progress tiklash)
+      opponentId: rsOppId,                   // raqib ID (rematch tugmasi uchun)
+      opponentName: rsOppName,               // raqib ismi
+      opponentPicture: rsOppPicture,         // raqib rasmi (avatar tiklash)
+    });
+
+    console.log("Reconnect: user " + userId + " → " + roomId + " (savol " + player.answeredCount + ", " + msLeft + "ms qoldi)");
+  });
+
+  // ===== LEAVE: o'yinchi jangni ataylab tark etdi =====
+  socket.on("battle:leave", ({ roomId }) => {
+    const battle = roomId ? battles[roomId] : null;
+    if (!battle) return;
+
+    // Tark etgan o'yinchini topamiz (socket.id bo'yicha)
+    const leaverKey = battle.players[socket.id] ? socket.id : null;
+    if (!leaverKey) return;
+
+    const leaver = battle.players[leaverKey];
+    const leaverUserId = leaver.userId;
+
+    // Tark etgan o'yinchini "tugagan" + "chiqib ketgan" deb belgilaymiz.
+    // disconnected=true → forfeit (chiqqan o'yinchi mag'lub bo'ladi).
+    leaver.finished = true;
+    leaver.disconnected = true;
+
+    // userToRoom'dan darrov tozalaymiz — endi reconnect qilmaydi
+    if (leaverUserId && userToRoom[leaverUserId] === roomId) {
+      delete userToRoom[leaverUserId];
+    }
+
+    console.log("Leave: user " + leaverUserId + " jangni tark etdi → " + roomId);
+
+    if (battle.isTeam) {
+      // JAMOA: raqib(lar)ga offline signal + progress + tugash tekshiruvi
+      socket.to(roomId).emit("playerOffline", { userId: String(leaverUserId) });
+      emitTeamProgress(roomId);
+      checkTeamFinish(roomId);
+    } else {
+      // 1v1: hamma tugagan bo'lsa finishBattle, aks holda raqibga xabar
+      const allFinished = Object.values(battle.players).every((p) => p.finished);
+      if (allFinished) {
+        finishBattle(roomId);
+      } else {
+        socket.to(roomId).emit("opponentLeft", { message: "Raqib jangni tark etdi" });
+      }
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("O'yinchi uzildi:", socket.id);
     removeFromQueue(socket.id); // navbatda qolib ketmasin
+
+    // ===== JAMOA JANG: uzilgan o'yinchi uchun grace period =====
+    // Darrov forfeit QILMAYMIZ (F5 ham disconnect chiqaradi). 30s kutamiz:
+    // - o'yinchi qaytsa (reconnect) — rebind bo'ladi, hech narsa bo'lmaydi
+    // - qaytmasa — uni 'finished' deb belgilaymiz, jang qotib qolmaydi
+    // Bu 1v1 VA jamoa jang uchun ishlaydi.
+    var dcUserId = socket.userId;
+    var dcSocketId = socket.id;
+    if (dcUserId) {
+      var rId = userToRoom[dcUserId];
+      var b = rId ? battles[rId] : null;
+      if (b) {
+        // REAL-TIME: "offline" signalini DARROV yubormaymiz.
+        // Jang boshida socket bir necha marta ulanib-uzilishi mumkin (matchmaking → jang
+        // sahifasiga o'tish). Agar darrov yuborsak, raqib noto'g'ri "oflayn" ko'rinadi.
+        // 3 soniya kutamiz: o'yinchi yangi socket bilan qaytsa — offline YUBORMAYMIZ.
+        setTimeout(function () {
+          var battle = battles[rId];
+          if (!battle) return;
+          if (userToRoom[dcUserId] !== rId) return;
+          var curKey = Object.keys(battle.players).find(function (k) {
+            return String(battle.players[k].userId) === String(dcUserId);
+          });
+          // Yangi socket bilan qaytgan (curKey eski socketdan farq qiladi) — offline emas
+          if (!curKey || curKey !== dcSocketId) return;
+          // Hali eski socket — haqiqatan offline. Raqib(lar)ga signal.
+          socket.to(rId).emit("playerOffline", { userId: String(dcUserId) });
+        }, 3000);
+
+        setTimeout(function () {
+          var battle = battles[rId];
+          if (!battle) return; // jang tugagan
+          // O'yinchi qaytdimi? (userToRoom hali shu room'ni ko'rsatyaptimi)
+          if (userToRoom[dcUserId] !== rId) return; // boshqa jangda yoki tozalangan
+          var curKey = Object.keys(battle.players).find(function (k) {
+            return String(battle.players[k].userId) === String(dcUserId);
+          });
+          if (!curKey) return; // topilmadi
+          if (curKey !== dcSocketId) return; // yangi socket bilan qaytgan — hammasi joyida
+          // Hali eski socket — demak qaytmadi. Forfeit: 'finished' qilamiz.
+          var pl = battle.players[curKey];
+          if (pl && !pl.finished) {
+            pl.finished = true;
+            pl.disconnected = true;
+            if (battle.isTeam) {
+              // JAMOA: jamoa progress + tugash tekshiruvi
+              console.log("Jamoa jang: user " + dcUserId + " qaytmadi (30s) → finished, jang davom etadi");
+              emitTeamProgress(rId);
+              checkTeamFinish(rId);
+            } else {
+              // 1v1: raqibga xabar + hamma tugagan bo'lsa finishBattle
+              console.log("1v1 jang: user " + dcUserId + " qaytmadi (30s) → finished, jang yakunlanadi");
+              socket.to(rId).emit("opponentLeft", { message: "Raqib jangdan chiqib ketdi" });
+              var allDone = Object.values(battle.players).every(function (p) { return p.finished; });
+              if (allDone) finishBattle(rId);
+            }
+          }
+        }, 30000); // 30 soniya grace
+      }
+    }
+
     // Onlayn ro'yxatdan o'chirish
     if (socket.userId && onlineUsers[socket.userId] === socket.id) {
       delete onlineUsers[socket.userId];
       console.log("Offlayn:", socket.userId);
       notifyFriendsStatus(socket.userId, false); // do'stlarga "men offlayn" signali
+      removeFromParty(String(socket.userId)); // party'dan ham chiqaramiz
     }
   });
 });
@@ -1832,8 +2336,9 @@ function emitTeamProgress(roomId) {
   function teamProg(ids) {
     return ids.map(function (sid) {
       var p = battle.players[sid];
+      if (!p) return null; // rebind'dan keyin eski socket — keyin filter qilamiz
       return { name: p.name, answeredCount: p.answeredCount, score: p.score, finished: p.finished, isBot: p.isBot, level: p.level, rating: p.rating };
-    });
+    }).filter(function (x) { return x !== null; });
   }
   var progA = teamProg(battle.teams.A);
   var progB = teamProg(battle.teams.B);
@@ -1909,7 +2414,7 @@ async function startTeamBattle(group, teamMode, teamSize) {
 
     // Savollarni olamiz
     var result = await pool.query(
-      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
+      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, skill
        FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
       [level, qCount]
     );
@@ -1931,23 +2436,33 @@ async function startTeamBattle(group, teamMode, teamSize) {
     var teamAIds = [], teamBIds = [];
 
     teamA.forEach(function (p) {
-      players[p.socketId] = { userId: p.userId, name: p.name, level: p.level || "A1", rating: p.rating || 1000, profile_picture: p.profile_picture || null, score: 0, finished: false, answeredCount: 0, answers: [], answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS, team: "A", isBot: !!p.isBot };
+      players[p.socketId] = { userId: p.userId, name: p.name, socketId: p.socketId, level: p.level || "A1", rating: p.rating || 1000, profile_picture: p.profile_picture || null, score: 0, finished: false, answeredCount: 0, answers: [], answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS, team: "A", isBot: !!p.isBot };
       teamAIds.push(p.socketId);
     });
     teamB.forEach(function (p) {
-      players[p.socketId] = { userId: p.userId, name: p.name, level: p.level || "A1", rating: p.rating || 1000, profile_picture: p.profile_picture || null, score: 0, finished: false, answeredCount: 0, answers: [], answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS, team: "B", isBot: !!p.isBot };
+      players[p.socketId] = { userId: p.userId, name: p.name, socketId: p.socketId, level: p.level || "A1", rating: p.rating || 1000, profile_picture: p.profile_picture || null, score: 0, finished: false, answeredCount: 0, answers: [], answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS, team: "B", isBot: !!p.isBot };
       teamBIds.push(p.socketId);
     });
 
     battles[roomId] = {
       isTeam: true,
       teamMode: teamMode,
+      battleType: teamMode === "squad" ? "4v4" : "2v2",
       questions: questions,
       level: level,
       lengthKey: lengthKey,
+      createdAt: Date.now(),
       teams: { A: teamAIds, B: teamBIds },
       players: players,
     };
+
+    // RECONNECT: kim qaysi jamoa jangida — userToRoom'ga yozamiz (faqat real o'yinchilar)
+    [].concat(teamAIds, teamBIds).forEach(function (sid) {
+      var pl = players[sid];
+      if (pl.userId && !pl.isBot) userToRoom[pl.userId] = roomId;
+    });
+    // PERSISTENCE: jamoa jang holatini DB'ga saqlash
+    saveBattleSession(roomId, battles[roomId]);
 
     // Savollarni xavfsiz (to'g'ri javobsiz) tayyorlaymiz
     var safeQuestions = questions.map(function (q) {
@@ -2053,14 +2568,30 @@ async function finishTeamBattle(roomId) {
 
   // Jamoa ballari = a'zolar ballari yig'indisi
   function teamTotal(ids) {
-    return ids.reduce(function (s, sid) { return s + battle.players[sid].score; }, 0);
+    return ids.reduce(function (s, sid) { return s + (battle.players[sid] ? battle.players[sid].score : 0); }, 0);
   }
   var totalA = teamTotal(battle.teams.A);
   var totalB = teamTotal(battle.teams.B);
 
+  // FORFEIT: bir jamoaning HAMMA real o'yinchilari chiqib ketgan bo'lsa — o'sha jamoa mag'lub
+  function teamAllRealDisconnected(ids) {
+    var reals = ids.filter(function (sid) { return battle.players[sid] && !battle.players[sid].isBot; });
+    if (reals.length === 0) return false; // faqat botlar — forfeit emas
+    return reals.every(function (sid) { return battle.players[sid].disconnected; });
+  }
+  var aForfeit = teamAllRealDisconnected(battle.teams.A);
+  var bForfeit = teamAllRealDisconnected(battle.teams.B);
+
   var winningTeam = null;
-  if (totalA > totalB) winningTeam = "A";
-  else if (totalB > totalA) winningTeam = "B";
+  if (aForfeit && !bForfeit) {
+    winningTeam = "B"; // A jamoa to'liq chiqdi — B yutadi
+  } else if (bForfeit && !aForfeit) {
+    winningTeam = "A"; // B jamoa to'liq chiqdi — A yutadi
+  } else if (totalA > totalB) {
+    winningTeam = "A";
+  } else if (totalB > totalA) {
+    winningTeam = "B";
+  }
   // teng bo'lsa — durang
 
   var RATING_CHANGE = 20;
@@ -2071,8 +2602,9 @@ async function finishTeamBattle(roomId) {
   function teamRoster(ids) {
     return ids.map(function (sid) {
       var p = battle.players[sid];
+      if (!p) return null;
       return { name: p.name, score: p.score, isBot: p.isBot };
-    });
+    }).filter(function (x) { return x !== null; });
   }
   var rosterA = teamRoster(battle.teams.A);
   var rosterB = teamRoster(battle.teams.B);
@@ -2128,9 +2660,9 @@ async function finishTeamBattle(roomId) {
         var enemyLabel = (battle.teamMode === "squad" ? "Squad" : "Duo") + " jamoa";
         await pool.query(
           `INSERT INTO battle_history
-           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level, mode)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-          [me.userId, enemyLabel, null, myTeamScore, enemyTeamScore, outcome, xpEarned, ratingDelta, battle.level || "A1", "school"]
+           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level, mode, room_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+          [me.userId, enemyLabel, null, myTeamScore, enemyTeamScore, outcome, xpEarned, ratingDelta, battle.level || "A1", "school", roomId]
         );
         await updateQuestProgress(me.userId, { won: outcome === "win", correctAnswers: me.score, xpEarned: xpEarned });
 
@@ -2165,6 +2697,54 @@ async function finishTeamBattle(roomId) {
   }
 
   console.log("Jamoa jang tugadi [" + battle.teamMode + "]: " + roomId + " | A:" + totalA + " B:" + totalB + " | G'olib: " + (winningTeam || "Durang"));
+
+  // RECONNECT: userToRoom tozalash + natija uchun recentlyFinished'ga yozish
+  Object.keys(battle.players).forEach(function (sid) {
+    var uid = battle.players[sid].userId;
+    if (uid && !battle.players[sid].isBot) {
+      if (userToRoom[uid] === roomId) delete userToRoom[uid];
+      recentlyFinished[uid] = roomId;
+      setTimeout(function () {
+        if (recentlyFinished[uid] === roomId) delete recentlyFinished[uid];
+      }, 5 * 60 * 1000);
+    }
+  });
+  // PERSISTENCE: live sessiyani 'finished' deb belgilash
+  finishBattleSession(roomId).catch(function () {});
+
+  // NATIJA SNAPSHOT: to'liq jamoa natijasini saqlaymiz (F5 refresh uchun)
+  // Har o'yinchi: ism, ball, rasm, userId, jamoa. + jamoa ballari + g'olib.
+  try {
+    function rosterSnap(ids) {
+      return ids.map(function (sid) {
+        var p = battle.players[sid];
+        if (!p) return null;
+        return { name: p.name, userId: p.userId, score: p.score, isBot: p.isBot, level: p.level, rating: p.rating, profile_picture: p.profile_picture, answeredCount: p.answeredCount };
+      }).filter(function (x) { return x !== null; });
+    }
+    var snapshot = {
+      isTeamResult: true,
+      teamMode: battle.teamMode,
+      level: battle.level || "A1",
+      total_questions: battle.questions.length,
+      winningTeam: winningTeam,
+      teamAScore: totalA,
+      teamBScore: totalB,
+      teamA: rosterSnap(battle.teams.A),
+      teamB: rosterSnap(battle.teams.B),
+      // Har o'yinchining qaysi jamoada ekani (userId → team) — client o'zini topishi uchun
+      playerTeams: Object.keys(battle.players).reduce(function (acc, sid) {
+        var p = battle.players[sid];
+        if (p.userId) acc[String(p.userId)] = p.team;
+        return acc;
+      }, {}),
+    };
+    pool.query(
+      "UPDATE battle_sessions SET state = state || $2::jsonb, updated_at = NOW() WHERE room_id = $1",
+      [roomId, JSON.stringify({ result_snapshot: snapshot })]
+    ).catch(function (e) { console.error("Jamoa natija snapshot xato:", e.message); });
+  } catch (e) { console.error("Jamoa snapshot qurish xato:", e.message); }
+
   // Jangni biroz keyin o'chiramiz (qayta ulanishlar uchun)
   setTimeout(function () { delete battles[roomId]; }, 30000);
 }
@@ -2179,8 +2759,16 @@ async function finishBattle(roomId) {
   const p2 = battle.players[playerIds[1]];
 
   let winnerId = null;
-  if (p1.score > p2.score) winnerId = playerIds[0];
-  else if (p2.score > p1.score) winnerId = playerIds[1];
+  // FORFEIT: agar bir o'yinchi chiqib ketgan bo'lsa (disconnected/forfeited) — ikkinchisi g'olib
+  if (p1.disconnected && !p2.disconnected) {
+    winnerId = playerIds[1];
+  } else if (p2.disconnected && !p1.disconnected) {
+    winnerId = playerIds[0];
+  } else if (p1.score > p2.score) {
+    winnerId = playerIds[0];
+  } else if (p2.score > p1.score) {
+    winnerId = playerIds[1];
+  }
 
   // Reyting o'zgarishi (oddiy tizim)
   const RATING_CHANGE = 20;
@@ -2265,9 +2853,9 @@ async function finishBattle(roomId) {
         // Jang tarixiga yozish
         await pool.query(
           `INSERT INTO battle_history
-           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level, mode, total_questions)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-          [me.userId, opp.name, opp.userId || null, me.score, opp.score, outcome, xpEarned, ratingDelta, battle.level || "A1", (battle.mode === "casual" ? "casual" : "ranked"), battle.questions.length]
+           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level, mode, total_questions, room_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+          [me.userId, opp.name, opp.userId || null, me.score, opp.score, outcome, xpEarned, ratingDelta, battle.level || "A1", (battle.mode === "casual" ? "casual" : "ranked"), battle.questions.length, roomId]
         );
         // Topshiriqlar progressini yangilash
         await updateQuestProgress(me.userId, {
@@ -2287,6 +2875,15 @@ async function finishBattle(roomId) {
       }
     }
 
+    // Raqib rasmini olamiz (natija ekranida ko'rsatish uchun — bot bo'lsa null)
+    let oppPicture = null;
+    if (opp.userId) {
+      try {
+        const opr = await pool.query("SELECT profile_picture FROM users WHERE id = $1", [opp.userId]);
+        if (opr.rows[0]) oppPicture = opr.rows[0].profile_picture;
+      } catch (e) {}
+    }
+
     // O'yinchiga natija yuborish (yangilangan ma'lumot bilan)
     io.to(id).emit("battleEnd", {
       outcome: outcome,
@@ -2302,10 +2899,27 @@ async function finishBattle(roomId) {
       updated_user: updatedUser,
       answers: me.answers || [],
       league_change: me.leagueChange || null,
+      opponent_picture: oppPicture,
     });
   }
 
   console.log("Jang tugadi va saqlandi, xona:", roomId);
+
+  // PERSISTENCE: live sessiyani 'finished' deb belgilash (RAM tozalanadi)
+  await finishBattleSession(roomId);
+
+  // RECONNECT: userToRoom'dan tozalash (jang tugadi), lekin natija uchun eslab qolamiz
+  for (const id of playerIds) {
+    const uid = battle.players[id] && battle.players[id].userId;
+    if (uid) {
+      if (userToRoom[uid] === roomId) delete userToRoom[uid];
+      // Refresh natijani topishi uchun 5 daqiqa eslab qolamiz
+      recentlyFinished[uid] = roomId;
+      setTimeout(() => {
+        if (recentlyFinished[uid] === roomId) delete recentlyFinished[uid];
+      }, 5 * 60 * 1000);
+    }
+  }
   delete battles[roomId];
 }
 
@@ -4260,6 +4874,122 @@ app.get("/history/:userId", authMiddleware, async (req, res) => {
   }
 });
 
+// ===== NATIJA (refresh-proof): roomId bo'yicha jang natijasini DB'dan olish =====
+app.get("/battle/result/:roomId", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const roomId = req.params.roomId;
+
+    // Faqat o'sha jangda qatnashgan o'yinchi ko'ra oladi (IDOR himoyasi)
+    const bh = await pool.query(
+      `SELECT bh.opponent_name, bh.opponent_id, bh.my_score, bh.opponent_score, bh.outcome,
+              bh.xp_earned, bh.rating_change, bh.cefr_level, bh.mode,
+              bh.total_questions, bh.played_at,
+              opp.profile_picture AS opponent_picture,
+              opp.rating AS opponent_rating,
+              me.profile_picture AS my_picture
+       FROM battle_history bh
+       LEFT JOIN users opp ON opp.id = bh.opponent_id
+       LEFT JOIN users me ON me.id = bh.user_id
+       WHERE bh.room_id = $1 AND bh.user_id = $2
+       LIMIT 1`,
+      [roomId, userId]
+    );
+
+    if (bh.rows.length === 0) {
+      return res.status(404).json({ error: "Natija topilmadi" });
+    }
+    const result = bh.rows[0];
+
+    // Javoblar tahlili (battle_answers + questions matni bilan)
+    const ans = await pool.query(
+      `SELECT ba.question_id, ba.q_order, ba.selected_option AS your_answer,
+              ba.correct_option AS correct_answer, ba.is_correct,
+              q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.explanation
+       FROM battle_answers ba
+       JOIN questions q ON q.id = ba.question_id
+       WHERE ba.room_id = $1 AND ba.user_id = $2
+       ORDER BY ba.q_order ASC`,
+      [roomId, userId]
+    );
+
+    res.json({
+      result: result,
+      answers: ans.rows,
+    });
+  } catch (err) {
+    console.error("Natija olish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Jamoa jang natijasi (F5 refresh-proof) — snapshot'dan to'liq natija
+app.get("/team-battle/result/:roomId", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const roomId = req.params.roomId;
+
+    // Sessiyadan snapshot + IDOR himoyasi (faqat qatnashgan o'yinchi)
+    const sess = await pool.query(
+      "SELECT state FROM battle_sessions WHERE room_id = $1 LIMIT 1",
+      [roomId]
+    );
+    if (sess.rows.length === 0 || !sess.rows[0].state || !sess.rows[0].state.result_snapshot) {
+      return res.status(404).json({ error: "Natija topilmadi" });
+    }
+    const snap = sess.rows[0].state.result_snapshot;
+
+    // IDOR: foydalanuvchi shu jangda qatnashganmi? (playerTeams ichida userId bormi)
+    const myTeam = snap.playerTeams ? snap.playerTeams[String(userId)] : null;
+    if (!myTeam) {
+      return res.status(403).json({ error: "Bu natijaga ruxsat yo'q" });
+    }
+
+    // Mening jamoam va raqib jamoa
+    const isA = myTeam === "A";
+    const myTeamPlayers = isA ? snap.teamA : snap.teamB;
+    const enemyTeamPlayers = isA ? snap.teamB : snap.teamA;
+    const myTeamScore = isA ? snap.teamAScore : snap.teamBScore;
+    const enemyTeamScore = isA ? snap.teamBScore : snap.teamAScore;
+
+    // Outcome (mening nuqtai nazarimdan)
+    let outcome = "draw";
+    if (snap.winningTeam === myTeam) outcome = "win";
+    else if (snap.winningTeam !== null) outcome = "lose";
+
+    // Mening shaxsiy ballim (myTeamPlayers ichidan userId bo'yicha)
+    const me = (myTeamPlayers || []).find(function (p) { return String(p.userId) === String(userId); });
+    const myScore = me ? me.score : 0;
+
+    // XP/rating: battle_history'dan (shu user, shu room)
+    let xpEarned = 0, ratingChange = 0;
+    try {
+      const bh = await pool.query(
+        "SELECT xp_earned, rating_change FROM battle_history WHERE room_id = $1 AND user_id = $2 LIMIT 1",
+        [roomId, userId]
+      );
+      if (bh.rows[0]) { xpEarned = bh.rows[0].xp_earned || 0; ratingChange = bh.rows[0].rating_change || 0; }
+    } catch (e) {}
+
+    res.json({
+      teamMode: snap.teamMode,
+      level: snap.level,
+      total: snap.total_questions,
+      outcome: outcome,
+      myScore: myScore,
+      myTeamScore: myTeamScore,
+      enemyTeamScore: enemyTeamScore,
+      myTeamPlayers: myTeamPlayers,
+      enemyTeamPlayers: enemyTeamPlayers,
+      xp_earned: xpEarned,
+      rating_change: ratingChange,
+    });
+  } catch (err) {
+    console.error("Jamoa natija olish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // ============ STREAK ============
 app.post("/streak/checkin", authMiddleware, async (req, res) => {
   try {
@@ -4640,6 +5370,49 @@ app.post("/exam/submit", authMiddleware, async (req, res) => {
     }
     const currentLevel = userResult.rows[0].cefr_level;
     const nextLevel = getNextLevel(currentLevel);
+
+    // ===== ANTI-ABUSE 1: eng yuqori darajada imtihon yo'q =====
+    if (!nextLevel) {
+      return res.status(400).json({ error: "Siz eng yuqori darajadasiz — imtihon yo'q." });
+    }
+
+    // ===== ANTI-ABUSE 2: COOLDOWN — oxirgi (o'tmagan) urinishdan 24 soat o'tishi kerak =====
+    const lastAttempt = await pool.query(
+      `SELECT taken_at, passed FROM exam_attempts
+       WHERE user_id = $1 AND from_level = $2
+       ORDER BY taken_at DESC LIMIT 1`,
+      [userId, currentLevel]
+    );
+    if (lastAttempt.rows.length > 0 && !lastAttempt.rows[0].passed) {
+      const hoursSince = (Date.now() - new Date(lastAttempt.rows[0].taken_at).getTime()) / 3600000;
+      const COOLDOWN_HOURS = 24;
+      if (hoursSince < COOLDOWN_HOURS) {
+        const wait = Math.ceil(COOLDOWN_HOURS - hoursSince);
+        return res.status(429).json({
+          error: `Keyingi imtihongacha ${wait} soat kuting.`,
+          cooldown_hours_left: wait
+        });
+      }
+    }
+
+    // ===== ANTI-ABUSE 3: ELIGIBILITY re-check (frontendga ishonmaymiz) =====
+    const statsChk = await pool.query(
+      `SELECT COUNT(*) AS battles,
+              COALESCE(SUM(my_score),0) AS total_correct,
+              COALESCE(SUM(total_questions),0) AS total_questions
+       FROM battle_history
+       WHERE user_id = $1 AND cefr_level = $2 AND mode IN ('ranked','casual')`,
+      [userId, currentLevel]
+    );
+    const exBattles = parseInt(statsChk.rows[0].battles);
+    const exTotalQ = parseInt(statsChk.rows[0].total_questions);
+    const exAccuracy = exTotalQ > 0 ? Math.round((parseInt(statsChk.rows[0].total_correct) / exTotalQ) * 100) : 0;
+    if (exBattles < 10 || exAccuracy < 70) {
+      return res.status(403).json({
+        error: "Imtihon shartlari bajarilmagan (kamida 10 jang va 70% aniqlik kerak).",
+        battles: exBattles, accuracy: exAccuracy
+      });
+    }
 
     // Har javobni tekshirish + skill bo'yicha sanash
     let totalCorrect = 0;
@@ -6303,33 +7076,33 @@ app.get("/student/assignments/:id/review", authMiddleware, requireStudent, async
 
 // ============================================================
 // PARENT LINKING — Stage 3: O'quvchi tomoni (ota-ona ulanishi)
+// HASH bilan: raw kod faqat yaratilganda bir marta ko'rsatiladi, DB'da hash.
 // ============================================================
-const PARENT_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // chalkash O,0,I,1 yo'q
-const PARENT_CODE_TTL_DAYS = 7;
 
-function genParentCodeString(len) {
-  let s = "";
-  for (let i = 0; i < (len || 8); i++) s += PARENT_CODE_CHARS[Math.floor(Math.random() * PARENT_CODE_CHARS.length)];
-  return s;
-}
-
-// Unique kod yaratib o'quvchiga yozadi (collision bo'lsa qayta urinadi)
+// Unique kod yaratib o'quvchiga yozadi — RAW faqat qaytariladi, DB'da HASH saqlanadi
 async function assignNewParentCode(studentId) {
   for (let attempt = 0; attempt < 6; attempt++) {
-    const code = genParentCodeString(8);
+    const rawCode = parentCode.generateRawCode();
+    const codeHash = parentCode.hashCode(rawCode);
     try {
       const r = await pool.query(
         `UPDATE users
-         SET parent_connect_code = $1,
+         SET parent_connect_code_hash = $1,
+             parent_connect_code = NULL,
              parent_connect_code_created_at = NOW(),
-             parent_connect_code_expires_at = NOW() + INTERVAL '${PARENT_CODE_TTL_DAYS} days'
+             parent_connect_code_expires_at = NOW() + INTERVAL '${parentCode.PARENT_CODE_TTL_HOURS} hours'
          WHERE id = $2
-         RETURNING parent_connect_code, parent_connect_code_created_at, parent_connect_code_expires_at`,
-        [code, studentId]
+         RETURNING parent_connect_code_created_at, parent_connect_code_expires_at`,
+        [codeHash, studentId]
       );
-      return r.rows[0];
+      // RAW kodni faqat shu yerda qaytaramiz (DB'da yo'q!)
+      return {
+        rawCode: rawCode,
+        created_at: r.rows[0].parent_connect_code_created_at,
+        expires_at: r.rows[0].parent_connect_code_expires_at,
+      };
     } catch (e) {
-      if (e.code === "23505") continue; // unique violation — boshqa o'quvchida shu kod, qayta urinamiz
+      if (e.code === "23505") continue; // hash collision (deyarli imkonsiz) — qayta urinamiz
       throw e;
     }
   }
@@ -6343,22 +7116,39 @@ function maskParentPhone(phone) {
   return "+" + d.slice(0, 3) + " ** *** ** " + d.slice(-2);
 }
 
-// --- Kod holatini olish (yo'q yoki eskirgan bo'lsa yangi yaratadi) ---
+// --- Kod holatini olish: amaldagi kod BOR-YO'Qligini bildiradi, lekin RAW kodni
+//     QAYTA KO'RSATMAYDI (hash'dan tiklab bo'lmaydi — xuddi parol kabi). ---
 app.get("/student/parent-code", authMiddleware, requireStudent, async (req, res) => {
   try {
     const studentId = req.user.id;
     const cur = await pool.query(
-      "SELECT parent_connect_code, parent_connect_code_created_at, parent_connect_code_expires_at FROM users WHERE id = $1",
+      "SELECT parent_connect_code_hash, parent_connect_code_created_at, parent_connect_code_expires_at FROM users WHERE id = $1",
       [studentId]
     );
-    let row = cur.rows[0];
-    const valid = row && row.parent_connect_code && row.parent_connect_code_expires_at &&
-                  new Date(row.parent_connect_code_expires_at) > new Date();
-    if (!valid) row = await assignNewParentCode(studentId);
+    const row = cur.rows[0];
+    const hasValidCode = row && row.parent_connect_code_hash &&
+                         row.parent_connect_code_expires_at &&
+                         new Date(row.parent_connect_code_expires_at) > new Date();
+
+    if (hasValidCode) {
+      // Amaldagi kod bor, lekin RAW'ni ko'rsata olmaymiz
+      return res.json({
+        has_active_code: true,
+        code: null,                          // RAW yo'q — xavfsizlik
+        created_at: row.parent_connect_code_created_at,
+        expires_at: row.parent_connect_code_expires_at,
+        message: "Amaldagi kod bor. Kodni qayta ko'rish mumkin emas — kerak bo'lsa yangi kod yarating."
+      });
+    }
+
+    // Amaldagi kod yo'q — YANGI yaratamiz va RAW'ni BIR MARTA ko'rsatamiz
+    const fresh = await assignNewParentCode(studentId);
     res.json({
-      code: row.parent_connect_code,
-      created_at: row.parent_connect_code_created_at,
-      expires_at: row.parent_connect_code_expires_at
+      has_active_code: true,
+      code: fresh.rawCode,                   // BIR MARTALIK — o'quvchi ko'chirib oladi
+      created_at: fresh.created_at,
+      expires_at: fresh.expires_at,
+      message: "Kodni saqlab oling — qayta ko'rsatilmaydi."
     });
   } catch (err) {
     console.error("Parent kod olish xatosi:", err.message);
@@ -6369,8 +7159,13 @@ app.get("/student/parent-code", authMiddleware, requireStudent, async (req, res)
 // --- Kodni yangilash (eski bekor bo'ladi) ---
 app.post("/student/parent-code/regenerate", authMiddleware, requireStudent, async (req, res) => {
   try {
-    const row = await assignNewParentCode(req.user.id);
-    res.json({ success: true, code: row.parent_connect_code, expires_at: row.parent_connect_code_expires_at });
+    const fresh = await assignNewParentCode(req.user.id);
+    res.json({
+      success: true,
+      code: fresh.rawCode,                   // BIR MARTALIK
+      expires_at: fresh.expires_at,
+      message: "Yangi kod yaratildi. Saqlab oling — qayta ko'rsatilmaydi."
+    });
   } catch (err) {
     console.error("Parent kod yangilash xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
@@ -6479,13 +7274,14 @@ app.post("/parent/link", authMiddleware, requireParent, async (req, res) => {
   if (code.length < 6 || code.length > 12) { parentLinkNoteFail(req); return res.status(400).json({ error: "Kod noto'g'ri" }); }
 
   try {
+    const codeHash = parentCode.hashCode(code);   // kiritilgan kodni HASH qilamiz
     const stu = await pool.query(
       `SELECT id, first_name, last_name, cefr_level, rating, role
        FROM users
-       WHERE parent_connect_code = $1
+       WHERE parent_connect_code_hash = $1
          AND parent_connect_code_expires_at IS NOT NULL
          AND parent_connect_code_expires_at > NOW()`,
-      [code]
+      [codeHash]
     );
     if (stu.rows.length === 0 || stu.rows[0].role !== "student") {
       parentLinkNoteFail(req);
@@ -6517,6 +7313,12 @@ app.post("/parent/link", authMiddleware, requireParent, async (req, res) => {
       await client.query("COMMIT");
     } catch (txe) { await client.query("ROLLBACK"); throw txe; }
     finally { client.release(); }
+
+    // BIR MARTALIK: kod ishlatildi — o'chiramiz (boshqa ota-ona shu kod bilan ulana olmasin)
+    await pool.query(
+      "UPDATE users SET parent_connect_code_hash = NULL, parent_connect_code_expires_at = NULL WHERE id = $1",
+      [child.id]
+    );
 
     parentLinkNoteOk(req);
     res.json({
@@ -7786,7 +8588,29 @@ async function notifyMatchPlayers(matchId, event, payload) {
 // Watcher'ni har 30 soniyada ishga tushiramiz
 setInterval(tournamentMatchWatcher, 30000);
 
-// DIQQAT: app.listen emas, server.listen!
-server.listen(PORT, () => {
+// ===== CRASH HIMOYASI: server o'chib qolmasligi uchun =====
+// Ushlanmagan xato yoki rad etilgan promise butun serverni o'chirib yuborishi mumkin.
+// Bu hodisalarni ushlab, loglaymiz va serverni ishlatib turamiz (barcha o'yinchilar
+// uzilib qolmasligi uchun). Production'da bu juda muhim.
+process.on("uncaughtException", (err) => {
+  console.error("‼️ USHLANMAGAN XATO (server ishlashda davom etadi):", err && err.stack ? err.stack : err);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("‼️ RAD ETILGAN PROMISE (server ishlashda davom etadi):", reason && reason.stack ? reason.stack : reason);
+});
+
+server.listen(PORT, async () => {
   console.log("Server ishga tushdi: http://localhost:3000");
+
+  // PRODUCTION'da SMS kredensiali majburiy — OTP console'ga tushib qolmasin
+  if (process.env.NODE_ENV === "production" && (!process.env.ESKIZ_EMAIL || !process.env.ESKIZ_PASSWORD)) {
+    console.error("‼️ XAVFSIZLIK: NODE_ENV=production, lekin ESKIZ_EMAIL/ESKIZ_PASSWORD yo'q!");
+    console.error("   OTP kodlar SMS o'rniga konsolga chiqadi — bu xavfli. Server to'xtatildi.");
+    process.exit(1);
+  }
+  if (!process.env.ESKIZ_EMAIL || !process.env.ESKIZ_PASSWORD) {
+    console.warn("⚠️  DIQQAT: SMS kredensiali yo'q — DEV rejim (OTP konsolga chiqadi). Production'da .env to'ldiring.");
+  }
+
+  await recoverActiveBattles();
 });
