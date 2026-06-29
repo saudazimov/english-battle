@@ -96,6 +96,42 @@
     }
     .card-title i { width: 20px; height: 20px; color: var(--accent); }
 
+    /* ===== AI HAFTALIK HISOBOT ===== */
+    .ai-card .card-title { justify-content: space-between; }
+    .ai-card .ct-left { display:flex; align-items:center; gap:10px; }
+    .ai-pro-badge { font-size:10px; font-weight:800; letter-spacing:.5px; padding:3px 9px; border-radius:6px; background:linear-gradient(135deg,var(--accent-2),var(--accent)); color:#fff; }
+    .ai-empty { text-align:center; padding:34px 20px; }
+    .ai-empty-ic { width:60px; height:60px; margin:0 auto 14px; border-radius:16px; background:rgba(91,140,255,0.1); border:1px solid rgba(91,140,255,0.25); display:flex; align-items:center; justify-content:center; color:var(--accent); }
+    .ai-empty-ic i { width:28px; height:28px; }
+    .ai-empty h4 { font-size:16px; font-weight:700; margin-bottom:7px; }
+    .ai-empty p { font-size:13px; color:var(--text-dim); max-width:360px; margin:0 auto 16px; line-height:1.6; }
+    .ai-empty ul { list-style:none; max-width:300px; margin:0 auto; text-align:left; display:flex; flex-direction:column; gap:6px; }
+    .ai-empty ul li { font-size:13px; color:var(--text-dim); padding-left:16px; position:relative; }
+    .ai-empty ul li::before { content:""; position:absolute; left:3px; top:7px; width:5px; height:5px; border-radius:50%; background:var(--accent); }
+    .ai-summary-box { font-size:14px; line-height:1.7; padding:14px 16px; background:rgba(91,140,255,0.06); border:1px solid rgba(91,140,255,0.15); border-radius:12px; margin-bottom:16px; }
+    .ai-blk { margin-bottom:15px; }
+    .ai-blk:last-child { margin-bottom:0; }
+    .ai-blk-h { display:flex; align-items:center; gap:7px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+    .ai-blk-h i { width:14px; height:14px; }
+    .ai-blk.s .ai-blk-h { color:#86efac; } .ai-blk.w .ai-blk-h { color:#fcd34d; } .ai-blk.n .ai-blk-h { color:#93c5fd; }
+    .ai-ul { list-style:none; display:flex; flex-direction:column; gap:6px; }
+    .ai-ul li { font-size:13px; line-height:1.5; color:var(--text-dim); padding-left:16px; position:relative; }
+    .ai-ul li::before { content:""; position:absolute; left:3px; top:7px; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.6; }
+    .ai-blk.s .ai-ul li::before{background:#86efac;} .ai-blk.w .ai-ul li::before{background:#fcd34d;} .ai-blk.n .ai-ul li::before{background:#93c5fd;}
+    .ai-motiv { margin-top:16px; padding:12px 15px; background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(91,140,255,0.06)); border:1px solid rgba(168,85,247,0.2); border-radius:12px; font-size:13.5px; font-weight:600; color:#ddd6fe; display:flex; align-items:center; gap:9px; }
+    .ai-motiv i { width:18px; height:18px; flex:0 0 auto; color:var(--accent-2); }
+    .ai-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:16px; padding-top:13px; border-top:1px solid var(--border); flex-wrap:wrap; }
+    .ai-conf { font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:5px; }
+    .ai-conf.high{background:rgba(34,197,94,.14);color:#86efac;} .ai-conf.medium{background:rgba(245,158,11,.14);color:#fcd34d;} .ai-conf.low{background:var(--panel-2,rgba(255,255,255,.04));color:var(--text-dim);border:1px solid var(--border);}
+    .ai-refresh { display:inline-flex; align-items:center; gap:6px; padding:7px 13px; background:rgba(91,140,255,0.1); border:1px solid var(--border); border-radius:9px; color:var(--text-main,#f8fafc); font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; }
+    .ai-refresh:hover { border-color:var(--accent); }
+    .ai-refresh:disabled { opacity:.6; cursor:not-allowed; }
+    .ai-refresh i { width:13px; height:13px; }
+    .ai-loading { display:flex; flex-direction:column; gap:11px; padding:6px 0; }
+    .ai-shimmer { height:15px; border-radius:8px; background:linear-gradient(90deg,rgba(255,255,255,.03),rgba(255,255,255,.07),rgba(255,255,255,.03)); background-size:200% 100%; animation:aiShim 1.4s infinite; }
+    .ai-shimmer.lg { height:50px; }
+    @keyframes aiShim { to { background-position:-200% 0; } }
+
     /* ===== ABOUT ME ===== */
     .about-card { padding: 22px 24px; }
     .about-rows { display: flex; flex-direction: column; gap: 14px; }
@@ -496,6 +532,15 @@
       <div class="card exam-card" id="examCard" style="display:none;">
         <div class="card-title"><i data-lucide="graduation-cap"></i> Imtihon tarixi</div>
         <div id="examList"><div class="ex-empty">Yuklanmoqda...</div></div>
+      </div>
+
+      <!-- AI haftalik hisobot (faqat o'z profilida, student) -->
+      <div class="card ai-card" id="aiCard" style="display:none;">
+        <div class="card-title">
+          <span class="ct-left"><i data-lucide="sparkles"></i> AI haftalik hisobot</span>
+          <span class="ai-pro-badge">PREMIUM</span>
+        </div>
+        <div id="aiBody"></div>
       </div>
 
       <!-- Recent Battle History -->
@@ -1043,6 +1088,60 @@
     function toggleExam(id){ const el=document.getElementById("exItem"+id); if(el) el.classList.toggle("open"); }
 
     if (isOwnProfile && (!user.role || user.role === "student")) loadExamHistory();
+
+    // ===== AI HAFTALIK HISOBOT (student) =====
+    const AI_CONF_LABEL = { high:"Yuqori ishonch", medium:"O'rta ishonch", low:"Past ishonch" };
+
+    async function loadAIReport(force){
+      const card = document.getElementById("aiCard");
+      const body = document.getElementById("aiBody");
+      if (!card || !body) return;
+      card.style.display = "block";
+      body.innerHTML = '<div class="ai-loading"><div class="ai-shimmer lg"></div><div class="ai-shimmer" style="width:85%"></div><div class="ai-shimmer" style="width:70%"></div></div>';
+      try {
+        const res = await authFetch("/ai/reports/student/weekly" + (force?"?refresh=1":""), { method:"POST" });
+        if (res.status === 402) { renderAILocked(body); if(window.lucide)lucide.createIcons(); return; }
+        const data = await res.json();
+        if (!res.ok) { renderAIError(body, data.error); if(window.lucide)lucide.createIcons(); return; }
+        if (data.report && data.report.status === "insufficient_data") { renderAIInsuf(body, data.report); if(window.lucide)lucide.createIcons(); return; }
+        renderAIReport(body, data);
+      } catch(e) { renderAIError(body, "Server bilan aloqa yo'q"); }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderAILocked(body){
+      body.innerHTML = '<div class="ai-empty"><div class="ai-empty-ic" style="color:var(--accent-2)"><i data-lucide="lock"></i></div><h4>Premium funksiya</h4><p>Haftalik AI tahlil — kuchli va zaif tomonlaring, keyingi hafta uchun aniq mashq rejasi.</p><button class="btn nlp-btn" style="max-width:200px;margin:0 auto" onclick="alert(\'Premium tez orada!\')"><i data-lucide="star" style="width:16px;height:16px"></i> Premium olish</button></div>';
+    }
+    function renderAIInsuf(body, rep){
+      const steps = (rep.next_steps||[]).map(s=>`<li>${escExam(s)}</li>`).join("");
+      body.innerHTML = '<div class="ai-empty"><div class="ai-empty-ic"><i data-lucide="info"></i></div><h4>'+escExam(rep.title||"Hali yetarli ma\'lumot yo\'q")+'</h4><p>'+escExam(rep.message||"")+'</p>'+(steps?'<ul>'+steps+'</ul>':"")+'</div>';
+    }
+    function renderAIError(body, msg){
+      body.innerHTML = '<div class="ai-empty"><div class="ai-empty-ic" style="color:#fca5a5;background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)"><i data-lucide="alert-circle"></i></div><h4>Hisobot tayyorlanmadi</h4><p>'+escExam(msg||"Keyinroq urinib ko\'ring.")+'</p><button class="ai-refresh" onclick="loadAIReport()"><i data-lucide="refresh-cw"></i> Qayta urinish</button></div>';
+    }
+    function aiBlk(cls, icon, title, items){
+      if (!items || !items.length) return "";
+      return '<div class="ai-blk '+cls+'"><div class="ai-blk-h"><i data-lucide="'+icon+'"></i>'+title+'</div><ul class="ai-ul">'+items.map(t=>`<li>${escExam(t)}</li>`).join("")+'</ul></div>';
+    }
+    function renderAIReport(body, data){
+      const r = data.report || {};
+      const conf = r.confidence || data.confidence || "medium";
+      let h = "";
+      if (r.summary) h += '<div class="ai-summary-box">'+escExam(r.summary)+'</div>';
+      h += aiBlk("s","check-circle","Kuchli tomonlaring", r.strengths);
+      h += aiBlk("w","alert-triangle","Yaxshilash kerak", r.weaknesses);
+      h += aiBlk("n","target","Keyingi qadamlar", r.next_steps);
+      if (r.motivation) h += '<div class="ai-motiv"><i data-lucide="flame"></i><span>'+escExam(r.motivation)+'</span></div>';
+      h += '<div class="ai-foot"><span class="ai-conf '+conf+'"><i data-lucide="shield-check" style="width:12px;height:12px"></i>'+(AI_CONF_LABEL[conf]||conf)+'</span><button class="ai-refresh" id="aiRefreshBtn" onclick="refreshAIReport()"><i data-lucide="refresh-cw"></i> Yangilash</button></div>';
+      body.innerHTML = h || '<div class="ai-empty"><p>Hisobot bo\'sh.</p></div>';
+    }
+    async function refreshAIReport(){
+      const btn = document.getElementById("aiRefreshBtn");
+      if (btn){ btn.disabled = true; btn.innerHTML = "Yangilanmoqda..."; }
+      await loadAIReport(true);
+    }
+
+    if (isOwnProfile && (!user.role || user.role === "student")) loadAIReport();
 
     // Lucide ikonalar
     lucide.createIcons();

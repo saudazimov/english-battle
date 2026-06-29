@@ -316,6 +316,41 @@
     .tab-panel { display:none; }
     .tab-panel.active { display:block; }
 
+    /* AI TAHLIL */
+    .ai-tab-badge { font-size:9px; font-weight:800; letter-spacing:.5px; padding:2px 6px; border-radius:5px; background:linear-gradient(135deg,var(--secondary),var(--accent)); color:#fff; margin-left:6px; vertical-align:middle; }
+    .ai-report { background:linear-gradient(165deg,rgba(139,92,246,.05),rgba(34,211,238,.02)); border:1px solid var(--border); border-radius:var(--radius); padding:22px; }
+    .ai-sum { font-size:14.5px; line-height:1.7; color:var(--text-main); padding:14px 16px; background:rgba(91,140,255,.06); border:1px solid rgba(91,140,255,.14); border-radius:12px; margin-bottom:18px; }
+    .ai-b { margin-bottom:18px; } .ai-b:last-child { margin-bottom:0; }
+    .ai-b-h { display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-bottom:10px; }
+    .ai-b-h svg { width:15px; height:15px; }
+    .ai-b.find .ai-b-h { color:#93c5fd; } .ai-b.rec .ai-b-h { color:#86efac; } .ai-b.attn .ai-b-h { color:#fcd34d; }
+    .ai-b-ul { list-style:none; display:flex; flex-direction:column; gap:7px; }
+    .ai-b-ul li { font-size:13.5px; line-height:1.55; color:var(--text-muted); padding-left:17px; position:relative; }
+    .ai-b-ul li::before { content:""; position:absolute; left:3px; top:8px; width:6px; height:6px; border-radius:50%; opacity:.6; }
+    .ai-b.find .ai-b-ul li::before{background:#93c5fd;} .ai-b.rec .ai-b-ul li::before{background:#86efac;}
+    .ai-att-list { display:flex; flex-direction:column; gap:8px; }
+    .ai-att-row { padding:11px 14px; background:rgba(245,158,11,.07); border:1px solid rgba(245,158,11,.2); border-radius:10px; }
+    .ai-att-name { font-size:13.5px; font-weight:700; color:#fcd34d; }
+    .ai-att-reason { font-size:12.5px; color:var(--text-muted); margin-top:3px; }
+    .ai-ft { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:18px; padding-top:14px; border-top:1px solid var(--border); flex-wrap:wrap; }
+    .ai-cf { font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; }
+    .ai-cf.high{background:rgba(34,197,94,.14);color:#86efac;} .ai-cf.medium{background:rgba(245,158,11,.14);color:#fcd34d;} .ai-cf.low{background:var(--bg-soft);color:var(--text-dim);border:1px solid var(--border);}
+    .ai-rfr { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; background:var(--bg-soft); border:1px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; }
+    .ai-rfr:hover { border-color:var(--border-focus); } .ai-rfr:disabled { opacity:.6; cursor:not-allowed; }
+    .ai-rfr svg { width:14px; height:14px; }
+    .ai-state { text-align:center; padding:48px 28px; }
+    .ai-state-ic { width:68px; height:68px; margin:0 auto 18px; border-radius:18px; background:rgba(139,92,246,.1); border:1px solid rgba(139,92,246,.25); display:flex; align-items:center; justify-content:center; }
+    .ai-state-ic svg { width:32px; height:32px; }
+    .ai-state h2 { font-size:19px; font-weight:700; margin-bottom:9px; }
+    .ai-state p { font-size:14px; color:var(--text-muted); max-width:420px; margin:0 auto 20px; line-height:1.6; }
+    .ai-steps { list-style:none; max-width:340px; margin:0 auto; text-align:left; display:flex; flex-direction:column; gap:7px; }
+    .ai-steps li { font-size:13.5px; color:var(--text-muted); padding-left:17px; position:relative; }
+    .ai-steps li::before { content:""; position:absolute; left:3px; top:8px; width:6px; height:6px; border-radius:50%; background:var(--accent); }
+    .ai-load { display:flex; flex-direction:column; gap:12px; }
+    .ai-shim { height:16px; border-radius:8px; background:linear-gradient(90deg,rgba(255,255,255,.03),rgba(255,255,255,.07),rgba(255,255,255,.03)); background-size:200% 100%; animation:aiSh 1.4s infinite; }
+    .ai-shim.lg { height:52px; }
+    @keyframes aiSh { to { background-position:-200% 0; } }
+
     .assign-head { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
     .assign-head .section-title { font-size:18px; font-weight:700; }
     .btn-primary { display:inline-flex; align-items:center; gap:8px; padding:11px 18px;
@@ -530,6 +565,10 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
               Topshiriqlar <span class="tab-num" id="tabCountAssignments">0</span>
             </button>
+            <button class="tab-btn" id="tabBtnAI" onclick="switchTab('ai')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>
+              AI tahlil <span class="ai-tab-badge">PRO</span>
+            </button>
           </div>
 
           <!-- PANEL: O'quvchilar -->
@@ -587,6 +626,11 @@
                 Yangi topshiriq
               </button>
             </div>
+          </div>
+
+          <!-- PANEL: AI tahlil -->
+          <div class="tab-panel" id="tabAI">
+            <div class="ai-wrap" id="aiWrap"></div>
           </div>
         </div>
 
@@ -891,18 +935,80 @@
     const SKILL_LABELS = { mixed:"Aralash", grammar:"Grammatika", vocabulary:"Lug'at", reading:"O'qish", listening:"Tinglash", speaking:"Gapirish", writing:"Yozish" };
 
     function switchTab(tab) {
-      const isStudents = tab === "students";
-      document.getElementById("tabBtnStudents").classList.toggle("active", isStudents);
-      document.getElementById("tabBtnAssignments").classList.toggle("active", !isStudents);
-      document.getElementById("tabStudents").classList.toggle("active", isStudents);
-      document.getElementById("tabAssignments").classList.toggle("active", !isStudents);
-      if (!isStudents && !assignmentsLoaded) loadAssignments();
+      document.getElementById("tabBtnStudents").classList.toggle("active", tab === "students");
+      document.getElementById("tabBtnAssignments").classList.toggle("active", tab === "assignments");
+      document.getElementById("tabBtnAI").classList.toggle("active", tab === "ai");
+      document.getElementById("tabStudents").classList.toggle("active", tab === "students");
+      document.getElementById("tabAssignments").classList.toggle("active", tab === "assignments");
+      document.getElementById("tabAI").classList.toggle("active", tab === "ai");
+      if (tab === "assignments" && !assignmentsLoaded) loadAssignments();
+      if (tab === "ai" && !aiLoaded) loadClassAI();
     }
 
     function fmtDateTime(iso) {
       if (!iso) return null;
       const d = new Date(iso);
       return d.toLocaleDateString("uz-UZ", { day:"numeric", month:"short" }) + ", " + d.toLocaleTimeString("uz-UZ", { hour:"2-digit", minute:"2-digit" });
+    }
+
+    // ===== AI SINF TAHLILI =====
+    let aiLoaded = false;
+    const AI_CONF_LABEL = { high:"Yuqori ishonch", medium:"O'rta ishonch", low:"Past ishonch" };
+
+    async function loadClassAI(force) {
+      const wrap = document.getElementById("aiWrap");
+      if (!wrap) return;
+      aiLoaded = true;
+      wrap.innerHTML = '<div class="ai-load"><div class="ai-shim lg"></div><div class="ai-shim" style="width:85%"></div><div class="ai-shim" style="width:70%"></div></div>';
+      try {
+        const res = await authFetch("/ai/reports/teacher/classes/" + encodeURIComponent(classId) + "/weekly" + (force?"?refresh=1":""), { method:"POST" });
+        if (res.status === 402) { aiLockedView(wrap); return; }
+        const data = await res.json();
+        if (!res.ok) { aiErrView(wrap, data.error); return; }
+        if (data.report && data.report.status === "insufficient_data") { aiInsufView(wrap, data.report); return; }
+        aiReportView(wrap, data);
+      } catch(e) { aiErrView(wrap, "Server bilan aloqa yo'q"); }
+    }
+
+    function aiLockedView(wrap){
+      wrap.innerHTML = '<div class="ai-state"><div class="ai-state-ic" style="color:var(--secondary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h2>Teacher Pro funksiyasi</h2><p>Sinfingiz uchun AI tahlil: zaif ko\'nikmalar, eng ko\'p xato qilingan savollar va e\'tibor kerak bo\'lgan o\'quvchilar.</p><button class="btn-primary" onclick="alert(\'Teacher Pro tez orada!\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg> Pro olish</button></div>';
+    }
+    function aiInsufView(wrap, rep){
+      const steps = (rep.next_steps||[]).map(s=>`<li>${esc(s)}</li>`).join("");
+      wrap.innerHTML = '<div class="ai-state"><div class="ai-state-ic" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><h2>'+esc(rep.title||"Hali yetarli ma\'lumot yo\'q")+'</h2><p>'+esc(rep.message||"")+'</p>'+(steps?'<ul class="ai-steps">'+steps+'</ul>':"")+'</div>';
+    }
+    function aiErrView(wrap, msg){
+      wrap.innerHTML = '<div class="ai-state"><div class="ai-state-ic" style="color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><h2>Tahlil tayyorlanmadi</h2><p>'+esc(msg||"Keyinroq urinib ko\'ring.")+'</p><button class="ai-rfr" onclick="loadClassAI()">Qayta urinish</button></div>';
+    }
+    function aiBlock(cls, svg, title, items){
+      if (!items || !items.length) return "";
+      return '<div class="ai-b '+cls+'"><div class="ai-b-h">'+svg+title+'</div><ul class="ai-b-ul">'+items.map(t=>`<li>${esc(t)}</li>`).join("")+'</ul></div>';
+    }
+    function aiReportView(wrap, data){
+      const r = data.report || {};
+      const conf = r.confidence || data.confidence || "medium";
+      const ICO = {
+        find: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+        rec: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+      };
+      let h = "";
+      if (r.class_summary) h += '<div class="ai-sum">'+esc(r.class_summary)+'</div>';
+      h += aiBlock("find", ICO.find, "Asosiy kuzatuvlar", r.key_findings);
+
+      // E'tibor kerak bo'lgan o'quvchilar (alohida ko'rinish)
+      if (r.students_need_attention && r.students_need_attention.length) {
+        const rows = r.students_need_attention.map(s=>'<div class="ai-att-row"><div class="ai-att-name">'+esc(s.name||"O\'quvchi")+'</div><div class="ai-att-reason">'+esc(s.reason||"")+'</div></div>').join("");
+        h += '<div class="ai-b attn"><div class="ai-b-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>E\'tibor kerak</div><div class="ai-att-list">'+rows+'</div></div>';
+      }
+
+      h += aiBlock("rec", ICO.rec, "Tavsiyalar", r.teaching_recommendations);
+      h += '<div class="ai-ft"><span class="ai-cf '+conf+'"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'+(AI_CONF_LABEL[conf]||conf)+'</span><button class="ai-rfr" id="aiRfrBtn" onclick="refreshClassAI()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Yangilash</button></div>';
+      wrap.innerHTML = '<div class="ai-report">'+(h||'<p style="color:var(--text-muted);text-align:center;padding:20px">Tahlil bo\'sh.</p>')+'</div>';
+    }
+    async function refreshClassAI(){
+      const btn = document.getElementById("aiRfrBtn");
+      if (btn){ btn.disabled = true; btn.textContent = "Yangilanmoqda..."; }
+      await loadClassAI(true);
     }
 
     async function loadAssignments() {

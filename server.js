@@ -10,6 +10,10 @@ const { signToken, authMiddleware, requireTeacher, requireStudent, requireParent
 const { saveBattleSession, loadBattleSession, finishBattleSession, loadActiveSessions } = require("./battleStore");
 const { recoverActiveBattles } = require("./battleRecovery");
 const parentCode = require("./parentCode");
+const premium = require("./premium");
+const aiService = require("./aiService");
+const aiSnapshot = require("./aiSnapshot");
+
 const { validateRegionDistrict, REGIONS } = require("./regions");
 
 const app = express();
@@ -4987,6 +4991,246 @@ app.get("/team-battle/result/:roomId", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("Jamoa natija olish xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============ PREMIUM OBUNA ============
+
+// Foydalanuvchining joriy obunasi (frontend premium holatni bilishi uchun)
+app.get("/me/subscription", authMiddleware, async (req, res) => {
+  try {
+    const plan = await premium.getUserPlan(req.user.id);
+    res.json({
+      is_premium: !!plan,
+      plan: plan ? plan.plan : null,
+      status: plan ? plan.status : "free",
+      expires_at: plan ? plan.expires_at : null,
+    });
+  } catch (err) {
+    console.error("Subscription holat xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// DEV/ADMIN: obuna aktivlashtirish (payment hali yo'q — test uchun).
+// Payme/Click qo'shilganda bu o'rniga payment callback ishlatiladi.
+app.post("/dev/subscription/activate", requireAdmin, async (req, res) => {
+  try {
+    const { user_id, plan, days } = req.body;
+    if (!user_id || !plan || !days) {
+      return res.status(400).json({ error: "user_id, plan, days kerak" });
+    }
+    const sub = await premium.grantSubscription(parseInt(user_id), plan, parseInt(days));
+    await logAudit(req, "subscription_granted", {
+      entityType: "user", entityId: user_id,
+      details: plan + " — " + days + " kun"
+    });
+    res.json({ success: true, subscription: sub });
+  } catch (err) {
+    console.error("Obuna aktivlashtirish xatosi:", err.message);
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// ============ AI: PARENT WEEKLY REPORT ============
+
+// Parent farzandi uchun haftalik AI hisobot (premium parent).
+app.post("/ai/reports/parent/children/:studentId/weekly",
+  authMiddleware, requireParent, premium.requirePremium("parent"),
+  async (req, res) => {
+  try {
+    const parentId = req.user.id;
+    const studentId = parseInt(req.params.studentId, 10);
+    if (isNaN(studentId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    // 1. ACCESS GUARD: parent shu childga ulanganmi (active)?
+    const link = await pool.query(
+      "SELECT id FROM parent_links WHERE parent_id=$1 AND student_id=$2 AND status='active'",
+      [parentId, studentId]
+    );
+    if (link.rows.length === 0) {
+      return res.status(403).json({ error: "Bu farzandga ruxsatingiz yo'q" });
+    }
+
+    // 2. Joriy hafta davri
+    const period = aiSnapshot.currentWeekPeriod();
+
+    // 3. CACHE: shu hafta uchun hisobot allaqachon bormi?
+    const cached = await pool.query(
+      `SELECT id, ai_output, confidence, status, created_at
+       FROM ai_reports
+       WHERE target_student_id=$1 AND report_type='parent_weekly_report'
+         AND period_start=$2
+       ORDER BY created_at DESC LIMIT 1`,
+      [studentId, period.start]
+    );
+    if (cached.rows.length > 0 && req.query.refresh !== "1") {
+      const c = cached.rows[0];
+      return res.json({
+        report: c.ai_output,
+        cached: true,
+        confidence: c.confidence,
+        status: c.status,
+        created_at: c.created_at,
+      });
+    }
+
+    // 4. SNAPSHOT: real data quramiz (faqat shu child)
+    const snapshot = await aiSnapshot.buildStudentWeeklySnapshot(studentId, period.start, period.end);
+
+    // 5. AI yoki fallback (kam data → insufficient_data)
+    const result = await aiService.generateParentWeeklyReport(snapshot);
+
+    // 6. DB'ga saqlaymiz (cache + tarix)
+    const saved = await pool.query(
+      `INSERT INTO ai_reports
+        (user_id, target_student_id, report_type, audience, period_start, period_end,
+         input_snapshot, ai_output, confidence, status)
+       VALUES ($1,$2,'parent_weekly_report','parent',$3,$4,$5,$6,$7,$8)
+       RETURNING id, created_at`,
+      [parentId, studentId, period.start, period.end,
+       JSON.stringify(snapshot), JSON.stringify(result.report),
+       result.confidence, result.status]
+    );
+
+    // 7. Token/narx logи (agar AI ishlatilgan bo'lsa)
+    if (result.usage) {
+      pool.query(
+        `INSERT INTO ai_usage_logs (user_id, report_id, model, input_tokens, output_tokens)
+         VALUES ($1,$2,$3,$4,$5)`,
+        [parentId, saved.rows[0].id, result.model, result.usage.input, result.usage.output]
+      ).catch((e) => console.error("AI usage log xato:", e.message));
+    }
+
+    res.json({
+      report: result.report,
+      data_quality: snapshot.data_quality,
+      cached: false,
+      confidence: result.confidence,
+      status: result.status,
+      created_at: saved.rows[0].created_at,
+    });
+  } catch (err) {
+    console.error("Parent AI report xatosi:", err.message);
+    res.status(500).json({ error: "Hozir AI hisobotni tayyorlab bo'lmadi. Keyinroq urinib ko'ring." });
+  }
+});
+
+// Parent: avval yaratilgan AI hisobotlar ro'yxati (bitta child uchun)
+app.get("/ai/reports/parent/children/:studentId",
+  authMiddleware, requireParent, premium.requirePremium("parent"),
+  async (req, res) => {
+  try {
+    const parentId = req.user.id;
+    const studentId = parseInt(req.params.studentId, 10);
+    if (isNaN(studentId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    const link = await pool.query(
+      "SELECT id FROM parent_links WHERE parent_id=$1 AND student_id=$2 AND status='active'",
+      [parentId, studentId]
+    );
+    if (link.rows.length === 0) return res.status(403).json({ error: "Ruxsat yo'q" });
+
+    const rows = await pool.query(
+      `SELECT id, period_start, period_end, ai_output, confidence, status, created_at
+       FROM ai_reports
+       WHERE target_student_id=$1 AND report_type='parent_weekly_report'
+       ORDER BY period_start DESC LIMIT 12`,
+      [studentId]
+    );
+    res.json({ reports: rows.rows });
+  } catch (err) {
+    console.error("AI hisobotlar ro'yxati xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============ AI: STUDENT WEEKLY REPORT ============
+
+// O'quvchi o'ziga haftalik AI hisobot (premium student)
+app.post("/ai/reports/student/weekly",
+  authMiddleware, requireStudent, premium.requirePremium("student"),
+  async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const period = aiSnapshot.currentWeekPeriod();
+
+    // Cache: shu hafta uchun bormi?
+    const cached = await pool.query(
+      `SELECT ai_output, confidence, status, created_at FROM ai_reports
+       WHERE target_student_id=$1 AND report_type='student_weekly_report' AND period_start=$2
+       ORDER BY created_at DESC LIMIT 1`,
+      [studentId, period.start]
+    );
+    if (cached.rows.length > 0 && req.query.refresh !== "1") {
+      const c = cached.rows[0];
+      return res.json({ report: c.ai_output, cached: true, confidence: c.confidence, status: c.status, created_at: c.created_at });
+    }
+
+    const snapshot = await aiSnapshot.buildStudentWeeklySnapshot(studentId, period.start, period.end);
+    const result = await aiService.generateStudentWeeklyReport(snapshot);
+
+    const saved = await pool.query(
+      `INSERT INTO ai_reports (user_id, target_student_id, report_type, audience, period_start, period_end, input_snapshot, ai_output, confidence, status)
+       VALUES ($1,$1,'student_weekly_report','student',$2,$3,$4,$5,$6,$7) RETURNING id, created_at`,
+      [studentId, period.start, period.end, JSON.stringify(snapshot), JSON.stringify(result.report), result.confidence, result.status]
+    );
+    if (result.usage) {
+      pool.query(`INSERT INTO ai_usage_logs (user_id, report_id, model, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)`,
+        [studentId, saved.rows[0].id, result.model, result.usage.input, result.usage.output]).catch(()=>{});
+    }
+    res.json({ report: result.report, data_quality: snapshot.data_quality, cached: false, confidence: result.confidence, status: result.status, created_at: saved.rows[0].created_at });
+  } catch (err) {
+    console.error("Student AI report xatosi:", err.message);
+    res.status(500).json({ error: "Hozir hisobotni tayyorlab bo'lmadi. Keyinroq urinib ko'ring." });
+  }
+});
+
+// ============ AI: TEACHER CLASS REPORT ============
+
+// O'qituvchi sinf uchun haftalik AI tahlil (teacher pro, faqat o'z sinfi)
+app.post("/ai/reports/teacher/classes/:classId/weekly",
+  authMiddleware, requireTeacher, premium.requirePremium("teacher"),
+  async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const classId = parseInt(req.params.classId, 10);
+    if (isNaN(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
+
+    // Egalik tekshiruvi (snapshot ichida ham bor, lekin oldindan ham tekshiramiz)
+    const own = await pool.query("SELECT id FROM classes WHERE id=$1 AND teacher_id=$2 AND archived_at IS NULL", [classId, teacherId]);
+    if (own.rows.length === 0) return res.status(403).json({ error: "Bu sinf sizga tegishli emas" });
+
+    const period = aiSnapshot.currentWeekPeriod();
+
+    const cached = await pool.query(
+      `SELECT ai_output, confidence, status, created_at FROM ai_reports
+       WHERE user_id=$1 AND report_type='teacher_class_report' AND period_start=$2
+         AND input_snapshot->'class'->>'id' = $3
+       ORDER BY created_at DESC LIMIT 1`,
+      [teacherId, period.start, String(classId)]
+    );
+    if (cached.rows.length > 0 && req.query.refresh !== "1") {
+      const c = cached.rows[0];
+      return res.json({ report: c.ai_output, cached: true, confidence: c.confidence, status: c.status, created_at: c.created_at });
+    }
+
+    const snapshot = await aiSnapshot.buildTeacherClassSnapshot(teacherId, classId, period.start, period.end);
+    const result = await aiService.generateTeacherClassReport(snapshot);
+
+    const saved = await pool.query(
+      `INSERT INTO ai_reports (user_id, target_student_id, report_type, audience, period_start, period_end, input_snapshot, ai_output, confidence, status)
+       VALUES ($1,NULL,'teacher_class_report','teacher',$2,$3,$4,$5,$6,$7) RETURNING id, created_at`,
+      [teacherId, period.start, period.end, JSON.stringify(snapshot), JSON.stringify(result.report), result.confidence, result.status]
+    );
+    if (result.usage) {
+      pool.query(`INSERT INTO ai_usage_logs (user_id, report_id, model, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)`,
+        [teacherId, saved.rows[0].id, result.model, result.usage.input, result.usage.output]).catch(()=>{});
+    }
+    res.json({ report: result.report, data_quality: snapshot.data_quality, cached: false, confidence: result.confidence, status: result.status, created_at: saved.rows[0].created_at });
+  } catch (err) {
+    console.error("Teacher AI report xatosi:", err.message);
+    res.status(500).json({ error: "Hozir hisobotni tayyorlab bo'lmadi. Keyinroq urinib ko'ring." });
   }
 });
 

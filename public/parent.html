@@ -111,6 +111,49 @@
     .wa-bar > span { display:block; height:100%; border-radius:999px; }
     .empty-mini { padding:26px 18px; text-align:center; color:var(--text-muted); font-size:13.5px; }
 
+    /* AI REPORT */
+    .ai-section-h { display:flex; align-items:center; gap:9px; font-size:16px; font-weight:700; margin-bottom:13px; }
+    .ai-section-h .ai-ic { width:26px; height:26px; border-radius:8px; flex:0 0 auto; background:linear-gradient(135deg,var(--secondary),var(--accent)); display:flex; align-items:center; justify-content:center; }
+    .ai-section-h .ai-ic svg { width:15px; height:15px; color:#fff; }
+    .ai-badge-pro { font-size:10px; font-weight:800; letter-spacing:.5px; padding:3px 8px; border-radius:6px; background:linear-gradient(135deg,var(--secondary),var(--accent)); color:#fff; margin-left:auto; }
+    .ai-panel { background:linear-gradient(165deg,rgba(139,92,246,.06),rgba(34,211,238,.03)); border:1px solid var(--border); border-radius:var(--radius); padding:22px; }
+    .ai-locked { text-align:center; padding:40px 26px; }
+    .ai-locked .lock-ic { width:64px; height:64px; margin:0 auto 16px; border-radius:18px; background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(34,211,238,.12)); border:1px solid rgba(139,92,246,.3); display:flex; align-items:center; justify-content:center; color:var(--secondary); }
+    .ai-locked .lock-ic svg { width:30px; height:30px; }
+    .ai-locked h3 { font-size:18px; font-weight:700; margin-bottom:8px; }
+    .ai-locked p { font-size:13.5px; color:var(--text-muted); max-width:380px; margin:0 auto 20px; line-height:1.6; }
+    .ai-locked .btn-row { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .ai-summary { font-size:14.5px; line-height:1.7; color:var(--text-main); margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--border); }
+    .ai-block { margin-bottom:16px; }
+    .ai-block:last-child { margin-bottom:0; }
+    .ai-block-title { display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-bottom:9px; }
+    .ai-block-title svg { width:14px; height:14px; }
+    .ai-block.strengths .ai-block-title { color:#86efac; }
+    .ai-block.concerns .ai-block-title { color:#fcd34d; }
+    .ai-block.recs .ai-block-title { color:#bfdbfe; }
+    .ai-block.questions .ai-block-title { color:var(--accent); }
+    .ai-block.focus .ai-block-title { color:var(--secondary); }
+    .ai-list { list-style:none; display:flex; flex-direction:column; gap:7px; }
+    .ai-list li { font-size:13.5px; line-height:1.55; color:var(--text-muted); padding-left:18px; position:relative; }
+    .ai-list li::before { content:""; position:absolute; left:3px; top:8px; width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.5; }
+    .ai-block.strengths .ai-list li { color:#cbeed6; } .ai-block.strengths .ai-list li::before { background:#86efac; }
+    .ai-block.concerns .ai-list li { color:#f0dcb0; } .ai-block.concerns .ai-list li::before { background:#fcd34d; }
+    .ai-chips { display:flex; gap:7px; flex-wrap:wrap; }
+    .ai-chip { font-size:12px; font-weight:600; padding:5px 11px; border-radius:8px; background:rgba(139,92,246,.12); border:1px solid rgba(139,92,246,.3); color:#ddd6fe; }
+    .ai-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:18px; padding-top:14px; border-top:1px solid var(--border); flex-wrap:wrap; }
+    .conf-badge { font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; }
+    .conf-badge.high { background:rgba(34,197,94,.14); color:#86efac; }
+    .conf-badge.medium { background:rgba(245,158,11,.14); color:#fcd34d; }
+    .conf-badge.low { background:var(--bg-soft); color:var(--text-dim); border:1px solid var(--border); }
+    .ai-meta { font-size:11.5px; color:var(--text-dim); }
+    .btn-sm { display:inline-flex; align-items:center; gap:6px; padding:8px 13px; background:var(--bg-soft); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; }
+    .btn-sm:hover { border-color:var(--border-focus); }
+    .btn-sm:disabled { opacity:.6; cursor:not-allowed; }
+    .btn-sm svg { width:14px; height:14px; }
+    .ai-sk { display:flex; flex-direction:column; gap:12px; }
+    .ai-sk .sk { height:16px; }
+    .ai-sk .sk.lg { height:54px; }
+
     /* MODAL */
     .ov-overlay { position:fixed; inset:0; background:rgba(3,6,15,.72); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; padding:20px; z-index:50; }
     .ov-overlay.show { display:flex; }
@@ -398,7 +441,126 @@
         <div class="section"><div class="section-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Oxirgi janglar</div><div class="panel">${bHtml}</div></div>
 
         <div class="section"><div class="section-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg> Zaif mavzular</div><div class="panel">${waHtml}</div></div>
+
+        <div class="section">
+          <div class="ai-section-h">
+            <span class="ai-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg></span>
+            AI haftalik hisobot
+            <span class="ai-badge-pro">PREMIUM</span>
+          </div>
+          <div class="ai-panel" id="aiReportBox"></div>
+        </div>
       `;
+
+      // AI hisobotni alohida yuklaymiz (premium/cache/data holatiga qarab)
+      loadAIReport(c.id);
+    }
+
+    // ===== AI HAFTALIK HISOBOT =====
+    const CONF_LABEL = { high:"Yuqori ishonch", medium:"O'rta ishonch", low:"Past ishonch" };
+
+    async function loadAIReport(childId, forceRefresh){
+      const box = document.getElementById("aiReportBox");
+      if (!box) return;
+      // Loading skeleton
+      box.innerHTML = '<div class="ai-sk"><div class="sk lg"></div><div class="sk" style="width:80%"></div><div class="sk" style="width:90%"></div><div class="sk" style="width:60%"></div></div>';
+      try {
+        const url = "/ai/reports/parent/children/"+encodeURIComponent(childId)+"/weekly"+(forceRefresh?"?refresh=1":"");
+        const res = await authFetch(url, { method:"POST" });
+
+        // Premium emas → locked holat
+        if (res.status === 402) {
+          renderAILocked(box);
+          return;
+        }
+        const data = await res.json();
+        if (!res.ok) { renderAIError(box, data.error); return; }
+
+        // Data kam → insufficient holat
+        if (data.report && data.report.status === "insufficient_data") {
+          renderAIInsufficient(box, data.report);
+          return;
+        }
+        renderAIReport(box, data, childId);
+      } catch(e) {
+        renderAIError(box, "Server bilan aloqa yo'q");
+      }
+    }
+
+    function renderAILocked(box){
+      box.innerHTML =
+        '<div class="ai-locked">' +
+          '<div class="lock-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>' +
+          '<h3>AI haftalik hisobot</h3>' +
+          '<p>Premium ota-onalar uchun. Farzandingizning haftalik progressi, kuchli va zaif mavzulari hamda keyingi hafta uchun aniq tavsiyalarni AI tahlili bilan ko\'ring.</p>' +
+          '<div class="btn-row"><button class="btn-primary" onclick="alert(\'Premium tez orada!\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg> Premium olish</button></div>' +
+        '</div>';
+    }
+
+    function renderAIInsufficient(box, rep){
+      const steps = (rep.next_steps||[]).map(s=>`<li>${esc(s)}</li>`).join("");
+      box.innerHTML =
+        '<div class="ai-locked">' +
+          '<div class="lock-ic" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>' +
+          '<h3>'+esc(rep.title||"Hali yetarli ma'lumot yo'q")+'</h3>' +
+          '<p>'+esc(rep.message||"")+'</p>' +
+          (steps?'<ul class="ai-list" style="max-width:320px;margin:0 auto;text-align:left">'+steps+'</ul>':"") +
+        '</div>';
+    }
+
+    function renderAIError(box, msg){
+      box.innerHTML =
+        '<div class="ai-locked">' +
+          '<div class="lock-ic err" style="color:var(--red);background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>' +
+          '<h3>Hisobot tayyorlanmadi</h3>' +
+          '<p>'+esc(msg||"Hozir AI hisobotni tayyorlab bo'lmadi. Keyinroq urinib ko'ring.")+'</p>' +
+          '<div class="btn-row"><button class="btn-sm" onclick="loadAIReport(curChild.id)">Qayta urinish</button></div>' +
+        '</div>';
+    }
+
+    function aiBlock(cls, iconPath, title, items){
+      if (!items || items.length===0) return "";
+      const lis = items.map(t=>`<li>${esc(t)}</li>`).join("");
+      return `<div class="ai-block ${cls}"><div class="ai-block-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconPath}</svg>${title}</div><ul class="ai-list">${lis}</ul></div>`;
+    }
+
+    function renderAIReport(box, data, childId){
+      const r = data.report || {};
+      const conf = r.confidence || data.confidence || "medium";
+      const cached = data.cached;
+
+      let html = '';
+      if (r.summary) html += `<div class="ai-summary">${esc(r.summary)}</div>`;
+
+      html += aiBlock("strengths", '<path d="M20 6L9 17l-5-5"/>', "Kuchli tomonlar", r.strengths);
+      html += aiBlock("concerns", '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>', "E'tibor beriladigan", r.concerns);
+      html += aiBlock("recs", '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', "Tavsiyalar", r.recommendations);
+      html += aiBlock("questions", '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>', "Farzandingizdan so'rang", r.questions_to_ask_child);
+
+      // Progress notes (agar bor bo'lsa, oddiy ro'yxat)
+      if (r.progress_notes && r.progress_notes.length) {
+        html += aiBlock("recs", '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', "Haftalik kuzatuvlar", r.progress_notes);
+      }
+
+      // Next week focus — chiplar
+      if (r.next_week_focus && r.next_week_focus.length) {
+        const chips = r.next_week_focus.map(f=>`<span class="ai-chip">${esc(SKILL_LABEL[f]||f)}</span>`).join("");
+        html += `<div class="ai-block focus"><div class="ai-block-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Keyingi hafta fokusi</div><div class="ai-chips">${chips}</div></div>`;
+      }
+
+      // Foot: confidence + refresh
+      html += `<div class="ai-foot">
+        <span class="conf-badge ${conf}"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${CONF_LABEL[conf]||conf}</span>
+        <button class="btn-sm" id="aiRefreshBtn" onclick="refreshAI('${childId}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Yangilash</button>
+      </div>`;
+
+      box.innerHTML = html || '<div class="empty-mini">Hisobot bo\'sh.</div>';
+    }
+
+    async function refreshAI(childId){
+      const btn = document.getElementById("aiRefreshBtn");
+      if (btn) { btn.disabled = true; btn.innerHTML = "Yangilanmoqda..."; }
+      await loadAIReport(childId, true);
     }
 
     function backToList(){ document.getElementById("detailView").style.display="none"; document.getElementById("listView").style.display="block"; curChild=null; window.scrollTo(0,0); }
