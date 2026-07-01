@@ -11,6 +11,7 @@ const { saveBattleSession, loadBattleSession, finishBattleSession, loadActiveSes
 const { recoverActiveBattles } = require("./battleRecovery");
 const parentCode = require("./parentCode");
 const premium = require("./premium");
+const payme = require("./payme");                        // ← YANGI
 const aiService = require("./aiService");
 const aiSnapshot = require("./aiSnapshot");
 
@@ -5032,6 +5033,65 @@ app.post("/dev/subscription/activate", requireAdmin, async (req, res) => {
   }
 });
 
+// ============ TO'LOV (PAYME) ============
+
+// Plan narxlari (TIYIN — 1 so'm = 100 tiyin)
+const PLAN_PRICES = {
+  student_premium: 5000000,   // 50,000 so'm/oy
+  parent_premium:  5000000,   // 50,000 so'm/oy
+  teacher_pro:     15000000,  // 150,000 so'm/oy
+  center_pro:      50000000,  // 500,000 so'm/oy
+};
+
+// To'lov yaratish — foydalanuvchi plan tanlab "to'lash" bosganда
+app.post("/payments/create", authMiddleware, async (req, res) => {
+  try {
+    const { plan, months } = req.body;
+    const validPlans = Object.keys(PLAN_PRICES);
+    if (!validPlans.includes(plan)) return res.status(400).json({ error: "Noto'g'ri plan" });
+    const m = parseInt(months) || 1;
+    if (m < 1 || m > 12) return res.status(400).json({ error: "1-12 oy oralig'ida" });
+    const amount = PLAN_PRICES[plan] * m; // tiyin
+    const r = await pool.query(
+      `INSERT INTO payments (user_id, plan, months, amount, provider, status)
+       VALUES ($1,$2,$3,$4,'payme','pending') RETURNING id`,
+      [req.user.id, plan, m, amount]
+    );
+    const paymentId = r.rows[0].id;
+    const merchantId = process.env.PAYME_MERCHANT_ID || "TEST_MERCHANT";
+    const checkoutParams = `m=${merchantId};ac.payment_id=${paymentId};a=${amount}`;
+    const checkoutUrl = "https://checkout.paycom.uz/" + Buffer.from(checkoutParams).toString("base64");
+    res.json({ payment_id: paymentId, amount: amount, checkout_url: checkoutUrl });
+  } catch (err) {
+    console.error("Payment create xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// To'lov holatини tekshirish (frontend polling uchun)
+app.get("/payments/:id/status", authMiddleware, async (req, res) => {
+  try {
+    const r = await pool.query("SELECT id, status, plan, amount FROM payments WHERE id=$1 AND user_id=$2",
+      [parseInt(req.params.id), req.user.id]);
+    if (r.rows.length === 0) return res.status(404).json({ error: "Topilmadi" });
+    res.json(r.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Payme webhook — Payme serveri 5 metod yuboradi (JSON-RPC)
+// MUHIM: authMiddleware ISHLATMAYDI — Payme o'z Basic auth'ини yuboradi
+app.post("/payments/payme", async (req, res) => {
+  try {
+    const result = await payme.handlePaymeRequest(req.body, req.headers.authorization);
+    res.json(result);
+  } catch (err) {
+    console.error("Payme webhook xatosi:", err.message);
+    res.json({ jsonrpc: "2.0", id: (req.body && req.body.id) || 0, error: { code: -32300, message: "Server xatosi" } });
+  }
+});
+
 // ============ AI: PARENT WEEKLY REPORT ============
 
 // Parent farzandi uchun haftalik AI hisobot (premium parent).
@@ -5231,6 +5291,88 @@ app.post("/ai/reports/teacher/classes/:classId/weekly",
   } catch (err) {
     console.error("Teacher AI report xatosi:", err.message);
     res.status(500).json({ error: "Hozir hisobotni tayyorlab bo'lmadi. Keyinroq urinib ko'ring." });
+  }
+});
+
+// Teacher yaratgan barcha AI hisobotlar (AI Hisobotlar sahifasi)
+app.get("/teacher/ai-reports", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+
+    // Teacher'ning hisobotlari (audience=teacher yoki user_id=teacher)
+    const result = await pool.query(
+      `SELECT r.id, r.report_type, r.audience, r.period_start, r.period_end,
+              r.confidence, r.status, r.created_at, r.target_student_id,
+              r.ai_output,
+              tu.first_name AS target_first, tu.last_name AS target_last
+       FROM ai_reports r
+       LEFT JOIN users tu ON tu.id = r.target_student_id
+       WHERE r.user_id = $1 AND r.audience = 'teacher'
+       ORDER BY r.created_at DESC
+       LIMIT 200`,
+      [teacherId]
+    );
+
+    // Confidence -> aniqlik foizi (taxminiy ko'rsatish uchun)
+    const confPct = { high: 93, medium: 88, low: 78 };
+
+    const reports = result.rows.map((r) => {
+      const targetName = ((r.target_first || "") + " " + (r.target_last || "")).trim() || null;
+      // ai_output ichidan sarlavha/sinf/skill olishga harakat (agar saqlangan bo'lsa)
+      let title = null, className = null, skill = null;
+      try {
+        const out = typeof r.ai_output === "string" ? JSON.parse(r.ai_output) : r.ai_output;
+        if (out) { title = out.title || null; className = out.class_name || null; skill = out.skill || null; }
+      } catch (e) { /* ai_output JSON emas */ }
+
+      return {
+        id: r.id,
+        report_type: r.report_type,
+        confidence: r.confidence || "medium",
+        accuracy_pct: confPct[(r.confidence || "medium")] || 85,
+        status: r.status,
+        created_at: r.created_at,
+        period_start: r.period_start,
+        period_end: r.period_end,
+        target_name: targetName,
+        title: title,
+        class_name: className,
+        skill: skill,
+      };
+    });
+
+    // ===== Statistika =====
+    const total = reports.length;
+    // O'rtacha aniqlik
+    const avgAccuracy = total > 0
+      ? Math.round(reports.reduce((a, r) => a + (r.accuracy_pct || 0), 0) / total)
+      : null;
+    // Tahlil qilingan o'quvchilar (unikal target)
+    const studentSet = new Set();
+    reports.forEach((r) => { if (r.target_name) studentSet.add(r.target_name); });
+    const studentsAnalyzed = studentSet.size;
+    // Eng ko'p hisobot yaratilgan sinf
+    const classCount = {};
+    reports.forEach((r) => { if (r.class_name) classCount[r.class_name] = (classCount[r.class_name] || 0) + 1; });
+    let topClass = null, topClassCount = 0;
+    Object.keys(classCount).forEach((k) => { if (classCount[k] > topClassCount) { topClass = k; topClassCount = classCount[k]; } });
+    // Taxminiy tejaigan vaqt (har hisobot ~45 daqiqa qo'l mehnati)
+    const timeSaved = total > 0 ? Math.round((total * 45 / 60) * 10) / 10 : null;
+
+    res.json({
+      reports,
+      stats: {
+        total,
+        avg_accuracy: avgAccuracy,
+        students_analyzed: studentsAnalyzed,
+        top_class: topClass,
+        top_class_count: topClassCount,
+        time_saved: timeSaved,
+      },
+    });
+  } catch (err) {
+    console.error("/teacher/ai-reports xatosi:", err);
+    res.status(500).json({ error: "Server xatosi" });
   }
 });
 
@@ -6835,6 +6977,155 @@ app.get("/teacher/dashboard", authMiddleware, requireTeacher, async (req, res) =
   }
 });
 
+// Teacher bosh sahifa uchun to'liq real ma'lumot (statistika + grafik + vazifalar + faoliyat)
+app.get("/teacher/overview", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+
+    // Teacher sinflari ID lari
+    const clsRes = await pool.query(
+      "SELECT id FROM classes WHERE teacher_id = $1 AND archived_at IS NULL",
+      [teacherId]
+    );
+    const classIds = clsRes.rows.map((r) => r.id);
+
+    // Default bo'sh javob (sinf yo'q bo'lsa)
+    if (classIds.length === 0) {
+      return res.json({
+        stats: { total_students: 0, completion_rate: 0, avg_score: 0, active_students: 0 },
+        chart: { labels: [], assignments: [], exams: [] },
+        upcoming_tasks: [],
+        recent_activity: [],
+      });
+    }
+
+    // ===== 1. STATISTIKA =====
+    // O'quvchilar soni
+    const studRes = await pool.query(
+      `SELECT COUNT(DISTINCT student_id)::int AS c
+       FROM class_students WHERE class_id = ANY($1) AND status = 'active'`,
+      [classIds]
+    );
+    const totalStudents = studRes.rows[0].c;
+
+    // Bajarish foizi: topshirilган / (o'quvchi × topshiriq) — oxirgi 30 kun
+    const compRes = await pool.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE s.status IN ('submitted','late_submitted'))::int AS submitted,
+         COUNT(DISTINCT a.id)::int AS total_assignments
+       FROM assignments a
+       LEFT JOIN assignment_submissions s ON s.assignment_id = a.id
+       WHERE a.class_id = ANY($1) AND a.status = 'active'
+         AND a.created_at >= NOW() - INTERVAL '30 days'`,
+      [classIds]
+    );
+    const submitted = compRes.rows[0].submitted || 0;
+    const totalAsg = compRes.rows[0].total_assignments || 0;
+    const expected = totalAsg * Math.max(totalStudents, 1);
+    const completionRate = expected > 0 ? Math.round((submitted / expected) * 100) : 0;
+
+    // O'rtacha natija (barcha topshirilган topshiriqlar)
+    const avgRes = await pool.query(
+      `SELECT ROUND(AVG(s.percent))::int AS avg
+       FROM assignment_submissions s
+       JOIN assignments a ON a.id = s.assignment_id
+       WHERE a.class_id = ANY($1) AND s.status IN ('submitted','late_submitted') AND s.percent IS NOT NULL`,
+      [classIds]
+    );
+    const avgScore = avgRes.rows[0].avg || 0;
+
+    // Faol o'quvchilar — oxirgi 7 kunda topshiriq topshirган yoki jang o'ynaган
+    const activeRes = await pool.query(
+      `SELECT COUNT(DISTINCT student_id)::int AS c FROM (
+         SELECT s.student_id FROM assignment_submissions s
+           JOIN assignments a ON a.id = s.assignment_id
+           WHERE a.class_id = ANY($1) AND s.submitted_at >= NOW() - INTERVAL '7 days'
+         UNION
+         SELECT cs.student_id FROM class_students cs
+           JOIN battle_history bh ON bh.user_id = cs.student_id
+           WHERE cs.class_id = ANY($1) AND bh.played_at >= NOW() - INTERVAL '7 days'
+       ) AS active_union`,
+      [classIds]
+    );
+    const activeStudents = activeRes.rows[0].c;
+
+    // ===== 2. GRAFIK — oxirgi 30 kun, har 5 kunlik bo'lak (topshiriq topshirishlar) =====
+    const chartRes = await pool.query(
+      `SELECT TO_CHAR(s.submitted_at, 'DD Mon') AS day,
+              DATE_TRUNC('day', s.submitted_at) AS d,
+              COUNT(*)::int AS cnt
+       FROM assignment_submissions s
+       JOIN assignments a ON a.id = s.assignment_id
+       WHERE a.class_id = ANY($1) AND s.submitted_at >= NOW() - INTERVAL '30 days'
+         AND s.status IN ('submitted','late_submitted')
+       GROUP BY day, d ORDER BY d ASC`,
+      [classIds]
+    );
+    // Soddalik uchun: kunlik topshiriqlar (imtihon ma'lumoti hozircha yo'q → 0)
+    const chartLabels = chartRes.rows.map((r) => r.day);
+    const chartAssignments = chartRes.rows.map((r) => r.cnt);
+    const chartExams = chartRes.rows.map(() => 0);
+
+    // ===== 3. KELAYOTGAN VAZIFALAR — tekshirilиши kerak (topshirilган, lekin ko'p) =====
+    const tasksRes = await pool.query(
+      `SELECT a.id, a.title, a.due_at, c.name AS class_name,
+              COUNT(s.id) FILTER (WHERE s.status IN ('submitted','late_submitted'))::int AS submitted_count
+       FROM assignments a
+       JOIN classes c ON c.id = a.class_id
+       LEFT JOIN assignment_submissions s ON s.assignment_id = a.id
+       WHERE a.class_id = ANY($1) AND a.status = 'active'
+       GROUP BY a.id, a.title, a.due_at, c.name
+       HAVING COUNT(s.id) FILTER (WHERE s.status IN ('submitted','late_submitted')) > 0
+       ORDER BY a.due_at ASC NULLS LAST
+       LIMIT 5`,
+      [classIds]
+    );
+    const upcomingTasks = tasksRes.rows.map((t) => ({
+      id: t.id,
+      title: t.title,
+      class_name: t.class_name,
+      submitted_count: t.submitted_count,
+      due_at: t.due_at,
+    }));
+
+    // ===== 4. SO'NGGI FAOLIYAT — oxirgi topshirishlar =====
+    const feedRes = await pool.query(
+      `SELECT s.percent, s.submitted_at, a.title AS assignment_title,
+              c.name AS class_name,
+              (u.first_name || ' ' || COALESCE(u.last_name,'')) AS student_name
+       FROM assignment_submissions s
+       JOIN assignments a ON a.id = s.assignment_id
+       JOIN classes c ON c.id = a.class_id
+       JOIN users u ON u.id = s.student_id
+       WHERE a.class_id = ANY($1) AND s.status IN ('submitted','late_submitted')
+       ORDER BY s.submitted_at DESC LIMIT 6`,
+      [classIds]
+    );
+    const recentActivity = feedRes.rows.map((f) => ({
+      student_name: (f.student_name || "").trim(),
+      assignment_title: f.assignment_title,
+      class_name: f.class_name,
+      percent: f.percent,
+      submitted_at: f.submitted_at,
+    }));
+
+    res.json({
+      stats: {
+        total_students: totalStudents,
+        completion_rate: completionRate,
+        avg_score: avgScore,
+        active_students: activeStudents,
+      },
+      chart: { labels: chartLabels, assignments: chartAssignments, exams: chartExams },
+      upcoming_tasks: upcomingTasks,
+      recent_activity: recentActivity,
+    });
+  } catch (err) {
+    console.error("Teacher overview xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // ============================================================
 // SINF BOSHQARUVI (Teacher Panel Phase 2B)
 // ============================================================
@@ -6877,6 +7168,16 @@ app.post("/teacher/classes", authMiddleware, requireTeacher, async (req, res) =>
       return res.status(400).json({ error: "Sinf nomi juda uzun (120 belgidan oshmasin)" });
     }
 
+    // ===== LIMIT: Free teacher faqat 1 sinf =====
+    const classLimit = await premium.checkTeacherLimit(teacherId, "classes");
+    if (!classLimit.allowed) {
+      await logAudit(req, "teacher_limit_blocked_class", {
+        entityType: "class", entityId: teacherId,
+        details: "teacher=" + teacherId + " count=" + classLimit.current + " limit=" + classLimit.limit + " plan=free"
+      }).catch(() => {});
+      return res.status(402).json(premium.teacherLimitError("classes"));
+    }
+
     // school_id — o'qituvchining maktabidan (hozircha matn, FK yo'q, shuning uchun null)
     // Maktab tizimi qurilganda bu yerda haqiqiy school_id qo'yiladi.
     const schoolId = null;
@@ -6904,24 +7205,250 @@ app.post("/teacher/classes", authMiddleware, requireTeacher, async (req, res) =>
 // O'QITUVCHINING SINFLARI RO'YXATI
 app.get("/teacher/classes", authMiddleware, requireTeacher, async (req, res) => {
   try {
-    const teacherId = req.user.id;
-
-    // Faqat shu o'qituvchining arxivlanmagan sinflari
-    // (xavfsizlik: boshqa o'qituvchining sinflarini ko'ra olmaydi)
+    // Sinflar + har biri uchun: o'quvchi soni, o'rtacha natija, faol topshiriqlar
     const classes = await pool.query(
       `SELECT c.id, c.name, c.description, c.join_code, c.created_at,
-              COUNT(cs.id) FILTER (WHERE cs.status = 'active') AS student_count
+              COUNT(DISTINCT cs.student_id) FILTER (WHERE cs.status = 'active') AS student_count,
+              COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'active') AS active_assignments,
+              ROUND(AVG(sub.percent)) AS avg_score
        FROM classes c
        LEFT JOIN class_students cs ON cs.class_id = c.id
+       LEFT JOIN assignments a ON a.class_id = c.id AND a.status = 'active'
+       LEFT JOIN assignment_submissions sub ON sub.assignment_id = a.id
+            AND sub.status IN ('submitted','late_submitted') AND sub.percent IS NOT NULL
        WHERE c.teacher_id = $1 AND c.archived_at IS NULL
        GROUP BY c.id
        ORDER BY c.created_at DESC`,
+      [req.user.id]
+    );
+
+    // Har sinf uchun keyingi topshiriq (eng yaqin due_at, kelajakda)
+    const classList = classes.rows;
+    for (const cls of classList) {
+      const nextAsg = await pool.query(
+        `SELECT title, due_at FROM assignments
+         WHERE class_id = $1 AND status = 'active' AND due_at >= NOW()
+         ORDER BY due_at ASC LIMIT 1`,
+        [cls.id]
+      );
+      if (nextAsg.rows.length > 0) {
+        cls.next_assignment_title = nextAsg.rows[0].title;
+        cls.next_assignment_due = nextAsg.rows[0].due_at;
+      } else {
+        cls.next_assignment_title = null;
+        cls.next_assignment_due = null;
+      }
+      // avg_score raqamga aylantirish (NULL bo'lsa null qoladi)
+      cls.avg_score = cls.avg_score != null ? Number(cls.avg_score) : null;
+      cls.active_assignments = Number(cls.active_assignments) || 0;
+      cls.student_count = Number(cls.student_count) || 0;
+    }
+
+    res.json({ classes: classList });
+  } catch (err) {
+    console.error("Sinflar ro'yxati xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Barcha topshiriqlar (Topshiriqlar sahifasi)
+app.get("/teacher/assignments", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+
+    // 1) Barcha topshiriqlar + sinf nomi + o'quvchi soni + bajarilish
+    const asgResult = await pool.query(
+      `SELECT a.id, a.title, a.description, a.cefr_level, a.skill, a.question_count,
+              a.due_at, a.status, a.created_at, a.class_id,
+              c.name AS class_name,
+              (SELECT COUNT(*)::int FROM class_students cs WHERE cs.class_id = a.class_id AND cs.status = 'active') AS class_student_count,
+              (SELECT COUNT(*)::int FROM assignment_submissions sub WHERE sub.assignment_id = a.id AND sub.status IN ('submitted','late_submitted')) AS submitted_count
+       FROM assignments a
+       JOIN classes c ON c.id = a.class_id
+       WHERE a.teacher_id = $1 AND c.archived_at IS NULL
+       ORDER BY a.created_at DESC`,
       [teacherId]
     );
 
-    res.json({ classes: classes.rows });
+    const assignments = asgResult.rows.map((a) => {
+      const total = a.class_student_count || 0;
+      const done = a.submitted_count || 0;
+      const completion = total > 0 ? Math.round((done / total) * 100) : 0;
+      return {
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        cefr_level: a.cefr_level,
+        skill: a.skill,
+        question_count: a.question_count,
+        due_at: a.due_at,
+        status: a.status,
+        class_id: a.class_id,
+        class_name: a.class_name,
+        class_student_count: total,
+        submitted_count: done,
+        total_students: total,
+        completion_percent: completion,
+      };
+    });
+
+    // 2) Statistika
+    const total = assignments.length;
+    const active = assignments.filter((a) => a.status === "active").length;
+    const now = new Date();
+    const soon = assignments.filter((a) => {
+      if (!a.due_at || a.status !== "active") return false;
+      const d = Math.ceil((new Date(a.due_at) - now) / 86400000);
+      return d >= 0 && d <= 3;
+    }).length;
+    const withComp = assignments.filter((a) => a.total_students > 0);
+    const avgCompletion = withComp.length
+      ? Math.round(withComp.reduce((s, a) => s + a.completion_percent, 0) / withComp.length)
+      : null;
+
+    // 3) Muddati yaqin (eng yaqin 5 ta, faol, kelajakda yoki yaqinda o'tgan)
+    const dueSoon = assignments
+      .filter((a) => a.due_at && a.status === "active")
+      .sort((x, y) => new Date(x.due_at) - new Date(y.due_at))
+      .slice(0, 5)
+      .map((a) => ({ id: a.id, title: a.title, class_name: a.class_name, due_at: a.due_at }));
+
+    // 4) Sinflar kesimida bajarilish (har sinf bo'yicha o'rtacha completion)
+    const classMap = {};
+    assignments.forEach((a) => {
+      if (!classMap[a.class_id]) classMap[a.class_id] = { class_name: a.class_name, sum: 0, cnt: 0 };
+      if (a.total_students > 0) { classMap[a.class_id].sum += a.completion_percent; classMap[a.class_id].cnt++; }
+    });
+    const classCompletion = Object.values(classMap).map((c) => ({
+      class_name: c.class_name,
+      completion: c.cnt > 0 ? Math.round(c.sum / c.cnt) : 0,
+    }));
+
+    res.json({
+      assignments,
+      stats: { total, active, soon, avg_completion: avgCompletion },
+      due_soon: dueSoon,
+      class_completion: classCompletion,
+    });
   } catch (err) {
-    console.error("Sinflar ro'yxati xatosi:", err.message);
+    console.error("/teacher/assignments xatosi:", err);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// Tanlangan topshiriq natijalari (Natijalar sahifasi)
+app.get("/teacher/results/:assignmentId", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const asgId = parseInt(req.params.assignmentId);
+    if (!asgId) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    // Ownership: bu topshiriq shu teacher'niki ekanini tekshiramiz
+    const own = await pool.query(
+      `SELECT a.id, a.title, a.class_id, a.skill, c.name AS class_name
+       FROM assignments a JOIN classes c ON c.id = a.class_id
+       WHERE a.id = $1 AND a.teacher_id = $2`,
+      [asgId, teacherId]
+    );
+    if (own.rows.length === 0) return res.status(404).json({ error: "Topshiriq topilmadi" });
+
+    // O'quvchilar natijalari (topshirilgan)
+    const subs = await pool.query(
+      `SELECT sub.student_id, sub.score, sub.total, sub.percent,
+              sub.correct_count, sub.wrong_count, sub.unanswered_count, sub.is_late,
+              sub.started_at, sub.submitted_at,
+              u.first_name, u.last_name,
+              c.name AS class_name
+       FROM assignment_submissions sub
+       JOIN users u ON u.id = sub.student_id
+       JOIN assignments a ON a.id = sub.assignment_id
+       JOIN classes c ON c.id = a.class_id
+       WHERE sub.assignment_id = $1 AND sub.status IN ('submitted','late_submitted')
+       ORDER BY sub.percent DESC`,
+      [asgId]
+    );
+
+    const students = subs.rows.map((r) => {
+      let timeSeconds = null;
+      if (r.started_at && r.submitted_at) {
+        timeSeconds = Math.max(0, Math.round((new Date(r.submitted_at) - new Date(r.started_at)) / 1000));
+      }
+      return {
+        student_id: r.student_id,
+        name: ((r.first_name || "") + " " + (r.last_name || "")).trim(),
+        class_name: r.class_name,
+        score: r.score,
+        total: r.total,
+        percent: r.percent,
+        correct_count: r.correct_count,
+        wrong_count: r.wrong_count,
+        unanswered_count: r.unanswered_count,
+        is_late: r.is_late,
+        time_seconds: timeSeconds,
+      };
+    });
+
+    // Jami o'quvchilar (sinfda)
+    const totalRes = await pool.query(
+      `SELECT COUNT(*)::int AS c FROM class_students WHERE class_id = $1 AND status = 'active'`,
+      [own.rows[0].class_id]
+    );
+    const totalStudents = totalRes.rows[0].c;
+
+    // ===== Statistika =====
+    const submitted = students.length;
+    const scores = students.map((s) => s.percent).filter((p) => p != null);
+    const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+    let topS = null, topN = null, lowS = null, lowN = null;
+    students.forEach((s) => {
+      if (topS == null || s.percent > topS) { topS = s.percent; topN = s.name; }
+      if (lowS == null || s.percent < lowS) { lowS = s.percent; lowN = s.name; }
+    });
+    const late = students.filter((s) => s.is_late).length;
+    const submitRate = totalStudents > 0 ? Math.round((submitted / totalStudents) * 100) : 0;
+    const lateRate = submitted > 0 ? Math.round((late / submitted) * 100) : 0;
+
+    // ===== Natijalar taqsimoti (donut) =====
+    const dist = { excellent: 0, good: 0, mid: 0, low: 0 };
+    students.forEach((s) => {
+      if (s.percent >= 90) dist.excellent++;
+      else if (s.percent >= 75) dist.good++;
+      else if (s.percent >= 50) dist.mid++;
+      else dist.low++;
+    });
+    const distribution = [
+      { label: "A'lo (90-100%)", count: dist.excellent, color: "#16b06a" },
+      { label: "Yaxshi (75-89%)", count: dist.good, color: "#2f6bff" },
+      { label: "O'rta (50-74%)", count: dist.mid, color: "#f59e0b" },
+      { label: "Past (<50%)", count: dist.low, color: "#ef4655" },
+    ];
+
+    // ===== Sinf taqqoslash (agar bir necha sinf) =====
+    const classMap = {};
+    students.forEach((s) => {
+      const k = s.class_name || "—";
+      if (!classMap[k]) classMap[k] = { sum: 0, cnt: 0 };
+      classMap[k].sum += s.percent; classMap[k].cnt++;
+    });
+    const classComparison = Object.keys(classMap).map((k) => ({
+      class_name: k, avg: classMap[k].cnt > 0 ? classMap[k].sum / classMap[k].cnt : 0,
+    }));
+
+    res.json({
+      assignment: { id: own.rows[0].id, title: own.rows[0].title, class_name: own.rows[0].class_name },
+      students,
+      stats: {
+        total: totalStudents, avg_score: avgScore,
+        top_score: topS, top_name: topN, low_score: lowS, low_name: lowN,
+        submitted, submit_rate: submitRate, late, late_rate: lateRate,
+      },
+      distribution,
+      class_comparison: classComparison,
+      skills: [],      // TODO: submission_answers'dan ko'nikma bo'yicha (keyingi bosqich)
+      difficulty: [],  // TODO: savol qiyinlik darajasi (keyingi bosqich)
+    });
+  } catch (err) {
+    console.error("/teacher/results xatosi:", err);
     res.status(500).json({ error: "Server xatosi" });
   }
 });
@@ -6971,6 +7498,21 @@ app.post("/student/join-class", authMiddleware, requireStudent, async (req, res)
         return res.json({ message: "Sinfga qayta qo'shildingiz", class: { id: cls.id, name: cls.name } });
       }
       return res.status(409).json({ error: "Siz allaqachon bu sinf a'zosisiz" });
+    }
+
+    // ===== LIMIT: Free teacher max 15 o'quvchi =====
+    const studentLimit = await premium.checkTeacherLimit(cls.teacher_id, "students");
+    if (!studentLimit.allowed) {
+      await logAudit(req, "teacher_limit_blocked_student", {
+        entityType: "class", entityId: cls.id,
+        details: "teacher=" + cls.teacher_id + " count=" + studentLimit.current + " limit=" + studentLimit.limit + " plan=free"
+      }).catch(() => {});
+      return res.status(402).json({
+        error: "teacher_pro_required",
+        feature: "more_students",
+        message: "Bu sinfga qo'shilib bo'lmaydi — o'qituvchining bepul limiti to'lgan (15 o'quvchi).",
+        upgrade_url: "/pricing.html?plan=teacher_pro"
+      });
     }
 
     // Qo'shamiz
@@ -7802,6 +8344,103 @@ app.get("/teacher/classes/:classId/students", authMiddleware, requireTeacher, as
   }
 });
 
+// Barcha o'quvchilar (O'quvchilar sahifasi)
+app.get("/teacher/students", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+
+    // Teacher'ning barcha active sinflaridagi active o'quvchilar
+    const result = await pool.query(
+      `SELECT u.id, u.first_name, u.last_name, u.phone, u.cefr_level,
+              c.id AS class_id, c.name AS class_name,
+              -- O'rtacha natija (topshirilgan topshiriqlar)
+              (SELECT ROUND(AVG(sub.percent)) FROM assignment_submissions sub
+               WHERE sub.student_id = u.id AND sub.status IN ('submitted','late_submitted') AND sub.percent IS NOT NULL) AS avg_score,
+              -- Bajarilgan topshiriqlar (shu sinfdagi)
+              (SELECT COUNT(*)::int FROM assignment_submissions sub
+               JOIN assignments a ON a.id = sub.assignment_id
+               WHERE sub.student_id = u.id AND a.class_id = c.id AND sub.status IN ('submitted','late_submitted')) AS assignments_done,
+              (SELECT COUNT(*)::int FROM assignments a WHERE a.class_id = c.id) AS assignments_total,
+              -- Oxirgi 7 kunda faol kunlar (submission bo'yicha)
+              (SELECT COUNT(DISTINCT DATE(sub.submitted_at)) FROM assignment_submissions sub
+               WHERE sub.student_id = u.id AND sub.submitted_at >= NOW() - INTERVAL '7 days') AS active_days_7
+       FROM class_students cs
+       JOIN classes c ON c.id = cs.class_id
+       JOIN users u ON u.id = cs.student_id
+       WHERE c.teacher_id = $1 AND c.archived_at IS NULL AND cs.status = 'active'
+       ORDER BY u.first_name, u.last_name`,
+      [teacherId]
+    );
+
+    const students = result.rows.map((s) => ({
+      id: s.id,
+      first_name: s.first_name,
+      last_name: s.last_name,
+      phone: s.phone,
+      cefr_level: s.cefr_level || "A1",
+      class_id: s.class_id,
+      class_name: s.class_name,
+      avg_score: s.avg_score != null ? Number(s.avg_score) : null,
+      assignments_done: Number(s.assignments_done) || 0,
+      assignments_total: Number(s.assignments_total) || 0,
+      active_days_7: Number(s.active_days_7) || 0,
+    }));
+
+    // ===== Statistika =====
+    const total = students.length;
+    const active = students.filter((s) => s.active_days_7 > 0).length;
+    const withScore = students.filter((s) => s.avg_score != null);
+    const avgScore = withScore.length
+      ? Math.round(withScore.reduce((a, s) => a + s.avg_score, 0) / withScore.length)
+      : null;
+    // Eng yuqori natija
+    let topScore = null, topName = null;
+    withScore.forEach((s) => {
+      if (topScore == null || s.avg_score > topScore) {
+        topScore = s.avg_score;
+        topName = ((s.first_name || "") + " " + (s.last_name || "")).trim() + (s.class_name ? " (" + s.class_name + ")" : "");
+      }
+    });
+    // O'rtacha faollik (hafta kunlari)
+    const avgFreq = total > 0
+      ? Math.round((students.reduce((a, s) => a + s.active_days_7, 0) / total) * 10) / 10
+      : null;
+
+    // ===== Sinf taqsimoti (donut) =====
+    const classMap = {};
+    students.forEach((s) => {
+      const key = s.class_name || "—";
+      classMap[key] = (classMap[key] || 0) + 1;
+    });
+    const classDistribution = Object.keys(classMap).map((k) => ({ class_name: k, count: classMap[k] }));
+
+    // ===== Natija bo'yicha guruhlar =====
+    const groups = { excellent: 0, good: 0, mid: 0, low: 0 };
+    withScore.forEach((s) => {
+      if (s.avg_score >= 90) groups.excellent++;
+      else if (s.avg_score >= 75) groups.good++;
+      else if (s.avg_score >= 50) groups.mid++;
+      else groups.low++;
+    });
+    const scoreGroups = [
+      { key: "excellent", count: groups.excellent },
+      { key: "good", count: groups.good },
+      { key: "mid", count: groups.mid },
+      { key: "low", count: groups.low },
+    ];
+
+    res.json({
+      students,
+      stats: { total, active, avg_score: avgScore, top_score: topScore, top_name: topName, avg_frequency: avgFreq },
+      class_distribution: classDistribution,
+      score_groups: scoreGroups,
+    });
+  } catch (err) {
+    console.error("/teacher/students xatosi:", err);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // O'QUVCHINI SINFDAN OLIB TASHLASH (yumshoq: status='removed')
 app.delete("/teacher/classes/:classId/students/:studentId", authMiddleware, requireTeacher, async (req, res) => {
   try {
@@ -7882,6 +8521,16 @@ app.post("/teacher/classes/:classId/assignments", authMiddleware, requireTeacher
       [classId, teacherId]
     );
     if (cls.rows.length === 0) return res.status(404).json({ error: "Sinf topilmadi" });
+
+    // ===== LIMIT: Free teacher oyiga 3 topshiriq =====
+    const asgLimit = await premium.checkTeacherLimit(teacherId, "assignments");
+    if (!asgLimit.allowed) {
+      await logAudit(req, "teacher_limit_blocked_assignment", {
+        entityType: "assignment", entityId: classId,
+        details: "teacher=" + teacherId + " count=" + asgLimit.current + " limit=" + asgLimit.limit + " plan=free"
+      }).catch(() => {});
+      return res.status(402).json(premium.teacherLimitError("assignments"));
+    }
 
     // Savol tanlash: faqat published, daraja (+ skill agar mixed bo'lmasa)
     let qSql = "SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, cefr_level, skill, difficulty FROM questions WHERE status = 'published' AND cefr_level = $1";

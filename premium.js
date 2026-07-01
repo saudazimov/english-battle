@@ -51,6 +51,86 @@ async function isPremium(userId, planGroup = null) {
   return allowed.includes(sub.plan);
 }
 
+// Teacher Pro tekshiruvi (qulaylik uchun)
+async function isTeacherPro(userId) {
+  return await isPremium(userId, "teacher");
+}
+
+// ===== FREE TEACHER LIMITLARI =====
+// Free teacher: 1 sinf, 15 o'quvchi (umumiy), oyiga 3 topshiriq.
+// Teacher Pro: cheksiz (limit tekshiruvi o'tkazib yuboriladi).
+const TEACHER_FREE_LIMITS = {
+  max_classes: 1,
+  max_students: 15,      // teacher bo'yicha JAMI active o'quvchi
+  max_assignments_per_month: 3,
+};
+
+// Limit yetdimi tekshirish (DB count'ga asoslangan, fail-closed emas — limit muhim).
+// feature: "classes" | "students" | "assignments"
+// Qaytaradi: { allowed: bool, current: int, limit: int, is_pro: bool }
+async function checkTeacherLimit(userId, feature) {
+  // Pro bo'lsa — har doim ruxsat
+  const pro = await isTeacherPro(userId);
+  if (pro) return { allowed: true, is_pro: true, current: 0, limit: null };
+
+  let current = 0;
+  let limit = 0;
+  try {
+    if (feature === "classes") {
+      limit = TEACHER_FREE_LIMITS.max_classes;
+      const r = await pool.query(
+        "SELECT COUNT(*)::int AS c FROM classes WHERE teacher_id = $1 AND archived_at IS NULL",
+        [userId]
+      );
+      current = r.rows[0].c;
+    } else if (feature === "students") {
+      limit = TEACHER_FREE_LIMITS.max_students;
+      // Teacher'ning barcha active sinflaridagi JAMI active o'quvchi (distinct)
+      const r = await pool.query(
+        `SELECT COUNT(DISTINCT cs.student_id)::int AS c
+         FROM class_students cs
+         JOIN classes c ON c.id = cs.class_id
+         WHERE c.teacher_id = $1 AND c.archived_at IS NULL AND cs.status = 'active'`,
+        [userId]
+      );
+      current = r.rows[0].c;
+    } else if (feature === "assignments") {
+      limit = TEACHER_FREE_LIMITS.max_assignments_per_month;
+      // Joriy oyda yaratilган (arxivlanmagan) topshiriqlar
+      const r = await pool.query(
+        `SELECT COUNT(*)::int AS c FROM assignments
+         WHERE teacher_id = $1 AND created_at >= date_trunc('month', NOW()) AND status != 'archived'`,
+        [userId]
+      );
+      current = r.rows[0].c;
+    } else {
+      return { allowed: true, is_pro: false, current: 0, limit: null }; // noma'lum feature — bloklamaymiz
+    }
+  } catch (e) {
+    console.error("checkTeacherLimit xatosi (" + feature + "):", e.message);
+    // Xatoда — bloklaмaymiz (teacher ishlay olsin, lekin log qoladi)
+    return { allowed: true, is_pro: false, current: 0, limit: limit, error: true };
+  }
+
+  return { allowed: current < limit, is_pro: false, current: current, limit: limit };
+}
+
+// Limit xato javobini tuzish (endpoint'larда ishlatish uchun)
+function teacherLimitError(feature) {
+  const messages = {
+    classes: "Bepul tarifda faqat 1 ta sinf yaratish mumkin. Ko'proq sinflar uchun Teacher Pro kerak.",
+    students: "Bepul tarifda o'qituvchida jami 15 ta o'quvchi bo'lishi mumkin. Ko'proq o'quvchilar uchun Teacher Pro kerak.",
+    assignments: "Bepul tarifda oyiga 3 ta topshiriq yaratish mumkin. Cheksiz topshiriqlar uchun Teacher Pro kerak.",
+  };
+  const features = { classes: "more_classes", students: "more_students", assignments: "more_assignments" };
+  return {
+    error: "teacher_pro_required",
+    feature: features[feature] || feature,
+    message: messages[feature] || "Bu funksiya Teacher Pro uchun.",
+    upgrade_url: "/pricing.html?plan=teacher_pro",
+  };
+}
+
 // Middleware fabrikasi: ma'lum plan guruhini talab qiladi
 //   app.get("...", authMiddleware, requireParent, requirePremium("parent"), handler)
 function requirePremium(planGroup = null) {
@@ -131,8 +211,12 @@ async function grantSubscription(userId, plan, days) {
 
 module.exports = {
   PLAN_GROUPS,
+  TEACHER_FREE_LIMITS,
   getUserPlan,
   isPremium,
+  isTeacherPro,
+  checkTeacherLimit,
+  teacherLimitError,
   requirePremium,
   expireOldSubscriptions,
   grantSubscription,

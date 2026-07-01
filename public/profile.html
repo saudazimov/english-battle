@@ -624,6 +624,7 @@
   </div>
 
   <script src="/api.js"></script>
+  <script src="/payment-modal.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/sidebar.js"></script>
   <script>
@@ -1110,7 +1111,7 @@
     }
 
     function renderAILocked(body){
-      body.innerHTML = '<div class="ai-empty"><div class="ai-empty-ic" style="color:var(--accent-2)"><i data-lucide="lock"></i></div><h4>Premium funksiya</h4><p>Haftalik AI tahlil — kuchli va zaif tomonlaring, keyingi hafta uchun aniq mashq rejasi.</p><button class="btn nlp-btn" style="max-width:200px;margin:0 auto" onclick="alert(\'Premium tez orada!\')"><i data-lucide="star" style="width:16px;height:16px"></i> Premium olish</button></div>';
+      body.innerHTML = '<div class="ai-empty"><div class="ai-empty-ic" style="color:var(--accent-2)"><i data-lucide="lock"></i></div><h4>Premium funksiya</h4><p>Haftalik AI tahlil — kuchli va zaif tomonlaring, keyingi hafta uchun aniq mashq rejasi.</p><button class="btn nlp-btn" style="max-width:200px;margin:0 auto" onclick="window.openPaymentModal(\'student_premium\')"><i data-lucide="star" style="width:16px;height:16px"></i> Premium olish</button></div>';
     }
     function renderAIInsuf(body, rep){
       const steps = (rep.next_steps||[]).map(s=>`<li>${escExam(s)}</li>`).join("");

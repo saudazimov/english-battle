@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Natijalar — English Battle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root, [data-theme="light"] {
+      --bg: #f1f4f9; --bg-card: #ffffff; --bg-soft: #f6f8fc; --bg-hover: #eef2f9;
+      --border: #e8edf5; --border-strong: #dce4ef;
+      --text: #1a2233; --text-sub: #5d6b85; --text-dim: #8b97ad;
+      --primary: #2f6bff; --primary-soft: #e8efff; --accent: #7c5cfc; --accent-soft: #efe9ff;
+      --green: #16b06a; --green-soft: #e0f5ec; --amber: #f59e0b; --amber-soft: #fdf2dd;
+      --red: #ef4655; --red-soft: #fde8ea; --cyan: #06b6d4;
+      --shadow: 0 1px 3px rgba(20,30,60,.04); --shadow-md: 0 4px 16px rgba(20,30,60,.06); --shadow-lg: 0 12px 40px rgba(20,30,60,.10);
+      --radius: 16px; --radius-sm: 11px;
+    }
+    [data-theme="dark"] {
+      --bg: #0a0f1e; --bg-card: #111a2e; --bg-soft: #0e1626; --bg-hover: #16203a;
+      --border: #1d2940; --border-strong: #26344f;
+      --text: #f1f5fc; --text-sub: #9aa8c4; --text-dim: #6b7a99;
+      --primary: #3b82f6; --primary-soft: rgba(59,130,246,.14); --accent: #8b5cf6; --accent-soft: rgba(139,92,246,.15);
+      --green: #22c55e; --green-soft: rgba(34,197,94,.14); --amber: #f59e0b; --amber-soft: rgba(245,158,11,.14);
+      --red: #ef4444; --red-soft: rgba(239,68,68,.14); --cyan: #22d3ee;
+      --shadow: 0 1px 3px rgba(0,0,0,.3); --shadow-md: 0 4px 16px rgba(0,0,0,.35); --shadow-lg: 0 16px 50px rgba(0,0,0,.5);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; transition: background .25s, color .25s; }
+    a { text-decoration: none; color: inherit; }
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    .layout { display: flex; min-height: 100vh; }
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar { display: flex; align-items: flex-start; gap: 18px; padding: 26px 30px 8px; }
+    .tb-head { flex: 1; min-width: 0; }
+    .tb-head h1 { font-size: 27px; font-weight: 800; letter-spacing: -.6px; }
+    .tb-head p { font-size: 14px; color: var(--text-sub); margin-top: 5px; }
+    .tb-year { display: flex; align-items: center; gap: 9px; padding: 10px 15px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 11px; font-size: 13.5px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); white-space: nowrap; }
+    .tb-year svg { width: 16px; height: 16px; color: var(--text-dim); }
+    .theme-toggle, .tb-icon-btn { width: 44px; height: 44px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; display: grid; place-items: center; box-shadow: var(--shadow); color: var(--text-sub); position: relative; }
+    .theme-toggle svg, .tb-icon-btn svg { width: 19px; height: 19px; }
+    .tb-icon-btn .dot { position: absolute; top: 9px; right: 10px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; border: 2px solid var(--bg-card); }
+    .tb-user { display: flex; align-items: center; gap: 11px; cursor: pointer; }
+    .tb-user-info { text-align: right; }
+    .tb-user-name { font-size: 14px; font-weight: 700; }
+    .tb-user-role { font-size: 12px; color: var(--text-dim); }
+    .tb-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--primary)); display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 16px; }
+
+    .content { padding: 14px 30px 36px; display: flex; gap: 22px; align-items: flex-start; }
+    .col-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+    .col-side { width: 300px; flex: 0 0 300px; display: flex; flex-direction: column; gap: 18px; }
+
+    /* Filtrlar qatori */
+    .filter-row { display: flex; gap: 11px; align-items: flex-end; flex-wrap: wrap; }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; }
+    .filter-group label { font-size: 11.5px; font-weight: 600; color: var(--text-dim); padding-left: 2px; }
+    .filter-input { display: flex; align-items: center; gap: 8px; padding: 11px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 11px; font-size: 13.5px; font-weight: 600; color: var(--text); cursor: pointer; box-shadow: var(--shadow); white-space: nowrap; min-width: 150px; }
+    .filter-input svg { width: 14px; height: 14px; color: var(--text-dim); }
+    .filter-input.wide { min-width: 190px; }
+    .filter-input select { border: none; background: transparent; outline: none; font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--text); width: 100%; cursor: pointer; }
+    .btn-export { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border: 1px solid var(--border); border-radius: 11px; background: var(--bg-card); color: var(--text); font-size: 13.5px; font-weight: 600; font-family: inherit; cursor: pointer; box-shadow: var(--shadow); }
+    .btn-export:hover { background: var(--bg-hover); }
+    .btn-export svg { width: 16px; height: 16px; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+    .stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; box-shadow: var(--shadow); }
+    .stat-top { display: flex; align-items: center; gap: 9px; margin-bottom: 11px; }
+    .stat-ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex: 0 0 auto; }
+    .stat-ic svg { width: 16px; height: 16px; }
+    .stat-label { font-size: 11px; color: var(--text-sub); font-weight: 600; line-height: 1.25; }
+    .stat-val { font-size: 23px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+    .stat-sub { font-size: 11px; margin-top: 8px; color: var(--text-dim); font-weight: 500; }
+    .stat-sub.up { color: var(--green); font-weight: 600; }
+
+    .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .tabs-bar { display: flex; align-items: center; gap: 6px; padding: 16px 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .tab { padding: 9px 16px; border-radius: 10px; font-size: 13.5px; font-weight: 600; color: var(--text-sub); cursor: pointer; border: none; background: transparent; font-family: inherit; position: relative; }
+    .tab.active { color: var(--primary); }
+    .tab.active::after { content: ""; position: absolute; bottom: -16px; left: 12px; right: 12px; height: 2.5px; background: var(--primary); border-radius: 2px; }
+    .tabs-spacer { flex: 1; }
+    .tab-search { display: flex; align-items: center; gap: 9px; padding: 9px 14px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 10px; min-width: 180px; }
+    .tab-search svg { width: 16px; height: 16px; color: var(--text-dim); flex: 0 0 auto; }
+    .tab-search input { border: none; background: transparent; outline: none; font-family: inherit; font-size: 13.5px; color: var(--text); width: 100%; }
+    .tab-filter { display: flex; align-items: center; gap: 7px; padding: 9px 14px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .tab-filter svg { width: 14px; height: 14px; color: var(--text-dim); }
+
+    .table-wrap { overflow-x: auto; }
+    .rs-table { width: 100%; border-collapse: collapse; }
+    .rs-table thead th { text-align: left; padding: 13px 16px; font-size: 12px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .3px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .rs-table tbody td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .rs-table tbody tr:last-child td { border-bottom: none; }
+    .rs-table tbody tr:hover { background: var(--bg-soft); }
+    .rs-num { font-size: 13px; color: var(--text-dim); font-weight: 600; }
+    .rs-name-cell { display: flex; align-items: center; gap: 11px; min-width: 170px; }
+    .rs-av { width: 36px; height: 36px; border-radius: 50%; flex: 0 0 auto; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px; }
+    .rs-name { font-size: 13.5px; font-weight: 700; }
+    .rs-class { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+    .rs-correct { color: var(--green); font-weight: 700; font-size: 14px; }
+    .rs-wrong { color: var(--red); font-weight: 700; font-size: 14px; }
+    .rs-skip { font-weight: 700; font-size: 14px; }
+    .rs-arrow { display: inline-flex; align-items: center; gap: 3px; }
+    .rs-arrow svg { width: 12px; height: 12px; }
+    .rs-prog { min-width: 90px; }
+    .rs-prog-top { font-size: 13.5px; font-weight: 700; margin-bottom: 5px; }
+    .rs-prog-bar { height: 6px; border-radius: 999px; background: var(--bg-hover); overflow: hidden; }
+    .rs-prog-bar > span { display: block; height: 100%; border-radius: 999px; }
+    .rs-ball { font-size: 13.5px; font-weight: 600; }
+    .rs-time { font-size: 13.5px; color: var(--text-sub); font-weight: 600; }
+    .status-badge { font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
+    .status-badge.good { background: var(--green-soft); color: var(--green); }
+    .status-badge.mid { background: var(--amber-soft); color: var(--amber); }
+    .status-badge.low { background: var(--red-soft); color: var(--red); }
+    .act-ic { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; cursor: pointer; display: grid; place-items: center; color: var(--text-dim); }
+    .act-ic:hover { background: var(--bg-hover); color: var(--primary); }
+    .act-ic svg { width: 16px; height: 16px; }
+
+    .pager { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; flex-wrap: wrap; gap: 12px; }
+    .pager-info { font-size: 13px; color: var(--text-dim); }
+    .pager-nav { display: flex; align-items: center; gap: 6px; }
+    .pg-btn { min-width: 34px; height: 34px; padding: 0 8px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-sub); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: grid; place-items: center; }
+    .pg-btn:hover { background: var(--bg-hover); }
+    .pg-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .pg-btn svg { width: 15px; height: 15px; }
+    .pager-size { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--text-dim); }
+    .pager-size select { padding: 7px 11px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text); font-family: inherit; font-size: 13px; cursor: pointer; }
+
+    /* Pastki panellar */
+    .bottom-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+    .b-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+    .b-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .b-head h3 { font-size: 15px; font-weight: 800; }
+    .b-sel { display: flex; align-items: center; gap: 5px; padding: 5px 10px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px; font-size: 11.5px; font-weight: 600; cursor: pointer; }
+    .b-sel svg { width: 12px; height: 12px; color: var(--text-dim); }
+    .chart-empty { height: 150px; display: grid; place-items: center; color: var(--text-dim); font-size: 12.5px; text-align: center; }
+
+    .skill-row { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+    .skill-row:last-child { margin-bottom: 0; }
+    .skill-ic { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: 0 0 auto; }
+    .skill-ic svg { width: 15px; height: 15px; }
+    .skill-name { font-size: 13px; font-weight: 600; width: 78px; flex: 0 0 auto; }
+    .skill-bar { flex: 1; height: 8px; border-radius: 999px; background: var(--bg-hover); overflow: hidden; }
+    .skill-bar > span { display: block; height: 100%; border-radius: 999px; }
+    .skill-val { font-size: 13px; font-weight: 700; width: 38px; text-align: right; flex: 0 0 auto; }
+
+    .donut-wrap { display: flex; align-items: center; gap: 16px; }
+    .donut { width: 110px; height: 110px; flex: 0 0 auto; }
+    .donut-legend { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+    .dleg { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .dleg .d { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+    .dleg-name { color: var(--text-sub); font-weight: 600; }
+    .dleg-val { margin-left: auto; color: var(--text-dim); font-weight: 600; }
+    .donut-total { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 12px; }
+
+    /* O'ng panel */
+    .side-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+    .side-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .side-head h3 { font-size: 16px; font-weight: 800; }
+    .cmp-row { margin-bottom: 15px; }
+    .cmp-row:last-of-type { margin-bottom: 0; }
+    .cmp-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .cmp-label { font-size: 13px; font-weight: 700; }
+    .cmp-val { font-size: 13px; font-weight: 700; }
+    .cmp-bar { height: 8px; border-radius: 999px; background: var(--bg-hover); overflow: hidden; }
+    .cmp-bar > span { display: block; height: 100%; border-radius: 999px; }
+    .btn-block { display: block; width: 100%; text-align: center; padding: 12px; border: 1px solid var(--border); border-radius: 11px; background: var(--bg-soft); color: var(--text); font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 16px; }
+    .btn-block:hover { background: var(--bg-hover); }
+    .btn-block.ai { background: linear-gradient(135deg, var(--accent-soft), var(--primary-soft)); color: var(--accent); border: none; }
+
+    .tip-item { display: flex; gap: 11px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .tip-item:last-of-type { border-bottom: none; }
+    .tip-ic { width: 30px; height: 30px; border-radius: 8px; flex: 0 0 auto; display: grid; place-items: center; }
+    .tip-ic svg { width: 15px; height: 15px; }
+    .tip-txt { font-size: 12.5px; color: var(--text); line-height: 1.45; }
+
+    .empty-state { padding: 60px 30px; text-align: center; }
+    .empty-ic { width: 68px; height: 68px; margin: 0 auto 18px; border-radius: 18px; background: var(--accent-soft); display: grid; place-items: center; }
+    .empty-ic svg { width: 32px; height: 32px; color: var(--accent); }
+    .empty-title { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
+    .empty-text { font-size: 13.5px; color: var(--text-sub); max-width: 380px; margin: 0 auto; line-height: 1.5; }
+
+    .state-msg { padding: 30px 20px; text-align: center; color: var(--text-dim); font-size: 13.5px; }
+    .skeleton-bar { height: 54px; background: linear-gradient(90deg, var(--bg-soft), var(--bg-hover), var(--bg-soft)); background-size: 200% 100%; animation: shim 1.4s infinite; }
+    @keyframes shim { to { background-position: -200% 0; } }
+
+    .toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: var(--bg-card); padding: 13px 22px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; transition: all .3s; z-index: 7000; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    @media (max-width: 1400px) { .stats-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 1280px) { .content { flex-direction: column; } .col-side { width: 100%; flex: none; display: grid; grid-template-columns: 1fr 1fr; align-items: start; } .bottom-row { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } .col-side { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) { .stats-row { grid-template-columns: 1fr; } .topbar { flex-wrap: wrap; padding: 18px; } .content { padding: 14px 16px 28px; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div id="teacherSidebar"></div>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="tb-head">
+          <h1>Natijalar</h1>
+          <p>Topshiriqlar va imtihonlar natijalarini tahlil qiling</p>
+        </div>
+        <div class="tb-year" onclick="comingSoon('O\'quv yili')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          2024–2025 O'quv yili
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
+        <button class="tb-icon-btn" onclick="comingSoon('Bildirishnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
+        <div class="tb-user" onclick="window.location.href='/profile.html'">
+          <div class="tb-user-info">
+            <div class="tb-user-name" id="userName">O'qituvchi</div>
+            <div class="tb-user-role">Teacher</div>
+          </div>
+          <div class="tb-avatar" id="userAvatar">T</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="col-main">
+          <!-- Filtrlar qatori -->
+          <div class="filter-row">
+            <div class="filter-group">
+              <label>Topshiriq</label>
+              <div class="filter-input wide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><select id="selAssignment" onchange="onAssignmentChange(this.value)"><option value="">Topshiriq tanlang...</option></select></div>
+            </div>
+            <div class="filter-group">
+              <label>Sinf</label>
+              <div class="filter-input"><select id="selClass" onchange="comingSoon('Sinf filtri')"><option>Barcha sinflar</option></select></div>
+            </div>
+            <div class="filter-group">
+              <label>O'quvchilar</label>
+              <div class="filter-input"><select onchange="comingSoon('O\'quvchi filtri')"><option>Barcha o'quvchilar</option></select></div>
+            </div>
+            <div class="filter-group">
+              <label>Sana oralig'i</label>
+              <div class="filter-input" onclick="comingSoon('Sana')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span style="color:var(--text-dim)">Sana tanlang</span></div>
+            </div>
+            <div class="filter-group">
+              <label>&nbsp;</label>
+              <button class="btn-export" onclick="comingSoon('Export')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
+            </div>
+          </div>
+
+          <!-- 6 statistika -->
+          <div class="stats-row">
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><span class="stat-label">Jami o'quvchilar</span></div>
+              <div class="stat-val" id="stTotal">0</div>
+              <div class="stat-sub">Barchasi</div>
+            </div>
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span class="stat-label">O'rtacha natija</span></div>
+              <div class="stat-val" id="stAvg">—</div>
+              <div class="stat-sub up">Ushbu topshiriq</div>
+            </div>
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg></div><span class="stat-label">Yuqori natija</span></div>
+              <div class="stat-val" id="stTop">—</div>
+              <div class="stat-sub" id="stTopName">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 15h8M9.5 9h.01M14.5 9h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div><span class="stat-label">Quyi natija</span></div>
+              <div class="stat-val" id="stLow">—</div>
+              <div class="stat-sub" id="stLowName">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><span class="stat-label">Topshirganlar</span></div>
+              <div class="stat-val" id="stSubmitted">0</div>
+              <div class="stat-sub">Topshirilish darajasi</div>
+            </div>
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--red-soft);color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="stat-label">Muddatdan kechikkan</span></div>
+              <div class="stat-val" id="stLate">0</div>
+              <div class="stat-sub">Kechikkanlar</div>
+            </div>
+          </div>
+
+          <!-- Tab'lar + jadval -->
+          <div class="panel">
+            <div class="tabs-bar">
+              <button class="tab active" id="tabStudents" onclick="switchTab('students')">O'quvchilar bo'yicha</button>
+              <button class="tab" id="tabQuestions" onclick="switchTab('questions')">Savollar bo'yicha</button>
+              <button class="tab" id="tabSkills" onclick="switchTab('skills')">Ko'nikmalar bo'yicha</button>
+              <div class="tabs-spacer"></div>
+              <div class="tab-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="searchInput" type="text" placeholder="O'quvchi nomi..." oninput="onSearch(this.value)" /></div>
+              <button class="tab-filter" onclick="comingSoon('Filtr')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filtr</button>
+            </div>
+            <div id="resultArea">
+              <div class="skeleton-bar"></div><div class="skeleton-bar"></div><div class="skeleton-bar"></div>
+            </div>
+            <div class="pager" id="pager" style="display:none">
+              <div class="pager-info" id="pagerInfo"></div>
+              <div class="pager-nav" id="pagerNav"></div>
+              <div class="pager-size">Har sahifada: <select id="pageSize" onchange="changePageSize(this.value)"><option>10</option><option>20</option><option>50</option></select></div>
+            </div>
+          </div>
+
+          <!-- Pastki 3 panel -->
+          <div class="bottom-row">
+            <div class="b-card">
+              <div class="b-head"><h3>Natijalar trendi</h3><div class="b-sel" onclick="comingSoon('Ko\'rsatkich')">O'rtacha natija <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+              <div id="trendArea"><div class="chart-empty">Topshiriq tanlanганда<br>trend ko'rsatiladi.</div></div>
+            </div>
+            <div class="b-card">
+              <div class="b-head"><h3>Ko'nikmalar bo'yicha natijalar</h3></div>
+              <div id="skillsArea"><div class="chart-empty">Ma'lumot yo'q</div></div>
+            </div>
+            <div class="b-card">
+              <div class="b-head"><h3>Savollar qiyinlik darajasi</h3></div>
+              <div id="difficultyArea"><div class="chart-empty">Ma'lumot yo'q</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- O'ng panel -->
+        <div class="col-side">
+          <div class="side-card">
+            <div class="side-head"><h3>Natijalar taqsimoti</h3></div>
+            <div id="distArea"><div class="chart-empty">Topshiriq tanlang</div></div>
+          </div>
+
+          <div class="side-card">
+            <div class="side-head"><h3>Sinf bo'yicha taqqoslash</h3></div>
+            <div id="classCmpArea"><div class="state-msg" style="padding:14px 0">Ma'lumot yo'q</div></div>
+            <button class="btn-block" onclick="comingSoon('Batafsil taqqoslash')">Batafsil taqqoslash →</button>
+          </div>
+
+          <div class="side-card">
+            <div class="side-head"><h3>Tezkor tahlil</h3></div>
+            <div class="tip-item"><div class="tip-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="tip-txt">Topshiriq tanlab, o'quvchilar natijalarini ko'ring. AI tahlil zaif va kuchli tomonlarni aniqlaydi.</div></div>
+            <button class="btn-block ai" onclick="comingSoon('AI tahlil')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>AI tahlil olish</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/api.js"></script>
+  <script src="/payment-modal.js"></script>
+  <script src="/premium-modal.js"></script>
+  <script src="/teacher-sidebar.js"></script>
+  <script>
+    // ===== TEMA =====
+    (function initTheme() {
+      var saved = localStorage.getItem("eb_theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+      updateThemeIcon(saved);
+    })();
+    function toggleTheme() {
+      var cur = document.documentElement.getAttribute("data-theme");
+      var next = cur === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("eb_theme", next);
+      updateThemeIcon(next);
+    }
+    function updateThemeIcon(theme) {
+      var el = document.getElementById("themeIcon");
+      if (!el) return;
+      el.innerHTML = theme === "dark"
+        ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+        : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>';
+    }
+
+    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada tayyor bo'ladi"); }
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function showToast(text) { var t = document.getElementById("toast"); t.textContent = text; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2600); }
+    function fmtTime(sec) {
+      if (sec == null) return "—";
+      var m = Math.floor(sec / 60), s = sec % 60;
+      return m + ":" + (s < 10 ? "0" : "") + s;
+    }
+
+    // ===== AUTH =====
+    var userData = localStorage.getItem("user");
+    if (!userData || !localStorage.getItem("token")) { window.location.href = "/index.html"; }
+    var user = userData ? JSON.parse(userData) : {};
+    if (user.role && user.role !== "teacher") {
+      var R = { student: "/lobby.html", parent: "/parent.html", school_admin: "/school-admin.html" };
+      if (R[user.role]) window.location.href = R[user.role];
+    }
+    renderTeacherSidebar("results");
+
+    var fn = user.first_name || "", ln = user.last_name || "";
+    document.getElementById("userName").textContent = (fn + " " + ln).trim() || "O'qituvchi";
+    document.getElementById("userAvatar").textContent = (fn || "T").charAt(0).toUpperCase();
+
+    var AV_COLORS = ["#2f6bff", "#16b06a", "#7c5cfc", "#f59e0b", "#06b6d4", "#ef4655"];
+    var DONUT_COLORS = ["#16b06a", "#2f6bff", "#f59e0b", "#ef4655"];
+    function avColor(name) { var s = 0; for (var i = 0; i < (name || "").length; i++) s += name.charCodeAt(i); return AV_COLORS[s % AV_COLORS.length]; }
+    function initials(n) { var p = (n || "").trim().split(" "); return ((p[0] || "").charAt(0) + (p[1] || "").charAt(0)).toUpperCase() || "?"; }
+
+    var currentTab = "students";
+    var rows = [], filtered = [], page = 1, pageSize = 10;
+    var currentAssignmentId = null;
+
+    // ===== TOPSHIRIQLAR RO'YXATINI YUKLASH (dropdown) =====
+    async function loadAssignmentList() {
+      try {
+        var res = await authFetch("/teacher/assignments");
+        if (!res.ok) { showNoAssignments(); return; }
+        var data = await res.json();
+        var list = data.assignments || [];
+        if (!list.length) { showNoAssignments(); return; }
+        var sel = document.getElementById("selAssignment");
+        sel.innerHTML = '<option value="">Topshiriq tanlang...</option>' + list.map(function (a) {
+          return '<option value="' + a.id + '">' + esc(a.title) + (a.class_name ? " — " + esc(a.class_name) : "") + '</option>';
+        }).join("");
+        // Birinchi topshiriqni avtomatik tanlaymiz
+        if (list[0]) { sel.value = list[0].id; onAssignmentChange(list[0].id); }
+      } catch (e) { showNoAssignments(); }
+    }
+
+    function showNoAssignments() {
+      document.getElementById("resultArea").innerHTML =
+        '<div class="empty-state"><div class="empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>' +
+        '<div class="empty-title">Hali natija yo\'q</div>' +
+        '<div class="empty-text">Topshiriq yoki imtihon yarating. O\'quvchilar topshirgach, natijalar shu yerda batafsil tahlil bilan ko\'rinadi.</div></div>';
+      document.getElementById("pager").style.display = "none";
+    }
+
+    // ===== TANLANGAN TOPSHIRIQ NATIJALARI =====
+    async function onAssignmentChange(id) {
+      if (!id) return;
+      currentAssignmentId = id;
+      document.getElementById("resultArea").innerHTML = '<div class="skeleton-bar"></div><div class="skeleton-bar"></div><div class="skeleton-bar"></div>';
+      try {
+        var res = await authFetch("/teacher/results/" + id);
+        if (!res.ok) { document.getElementById("resultArea").innerHTML = '<div class="state-msg">Natijalarni yuklab bo\'lmadi.</div>'; return; }
+        var data = await res.json();
+        rows = data.students || [];
+        filtered = rows.slice();
+        renderStats(data.stats || {});
+        renderTable();
+        renderDist(data.distribution || []);
+        renderClassCmp(data.class_comparison || []);
+        renderSkills(data.skills || []);
+        renderDifficulty(data.difficulty || []);
+      } catch (e) {
+        document.getElementById("resultArea").innerHTML = '<div class="state-msg">Xatolik yuz berdi.</div>';
+      }
+    }
+
+    function renderStats(s) {
+      document.getElementById("stTotal").textContent = s.total != null ? s.total : "0";
+      document.getElementById("stAvg").textContent = s.avg_score != null ? s.avg_score + "%" : "—";
+      document.getElementById("stTop").textContent = s.top_score != null ? s.top_score + "%" : "—";
+      document.getElementById("stTopName").textContent = s.top_name || "—";
+      document.getElementById("stLow").textContent = s.low_score != null ? s.low_score + "%" : "—";
+      document.getElementById("stLowName").textContent = s.low_name || "—";
+      document.getElementById("stSubmitted").textContent = s.submitted != null ? s.submitted + (s.submit_rate != null ? " (" + s.submit_rate + "%)" : "") : "0";
+      document.getElementById("stLate").textContent = s.late != null ? s.late + (s.late_rate != null ? " (" + s.late_rate + "%)" : "") : "0";
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      ["students", "questions", "skills"].forEach(function (t) {
+        document.getElementById("tab" + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle("active", t === tab);
+      });
+      if (tab === "students") { renderTable(); }
+      else { document.getElementById("resultArea").innerHTML = '<div class="state-msg">Bu ko\'rinish tez orada tayyor bo\'ladi.</div>'; document.getElementById("pager").style.display = "none"; }
+    }
+
+    function renderTable() {
+      if (currentTab !== "students") return;
+      var area = document.getElementById("resultArea");
+      if (!filtered.length) {
+        area.innerHTML = '<div class="state-msg">Bu topshiriqni hali hech kim topshirmagan.</div>';
+        document.getElementById("pager").style.display = "none";
+        return;
+      }
+      var start = (page - 1) * pageSize;
+      var pageItems = filtered.slice(start, start + pageSize);
+
+      var body = pageItems.map(function (r, i) {
+        var name = r.name || "O'quvchi";
+        var pct = r.percent != null ? r.percent : 0;
+        var pctColor = pct >= 75 ? "var(--green)" : pct >= 50 ? "var(--amber)" : "var(--red)";
+        var stClass = pct >= 75 ? "good" : pct >= 50 ? "mid" : "low";
+        var stText = pct >= 75 ? "Yaxshi" : pct >= 50 ? "O'rta" : "Past";
+        var skip = r.unanswered_count != null ? r.unanswered_count : 0;
+        var wrong = r.wrong_count != null ? r.wrong_count : 0;
+        var wrongDisplay = wrong > 8 ? '<span class="rs-arrow" style="color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>' + wrong + '</span>' : wrong;
+
+        return '<tr>' +
+          '<td><span class="rs-num">' + (start + i + 1) + '</span></td>' +
+          '<td><div class="rs-name-cell"><div class="rs-av" style="background:' + avColor(name) + '">' + initials(name) + '</div><div><div class="rs-name">' + esc(name) + '</div>' + (r.class_name ? '<div class="rs-class">' + esc(r.class_name) + '</div>' : '') + '</div></div></td>' +
+          '<td><span class="rs-correct">' + (r.correct_count != null ? r.correct_count : 0) + '</span></td>' +
+          '<td><span class="rs-wrong">' + wrongDisplay + '</span></td>' +
+          '<td><span class="rs-skip">' + skip + '</span></td>' +
+          '<td><div class="rs-prog"><div class="rs-prog-top">' + pct + '%</div><div class="rs-prog-bar"><span style="width:' + pct + '%;background:' + pctColor + '"></span></div></div></td>' +
+          '<td><span class="rs-ball">' + (r.score != null ? r.score : 0) + ' / ' + (r.total != null ? r.total : 100) + '</span></td>' +
+          '<td><span class="rs-time">' + fmtTime(r.time_seconds) + '</span></td>' +
+          '<td><span class="status-badge ' + stClass + '">' + stText + '</span></td>' +
+          '<td><button class="act-ic" onclick="comingSoon(\'Batafsil\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>' +
+        '</tr>';
+      }).join("");
+
+      area.innerHTML = '<div class="table-wrap"><table class="rs-table"><thead><tr>' +
+        '<th>#</th><th>O\'quvchi</th><th>To\'g\'ri</th><th>Xato</th><th>O\'tkazib yuborilgan</th><th>Natija</th><th>Ball (maks. 100)</th><th>Vaqt</th><th>Status</th><th></th>' +
+        '</tr></thead><tbody>' + body + '</tbody></table></div>';
+      renderPager();
+    }
+
+    function renderPager() {
+      var totalPages = Math.ceil(filtered.length / pageSize);
+      var pager = document.getElementById("pager");
+      if (totalPages <= 1) { pager.style.display = "none"; return; }
+      pager.style.display = "flex";
+      var start = (page - 1) * pageSize + 1;
+      var end = Math.min(page * pageSize, filtered.length);
+      document.getElementById("pagerInfo").textContent = "Jami " + filtered.length + " ta o'quvchidan " + start + "–" + end + " tasi ko'rsatilmoqda";
+      var html = '<button class="pg-btn" onclick="goPage(' + (page - 1) + ')"' + (page === 1 ? ' disabled' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>';
+      for (var p = 1; p <= totalPages; p++) {
+        if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) html += '<button class="pg-btn' + (p === page ? ' active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+        else if (p === page - 2 || p === page + 2) html += '<span style="color:var(--text-dim);padding:0 4px">…</span>';
+      }
+      html += '<button class="pg-btn" onclick="goPage(' + (page + 1) + ')"' + (page === totalPages ? ' disabled' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>';
+      document.getElementById("pagerNav").innerHTML = html;
+    }
+    function goPage(p) { var tp = Math.ceil(filtered.length / pageSize); if (p < 1 || p > tp) return; page = p; renderTable(); }
+    function changePageSize(v) { pageSize = parseInt(v); page = 1; renderTable(); }
+
+    var searchTimer = null;
+    function onSearch(q) {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        var query = (q || "").trim().toLowerCase();
+        filtered = !query ? rows.slice() : rows.filter(function (r) { return (r.name || "").toLowerCase().indexOf(query) !== -1; });
+        page = 1;
+        if (currentTab === "students") renderTable();
+      }, 250);
+    }
+
+    // ===== DONUT: Natijalar taqsimoti =====
+    function renderDist(list) {
+      var box = document.getElementById("distArea");
+      drawDonut(box, list, "o'quvchi");
+    }
+    function renderDifficulty(list) {
+      var box = document.getElementById("difficultyArea");
+      if (!list.length) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
+      drawDonut(box, list, "savol");
+    }
+    function drawDonut(box, list, unit) {
+      if (!list.length) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
+      var total = list.reduce(function (s, c) { return s + c.count; }, 0);
+      if (total === 0) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
+      var r = 46, cx = 55, cy = 55, circ = 2 * Math.PI * r, offset = 0;
+      var segs = list.map(function (c, i) {
+        var len = (c.count / total) * circ;
+        var seg = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + (c.color || DONUT_COLORS[i % DONUT_COLORS.length]) + '" stroke-width="13" stroke-dasharray="' + len + ' ' + (circ - len) + '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+        offset += len; return seg;
+      }).join("");
+      var legend = list.map(function (c, i) {
+        var pct = Math.round((c.count / total) * 100);
+        return '<div class="dleg"><span class="d" style="background:' + (c.color || DONUT_COLORS[i % DONUT_COLORS.length]) + '"></span><span class="dleg-name">' + esc(c.label) + '</span><span class="dleg-val">' + c.count + ' (' + pct + '%)</span></div>';
+      }).join("");
+      box.innerHTML = '<div class="donut-wrap"><svg class="donut" viewBox="0 0 110 110">' + segs + '</svg><div class="donut-legend">' + legend + '</div></div><div class="donut-total">Jami: ' + total + ' ta ' + unit + '</div>';
+    }
+
+    // ===== Sinf taqqoslash =====
+    function renderClassCmp(list) {
+      var box = document.getElementById("classCmpArea");
+      if (!list.length) { box.innerHTML = '<div class="state-msg" style="padding:14px 0">Ma\'lumot yo\'q</div>'; return; }
+      box.innerHTML = list.map(function (c, i) {
+        var pct = c.avg != null ? Math.round(c.avg) : 0;
+        var color = ["#7c5cfc", "#2f6bff", "#16b06a", "#f59e0b", "#ef4655"][i % 5];
+        return '<div class="cmp-row"><div class="cmp-top"><span class="cmp-label">' + esc(c.class_name) + '</span><span class="cmp-val">' + pct + '%</span></div><div class="cmp-bar"><span style="width:' + pct + '%;background:' + color + '"></span></div></div>';
+      }).join("");
+    }
+
+    // ===== Ko'nikmalar =====
+    function renderSkills(list) {
+      var box = document.getElementById("skillsArea");
+      if (!list.length) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
+      var ICONS = {
+        reading: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+        grammar: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>',
+        vocabulary: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+        listening: '<path d="M12 2a7 7 0 0 0-7 7v3a3 3 0 0 0 3 3h1V9H7a5 5 0 0 1 10 0h-2v6h1a3 3 0 0 0 3-3V9a7 7 0 0 0-7-7z"/>',
+      };
+      var COLORS = { reading: "var(--green)", grammar: "var(--amber)", vocabulary: "var(--green)", listening: "var(--amber)" };
+      box.innerHTML = list.map(function (sk) {
+        var key = (sk.skill || "").toLowerCase();
+        var pct = sk.avg != null ? Math.round(sk.avg) : 0;
+        var color = pct >= 75 ? "var(--green)" : pct >= 60 ? "var(--amber)" : "var(--red)";
+        return '<div class="skill-row"><div class="skill-ic" style="background:var(--bg-soft);color:var(--text-sub)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[key] || ICONS.reading) + '</svg></div><span class="skill-name">' + esc(cap(sk.skill)) + '</span><div class="skill-bar"><span style="width:' + pct + '%;background:' + color + '"></span></div><span class="skill-val">' + pct + '%</span></div>';
+      }).join("");
+    }
+    function cap(s) { return String(s).charAt(0).toUpperCase() + String(s).slice(1); }
+
+    // ===== ISHGA TUSHIRISH =====
+    loadAssignmentList();
+  </script>
+</body>
+</html>

@@ -3,476 +3,803 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>O'qituvchi paneli — Knowledge Arena</title>
+  <title>O'qituvchi paneli — English Battle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --bg-main: #070b18;
-      --bg-card: #10172a;
-      --bg-input: #0b1322;
-      --bg-soft: #0e1526;
-      --bg-sidebar: #0a0f1f;
-      --border: #1e2a44;
-      --border-focus: #3b82f6;
-      --primary: #3b82f6;
-      --secondary: #8b5cf6;
-      --accent: #22d3ee;
-      --gold: #facc15;
-      --green: #22c55e;
-      --orange: #f59e0b;
-      --red: #ef4444;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
+    /* ===== TEMA O'ZGARUVCHILARI ===== */
+    :root, [data-theme="light"] {
+      --bg: #f1f4f9;
+      --bg-sidebar: #ffffff;
+      --bg-card: #ffffff;
+      --bg-soft: #f6f8fc;
+      --bg-hover: #eef2f9;
+      --border: #e8edf5;
+      --border-strong: #dce4ef;
+      --text: #1a2233;
+      --text-sub: #5d6b85;
+      --text-dim: #8b97ad;
+      --primary: #2f6bff;
+      --primary-soft: #e8efff;
+      --accent: #7c5cfc;
+      --accent-soft: #efe9ff;
+      --green: #16b06a;
+      --green-soft: #e0f5ec;
+      --amber: #f59e0b;
+      --amber-soft: #fdf2dd;
+      --red: #ef4655;
+      --red-soft: #fde8ea;
+      --cyan: #06b6d4;
+      --shadow: 0 1px 3px rgba(20,30,60,.04), 0 1px 2px rgba(20,30,60,.03);
+      --shadow-md: 0 4px 16px rgba(20,30,60,.06);
+      --shadow-lg: 0 12px 40px rgba(20,30,60,.10);
       --radius: 16px;
-      --radius-sm: 10px;
+      --radius-sm: 11px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    [data-theme="dark"] {
+      --bg: #0a0f1e;
+      --bg-sidebar: #0d1424;
+      --bg-card: #111a2e;
+      --bg-soft: #0e1626;
+      --bg-hover: #16203a;
+      --border: #1d2940;
+      --border-strong: #26344f;
+      --text: #f1f5fc;
+      --text-sub: #9aa8c4;
+      --text-dim: #6b7a99;
+      --primary: #3b82f6;
+      --primary-soft: rgba(59,130,246,.14);
+      --accent: #8b5cf6;
+      --accent-soft: rgba(139,92,246,.15);
+      --green: #22c55e;
+      --green-soft: rgba(34,197,94,.14);
+      --amber: #f59e0b;
+      --amber-soft: rgba(245,158,11,.14);
+      --red: #ef4444;
+      --red-soft: rgba(239,68,68,.14);
+      --cyan: #22d3ee;
+      --shadow: 0 1px 3px rgba(0,0,0,.3);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.35);
+      --shadow-lg: 0 16px 50px rgba(0,0,0,.5);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg-main);
-      color: var(--text-main);
-      min-height: 100vh;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--bg); color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      transition: background .25s, color .25s;
     }
     a { text-decoration: none; color: inherit; }
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+    ::-webkit-scrollbar-track { background: transparent; }
 
-    /* ===== LAYOUT: sidebar + main ===== */
     .layout { display: flex; min-height: 100vh; }
 
     /* ===== SIDEBAR ===== */
     .sidebar {
-      width: 248px; flex: 0 0 248px;
-      background: var(--bg-sidebar);
-      border-right: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      padding: 20px 14px;
-      position: sticky; top: 0; height: 100vh;
+      width: 256px; flex: 0 0 256px; background: var(--bg-sidebar);
+      border-right: 1px solid var(--border); display: flex; flex-direction: column;
+      position: sticky; top: 0; height: 100vh; padding: 22px 16px;
+      transition: background .25s, border-color .25s;
     }
-    .sidebar-logo {
-      display: flex; align-items: center; gap: 11px;
-      padding: 6px 8px 20px;
+    .sb-logo { display: flex; align-items: center; gap: 12px; padding: 4px 8px 22px; }
+    .sb-logo-mark {
+      width: 42px; height: 42px; border-radius: 12px; flex: 0 0 auto;
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      display: grid; place-items: center; box-shadow: 0 6px 18px rgba(124,92,252,.32);
     }
-    .logo-mark {
-      width: 40px; height: 40px; border-radius: 11px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 16px; color: #fff;
-      box-shadow: 0 4px 14px rgba(59,130,246,0.4);
+    .sb-logo-mark svg { width: 23px; height: 23px; color: #fff; }
+    .sb-logo-name { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+    .sb-logo-sub { font-size: 11.5px; color: var(--text-dim); font-weight: 600; margin-top: 1px; }
+
+    .sb-nav { display: flex; flex-direction: column; gap: 3px; flex: 1; overflow-y: auto; }
+    .sb-item {
+      display: flex; align-items: center; gap: 12px; padding: 11px 13px;
+      border-radius: var(--radius-sm); color: var(--text-sub); font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all .15s; position: relative;
     }
-    .logo-name { font-size: 17px; font-weight: 700; }
-    .nav { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; }
-    .nav-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 12px; border-radius: var(--radius-sm);
-      color: var(--text-muted); font-size: 14.5px; font-weight: 500;
-      cursor: pointer; transition: background 0.15s, color 0.15s;
-      position: relative;
+    .sb-item svg { width: 19px; height: 19px; flex: 0 0 auto; }
+    .sb-item:hover { background: var(--bg-hover); color: var(--text); }
+    .sb-item.active {
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      color: #fff; box-shadow: 0 6px 18px rgba(124,92,252,.3);
     }
-    .nav-item svg { width: 19px; height: 19px; flex: 0 0 auto; }
-    .nav-item:hover { background: var(--bg-soft); color: var(--text-main); }
-    .nav-item.active {
-      background: linear-gradient(95deg, rgba(59,130,246,0.18), rgba(139,92,246,0.12));
-      color: #fff;
+    .sb-tag {
+      margin-left: auto; font-size: 10px; font-weight: 800; padding: 2px 8px;
+      border-radius: 999px; background: var(--accent); color: #fff; letter-spacing: .3px;
     }
-    .nav-item.active::before {
-      content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-      width: 3px; height: 22px; border-radius: 2px;
-      background: linear-gradient(var(--primary), var(--secondary));
+    .sb-item.active .sb-tag { background: rgba(255,255,255,.25); }
+    .sb-badge {
+      margin-left: auto; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px;
+      padding: 0 6px; border-radius: 999px; background: var(--red); color: #fff;
+      display: grid; place-items: center;
     }
-    .nav-item.soon { opacity: 0.6; }
-    .nav-badge {
-      margin-left: auto; font-size: 11px; font-weight: 700;
-      background: var(--red); color: #fff;
-      min-width: 18px; height: 18px; padding: 0 5px;
-      border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    .sb-item.active .sb-badge { background: rgba(255,255,255,.25); }
+
+    .sb-promo {
+      margin-top: 16px; padding: 18px; border-radius: var(--radius);
+      background: linear-gradient(160deg, var(--accent-soft), var(--primary-soft));
+      border: 1px solid var(--border); text-align: center;
     }
-    .nav-soon-tag {
-      margin-left: auto; font-size: 9.5px; font-weight: 600;
-      color: var(--gold); background: var(--bg-soft);
-      padding: 2px 6px; border-radius: 999px; border: 1px solid var(--border);
+    .sb-promo-ic { width: 38px; height: 38px; margin: 0 auto 10px; border-radius: 11px;
+      background: linear-gradient(135deg, var(--accent), var(--primary)); display: grid; place-items: center; }
+    .sb-promo-ic svg { width: 20px; height: 20px; color: #fff; }
+    .sb-promo h4 { font-size: 14px; font-weight: 800; margin-bottom: 5px; }
+    .sb-promo p { font-size: 11.5px; color: var(--text-sub); line-height: 1.5; margin-bottom: 13px; }
+    .sb-promo-btn {
+      width: 100%; padding: 9px; border: none; border-radius: 9px; cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--primary)); color: #fff;
+      font-size: 12.5px; font-weight: 700; font-family: inherit;
     }
-    .sidebar-foot {
-      margin-top: auto; padding: 12px 8px 4px;
-      border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim);
-    }
+    /* Premium card — Pro holat */
+    .sb-promo.pro { background: linear-gradient(160deg, var(--green-soft), var(--primary-soft)); }
+    .sb-promo-limits { list-style: none; margin: 0 0 12px; padding: 0; text-align: left; }
+    .sb-promo-limits li { font-size: 11px; color: var(--text-sub); display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .sb-promo-limits li svg { width: 12px; height: 12px; flex: 0 0 auto; color: var(--text-dim); }
+    .sb-promo-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; padding: 4px 11px; border-radius: 999px; background: var(--green); color: #fff; margin-bottom: 8px; }
+    .sb-promo-exp { font-size: 11px; color: var(--text-sub); margin-bottom: 10px; }
+    .sb-foot { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 9px; color: var(--text-dim); font-size: 13px; font-weight: 600;
+      cursor: pointer; padding-left: 8px; }
+    .sb-foot svg { width: 18px; height: 18px; }
 
     /* ===== MAIN ===== */
     .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-
-    /* ===== TOPBAR ===== */
     .topbar {
-      display: flex; align-items: center; gap: 18px;
-      padding: 16px 28px; border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; background: rgba(7,11,24,0.85);
-      backdrop-filter: blur(8px); z-index: 10;
+      display: flex; align-items: center; gap: 18px; padding: 22px 30px;
     }
-    .search {
-      flex: 1; max-width: 440px;
-      display: flex; align-items: center; gap: 10px;
-      background: var(--bg-input); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); padding: 10px 14px;
-      color: var(--text-dim);
+    .tb-greet { flex: 1; min-width: 0; }
+    .tb-greet h1 { font-size: 24px; font-weight: 800; letter-spacing: -.5px; display: flex; align-items: center; gap: 8px; }
+    .tb-greet p { font-size: 14px; color: var(--text-sub); margin-top: 3px; }
+    .tb-year {
+      display: flex; align-items: center; gap: 9px; padding: 10px 15px;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 11px;
+      font-size: 13.5px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow);
     }
-    .search svg { width: 17px; height: 17px; flex: 0 0 auto; }
-    .search input {
-      border: none; background: transparent; outline: none;
-      color: var(--text-main); font-size: 14px; width: 100%;
+    .tb-year svg { width: 16px; height: 16px; color: var(--text-dim); }
+    .tb-icon-btn {
+      position: relative; width: 44px; height: 44px; border-radius: 12px;
+      background: var(--bg-card); border: 1px solid var(--border); cursor: pointer;
+      display: grid; place-items: center; box-shadow: var(--shadow); color: var(--text-sub);
     }
-    .search input::placeholder { color: var(--text-dim); }
-    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
-    .create-btn {
-      display: flex; align-items: center; gap: 8px;
-      padding: 10px 18px; border: none; border-radius: var(--radius-sm);
-      background: linear-gradient(95deg, var(--primary), var(--secondary));
-      color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
-      box-shadow: 0 6px 18px rgba(59,130,246,0.3); transition: opacity 0.15s;
+    .tb-icon-btn svg { width: 19px; height: 19px; }
+    .tb-icon-btn .dot {
+      position: absolute; top: 9px; right: 10px; min-width: 16px; height: 16px; padding: 0 4px;
+      border-radius: 999px; background: var(--red); color: #fff; font-size: 10px; font-weight: 700;
+      display: grid; place-items: center; border: 2px solid var(--bg-card);
     }
-    .create-btn:hover { opacity: 0.93; }
-    .create-btn svg { width: 17px; height: 17px; }
-    .icon-btn {
-      position: relative; width: 42px; height: 42px; border-radius: var(--radius-sm);
-      background: var(--bg-card); border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-muted); cursor: pointer; transition: border-color 0.15s, color 0.15s;
-    }
-    .icon-btn:hover { border-color: var(--border-focus); color: var(--text-main); }
-    .icon-btn svg { width: 19px; height: 19px; }
-    .icon-btn .dot {
-      position: absolute; top: 8px; right: 9px;
-      width: 8px; height: 8px; border-radius: 50%; background: var(--red);
-      border: 2px solid var(--bg-card);
-    }
-    .profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding-left: 4px; }
-    .avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 15px; color: #fff;
-    }
-    .profile-info { line-height: 1.3; }
-    .profile-name { font-size: 14px; font-weight: 600; }
-    .profile-role { font-size: 12px; color: var(--text-muted); }
+    .tb-user { display: flex; align-items: center; gap: 11px; cursor: pointer; }
+    .tb-user-info { text-align: right; }
+    .tb-user-name { font-size: 14px; font-weight: 700; }
+    .tb-user-role { font-size: 12px; color: var(--text-dim); }
+    .tb-avatar { width: 44px; height: 44px; border-radius: 12px; object-fit: cover;
+      background: linear-gradient(135deg, var(--accent), var(--primary)); display: grid; place-items: center;
+      color: #fff; font-weight: 700; font-size: 16px; }
 
-    /* ===== CONTENT ===== */
-    .content { padding: 28px; }
-    .page-head { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; }
-    .page-icon {
-      width: 56px; height: 56px; border-radius: 15px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: flex; align-items: center; justify-content: center; color: #fff;
-      box-shadow: 0 8px 24px rgba(59,130,246,0.35);
-    }
-    .page-icon svg { width: 28px; height: 28px; }
-    .page-title { font-size: 26px; font-weight: 800; }
-    .page-sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+    .content { padding: 6px 30px 36px; display: flex; flex-direction: column; gap: 20px; }
 
-    /* ===== STAT CARDS ===== */
-    .stat-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 28px;
+    /* Tezkor amallar */
+    .quick-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .quick-card {
+      display: flex; align-items: center; gap: 14px; padding: 18px;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      cursor: pointer; transition: all .18s; box-shadow: var(--shadow);
     }
-    .stat-card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 22px;
-      display: flex; align-items: flex-start; gap: 16px;
-    }
-    .stat-icon {
-      width: 52px; height: 52px; border-radius: 14px; flex: 0 0 auto;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .stat-icon svg { width: 26px; height: 26px; }
-    .stat-icon.blue { background: rgba(59,130,246,0.14); color: var(--primary); }
-    .stat-icon.purple { background: rgba(139,92,246,0.14); color: var(--secondary); }
-    .stat-icon.orange { background: rgba(245,158,11,0.14); color: var(--orange); }
-    .stat-icon.green { background: rgba(34,197,94,0.14); color: var(--green); }
-    .stat-label { font-size: 13.5px; color: var(--text-muted); margin-bottom: 6px; }
-    .stat-value { font-size: 30px; font-weight: 800; line-height: 1; }
-    .stat-foot { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+    .quick-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
+    .quick-ic { width: 46px; height: 46px; border-radius: 12px; flex: 0 0 auto; display: grid; place-items: center; }
+    .quick-ic svg { width: 22px; height: 22px; }
+    .quick-ic.blue { background: var(--primary-soft); color: var(--primary); }
+    .quick-ic.green { background: var(--green-soft); color: var(--green); }
+    .quick-ic.amber { background: var(--amber-soft); color: var(--amber); }
+    .quick-ic.violet { background: var(--accent-soft); color: var(--accent); }
+    .quick-tx h3 { font-size: 14.5px; font-weight: 700; }
+    .quick-tx p { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
 
-    /* ===== EMPTY STATE ===== */
-    .empty {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 56px 32px; text-align: center;
+    /* Umumiy panel grid */
+    .panel {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow); transition: background .25s, border-color .25s;
     }
-    .empty-icon {
-      width: 84px; height: 84px; margin: 0 auto 22px; border-radius: 24px;
-      background: var(--bg-soft); border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+    .panel-h { display: flex; align-items: center; justify-content: space-between; padding: 20px 22px 0; }
+    .panel-h h2 { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+    .panel-link { font-size: 13px; font-weight: 600; color: var(--primary); cursor: pointer; }
+    .panel-sel {
+      display: flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 9px;
+      background: var(--bg-soft); border: 1px solid var(--border); font-size: 12.5px; font-weight: 600; cursor: pointer;
     }
-    .empty-icon svg { width: 40px; height: 40px; }
-    .empty h2 { font-size: 21px; font-weight: 700; margin-bottom: 8px; }
-    .empty p { font-size: 14.5px; color: var(--text-muted); max-width: 420px; margin: 0 auto 24px; line-height: 1.6; }
-    .empty-btn {
-      display: inline-flex; align-items: center; gap: 9px;
-      padding: 13px 24px; border: none; border-radius: var(--radius-sm);
-      background: linear-gradient(95deg, var(--primary), var(--secondary));
-      color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
-      box-shadow: 0 8px 22px rgba(59,130,246,0.3); transition: opacity 0.15s;
-    }
-    .empty-btn:hover { opacity: 0.93; }
-    .empty-btn svg { width: 18px; height: 18px; }
+    .panel-sel svg { width: 14px; height: 14px; color: var(--text-dim); }
 
-    /* ===== LOADING ===== */
-    .loading {
-      display: flex; align-items: center; justify-content: center;
-      padding: 80px; color: var(--text-muted); font-size: 15px; gap: 12px;
+    /* Statistika */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 18px 22px 22px; }
+    .stat {
+      padding: 18px; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border);
     }
-    .spinner {
-      width: 22px; height: 22px; border: 3px solid var(--border);
-      border-top-color: var(--primary); border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .stat-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .stat-ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; flex: 0 0 auto; }
+    .stat-ic svg { width: 19px; height: 19px; }
+    .stat-label { font-size: 12.5px; color: var(--text-sub); font-weight: 600; }
+    .stat-val { font-size: 30px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+    .stat-delta { font-size: 12px; font-weight: 600; margin-top: 11px; display: flex; align-items: center; gap: 5px; }
+    .stat-delta.up { color: var(--green); }
+    .stat-delta svg { width: 13px; height: 13px; }
+    .stat-delta span { color: var(--text-dim); font-weight: 500; }
 
-    /* ===== TOAST (soon) ===== */
-    .toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); padding: 13px 20px;
-      font-size: 14px; color: var(--text-main); box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-      opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 100;
-      display: flex; align-items: center; gap: 10px;
-    }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .toast svg { width: 18px; height: 18px; color: var(--gold); }
+    /* Asosiy 2-ustun grid */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-main { display: grid; grid-template-columns: 1.45fr 1fr; gap: 20px; align-items: start; }
 
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 1100px) {
-      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    /* Sinflar ro'yxati */
+    .class-list { padding: 8px 14px 16px; }
+    .class-row {
+      display: flex; align-items: center; gap: 14px; padding: 13px 8px; border-radius: var(--radius-sm);
+      cursor: pointer; transition: background .15s;
     }
-    @media (max-width: 860px) {
+    .class-row:hover { background: var(--bg-soft); }
+    .class-av { width: 44px; height: 44px; border-radius: 12px; flex: 0 0 auto; display: grid; place-items: center; color: #fff; font-weight: 700; }
+    .class-av svg { width: 21px; height: 21px; }
+    .class-info { flex: 1; min-width: 0; }
+    .class-name { font-size: 14.5px; font-weight: 700; }
+    .class-meta { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
+    .class-score { text-align: right; min-width: 120px; }
+    .class-score-label { font-size: 11.5px; color: var(--text-dim); margin-bottom: 5px; }
+    .class-bar { height: 6px; border-radius: 999px; background: var(--bg-hover); overflow: hidden; }
+    .class-bar > span { display: block; height: 100%; border-radius: 999px; }
+    .class-score-pct { font-size: 13px; font-weight: 700; margin-bottom: 5px; }
+
+    /* AI sinf tahlili karta */
+    .ai-card-inner { padding: 18px 22px 22px; }
+    .ai-rep {
+      background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 17px;
+    }
+    .ai-rep-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 11px; }
+    .ai-rep-title { font-size: 14px; font-weight: 700; }
+    .ai-rep-tag { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--green-soft); color: var(--green); }
+    .ai-rep-tag.warn { background: var(--amber-soft); color: var(--amber); }
+    .ai-rep-txt { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 15px; }
+    .ai-rep-sub { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .ai-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .ai-chip { font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: 8px; }
+    .ai-chip.good { background: var(--green-soft); color: var(--green); }
+    .ai-chip.bad { background: var(--amber-soft); color: var(--amber); }
+    .ai-rep-btn {
+      width: 100%; margin-top: 4px; padding: 12px; border: none; border-radius: 11px; cursor: pointer;
+      background: linear-gradient(135deg, #1e2a52, #2f3a6b); color: #fff; font-size: 13.5px; font-weight: 700;
+      font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    [data-theme="light"] .ai-rep-btn { background: linear-gradient(135deg, #1a2545, #28335f); }
+    .ai-rep-btn svg { width: 16px; height: 16px; }
+    .ai-loading { display: flex; flex-direction: column; gap: 10px; }
+    .ai-shim { height: 14px; border-radius: 7px; background: linear-gradient(90deg, var(--bg-hover), var(--border), var(--bg-hover)); background-size: 200% 100%; animation: shim 1.4s infinite; }
+    .ai-shim.lg { height: 44px; }
+    @keyframes shim { to { background-position: -200% 0; } }
+
+    /* Grafik */
+    .chart-wrap { padding: 14px 22px 20px; }
+    .chart-legend { display: flex; gap: 18px; margin-bottom: 8px; }
+    .chart-leg { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-sub); font-weight: 600; }
+    .chart-leg .ld { width: 11px; height: 11px; border-radius: 50%; }
+    svg.chart { width: 100%; height: 230px; display: block; }
+
+    /* Kelayotgan vazifalar */
+    .task-list { padding: 8px 14px 16px; display: flex; flex-direction: column; }
+    .task-row { display: flex; align-items: center; gap: 13px; padding: 13px 8px; }
+    .task-ic { width: 38px; height: 38px; border-radius: 10px; flex: 0 0 auto; display: grid; place-items: center; }
+    .task-ic svg { width: 18px; height: 18px; }
+    .task-info { flex: 1; min-width: 0; }
+    .task-name { font-size: 13.5px; font-weight: 700; }
+    .task-meta { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+    .task-due { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+
+    /* So'nggi faoliyat */
+    .feed-list { padding: 8px 14px 16px; display: flex; flex-direction: column; }
+    .feed-row { display: flex; gap: 13px; padding: 12px 8px; }
+    .feed-ic { width: 36px; height: 36px; border-radius: 10px; flex: 0 0 auto; display: grid; place-items: center; }
+    .feed-ic svg { width: 17px; height: 17px; }
+    .feed-info { flex: 1; min-width: 0; }
+    .feed-txt { font-size: 13px; color: var(--text); line-height: 1.45; }
+    .feed-txt b { font-weight: 700; }
+    .feed-time { font-size: 11.5px; color: var(--text-dim); margin-top: 3px; }
+
+    /* Kalendar */
+    .cal-wrap { padding: 18px 22px 22px; }
+    .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .cal-month { font-size: 16px; font-weight: 800; }
+    .cal-nav { display: flex; gap: 6px; }
+    .cal-nav button { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-soft); cursor: pointer; display: grid; place-items: center; color: var(--text-sub); }
+    .cal-nav button svg { width: 15px; height: 15px; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .cal-dow { font-size: 11.5px; font-weight: 700; color: var(--text-dim); text-align: center; padding: 6px 0; }
+    .cal-day { aspect-ratio: 1; display: grid; place-items: center; font-size: 13px; font-weight: 600; border-radius: 9px; cursor: pointer; position: relative; color: var(--text-sub); }
+    .cal-day:hover { background: var(--bg-hover); }
+    .cal-day.other { color: var(--text-dim); opacity: .45; }
+    .cal-day.today { background: var(--primary); color: #fff; font-weight: 700; }
+    .cal-day.has-dot::after { content: ""; position: absolute; bottom: 5px; width: 4px; height: 4px; border-radius: 50%; background: var(--primary); }
+    .cal-day.today.has-dot::after { background: #fff; }
+
+    /* Tema tugmasi */
+    .theme-toggle {
+      width: 44px; height: 44px; border-radius: 12px; background: var(--bg-card);
+      border: 1px solid var(--border); cursor: pointer; display: grid; place-items: center;
+      box-shadow: var(--shadow); color: var(--text-sub);
+    }
+    .theme-toggle svg { width: 19px; height: 19px; }
+
+    .skeleton { color: transparent !important; background: var(--bg-hover); border-radius: 6px; animation: shim 1.4s infinite; }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .grid-main { grid-template-columns: 1fr; }
+      .stats-row, .quick-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 920px) {
       .sidebar { display: none; }
-      .search { max-width: none; }
-      .create-btn span { display: none; }
+      .grid-2 { grid-template-columns: 1fr; }
     }
-    @media (max-width: 560px) {
-      .stat-grid { grid-template-columns: 1fr; }
-      .content { padding: 18px; }
-      .profile-info { display: none; }
+    @media (max-width: 640px) {
+      .stats-row, .quick-row { grid-template-columns: 1fr; }
+      .topbar { flex-wrap: wrap; padding: 18px; }
+      .content { padding: 6px 16px 28px; }
     }
   </style>
 </head>
 <body>
   <div class="layout">
+    <!-- SIDEBAR -->
+    <div id="teacherSidebar"></div>
 
-    <!-- ===== SIDEBAR ===== -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
-        <div class="logo-mark">KA</div>
-        <div class="logo-name">Knowledge Arena</div>
-      </div>
-      <nav class="nav">
-        <div class="nav-item active">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Boshqaruv paneli
-        </div>
-        <a class="nav-item" href="/teacher-classes.html" style="text-decoration:none;color:inherit;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Sinflar
-        </a>
-        <div class="nav-item soon" onclick="comingSoon('O\'quvchilar')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          O'quvchilar <span class="nav-soon-tag">tez orada</span>
-        </div>
-        <div class="nav-item soon" onclick="comingSoon('Topshiriqlar')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          Topshiriqlar <span class="nav-soon-tag">tez orada</span>
-        </div>
-        <div class="nav-item soon" onclick="comingSoon('Testlar')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-          Testlar <span class="nav-soon-tag">tez orada</span>
-        </div>
-        <div class="nav-item soon" onclick="comingSoon('Savollar banki')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          Savollar banki <span class="nav-soon-tag">tez orada</span>
-        </div>
-        <div class="nav-item soon" onclick="comingSoon('Hisobotlar')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          Hisobotlar <span class="nav-soon-tag">tez orada</span>
-        </div>
-        <div class="nav-item soon" onclick="comingSoon('Bildirishnomalar')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          Bildirishnomalar
-        </div>
-        <div class="nav-item soon" onclick="comingSoon('Sozlamalar')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Sozlamalar
-        </div>
-      </nav>
-      <div class="sidebar-foot">© 2025 Knowledge Arena</div>
-    </aside>
-
-    <!-- ===== MAIN ===== -->
+    <!-- MAIN -->
     <div class="main">
-
-      <!-- TOPBAR -->
-      <div class="topbar">
-        <div class="search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="O'quvchi, sinf, topshiriq qidirish..." onfocus="comingSoon('Qidiruv')" />
+      <header class="topbar">
+        <div class="tb-greet">
+          <h1 id="greetText">Salom! <span style="font-size:22px">👋</span></h1>
+          <p id="greetSub">Bugun ajoyib kun! O'quvchilaringiz sizni kutishmoqda.</p>
         </div>
-        <div class="topbar-right">
-          <button class="create-btn" onclick="window.location.href='/teacher-classes.html'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Yaratish</span>
-          </button>
-          <div class="icon-btn" onclick="comingSoon('Bildirishnomalar')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <span class="dot"></span>
-          </div>
-          <div class="profile">
-            <div class="avatar" id="avatar">T</div>
-            <div class="profile-info">
-              <div class="profile-name" id="profileName">O'qituvchi</div>
-              <div class="profile-role">O'qituvchi</div>
-            </div>
-          </div>
+        <div class="tb-year" onclick="comingSoon('O\'quv yili')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          2024–2025 O'quv yili
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-      </div>
+        <button class="theme-toggle" id="themeToggle" title="Tema almashtirish" onclick="toggleTheme()">
+          <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg>
+        </button>
+        <button class="tb-icon-btn" onclick="comingSoon('Bildirishnomalar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="dot">3</span>
+        </button>
+        <div class="tb-user" onclick="window.location.href='/profile.html'">
+          <div class="tb-user-info">
+            <div class="tb-user-name" id="userName">O'qituvchi</div>
+            <div class="tb-user-role">Teacher</div>
+          </div>
+          <div class="tb-avatar" id="userAvatar">T</div>
+        </div>
+      </header>
 
-      <!-- CONTENT -->
       <div class="content">
-        <div class="page-head">
-          <div class="page-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        <!-- TEZKOR AMALLAR -->
+        <div class="quick-row">
+          <div class="quick-card" onclick="window.location.href='/teacher-classes.html'">
+            <div class="quick-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></div>
+            <div class="quick-tx"><h3>Topshiriq yaratish</h3><p>Yangi topshiriq berish</p></div>
           </div>
-          <div>
-            <div class="page-title">O'qituvchi paneli</div>
-            <div class="page-sub">Sinflar, o'quvchilar, topshiriqlar va natijalarni boshqaring.</div>
+          <div class="quick-card" onclick="comingSoon('Imtihon yaratish')">
+            <div class="quick-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="quick-tx"><h3>Imtihon yaratish</h3><p>Yangi imtihon ochish</p></div>
+          </div>
+          <div class="quick-card" onclick="window.location.href='/teacher-classes.html'">
+            <div class="quick-ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+            <div class="quick-tx"><h3>Sinf yaratish</h3><p>Yangi sinf qo'shish</p></div>
+          </div>
+          <div class="quick-card" onclick="window.location.href='/teacher-classes.html'">
+            <div class="quick-ic violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg></div>
+            <div class="quick-tx"><h3>AI Hisobot olish</h3><p>Sinf tahlili</p></div>
           </div>
         </div>
 
-        <!-- Yuklanmoqda -->
-        <div class="loading" id="loadingBox">
-          <div class="spinner"></div> Yuklanmoqda...
+        <!-- UMUMIY KO'RSATKICHLAR -->
+        <div class="panel">
+          <div class="panel-h">
+            <h2>Umumiy ko'rsatkichlar</h2>
+            <div class="panel-sel" onclick="comingSoon('Davr')">Bu hafta <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+          </div>
+          <div class="stats-row">
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><span class="stat-label">O'quvchilar soni</span></div>
+              <div class="stat-val" id="statStudents">—</div>
+              <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>12% <span>o'tgan haftaga nisbatan</span></div>
+            </div>
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><span class="stat-label">Topshiriqlar bajarildi</span></div>
+              <div class="stat-val" id="statCompleted">87%</div>
+              <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>8% <span>o'tgan haftaga nisbatan</span></div>
+            </div>
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span class="stat-label">O'rtacha natija</span></div>
+              <div class="stat-val" id="statAvg">78.4%</div>
+              <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>5.6% <span>o'tgan haftaga nisbatan</span></div>
+            </div>
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="stat-label">Faol o'quvchilar</span></div>
+              <div class="stat-val" id="statActive">—</div>
+              <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>15% <span>o'tgan haftaga nisbatan</span></div>
+            </div>
+          </div>
         </div>
 
-        <!-- Asosiy kontent (yuklangач ko'rinadi) -->
-        <div id="dashboardContent" style="display:none;">
-          <!-- STAT CARDS -->
-          <div class="stat-grid">
-            <div class="stat-card" onclick="window.location.href='/teacher-classes.html'" style="cursor:pointer;">
-              <div class="stat-icon blue">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              </div>
-              <div>
-                <div class="stat-label">Mening sinflarim</div>
-                <div class="stat-value" id="statClasses">0</div>
-                <div class="stat-foot">Faol sinflar</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon purple">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </div>
-              <div>
-                <div class="stat-label">O'quvchilarim</div>
-                <div class="stat-value" id="statStudents">0</div>
-                <div class="stat-foot">Jami o'quvchilar</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon orange">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-              </div>
-              <div>
-                <div class="stat-label">Faol topshiriqlar</div>
-                <div class="stat-value" id="statAssignments">0</div>
-                <div class="stat-foot">Joriy topshiriqlar</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon green">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-              </div>
-              <div>
-                <div class="stat-label">O'rtacha ko'rsatkich</div>
-                <div class="stat-value" id="statPerformance">—</div>
-                <div class="stat-foot">O'rtacha ball</div>
-              </div>
+        <!-- SINFLAR + AI -->
+        <div class="grid-main">
+          <div class="panel">
+            <div class="panel-h"><h2>Sinflarim</h2><span class="panel-link" onclick="window.location.href='/teacher-classes.html'">Barchasini ko'rish</span></div>
+            <div class="class-list" id="classList">
+              <div style="padding:30px;text-align:center;color:var(--text-dim);font-size:13px">Yuklanmoqda...</div>
             </div>
           </div>
 
-          <!-- EMPTY STATE (sinf yo'q) -->
-          <div class="empty" id="emptyState">
-            <div class="empty-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          <div class="panel">
+            <div class="panel-h"><h2>AI sinf tahlili</h2><span class="panel-link" onclick="window.location.href='/teacher-classes.html'">Barchasini ko'rish</span></div>
+            <div class="ai-card-inner" id="aiCard">
+              <div class="ai-loading"><div class="ai-shim lg"></div><div class="ai-shim" style="width:85%"></div><div class="ai-shim" style="width:70%"></div></div>
             </div>
-            <h2>Birinchi sinfingizni yarating</h2>
-            <p>Hozircha sinfingiz yo'q. Sinf yarating, o'quvchilarni qo'shing va ularning natijalarini kuzatishni boshlang.</p>
-            <button class="empty-btn" onclick="window.location.href='/teacher-classes.html'">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Sinf yaratish
-            </button>
+          </div>
+        </div>
+
+        <!-- FAOLIYAT + VAZIFALAR -->
+        <div class="grid-main">
+          <div class="panel">
+            <div class="panel-h"><h2>Faoliyat statistikasi</h2><div class="panel-sel" onclick="comingSoon('Davr')">Bu oy <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+            <div class="chart-wrap">
+              <div class="chart-legend">
+                <div class="chart-leg"><span class="ld" style="background:var(--primary)"></span>Topshiriqlar</div>
+                <div class="chart-leg"><span class="ld" style="background:var(--accent)"></span>Imtihonlar</div>
+              </div>
+              <svg class="chart" id="activityChart" viewBox="0 0 600 230" preserveAspectRatio="none"></svg>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-h"><h2>Kelayotgan vazifalar</h2></div>
+            <div class="task-list" id="taskList"></div>
+          </div>
+        </div>
+
+        <!-- SO'NGGI FAOLIYAT + KALENDAR -->
+        <div class="grid-main">
+          <div class="panel">
+            <div class="panel-h"><h2>So'nggi faoliyat</h2><span class="panel-link" onclick="comingSoon('Faoliyat')">Barchasini ko'rish</span></div>
+            <div class="feed-list" id="feedList"></div>
+          </div>
+
+          <div class="panel">
+            <div class="cal-wrap">
+              <div class="cal-head">
+                <div class="cal-month" id="calMonth">—</div>
+                <div class="cal-nav">
+                  <button onclick="calPrev()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+                  <button onclick="calNext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                </div>
+              </div>
+              <div class="cal-grid" id="calGrid"></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- TOAST -->
-  <div class="toast" id="toast">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    <span id="toastText">Bu bo'lim tez orada tayyor bo'ladi</span>
-  </div>
-
   <script src="/api.js"></script>
+  <script src="/payment-modal.js"></script>
+  <script src="/premium-modal.js"></script>
+  <script src="/teacher-sidebar.js"></script>
+  <script>renderTeacherSidebar("home");</script>
   <script>
-    // Foydalanuvchi (himoya: tizimga kirmagan bo'lsa login'ga)
-    const userData = localStorage.getItem("user");
-    if (!userData) window.location.href = "/index.html";
-    const user = userData ? JSON.parse(userData) : {};
-
-    // Agar teacher/admin bo'lmasa — bu sahifa unга emas
-    if (user.role && user.role !== "teacher" && user.role !== "school_admin") {
-      window.location.href = "/lobby.html";
+    // ===== TEMA =====
+    (function initTheme() {
+      var saved = localStorage.getItem("eb_theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+      updateThemeIcon(saved);
+    })();
+    function toggleTheme() {
+      var cur = document.documentElement.getAttribute("data-theme");
+      var next = cur === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("eb_theme", next);
+      updateThemeIcon(next);
     }
-
-    // Profil ko'rsatish
-    const fname = user.first_name || "O'qituvchi";
-    document.getElementById("profileName").textContent = fname;
-    document.getElementById("avatar").textContent = (fname[0] || "T").toUpperCase();
-
-    // "Tez orada" toast
-    let toastTimer = null;
-    function comingSoon(name) {
-      const toast = document.getElementById("toast");
-      document.getElementById("toastText").textContent = (name ? name + ": " : "") + "bu bo'lim tez orada tayyor bo'ladi";
-      toast.classList.add("show");
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
-    }
-
-    // Dashboard ma'lumotini yuklash (himoyalangan endpoint)
-    async function loadDashboard() {
-      try {
-        const res = await authFetch("/teacher/dashboard");
-        if (!res.ok) {
-          // 403 = teacher emas, 401 = token muammosi (authFetch o'zi login'ga yuboradi)
-          if (res.status === 403) { window.location.href = "/lobby.html"; return; }
-          throw new Error("Yuklab bo'lmadi");
-        }
-        const data = await res.json();
-        const s = data.stats || {};
-
-        document.getElementById("statClasses").textContent = s.totalClasses || 0;
-        document.getElementById("statStudents").textContent = s.totalStudents || 0;
-        document.getElementById("statAssignments").textContent = s.activeAssignments || 0;
-        document.getElementById("statPerformance").textContent =
-          s.totalStudents > 0 ? (s.averagePerformance || 0) + "%" : "—";
-
-        // Bo'sh holatni ko'rsatish (sinf yo'q bo'lsa)
-        document.getElementById("emptyState").style.display =
-          (s.totalClasses > 0) ? "none" : "block";
-
-        // Yuklanish tugadi
-        document.getElementById("loadingBox").style.display = "none";
-        document.getElementById("dashboardContent").style.display = "block";
-      } catch (err) {
-        document.getElementById("loadingBox").innerHTML =
-          "<span style='color:var(--red)'>Ma'lumotni yuklab bo'lmadi. Sahifani yangilang.</span>";
+    function updateThemeIcon(theme) {
+      var el = document.getElementById("themeIcon");
+      if (!el) return;
+      if (theme === "dark") {
+        el.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+      } else {
+        el.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>';
       }
     }
 
+    function comingSoon(name) { alert((name ? name + ": " : "") + "tez orada tayyor bo'ladi"); }
+    function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+
+    // ===== AUTH TEKSHIRUVI =====
+    var userData = localStorage.getItem("user");
+    if (!userData || !localStorage.getItem("token")) {
+      window.location.href = "/index.html";
+    }
+    var user = userData ? JSON.parse(userData) : {};
+    if (user.role && user.role !== "teacher") {
+      // noto'g'ri rol — o'z paneliga
+      var R = { student:"/lobby.html", parent:"/parent.html", school_admin:"/school-admin.html" };
+      if (R[user.role]) window.location.href = R[user.role];
+    }
+
+    var CLASS_COLORS = ["#2f6bff","#16b06a","#7c5cfc","#f59e0b","#ef4655","#06b6d4"];
+
+    // ===== DASHBOARD MA'LUMOTI =====
+    async function loadDashboard() {
+      // Profil
+      var fn = user.first_name || "";
+      var ln = user.last_name || "";
+      document.getElementById("greetText").innerHTML = "Salom, " + esc(fn || "O'qituvchi") + "! <span style='font-size:22px'>👋</span>";
+      document.getElementById("userName").textContent = (fn + " " + ln).trim() || "O'qituvchi";
+      var initial = (fn || "T").charAt(0).toUpperCase();
+      document.getElementById("userAvatar").textContent = initial;
+
+      // Sinflar soni (greet uchun) + sinflar ro'yxati
+      loadClasses();
+
+      // To'liq real overview (statistika + grafik + vazifalar + faoliyat)
+      try {
+        var res = await authFetch("/teacher/overview");
+        var d = await res.json();
+        if (res.ok) {
+          var st = d.stats || {};
+          document.getElementById("statStudents").textContent = st.total_students != null ? st.total_students : "0";
+          document.getElementById("statCompleted").textContent = (st.completion_rate != null ? st.completion_rate : 0) + "%";
+          document.getElementById("statAvg").textContent = (st.avg_score != null ? st.avg_score : 0) + "%";
+          document.getElementById("statActive").textContent = st.active_students != null ? st.active_students : "0";
+
+          var cls = (d.recent_activity && d.recent_activity.length) || 0;
+          document.getElementById("greetSub").textContent = st.total_students > 0
+            ? st.total_students + " ta o'quvchingiz bor. Bugun ajoyib kun!"
+            : "Birinchi sinfingizni yarating va o'quvchilarni qo'shing.";
+
+          drawChart(d.chart);
+          renderTasks(d.upcoming_tasks);
+          renderFeed(d.recent_activity);
+        } else {
+          drawChart(null); renderTasks(null); renderFeed(null);
+        }
+      } catch (e) {
+        drawChart(null); renderTasks(null); renderFeed(null);
+      }
+
+      renderCalendar();
+    }
+
+    // ===== SINFLAR =====
+    async function loadClasses() {
+      var box = document.getElementById("classList");
+      try {
+        var res = await authFetch("/teacher/classes");
+        var data = await res.json();
+        var classes = data.classes || data || [];
+        if (!Array.isArray(classes) || classes.length === 0) {
+          box.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-dim);font-size:13px">Hali sinf yo\'q. <span style="color:var(--primary);cursor:pointer" onclick="window.location.href=\'/teacher-classes.html\'">Sinf yaratish</span></div>';
+          return;
+        }
+        var html = "";
+        classes.slice(0, 6).forEach(function (c, i) {
+          var color = CLASS_COLORS[i % CLASS_COLORS.length];
+          var avg = c.avg_score != null ? Math.round(c.avg_score) : (c.average_percent != null ? Math.round(c.average_percent) : null);
+          var count = c.student_count != null ? c.student_count : (c.students_count != null ? c.students_count : 0);
+          var barColor = avg == null ? "var(--border-strong)" : (avg >= 80 ? "var(--green)" : avg >= 65 ? "var(--amber)" : "var(--red)");
+          html += '<div class="class-row" onclick="window.location.href=\'/teacher-class-detail.html?id=' + c.id + '\'">' +
+            '<div class="class-av" style="background:' + color + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>' +
+            '<div class="class-info"><div class="class-name">' + esc(c.name) + '</div><div class="class-meta">' + count + ' o\'quvchi</div></div>' +
+            '<div class="class-score"><div class="class-score-label">O\'rtacha natija</div>' +
+              (avg != null ? '<div class="class-score-pct">' + avg + '%</div><div class="class-bar"><span style="width:' + avg + '%;background:' + barColor + '"></span></div>' : '<div class="class-score-pct" style="color:var(--text-dim)">—</div>') +
+            '</div></div>';
+        });
+        box.innerHTML = html;
+      } catch (e) {
+        box.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-dim);font-size:13px">Sinflarni yuklab bo\'lmadi.</div>';
+      }
+    }
+
+    // ===== AI SINF TAHLILI (birinchi sinf uchun) =====
+    async function loadFirstClassAI() {
+      var box = document.getElementById("aiCard");
+      try {
+        var cRes = await authFetch("/teacher/classes");
+        var cData = await cRes.json();
+        var classes = cData.classes || cData || [];
+        if (!Array.isArray(classes) || classes.length === 0) {
+          box.innerHTML = '<div style="text-align:center;padding:30px 10px;color:var(--text-dim);font-size:13px">Sinf yaratilgach AI tahlil shu yerda chiqadi.</div>';
+          return;
+        }
+        var first = classes[0];
+        var res = await authFetch("/ai/reports/teacher/classes/" + first.id + "/weekly", { method: "POST" });
+        if (res.status === 402) {
+          box.innerHTML = '<div class="ai-rep"><div style="text-align:center;padding:10px"><div style="font-size:14px;font-weight:700;margin-bottom:6px">Teacher Pro funksiyasi</div><p style="font-size:12.5px;color:var(--text-sub);margin-bottom:14px">AI sinf tahlilini ko\'rish uchun Premium kerak.</p><button class="ai-rep-btn" onclick="window.openPaymentModal && window.openPaymentModal(\'teacher_pro\')">Pro olish</button></div></div>';
+          return;
+        }
+        var data = await res.json();
+        var r = data.report || {};
+        if (r.status === "insufficient_data") {
+          box.innerHTML = '<div class="ai-rep"><div class="ai-rep-h"><span class="ai-rep-title">' + esc(first.name) + '</span></div><p class="ai-rep-txt">' + esc(r.message || "Hali yetarli ma'lumot yo'q.") + '</p></div>';
+          return;
+        }
+        renderClassAI(box, first, r);
+      } catch (e) {
+        box.innerHTML = '<div style="text-align:center;padding:30px 10px;color:var(--text-dim);font-size:13px">AI tahlilni yuklab bo\'lmadi.</div>';
+      }
+    }
+
+    function renderClassAI(box, cls, r) {
+      var findings = (r.key_findings || []).slice(0, 1);
+      var summary = r.class_summary || (findings[0] || "");
+      var recs = (r.teaching_recommendations || []);
+      // "kuchli/zaif" — recommendations va findings'дан taxminiy ajratamiz
+      var strong = [], weak = [];
+      (r.key_findings || []).forEach(function (f) {
+        if (/zaif|past|qiyin|kerak|rivoj/i.test(f)) weak.push(f); else strong.push(f);
+      });
+      var html = '<div class="ai-rep">' +
+        '<div class="ai-rep-h"><span class="ai-rep-title">' + esc(cls.name) + ' tahlili</span><span class="ai-rep-tag">AI</span></div>' +
+        '<p class="ai-rep-txt">' + esc(summary) + '</p>';
+      if (recs.length) {
+        html += '<div class="ai-rep-sub">Tavsiyalar</div><div class="ai-chips">' +
+          recs.slice(0, 3).map(function (x) { return '<span class="ai-chip bad">' + esc(x.length > 28 ? x.slice(0, 28) + "…" : x) + '</span>'; }).join("") + '</div>';
+      }
+      html += '<button class="ai-rep-btn" onclick="window.location.href=\'/teacher-class-detail.html?id=' + cls.id + '\'">To\'liq AI hisobotni ko\'rish <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div>';
+      box.innerHTML = html;
+    }
+
+    // ===== FAOLIYAT GRAFIGI (real ma'lumot, bo'sh bo'lsa namuna) =====
+    function drawChart(chartData) {
+      var svg = document.getElementById("activityChart");
+      var W = 600, H = 230, pad = 30;
+      var d1, d2, labels;
+      if (chartData && chartData.assignments && chartData.assignments.length >= 2) {
+        d1 = chartData.assignments;
+        d2 = chartData.exams && chartData.exams.length === d1.length ? chartData.exams : d1.map(function(){return 0;});
+        labels = chartData.labels || [];
+      } else {
+        // Yetarli real ma'lumot yo'q — bo'sh holat
+        svg.innerHTML = '<text x="300" y="115" fill="var(--text-dim)" font-size="13" text-anchor="middle">Faoliyat ma\'lumoti hali yetarli emas</text>';
+        return;
+      }
+      var n = d1.length;
+      var maxV = Math.max(10, Math.max.apply(null, d1.concat(d2)) * 1.2);
+      function pts(arr) {
+        return arr.map(function (v, i) {
+          var x = pad + (i / (n - 1)) * (W - pad * 2);
+          var y = H - pad - (v / maxV) * (H - pad * 2);
+          return [x, y];
+        });
+      }
+      function path(p) { return p.map(function (q, i) { return (i === 0 ? "M" : "L") + q[0].toFixed(1) + " " + q[1].toFixed(1); }).join(" "); }
+      function dots(p, color) { return p.map(function (q) { return '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="3.5" fill="' + color + '"/>'; }).join(""); }
+      var p1 = pts(d1), p2 = pts(d2);
+      var grid = "";
+      var steps = [0, 0.25, 0.5, 0.75, 1];
+      steps.forEach(function (s) {
+        var g = Math.round(maxV * s);
+        var y = H - pad - s * (H - pad * 2);
+        grid += '<line x1="' + pad + '" y1="' + y + '" x2="' + (W - pad) + '" y2="' + y + '" stroke="var(--border)" stroke-width="1"/>';
+        grid += '<text x="' + (pad - 8) + '" y="' + (y + 4) + '" fill="var(--text-dim)" font-size="11" text-anchor="end">' + g + '</text>';
+      });
+      svg.innerHTML = grid +
+        '<path d="' + path(p1) + '" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="' + path(p2) + '" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        dots(p1, "var(--primary)") + dots(p2, "var(--accent)");
+    }
+
+    // ===== KELAYOTGAN VAZIFALAR (namuna) =====
+    // ===== KELAYOTGAN VAZIFALAR (real — tekshirilиши kerak topshiriqlar) =====
+    function renderTasks(tasksData) {
+      var box = document.getElementById("taskList");
+      if (!tasksData || !tasksData.length) {
+        box.innerHTML = '<div style="padding:28px 10px;text-align:center;color:var(--text-dim);font-size:13px">Hozircha tekshirilиши kerak vazifa yo\'q.</div>';
+        return;
+      }
+      box.innerHTML = tasksData.map(function (t) {
+        var due = dueLabel(t.due_at);
+        var c = due.urgent ? "var(--red)" : "var(--amber)";
+        var cs = due.urgent ? "var(--red-soft)" : "var(--amber-soft)";
+        var meta = (t.class_name ? esc(t.class_name) : "") + (t.submitted_count != null ? " · " + t.submitted_count + " topshiriq" : "");
+        return '<div class="task-row" onclick="window.location.href=\'/teacher-classes.html\'" style="cursor:pointer"><div class="task-ic" style="background:' + cs + ';color:' + c + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>' +
+          '<div class="task-info"><div class="task-name">' + esc(t.title) + '</div><div class="task-meta">' + meta + '</div></div>' +
+          '<span class="task-due" style="background:' + cs + ';color:' + c + '">' + due.label + '</span></div>';
+      }).join("") + '<div style="text-align:center;padding:12px 0 4px"><span class="panel-link" onclick="window.location.href=\'/teacher-classes.html\'">Barchasini ko\'rish →</span></div>';
+    }
+
+    // Muddat yorlig'i (due_at -> "Ertaga", "3 kun", "Muddati o'tdi")
+    function dueLabel(dueAt) {
+      if (!dueAt) return { label: "Muddatsiz", urgent: false };
+      var due = new Date(dueAt);
+      var now = new Date();
+      var diffMs = due - now;
+      var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) return { label: "Muddati o'tdi", urgent: true };
+      if (diffDays === 0) return { label: "Bugun", urgent: true };
+      if (diffDays === 1) return { label: "Ertaga", urgent: true };
+      if (diffDays <= 3) return { label: diffDays + " kun", urgent: true };
+      return { label: diffDays + " kun", urgent: false };
+    }
+
+    // ===== SO'NGGI FAOLIYAT (real — oxirgi topshirishlar) =====
+    function renderFeed(feedData) {
+      var box = document.getElementById("feedList");
+      if (!feedData || !feedData.length) {
+        box.innerHTML = '<div style="padding:28px 10px;text-align:center;color:var(--text-dim);font-size:13px">Hozircha faoliyat yo\'q. O\'quvchilar topshiriq topshirgach shu yerda ko\'rinadi.</div>';
+        return;
+      }
+      box.innerHTML = feedData.map(function (f) {
+        var pct = f.percent != null ? f.percent : 0;
+        var good = pct >= 80;
+        var c = good ? ["var(--green-soft)","var(--green)"] : (pct >= 60 ? ["var(--primary-soft)","var(--primary)"] : ["var(--amber-soft)","var(--amber)"]);
+        var name = esc(f.student_name || "O'quvchi");
+        var title = esc(f.assignment_title || "topshiriq");
+        var cls = f.class_name ? esc(f.class_name) + " — " : "";
+        var txt = '<b>' + name + '</b> "' + title + '" topshirig\'ini ' + pct + '% bilan yakunladi';
+        return '<div class="feed-row"><div class="feed-ic" style="background:' + c[0] + ';color:' + c[1] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>' +
+          '<div class="feed-info"><div class="feed-txt">' + txt + '</div><div class="feed-time">' + cls + relTime(f.submitted_at) + '</div></div></div>';
+      }).join("");
+    }
+
+    // Nisbiy vaqt ("5 daqiqa oldin", "2 soat oldin", "3 kun oldin")
+    function relTime(ts) {
+      if (!ts) return "";
+      var then = new Date(ts);
+      var now = new Date();
+      var sec = Math.floor((now - then) / 1000);
+      if (sec < 60) return "hozirgina";
+      var min = Math.floor(sec / 60);
+      if (min < 60) return min + " daqiqa oldin";
+      var hr = Math.floor(min / 60);
+      if (hr < 24) return hr + " soat oldin";
+      var day = Math.floor(hr / 24);
+      if (day < 30) return day + " kun oldin";
+      return then.toLocaleDateString("uz-UZ");
+    }
+
+    // ===== KALENDAR =====
+    var calDate = new Date();
+    var MONTHS = ["Yanvar","Fevral","Mart","Aprel","May","Iyun","Iyul","Avgust","Sentabr","Oktabr","Noyabr","Dekabr"];
+    var DOW = ["Du","Se","Ch","Pa","Ju","Sh","Ya"];
+    function renderCalendar() {
+      var y = calDate.getFullYear(), m = calDate.getMonth();
+      document.getElementById("calMonth").textContent = MONTHS[m] + " " + y;
+      var first = new Date(y, m, 1);
+      var startDow = (first.getDay() + 6) % 7; // dushanba = 0
+      var daysInMonth = new Date(y, m + 1, 0).getDate();
+      var prevDays = new Date(y, m, 0).getDate();
+      var today = new Date();
+      var html = DOW.map(function (d) { return '<div class="cal-dow">' + d + '</div>'; }).join("");
+      // oldingi oy
+      for (var i = startDow - 1; i >= 0; i--) html += '<div class="cal-day other">' + (prevDays - i) + '</div>';
+      // joriy oy
+      for (var dd = 1; dd <= daysInMonth; dd++) {
+        var isToday = (dd === today.getDate() && m === today.getMonth() && y === today.getFullYear());
+        var hasDot = [7, 9, 15, 22, 29].indexOf(dd) !== -1; // namuna kunlar
+        html += '<div class="cal-day' + (isToday ? ' today' : '') + (hasDot ? ' has-dot' : '') + '">' + dd + '</div>';
+      }
+      // keyingi oy (to'ldirish)
+      var total = startDow + daysInMonth;
+      var trail = (7 - (total % 7)) % 7;
+      for (var t = 1; t <= trail; t++) html += '<div class="cal-day other">' + t + '</div>';
+      document.getElementById("calGrid").innerHTML = html;
+    }
+    function calPrev() { calDate.setMonth(calDate.getMonth() - 1); renderCalendar(); }
+    function calNext() { calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); }
+
+    // ===== ISHGA TUSHIRISH =====
     loadDashboard();
+    loadFirstClassAI();
+    // Premium card (sidebar) endi teacher-sidebar.js tomonidan boshqariladi
   </script>
 </body>
 </html>

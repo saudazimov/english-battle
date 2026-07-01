@@ -277,6 +277,7 @@
   <div class="toast" id="toast"></div>
 
   <script src="/api.js"></script>
+  <script src="/payment-modal.js"></script>
   <script>
     // Himoya
     const userData = localStorage.getItem("user");
@@ -493,7 +494,7 @@
           '<div class="lock-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>' +
           '<h3>AI haftalik hisobot</h3>' +
           '<p>Premium ota-onalar uchun. Farzandingizning haftalik progressi, kuchli va zaif mavzulari hamda keyingi hafta uchun aniq tavsiyalarni AI tahlili bilan ko\'ring.</p>' +
-          '<div class="btn-row"><button class="btn-primary" onclick="alert(\'Premium tez orada!\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg> Premium olish</button></div>' +
+          '<div class="btn-row"><button class="btn-primary" onclick="window.openPaymentModal(\'parent_premium\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg> Premium olish</button></div>' +
         '</div>';
     }
 

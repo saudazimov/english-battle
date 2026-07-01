@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sozlamalar — English Battle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root, [data-theme="light"] {
+      --bg: #f1f4f9; --bg-card: #ffffff; --bg-soft: #f6f8fc; --bg-hover: #eef2f9;
+      --border: #e8edf5; --border-strong: #dce4ef;
+      --text: #1a2233; --text-sub: #5d6b85; --text-dim: #8b97ad;
+      --primary: #2f6bff; --primary-soft: #e8efff; --accent: #7c5cfc; --accent-soft: #efe9ff;
+      --green: #16b06a; --green-soft: #e0f5ec; --amber: #f59e0b; --amber-soft: #fdf2dd;
+      --red: #ef4655; --red-soft: #fde8ea; --cyan: #06b6d4;
+      --navy: #1e2a5a;
+      --shadow: 0 1px 3px rgba(20,30,60,.04); --shadow-md: 0 4px 16px rgba(20,30,60,.06); --shadow-lg: 0 12px 40px rgba(20,30,60,.10);
+      --radius: 16px; --radius-sm: 11px;
+    }
+    [data-theme="dark"] {
+      --bg: #0a0f1e; --bg-card: #111a2e; --bg-soft: #0e1626; --bg-hover: #16203a;
+      --border: #1d2940; --border-strong: #26344f;
+      --text: #f1f5fc; --text-sub: #9aa8c4; --text-dim: #6b7a99;
+      --primary: #3b82f6; --primary-soft: rgba(59,130,246,.14); --accent: #8b5cf6; --accent-soft: rgba(139,92,246,.15);
+      --green: #22c55e; --green-soft: rgba(34,197,94,.14); --amber: #f59e0b; --amber-soft: rgba(245,158,11,.14);
+      --red: #ef4444; --red-soft: rgba(239,68,68,.14); --cyan: #22d3ee;
+      --navy: #3b82f6;
+      --shadow: 0 1px 3px rgba(0,0,0,.3); --shadow-md: 0 4px 16px rgba(0,0,0,.35); --shadow-lg: 0 16px 50px rgba(0,0,0,.5);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; transition: background .25s, color .25s; }
+    a { text-decoration: none; color: inherit; }
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    .layout { display: flex; min-height: 100vh; }
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar { display: flex; align-items: flex-start; gap: 18px; padding: 26px 30px 8px; }
+    .tb-head { flex: 1; min-width: 0; }
+    .tb-head h1 { font-size: 27px; font-weight: 800; letter-spacing: -.6px; }
+    .tb-head p { font-size: 14px; color: var(--text-sub); margin-top: 5px; }
+    .tb-year { display: flex; align-items: center; gap: 9px; padding: 10px 15px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 11px; font-size: 13.5px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); white-space: nowrap; }
+    .tb-year svg { width: 16px; height: 16px; color: var(--text-dim); }
+    .theme-toggle, .tb-icon-btn { width: 44px; height: 44px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; display: grid; place-items: center; box-shadow: var(--shadow); color: var(--text-sub); position: relative; }
+    .theme-toggle svg, .tb-icon-btn svg { width: 19px; height: 19px; }
+    .tb-icon-btn .dot { position: absolute; top: 9px; right: 10px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; border: 2px solid var(--bg-card); }
+    .tb-user { display: flex; align-items: center; gap: 11px; cursor: pointer; }
+    .tb-user-info { text-align: right; }
+    .tb-user-name { font-size: 14px; font-weight: 700; }
+    .tb-user-role { font-size: 12px; color: var(--text-dim); }
+    .tb-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--primary)); display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 16px; overflow: hidden; }
+    .tb-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .content { padding: 14px 30px 36px; display: flex; gap: 22px; align-items: flex-start; }
+    .col-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+    .col-side { width: 310px; flex: 0 0 310px; display: flex; flex-direction: column; gap: 18px; }
+
+    /* Tab'lar */
+    .tabs-bar { display: flex; align-items: center; gap: 4px; padding: 6px 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); flex-wrap: wrap; }
+    .tab { display: flex; align-items: center; gap: 8px; padding: 11px 17px; border-radius: 11px; font-size: 13.5px; font-weight: 600; color: var(--text-sub); cursor: pointer; border: none; background: transparent; font-family: inherit; }
+    .tab svg { width: 16px; height: 16px; }
+    .tab.active { background: var(--primary-soft); color: var(--primary); }
+    .tab:hover:not(.active) { background: var(--bg-soft); }
+
+    .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
+    .panel-head { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+    .panel-head-ic { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; flex: 0 0 auto; }
+    .panel-head-ic svg { width: 20px; height: 20px; }
+    .panel-head h2 { font-size: 17px; font-weight: 800; }
+
+    /* Profil forma */
+    .profile-grid { display: grid; grid-template-columns: 200px 1fr; gap: 28px; align-items: start; }
+    .avatar-col { text-align: center; }
+    .avatar-big { width: 130px; height: 130px; border-radius: 50%; margin: 0 auto 14px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 44px; overflow: hidden; background: linear-gradient(135deg, var(--accent), var(--primary)); }
+    .avatar-big img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-soft); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .avatar-btn:hover { background: var(--bg-hover); }
+    .avatar-btn svg { width: 14px; height: 14px; }
+    .avatar-hint { font-size: 11.5px; color: var(--text-dim); margin-top: 10px; }
+
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field.full { grid-column: 1 / -1; }
+    .field label { font-size: 12.5px; font-weight: 600; color: var(--text-sub); }
+    .field input, .field select, .field textarea { padding: 12px 14px; border: 1px solid var(--border); border-radius: 11px; background: var(--bg-soft); font-family: inherit; font-size: 14px; color: var(--text); outline: none; transition: border-color .15s; width: 100%; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); background: var(--bg-card); }
+    .field textarea { resize: vertical; min-height: 84px; line-height: 1.5; }
+    .field input::placeholder, .field textarea::placeholder { color: var(--text-dim); }
+    .field-note { font-size: 11px; color: var(--text-dim); }
+    .input-lock { position: relative; }
+    .input-lock input { padding-right: 42px; }
+    .input-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); border: none; background: transparent; cursor: pointer; color: var(--text-dim); padding: 0; }
+    .input-eye svg { width: 17px; height: 17px; }
+
+    .form-foot { display: flex; justify-content: flex-end; margin-top: 20px; }
+    .btn-save { padding: 12px 26px; border: none; border-radius: 11px; background: var(--navy); color: #fff; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; }
+    .btn-save:hover { opacity: .92; }
+    [data-theme="light"] .btn-save { background: #1e2a5a; }
+
+    .divider { height: 1px; background: var(--border); margin: 0; }
+
+    /* O'ng panel */
+    .side-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+    .side-card h3 { font-size: 15px; font-weight: 800; margin-bottom: 16px; }
+    .info-row { display: flex; align-items: center; gap: 11px; margin-bottom: 15px; }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-ic { width: 32px; height: 32px; border-radius: 9px; background: var(--bg-soft); display: grid; place-items: center; flex: 0 0 auto; color: var(--text-sub); }
+    .info-ic svg { width: 15px; height: 15px; }
+    .info-body { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; }
+    .info-k { font-size: 13px; color: var(--text-sub); }
+    .info-v { font-size: 13px; font-weight: 700; }
+
+    .prem-card { background: linear-gradient(135deg, var(--accent-soft), var(--primary-soft)); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+    .prem-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .prem-ic { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), var(--primary)); display: grid; place-items: center; flex: 0 0 auto; }
+    .prem-ic svg { width: 17px; height: 17px; color: #fff; }
+    .prem-title { font-size: 14.5px; font-weight: 800; }
+    .prem-badge { font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--accent); color: #fff; margin-left: auto; }
+    .prem-badge.free { background: var(--text-dim); }
+    .prem-desc { font-size: 12.5px; color: var(--text-sub); margin-bottom: 14px; line-height: 1.45; }
+    .prem-btn { display: block; width: 100%; text-align: center; padding: 11px; border: none; border-radius: 10px; background: var(--navy); color: #fff; font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    [data-theme="light"] .prem-btn { background: #1e2a5a; }
+    .prem-btn.pro { background: var(--green); }
+
+    .act-row { display: flex; align-items: center; gap: 11px; padding: 12px 0; cursor: pointer; border-bottom: 1px solid var(--border); }
+    .act-row:last-child { border-bottom: none; }
+    .act-row:hover .act-title { color: var(--primary); }
+    .act-ic { width: 32px; height: 32px; border-radius: 9px; background: var(--bg-soft); display: grid; place-items: center; flex: 0 0 auto; color: var(--text-sub); }
+    .act-ic svg { width: 15px; height: 15px; }
+    .act-body { flex: 1; min-width: 0; }
+    .act-title { font-size: 13px; font-weight: 700; transition: color .15s; }
+    .act-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
+    .act-tag { font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--bg-hover); color: var(--text-sub); flex: 0 0 auto; }
+    .act-arrow { color: var(--text-dim); flex: 0 0 auto; }
+    .act-arrow svg { width: 15px; height: 15px; }
+    .act-row.danger .act-ic { background: var(--red-soft); color: var(--red); }
+    .act-row.danger .act-title { color: var(--red); }
+
+    .state-msg { padding: 50px 20px; text-align: center; color: var(--text-dim); font-size: 14px; }
+    .soon-badge { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 10px; background: var(--amber-soft); color: var(--amber); font-size: 13px; font-weight: 600; margin-top: 10px; }
+    .soon-badge svg { width: 15px; height: 15px; }
+
+    .toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: var(--bg-card); padding: 13px 22px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; transition: all .3s; z-index: 7000; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    @media (max-width: 1280px) { .content { flex-direction: column; } .col-side { width: 100%; flex: none; display: grid; grid-template-columns: 1fr 1fr; align-items: start; } }
+    @media (max-width: 900px) { .profile-grid { grid-template-columns: 1fr; } .field-grid { grid-template-columns: 1fr; } .col-side { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) { .topbar { flex-wrap: wrap; padding: 18px; } .content { padding: 14px 16px 28px; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div id="teacherSidebar"></div>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="tb-head">
+          <h1>Sozlamalar</h1>
+          <p>Hisobingiz va platforma sozlamalarini boshqaring</p>
+        </div>
+        <div class="tb-year" onclick="comingSoon('O\'quv yili')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          2024–2025 O'quv yili
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
+        <button class="tb-icon-btn" onclick="comingSoon('Bildirishnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
+        <div class="tb-user" onclick="window.location.href='/profile.html'">
+          <div class="tb-user-info">
+            <div class="tb-user-name" id="userName">O'qituvchi</div>
+            <div class="tb-user-role">Teacher</div>
+          </div>
+          <div class="tb-avatar" id="userAvatar">T</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="col-main">
+          <!-- Tab'lar -->
+          <div class="tabs-bar">
+            <button class="tab active" id="tabProfil" onclick="switchTab('profil')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profil</button>
+            <button class="tab" id="tabHisob" onclick="switchTab('hisob')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20"/></svg> Hisob</button>
+            <button class="tab" id="tabBildirishnomalar" onclick="switchTab('bildirishnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Bildirishnomalar</button>
+            <button class="tab" id="tabMaxfiylik" onclick="switchTab('maxfiylik')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Maxfiylik</button>
+            <button class="tab" id="tabTashqi" onclick="switchTab('tashqi')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Tashqi xizmatlar</button>
+            <button class="tab" id="tabKorinish" onclick="switchTab('korinish')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2"/></svg> Ko'rinish</button>
+          </div>
+
+          <!-- PROFIL TAB -->
+          <div id="paneProfil">
+            <!-- Profil ma'lumotlari -->
+            <div class="panel">
+              <div class="panel-head"><div class="panel-head-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><h2>Profil ma'lumotlari</h2></div>
+              <div class="profile-grid">
+                <div class="avatar-col">
+                  <div class="avatar-big" id="avatarBig">T</div>
+                  <button class="avatar-btn" onclick="comingSoon('Rasmni o\'zgartirish')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Rasmni o'zgartirish</button>
+                  <div class="avatar-hint">JPG, PNG yoki WEBP. Maks. 2MB</div>
+                </div>
+                <div>
+                  <div class="field-grid">
+                    <div class="field"><label>To'liq ism</label><input id="inpName" type="text" placeholder="Ism familiya" /></div>
+                    <div class="field"><label>Email</label><input id="inpEmail" type="email" placeholder="email@example.com" /><span class="field-note">Hozircha o'zgartirib bo'lmaydi</span></div>
+                    <div class="field"><label>Telefon raqam</label><input id="inpPhone" type="text" placeholder="+998 90 123 45 67" /></div>
+                    <div class="field"><label>Fan</label><select id="inpSubject"><option>English</option><option>Boshqa</option></select></div>
+                    <div class="field full"><label>Qisqacha bio</label><textarea id="inpBio" placeholder="O'zingiz haqingizda qisqacha yozing..."></textarea></div>
+                  </div>
+                  <div class="form-foot"><button class="btn-save" onclick="saveProfile()">Saqlash</button></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Parolni o'zgartirish -->
+            <div class="panel" style="margin-top:20px">
+              <div class="panel-head"><div class="panel-head-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h2>Parolni o'zgartirish</h2></div>
+              <div class="field-grid" style="grid-template-columns:1fr 1fr 1fr">
+                <div class="field"><label>Joriy parol</label><div class="input-lock"><input id="pwCurrent" type="password" placeholder="Joriy parolni kiriting" /><button class="input-eye" onclick="togglePw('pwCurrent',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+                <div class="field"><label>Yangi parol</label><div class="input-lock"><input id="pwNew" type="password" placeholder="Yangi parolni kiriting" /><button class="input-eye" onclick="togglePw('pwNew',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+                <div class="field"><label>Yangi parolni tasdiqlang</label><div class="input-lock"><input id="pwConfirm" type="password" placeholder="Yangi parolni qayta kiriting" /><button class="input-eye" onclick="togglePw('pwConfirm',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+              </div>
+              <div class="form-foot"><button class="btn-save" onclick="changePassword()">Parolni yangilash</button></div>
+            </div>
+
+            <!-- Til va vaqt mintaqasi -->
+            <div class="panel" style="margin-top:20px">
+              <div class="panel-head"><div class="panel-head-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h2>Til va vaqt mintaqasi</h2></div>
+              <div class="field-grid" style="grid-template-columns:1fr 1fr 1fr 1fr">
+                <div class="field"><label>Til</label><select id="inpLang" onchange="saveLocale()"><option value="uz">O'zbekcha</option><option value="ru">Русский</option><option value="en">English</option></select></div>
+                <div class="field"><label>Vaqt mintaqasi</label><select id="inpTz"><option>(UTC+05:00) Tashkent</option><option>(UTC+03:00) Moscow</option><option>(UTC+00:00) London</option></select></div>
+                <div class="field"><label>Sana formati</label><select id="inpDateFmt"><option>DD.MM.YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select></div>
+                <div class="field"><label>Vaqt formati</label><select id="inpTimeFmt"><option>24 soat</option><option>12 soat (AM/PM)</option></select></div>
+              </div>
+              <div class="form-foot"><button class="btn-save" onclick="saveLocale()">Saqlash</button></div>
+            </div>
+          </div>
+
+          <!-- BOSHQA TAB'LAR (soon) -->
+          <div id="paneOther" style="display:none">
+            <div class="panel">
+              <div class="state-msg">
+                <div id="otherTabName" style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:8px">Bo'lim</div>
+                <div>Bu bo'lim tez orada tayyor bo'ladi.</div>
+                <div class="soon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Ishlab chiqilmoqda</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- O'ng panel -->
+        <div class="col-side">
+          <div class="side-card">
+            <h3>Hisobingiz haqida</h3>
+            <div class="info-row"><div class="info-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="info-body"><span class="info-k">Hisob turi</span><span class="info-v">Teacher</span></div></div>
+            <div class="info-row"><div class="info-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="info-body"><span class="info-k">A'zo bo'lish sanasi</span><span class="info-v" id="joinDate">—</span></div></div>
+            <div class="info-row"><div class="info-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="info-body"><span class="info-k">So'nggi kirish</span><span class="info-v">Bugun</span></div></div>
+          </div>
+
+          <div class="prem-card" id="premCard">
+            <div class="prem-top"><div class="prem-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div><span class="prem-title">Premium Teacher</span><span class="prem-badge free" id="premBadge">Free</span></div>
+            <div class="prem-desc" id="premDesc">Cheksiz sinf, topshiriq va AI imkoniyatlar.</div>
+            <button class="prem-btn" id="premBtn" onclick="onPremiumClick()">Pro ga o'tish</button>
+          </div>
+
+          <div class="side-card">
+            <h3>Xavfsizlik</h3>
+            <div class="act-row" onclick="comingSoon('Ikki bosqichli tasdiqlash')"><div class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="act-body"><div class="act-title">Ikki bosqichli tasdiqlash</div><div class="act-sub">Hisobingiz xavfsizligini oshiring</div></div><span class="act-tag">O'chirilgan</span></div>
+            <div class="act-row" onclick="comingSoon('Faol qurilmalar')"><div class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg></div><div class="act-body"><div class="act-title">Faol qurilmalar</div><div class="act-sub">Ulangan qurilmalarni ko'ring</div></div><span class="act-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+          </div>
+
+          <div class="side-card">
+            <h3>Ma'lumotlar va eksport</h3>
+            <div class="act-row" onclick="comingSoon('Eksport')"><div class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div class="act-body"><div class="act-title">Ma'lumotlarni eksport qilish</div><div class="act-sub">Hisobingiz ma'lumotlarini yuklab oling</div></div><span class="act-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+            <div class="act-row danger" onclick="comingSoon('Hisobni o\'chirish')"><div class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div><div class="act-body"><div class="act-title">Hisobni o'chirish</div><div class="act-sub">Hisobingizni butunlay o'chirib tashlang</div></div></div>
+          </div>
+
+          <div class="side-card">
+            <h3>Platforma haqida</h3>
+            <div class="act-row" onclick="comingSoon('Versiya')"><div class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><div class="info-body"><span class="act-title">Versiya</span><span class="info-v">1.0.0</span></div></div>
+            <div class="act-row" onclick="comingSoon('Yordam markazi')"><div class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="act-body"><div class="act-title">Yordam markazi</div><div class="act-sub">Yordam va qo'llanmalar</div></div><span class="act-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/api.js"></script>
+  <script src="/payment-modal.js"></script>
+  <script src="/premium-modal.js"></script>
+  <script src="/teacher-sidebar.js"></script>
+  <script>
+    // ===== TEMA =====
+    (function initTheme() {
+      var saved = localStorage.getItem("eb_theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+      updateThemeIcon(saved);
+    })();
+    function toggleTheme() {
+      var cur = document.documentElement.getAttribute("data-theme");
+      var next = cur === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("eb_theme", next);
+      updateThemeIcon(next);
+    }
+    function updateThemeIcon(theme) {
+      var el = document.getElementById("themeIcon");
+      if (!el) return;
+      el.innerHTML = theme === "dark"
+        ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+        : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>';
+    }
+
+    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada tayyor bo'ladi"); }
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function showToast(text) { var t = document.getElementById("toast"); t.textContent = text; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2600); }
+
+    // ===== AUTH =====
+    var userData = localStorage.getItem("user");
+    if (!userData || !localStorage.getItem("token")) { window.location.href = "/index.html"; }
+    var user = userData ? JSON.parse(userData) : {};
+    if (user.role && user.role !== "teacher") {
+      var R = { student: "/lobby.html", parent: "/parent.html", school_admin: "/school-admin.html" };
+      if (R[user.role]) window.location.href = R[user.role];
+    }
+    renderTeacherSidebar("settings");
+
+    var fn = user.first_name || "", ln = user.last_name || "";
+    var fullName = (fn + " " + ln).trim() || "O'qituvchi";
+    document.getElementById("userName").textContent = fullName;
+    var initial = (fn || "T").charAt(0).toUpperCase();
+    document.getElementById("userAvatar").textContent = initial;
+    document.getElementById("avatarBig").textContent = initial;
+
+    // Rasm bor bo'lsa ko'rsatamiz
+    if (user.profile_picture) {
+      var imgHtml = '<img src="' + esc(user.profile_picture) + '" alt="">';
+      document.getElementById("userAvatar").innerHTML = imgHtml;
+      document.getElementById("avatarBig").innerHTML = imgHtml;
+    }
+
+    // Prefill (real ma'lumot localStorage'dan)
+    document.getElementById("inpName").value = fullName;
+    document.getElementById("inpPhone").value = user.phone || "";
+    document.getElementById("inpEmail").value = user.email || "";
+    document.getElementById("inpBio").value = user.bio || "";
+
+    // Til (localStorage'dan)
+    var savedLang = localStorage.getItem("eb_lang") || "uz";
+    document.getElementById("inpLang").value = savedLang;
+
+    // A'zo bo'lish sanasi
+    if (user.created_at) {
+      try { document.getElementById("joinDate").textContent = new Date(user.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); } catch (e) {}
+    }
+
+    // ===== TAB'LAR =====
+    var TAB_NAMES = { hisob: "Hisob", bildirishnomalar: "Bildirishnomalar", maxfiylik: "Maxfiylik", tashqi: "Tashqi xizmatlar", korinish: "Ko'rinish" };
+    function switchTab(tab) {
+      ["profil", "hisob", "bildirishnomalar", "maxfiylik", "tashqi", "korinish"].forEach(function (t) {
+        var cap = t.charAt(0).toUpperCase() + t.slice(1);
+        var id = t === "tashqi" ? "tabTashqi" : t === "korinish" ? "tabKorinish" : "tab" + cap;
+        var el = document.getElementById(id);
+        if (el) el.classList.toggle("active", t === tab);
+      });
+      var isProfil = tab === "profil";
+      document.getElementById("paneProfil").style.display = isProfil ? "block" : "none";
+      document.getElementById("paneOther").style.display = isProfil ? "none" : "block";
+      if (!isProfil) document.getElementById("otherTabName").textContent = TAB_NAMES[tab] || "Bo'lim";
+    }
+
+    // ===== PROFIL SAQLASH =====
+    async function saveProfile() {
+      var name = document.getElementById("inpName").value.trim();
+      if (!name) { showToast("Ism bo'sh bo'lmasligi kerak"); return; }
+      // Backend endpoint hozircha yo'q — localStorage'ga saqlaymiz va xabar beramiz
+      // (server /me/update qo'shilganda shu yerda authFetch chaqiriladi)
+      comingSoon("Profil saqlash");
+    }
+
+    // ===== PAROL O'ZGARTIRISH =====
+    function togglePw(id, btn) {
+      var inp = document.getElementById(id);
+      inp.type = inp.type === "password" ? "text" : "password";
+    }
+    async function changePassword() {
+      var cur = document.getElementById("pwCurrent").value;
+      var nw = document.getElementById("pwNew").value;
+      var cf = document.getElementById("pwConfirm").value;
+      if (!cur || !nw || !cf) { showToast("Barcha parol maydonlarini to'ldiring"); return; }
+      if (nw.length < 6) { showToast("Yangi parol kamida 6 belgi bo'lsin"); return; }
+      if (nw !== cf) { showToast("Yangi parollar mos kelmadi"); return; }
+      // Backend teacher parol endpoint hozircha yo'q
+      comingSoon("Parolni yangilash");
+    }
+
+    // ===== TIL/VAQT SAQLASH =====
+    function saveLocale() {
+      var lang = document.getElementById("inpLang").value;
+      localStorage.setItem("eb_lang", lang);
+      showToast("Sozlamalar saqlandi");
+    }
+
+    // ===== PREMIUM =====
+    async function loadPremium() {
+      try {
+        var res = await authFetch("/me/subscription");
+        if (!res.ok) return;
+        var data = await res.json();
+        var isPro = data && (data.is_pro || (data.plan && data.plan !== "free"));
+        if (isPro) {
+          document.getElementById("premBadge").textContent = "Pro";
+          document.getElementById("premBadge").classList.remove("free");
+          document.getElementById("premDesc").textContent = "Barcha imkoniyatlar faol. Rahmat!";
+          var btn = document.getElementById("premBtn");
+          btn.textContent = "Faol ✓";
+          btn.classList.add("pro");
+          btn.onclick = function () { showToast("Premium Teacher faol"); };
+        }
+      } catch (e) {}
+    }
+    function onPremiumClick() {
+      if (window.openPaymentModal) window.openPaymentModal("teacher_pro");
+      else window.location.href = "/pricing.html?plan=teacher_pro";
+    }
+
+    // ===== ISHGA TUSHIRISH =====
+    loadPremium();
+  </script>
+</body>
+</html>

@@ -176,6 +176,18 @@
     };
 
     const role = user.role || "teacher";
+
+    // Har rolni o'z haqiqiy paneliga yo'naltirish (bu "tez orada" sahifa faqat zaxira)
+    var ROLE_PANEL = {
+      teacher: "/teacher.html",
+      parent: "/parent.html",
+      school_admin: "/school-admin.html",
+      student: "/lobby.html",
+    };
+    if (ROLE_PANEL[role]) {
+      window.location.replace(ROLE_PANEL[role]);
+    }
+
     const info = ROLE_INFO[role] || ROLE_INFO.teacher;
 
     const firstName = user.first_name || "";

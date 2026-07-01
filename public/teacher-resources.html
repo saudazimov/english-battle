@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resurslar — English Battle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root, [data-theme="light"] {
+      --bg: #f1f4f9; --bg-card: #ffffff; --bg-soft: #f6f8fc; --bg-hover: #eef2f9;
+      --border: #e8edf5; --border-strong: #dce4ef;
+      --text: #1a2233; --text-sub: #5d6b85; --text-dim: #8b97ad;
+      --primary: #2f6bff; --primary-soft: #e8efff; --accent: #7c5cfc; --accent-soft: #efe9ff;
+      --green: #16b06a; --green-soft: #e0f5ec; --amber: #f59e0b; --amber-soft: #fdf2dd;
+      --red: #ef4655; --red-soft: #fde8ea; --cyan: #06b6d4; --pink: #ec4899; --pink-soft: #fce7f3;
+      --shadow: 0 1px 3px rgba(20,30,60,.04); --shadow-md: 0 4px 16px rgba(20,30,60,.06); --shadow-lg: 0 12px 40px rgba(20,30,60,.10);
+      --radius: 16px; --radius-sm: 11px;
+    }
+    [data-theme="dark"] {
+      --bg: #0a0f1e; --bg-card: #111a2e; --bg-soft: #0e1626; --bg-hover: #16203a;
+      --border: #1d2940; --border-strong: #26344f;
+      --text: #f1f5fc; --text-sub: #9aa8c4; --text-dim: #6b7a99;
+      --primary: #3b82f6; --primary-soft: rgba(59,130,246,.14); --accent: #8b5cf6; --accent-soft: rgba(139,92,246,.15);
+      --green: #22c55e; --green-soft: rgba(34,197,94,.14); --amber: #f59e0b; --amber-soft: rgba(245,158,11,.14);
+      --red: #ef4444; --red-soft: rgba(239,68,68,.14); --cyan: #22d3ee; --pink: #ec4899; --pink-soft: rgba(236,72,153,.14);
+      --shadow: 0 1px 3px rgba(0,0,0,.3); --shadow-md: 0 4px 16px rgba(0,0,0,.35); --shadow-lg: 0 16px 50px rgba(0,0,0,.5);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; transition: background .25s, color .25s; }
+    a { text-decoration: none; color: inherit; }
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    .layout { display: flex; min-height: 100vh; }
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar { display: flex; align-items: flex-start; gap: 18px; padding: 26px 30px 8px; }
+    .tb-head { flex: 1; min-width: 0; }
+    .tb-head h1 { font-size: 27px; font-weight: 800; letter-spacing: -.6px; }
+    .tb-head p { font-size: 14px; color: var(--text-sub); margin-top: 5px; }
+    .tb-year { display: flex; align-items: center; gap: 9px; padding: 10px 15px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 11px; font-size: 13.5px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); white-space: nowrap; }
+    .tb-year svg { width: 16px; height: 16px; color: var(--text-dim); }
+    .theme-toggle, .tb-icon-btn { width: 44px; height: 44px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; display: grid; place-items: center; box-shadow: var(--shadow); color: var(--text-sub); position: relative; }
+    .theme-toggle svg, .tb-icon-btn svg { width: 19px; height: 19px; }
+    .tb-icon-btn .dot { position: absolute; top: 9px; right: 10px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; border: 2px solid var(--bg-card); }
+    .tb-user { display: flex; align-items: center; gap: 11px; cursor: pointer; }
+    .tb-user-info { text-align: right; }
+    .tb-user-name { font-size: 14px; font-weight: 700; }
+    .tb-user-role { font-size: 12px; color: var(--text-dim); }
+    .tb-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--primary)); display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 16px; }
+
+    .content { padding: 14px 30px 36px; display: flex; gap: 22px; align-items: flex-start; }
+    .col-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+    .col-side { width: 300px; flex: 0 0 300px; display: flex; flex-direction: column; gap: 18px; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+    .stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+    .stat-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .stat-ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; flex: 0 0 auto; }
+    .stat-ic svg { width: 18px; height: 18px; }
+    .stat-label { font-size: 11.5px; color: var(--text-sub); font-weight: 600; line-height: 1.3; }
+    .stat-val { font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+    .stat-sub { font-size: 11px; margin-top: 9px; color: var(--text-dim); font-weight: 500; }
+
+    .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .filters { display: flex; gap: 10px; padding: 18px; flex-wrap: wrap; }
+    .search-box { flex: 1; min-width: 170px; display: flex; align-items: center; gap: 10px; padding: 11px 15px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 11px; }
+    .search-box svg { width: 17px; height: 17px; color: var(--text-dim); flex: 0 0 auto; }
+    .search-box input { border: none; background: transparent; outline: none; font-family: inherit; font-size: 14px; color: var(--text); width: 100%; }
+    .search-box input::placeholder { color: var(--text-dim); }
+    .filter-sel { display: flex; align-items: center; gap: 7px; padding: 11px 14px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 11px; font-size: 12.5px; font-weight: 600; color: var(--text); cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .filter-sel svg { width: 13px; height: 13px; color: var(--text-dim); }
+
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .section-head h2 { font-size: 18px; font-weight: 800; }
+    .section-head a { font-size: 13px; font-weight: 700; color: var(--primary); cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    .section-head a svg { width: 15px; height: 15px; }
+
+    /* Tavsiya kartalari */
+    .rec-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .rec-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform .15s, box-shadow .2s; }
+    .rec-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .rec-thumb { height: 110px; position: relative; display: grid; place-items: center; }
+    .rec-thumb svg { width: 44px; height: 44px; opacity: .9; }
+    .rec-badge { position: absolute; top: 11px; left: 11px; font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 999px; background: rgba(255,255,255,.9); }
+    .rec-body { padding: 15px; }
+    .rec-title { font-size: 14.5px; font-weight: 700; }
+    .rec-meta { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+    .rec-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+    .rec-view { padding: 8px 18px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg-soft); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .rec-view:hover { background: var(--bg-hover); }
+    .rec-bookmark { width: 34px; height: 34px; border-radius: 9px; border: none; background: transparent; cursor: pointer; display: grid; place-items: center; color: var(--text-dim); }
+    .rec-bookmark:hover { background: var(--bg-hover); color: var(--accent); }
+    .rec-bookmark svg { width: 17px; height: 17px; }
+
+    /* Jadval */
+    .table-wrap { overflow-x: auto; }
+    .res-table { width: 100%; border-collapse: collapse; }
+    .res-table thead th { text-align: left; padding: 13px 16px; font-size: 12px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .3px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .res-table tbody td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .res-table tbody tr:last-child td { border-bottom: none; }
+    .res-table tbody tr:hover { background: var(--bg-soft); }
+    .res-name-cell { display: flex; align-items: center; gap: 12px; min-width: 190px; }
+    .fmt-ic { width: 40px; height: 40px; border-radius: 10px; flex: 0 0 auto; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; }
+    .res-name { font-size: 14px; font-weight: 700; }
+    .res-desc { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+    .chip { font-size: 11.5px; font-weight: 700; padding: 4px 11px; border-radius: 7px; }
+    .chip.reading { background: var(--primary-soft); color: var(--primary); }
+    .chip.grammar { background: var(--amber-soft); color: var(--amber); }
+    .chip.vocabulary { background: var(--green-soft); color: var(--green); }
+    .chip.listening { background: rgba(6,182,212,.14); color: var(--cyan); }
+    .res-cell { font-size: 13.5px; color: var(--text-sub); font-weight: 500; }
+    .act-cell { display: flex; gap: 4px; }
+    .act-ic { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; cursor: pointer; display: grid; place-items: center; color: var(--text-dim); }
+    .act-ic:hover { background: var(--bg-hover); color: var(--primary); }
+    .act-ic svg { width: 16px; height: 16px; }
+    .table-foot { text-align: center; padding: 16px; }
+    .table-foot a { font-size: 13.5px; font-weight: 700; color: var(--primary); cursor: pointer; }
+
+    /* O'ng panel */
+    .side-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+    .side-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .side-head h3 { font-size: 16px; font-weight: 800; }
+    .side-head a { font-size: 12px; font-weight: 700; color: var(--primary); cursor: pointer; }
+    .qa-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; cursor: pointer; border-bottom: 1px solid var(--border); }
+    .qa-item:last-child { border-bottom: none; }
+    .qa-item:hover .qa-name { color: var(--primary); }
+    .qa-ic { width: 34px; height: 34px; border-radius: 9px; flex: 0 0 auto; display: grid; place-items: center; }
+    .qa-ic svg { width: 16px; height: 16px; }
+    .qa-name { font-size: 13.5px; font-weight: 600; flex: 1; transition: color .15s; }
+    .qa-arrow { color: var(--text-dim); }
+    .qa-arrow svg { width: 15px; height: 15px; }
+
+    .mem-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .mem-txt { font-size: 13px; color: var(--text-sub); font-weight: 500; }
+    .mem-pct { font-size: 14px; font-weight: 800; }
+    .mem-bar { height: 8px; border-radius: 999px; background: var(--bg-hover); overflow: hidden; margin-bottom: 16px; }
+    .mem-bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--primary), var(--accent)); }
+    .mem-row { display: flex; align-items: center; gap: 9px; font-size: 12.5px; margin-bottom: 9px; }
+    .mem-row:last-child { margin-bottom: 0; }
+    .mem-row .d { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+    .mem-row .k { color: var(--text-sub); font-weight: 500; }
+    .mem-row .v { margin-left: auto; color: var(--text-dim); font-weight: 600; }
+
+    .donut-wrap { display: flex; align-items: center; gap: 16px; }
+    .donut { width: 110px; height: 110px; flex: 0 0 auto; }
+    .donut-legend { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+    .dleg { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .dleg .d { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+    .dleg-name { color: var(--text-sub); font-weight: 600; }
+    .dleg-val { margin-left: auto; color: var(--text-dim); font-weight: 600; }
+    .donut-total { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 12px; }
+
+    .up-item { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .up-item:last-child { border-bottom: none; }
+    .up-ic { width: 34px; height: 34px; border-radius: 9px; flex: 0 0 auto; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #fff; }
+    .up-info { flex: 1; min-width: 0; }
+    .up-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .up-date { font-size: 12px; color: var(--text-dim); flex: 0 0 auto; }
+
+    /* Bo'sh holat */
+    .empty-state { padding: 60px 30px; text-align: center; }
+    .empty-ic { width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 20px; background: var(--accent-soft); display: grid; place-items: center; }
+    .empty-ic svg { width: 34px; height: 34px; color: var(--accent); }
+    .empty-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .empty-text { font-size: 13.5px; color: var(--text-sub); max-width: 400px; margin: 0 auto 22px; line-height: 1.55; }
+    .btn-up { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border: none; border-radius: 11px; background: linear-gradient(135deg, var(--accent), var(--primary)); color: #fff; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; box-shadow: 0 6px 18px rgba(124,92,252,.3); }
+    .btn-up svg { width: 17px; height: 17px; }
+
+    .state-msg { padding: 30px 20px; text-align: center; color: var(--text-dim); font-size: 13.5px; }
+    .chart-empty { height: 120px; display: grid; place-items: center; color: var(--text-dim); font-size: 12.5px; text-align: center; }
+    .skeleton-bar { height: 54px; background: linear-gradient(90deg, var(--bg-soft), var(--bg-hover), var(--bg-soft)); background-size: 200% 100%; animation: shim 1.4s infinite; }
+    @keyframes shim { to { background-position: -200% 0; } }
+
+    .toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: var(--bg-card); padding: 13px 22px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; transition: all .3s; z-index: 7000; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    @media (max-width: 1400px) { .stats-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } .rec-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 1280px) { .content { flex-direction: column; } .col-side { width: 100%; flex: none; display: grid; grid-template-columns: 1fr 1fr; align-items: start; } }
+    @media (max-width: 900px) { .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rec-grid { grid-template-columns: 1fr; } .col-side { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) { .stats-row { grid-template-columns: 1fr; } .topbar { flex-wrap: wrap; padding: 18px; } .content { padding: 14px 16px 28px; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div id="teacherSidebar"></div>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="tb-head">
+          <h1>Resurslar</h1>
+          <p>O'quv materiallari, fayllar va tayyor resurslarni boshqaring</p>
+        </div>
+        <div class="tb-year" onclick="comingSoon('O\'quv yili')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          2024–2025 O'quv yili
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
+        <button class="tb-icon-btn" onclick="comingSoon('Bildirishnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
+        <div class="tb-user" onclick="window.location.href='/profile.html'">
+          <div class="tb-user-info">
+            <div class="tb-user-name" id="userName">O'qituvchi</div>
+            <div class="tb-user-role">Teacher</div>
+          </div>
+          <div class="tb-avatar" id="userAvatar">T</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="col-main">
+          <!-- 5 statistika -->
+          <div class="stats-row">
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><span class="stat-label">Jami resurslar</span></div>
+              <div class="stat-val" id="stTotal">0</div>
+              <div class="stat-sub">barcha resurslar</div>
+            </div>
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><span class="stat-label">Mening fayllarim</span></div>
+              <div class="stat-val" id="stMine">0</div>
+              <div class="stat-sub">o'zim yuklagan</div>
+            </div>
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><span class="stat-label">Menga ulashilgan</span></div>
+              <div class="stat-val" id="stShared">0</div>
+              <div class="stat-sub">boshqalardan</div>
+            </div>
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><span class="stat-label">Yuklab olingan</span></div>
+              <div class="stat-val" id="stDownloads">0</div>
+              <div class="stat-sub">yuklab olishlar</div>
+            </div>
+            <div class="stat">
+              <div class="stat-top"><div class="stat-ic" style="background:var(--pink-soft);color:var(--pink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><span class="stat-label">Sevimlilar</span></div>
+              <div class="stat-val" id="stFav">0</div>
+              <div class="stat-sub">belgilangan</div>
+            </div>
+          </div>
+
+          <!-- Filtrlar -->
+          <div class="panel">
+            <div class="filters">
+              <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input id="searchInput" type="text" placeholder="Resurs nomi bo'yicha qidiring..." oninput="onSearch(this.value)" />
+              </div>
+              <button class="filter-sel" onclick="comingSoon('Tur filtri')">Barcha tur <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+              <button class="filter-sel" onclick="comingSoon('Sinf filtri')">Barcha sinf <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+              <button class="filter-sel" onclick="comingSoon('Format filtri')">Barcha format <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+              <button class="filter-sel" onclick="comingSoon('Filtrlar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filtrlar</button>
+            </div>
+          </div>
+
+          <!-- Tavsiya etilgan (namuna kartalar — o'quv materiallari kutubxonasi) -->
+          <div>
+            <div class="section-head"><h2>Tavsiya etilgan resurslar</h2><a onclick="comingSoon('Barchasi')">Barchasini ko'rish <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a></div>
+            <div class="rec-grid" style="margin-top:14px">
+              <div class="rec-card">
+                <div class="rec-thumb" style="background:linear-gradient(135deg,#ede9ff,#e0d7ff)"><span class="rec-badge" style="color:var(--accent)">Reading</span><svg viewBox="0 0 24 24" fill="none" stroke="#7c5cfc" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+                <div class="rec-body"><div class="rec-title">Reading Practice Pack</div><div class="rec-meta">15 ta mashq · PDF</div><div class="rec-foot"><button class="rec-view" onclick="comingSoon('Ko\'rish')">Ko'rish</button><button class="rec-bookmark" onclick="comingSoon('Saqlash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div></div>
+              </div>
+              <div class="rec-card">
+                <div class="rec-thumb" style="background:linear-gradient(135deg,#e8efff,#d7e3ff)"><span class="rec-badge" style="color:var(--primary)">Grammar</span><svg viewBox="0 0 24 24" fill="none" stroke="#2f6bff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></div>
+                <div class="rec-body"><div class="rec-title">Grammar Exercises</div><div class="rec-meta">20 ta mashq · PDF</div><div class="rec-foot"><button class="rec-view" onclick="comingSoon('Ko\'rish')">Ko'rish</button><button class="rec-bookmark" onclick="comingSoon('Saqlash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div></div>
+              </div>
+              <div class="rec-card">
+                <div class="rec-thumb" style="background:linear-gradient(135deg,#e0f5ec,#d0f0e0)"><span class="rec-badge" style="color:var(--green)">Vocabulary</span><svg viewBox="0 0 24 24" fill="none" stroke="#16b06a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+                <div class="rec-body"><div class="rec-title">Vocabulary Flashcards</div><div class="rec-meta">100 ta karta · PDF</div><div class="rec-foot"><button class="rec-view" onclick="comingSoon('Ko\'rish')">Ko'rish</button><button class="rec-bookmark" onclick="comingSoon('Saqlash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div></div>
+              </div>
+              <div class="rec-card">
+                <div class="rec-thumb" style="background:linear-gradient(135deg,#fdf2dd,#fce8c8)"><span class="rec-badge" style="color:var(--amber)">Listening</span><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></div>
+                <div class="rec-body"><div class="rec-title">Listening Activities</div><div class="rec-meta">12 ta mashq · MP3</div><div class="rec-foot"><button class="rec-view" onclick="comingSoon('Ko\'rish')">Ko'rish</button><button class="rec-bookmark" onclick="comingSoon('Saqlash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mening so'nggi resurslarim -->
+          <div class="panel">
+            <div style="padding:18px 18px 0"><div class="section-head"><h2 style="font-size:16px">Mening so'nggi resurslarim</h2></div></div>
+            <div id="resArea" style="margin-top:14px">
+              <div class="skeleton-bar"></div><div class="skeleton-bar"></div><div class="skeleton-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- O'ng panel -->
+        <div class="col-side">
+          <div class="side-card">
+            <div class="side-head"><h3>Tezkor kirish</h3></div>
+            <div class="qa-item" onclick="comingSoon('Fayl yuklash')"><div class="qa-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><span class="qa-name">Fayl yuklash</span><span class="qa-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+            <div class="qa-item" onclick="comingSoon('Google Drive')"><div class="qa-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.71 3.5L1.15 15l3.42 5.5h6.56M22.85 15L16.29 3.5H9.42M4.57 20.5h13.71l3.42-5.5"/></svg></div><span class="qa-name">Google Drive dan qo'shish</span><span class="qa-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+            <div class="qa-item" onclick="comingSoon('Kutubxona')"><div class="qa-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><span class="qa-name">Tayyor resurslar kutubxonasi</span><span class="qa-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+            <div class="qa-item" onclick="comingSoon('Ulashilgan')"><div class="qa-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><span class="qa-name">Menga ulashilgan resurslar</span><span class="qa-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+            <div class="qa-item" onclick="comingSoon('Sevimlilar')"><div class="qa-ic" style="background:var(--pink-soft);color:var(--pink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><span class="qa-name">Sevimlilarim</span><span class="qa-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+          </div>
+
+          <div class="side-card">
+            <div class="side-head"><h3>Xotira holati</h3></div>
+            <div class="mem-top"><span class="mem-txt" id="memTxt">0 GB / 10 GB ishlatilgan</span><span class="mem-pct" id="memPct">0%</span></div>
+            <div class="mem-bar"><span id="memBar" style="width:0%"></span></div>
+            <div class="mem-row"><span class="d" style="background:var(--primary)"></span><span class="k">Mening fayllarim</span><span class="v" id="memMine">—</span></div>
+            <div class="mem-row"><span class="d" style="background:var(--green)"></span><span class="k">Menga ulashilgan</span><span class="v" id="memShared">—</span></div>
+            <div class="mem-row"><span class="d" style="background:var(--text-dim)"></span><span class="k">Boshqalar</span><span class="v" id="memOther">—</span></div>
+          </div>
+
+          <div class="side-card">
+            <div class="side-head"><h3>Resurs turlari</h3></div>
+            <div id="donutArea"><div class="chart-empty">Resurs qo'shilgach,<br>taqsimot ko'rsatiladi.</div></div>
+          </div>
+
+          <div class="side-card">
+            <div class="side-head"><h3>So'nggi yuklamalar</h3><a onclick="comingSoon('Barchasi')">Barchasini ko'rish</a></div>
+            <div id="recentArea"><div class="state-msg" style="padding:14px 0">Hali yuklama yo'q</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/api.js"></script>
+  <script src="/payment-modal.js"></script>
+  <script src="/premium-modal.js"></script>
+  <script src="/teacher-sidebar.js"></script>
+  <script>
+    // ===== TEMA =====
+    (function initTheme() {
+      var saved = localStorage.getItem("eb_theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+      updateThemeIcon(saved);
+    })();
+    function toggleTheme() {
+      var cur = document.documentElement.getAttribute("data-theme");
+      var next = cur === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("eb_theme", next);
+      updateThemeIcon(next);
+    }
+    function updateThemeIcon(theme) {
+      var el = document.getElementById("themeIcon");
+      if (!el) return;
+      el.innerHTML = theme === "dark"
+        ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+        : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>';
+    }
+
+    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada tayyor bo'ladi"); }
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function showToast(text) { var t = document.getElementById("toast"); t.textContent = text; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2600); }
+    function fmtDate(iso) { if (!iso) return "—"; var d = new Date(iso); return d.toISOString().slice(0, 10); }
+
+    // ===== AUTH =====
+    var userData = localStorage.getItem("user");
+    if (!userData || !localStorage.getItem("token")) { window.location.href = "/index.html"; }
+    var user = userData ? JSON.parse(userData) : {};
+    if (user.role && user.role !== "teacher") {
+      var R = { student: "/lobby.html", parent: "/parent.html", school_admin: "/school-admin.html" };
+      if (R[user.role]) window.location.href = R[user.role];
+    }
+    renderTeacherSidebar("resources");
+
+    var fn = user.first_name || "", ln = user.last_name || "";
+    document.getElementById("userName").textContent = (fn + " " + ln).trim() || "O'qituvchi";
+    document.getElementById("userAvatar").textContent = (fn || "T").charAt(0).toUpperCase();
+
+    var FMT_COLORS = { PDF: "#ef4655", DOCX: "#2f6bff", DOC: "#2f6bff", PPTX: "#f59e0b", PPT: "#f59e0b", MP3: "#16b06a", XLSX: "#16b06a" };
+    var DONUT_COLORS = ["#ef4655", "#2f6bff", "#f59e0b", "#16b06a", "#94a3b8"];
+    function fmtColor(f) { return FMT_COLORS[(f || "").toUpperCase()] || "#7c5cfc"; }
+
+    // ===== RESURSLARNI YUKLASH =====
+    async function loadResources() {
+      try {
+        var res = await authFetch("/teacher/resources");
+        if (!res.ok) { showEmpty(); return; }
+        var data = await res.json();
+        var list = data.resources || [];
+        renderStats(data.stats || {});
+        renderMemory(data.storage || {});
+        renderDonut(data.by_format || []);
+        renderRecent(data.recent_uploads || []);
+        if (!list.length) { showTableEmpty(); return; }
+        renderTable(list);
+      } catch (e) { showEmpty(); }
+    }
+
+    function showEmpty() { showTableEmpty(); }
+
+    function showTableEmpty() {
+      document.getElementById("resArea").innerHTML =
+        '<div class="empty-state"><div class="empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>' +
+        '<div class="empty-title">Hali resurs yo\'q</div>' +
+        '<div class="empty-text">O\'quv materiallari, PDF, taqdimot va audio fayllaringizni yuklang. O\'quvchilar bilan ulashing, topshiriqlarga biriktiring. Fayl yuklash tez orada ochiladi.</div>' +
+        '<button class="btn-up" onclick="comingSoon(\'Fayl yuklash\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Birinchi faylni yuklang</button></div>';
+    }
+
+    function renderStats(s) {
+      document.getElementById("stTotal").textContent = s.total != null ? s.total : "0";
+      document.getElementById("stMine").textContent = s.mine != null ? s.mine : "0";
+      document.getElementById("stShared").textContent = s.shared != null ? s.shared : "0";
+      document.getElementById("stDownloads").textContent = s.downloads != null ? s.downloads : "0";
+      document.getElementById("stFav").textContent = s.favorites != null ? s.favorites : "0";
+    }
+
+    function renderMemory(st) {
+      var used = st.used_gb != null ? st.used_gb : 0;
+      var totalGb = st.total_gb != null ? st.total_gb : 10;
+      var pct = totalGb > 0 ? Math.round((used / totalGb) * 100) : 0;
+      document.getElementById("memTxt").textContent = used + " GB / " + totalGb + " GB ishlatilgan";
+      document.getElementById("memPct").textContent = pct + "%";
+      document.getElementById("memBar").style.width = pct + "%";
+      document.getElementById("memMine").textContent = st.mine_gb != null ? st.mine_gb + " GB" : "—";
+      document.getElementById("memShared").textContent = st.shared_gb != null ? st.shared_gb + " GB" : "—";
+      document.getElementById("memOther").textContent = st.other_gb != null ? st.other_gb + " GB" : "—";
+    }
+
+    function renderDonut(list) {
+      var box = document.getElementById("donutArea");
+      if (!list.length) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
+      var total = list.reduce(function (s, c) { return s + c.count; }, 0);
+      if (total === 0) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
+      var r = 46, cx = 55, cy = 55, circ = 2 * Math.PI * r, offset = 0;
+      var segs = list.map(function (c, i) {
+        var len = (c.count / total) * circ;
+        var seg = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + (fmtColor(c.format) || DONUT_COLORS[i % DONUT_COLORS.length]) + '" stroke-width="13" stroke-dasharray="' + len + ' ' + (circ - len) + '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+        offset += len; return seg;
+      }).join("");
+      var legend = list.map(function (c, i) {
+        var pct = Math.round((c.count / total) * 100);
+        return '<div class="dleg"><span class="d" style="background:' + (fmtColor(c.format) || DONUT_COLORS[i % DONUT_COLORS.length]) + '"></span><span class="dleg-name">' + esc(c.format) + '</span><span class="dleg-val">' + c.count + ' (' + pct + '%)</span></div>';
+      }).join("");
+      box.innerHTML = '<div class="donut-wrap"><svg class="donut" viewBox="0 0 110 110">' + segs + '</svg><div class="donut-legend">' + legend + '</div></div><div class="donut-total">Jami: ' + total + ' resurs</div>';
+    }
+
+    function renderRecent(list) {
+      var box = document.getElementById("recentArea");
+      if (!list.length) { box.innerHTML = '<div class="state-msg" style="padding:14px 0">Hali yuklama yo\'q</div>'; return; }
+      box.innerHTML = list.map(function (u) {
+        var fmt = (u.format || "").toUpperCase();
+        return '<div class="up-item"><div class="up-ic" style="background:' + fmtColor(fmt) + '">' + esc(fmt.slice(0, 3)) + '</div><div class="up-info"><div class="up-name">' + esc(u.name) + '</div></div><span class="up-date">' + fmtDate(u.uploaded_at) + '</span></div>';
+      }).join("");
+    }
+
+    function renderTable(list) {
+      var area = document.getElementById("resArea");
+      var body = list.map(function (r) {
+        var fmt = (r.format || "").toUpperCase();
+        var tur = (r.type || "").toLowerCase();
+        return '<tr>' +
+          '<td><div class="res-name-cell"><div class="fmt-ic" style="background:' + fmtColor(fmt) + '">' + esc(fmt.slice(0, 3)) + '</div><div><div class="res-name">' + esc(r.name) + '</div>' + (r.description ? '<div class="res-desc">' + esc(r.description) + '</div>' : '') + '</div></div></td>' +
+          '<td>' + (r.type ? '<span class="chip ' + tur + '">' + esc(r.type) + '</span>' : '—') + '</td>' +
+          '<td><span class="res-cell">' + esc(r.class_name || "—") + '</span></td>' +
+          '<td><span class="res-cell">' + esc(fmt) + '</span></td>' +
+          '<td><span class="res-cell">' + esc(r.size || "—") + '</span></td>' +
+          '<td><span class="res-cell">' + fmtDate(r.uploaded_at) + '</span></td>' +
+          '<td><div class="act-cell"><button class="act-ic" onclick="comingSoon(\'Ko\\\'rish\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="act-ic" onclick="comingSoon(\'Yuklab olish\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="act-ic" onclick="comingSoon(\'Amallar\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div></td>' +
+        '</tr>';
+      }).join("");
+      area.innerHTML = '<div class="table-wrap"><table class="res-table"><thead><tr><th>Nomi</th><th>Tur</th><th>Sinf</th><th>Format</th><th>O\'lcham</th><th>Yuklangan sana</th><th>Amallar</th></tr></thead><tbody>' + body + '</tbody></table></div><div class="table-foot"><a onclick="comingSoon(\'Barchasi\')">Barchasini ko\'rish →</a></div>';
+    }
+
+    var searchTimer = null;
+    function onSearch(q) { clearTimeout(searchTimer); searchTimer = setTimeout(function () { comingSoon("Qidiruv"); }, 400); }
+
+    // ===== ISHGA TUSHIRISH =====
+    loadResources();
+  </script>
+</body>
+</html>

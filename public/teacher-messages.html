@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xabarlar — English Battle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root, [data-theme="light"] {
+      --bg: #f1f4f9; --bg-card: #ffffff; --bg-soft: #f6f8fc; --bg-hover: #eef2f9;
+      --border: #e8edf5; --border-strong: #dce4ef;
+      --text: #1a2233; --text-sub: #5d6b85; --text-dim: #8b97ad;
+      --primary: #2f6bff; --primary-soft: #e8efff; --accent: #7c5cfc; --accent-soft: #efe9ff;
+      --green: #16b06a; --green-soft: #e0f5ec; --amber: #f59e0b; --amber-soft: #fdf2dd;
+      --red: #ef4655; --red-soft: #fde8ea; --cyan: #06b6d4;
+      --bubble-in: #f1f4f9; --bubble-out: #ece8fd;
+      --shadow: 0 1px 3px rgba(20,30,60,.04); --shadow-md: 0 4px 16px rgba(20,30,60,.06); --shadow-lg: 0 12px 40px rgba(20,30,60,.10);
+      --radius: 16px; --radius-sm: 11px;
+    }
+    [data-theme="dark"] {
+      --bg: #0a0f1e; --bg-card: #111a2e; --bg-soft: #0e1626; --bg-hover: #16203a;
+      --border: #1d2940; --border-strong: #26344f;
+      --text: #f1f5fc; --text-sub: #9aa8c4; --text-dim: #6b7a99;
+      --primary: #3b82f6; --primary-soft: rgba(59,130,246,.14); --accent: #8b5cf6; --accent-soft: rgba(139,92,246,.15);
+      --green: #22c55e; --green-soft: rgba(34,197,94,.14); --amber: #f59e0b; --amber-soft: rgba(245,158,11,.14);
+      --red: #ef4444; --red-soft: rgba(239,68,68,.14); --cyan: #22d3ee;
+      --bubble-in: #16203a; --bubble-out: #2a2350;
+      --shadow: 0 1px 3px rgba(0,0,0,.3); --shadow-md: 0 4px 16px rgba(0,0,0,.35); --shadow-lg: 0 16px 50px rgba(0,0,0,.5);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; transition: background .25s, color .25s; }
+    a { text-decoration: none; color: inherit; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    .layout { display: flex; min-height: 100vh; }
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+    .topbar { display: flex; align-items: flex-start; gap: 18px; padding: 26px 30px 8px; }
+    .tb-head { flex: 1; min-width: 0; }
+    .tb-head h1 { font-size: 27px; font-weight: 800; letter-spacing: -.6px; }
+    .tb-head p { font-size: 14px; color: var(--text-sub); margin-top: 5px; }
+    .tb-year { display: flex; align-items: center; gap: 9px; padding: 10px 15px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 11px; font-size: 13.5px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); white-space: nowrap; }
+    .tb-year svg { width: 16px; height: 16px; color: var(--text-dim); }
+    .theme-toggle, .tb-icon-btn { width: 44px; height: 44px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; display: grid; place-items: center; box-shadow: var(--shadow); color: var(--text-sub); position: relative; }
+    .theme-toggle svg, .tb-icon-btn svg { width: 19px; height: 19px; }
+    .tb-icon-btn .dot { position: absolute; top: 9px; right: 10px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; border: 2px solid var(--bg-card); }
+    .tb-user { display: flex; align-items: center; gap: 11px; cursor: pointer; }
+    .tb-user-info { text-align: right; }
+    .tb-user-name { font-size: 14px; font-weight: 700; }
+    .tb-user-role { font-size: 12px; color: var(--text-dim); }
+    .tb-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--primary)); display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 16px; }
+
+    /* Chat 3 ustun */
+    .chat-wrap { padding: 14px 30px 30px; }
+    .chat-grid { display: grid; grid-template-columns: 340px 1fr 300px; gap: 0; height: calc(100vh - 130px); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+
+    /* Chap: suhbatlar */
+    .conv-col { border-right: 1px solid var(--border); display: flex; flex-direction: column; min-width: 0; }
+    .conv-search { padding: 16px; display: flex; gap: 10px; }
+    .conv-search-box { flex: 1; display: flex; align-items: center; gap: 9px; padding: 10px 13px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 10px; }
+    .conv-search-box svg { width: 16px; height: 16px; color: var(--text-dim); flex: 0 0 auto; }
+    .conv-search-box input { border: none; background: transparent; outline: none; font-family: inherit; font-size: 13.5px; color: var(--text); width: 100%; }
+    .conv-search-box input::placeholder { color: var(--text-dim); }
+    .conv-new-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-soft); cursor: pointer; display: grid; place-items: center; color: var(--text-sub); flex: 0 0 auto; }
+    .conv-new-btn svg { width: 17px; height: 17px; }
+    .conv-tabs { display: flex; gap: 4px; padding: 0 16px 14px; }
+    .conv-tab { display: flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--text-sub); cursor: pointer; border: none; background: transparent; font-family: inherit; }
+    .conv-tab.active { background: var(--accent-soft); color: var(--accent); }
+    .conv-tab .cnt { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--border-strong); color: var(--text-sub); }
+    .conv-tab.active .cnt { background: var(--accent); color: #fff; }
+    .conv-list { flex: 1; overflow-y: auto; }
+    .conv-item { display: flex; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer; border-left: 3px solid transparent; }
+    .conv-item:hover { background: var(--bg-soft); }
+    .conv-item.active { background: var(--accent-soft); border-left-color: var(--accent); }
+    .conv-av { width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 15px; position: relative; }
+    .conv-av .online { position: absolute; bottom: 1px; right: 1px; width: 11px; height: 11px; border-radius: 50%; background: var(--green); border: 2px solid var(--bg-card); }
+    .conv-info { flex: 1; min-width: 0; }
+    .conv-top { display: flex; align-items: center; gap: 7px; }
+    .conv-name { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .conv-tag { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 6px; background: var(--primary-soft); color: var(--primary); flex: 0 0 auto; }
+    .conv-time { margin-left: auto; font-size: 11px; color: var(--text-dim); flex: 0 0 auto; }
+    .conv-last { font-size: 12.5px; color: var(--text-dim); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .conv-unread { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; flex: 0 0 auto; }
+    .conv-archive { padding: 14px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--text-sub); cursor: pointer; }
+    .conv-archive:hover { background: var(--bg-soft); }
+    .conv-archive svg { width: 16px; height: 16px; }
+    .conv-archive .arrow { margin-left: auto; }
+
+    /* O'rta: chat */
+    .chat-col { display: flex; flex-direction: column; min-width: 0; }
+    .chat-header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+    .chat-h-av { width: 44px; height: 44px; border-radius: 50%; flex: 0 0 auto; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 15px; }
+    .chat-h-info { flex: 1; min-width: 0; }
+    .chat-h-name { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .chat-h-status { font-size: 12px; color: var(--green); margin-top: 2px; display: flex; align-items: center; gap: 5px; }
+    .chat-h-status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+    .chat-h-actions { display: flex; gap: 6px; }
+    .chat-h-btn { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-soft); cursor: pointer; display: grid; place-items: center; color: var(--text-sub); }
+    .chat-h-btn:hover { background: var(--bg-hover); }
+    .chat-h-btn svg { width: 17px; height: 17px; }
+    .chat-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 4px; }
+    .chat-day { text-align: center; font-size: 12px; color: var(--text-dim); font-weight: 600; margin: 12px 0; }
+    .msg { max-width: 70%; padding: 11px 15px; border-radius: 16px; font-size: 13.5px; line-height: 1.5; position: relative; }
+    .msg-in { align-self: flex-start; background: var(--bubble-in); border-bottom-left-radius: 5px; }
+    .msg-out { align-self: flex-end; background: var(--bubble-out); border-bottom-right-radius: 5px; }
+    .msg-time { font-size: 10.5px; color: var(--text-dim); margin-top: 5px; display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+    .msg-time svg { width: 13px; height: 13px; color: var(--primary); }
+    .msg-in .msg-time { justify-content: flex-start; }
+    .chat-input { display: flex; align-items: center; gap: 11px; padding: 14px 20px; border-top: 1px solid var(--border); }
+    .chat-attach { width: 38px; height: 38px; border-radius: 10px; border: none; background: transparent; cursor: pointer; display: grid; place-items: center; color: var(--text-dim); flex: 0 0 auto; }
+    .chat-attach:hover { background: var(--bg-soft); }
+    .chat-attach svg { width: 19px; height: 19px; }
+    .chat-input-box { flex: 1; display: flex; align-items: center; gap: 9px; padding: 11px 15px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 12px; }
+    .chat-input-box input { flex: 1; border: none; background: transparent; outline: none; font-family: inherit; font-size: 14px; color: var(--text); }
+    .chat-input-box input::placeholder { color: var(--text-dim); }
+    .chat-emoji { width: 24px; height: 24px; border: none; background: transparent; cursor: pointer; color: var(--text-dim); }
+    .chat-emoji svg { width: 19px; height: 19px; }
+    .chat-send { width: 44px; height: 44px; border-radius: 12px; border: none; background: linear-gradient(135deg, var(--accent), var(--primary)); cursor: pointer; display: grid; place-items: center; color: #fff; flex: 0 0 auto; }
+    .chat-send svg { width: 18px; height: 18px; }
+
+    /* O'ng: profil */
+    .prof-col { border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; min-width: 0; }
+    .prof-card { padding: 22px 18px; text-align: center; border-bottom: 1px solid var(--border); }
+    .prof-av { width: 76px; height: 76px; border-radius: 50%; margin: 0 auto 12px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 26px; }
+    .prof-name { font-size: 16px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .prof-role { font-size: 12.5px; color: var(--text-dim); margin-top: 5px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .prof-role svg { width: 13px; height: 13px; }
+    .prof-email { font-size: 12.5px; color: var(--text-sub); margin-top: 8px; }
+    .prof-btn { display: inline-flex; align-items: center; gap: 7px; margin-top: 15px; padding: 9px 18px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-soft); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .prof-btn:hover { background: var(--bg-hover); }
+    .prof-btn svg { width: 15px; height: 15px; }
+    .prof-sec { padding: 18px; border-bottom: 1px solid var(--border); }
+    .prof-sec h4 { font-size: 14px; font-weight: 800; margin-bottom: 14px; }
+    .prof-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 13px; }
+    .prof-row:last-child { margin-bottom: 0; }
+    .prof-row .k { color: var(--text-dim); font-weight: 500; }
+    .prof-row .v { font-weight: 700; display: flex; align-items: center; gap: 5px; }
+    .prof-row .v svg { width: 13px; height: 13px; color: var(--text-dim); }
+    .prof-detail-btn { display: block; width: 100%; text-align: center; margin-top: 15px; padding: 11px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--primary)); color: #fff; font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .media-item { text-align: center; cursor: pointer; }
+    .media-ic { width: 100%; aspect-ratio: 1; border-radius: 11px; display: grid; place-items: center; margin-bottom: 6px; }
+    .media-ic svg { width: 26px; height: 26px; }
+    .media-name { font-size: 10.5px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .prof-qa { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .prof-qa-btn { display: flex; align-items: center; gap: 8px; padding: 11px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-soft); cursor: pointer; font-family: inherit; }
+    .prof-qa-btn:hover { background: var(--bg-hover); }
+    .prof-qa-ic { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: 0 0 auto; }
+    .prof-qa-ic svg { width: 14px; height: 14px; }
+    .prof-qa-label { font-size: 11.5px; font-weight: 600; }
+
+    .sec-head-link { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .sec-head-link h4 { font-size: 14px; font-weight: 800; }
+    .sec-head-link a { font-size: 12px; font-weight: 700; color: var(--primary); cursor: pointer; }
+
+    /* Bo'sh holat */
+    .empty-full { grid-column: 1 / -1; display: grid; place-items: center; padding: 40px; }
+    .empty-inner { text-align: center; max-width: 400px; }
+    .empty-ic { width: 80px; height: 80px; margin: 0 auto 20px; border-radius: 22px; background: linear-gradient(135deg, var(--accent-soft), var(--primary-soft)); display: grid; place-items: center; }
+    .empty-ic svg { width: 38px; height: 38px; color: var(--accent); }
+    .empty-title { font-size: 19px; font-weight: 800; margin-bottom: 10px; }
+    .empty-text { font-size: 14px; color: var(--text-sub); line-height: 1.55; }
+    .chat-empty-mid { flex: 1; display: grid; place-items: center; color: var(--text-dim); font-size: 14px; text-align: center; padding: 40px; }
+
+    .toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: var(--bg-card); padding: 13px 22px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; transition: all .3s; z-index: 7000; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    @media (max-width: 1200px) { .chat-grid { grid-template-columns: 300px 1fr; } .prof-col { display: none; } }
+    @media (max-width: 800px) { .chat-grid { grid-template-columns: 1fr; } .conv-col { display: none; } .chat-wrap { padding: 14px 16px 20px; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div id="teacherSidebar"></div>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="tb-head">
+          <h1>Xabarlar</h1>
+          <p>O'quvchilar, ota-onalar va jamoa bilan muloqot qiling</p>
+        </div>
+        <div class="tb-year" onclick="comingSoon('O\'quv yili')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          2024–2025 O'quv yili
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
+        <button class="tb-icon-btn" onclick="comingSoon('Bildirishnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
+        <div class="tb-user" onclick="window.location.href='/profile.html'">
+          <div class="tb-user-info">
+            <div class="tb-user-name" id="userName">O'qituvchi</div>
+            <div class="tb-user-role">Teacher</div>
+          </div>
+          <div class="tb-avatar" id="userAvatar">T</div>
+        </div>
+      </header>
+
+      <div class="chat-wrap">
+        <div class="chat-grid" id="chatGrid">
+          <!-- Chap: suhbatlar -->
+          <div class="conv-col">
+            <div class="conv-search">
+              <div class="conv-search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input id="convSearch" type="text" placeholder="Qidirish..." oninput="onSearch(this.value)" />
+              </div>
+              <button class="conv-new-btn" onclick="comingSoon('Yangi suhbat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+            <div class="conv-tabs">
+              <button class="conv-tab active" id="ctAll" onclick="switchConvTab('all')">Barchasi <span class="cnt" id="cntAll">0</span></button>
+              <button class="conv-tab" id="ctUnread" onclick="switchConvTab('unread')">O'qilmagan <span class="cnt" id="cntUnread">0</span></button>
+              <button class="conv-tab" id="ctImportant" onclick="switchConvTab('important')">Muhim</button>
+            </div>
+            <div class="conv-list" id="convList"></div>
+            <div class="conv-archive" onclick="comingSoon('Arxiv')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+              Arxivlangan xabarlar
+              <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </div>
+          </div>
+
+          <!-- O'rta: chat (bo'sh holatda placeholder) -->
+          <div class="chat-col" id="chatCol">
+            <div class="chat-empty-mid" id="chatMid">Suhbatni tanlang yoki yangi xabar boshlang</div>
+          </div>
+
+          <!-- O'ng: profil -->
+          <div class="prof-col" id="profCol">
+            <div class="chat-empty-mid" style="border:none">Suhbat tanlanganda<br>ma'lumot ko'rinadi</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/api.js"></script>
+  <script src="/payment-modal.js"></script>
+  <script src="/premium-modal.js"></script>
+  <script src="/teacher-sidebar.js"></script>
+  <script>
+    // ===== TEMA =====
+    (function initTheme() {
+      var saved = localStorage.getItem("eb_theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+      updateThemeIcon(saved);
+    })();
+    function toggleTheme() {
+      var cur = document.documentElement.getAttribute("data-theme");
+      var next = cur === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("eb_theme", next);
+      updateThemeIcon(next);
+    }
+    function updateThemeIcon(theme) {
+      var el = document.getElementById("themeIcon");
+      if (!el) return;
+      el.innerHTML = theme === "dark"
+        ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+        : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>';
+    }
+
+    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada tayyor bo'ladi"); }
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function showToast(text) { var t = document.getElementById("toast"); t.textContent = text; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2600); }
+
+    // ===== AUTH =====
+    var userData = localStorage.getItem("user");
+    if (!userData || !localStorage.getItem("token")) { window.location.href = "/index.html"; }
+    var user = userData ? JSON.parse(userData) : {};
+    if (user.role && user.role !== "teacher") {
+      var R = { student: "/lobby.html", parent: "/parent.html", school_admin: "/school-admin.html" };
+      if (R[user.role]) window.location.href = R[user.role];
+    }
+    renderTeacherSidebar("messages");
+
+    var fn = user.first_name || "", ln = user.last_name || "";
+    document.getElementById("userName").textContent = (fn + " " + ln).trim() || "O'qituvchi";
+    document.getElementById("userAvatar").textContent = (fn || "T").charAt(0).toUpperCase();
+
+    var AV_COLORS = ["#2f6bff", "#16b06a", "#7c5cfc", "#f59e0b", "#06b6d4", "#ef4655"];
+    function avColor(name) { var s = 0; for (var i = 0; i < (name || "").length; i++) s += name.charCodeAt(i); return AV_COLORS[s % AV_COLORS.length]; }
+    function initials(n) { var p = (n || "").trim().split(" "); return ((p[0] || "").charAt(0) + (p[1] || "").charAt(0)).toUpperCase() || "?"; }
+
+    var currentConvTab = "all";
+    var allConvs = [], filtered = [];
+
+    // ===== SUHBATLARNI YUKLASH =====
+    async function loadConversations() {
+      try {
+        var res = await authFetch("/teacher/conversations");
+        if (!res.ok) { showEmpty(); return; }
+        var data = await res.json();
+        allConvs = data.conversations || [];
+        filtered = allConvs.slice();
+        if (!allConvs.length) { showEmpty(); return; }
+        renderConvList();
+        updateCounts(data);
+      } catch (e) { showEmpty(); }
+    }
+
+    function showEmpty() {
+      // Suhbatlar ro'yxati bo'sh
+      document.getElementById("convList").innerHTML = '';
+      document.getElementById("cntAll").textContent = "0";
+      document.getElementById("cntUnread").textContent = "0";
+      // O'rta: to'liq bo'sh holat (3 ustunni egallaydi)
+      var grid = document.getElementById("chatGrid");
+      grid.innerHTML =
+        '<div class="empty-full"><div class="empty-inner">' +
+          '<div class="empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>' +
+          '<div class="empty-title">Hali xabar yo\'q</div>' +
+          '<div class="empty-text">O\'quvchilar, ota-onalar va hamkasblar bilan muloqot shu yerda bo\'ladi. Xabar almashish tez orada ochiladi — o\'quvchilaringizga topshiriq eslatmalari, natija izohlari va savol-javoblar uchun.</div>' +
+        '</div></div>';
+    }
+
+    function updateCounts(data) {
+      document.getElementById("cntAll").textContent = allConvs.length;
+      var unread = allConvs.filter(function (c) { return (c.unread_count || 0) > 0; }).length;
+      document.getElementById("cntUnread").textContent = unread;
+    }
+
+    function switchConvTab(tab) {
+      currentConvTab = tab;
+      ["all", "unread", "important"].forEach(function (t) {
+        var id = "ct" + t.charAt(0).toUpperCase() + t.slice(1);
+        var el = document.getElementById(id);
+        if (el) el.classList.toggle("active", t === tab);
+      });
+      applyFilter();
+    }
+
+    function applyFilter() {
+      var q = (document.getElementById("convSearch").value || "").trim().toLowerCase();
+      filtered = allConvs.filter(function (c) {
+        if (currentConvTab === "unread" && !(c.unread_count > 0)) return false;
+        if (currentConvTab === "important" && !c.is_important) return false;
+        if (q && (c.name || "").toLowerCase().indexOf(q) === -1) return false;
+        return true;
+      });
+      renderConvList();
+    }
+
+    function renderConvList() {
+      var box = document.getElementById("convList");
+      if (!filtered.length) { box.innerHTML = '<div style="padding:30px 20px;text-align:center;color:var(--text-dim);font-size:13px">Suhbat topilmadi</div>'; return; }
+      box.innerHTML = filtered.map(function (c) {
+        var name = c.name || "Foydalanuvchi";
+        return '<div class="conv-item" onclick="openConv(' + c.id + ')">' +
+          '<div class="conv-av" style="background:' + avColor(name) + '">' + initials(name) + (c.online ? '<span class="online"></span>' : '') + '</div>' +
+          '<div class="conv-info"><div class="conv-top"><span class="conv-name">' + esc(name) + '</span>' + (c.tag ? '<span class="conv-tag">' + esc(c.tag) + '</span>' : '') + '<span class="conv-time">' + esc(c.last_time || '') + '</span></div>' +
+            '<div class="conv-last">' + esc(c.last_message || '') + '</div></div>' +
+          ((c.unread_count > 0) ? '<span class="conv-unread">' + c.unread_count + '</span>' : '') +
+        '</div>';
+      }).join("");
+    }
+
+    function openConv(id) { comingSoon("Suhbat"); }
+
+    var searchTimer = null;
+    function onSearch(q) { clearTimeout(searchTimer); searchTimer = setTimeout(applyFilter, 250); }
+
+    // ===== ISHGA TUSHIRISH =====
+    loadConversations();
+  </script>
+</body>
+</html>
