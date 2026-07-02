@@ -34,3 +34,6 @@ tmp/
 *.sqlite3
 *.db
 db-backup-*.sql
+# Foydalanuvchi yuklagan fayllar
+public/uploads/*
+!public/uploads/.gitkeep

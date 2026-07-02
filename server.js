@@ -6,6 +6,18 @@ const { Server } = require("socket.io");
 
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
+
+// ===== Upload papkalarini avtomatik yaratish (server startda) =====
+[
+  path.join(__dirname, "public/uploads"),
+  path.join(__dirname, "public/uploads/resources"),
+].forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log("Papka yaratildi:", dir);
+  }
+});
 const { signToken, authMiddleware, requireTeacher, requireStudent, requireParent, signAdminToken, requireAdmin, verifySocketToken } = require("./auth");
 const { saveBattleSession, loadBattleSession, finishBattleSession, loadActiveSessions } = require("./battleStore");
 const { recoverActiveBattles } = require("./battleRecovery");
@@ -5376,6 +5388,45 @@ app.get("/teacher/ai-reports", authMiddleware, requireTeacher, async (req, res) 
   }
 });
 
+// BITTA AI HISOBOTNI TO'LIQ OLISH (ai_output bilan — ko'rish modali uchun)
+app.get("/teacher/ai-reports/:id", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const reportId = parseInt(req.params.id, 10);
+    if (isNaN(reportId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    const result = await pool.query(
+      `SELECT id, report_type, audience, ai_output, confidence, status,
+              period_start, period_end, created_at
+       FROM ai_reports
+       WHERE id = $1 AND user_id = $2 AND audience = 'teacher'`,
+      [reportId, teacherId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: "Hisobot topilmadi" });
+
+    const r = result.rows[0];
+    // ai_output JSON bo'lishi mumkin (string yoki object)
+    let aiOutput = r.ai_output;
+    if (typeof aiOutput === "string") {
+      try { aiOutput = JSON.parse(aiOutput); } catch (e) { /* string qoladi */ }
+    }
+
+    res.json({
+      id: r.id,
+      report_type: r.report_type,
+      ai_output: aiOutput,
+      confidence: r.confidence,
+      status: r.status,
+      period_start: r.period_start,
+      period_end: r.period_end,
+      created_at: r.created_at,
+    });
+  } catch (err) {
+    console.error("/teacher/ai-reports/:id xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // ============ STREAK ============
 app.post("/streak/checkin", authMiddleware, async (req, res) => {
   try {
@@ -6528,6 +6579,172 @@ const upload = multer({
   },
 });
 
+// ===== RESURSLAR uchun multer (hujjat + rasm) =====
+const resourceStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, "public/uploads/resources"));
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, "res_" + req.user.id + "_" + Date.now() + ext);
+  },
+});
+const ALLOWED_RESOURCE_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "image/jpeg", "image/png", "image/webp", "image/gif",
+  "text/plain",
+];
+const uploadResource = multer({
+  storage: resourceStorage,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+  fileFilter: function (req, file, cb) {
+    if (ALLOWED_RESOURCE_TYPES.indexOf(file.mimetype) !== -1) cb(null, true);
+    else cb(new Error("Ruxsat etilmagan fayl turi. PDF, Word, PowerPoint, Excel yoki rasm yuklang."));
+  },
+});
+
+// Fayl turini aniqlash (ikonка uchun)
+function detectFileType(mimetype) {
+  if (mimetype === "application/pdf") return "pdf";
+  if (mimetype.indexOf("word") !== -1 || mimetype === "application/msword") return "doc";
+  if (mimetype.indexOf("presentation") !== -1 || mimetype.indexOf("powerpoint") !== -1) return "ppt";
+  if (mimetype.indexOf("sheet") !== -1 || mimetype.indexOf("excel") !== -1) return "xls";
+  if (mimetype.startsWith("image/")) return "image";
+  return "other";
+}
+
+// ===== RESURS YUKLASH =====
+app.post("/teacher/resources", authMiddleware, requireTeacher, uploadResource.single("file"), async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    if (!req.file) return res.status(400).json({ error: "Fayl yuklanmadi" });
+
+    const title = (req.body.title || "").trim() || req.file.originalname;
+    const description = (req.body.description || "").trim();
+    const cefrLevel = (req.body.cefr_level || "").trim() || null;
+    const skill = (req.body.skill || "").trim() || null;
+    const classId = req.body.class_id ? parseInt(req.body.class_id, 10) : null;
+
+    const filePath = "/uploads/resources/" + req.file.filename;
+    const fileType = detectFileType(req.file.mimetype);
+
+    const result = await pool.query(
+      `INSERT INTO teacher_resources
+        (teacher_id, title, description, file_path, file_name, file_type, file_size, cefr_level, skill, class_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       RETURNING id, created_at`,
+      [teacherId, title, description, filePath, req.file.originalname, fileType, req.file.size, cefrLevel, skill, classId]
+    );
+
+    if (typeof logAudit === "function") logAudit(req, "resource_uploaded", { entityType: "resource", entityId: result.rows[0].id });
+
+    res.json({ success: true, id: result.rows[0].id });
+  } catch (err) {
+    console.error("Resurs yuklash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== RESURSLAR RO'YXATI =====
+app.get("/teacher/resources", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const result = await pool.query(
+      `SELECT r.id, r.title, r.description, r.file_path, r.file_name, r.file_type,
+              r.file_size, r.cefr_level, r.skill, r.class_id, r.download_count, r.created_at,
+              c.name AS class_name
+       FROM teacher_resources r
+       LEFT JOIN classes c ON c.id = r.class_id
+       WHERE r.teacher_id = $1
+       ORDER BY r.created_at DESC`,
+      [teacherId]
+    );
+
+    // Statistika
+    const total = result.rows.length;
+    const totalSize = result.rows.reduce((a, r) => a + (r.file_size || 0), 0);
+    const totalDownloads = result.rows.reduce((a, r) => a + (r.download_count || 0), 0);
+    const byType = {};
+    result.rows.forEach((r) => { byType[r.file_type] = (byType[r.file_type] || 0) + 1; });
+
+    res.json({
+      resources: result.rows,
+      stats: {
+        total,
+        total_size: totalSize,
+        total_downloads: totalDownloads,
+        by_type: byType,
+      },
+    });
+  } catch (err) {
+    console.error("Resurslar ro'yxati xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== RESURS YUKLAB OLISH (download hisoblagich bilan) =====
+app.get("/teacher/resources/:id/download", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const resId = parseInt(req.params.id, 10);
+    if (isNaN(resId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    const result = await pool.query(
+      "SELECT file_path, file_name FROM teacher_resources WHERE id = $1 AND teacher_id = $2",
+      [resId, teacherId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: "Resurs topilmadi" });
+
+    // Download hisoblagichni oshiramiz
+    pool.query("UPDATE teacher_resources SET download_count = download_count + 1 WHERE id = $1", [resId]).catch(() => {});
+
+    const r = result.rows[0];
+    const absPath = path.join(__dirname, "public", r.file_path);
+    res.download(absPath, r.file_name);
+  } catch (err) {
+    console.error("Resurs yuklab olish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== RESURS O'CHIRISH =====
+app.delete("/teacher/resources/:id", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const resId = parseInt(req.params.id, 10);
+    if (isNaN(resId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    const result = await pool.query(
+      "SELECT file_path FROM teacher_resources WHERE id = $1 AND teacher_id = $2",
+      [resId, teacherId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: "Resurs topilmadi" });
+
+    // Bazadan o'chiramiz
+    await pool.query("DELETE FROM teacher_resources WHERE id = $1", [resId]);
+
+    // Diskdagi faylni ham o'chiramiz (xato bo'lsa jim o'tamiz)
+    try {
+      const fs = require("fs");
+      const absPath = path.join(__dirname, "public", result.rows[0].file_path);
+      if (fs.existsSync(absPath)) fs.unlinkSync(absPath);
+    } catch (e) { /* fayl allaqachon yo'q bo'lishi mumkin */ }
+
+    if (typeof logAudit === "function") logAudit(req, "resource_deleted", { entityType: "resource", entityId: resId });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Resurs o'chirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // Profil rasm yuklash endpoint
 app.post("/profile/:userId/picture", authMiddleware, upload.single("picture"), async (req, res) => {
   try {
@@ -6996,6 +7213,7 @@ app.get("/teacher/overview", authMiddleware, requireTeacher, async (req, res) =>
         chart: { labels: [], assignments: [], exams: [] },
         upcoming_tasks: [],
         recent_activity: [],
+        calendar_dates: [],
       });
     }
 
@@ -7109,6 +7327,17 @@ app.get("/teacher/overview", authMiddleware, requireTeacher, async (req, res) =>
       submitted_at: f.submitted_at,
     }));
 
+    // ===== 5. KALENDAR — topshiriq muddatlari (joriy oy atrofida) =====
+    const calRes = await pool.query(
+      `SELECT DISTINCT due_at
+       FROM assignments
+       WHERE class_id = ANY($1) AND due_at IS NOT NULL
+         AND due_at >= NOW() - INTERVAL '60 days'
+         AND due_at <= NOW() + INTERVAL '60 days'`,
+      [classIds]
+    );
+    const calendarDates = calRes.rows.map((r) => r.due_at);
+
     res.json({
       stats: {
         total_students: totalStudents,
@@ -7116,9 +7345,10 @@ app.get("/teacher/overview", authMiddleware, requireTeacher, async (req, res) =>
         avg_score: avgScore,
         active_students: activeStudents,
       },
-      chart: { labels: chartLabels, assignments: chartAssignments, exams: chartExams },
+      chart: { labels: chartLabels, assignments: chartAssignments },
       upcoming_tasks: upcomingTasks,
       recent_activity: recentActivity,
+      calendar_dates: calendarDates,
     });
   } catch (err) {
     console.error("Teacher overview xatosi:", err.message);
@@ -7198,6 +7428,72 @@ app.post("/teacher/classes", authMiddleware, requireTeacher, async (req, res) =>
     });
   } catch (err) {
     console.error("Sinf yaratish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// SINFNI TAHRIRLASH (nom + tavsif)
+app.put("/teacher/classes/:classId", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const classId = parseInt(req.params.classId);
+    if (!classId) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    const name = (req.body.name || "").trim();
+    const description = (req.body.description || "").trim();
+    if (!name) return res.status(400).json({ error: "Sinf nomini kiriting" });
+    if (name.length > 120) return res.status(400).json({ error: "Sinf nomi juda uzun" });
+
+    // Ownership: bu sinf shu teacher'niki ekanini tekshiramiz
+    const own = await pool.query(
+      "SELECT id FROM classes WHERE id = $1 AND teacher_id = $2 AND archived_at IS NULL",
+      [classId, teacherId]
+    );
+    if (own.rows.length === 0) return res.status(404).json({ error: "Sinf topilmadi" });
+
+    await pool.query(
+      "UPDATE classes SET name = $1, description = $2 WHERE id = $3",
+      [name, description, classId]
+    );
+
+    // Audit (agar logAudit funksiyangiz bo'lsa)
+    if (typeof logAudit === "function") {
+      logAudit(req, "class_updated", { entityType: "class", entityId: classId, details: { name } });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Sinf tahrirlash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// SINFNI ARXIVLASH (yumshoq o'chirish: archived_at = NOW())
+app.post("/teacher/classes/:classId/archive", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const classId = parseInt(req.params.classId);
+    if (!classId) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    // Ownership
+    const own = await pool.query(
+      "SELECT id FROM classes WHERE id = $1 AND teacher_id = $2 AND archived_at IS NULL",
+      [classId, teacherId]
+    );
+    if (own.rows.length === 0) return res.status(404).json({ error: "Sinf topilmadi" });
+
+    await pool.query(
+      "UPDATE classes SET archived_at = NOW() WHERE id = $1",
+      [classId]
+    );
+
+    if (typeof logAudit === "function") {
+      logAudit(req, "class_archived", { entityType: "class", entityId: classId });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Sinf arxivlash xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });
@@ -7434,6 +7730,75 @@ app.get("/teacher/results/:assignmentId", authMiddleware, requireTeacher, async 
       class_name: k, avg: classMap[k].cnt > 0 ? classMap[k].sum / classMap[k].cnt : 0,
     }));
 
+    // ===== KO'NIKMA BO'YICHA (skill) — real submission_answers + assignment_questions =====
+    const skillRes = await pool.query(
+      `SELECT aq.skill,
+              COUNT(*)::int AS total,
+              COUNT(*) FILTER (WHERE sa.is_correct)::int AS correct
+       FROM submission_answers sa
+       JOIN assignment_questions aq ON aq.id = sa.assignment_question_id
+       JOIN assignment_submissions sub ON sub.id = sa.submission_id
+       WHERE sub.assignment_id = $1 AND sub.status IN ('submitted','late_submitted')
+         AND aq.skill IS NOT NULL
+       GROUP BY aq.skill
+       ORDER BY aq.skill`,
+      [asgId]
+    );
+    const skills = skillRes.rows.map((r) => ({
+      skill: r.skill,
+      avg: r.total > 0 ? Math.round((r.correct / r.total) * 100) : 0,
+      total: r.total,
+      correct: r.correct,
+    }));
+
+    // ===== QIYINLIK BO'YICHA (difficulty) — savollar qiyinlik taqsimoti =====
+    const diffRes = await pool.query(
+      `SELECT aq.difficulty, COUNT(DISTINCT aq.id)::int AS question_count
+       FROM assignment_questions aq
+       WHERE aq.assignment_id = $1 AND aq.difficulty IS NOT NULL
+       GROUP BY aq.difficulty`,
+      [asgId]
+    );
+    // difficulty qiymatlarini standartlashtirish + rang
+    const diffMeta = {
+      easy: { label: "Oson", color: "#16b06a" },
+      oson: { label: "Oson", color: "#16b06a" },
+      medium: { label: "O'rta", color: "#2f6bff" },
+      "o'rta": { label: "O'rta", color: "#2f6bff" },
+      orta: { label: "O'rta", color: "#2f6bff" },
+      hard: { label: "Qiyin", color: "#ef4655" },
+      qiyin: { label: "Qiyin", color: "#ef4655" },
+    };
+    const difficulty = diffRes.rows.map((r) => {
+      const key = (r.difficulty || "").toLowerCase();
+      const meta = diffMeta[key] || { label: r.difficulty, color: "#94a3b8" };
+      return { label: meta.label, count: r.question_count, color: meta.color };
+    });
+
+    // ===== SAVOL BO'YICHA (har savol: nechta to'g'ri/xato) =====
+    const questionRes = await pool.query(
+      `SELECT aq.q_order, aq.question_text, aq.skill, aq.difficulty,
+              COUNT(*)::int AS total,
+              COUNT(*) FILTER (WHERE sa.is_correct)::int AS correct
+       FROM submission_answers sa
+       JOIN assignment_questions aq ON aq.id = sa.assignment_question_id
+       JOIN assignment_submissions sub ON sub.id = sa.submission_id
+       WHERE sub.assignment_id = $1 AND sub.status IN ('submitted','late_submitted')
+       GROUP BY aq.id, aq.q_order, aq.question_text, aq.skill, aq.difficulty
+       ORDER BY aq.q_order`,
+      [asgId]
+    );
+    const questions = questionRes.rows.map((r) => ({
+      q_order: r.q_order,
+      question_text: r.question_text,
+      skill: r.skill,
+      difficulty: r.difficulty,
+      total: r.total,
+      correct: r.correct,
+      wrong: r.total - r.correct,
+      correct_rate: r.total > 0 ? Math.round((r.correct / r.total) * 100) : 0,
+    }));
+
     res.json({
       assignment: { id: own.rows[0].id, title: own.rows[0].title, class_name: own.rows[0].class_name },
       students,
@@ -7444,8 +7809,9 @@ app.get("/teacher/results/:assignmentId", authMiddleware, requireTeacher, async 
       },
       distribution,
       class_comparison: classComparison,
-      skills: [],      // TODO: submission_answers'dan ko'nikma bo'yicha (keyingi bosqich)
-      difficulty: [],  // TODO: savol qiyinlik darajasi (keyingi bosqich)
+      skills,        // ko'nikma bo'yicha (real)
+      difficulty,    // qiyinlik bo'yicha (real)
+      questions,     // savol bo'yicha (real)
     });
   } catch (err) {
     console.error("/teacher/results xatosi:", err);
@@ -8576,6 +8942,197 @@ app.post("/teacher/classes/:classId/assignments", authMiddleware, requireTeacher
     }
   } catch (err) {
     console.error("Topshiriq yaratish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== IMTIHON YARATISH (savol snapshot bilan) =====
+app.post("/teacher/exams", authMiddleware, requireTeacher, async (req, res) => {
+  const teacherId = req.user.id;
+  let { class_id, title, description, cefr_level, skill, question_count,
+        duration_minutes, pass_percent, max_attempts, starts_at, ends_at } = req.body;
+
+  // Validatsiya
+  title = (title || "").trim();
+  if (title.length < 3 || title.length > 200) return res.status(400).json({ error: "Sarlavha 3–200 belgi bo'lishi kerak" });
+  if (!ASSIGN_LEVELS.includes(cefr_level)) return res.status(400).json({ error: "Noto'g'ri CEFR daraja" });
+  skill = ASSIGN_SKILLS.includes(skill) ? skill : "mixed";
+  question_count = parseInt(question_count, 10);
+  if (isNaN(question_count) || question_count < 1 || question_count > 50) return res.status(400).json({ error: "Savol soni 1–50 oralig'ida" });
+  duration_minutes = parseInt(duration_minutes, 10);
+  if (isNaN(duration_minutes) || duration_minutes < 5 || duration_minutes > 180) return res.status(400).json({ error: "Davomiylik 5–180 daqiqa oralig'ida" });
+  pass_percent = parseInt(pass_percent, 10);
+  if (isNaN(pass_percent) || pass_percent < 0 || pass_percent > 100) pass_percent = 60;
+  max_attempts = parseInt(max_attempts, 10);
+  if (isNaN(max_attempts) || max_attempts < 1 || max_attempts > 5) max_attempts = 1;
+
+  let startsAt = null, endsAt = null;
+  if (starts_at) { const d = new Date(starts_at); if (!isNaN(d.getTime())) startsAt = d; }
+  if (ends_at) { const d = new Date(ends_at); if (!isNaN(d.getTime())) endsAt = d; }
+
+  const classId = class_id ? parseInt(class_id, 10) : null;
+
+  try {
+    // Egalik: sinf shu o'qituvchiniki
+    if (classId) {
+      const cls = await pool.query(
+        "SELECT id FROM classes WHERE id = $1 AND teacher_id = $2 AND archived_at IS NULL",
+        [classId, teacherId]
+      );
+      if (cls.rows.length === 0) return res.status(404).json({ error: "Sinf topilmadi" });
+    }
+
+    // Pro limit (imtihon ham topshiriq kabi cheklanadi — ixtiyoriy)
+    // Agar imtihon uchun alohida limit kerak bo'lmasa, bu blokni o'tkazib yuboring
+    // const examLimit = await premium.checkTeacherLimit(teacherId, "assignments");
+    // if (!examLimit.allowed) return res.status(402).json(premium.teacherLimitError("assignments"));
+
+    // Savol tanlash: published, daraja (+skill)
+    let qSql = "SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, cefr_level, skill, difficulty FROM questions WHERE status = 'published' AND cefr_level = $1";
+    const qParams = [cefr_level];
+    if (skill !== "mixed") { qParams.push(skill); qSql += " AND skill = $2"; }
+    qSql += " ORDER BY RANDOM() LIMIT " + question_count;
+
+    const qRes = await pool.query(qSql, qParams);
+    if (qRes.rows.length < 1) {
+      return res.status(400).json({ error: "Bu daraja/ko'nikma bo'yicha yetarli savol yo'q. Avval savollar qo'shing." });
+    }
+
+    // Imtihonni yaratamiz
+    const examRes = await pool.query(
+      `INSERT INTO teacher_exams
+        (teacher_id, class_id, title, description, cefr_level, skill, question_count,
+         duration_minutes, pass_percent, max_attempts, starts_at, ends_at, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+       RETURNING id`,
+      [teacherId, classId, title, (description || "").trim(), cefr_level, skill,
+       qRes.rows.length, duration_minutes, pass_percent, max_attempts, startsAt, endsAt,
+       startsAt && startsAt > new Date() ? "scheduled" : "active"]
+    );
+    const examId = examRes.rows[0].id;
+
+    // Savollarni snapshot qilamiz
+    for (let i = 0; i < qRes.rows.length; i++) {
+      const q = qRes.rows[i];
+      await pool.query(
+        `INSERT INTO teacher_exam_questions
+          (exam_id, original_question_id, q_order, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, skill, cefr_level, difficulty)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+        [examId, q.id, i + 1, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_option, q.explanation, q.skill, q.cefr_level, q.difficulty]
+      );
+    }
+
+    if (typeof logAudit === "function") logAudit(req, "exam_created", { entityType: "exam", entityId: examId });
+
+    res.json({ success: true, id: examId, question_count: qRes.rows.length });
+  } catch (err) {
+    console.error("Imtihon yaratish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== IMTIHONLAR RO'YXATI =====
+app.get("/teacher/exams", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+
+    // Vaqtga qarab holatni yangilaymiz (scheduled->active->finished)
+    await pool.query(
+      `UPDATE teacher_exams SET status = 'active'
+       WHERE teacher_id = $1 AND status = 'scheduled' AND (starts_at IS NULL OR starts_at <= NOW())`,
+      [teacherId]
+    );
+    await pool.query(
+      `UPDATE teacher_exams SET status = 'finished'
+       WHERE teacher_id = $1 AND status = 'active' AND ends_at IS NOT NULL AND ends_at < NOW()`,
+      [teacherId]
+    );
+
+    const result = await pool.query(
+      `SELECT e.id, e.title, e.description, e.cefr_level, e.skill, e.question_count,
+              e.duration_minutes, e.pass_percent, e.max_attempts, e.starts_at, e.ends_at,
+              e.status, e.created_at, e.class_id,
+              c.name AS class_name,
+              (SELECT COUNT(*) FROM class_students cs WHERE cs.class_id = e.class_id AND cs.status = 'active')::int AS class_student_count
+       FROM teacher_exams e
+       LEFT JOIN classes c ON c.id = e.class_id
+       WHERE e.teacher_id = $1
+       ORDER BY e.created_at DESC`,
+      [teacherId]
+    );
+
+    // Statistika
+    const rows = result.rows;
+    const total = rows.length;
+    const active = rows.filter((r) => r.status === "active").length;
+    const finished = rows.filter((r) => r.status === "finished").length;
+    const avgDuration = total > 0 ? Math.round(rows.reduce((a, r) => a + (r.duration_minutes || 0), 0) / total) : 0;
+
+    res.json({
+      exams: rows,
+      stats: {
+        total,
+        active,
+        finished,
+        avg_score: 0,          // Faza 2'da attempts kelganda hisoblanadi
+        avg_duration: avgDuration,
+      },
+    });
+  } catch (err) {
+    console.error("Imtihonlar ro'yxati xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== BITTA IMTIHON (savollari bilan — ko'rish/tahrirlash uchun) =====
+app.get("/teacher/exams/:id", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const examId = parseInt(req.params.id, 10);
+    if (isNaN(examId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    const examRes = await pool.query(
+      `SELECT e.*, c.name AS class_name
+       FROM teacher_exams e LEFT JOIN classes c ON c.id = e.class_id
+       WHERE e.id = $1 AND e.teacher_id = $2`,
+      [examId, teacherId]
+    );
+    if (examRes.rows.length === 0) return res.status(404).json({ error: "Imtihon topilmadi" });
+
+    const qRes = await pool.query(
+      `SELECT q_order, question_text, option_a, option_b, option_c, option_d, skill, difficulty
+       FROM teacher_exam_questions WHERE exam_id = $1 ORDER BY q_order`,
+      [examId]
+    );
+
+    res.json({ exam: examRes.rows[0], questions: qRes.rows });
+  } catch (err) {
+    console.error("Imtihon ko'rish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== IMTIHON O'CHIRISH =====
+app.delete("/teacher/exams/:id", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const examId = parseInt(req.params.id, 10);
+    if (isNaN(examId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    const own = await pool.query(
+      "SELECT id FROM teacher_exams WHERE id = $1 AND teacher_id = $2",
+      [examId, teacherId]
+    );
+    if (own.rows.length === 0) return res.status(404).json({ error: "Imtihon topilmadi" });
+
+    // teacher_exam_questions ON DELETE CASCADE bilan o'chadi
+    await pool.query("DELETE FROM teacher_exams WHERE id = $1", [examId]);
+
+    if (typeof logAudit === "function") logAudit(req, "exam_deleted", { entityType: "exam", entityId: examId });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Imtihon o'chirish xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });

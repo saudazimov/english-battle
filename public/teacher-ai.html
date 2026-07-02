@@ -77,7 +77,8 @@
     .search-box svg { width: 17px; height: 17px; color: var(--text-dim); flex: 0 0 auto; }
     .search-box input { border: none; background: transparent; outline: none; font-family: inherit; font-size: 14px; color: var(--text); width: 100%; }
     .search-box input::placeholder { color: var(--text-dim); }
-    .filter-sel { display: flex; align-items: center; gap: 7px; padding: 11px 14px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 11px; font-size: 12.5px; font-weight: 600; color: var(--text); cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .filter-sel { display: flex; align-items: center; gap: 7px; padding: 11px 32px 11px 14px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 11px; font-size: 12.5px; font-weight: 600; color: var(--text); cursor: pointer; font-family: inherit; white-space: nowrap; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b97ad' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+    .filter-sel:focus { outline: none; border-color: var(--primary); }
     .filter-sel svg { width: 13px; height: 13px; color: var(--text-dim); }
 
     /* Hisobot ro'yxati */
@@ -172,6 +173,42 @@
     @media (max-width: 1280px) { .content { flex-direction: column; } .col-side { width: 100%; flex: none; display: grid; grid-template-columns: 1fr 1fr; align-items: start; } }
     @media (max-width: 900px) { .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } .col-side { grid-template-columns: 1fr; } }
     @media (max-width: 700px) { .stats-row { grid-template-columns: 1fr; } .rep-row { flex-wrap: wrap; } .topbar { flex-wrap: wrap; padding: 18px; } .content { padding: 14px 16px 28px; } }
+    /* AI modal */
+    .ai-modal-overlay { position: fixed; inset: 0; background: rgba(10,15,30,.55); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 6000; padding: 20px; }
+    .ai-modal-overlay.show { display: flex; }
+    .ai-modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 70px rgba(0,0,0,.3); }
+    .ai-modal.wide { max-width: 640px; }
+    .ai-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 22px 24px 16px; border-bottom: 1px solid var(--border); }
+    .ai-modal-title { font-size: 18px; font-weight: 800; }
+    .ai-modal-sub { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
+    .ai-modal-close { width: 34px; height: 34px; border-radius: 9px; border: none; background: var(--bg-soft); cursor: pointer; display: grid; place-items: center; color: var(--text-sub); flex: 0 0 auto; }
+    .ai-modal-close:hover { background: var(--bg-hover); }
+    .ai-modal-close svg { width: 17px; height: 17px; }
+    .ai-modal-body { padding: 20px 24px; }
+    .ai-field { margin-bottom: 15px; }
+    .ai-field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-sub); margin-bottom: 6px; }
+    .ai-field select { width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-soft); font-family: inherit; font-size: 14px; color: var(--text); outline: none; }
+    .ai-field select:focus { border-color: var(--primary); background: var(--bg-card); }
+    .ai-note { display: flex; gap: 10px; padding: 12px 14px; background: var(--primary-soft); border-radius: 10px; font-size: 12.5px; color: var(--text-sub); line-height: 1.5; }
+    .ai-note svg { width: 16px; height: 16px; flex: 0 0 auto; color: var(--primary); margin-top: 1px; }
+    .ai-modal-err { font-size: 13px; color: var(--red); background: var(--red-soft); padding: 10px 13px; border-radius: 9px; display: none; margin-top: 12px; }
+    .ai-modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px 22px; border-top: 1px solid var(--border); }
+    .ai-btn { padding: 11px 22px; border-radius: 10px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; border: none; }
+    .ai-btn.cancel { background: var(--bg-soft); color: var(--text); border: 1px solid var(--border); }
+    .ai-btn.cancel:hover { background: var(--bg-hover); }
+    .ai-btn.confirm { background: linear-gradient(135deg, var(--accent), var(--primary)); color: #fff; }
+    .ai-btn.confirm:disabled { opacity: .6; cursor: not-allowed; }
+    /* Hisobot ko'rish mazmuni */
+    .rep-section { margin-bottom: 20px; }
+    .rep-section:last-child { margin-bottom: 0; }
+    .rep-sec-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+    .rep-sec-title svg { width: 16px; height: 16px; }
+    .rep-summary { font-size: 13.5px; line-height: 1.6; color: var(--text-sub); background: var(--bg-soft); padding: 14px 16px; border-radius: 11px; }
+    .rep-list { list-style: none; padding: 0; margin: 0; }
+    .rep-list li { position: relative; padding: 7px 0 7px 24px; font-size: 13px; line-height: 1.5; color: var(--text-sub); }
+    .rep-list li::before { content: ""; position: absolute; left: 6px; top: 14px; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+    .rep-list.warn li::before { background: var(--amber); }
+    .rep-list.rec li::before { background: var(--green); }
   </style>
 </head>
 <body>
@@ -244,10 +281,9 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input id="searchInput" type="text" placeholder="Hisobot nomi bo'yicha qidiring..." oninput="onSearch(this.value)" />
               </div>
-              <button class="filter-sel" onclick="comingSoon('Tur filtri')">Barcha tur <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-              <button class="filter-sel" onclick="comingSoon('Sinf filtri')">Barcha sinflar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-              <button class="filter-sel" onclick="comingSoon('Davr filtri')">Barcha davrlar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-              <button class="filter-sel" onclick="comingSoon('Filtr')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filtr</button>
+              <select class="filter-sel" id="filterStatus" onchange="applyFilters()"><option value="">Barcha holat</option><option value="generated">Tayyor</option><option value="insufficient_data">Ma'lumot yetarli emas</option><option value="fallback">Oddiy</option></select>
+              <select class="filter-sel" id="filterConf" onchange="applyFilters()"><option value="">Barcha aniqlik</option><option value="high">Yuqori</option><option value="medium">O'rta</option><option value="low">Past</option></select>
+              <select class="filter-sel" id="filterSort" onchange="applyFilters()"><option value="new">Saralash: Yangi</option><option value="old">Saralash: Eski</option><option value="accuracy">Saralash: Aniqlik</option></select>
             </div>
             <div id="reportArea">
               <div class="skeleton-bar"></div><div class="skeleton-bar"></div><div class="skeleton-bar"></div>
@@ -264,22 +300,22 @@
         <div class="col-side">
           <div class="side-card">
             <div class="side-head"><h3>Hisobot yaratish</h3><p>Yangi AI hisobot yarating</p></div>
-            <div class="gen-opt" onclick="comingSoon('Sinf tahlili')">
+            <div class="gen-opt" onclick="openGenModal()">
               <div class="gen-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
               <div class="gen-info"><div class="gen-name">Sinf bo'yicha tahlil</div><div class="gen-desc">Butun sinf natijalarini tahlil qiling</div></div>
               <span class="gen-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
             </div>
-            <div class="gen-opt" onclick="comingSoon('O\'quvchi tahlili')">
+            <div class="gen-opt" onclick="showToast('O\'quvchi bo\'yicha AI tahlil tez orada qo\'shiladi')">
               <div class="gen-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
               <div class="gen-info"><div class="gen-name">O'quvchi bo'yicha tahlil</div><div class="gen-desc">Individual o'quvchi tahlili</div></div>
               <span class="gen-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
             </div>
-            <div class="gen-opt" onclick="comingSoon('Topshiriq tahlili')">
+            <div class="gen-opt" onclick="showToast('Topshiriq bo\'yicha AI tahlil tez orada qo\'shiladi')">
               <div class="gen-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
               <div class="gen-info"><div class="gen-name">Topshiriq bo'yicha tahlil</div><div class="gen-desc">Topshiriq natijalarini tahlil qiling</div></div>
               <span class="gen-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
             </div>
-            <button class="btn-gen" onclick="comingSoon('Yangi hisobot')">Yangi hisobot yaratish</button>
+            <button class="btn-gen" onclick="openGenModal()">Yangi hisobot yaratish</button>
           </div>
 
           <div class="side-card">
@@ -294,6 +330,53 @@
             <div id="chartArea"><div class="chart-empty">Hisobotlar yaratilgach,<br>bu yerda faoliyat ko'rsatiladi.</div></div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISOBOT YARATISH MODAL -->
+  <div class="ai-modal-overlay" id="genModal">
+    <div class="ai-modal">
+      <div class="ai-modal-head">
+        <div>
+          <div class="ai-modal-title">Sinf bo'yicha AI hisobot</div>
+          <div class="ai-modal-sub">Sinf tanlang — AI o'quvchilar faoliyatini tahlil qiladi</div>
+        </div>
+        <button class="ai-modal-close" onclick="closeGenModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="ai-modal-body">
+        <div class="ai-field">
+          <label>Sinf *</label>
+          <select id="genClass"><option value="">Sinf tanlang...</option></select>
+        </div>
+        <div class="ai-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>Hisobot joriy hafta ma'lumotlari asosida tayyorlanadi. Bir sinf uchun hafta davomida bitta hisobot saqlanadi.</span>
+        </div>
+        <div class="ai-modal-err" id="genErr"></div>
+      </div>
+      <div class="ai-modal-foot">
+        <button class="ai-btn cancel" onclick="closeGenModal()">Bekor qilish</button>
+        <button class="ai-btn confirm" id="genSubmitBtn" onclick="generateReport()">Hisobot yaratish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISOBOTNI KO'RISH MODAL -->
+  <div class="ai-modal-overlay" id="viewModal">
+    <div class="ai-modal wide">
+      <div class="ai-modal-head">
+        <div>
+          <div class="ai-modal-title" id="viewTitle">AI hisobot</div>
+          <div class="ai-modal-sub" id="viewSub">—</div>
+        </div>
+        <button class="ai-modal-close" onclick="closeViewModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="ai-modal-body" id="viewBody">
+        <div class="state-msg">Yuklanmoqda...</div>
+      </div>
+      <div class="ai-modal-foot">
+        <button class="ai-btn cancel" onclick="closeViewModal()">Yopish</button>
       </div>
     </div>
   </div>
@@ -381,7 +464,7 @@
         '<div class="empty-state"><div class="empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg></div>' +
         '<div class="empty-title">Hali AI hisobot yo\'q</div>' +
         '<div class="empty-text">O\'ng tomondan sinf, o\'quvchi yoki topshiriq bo\'yicha AI tahlil yarating. Hisobot zaif va kuchli tomonlarni aniqlab, aniq tavsiyalar beradi.</div>' +
-        '<button class="btn-gen" style="max-width:240px;margin:0 auto" onclick="comingSoon(\'Yangi hisobot\')">Birinchi hisobotni yarating</button></div>';
+        '<button class="btn-gen" style="max-width:240px;margin:0 auto" onclick="openGenModal()">Birinchi hisobotni yarating</button></div>';
       document.getElementById("pager").style.display = "none";
     }
 
@@ -401,19 +484,7 @@
         var el = document.getElementById(id);
         if (el) el.classList.toggle("active", t === tab);
       });
-      applyFilter();
-    }
-
-    function applyFilter() {
-      var q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
-      filtered = allReports.filter(function (r) {
-        var cat = reportCategory(r.report_type);
-        if (currentTab !== "all" && cat !== currentTab) return false;
-        if (q && (r.title || "").toLowerCase().indexOf(q) === -1) return false;
-        return true;
-      });
-      page = 1;
-      if (allReports.length) renderList();
+      applyFilters();
     }
 
     function renderList() {
@@ -446,7 +517,7 @@
             '<div class="rep-chips">' + chips + '</div></div>' +
           '<div class="rep-date"><div class="rep-date-main">' + fmtDate(r.created_at) + '</div>' + (r.period_start ? '<div class="rep-date-sub">' + fmtDate(r.period_start) + ' - ' + fmtDate(r.period_end) + '</div>' : '') + '</div>' +
           '<div class="rep-conf"><span class="conf-badge ' + conf + '">' + confText + '</span><div class="conf-pct">' + confPct + '%</div></div>' +
-          '<div class="rep-actions"><button class="rep-view" onclick="comingSoon(\'Hisobotni ko\\\'rish\')">Ko\'rish</button><button class="act-ic" onclick="comingSoon(\'Amallar\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>' +
+          '<div class="rep-actions"><button class="rep-view" onclick="openViewModal(' + r.id + ')">Ko\'rish</button><button class="act-ic" onclick="showToast(\'Qo\\\'shimcha amallar tez orada\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>' +
         '</div>';
       }).join("") + '</div>';
 
@@ -472,10 +543,170 @@
     function changePageSize(v) { pageSize = parseInt(v); page = 1; renderList(); }
 
     var searchTimer = null;
-    function onSearch(q) { clearTimeout(searchTimer); searchTimer = setTimeout(applyFilter, 250); }
+    function onSearch(q) { clearTimeout(searchTimer); searchTimer = setTimeout(applyFilters, 250); }
+
+    // ===== FILTRLAR (tab + status + aniqlik + saralash) =====
+    function applyFilters() {
+      var q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+      var fStatus = document.getElementById("filterStatus") ? document.getElementById("filterStatus").value : "";
+      var fConf = document.getElementById("filterConf") ? document.getElementById("filterConf").value : "";
+      var fSort = document.getElementById("filterSort") ? document.getElementById("filterSort").value : "new";
+
+      var list = allReports.filter(function (r) {
+        var cat = reportCategory(r.report_type);
+        if (currentTab !== "all" && cat !== currentTab) return false;
+        var title = r.title || (r.target_name ? r.target_name + " tahlili" : "");
+        if (q && title.toLowerCase().indexOf(q) === -1 && (r.class_name || "").toLowerCase().indexOf(q) === -1) return false;
+        if (fStatus && r.status !== fStatus) return false;
+        if (fConf && (r.confidence || "medium") !== fConf) return false;
+        return true;
+      });
+
+      list = list.slice();
+      if (fSort === "new") list.sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+      else if (fSort === "old") list.sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); });
+      else if (fSort === "accuracy") list.sort(function (a, b) { return (b.accuracy_pct || 0) - (a.accuracy_pct || 0); });
+
+      filtered = list;
+      page = 1;
+      if (allReports.length) renderList();
+    }
+
+    // ===== HISOBOT YARATISH MODAL =====
+    var genClasses = [];
+    async function loadGenClasses() {
+      try {
+        var res = await authFetch("/teacher/classes");
+        var data = await res.json();
+        genClasses = data.classes || [];
+        var sel = document.getElementById("genClass");
+        sel.innerHTML = '<option value="">Sinf tanlang...</option>' + genClasses.map(function (c) {
+          return '<option value="' + c.id + '">' + esc(c.name) + '</option>';
+        }).join("");
+      } catch (e) { /* modal ochilganda qayta urinadi */ }
+    }
+    function openGenModal() {
+      if (!genClasses.length) loadGenClasses();
+      document.getElementById("genClass").value = "";
+      document.getElementById("genErr").style.display = "none";
+      document.getElementById("genSubmitBtn").disabled = false;
+      document.getElementById("genSubmitBtn").textContent = "Hisobot yaratish";
+      document.getElementById("genModal").classList.add("show");
+    }
+    function closeGenModal() { document.getElementById("genModal").classList.remove("show"); }
+    document.getElementById("genModal").addEventListener("click", function (e) { if (e.target === this) closeGenModal(); });
+
+    async function generateReport() {
+      var classId = document.getElementById("genClass").value;
+      var errEl = document.getElementById("genErr");
+      var btn = document.getElementById("genSubmitBtn");
+      if (!classId) { errEl.textContent = "Sinf tanlang"; errEl.style.display = "block"; return; }
+
+      btn.disabled = true; btn.textContent = "AI tahlil qilmoqda...";
+      errEl.style.display = "none";
+      try {
+        var res = await authFetch("/ai/reports/teacher/classes/" + classId + "/weekly", { method: "POST" });
+        var data = await res.json();
+        if (!res.ok) {
+          // Pro kerak (402)
+          if (window.handleProLimit && window.handleProLimit(res, data)) { closeGenModal(); btn.disabled = false; btn.textContent = "Hisobot yaratish"; return; }
+          if (res.status === 402 || res.status === 403) {
+            errEl.textContent = data.error || "Bu funksiya Premium Teacher uchun";
+            errEl.style.display = "block";
+            btn.disabled = false; btn.textContent = "Hisobot yaratish";
+            if (window.openPremiumModal) { closeGenModal(); window.openPremiumModal("teacher"); }
+            return;
+          }
+          errEl.textContent = data.error || "Hisobot yaratishda xatolik"; errEl.style.display = "block";
+          btn.disabled = false; btn.textContent = "Hisobot yaratish"; return;
+        }
+        closeGenModal();
+        btn.disabled = false; btn.textContent = "Hisobot yaratish";
+        showToast(data.cached ? "Bu hafta uchun hisobot allaqachon mavjud" : "AI hisobot tayyor!");
+        loadReports();
+        // Yaratilgan hisobotni darhol ko'rsatamiz
+        if (data.report) { setTimeout(function () { showReportContent("Sinf hisoboti", data.report, data.confidence, data.created_at); }, 400); }
+      } catch (e) {
+        errEl.textContent = "Server bilan aloqa yo'q"; errEl.style.display = "block";
+        btn.disabled = false; btn.textContent = "Hisobot yaratish";
+      }
+    }
+
+    // ===== HISOBOTNI KO'RISH MODAL =====
+    function openViewModal(id) {
+      var rep = allReports.filter(function (r) { return r.id === id; })[0];
+      document.getElementById("viewModal").classList.add("show");
+      document.getElementById("viewBody").innerHTML = '<div class="state-msg">Yuklanmoqda...</div>';
+      document.getElementById("viewTitle").textContent = rep ? (rep.title || "AI hisobot") : "AI hisobot";
+      document.getElementById("viewSub").textContent = rep && rep.class_name ? rep.class_name : (rep && rep.created_at ? fmtDate(rep.created_at) : "—");
+      // ai_output ni olish uchun: ro'yxatда bo'lsa ishlatamiz, aks holda endpoint qayta chaqiramiz
+      fetchReportContent(id, rep);
+    }
+    async function fetchReportContent(id, rep) {
+      // /teacher/ai-reports ai_output ni to'liq qaytarmaydi — bittalik endpointdan olamiz
+      try {
+        var res = await authFetch("/teacher/ai-reports/" + id);
+        if (res.ok) {
+          var data = await res.json();
+          var out = data.ai_output || data.report || null;
+          renderReportBody(out, data.confidence || (rep && rep.confidence), data.created_at || (rep && rep.created_at));
+          return;
+        }
+      } catch (e) { /* fallback pastda */ }
+      // Endpoint yo'q bo'lsa — ma'lumot yetarli emasligini ko'rsatamiz
+      document.getElementById("viewBody").innerHTML = '<div class="state-msg">Hisobot mazmunini yuklab bo\'lmadi. Iltimos, sahifani yangilang.</div>';
+    }
+    function showReportContent(title, report, confidence, createdAt) {
+      document.getElementById("viewModal").classList.add("show");
+      document.getElementById("viewTitle").textContent = title || "AI hisobot";
+      document.getElementById("viewSub").textContent = createdAt ? fmtDate(createdAt) : "—";
+      renderReportBody(report, confidence, createdAt);
+    }
+    function renderReportBody(out, confidence, createdAt) {
+      var body = document.getElementById("viewBody");
+      if (typeof out === "string") { try { out = JSON.parse(out); } catch (e) { /* string qoladi */ } }
+      if (!out || typeof out !== "object") {
+        body.innerHTML = '<div class="state-msg">Bu hisobot uchun mazmun mavjud emas.</div>';
+        return;
+      }
+      var html = "";
+      var confMap = { high: "Yuqori aniqlik", medium: "O'rta aniqlik", low: "Past aniqlik" };
+      if (confidence) html += '<div style="margin-bottom:16px"><span class="conf-badge ' + (confidence || "medium") + '">' + (confMap[confidence] || "O'rta aniqlik") + '</span></div>';
+
+      // Sinf hisoboti maydonlari
+      if (out.class_summary) html += section("Umumiy holat", "summary", out.class_summary);
+      if (out.summary) html += section("Umumiy holat", "summary", out.summary);
+      if (out.key_findings && out.key_findings.length) html += listSection("Asosiy kuzatuvlar", "", out.key_findings);
+      if (out.strengths && out.strengths.length) html += listSection("Kuchli tomonlar", "rec", out.strengths);
+      if (out.students_need_attention && out.students_need_attention.length) html += listSection("E'tibor talab qiladigan o'quvchilar", "warn", out.students_need_attention);
+      if (out.weaknesses && out.weaknesses.length) html += listSection("Zaif tomonlar", "warn", out.weaknesses);
+      if (out.teaching_recommendations && out.teaching_recommendations.length) html += listSection("O'qitish tavsiyalari", "rec", out.teaching_recommendations);
+      if (out.recommendations && out.recommendations.length) html += listSection("Tavsiyalar", "rec", out.recommendations);
+      if (out.next_steps && out.next_steps.length) html += listSection("Keyingi qadamlar", "", out.next_steps);
+
+      if (!html) html = '<div class="state-msg">Bu hisobot uchun mazmun mavjud emas.</div>';
+      body.innerHTML = html;
+    }
+    function section(title, type, text) {
+      return '<div class="rep-section"><div class="rep-sec-title">' + iconFor(type) + esc(title) + '</div><div class="rep-summary">' + esc(text) + '</div></div>';
+    }
+    function listSection(title, cls, items) {
+      return '<div class="rep-section"><div class="rep-sec-title">' + iconFor(cls) + esc(title) + '</div><ul class="rep-list ' + cls + '">' + items.map(function (it) { return '<li>' + esc(typeof it === "string" ? it : (it.text || JSON.stringify(it))) + '</li>'; }).join("") + '</ul></div>';
+    }
+    function iconFor(type) {
+      var ic = type === "warn"
+        ? '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
+        : type === "rec"
+        ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'
+        : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>';
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ic + '</svg>';
+    }
+    function closeViewModal() { document.getElementById("viewModal").classList.remove("show"); }
+    document.getElementById("viewModal").addEventListener("click", function (e) { if (e.target === this) closeViewModal(); });
 
     // ===== ISHGA TUSHIRISH =====
     loadReports();
+    loadGenClasses();
   </script>
 </body>
 </html>

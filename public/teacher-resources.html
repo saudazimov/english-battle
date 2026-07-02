@@ -70,7 +70,8 @@
     .search-box svg { width: 17px; height: 17px; color: var(--text-dim); flex: 0 0 auto; }
     .search-box input { border: none; background: transparent; outline: none; font-family: inherit; font-size: 14px; color: var(--text); width: 100%; }
     .search-box input::placeholder { color: var(--text-dim); }
-    .filter-sel { display: flex; align-items: center; gap: 7px; padding: 11px 14px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 11px; font-size: 12.5px; font-weight: 600; color: var(--text); cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .filter-sel { display: flex; align-items: center; gap: 7px; padding: 11px 32px 11px 14px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 11px; font-size: 12.5px; font-weight: 600; color: var(--text); cursor: pointer; font-family: inherit; white-space: nowrap; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b97ad' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+    .filter-sel:focus { outline: none; border-color: var(--primary); }
     .filter-sel svg { width: 13px; height: 13px; color: var(--text-dim); }
 
     .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
@@ -181,6 +182,39 @@
     @media (max-width: 1280px) { .content { flex-direction: column; } .col-side { width: 100%; flex: none; display: grid; grid-template-columns: 1fr 1fr; align-items: start; } }
     @media (max-width: 900px) { .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rec-grid { grid-template-columns: 1fr; } .col-side { grid-template-columns: 1fr; } }
     @media (max-width: 700px) { .stats-row { grid-template-columns: 1fr; } .topbar { flex-wrap: wrap; padding: 18px; } .content { padding: 14px 16px 28px; } }
+    /* Upload modal */
+    .up-modal-overlay { position: fixed; inset: 0; background: rgba(10,15,30,.55); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 6000; padding: 20px; }
+    .up-modal-overlay.show { display: flex; }
+    .up-modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; box-shadow: 0 24px 70px rgba(0,0,0,.3); }
+    .up-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 22px 24px 16px; border-bottom: 1px solid var(--border); }
+    .up-modal-title { font-size: 18px; font-weight: 800; }
+    .up-modal-sub { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
+    .up-modal-close { width: 34px; height: 34px; border-radius: 9px; border: none; background: var(--bg-soft); cursor: pointer; display: grid; place-items: center; color: var(--text-sub); flex: 0 0 auto; }
+    .up-modal-close:hover { background: var(--bg-hover); }
+    .up-modal-close svg { width: 17px; height: 17px; }
+    .up-modal-body { padding: 20px 24px; }
+    .up-drop { border: 2px dashed var(--border-strong); border-radius: 13px; padding: 26px 20px; text-align: center; cursor: pointer; transition: all .15s; margin-bottom: 18px; color: var(--text-dim); }
+    .up-drop:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .up-drop.has-file { border-color: var(--green); background: var(--green-soft); color: var(--green); border-style: solid; }
+    .up-drop svg { width: 34px; height: 34px; margin-bottom: 10px; }
+    .up-drop-txt { font-size: 14px; font-weight: 700; color: var(--text); }
+    .up-drop.has-file .up-drop-txt { color: var(--green); }
+    .up-drop-sub { font-size: 12px; margin-top: 3px; }
+    .up-field { margin-bottom: 14px; }
+    .up-field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-sub); margin-bottom: 6px; }
+    .up-field input, .up-field select, .up-field textarea { width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-soft); font-family: inherit; font-size: 14px; color: var(--text); outline: none; }
+    .up-field input:focus, .up-field select:focus, .up-field textarea:focus { border-color: var(--primary); background: var(--bg-card); }
+    .up-field textarea { resize: vertical; }
+    .up-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .up-modal-err { font-size: 13px; color: var(--red); background: var(--red-soft); padding: 10px 13px; border-radius: 9px; display: none; margin-top: 4px; }
+    .up-modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px 22px; border-top: 1px solid var(--border); }
+    .up-btn { padding: 11px 22px; border-radius: 10px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; border: none; }
+    .up-btn.cancel { background: var(--bg-soft); color: var(--text); border: 1px solid var(--border); }
+    .up-btn.cancel:hover { background: var(--bg-hover); }
+    .up-btn.confirm { background: linear-gradient(135deg, var(--accent), var(--primary)); color: #fff; }
+    .up-btn.confirm:disabled { opacity: .6; cursor: not-allowed; }
+    .act-ic.danger:hover { background: var(--red-soft); color: var(--red); }
+    @media (max-width: 520px) { .up-row2 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -219,12 +253,12 @@
               <div class="stat-sub">barcha resurslar</div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><span class="stat-label">Mening fayllarim</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><span class="stat-label">Yuklangan fayllar</span></div>
               <div class="stat-val" id="stMine">0</div>
               <div class="stat-sub">o'zim yuklagan</div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><span class="stat-label">Menga ulashilgan</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><span class="stat-label">Umumiy hajm</span></div>
               <div class="stat-val" id="stShared">0</div>
               <div class="stat-sub">boshqalardan</div>
             </div>
@@ -234,7 +268,7 @@
               <div class="stat-sub">yuklab olishlar</div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--pink-soft);color:var(--pink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><span class="stat-label">Sevimlilar</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--pink-soft);color:var(--pink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><span class="stat-label">Fayl turlari</span></div>
               <div class="stat-val" id="stFav">0</div>
               <div class="stat-sub">belgilangan</div>
             </div>
@@ -247,39 +281,15 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input id="searchInput" type="text" placeholder="Resurs nomi bo'yicha qidiring..." oninput="onSearch(this.value)" />
               </div>
-              <button class="filter-sel" onclick="comingSoon('Tur filtri')">Barcha tur <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-              <button class="filter-sel" onclick="comingSoon('Sinf filtri')">Barcha sinf <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-              <button class="filter-sel" onclick="comingSoon('Format filtri')">Barcha format <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-              <button class="filter-sel" onclick="comingSoon('Filtrlar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filtrlar</button>
+              <select class="filter-sel" id="filterType" onchange="applyFilters()"><option value="">Barcha turlar</option><option value="pdf">PDF</option><option value="doc">Word</option><option value="ppt">PowerPoint</option><option value="xls">Excel</option><option value="image">Rasm</option><option value="other">Boshqa</option></select>
+              <select class="filter-sel" id="filterSort" onchange="applyFilters()"><option value="new">Saralash: Yangi</option><option value="old">Saralash: Eski</option><option value="name">Saralash: Nomi</option><option value="downloads">Saralash: Ko'p yuklangan</option></select>
+              <button class="btn-up" onclick="openUploadModal()" style="padding:11px 18px;font-size:13.5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Fayl yuklash</button>
             </div>
           </div>
 
-          <!-- Tavsiya etilgan (namuna kartalar — o'quv materiallari kutubxonasi) -->
-          <div>
-            <div class="section-head"><h2>Tavsiya etilgan resurslar</h2><a onclick="comingSoon('Barchasi')">Barchasini ko'rish <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a></div>
-            <div class="rec-grid" style="margin-top:14px">
-              <div class="rec-card">
-                <div class="rec-thumb" style="background:linear-gradient(135deg,#ede9ff,#e0d7ff)"><span class="rec-badge" style="color:var(--accent)">Reading</span><svg viewBox="0 0 24 24" fill="none" stroke="#7c5cfc" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
-                <div class="rec-body"><div class="rec-title">Reading Practice Pack</div><div class="rec-meta">15 ta mashq · PDF</div><div class="rec-foot"><button class="rec-view" onclick="comingSoon('Ko\'rish')">Ko'rish</button><button class="rec-bookmark" onclick="comingSoon('Saqlash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div></div>
-              </div>
-              <div class="rec-card">
-                <div class="rec-thumb" style="background:linear-gradient(135deg,#e8efff,#d7e3ff)"><span class="rec-badge" style="color:var(--primary)">Grammar</span><svg viewBox="0 0 24 24" fill="none" stroke="#2f6bff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></div>
-                <div class="rec-body"><div class="rec-title">Grammar Exercises</div><div class="rec-meta">20 ta mashq · PDF</div><div class="rec-foot"><button class="rec-view" onclick="comingSoon('Ko\'rish')">Ko'rish</button><button class="rec-bookmark" onclick="comingSoon('Saqlash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div></div>
-              </div>
-              <div class="rec-card">
-                <div class="rec-thumb" style="background:linear-gradient(135deg,#e0f5ec,#d0f0e0)"><span class="rec-badge" style="color:var(--green)">Vocabulary</span><svg viewBox="0 0 24 24" fill="none" stroke="#16b06a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-                <div class="rec-body"><div class="rec-title">Vocabulary Flashcards</div><div class="rec-meta">100 ta karta · PDF</div><div class="rec-foot"><button class="rec-view" onclick="comingSoon('Ko\'rish')">Ko'rish</button><button class="rec-bookmark" onclick="comingSoon('Saqlash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div></div>
-              </div>
-              <div class="rec-card">
-                <div class="rec-thumb" style="background:linear-gradient(135deg,#fdf2dd,#fce8c8)"><span class="rec-badge" style="color:var(--amber)">Listening</span><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></div>
-                <div class="rec-body"><div class="rec-title">Listening Activities</div><div class="rec-meta">12 ta mashq · MP3</div><div class="rec-foot"><button class="rec-view" onclick="comingSoon('Ko\'rish')">Ko'rish</button><button class="rec-bookmark" onclick="comingSoon('Saqlash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Mening so'nggi resurslarim -->
+          <!-- Mening resurslarim (real — yuklangan fayllar) -->
           <div class="panel">
-            <div style="padding:18px 18px 0"><div class="section-head"><h2 style="font-size:16px">Mening so'nggi resurslarim</h2></div></div>
+            <div style="padding:18px 18px 0"><div class="section-head"><h2 style="font-size:16px">Mening resurslarim</h2></div></div>
             <div id="resArea" style="margin-top:14px">
               <div class="skeleton-bar"></div><div class="skeleton-bar"></div><div class="skeleton-bar"></div>
             </div>
@@ -290,20 +300,14 @@
         <div class="col-side">
           <div class="side-card">
             <div class="side-head"><h3>Tezkor kirish</h3></div>
-            <div class="qa-item" onclick="comingSoon('Fayl yuklash')"><div class="qa-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><span class="qa-name">Fayl yuklash</span><span class="qa-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
-            <div class="qa-item" onclick="comingSoon('Google Drive')"><div class="qa-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.71 3.5L1.15 15l3.42 5.5h6.56M22.85 15L16.29 3.5H9.42M4.57 20.5h13.71l3.42-5.5"/></svg></div><span class="qa-name">Google Drive dan qo'shish</span><span class="qa-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
-            <div class="qa-item" onclick="comingSoon('Kutubxona')"><div class="qa-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><span class="qa-name">Tayyor resurslar kutubxonasi</span><span class="qa-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
-            <div class="qa-item" onclick="comingSoon('Ulashilgan')"><div class="qa-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><span class="qa-name">Menga ulashilgan resurslar</span><span class="qa-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
-            <div class="qa-item" onclick="comingSoon('Sevimlilar')"><div class="qa-ic" style="background:var(--pink-soft);color:var(--pink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><span class="qa-name">Sevimlilarim</span><span class="qa-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+            <div class="qa-item" onclick="openUploadModal()"><div class="qa-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><span class="qa-name">Yangi fayl yuklash</span><span class="qa-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
           </div>
 
           <div class="side-card">
-            <div class="side-head"><h3>Xotira holati</h3></div>
-            <div class="mem-top"><span class="mem-txt" id="memTxt">0 GB / 10 GB ishlatilgan</span><span class="mem-pct" id="memPct">0%</span></div>
-            <div class="mem-bar"><span id="memBar" style="width:0%"></span></div>
-            <div class="mem-row"><span class="d" style="background:var(--primary)"></span><span class="k">Mening fayllarim</span><span class="v" id="memMine">—</span></div>
-            <div class="mem-row"><span class="d" style="background:var(--green)"></span><span class="k">Menga ulashilgan</span><span class="v" id="memShared">—</span></div>
-            <div class="mem-row"><span class="d" style="background:var(--text-dim)"></span><span class="k">Boshqalar</span><span class="v" id="memOther">—</span></div>
+            <div class="side-head"><h3>Saqlangan hajm</h3></div>
+            <div class="mem-top"><span class="mem-txt" id="memTxt">0 B ishlatilgan</span><span class="mem-pct" id="memCount">0 fayl</span></div>
+            <div class="mem-bar"><span id="memBar" style="width:0%;background:var(--primary)"></span></div>
+            <div class="mem-row"><span class="d" style="background:var(--primary)"></span><span class="k">Jami fayllar</span><span class="v" id="memMine">—</span></div>
           </div>
 
           <div class="side-card">
@@ -312,10 +316,58 @@
           </div>
 
           <div class="side-card">
-            <div class="side-head"><h3>So'nggi yuklamalar</h3><a onclick="comingSoon('Barchasi')">Barchasini ko'rish</a></div>
+            <div class="side-head"><h3>So'nggi yuklamalar</h3></div>
             <div id="recentArea"><div class="state-msg" style="padding:14px 0">Hali yuklama yo'q</div></div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAYL YUKLASH MODAL -->
+  <div class="up-modal-overlay" id="uploadModal">
+    <div class="up-modal">
+      <div class="up-modal-head">
+        <div>
+          <div class="up-modal-title">Yangi fayl yuklash</div>
+          <div class="up-modal-sub">PDF, Word, PowerPoint, Excel yoki rasm (maks. 20MB)</div>
+        </div>
+        <button class="up-modal-close" onclick="closeUploadModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="up-modal-body">
+        <div class="up-drop" id="upDrop" onclick="document.getElementById('upFile').click()">
+          <input type="file" id="upFile" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.gif,.txt" style="display:none" onchange="onFilePicked(this)" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div class="up-drop-txt" id="upDropTxt">Fayl tanlash uchun bosing</div>
+          <div class="up-drop-sub" id="upDropSub">yoki bu yerga tashlang</div>
+        </div>
+        <div class="up-field">
+          <label>Nomi *</label>
+          <input id="upTitle" type="text" placeholder="Masalan: Present Simple qoidalari" maxlength="200" />
+        </div>
+        <div class="up-field">
+          <label>Tavsif (ixtiyoriy)</label>
+          <textarea id="upDesc" rows="2" placeholder="Qisqacha izoh"></textarea>
+        </div>
+        <div class="up-row2">
+          <div class="up-field">
+            <label>CEFR daraja (ixtiyoriy)</label>
+            <select id="upLevel"><option value="">—</option><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select>
+          </div>
+          <div class="up-field">
+            <label>Ko'nikma (ixtiyoriy)</label>
+            <select id="upSkill"><option value="">—</option><option value="grammar">Grammar</option><option value="vocabulary">Vocabulary</option><option value="reading">Reading</option><option value="listening">Listening</option><option value="speaking">Speaking</option><option value="writing">Writing</option></select>
+          </div>
+        </div>
+        <div class="up-field">
+          <label>Sinf (ixtiyoriy)</label>
+          <select id="upClass"><option value="">Barcha sinflar uchun</option></select>
+        </div>
+        <div class="up-modal-err" id="upErr"></div>
+      </div>
+      <div class="up-modal-foot">
+        <button class="up-btn cancel" onclick="closeUploadModal()">Bekor qilish</button>
+        <button class="up-btn confirm" id="upSubmitBtn" onclick="submitUpload()">Yuklash</button>
       </div>
     </div>
   </div>
@@ -371,66 +423,93 @@
     var DONUT_COLORS = ["#ef4655", "#2f6bff", "#f59e0b", "#16b06a", "#94a3b8"];
     function fmtColor(f) { return FMT_COLORS[(f || "").toUpperCase()] || "#7c5cfc"; }
 
-    // ===== RESURSLARNI YUKLASH =====
+    // ===== RESURSLARNI YUKLASH (real) =====
+    var allResources = [], filteredRes = [];
+
     async function loadResources() {
       try {
         var res = await authFetch("/teacher/resources");
-        if (!res.ok) { showEmpty(); return; }
+        if (!res.ok) { showTableEmpty(); resetStats(); return; }
         var data = await res.json();
-        var list = data.resources || [];
+        allResources = data.resources || [];
+        filteredRes = allResources.slice();
         renderStats(data.stats || {});
-        renderMemory(data.storage || {});
-        renderDonut(data.by_format || []);
-        renderRecent(data.recent_uploads || []);
-        if (!list.length) { showTableEmpty(); return; }
-        renderTable(list);
-      } catch (e) { showEmpty(); }
+        renderTypeDonut(data.stats && data.stats.by_type ? data.stats.by_type : {});
+        renderRecent(allResources.slice(0, 4));
+        if (!allResources.length) { showTableEmpty(); return; }
+        renderTable(filteredRes);
+      } catch (e) { showTableEmpty(); resetStats(); }
     }
 
-    function showEmpty() { showTableEmpty(); }
+    function resetStats() {
+      ["stTotal", "stMine", "stShared", "stDownloads", "stFav"].forEach(function (id) {
+        var el = document.getElementById(id); if (el) el.textContent = "0";
+      });
+    }
 
     function showTableEmpty() {
       document.getElementById("resArea").innerHTML =
         '<div class="empty-state"><div class="empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>' +
         '<div class="empty-title">Hali resurs yo\'q</div>' +
-        '<div class="empty-text">O\'quv materiallari, PDF, taqdimot va audio fayllaringizni yuklang. O\'quvchilar bilan ulashing, topshiriqlarga biriktiring. Fayl yuklash tez orada ochiladi.</div>' +
-        '<button class="btn-up" onclick="comingSoon(\'Fayl yuklash\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Birinchi faylni yuklang</button></div>';
+        '<div class="empty-text">O\'quv materiallari, PDF, taqdimot va rasm fayllaringizni yuklang va bir joyda saqlang.</div>' +
+        '<button class="btn-up" onclick="openUploadModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Birinchi faylni yuklang</button></div>';
     }
 
     function renderStats(s) {
       document.getElementById("stTotal").textContent = s.total != null ? s.total : "0";
-      document.getElementById("stMine").textContent = s.mine != null ? s.mine : "0";
-      document.getElementById("stShared").textContent = s.shared != null ? s.shared : "0";
-      document.getElementById("stDownloads").textContent = s.downloads != null ? s.downloads : "0";
-      document.getElementById("stFav").textContent = s.favorites != null ? s.favorites : "0";
+      document.getElementById("stMine").textContent = s.total != null ? s.total : "0";
+      document.getElementById("stShared").textContent = s.total_size != null ? fmtSize(s.total_size) : "0";
+      document.getElementById("stDownloads").textContent = s.total_downloads != null ? s.total_downloads : "0";
+      var typeCount = s.by_type ? Object.keys(s.by_type).length : 0;
+      document.getElementById("stFav").textContent = typeCount;
+
+      // Xotira bloki (jami hajm — kvotasiz, nisbiy progress)
+      var memTxt = document.getElementById("memTxt");
+      var memCount = document.getElementById("memCount");
+      var memBar = document.getElementById("memBar");
+      if (memTxt) memTxt.textContent = (s.total_size != null ? fmtSize(s.total_size) : "0 B") + " ishlatilgan";
+      if (memCount) memCount.textContent = (s.total || 0) + " fayl";
+      // Progress: 100MB ni to'liq deb olamiz (faqat vizual, kvota emas)
+      if (memBar) { var pct = Math.min(100, Math.round(((s.total_size || 0) / (100 * 1024 * 1024)) * 100)); memBar.style.width = pct + "%"; }
+      var memMine = document.getElementById("memMine");
+      if (memMine) memMine.textContent = (s.total || 0) + " ta";
     }
 
-    function renderMemory(st) {
-      var used = st.used_gb != null ? st.used_gb : 0;
-      var totalGb = st.total_gb != null ? st.total_gb : 10;
-      var pct = totalGb > 0 ? Math.round((used / totalGb) * 100) : 0;
-      document.getElementById("memTxt").textContent = used + " GB / " + totalGb + " GB ishlatilgan";
-      document.getElementById("memPct").textContent = pct + "%";
-      document.getElementById("memBar").style.width = pct + "%";
-      document.getElementById("memMine").textContent = st.mine_gb != null ? st.mine_gb + " GB" : "—";
-      document.getElementById("memShared").textContent = st.shared_gb != null ? st.shared_gb + " GB" : "—";
-      document.getElementById("memOther").textContent = st.other_gb != null ? st.other_gb + " GB" : "—";
+    // Fayl hajmini formatlash
+    function fmtSize(bytes) {
+      if (!bytes) return "0 B";
+      if (bytes < 1024) return bytes + " B";
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+      return (bytes / (1024 * 1024)).toFixed(1) + " MB";
     }
 
-    function renderDonut(list) {
+    // Fayl turi -> rang/label
+    var TYPE_META = {
+      pdf: { color: "#ef4655", label: "PDF" },
+      doc: { color: "#2f6bff", label: "Word" },
+      ppt: { color: "#f59e0b", label: "PowerPoint" },
+      xls: { color: "#16b06a", label: "Excel" },
+      image: { color: "#7c5cfc", label: "Rasm" },
+      other: { color: "#94a3b8", label: "Fayl" },
+    };
+    function typeMeta(t) { return TYPE_META[(t || "other").toLowerCase()] || TYPE_META.other; }
+
+    // Fayl turi taqsimoti (donut)
+    function renderTypeDonut(byType) {
       var box = document.getElementById("donutArea");
-      if (!list.length) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
-      var total = list.reduce(function (s, c) { return s + c.count; }, 0);
+      var keys = Object.keys(byType || {});
+      if (!keys.length) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
+      var total = keys.reduce(function (s, k) { return s + byType[k]; }, 0);
       if (total === 0) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
       var r = 46, cx = 55, cy = 55, circ = 2 * Math.PI * r, offset = 0;
-      var segs = list.map(function (c, i) {
-        var len = (c.count / total) * circ;
-        var seg = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + (fmtColor(c.format) || DONUT_COLORS[i % DONUT_COLORS.length]) + '" stroke-width="13" stroke-dasharray="' + len + ' ' + (circ - len) + '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+      var segs = keys.map(function (k) {
+        var len = (byType[k] / total) * circ;
+        var seg = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + typeMeta(k).color + '" stroke-width="13" stroke-dasharray="' + len + ' ' + (circ - len) + '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
         offset += len; return seg;
       }).join("");
-      var legend = list.map(function (c, i) {
-        var pct = Math.round((c.count / total) * 100);
-        return '<div class="dleg"><span class="d" style="background:' + (fmtColor(c.format) || DONUT_COLORS[i % DONUT_COLORS.length]) + '"></span><span class="dleg-name">' + esc(c.format) + '</span><span class="dleg-val">' + c.count + ' (' + pct + '%)</span></div>';
+      var legend = keys.map(function (k) {
+        var pct = Math.round((byType[k] / total) * 100);
+        return '<div class="dleg"><span class="d" style="background:' + typeMeta(k).color + '"></span><span class="dleg-name">' + typeMeta(k).label + '</span><span class="dleg-val">' + byType[k] + ' (' + pct + '%)</span></div>';
       }).join("");
       box.innerHTML = '<div class="donut-wrap"><svg class="donut" viewBox="0 0 110 110">' + segs + '</svg><div class="donut-legend">' + legend + '</div></div><div class="donut-total">Jami: ' + total + ' resurs</div>';
     }
@@ -439,34 +518,193 @@
       var box = document.getElementById("recentArea");
       if (!list.length) { box.innerHTML = '<div class="state-msg" style="padding:14px 0">Hali yuklama yo\'q</div>'; return; }
       box.innerHTML = list.map(function (u) {
-        var fmt = (u.format || "").toUpperCase();
-        return '<div class="up-item"><div class="up-ic" style="background:' + fmtColor(fmt) + '">' + esc(fmt.slice(0, 3)) + '</div><div class="up-info"><div class="up-name">' + esc(u.name) + '</div></div><span class="up-date">' + fmtDate(u.uploaded_at) + '</span></div>';
+        var m = typeMeta(u.file_type);
+        return '<div class="up-item"><div class="up-ic" style="background:' + m.color + '">' + esc(m.label.slice(0, 3)) + '</div><div class="up-info"><div class="up-name">' + esc(u.title) + '</div></div><span class="up-date">' + fmtDate(u.created_at) + '</span></div>';
       }).join("");
     }
 
     function renderTable(list) {
       var area = document.getElementById("resArea");
+      if (!list.length) { area.innerHTML = '<div class="state-msg" style="padding:30px">Filtrga mos resurs topilmadi.</div>'; return; }
       var body = list.map(function (r) {
-        var fmt = (r.format || "").toUpperCase();
-        var tur = (r.type || "").toLowerCase();
+        var m = typeMeta(r.file_type);
         return '<tr>' +
-          '<td><div class="res-name-cell"><div class="fmt-ic" style="background:' + fmtColor(fmt) + '">' + esc(fmt.slice(0, 3)) + '</div><div><div class="res-name">' + esc(r.name) + '</div>' + (r.description ? '<div class="res-desc">' + esc(r.description) + '</div>' : '') + '</div></div></td>' +
-          '<td>' + (r.type ? '<span class="chip ' + tur + '">' + esc(r.type) + '</span>' : '—') + '</td>' +
+          '<td><div class="res-name-cell"><div class="fmt-ic" style="background:' + m.color + '">' + esc(m.label.slice(0, 3)) + '</div><div><div class="res-name">' + esc(r.title) + '</div>' + (r.description ? '<div class="res-desc">' + esc(r.description) + '</div>' : '') + '</div></div></td>' +
+          '<td>' + (r.skill ? '<span class="chip ' + esc((r.skill || "").toLowerCase()) + '">' + esc(r.skill) + '</span>' : '—') + '</td>' +
           '<td><span class="res-cell">' + esc(r.class_name || "—") + '</span></td>' +
-          '<td><span class="res-cell">' + esc(fmt) + '</span></td>' +
-          '<td><span class="res-cell">' + esc(r.size || "—") + '</span></td>' +
-          '<td><span class="res-cell">' + fmtDate(r.uploaded_at) + '</span></td>' +
-          '<td><div class="act-cell"><button class="act-ic" onclick="comingSoon(\'Ko\\\'rish\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="act-ic" onclick="comingSoon(\'Yuklab olish\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="act-ic" onclick="comingSoon(\'Amallar\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div></td>' +
+          '<td><span class="res-cell">' + esc(m.label) + '</span></td>' +
+          '<td><span class="res-cell">' + fmtSize(r.file_size) + '</span></td>' +
+          '<td><span class="res-cell">' + fmtDate(r.created_at) + '</span></td>' +
+          '<td><div class="act-cell">' +
+            '<button class="act-ic" title="Yuklab olish" onclick="downloadResource(' + r.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>' +
+            '<button class="act-ic danger" title="O\'chirish" onclick="deleteResource(' + r.id + ', \'' + esc((r.title || "").replace(/'/g, "")) + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
+          '</div></td>' +
         '</tr>';
       }).join("");
-      area.innerHTML = '<div class="table-wrap"><table class="res-table"><thead><tr><th>Nomi</th><th>Tur</th><th>Sinf</th><th>Format</th><th>O\'lcham</th><th>Yuklangan sana</th><th>Amallar</th></tr></thead><tbody>' + body + '</tbody></table></div><div class="table-foot"><a onclick="comingSoon(\'Barchasi\')">Barchasini ko\'rish →</a></div>';
+      area.innerHTML = '<div class="table-wrap"><table class="res-table"><thead><tr><th>Nomi</th><th>Ko\'nikma</th><th>Sinf</th><th>Format</th><th>O\'lcham</th><th>Yuklangan sana</th><th>Amallar</th></tr></thead><tbody>' + body + '</tbody></table></div>';
     }
 
+    // ===== FILTR + QIDIRUV =====
     var searchTimer = null;
-    function onSearch(q) { clearTimeout(searchTimer); searchTimer = setTimeout(function () { comingSoon("Qidiruv"); }, 400); }
+    function onSearch(q) { clearTimeout(searchTimer); searchTimer = setTimeout(applyFilters, 300); }
+
+    function applyFilters() {
+      var query = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+      var fType = document.getElementById("filterType") ? document.getElementById("filterType").value : "";
+      var fSort = document.getElementById("filterSort") ? document.getElementById("filterSort").value : "new";
+
+      var list = allResources.filter(function (r) {
+        if (query && (r.title || "").toLowerCase().indexOf(query) === -1) return false;
+        if (fType && (r.file_type || "other") !== fType) return false;
+        return true;
+      });
+      list = list.slice();
+      if (fSort === "new") list.sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+      else if (fSort === "old") list.sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); });
+      else if (fSort === "name") list.sort(function (a, b) { return (a.title || "").localeCompare(b.title || ""); });
+      else if (fSort === "downloads") list.sort(function (a, b) { return (b.download_count || 0) - (a.download_count || 0); });
+
+      filteredRes = list;
+      if (allResources.length) renderTable(filteredRes);
+    }
+
+    // ===== YUKLAB OLISH (real) =====
+    function downloadResource(id) {
+      var token = localStorage.getItem("token");
+      // Autentifikatsiyali download uchun fetch + blob
+      showToast("Yuklab olinmoqda...");
+      fetch("/teacher/resources/" + id + "/download", { headers: { "Authorization": "Bearer " + token } })
+        .then(function (res) {
+          if (!res.ok) throw new Error("download failed");
+          var disp = res.headers.get("Content-Disposition") || "";
+          var m = disp.match(/filename="?([^"]+)"?/);
+          var fname = m ? m[1] : "resurs";
+          return res.blob().then(function (blob) { return { blob: blob, fname: fname }; });
+        })
+        .then(function (r) {
+          var url = URL.createObjectURL(r.blob);
+          var a = document.createElement("a");
+          a.href = url; a.download = r.fname;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          loadResources(); // download_count yangilanadi
+        })
+        .catch(function () { showToast("Yuklab olishda xatolik"); });
+    }
+
+    // ===== O'CHIRISH (real) =====
+    async function deleteResource(id, title) {
+      if (!confirm('"' + title + '" resursini o\'chirasizmi?\n\nBu amalni bekor qilib bo\'lmaydi.')) return;
+      try {
+        var res = await authFetch("/teacher/resources/" + id, { method: "DELETE" });
+        var data = await res.json();
+        if (!res.ok) { showToast(data.error || "O'chirishda xatolik"); return; }
+        showToast("Resurs o'chirildi");
+        loadResources();
+      } catch (e) { showToast("Server bilan aloqa yo'q"); }
+    }
+
+    // ===== FAYL YUKLASH MODAL =====
+    var uploadClasses = [], pickedFile = null;
+
+    async function loadUploadClasses() {
+      try {
+        var res = await authFetch("/teacher/classes");
+        var data = await res.json();
+        uploadClasses = data.classes || [];
+        var sel = document.getElementById("upClass");
+        sel.innerHTML = '<option value="">Barcha sinflar uchun</option>' + uploadClasses.map(function (c) {
+          return '<option value="' + c.id + '">' + esc(c.name) + '</option>';
+        }).join("");
+      } catch (e) { /* keyin qayta urinadi */ }
+    }
+
+    function openUploadModal() {
+      if (!uploadClasses.length) loadUploadClasses();
+      pickedFile = null;
+      document.getElementById("upFile").value = "";
+      document.getElementById("upTitle").value = "";
+      document.getElementById("upDesc").value = "";
+      document.getElementById("upLevel").value = "";
+      document.getElementById("upSkill").value = "";
+      document.getElementById("upClass").value = "";
+      document.getElementById("upErr").style.display = "none";
+      document.getElementById("upDrop").classList.remove("has-file");
+      document.getElementById("upDropTxt").textContent = "Fayl tanlash uchun bosing";
+      document.getElementById("upDropSub").textContent = "yoki bu yerga tashlang";
+      document.getElementById("upSubmitBtn").disabled = false;
+      document.getElementById("upSubmitBtn").textContent = "Yuklash";
+      document.getElementById("uploadModal").classList.add("show");
+    }
+    function closeUploadModal() { document.getElementById("uploadModal").classList.remove("show"); }
+    document.getElementById("uploadModal").addEventListener("click", function (e) { if (e.target === this) closeUploadModal(); });
+
+    function onFilePicked(input) {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      if (file.size > 20 * 1024 * 1024) { showToast("Fayl hajmi 20MB dan oshmasligi kerak"); input.value = ""; return; }
+      pickedFile = file;
+      document.getElementById("upDrop").classList.add("has-file");
+      document.getElementById("upDropTxt").textContent = file.name;
+      document.getElementById("upDropSub").textContent = fmtSize(file.size);
+      // Nom bo'sh bo'lsa fayl nomini taklif qilamiz
+      var titleEl = document.getElementById("upTitle");
+      if (!titleEl.value.trim()) titleEl.value = file.name.replace(/\.[^.]+$/, "");
+    }
+
+    // Drag & drop
+    (function () {
+      var drop = document.getElementById("upDrop");
+      if (!drop) return;
+      ["dragenter", "dragover"].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.style.borderColor = "var(--primary)"; }); });
+      ["dragleave", "drop"].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.style.borderColor = ""; }); });
+      drop.addEventListener("drop", function (e) {
+        var f = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f) { var inp = document.getElementById("upFile"); inp.files = e.dataTransfer.files; onFilePicked(inp); }
+      });
+    })();
+
+    async function submitUpload() {
+      var errEl = document.getElementById("upErr");
+      var btn = document.getElementById("upSubmitBtn");
+      if (!pickedFile) { errEl.textContent = "Fayl tanlang"; errEl.style.display = "block"; return; }
+      var title = document.getElementById("upTitle").value.trim();
+      if (!title) { errEl.textContent = "Nom kiriting"; errEl.style.display = "block"; return; }
+
+      var fd = new FormData();
+      fd.append("file", pickedFile);
+      fd.append("title", title);
+      fd.append("description", document.getElementById("upDesc").value.trim());
+      fd.append("cefr_level", document.getElementById("upLevel").value);
+      fd.append("skill", document.getElementById("upSkill").value);
+      fd.append("class_id", document.getElementById("upClass").value);
+
+      btn.disabled = true; btn.textContent = "Yuklanmoqda...";
+      errEl.style.display = "none";
+      try {
+        var token = localStorage.getItem("token");
+        var res = await fetch("/teacher/resources", {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + token },
+          body: fd,
+        });
+        var data = await res.json();
+        if (!res.ok) {
+          errEl.textContent = data.error || "Yuklashda xatolik"; errEl.style.display = "block";
+          btn.disabled = false; btn.textContent = "Yuklash"; return;
+        }
+        closeUploadModal();
+        showToast("Fayl yuklandi!");
+        loadResources();
+      } catch (e) {
+        errEl.textContent = "Server bilan aloqa yo'q"; errEl.style.display = "block";
+        btn.disabled = false; btn.textContent = "Yuklash";
+      }
+    }
 
     // ===== ISHGA TUSHIRISH =====
     loadResources();
+    loadUploadClasses();
   </script>
 </body>
 </html>
