@@ -59,7 +59,7 @@ function renderSidebar(activePage) {
     { id: "battle", icon: "swords", label: "Battle", href: "/lobby.html", ready: true },
     { id: "practice", icon: "dumbbell", label: "Practice", href: "/practice.html", ready: false },
     { id: "myclasses", icon: "book-open", label: "Sinflarim", href: "/student-classes.html", ready: true },
-    { id: "exam", icon: "graduation-cap", label: "Imtihon", href: "/exam.html", ready: true },
+    { id: "exam", icon: "graduation-cap", label: "Daraja imtihoni", href: "/exam.html", ready: true },
     { id: "ranking", icon: "trophy", label: "Ranking", href: "/leaderboard.html", ready: true },
     { id: "tournaments", icon: "swords", label: "Turnirlar", href: "/student-tournaments.html", ready: true },
     { id: "friends", icon: "users", label: "Do'stlar", href: "/friends.html", ready: true },

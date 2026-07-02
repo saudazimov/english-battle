@@ -7558,6 +7558,8 @@ app.get("/teacher/assignments", authMiddleware, requireTeacher, async (req, res)
               a.due_at, a.status, a.created_at, a.class_id,
               c.name AS class_name,
               (SELECT COUNT(*)::int FROM class_students cs WHERE cs.class_id = a.class_id AND cs.status = 'active') AS class_student_count,
+              ,(SELECT COUNT(*) FROM teacher_exam_attempts a WHERE a.exam_id = e.id AND a.status = 'submitted')::int AS submitted_count
+              ,(SELECT ROUND(AVG(a.percent)) FROM teacher_exam_attempts a WHERE a.exam_id = e.id AND a.status = 'submitted')::int AS avg_percent
               (SELECT COUNT(*)::int FROM assignment_submissions sub WHERE sub.assignment_id = a.id AND sub.status IN ('submitted','late_submitted')) AS submitted_count
        FROM assignments a
        JOIN classes c ON c.id = a.class_id
@@ -7908,8 +7910,7 @@ app.get("/student/classes", authMiddleware, requireStudent, async (req, res) => 
     // Faqat shu o'quvchi a'zo bo'lgan faol sinflar.
     // O'qituvchi nomi + sinfdagi jami faol o'quvchilar soni (kartada ko'rsatish uchun).
     const classes = await pool.query(
-      `SELECT c.id, c.name, c.description, c.join_code,
-              cs.joined_at, cs.status,
+      `SELECT c.id, c.name, c.description, c.join_code, c.cefr_level, c.created_at, c.schedule,
               t.first_name AS teacher_first_name, t.last_name AS teacher_last_name,
               (SELECT COUNT(*) FROM class_students m WHERE m.class_id = c.id AND m.status = 'active') AS student_count
        FROM class_students cs
@@ -9053,7 +9054,9 @@ app.get("/teacher/exams", authMiddleware, requireTeacher, async (req, res) => {
               e.duration_minutes, e.pass_percent, e.max_attempts, e.starts_at, e.ends_at,
               e.status, e.created_at, e.class_id,
               c.name AS class_name,
-              (SELECT COUNT(*) FROM class_students cs WHERE cs.class_id = e.class_id AND cs.status = 'active')::int AS class_student_count
+              (SELECT COUNT(*) FROM class_students cs WHERE cs.class_id = e.class_id AND cs.status = 'active')::int AS class_student_count,
+              (SELECT COUNT(*) FROM teacher_exam_attempts a WHERE a.exam_id = e.id AND a.status = 'submitted')::int AS submitted_count,
+              (SELECT ROUND(AVG(a.percent)) FROM teacher_exam_attempts a WHERE a.exam_id = e.id AND a.status = 'submitted')::int AS avg_percent
        FROM teacher_exams e
        LEFT JOIN classes c ON c.id = e.class_id
        WHERE e.teacher_id = $1
@@ -9068,13 +9071,18 @@ app.get("/teacher/exams", authMiddleware, requireTeacher, async (req, res) => {
     const finished = rows.filter((r) => r.status === "finished").length;
     const avgDuration = total > 0 ? Math.round(rows.reduce((a, r) => a + (r.duration_minutes || 0), 0) / total) : 0;
 
+    const submittedExams = rows.filter((r) => r.avg_percent != null);
+    const avgScore = submittedExams.length > 0
+      ? Math.round(submittedExams.reduce((a, r) => a + r.avg_percent, 0) / submittedExams.length)
+      : 0;
+
     res.json({
       exams: rows,
       stats: {
         total,
         active,
         finished,
-        avg_score: 0,          // Faza 2'da attempts kelganda hisoblanadi
+        avg_score: avgScore,
         avg_duration: avgDuration,
       },
     });
@@ -9136,6 +9144,273 @@ app.delete("/teacher/exams/:id", authMiddleware, requireTeacher, async (req, res
     res.status(500).json({ error: "Server xatosi" });
   }
 });
+
+// =====================================================
+// IMTIHON FAZA 2 — O'QUVCHI TOMONI
+// =====================================================
+
+// O'quvchi ko'radigan faol imtihonlar (o'z sinflari)
+app.get("/student/exams", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+
+    // Avval vaqti o'tган imtihonlarni finished qilamiz (global)
+    await pool.query(
+      `UPDATE teacher_exams SET status = 'finished'
+       WHERE status = 'active' AND ends_at IS NOT NULL AND ends_at < NOW()`
+    );
+    await pool.query(
+      `UPDATE teacher_exams SET status = 'active'
+       WHERE status = 'scheduled' AND (starts_at IS NULL OR starts_at <= NOW())`
+    );
+
+    // O'quvchining faol sinflaridagi imtihonlar
+    const result = await pool.query(
+      `SELECT e.id, e.title, e.description, e.cefr_level, e.skill, e.question_count,
+              e.duration_minutes, e.pass_percent, e.max_attempts, e.starts_at, e.ends_at,
+              e.status, c.name AS class_name,
+              (SELECT COUNT(*) FROM teacher_exam_attempts a
+                WHERE a.exam_id = e.id AND a.student_id = $1 AND a.status = 'submitted')::int AS my_attempts,
+              (SELECT a.id FROM teacher_exam_attempts a
+                WHERE a.exam_id = e.id AND a.student_id = $1 AND a.status = 'in_progress'
+                ORDER BY a.started_at DESC LIMIT 1) AS in_progress_id,
+              (SELECT a.percent FROM teacher_exam_attempts a
+                WHERE a.exam_id = e.id AND a.student_id = $1 AND a.status = 'submitted'
+                ORDER BY a.percent DESC LIMIT 1) AS best_percent
+       FROM teacher_exams e
+       JOIN classes c ON c.id = e.class_id
+       JOIN class_students cs ON cs.class_id = c.id
+       WHERE cs.student_id = $1 AND cs.status = 'active'
+         AND e.status IN ('active', 'finished')
+       ORDER BY e.status ASC, e.created_at DESC`,
+      [studentId]
+    );
+
+    res.json({ exams: result.rows });
+  } catch (err) {
+    console.error("Student exams ro'yxati xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// IMTIHONNI BOSHLASH (yoki davom ettirish)
+app.post("/student/exams/:id/start", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const examId = parseInt(req.params.id, 10);
+    if (isNaN(examId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    // Imtihon + o'quvchi sinfda ekanini tekshiramiz
+    const examRes = await pool.query(
+      `SELECT e.* FROM teacher_exams e
+       JOIN class_students cs ON cs.class_id = e.class_id
+       WHERE e.id = $1 AND cs.student_id = $2 AND cs.status = 'active'`,
+      [examId, studentId]
+    );
+    if (examRes.rows.length === 0) return res.status(404).json({ error: "Imtihon topilmadi yoki sizga ochiq emas" });
+    const exam = examRes.rows[0];
+
+    if (exam.status !== "active") return res.status(400).json({ error: "Imtihon hozir faol emas" });
+
+    // Davom etayotgan urinish bormi?
+    const ongoing = await pool.query(
+      `SELECT * FROM teacher_exam_attempts
+       WHERE exam_id = $1 AND student_id = $2 AND status = 'in_progress'
+       ORDER BY started_at DESC LIMIT 1`,
+      [examId, studentId]
+    );
+
+    if (ongoing.rows.length > 0) {
+      const att = ongoing.rows[0];
+      // Vaqt tugaganmi? Tugagan bo'lsa avtomatik submit (pastdagi baholash mantiqi bilan)
+      if (att.expires_at && new Date(att.expires_at) < new Date()) {
+        // Vaqt tugagan — auto submit qilamiz va natijani qaytaramiz
+        await gradeAttempt(att.id); // pastdagi yordamchi funksiya
+        return res.status(409).json({ error: "Oldingi urinish vaqti tugagan", expired: true });
+      }
+      // Davom ettirish — savollar + saqlangan javoblar + qolgan vaqt
+      const qs = await pool.query(
+        `SELECT id, q_order, question_text, option_a, option_b, option_c, option_d, skill
+         FROM teacher_exam_questions WHERE exam_id = $1 ORDER BY q_order`,
+        [examId]
+      );
+      const secondsLeft = Math.max(0, Math.floor((new Date(att.expires_at) - new Date()) / 1000));
+      return res.json({
+        attempt_id: att.id,
+        resumed: true,
+        exam: { title: exam.title, duration_minutes: exam.duration_minutes, question_count: exam.question_count },
+        questions: qs.rows,     // to'g'ri javobsiz
+        saved_answers: att.answers || {},
+        seconds_left: secondsLeft,
+      });
+    }
+
+    // Yangi urinish — max_attempts tekshiramiz
+    const doneCount = await pool.query(
+      `SELECT COUNT(*)::int AS c FROM teacher_exam_attempts
+       WHERE exam_id = $1 AND student_id = $2 AND status IN ('submitted','expired')`,
+      [examId, studentId]
+    );
+    if (doneCount.rows[0].c >= exam.max_attempts) {
+      return res.status(403).json({ error: "Urinishlar tugagan (maksimal " + exam.max_attempts + " marta)" });
+    }
+
+    // expires_at = now + duration
+    const expiresAt = new Date(Date.now() + exam.duration_minutes * 60 * 1000);
+    const attRes = await pool.query(
+      `INSERT INTO teacher_exam_attempts
+        (exam_id, student_id, attempt_number, status, started_at, expires_at, total)
+       VALUES ($1, $2, $3, 'in_progress', NOW(), $4, $5)
+       RETURNING id`,
+      [examId, studentId, doneCount.rows[0].c + 1, expiresAt, exam.question_count]
+    );
+
+    const qs = await pool.query(
+      `SELECT id, q_order, question_text, option_a, option_b, option_c, option_d, skill
+       FROM teacher_exam_questions WHERE exam_id = $1 ORDER BY q_order`,
+      [examId]
+    );
+
+    res.json({
+      attempt_id: attRes.rows[0].id,
+      resumed: false,
+      exam: { title: exam.title, duration_minutes: exam.duration_minutes, question_count: exam.question_count },
+      questions: qs.rows,      // to'g'ri javobsiz (aldашga qarshi)
+      saved_answers: {},
+      seconds_left: exam.duration_minutes * 60,
+    });
+  } catch (err) {
+    console.error("Imtihon start xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// BITTA JAVOBNI SAQLASH (recovery uchun — har javob darhol)
+app.post("/student/exams/attempts/:attemptId/answer", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const attemptId = parseInt(req.params.attemptId, 10);
+    const { question_id, answer } = req.body;
+    if (isNaN(attemptId) || !question_id) return res.status(400).json({ error: "Noto'g'ri so'rov" });
+
+    // Urinish o'ziniki va in_progress ekanini tekshiramiz
+    const att = await pool.query(
+      "SELECT * FROM teacher_exam_attempts WHERE id = $1 AND student_id = $2",
+      [attemptId, studentId]
+    );
+    if (att.rows.length === 0) return res.status(404).json({ error: "Urinish topilmadi" });
+    if (att.rows[0].status !== "in_progress") return res.status(400).json({ error: "Imtihon yakunlangan" });
+    if (att.rows[0].expires_at && new Date(att.rows[0].expires_at) < new Date()) {
+      return res.status(400).json({ error: "Vaqt tugagan", expired: true });
+    }
+
+    // answers JSONB ni yangilaymiz (bitta kalitni)
+    const answers = att.rows[0].answers || {};
+    answers[question_id] = (answer || "").toLowerCase();
+    await pool.query(
+      "UPDATE teacher_exam_attempts SET answers = $1 WHERE id = $2",
+      [JSON.stringify(answers), attemptId]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Javob saqlash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// IMTIHONNI YAKUNLASH (baholash)
+app.post("/student/exams/attempts/:attemptId/submit", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const attemptId = parseInt(req.params.attemptId, 10);
+    if (isNaN(attemptId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+    const att = await pool.query(
+      "SELECT * FROM teacher_exam_attempts WHERE id = $1 AND student_id = $2",
+      [attemptId, studentId]
+    );
+    if (att.rows.length === 0) return res.status(404).json({ error: "Urinish topilmadi" });
+    if (att.rows[0].status !== "in_progress") return res.status(400).json({ error: "Allaqachon yakunlangan" });
+
+    // Frontend so'nggi javoblarni yuborishi mumkin (ixtiyoriy — recovery bilan ham bor)
+    if (req.body && req.body.answers && typeof req.body.answers === "object") {
+      const merged = Object.assign({}, att.rows[0].answers || {}, req.body.answers);
+      await pool.query("UPDATE teacher_exam_attempts SET answers = $1 WHERE id = $2", [JSON.stringify(merged), attemptId]);
+    }
+
+    const result = await gradeAttempt(attemptId);
+    res.json(result);
+  } catch (err) {
+    console.error("Imtihon submit xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// NATIJANI KO'RISH
+app.get("/student/exams/attempts/:attemptId/result", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const attemptId = parseInt(req.params.attemptId, 10);
+    const att = await pool.query(
+      `SELECT a.*, e.title, e.pass_percent, e.cefr_level
+       FROM teacher_exam_attempts a JOIN teacher_exams e ON e.id = a.exam_id
+       WHERE a.id = $1 AND a.student_id = $2`,
+      [attemptId, studentId]
+    );
+    if (att.rows.length === 0) return res.status(404).json({ error: "Natija topilmadi" });
+    res.json({ result: att.rows[0] });
+  } catch (err) {
+    console.error("Natija xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== YORDAMCHI: urinishni baholash (server-side, aldashga qarshi) =====
+async function gradeAttempt(attemptId) {
+  const att = await pool.query("SELECT * FROM teacher_exam_attempts WHERE id = $1", [attemptId]);
+  if (att.rows.length === 0) return { error: "Urinish topilmadi" };
+  const attempt = att.rows[0];
+
+  // To'g'ri javoblar (faqat serverda — teacher_exam_questions)
+  const qs = await pool.query(
+    "SELECT id, correct_answer FROM teacher_exam_questions WHERE exam_id = $1",
+    [attempt.exam_id]
+  );
+  const answers = attempt.answers || {};
+
+  let correct = 0, wrong = 0, unanswered = 0;
+  qs.rows.forEach((q) => {
+    const given = (answers[q.id] || answers[String(q.id)] || "").toLowerCase();
+    if (!given) unanswered++;
+    else if (given === (q.correct_answer || "").toLowerCase()) correct++;
+    else wrong++;
+  });
+
+  const total = qs.rows.length;
+  const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+  // pass_percent ni imtihondan olamiz
+  const examRes = await pool.query("SELECT pass_percent FROM teacher_exams WHERE id = $1", [attempt.exam_id]);
+  const passPercent = examRes.rows[0] ? examRes.rows[0].pass_percent : 60;
+  const passed = percent >= passPercent;
+
+  await pool.query(
+    `UPDATE teacher_exam_attempts
+     SET status = 'submitted', submitted_at = NOW(),
+         score = $1, total = $2, percent = $3,
+         correct_count = $1, wrong_count = $4, unanswered_count = $5, passed = $6
+     WHERE id = $7`,
+    [correct, total, percent, wrong, unanswered, passed, attemptId]
+  );
+
+  return {
+    success: true,
+    score: correct, total, percent,
+    correct_count: correct, wrong_count: wrong, unanswered_count: unanswered,
+    passed,
+  };
+}
 
 // --- Sinf topshiriqlari ro'yxati (statistika bilan) ---
 app.get("/teacher/classes/:classId/assignments", authMiddleware, requireTeacher, async (req, res) => {

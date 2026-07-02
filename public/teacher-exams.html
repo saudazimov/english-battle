@@ -160,7 +160,14 @@
     .cal-day { aspect-ratio: 1; display: grid; place-items: center; font-size: 12.5px; font-weight: 600; border-radius: 8px; color: var(--text); position: relative; cursor: default; }
     .cal-day.other { color: var(--text-dim); opacity: .4; }
     .cal-day.today { background: var(--accent); color: #fff; }
-    .cal-day.has-dot::after { content: ""; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background: var(--amber); }
+    .cal-day.has-dot::after { content: ""; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
+    .cal-day.dot-active::after { background: var(--primary); }
+    .cal-day.dot-scheduled::after { background: var(--amber); }
+    .cal-day.dot-finished::after { background: var(--green); }
+    /* Bugungi kun nuqtasi oq (ko'k fon ustida ko'rinsin) */
+    /* Bugungi kun (ko'k fon): nuqta oq halqa + biroz soya bilan har qanday fonda ajraladi */
+    .cal-day.today.has-dot::after { box-shadow: 0 0 0 2px #fff, 0 0 3px rgba(0,0,0,.3); }
+    .cal-day.today.dot-active::after { background: #cfe0ff; }
     .cal-legend { display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap; }
     .cal-leg { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-sub); }
     .cal-leg .d { width: 8px; height: 8px; border-radius: 50%; }
@@ -342,9 +349,9 @@
             </div>
             <div class="cal-grid" id="calGrid"></div>
             <div class="cal-legend">
-              <div class="cal-leg"><span class="d" style="background:var(--green)"></span> Faol imtihon</div>
-              <div class="cal-leg"><span class="d" style="background:var(--amber)"></span> Boshlanadi</div>
-              <div class="cal-leg"><span class="d" style="background:var(--primary)"></span> Yakunlangan</div>
+              <div class="cal-leg"><span class="d" style="background:var(--primary)"></span> Faol</div>
+              <div class="cal-leg"><span class="d" style="background:var(--amber)"></span> Rejalashtirilgan</div>
+              <div class="cal-leg"><span class="d" style="background:var(--green)"></span> Yakunlangan</div>
             </div>
           </div>
 
@@ -771,10 +778,16 @@
     var examDates = {};
     function fillExamDates() {
       examDates = {};
+      // Status ustunligi: active(3) > scheduled(2) > finished(1) — bir kunda bir nechta bo'lsa eng muhimi
+      var rank = { active: 3, scheduled: 2, finished: 1 };
       allExams.forEach(function (e) {
-        if (e.starts_at) {
-          var d = new Date(e.starts_at);
-          examDates[d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate()] = true;
+        if (!e.starts_at) return;
+        var d = new Date(e.starts_at);
+        var key = d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
+        var st = e.status || "active";
+        // Shu kunda muhimroq status bo'lsa saqlaymiz
+        if (!examDates[key] || (rank[st] || 0) > (rank[examDates[key]] || 0)) {
+          examDates[key] = st;
         }
       });
       renderCalendar();
@@ -794,8 +807,9 @@
       for (var d = 1; d <= daysInMonth; d++) {
         var isToday = (d === today.getDate() && m === today.getMonth() && y === today.getFullYear());
         var key = y + "-" + m + "-" + d;
-        var hasDot = examDates[key] ? " has-dot" : "";
-        html += '<div class="cal-day' + (isToday ? " today" : "") + hasDot + '">' + d + '</div>';
+        var st = examDates[key];
+        var dotCls = st ? (" has-dot dot-" + st) : "";
+        html += '<div class="cal-day' + (isToday ? " today" : "") + dotCls + '">' + d + '</div>';
       }
       var totalCells = startDow + daysInMonth;
       var trail = (7 - (totalCells % 7)) % 7;

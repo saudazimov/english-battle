@@ -7,13 +7,13 @@
   <link rel="stylesheet" href="/app.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    .app { max-width: 1680px; grid-template-columns: 230px 1fr 340px; }
-    .main { padding-right: 6px; grid-column: 2 / 3; }
+    .app { max-width: 1560px; grid-template-columns: 230px 1fr; gap: 24px; padding: 24px 28px; margin: 0 auto; }
+    .main { padding-right: 0; grid-column: 2 / 3; min-width: 0; }
     @media (max-width: 1100px) { .app { grid-template-columns: 200px 1fr; } .main { grid-column: 2 / 3; } }
-    @media (max-width: 760px) { .app { grid-template-columns: 1fr; } .main { grid-column: 1; } }
+    @media (max-width: 760px) { .app { grid-template-columns: 1fr; padding: 16px; } .main { grid-column: 1; } }
 
     .top-actions { display: flex; align-items: center; margin-bottom: 4px; }
-    .back-link { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; color: var(--text-dim); font-size: 14px; font-weight: 600; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+    .back-link { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; color: var(--text-dim); font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
     .back-link:hover { border-color: var(--border-bright); color: var(--text); }
     .back-link i { width: 16px; height: 16px; }
 
@@ -41,7 +41,7 @@
     .state-ic i { width: 42px; height: 42px; }
     .state-box h2 { font-size: 21px; font-weight: 700; margin-bottom: 8px; }
     .state-box p { font-size: 14.5px; color: var(--text-dim); max-width: 440px; margin: 0 auto 24px; line-height: 1.6; }
-    .state-btn { display: inline-flex; align-items: center; gap: 9px; padding: 13px 24px; border: none; border-radius: 12px; background: linear-gradient(95deg, var(--accent), var(--accent-2)); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 22px rgba(91,140,255,0.3); transition: opacity 0.15s; }
+    .state-btn { display: inline-flex; align-items: center; gap: 9px; padding: 13px 24px; border: none; border-radius: 12px; background: linear-gradient(95deg, var(--accent), var(--accent-2)); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; text-decoration: none; box-shadow: 0 8px 22px rgba(91,140,255,0.3); transition: opacity 0.15s; }
     .state-btn:hover { opacity: 0.93; }
     .state-btn.ghost { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); box-shadow: none; }
     .state-btn i { width: 18px; height: 18px; }
@@ -139,6 +139,105 @@
     .ov-cancel { background:var(--panel-2);color:var(--text-dim); }
     .ov-confirm { background:linear-gradient(95deg,var(--accent),var(--accent-2));color:#fff;border:none; }
     .ov-confirm:disabled { opacity:.6;cursor:not-allowed; }
+    /* ===== SINFXONA (maket) ===== */
+    .cx-banner { display: flex; align-items: flex-start; gap: 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 24px; margin-bottom: 18px; }
+    .cx-shield { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; color: #fff; font-size: 26px; font-weight: 800; flex: 0 0 auto; }
+    .cx-head-main { flex: 1; min-width: 0; }
+    .cx-name { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .cx-teacher { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-dim); margin-bottom: 12px; }
+    .cx-teacher-ava { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg,#5b8cff,#a855f7); display: inline-block; flex: 0 0 auto; }
+    .cx-badges { display: flex; gap: 8px; margin-bottom: 12px; }
+    .cx-badge { font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 999px; }
+    .cx-badge.lvl { background: rgba(91,140,255,.16); color: var(--accent); }
+    .cx-badge.active { background: rgba(52,211,153,.16); color: var(--green); }
+    .cx-meta { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-dim); flex-wrap: wrap; }
+    .cx-meta span { display: inline-flex; align-items: center; gap: 6px; }
+    .cx-meta i { width: 15px; height: 15px; }
+    .cx-meta-sep { color: var(--border-bright); }
+    .cx-head-side { display: flex; flex-direction: column; gap: 10px; flex: 0 0 auto; width: 260px; }
+    .cx-code-box { background: rgba(91,140,255,.08); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; }
+    .cx-code-label { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+    .cx-code-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .cx-code { font-size: 18px; font-weight: 800; color: var(--accent); letter-spacing: 0.5px; }
+    .cx-copy { background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 4px; }
+    .cx-copy:hover { color: var(--accent); }
+    .cx-copy i { width: 17px; height: 17px; }
+    .cx-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 11px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; border: none; transition: transform .12s; }
+    .cx-btn:hover { transform: translateY(-1px); }
+    .cx-btn i { width: 17px; height: 17px; }
+    .cx-btn.primary { background: var(--accent); color: #fff; }
+    .cx-btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--border-bright); }
+
+    .cx-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 20px; }
+    .cx-stat { display: flex; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
+    .cx-stat-ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: 0 0 auto; }
+    .cx-stat-ic i { width: 21px; height: 21px; }
+    .cx-stat-ic.blue { background: rgba(91,140,255,.14); color: var(--accent); }
+    .cx-stat-ic.purple { background: rgba(168,85,247,.14); color: var(--accent-2); }
+    .cx-stat-ic.green { background: rgba(52,211,153,.14); color: var(--green); }
+    .cx-stat-ic.amber { background: rgba(251,191,36,.14); color: var(--gold); }
+    .cx-stat-ic.cyan { background: rgba(56,225,255,.14); color: var(--cyan); }
+    .cx-stat-label { font-size: 12.5px; color: var(--text-dim); margin-bottom: 3px; }
+    .cx-stat-val { font-size: 20px; font-weight: 800; }
+
+    .cx-cols { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+    .cx-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 18px; }
+    .cx-panel-head { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .cx-panel-head.sm { font-size: 15px; margin-bottom: 14px; }
+    .cx-panel-head i { width: 19px; height: 19px; color: var(--accent); }
+    .cx-panel-head.sm i { width: 17px; height: 17px; }
+    .cx-panel-sub { font-size: 12px; font-weight: 500; color: var(--text-dim); margin-left: auto; }
+    .cx-soon { padding: 24px 16px; text-align: center; font-size: 13px; color: var(--text-faint); background: rgba(255,255,255,.02); border-radius: 10px; border: 1px dashed var(--border); }
+    .cx-loading-row { padding: 20px; text-align: center; font-size: 13px; color: var(--text-dim); }
+
+    /* Imtihon jadvali */
+    .cx-etable { width: 100%; border-collapse: collapse; }
+    .cx-etable th { text-align: left; font-size: 12px; font-weight: 600; color: var(--text-dim); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    .cx-etable td { padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+    .cx-etable tr:last-child td { border-bottom: none; }
+    .cx-ename { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+    .cx-ename-ic { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: 0 0 auto; }
+    .cx-ename-ic i { width: 15px; height: 15px; }
+    .cx-estatus { font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+    .cx-estatus.active { background: rgba(91,140,255,.16); color: var(--accent); }
+    .cx-estatus.scheduled { background: rgba(251,191,36,.16); color: var(--gold); }
+    .cx-estatus.finished { background: rgba(52,211,153,.16); color: var(--green); }
+    .cx-estatus.done { background: rgba(52,211,153,.16); color: var(--green); }
+    .cx-ebtn { padding: 7px 14px; border-radius: 9px; font-size: 12.5px; font-weight: 700; font-family: inherit; cursor: pointer; border: 1px solid var(--border-bright); background: transparent; color: var(--accent); transition: all .12s; }
+    .cx-ebtn:hover { background: var(--accent); color: #fff; }
+    .cx-ebtn.done { border-color: var(--border); color: var(--text-dim); cursor: default; }
+    .cx-ebtn.done:hover { background: transparent; color: var(--text-dim); }
+    .cx-etable-foot { text-align: center; margin-top: 14px; }
+    .cx-etable-foot a { font-size: 13px; color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: none; }
+
+    /* Progress */
+    .cx-prog { display: flex; align-items: center; gap: 18px; }
+    .cx-prog-ring { width: 88px; height: 88px; border-radius: 50%; display: grid; place-items: center; flex: 0 0 auto; background: conic-gradient(var(--accent) 0%, var(--border) 0%); position: relative; }
+    .cx-prog-ring::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: var(--panel); }
+    .cx-prog-ring span { position: relative; font-size: 19px; font-weight: 800; }
+    .cx-prog-info { flex: 1; }
+    .cx-prog-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-dim); margin-bottom: 10px; }
+    .cx-prog-row:last-child { margin-bottom: 0; }
+    .cx-prog-row b { color: var(--accent); font-weight: 700; }
+
+    /* Yaqin imtihon */
+    .cx-ne-title { font-size: 16px; font-weight: 800; margin-bottom: 12px; }
+    .cx-ne-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); margin-bottom: 8px; }
+    .cx-ne-row i { width: 14px; height: 14px; color: var(--accent); }
+    .cx-ne-row b { color: var(--text); font-weight: 600; }
+    .cx-ne-btn { width: 100%; margin-top: 12px; padding: 10px; border-radius: 10px; background: rgba(91,140,255,.12); border: 1px solid var(--border-bright); color: var(--accent); font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; }
+    .cx-ne-btn:hover { background: var(--accent); color: #fff; }
+    .cx-ne-btn i { width: 15px; height: 15px; }
+
+    /* Sinf haqida */
+    .cx-about-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text-dim); padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .cx-about-row:last-child { border-bottom: none; }
+    .cx-about-row span { display: inline-flex; align-items: center; gap: 8px; }
+    .cx-about-row i { width: 15px; height: 15px; }
+    .cx-about-row b { color: var(--text); font-weight: 600; }
+
+    @media (max-width: 1100px) { .cx-cols { grid-template-columns: 1fr; } .cx-stats { grid-template-columns: repeat(3, 1fr); } .cx-head-side { width: 220px; } }
+    @media (max-width: 760px) { .cx-banner { flex-direction: column; } .cx-head-side { width: 100%; } .cx-stats { grid-template-columns: repeat(2, 1fr); } }
   </style>
 </head>
 <body>
@@ -161,40 +260,120 @@
 
       <!-- KONTENT -->
       <div id="content" style="display:none;">
-        <div class="class-banner">
-          <div class="cb-shield" id="cbShield">S</div>
-          <div style="min-width:0">
-            <div class="cb-name" id="cbName">Sinf</div>
-            <div class="cb-meta">
-              <span><i data-lucide="user"></i> <span id="cbTeacher">O'qituvchi</span></span>
-              <span><i data-lucide="activity"></i> Faol</span>
+        <!-- SINF BANNER -->
+        <div class="cx-banner">
+          <div class="cx-shield" id="cbShield">S</div>
+          <div class="cx-head-main">
+            <div class="cx-name" id="cbName">Sinf</div>
+            <div class="cx-teacher"><span class="cx-teacher-ava" id="cbTeacherAva"></span> O'qituvchi: <span id="cbTeacher">—</span></div>
+            <div class="cx-badges">
+              <span class="cx-badge lvl" id="cbLevel">A1</span>
+              <span class="cx-badge active">Faol sinf</span>
             </div>
+            <div class="cx-meta">
+              <span><i data-lucide="users"></i> <span id="cbStudents">0</span> o'quvchi</span>
+              <span class="cx-meta-sep">|</span>
+              <span><i data-lucide="calendar"></i> <span id="cbSchedule">—</span></span>
+            </div>
+          </div>
+          <div class="cx-head-side">
+            <div class="cx-code-box">
+              <div class="cx-code-label">Sinf kodi:</div>
+              <div class="cx-code-row"><span class="cx-code" id="cbCode">—</span><button class="cx-copy" onclick="copyCode()" title="Nusxa olish"><i data-lucide="copy"></i></button></div>
+            </div>
+            <button class="cx-btn primary" onclick="comingSoon('Darsga kirish')"><i data-lucide="book-open"></i> Darsga kirish</button>
+            <button class="cx-btn ghost" onclick="comingSoon('O\'qituvchiga yozish')"><i data-lucide="message-circle"></i> O'qituvchiga yozish</button>
           </div>
         </div>
 
-        <div class="filters" id="filters">
-          <div class="filter-chip active" onclick="setFilter('all', this)">Hammasi</div>
-          <div class="filter-chip" onclick="setFilter('not_started', this)">Boshlanmagan</div>
-          <div class="filter-chip" onclick="setFilter('submitted', this)">Bajarilgan</div>
-          <div class="filter-chip" onclick="setFilter('overdue', this)">Muddati o'tgan</div>
+        <!-- STATISTIKA -->
+        <div class="cx-stats">
+          <div class="cx-stat"><div class="cx-stat-ic blue"><i data-lucide="clipboard-list"></i></div><div><div class="cx-stat-label">Topshiriqlar</div><div class="cx-stat-val" id="stAssign">0 ta</div></div></div>
+          <div class="cx-stat"><div class="cx-stat-ic purple"><i data-lucide="graduation-cap"></i></div><div><div class="cx-stat-label">Imtihonlar</div><div class="cx-stat-val" id="stExams">0 ta</div></div></div>
+          <div class="cx-stat"><div class="cx-stat-ic green"><i data-lucide="home"></i></div><div><div class="cx-stat-label">Bugungi vazifa</div><div class="cx-stat-val" id="stToday">—</div></div></div>
+          <div class="cx-stat"><div class="cx-stat-ic amber"><i data-lucide="bar-chart-2"></i></div><div><div class="cx-stat-label">O'rtacha natija</div><div class="cx-stat-val" id="stAvg">—</div></div></div>
+          <div class="cx-stat"><div class="cx-stat-ic cyan"><i data-lucide="calendar-check"></i></div><div><div class="cx-stat-label">Davomat</div><div class="cx-stat-val" id="stAttend">—</div></div></div>
         </div>
 
-        <!-- Topshiriqlar ro'yxati -->
-        <div class="assign-list" id="assignList"></div>
+        <!-- IKKI USTUN -->
+        <div class="cx-cols">
+          <!-- CHAP: asosiy -->
+          <div class="cx-main-col">
+            <!-- E'LONLAR -->
+            <div class="cx-panel">
+              <div class="cx-panel-head"><i data-lucide="megaphone"></i> E'lonlar</div>
+              <div id="announceArea">
+                <div class="cx-soon">O'qituvchi e'lonlari tez orada shu yerda ko'rinadi.</div>
+              </div>
+            </div>
 
-        <!-- Bo'sh holat: topshiriq yo'q -->
-        <div class="state-box" id="emptyAssign" style="display:none;">
-          <div class="state-ic"><i data-lucide="clipboard-list"></i></div>
-          <h2>Bu sinf uchun hali topshiriqlar berilmagan</h2>
-          <p>O'qituvchingiz topshiriq berishni boshlaganda, ular shu yerda paydo bo'ladi.</p>
-          <a class="state-btn ghost" href="/student-classes.html"><i data-lucide="arrow-left"></i> Sinflarimga qaytish</a>
-        </div>
+            <!-- SINF IMTIHONLARI -->
+            <div class="cx-panel">
+              <div class="cx-panel-head"><i data-lucide="graduation-cap"></i> Sinf imtihonlari <span class="cx-panel-sub">O'qituvchi yaratgan maxsus sinf imtihonlari</span></div>
+              <div id="examArea">
+                <div class="cx-loading-row">Yuklanmoqda...</div>
+              </div>
+            </div>
 
-        <!-- Bo'sh holat: filtrga mos yo'q -->
-        <div class="state-box" id="emptyFilter" style="display:none;">
-          <div class="state-ic"><i data-lucide="filter"></i></div>
-          <h2>Bu filtrda topshiriq yo'q</h2>
-          <p>Boshqa filtrni tanlab ko'ring.</p>
+            <!-- TOPSHIRIQLAR -->
+            <div class="cx-panel">
+              <div class="cx-panel-head"><i data-lucide="clipboard-list"></i> Topshiriqlar</div>
+              <div class="filters" id="filters">
+                <div class="filter-chip active" onclick="setFilter('all', this)">Hammasi</div>
+                <div class="filter-chip" onclick="setFilter('not_started', this)">Boshlanmagan</div>
+                <div class="filter-chip" onclick="setFilter('submitted', this)">Bajarilgan</div>
+                <div class="filter-chip" onclick="setFilter('overdue', this)">Muddati o'tgan</div>
+              </div>
+              <div class="assign-list" id="assignList"></div>
+              <div class="state-box" id="emptyAssign" style="display:none;">
+                <div class="state-ic"><i data-lucide="clipboard-list"></i></div>
+                <h2>Bu sinf uchun hali topshiriqlar berilmagan</h2>
+                <p>O'qituvchingiz topshiriq berishni boshlaganda, ular shu yerda paydo bo'ladi.</p>
+              </div>
+              <div class="state-box" id="emptyFilter" style="display:none;">
+                <div class="state-ic"><i data-lucide="filter"></i></div>
+                <h2>Bu filtrda topshiriq yo'q</h2>
+                <p>Boshqa filtrni tanlab ko'ring.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- O'NG: yon panel -->
+          <div class="cx-side-col">
+            <!-- MENING PROGRESSIM -->
+            <div class="cx-panel">
+              <div class="cx-panel-head sm"><i data-lucide="trending-up"></i> Mening progressim</div>
+              <div class="cx-prog">
+                <div class="cx-prog-ring" id="progRing"><span id="progPct">0%</span></div>
+                <div class="cx-prog-info">
+                  <div class="cx-prog-row"><span>Bajarilgan topshiriqlar:</span><b id="progDone">0/0</b></div>
+                  <div class="cx-prog-row"><span>Haftalik streak:</span><b id="progStreak">0 kun</b></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- YAQIN IMTIHON -->
+            <div class="cx-panel" id="nextExamPanel" style="display:none;">
+              <div class="cx-panel-head sm"><i data-lucide="calendar-clock"></i> Yaqin imtihon</div>
+              <div id="nextExamBody"></div>
+            </div>
+
+            <!-- SINF REYTINGI -->
+            <div class="cx-panel">
+              <div class="cx-panel-head sm"><i data-lucide="trophy"></i> Sinf reytingi</div>
+              <div class="cx-soon">Sinf reytingi tez orada shu yerda ko'rinadi.</div>
+            </div>
+
+            <!-- SINF HAQIDA -->
+            <div class="cx-panel">
+              <div class="cx-panel-head sm"><i data-lucide="info"></i> Sinf haqida</div>
+              <div class="cx-about">
+                <div class="cx-about-row"><span><i data-lucide="bar-chart"></i> Daraja:</span><b id="abLevel">—</b></div>
+                <div class="cx-about-row"><span><i data-lucide="user"></i> O'qituvchi:</span><b id="abTeacher">—</b></div>
+                <div class="cx-about-row"><span><i data-lucide="calendar"></i> Boshlanish sanasi:</span><b id="abDate">—</b></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -269,6 +448,10 @@
     }
 
     function esc(s){ return String(s||"").replace(/[&<>"']/g, function(c){ return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]; }); }
+    function comingSoon(name){ showToast((name?name+": ":"")+"tez orada tayyor bo'ladi"); }
+    function showToast(t){ var el=document.getElementById("cxToast"); if(!el){ el=document.createElement("div"); el.id="cxToast"; el.style.cssText="position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#111a2e;color:#fff;padding:13px 22px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:9000;transition:opacity .3s;"; document.body.appendChild(el); } el.textContent=t; el.style.opacity="1"; clearTimeout(window._cxT); window._cxT=setTimeout(function(){el.style.opacity="0";},2600); }
+    var curClassData = null;
+    function copyCode(){ var code=curClassData&&curClassData.join_code; if(!code) return; navigator.clipboard.writeText(code).then(function(){ showToast("Sinf kodi nusxalandi"); }).catch(function(){ showToast(code); }); }
     function showState(s) {
       document.getElementById("loadingState").style.display = s === "loading" ? "block" : "none";
       document.getElementById("content").style.display = s === "content" ? "block" : "none";
@@ -302,14 +485,30 @@
     }
 
     function render(cls) {
+      curClassData = cls;
       var name = cls.name || "Sinf";
       document.getElementById("cbName").textContent = name;
       document.getElementById("cbShield").textContent = name.trim().substring(0,2).toUpperCase();
       var teacher = ((cls.teacher_first_name || "") + " " + (cls.teacher_last_name || "")).trim() || "O'qituvchi";
       document.getElementById("cbTeacher").textContent = teacher;
+      // Sinf kodi
+      document.getElementById("cbCode").textContent = cls.join_code || "—";
+      // Daraja (endpoint bersa)
+      var lvl = cls.cefr_level || null;
+      if (lvl) { document.getElementById("cbLevel").textContent = lvl; document.getElementById("abLevel").textContent = lvl; }
+      else { document.getElementById("cbLevel").style.display = "none"; document.getElementById("abLevel").textContent = "—"; }
+      // O'quvchi soni
+      document.getElementById("cbStudents").textContent = cls.student_count != null ? cls.student_count : 0;
+      // Dars kunlari/jadval (endpoint bersa)
+      document.getElementById("cbSchedule").textContent = cls.schedule || "Jadval belgilanmagan";
+      // Sinf haqida
+      document.getElementById("abTeacher").textContent = teacher;
+      document.getElementById("abDate").textContent = cls.created_at ? fmtDue(cls.created_at) : "—";
+
       showState("content");
       if (window.lucide) lucide.createIcons();
       loadAssignments();
+      loadExams();
     }
 
     // ===== Topshiriqlar ro'yxati =====
@@ -334,8 +533,120 @@
         var data = await res.json();
         allAssignments = (data.assignments || []).filter(function(a){ return String(a.class_id) === String(classId); });
         applyFilter();
+        updateAssignStats();
       } catch (e) { /* jim */ }
     }
+
+    // Topshiriq statistika + progress (real)
+    function updateAssignStats() {
+      var total = allAssignments.length;
+      document.getElementById("stAssign").textContent = total + " ta";
+      var done = allAssignments.filter(function(a){ return a.submission_status === "submitted" || a.submission_status === "late_submitted"; });
+      // Bugungi vazifa: muddati bugun bo'lgan va bajarilmagan
+      var today = new Date(); today.setHours(0,0,0,0);
+      var tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+      var todayCount = allAssignments.filter(function(a){
+        if (!a.due_at) return false;
+        var d = new Date(a.due_at);
+        var notDone = a.submission_status !== "submitted" && a.submission_status !== "late_submitted";
+        return d >= today && d < tomorrow && notDone;
+      }).length;
+      document.getElementById("stToday").textContent = todayCount + " ta";
+      // O'rtacha natija (bajarilgan topshiriqlar ballidan)
+      var scored = done.filter(function(a){ return a.percent != null; });
+      if (scored.length) {
+        var avg = Math.round(scored.reduce(function(s,a){ return s + a.percent; }, 0) / scored.length);
+        document.getElementById("stAvg").textContent = avg + "%";
+      } else {
+        document.getElementById("stAvg").textContent = "—";
+      }
+      // Davomat — backend yo'q → tez orada
+      document.getElementById("stAttend").textContent = "—";
+      // Progress ring (bajarilgan / jami)
+      var pct = total > 0 ? Math.round((done.length / total) * 100) : 0;
+      document.getElementById("progPct").textContent = pct + "%";
+      document.getElementById("progDone").textContent = done.length + "/" + total;
+      var ring = document.getElementById("progRing");
+      if (ring) ring.style.background = "conic-gradient(var(--accent) " + pct + "%, var(--border) 0%)";
+      // Streak — backend yo'q (0)
+      document.getElementById("progStreak").textContent = "—";
+    }
+
+    // ===== SINF IMTIHONLARI (Faza 2 — real) =====
+    var EX_SKILL = { mixed:"Aralash", grammar:"Grammar", vocabulary:"Vocabulary", reading:"Reading", listening:"Listening" };
+    async function loadExams() {
+      var area = document.getElementById("examArea");
+      try {
+        var res = await authFetch("/student/exams");
+        if (!res.ok) { examEmpty(); return; }
+        var data = await res.json();
+        var exams = (data.exams || []).filter(function(e){ return String(e.class_id) === String(classId); });
+        document.getElementById("stExams").textContent = exams.length + " ta";
+        if (!exams.length) { examEmpty(); return; }
+        renderExamTable(exams);
+        renderNextExam(exams);
+      } catch (e) { examEmpty(); }
+    }
+    function examEmpty() {
+      document.getElementById("examArea").innerHTML = '<div class="cx-soon">Bu sinf uchun hali imtihon yaratilmagan.</div>';
+      document.getElementById("stExams").textContent = "0 ta";
+    }
+    function fmtExDate(iso) {
+      if (!iso) return "—";
+      var d = new Date(iso);
+      return d.toLocaleDateString("uz-UZ", { day:"numeric", month:"short" }) + ", " + d.toLocaleTimeString("uz-UZ", { hour:"2-digit", minute:"2-digit" });
+    }
+    function renderExamTable(exams) {
+      var COLORS = ["rgba(168,85,247,.16)","rgba(91,140,255,.16)","rgba(52,211,153,.16)","rgba(251,191,36,.16)"];
+      var ICOLORS = ["#a855f7","#5b8cff","#34d399","#fbbf24"];
+      var rows = exams.map(function(e, i){
+        var canResume = !!e.in_progress_id;
+        var attemptsLeft = (e.max_attempts || 1) - (e.my_attempts || 0);
+        var isDone = e.my_attempts > 0 && attemptsLeft <= 0 && !canResume;
+        var isFinished = e.status === "finished";
+        var stCls, stTxt;
+        if (isFinished) { stCls="finished"; stTxt="Yakunlangan"; }
+        else if (isDone) { stCls="done"; stTxt="Topshirilgan"; }
+        else if (e.status === "scheduled") { stCls="scheduled"; stTxt="Rejalashtirilgan"; }
+        else { stCls="active"; stTxt="Faol"; }
+        var btn;
+        if (canResume) btn = '<button class="cx-ebtn" onclick="goExam('+e.id+')">Davom ettirish</button>';
+        else if (isDone || isFinished) btn = '<button class="cx-ebtn done">'+(e.best_percent!=null?e.best_percent+"%":"Topshirilgan")+'</button>';
+        else btn = '<button class="cx-ebtn" onclick="goExam('+e.id+')">Boshlash</button>';
+        return '<tr>' +
+          '<td><div class="cx-ename"><div class="cx-ename-ic" style="background:'+COLORS[i%4]+';color:'+ICOLORS[i%4]+'"><i data-lucide="file-text"></i></div>'+esc(e.title)+'</div></td>' +
+          '<td>'+fmtExDate(e.starts_at)+'</td>' +
+          '<td>'+fmtExDate(e.ends_at)+'</td>' +
+          '<td>'+(e.duration_minutes||0)+' daqiqa</td>' +
+          '<td><span class="cx-estatus '+stCls+'">'+stTxt+'</span></td>' +
+          '<td>'+btn+'</td>' +
+        '</tr>';
+      }).join("");
+      document.getElementById("examArea").innerHTML =
+        '<table class="cx-etable"><thead><tr><th>Imtihon nomi</th><th>Ochiladi</th><th>Muddat</th><th>Davomiyligi</th><th>Status</th><th>Harakat</th></tr></thead><tbody>'+rows+'</tbody></table>';
+      if (window.lucide) lucide.createIcons();
+    }
+    function renderNextExam(exams) {
+      // Eng yaqin faol/rejalashtirilgan, hali topshirilmagan imtihon
+      var upcoming = exams.filter(function(e){
+        return (e.status === "active" || e.status === "scheduled") && !(e.my_attempts > 0 && (e.max_attempts||1)-(e.my_attempts||0) <= 0);
+      }).sort(function(a,b){
+        var da = a.starts_at ? new Date(a.starts_at) : new Date(0);
+        var db = b.starts_at ? new Date(b.starts_at) : new Date(0);
+        return da - db;
+      });
+      if (!upcoming.length) { document.getElementById("nextExamPanel").style.display = "none"; return; }
+      var e = upcoming[0];
+      document.getElementById("nextExamPanel").style.display = "block";
+      document.getElementById("nextExamBody").innerHTML =
+        '<div class="cx-ne-title">'+esc(e.title)+'</div>' +
+        '<div class="cx-ne-row"><i data-lucide="clock"></i> Ochiladi: <b>'+fmtExDate(e.starts_at)+'</b></div>' +
+        '<div class="cx-ne-row"><i data-lucide="calendar"></i> Muddat: <b>'+fmtExDate(e.ends_at)+'</b></div>' +
+        '<div class="cx-ne-row"><i data-lucide="hourglass"></i> Davomiyligi: <b>'+(e.duration_minutes||0)+' daqiqa</b></div>' +
+        '<button class="cx-ne-btn" onclick="goExam('+e.id+')"><i data-lucide="play"></i> Imtihonga o\'tish</button>';
+      if (window.lucide) lucide.createIcons();
+    }
+    function goExam(id) { window.location.href = "/student-exam-room.html?id=" + id; }
 
     function setFilter(f, el) {
       curFilter = f;
