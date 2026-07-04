@@ -3,7 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ro'yxatdan o'tish — Knowledge Arena</title>
+  <title>Ro'yxatdan o'tish — IlmLiga</title>
+  <!-- ===== IlmLiga BRAND META (deploy uchun) ===== -->
+  <meta name="application-name" content="IlmLiga">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+  <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+  <meta property="og:title" content="IlmLiga">
+  <meta property="og:description" content="Learn, compete, and rise in the rankings with IlmLiga.">
+  <meta property="og:image" content="/images/brand/og-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="IlmLiga">
+  <meta name="twitter:description" content="Learn, compete, and rise in the rankings with IlmLiga.">
+  <meta name="twitter:image" content="/images/brand/og-image.png">
+
   <style>
     :root {
       --bg-main: #070b18;
@@ -33,10 +47,13 @@
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       background: var(--bg-main);
       color: var(--text-main);
-      height: 100vh;
-      overflow: hidden;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
+      background-attachment: fixed;
       background-image:
         radial-gradient(circle at 12% 40%, rgba(59,130,246,0.14), transparent 38%),
         radial-gradient(circle at 88% 25%, rgba(139,92,246,0.14), transparent 38%),
@@ -54,6 +71,8 @@
       font-weight: 800; font-size: 16px; color: #fff;
       box-shadow: 0 4px 14px rgba(59,130,246,0.4);
     }
+    .logo-mark.has-img { background: transparent; box-shadow: none; }
+    .logo-mark.has-img .logo-fallback { display: none; }
     .logo-name { font-size: 19px; font-weight: 700; }
     .header-right { display: flex; align-items: center; gap: 12px; }
     .header-btn {
@@ -112,7 +131,7 @@
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 28px 44px;
       width: 100%; max-width: 620px; box-shadow: 0 24px 70px rgba(0,0,0,0.45);
-      max-height: calc(100vh - 170px);
+      max-height: calc(100dvh - 170px);
       overflow-y: auto;
     }
     /* Karta ichidagi scroll chizig'ini chiroyli qilamiz */
@@ -238,11 +257,18 @@
     .resend-box .link { color: var(--accent); }
     .resend-box.disabled { opacity: 0.55; }
     .back-link { text-align: center; margin-top: 16px; }
-    .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 24px 0 8px; }
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin: 24px 0 8px;
+    }
     .role-card {
       position: relative; background: var(--bg-input); border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm); padding: 20px 16px; text-align: center; cursor: pointer;
+      border-radius: var(--radius-sm); padding: 20px 14px; text-align: center; cursor: pointer;
       transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 148px; justify-content: center;
     }
     .role-card:hover { border-color: var(--border-focus); background: var(--bg-soft); }
     .role-card:active { transform: translateY(1px); }
@@ -250,10 +276,19 @@
       border-color: var(--primary); background: rgba(59,130,246,0.08);
       box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
     }
+    /* "Tez orada" — tanlab bo'lmaydigan (disabled) kartalar */
+    .role-card.disabled {
+      cursor: not-allowed; opacity: 0.55;
+    }
+    .role-card.disabled:hover {
+      border-color: var(--border); background: var(--bg-input);
+    }
+    .role-card.disabled:active { transform: none; }
     .role-icon {
       width: 52px; height: 52px; margin: 0 auto 12px; border-radius: 14px;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       display: flex; align-items: center; justify-content: center; color: #fff;
+      flex-shrink: 0;
     }
     .role-icon svg { width: 26px; height: 26px; }
     .role-card h3 { font-size: 15px; margin-bottom: 4px; }
@@ -261,7 +296,7 @@
     .role-soon {
       position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 600;
       background: var(--bg-soft); color: var(--gold); padding: 3px 7px; border-radius: 999px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border); white-space: nowrap; z-index: 2;
     }
     .phone-badge {
       display: inline-flex; align-items: center; gap: 8px; margin: 0 auto 6px; padding: 9px 16px;
@@ -320,13 +355,22 @@
       cursor: pointer; color: var(--text-muted); transition: color 0.15s, border-color 0.15s;
     }
     @media (max-width: 980px) {
-      .auth-layout { flex-direction: column; padding: 0 16px 24px; }
+      .auth-layout {
+        flex-direction: column;
+        padding: 0 16px 24px;
+        align-items: stretch;   /* karta to'liq kenglik oladi */
+      }
       .brand-side { flex: none; max-width: 100%; text-align: center; padding: 16px 8px; }
       .brand-title { font-size: 38px; }
       .mascot { height: 200px; }
       .features { grid-template-columns: 1fr; }
       .auth-side { flex: none; width: 100%; }
-      .card { padding: 28px 20px; }
+      /* MUHIM: mobilda karta ichida alohida scroll YO'Q — butun sahifa scroll bo'ladi */
+      .card {
+        padding: 28px 20px;
+        max-height: none;       /* balandlik chegarasi olib tashlandi */
+        overflow-y: visible;    /* ichki scroll o'chirildi */
+      }
     }
     @media (max-width: 520px) {
       .site-header { padding: 14px 16px; }
@@ -335,14 +379,61 @@
       .otp-boxes input { width: 44px; height: 54px; font-size: 20px; }
       .step-line { width: 28px; }
       .features { display: none; }
+      /* --- ROL GRID mobil sozlamasi --- */
+      .role-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .role-card { min-height: 132px; padding: 16px 10px; }
+      .role-icon { width: 46px; height: 46px; margin-bottom: 10px; }
+      .role-icon svg { width: 23px; height: 23px; }
+      .role-card h3 { font-size: 14px; }
+      .role-card p { font-size: 11px; }
+      .role-soon { font-size: 9px; padding: 2px 6px; top: 6px; right: 6px; }
     }
+
+    /* ====== "Kod kerak" belgisi (role-soon o'rniga) ====== */
+    .role-code-badge {
+      position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 600;
+      background: rgba(59,130,246,0.15); color: var(--primary);
+      padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(59,130,246,0.3);
+      white-space: nowrap; z-index: 2;
+    }
+
+    /* ====== Maktab kodi bosqichi ====== */
+    .sc-head { text-align: center; margin-bottom: 4px; }
+    .sc-icon {
+      width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center; color: #fff;
+      box-shadow: 0 10px 30px rgba(59,130,246,0.4);
+    }
+    .sc-icon svg { width: 30px; height: 30px; }
+    .sc-code-input {
+      text-transform: uppercase; letter-spacing: 4px; text-align: center;
+      font-size: 22px; font-weight: 700; font-family: 'Courier New', monospace;
+    }
+    .sc-code-input::placeholder {
+      letter-spacing: 3px; font-weight: 400; color: var(--text-dim);
+    }
+    .sc-msg { font-size: 13px; margin-top: 10px; min-height: 18px; text-align: center; }
+    .sc-msg.error { color: var(--red, #f87171); }
+    .sc-msg.success { color: #5ad17e; font-weight: 600; }
+    .sc-info {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: 16px; padding: 14px 16px;
+      background: rgba(52,211,153,0.08);
+      border: 1px solid rgba(52,211,153,0.3); border-radius: var(--radius-sm);
+    }
+    .sc-info-ic { width: 26px; height: 26px; color: #5ad17e; flex-shrink: 0; }
+    .sc-info-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .sc-info-value { font-size: 15px; font-weight: 600; color: var(--text-main); margin-top: 2px; }
+    #schoolCodeNextBtn { width: 100%; margin-top: 20px; justify-content: center; }
+
   </style>
 </head>
 <body>
   <header class="site-header">
     <div class="logo">
-      <div class="logo-mark" id="logoMark">KA</div>
-      <div class="logo-name" id="logoName">Knowledge Arena</div>
+      <div class="logo-mark has-img" id="logoMark" style="position:relative;"><span class="logo-fallback" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">IL</span><img src="/images/brand/logo-icon.png" alt="IlmLiga" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" onerror="this.closest('.logo-mark').classList.remove('has-img');this.remove();"></div>
+      <div class="logo-name" id="logoName">IlmLiga</div>
     </div>
     <div class="header-right">
       <button class="header-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Uz <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg></button>
@@ -351,11 +442,11 @@
   </header>
   <div class="auth-layout">
     <div class="brand-side">
-      <div class="brand-title" id="brandName">Knowledge Arena</div>
-      <div class="brand-slogan" id="brandSlogan">Learn. Battle. Rise.</div>
+      <div class="brand-title" id="brandName">IlmLiga</div>
+      <div class="brand-slogan" id="brandSlogan">Learn. Compete. Rise.</div>
       <div class="mascot">
-        <div class="mascot-badge" id="mascotBadge">KA</div>
-        <div class="mascot-hint">Mascot (vaqtincha) — keyin haqiqiy rasm qo'yiladi</div>
+        <img src="/images/brand/mascot.png" alt="IlmLiga mascot" class="mascot-badge" id="mascotBadge" style="width:auto;height:180px;object-fit:contain;background:transparent;box-shadow:none;" onerror="this.outerHTML='<div class=&quot;mascot-badge&quot;>IL</div>'">
+        <div class="mascot-hint">Learn. Compete. Rise.</div>
       </div>
       <div class="features">
         <div class="feature-card">
@@ -397,7 +488,7 @@
               <p>Farzandingiz natijasini kuzating</p>
             </div>
             <div class="role-card" data-role="school_admin" onclick="selectRole(this)">
-              <span class="role-soon">Tez orada</span>
+              <span class="role-code-badge">Kod kerak</span>
               <div class="role-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/><path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/></svg></div>
               <h3>Maktab admini</h3>
               <p>Maktab statistikasini boshqaring</p>
@@ -423,6 +514,35 @@
             <div class="step-label">Profil</div>
           </div>
         </div>
+
+        <!-- ====== MAKTAB TAKLIF KODI BOSQICHI (faqat school_admin) ====== -->
+        <div class="stage" id="stageSchoolCode">
+          <div class="sc-head">
+            <div class="sc-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/><path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/></svg>
+            </div>
+            <h2 class="card-title">Maktab taklif kodi</h2>
+            <p class="subtitle">Maktab admini bo'lish uchun sizga berilgan kodni kiriting. Kodni maktab yoki platforma administratori beradi.</p>
+          </div>
+
+          <label>Taklif kodi</label>
+          <input type="text" id="schoolCodeInput" class="sc-code-input"
+                 placeholder="XXXX-XXXX-XX" maxlength="14" autocomplete="off">
+          <div id="schoolCodeMsg" class="sc-msg"></div>
+
+          <!-- Kod to'g'ri bo'lsa maktab ma'lumoti chiqadi -->
+          <div id="schoolInfoBox" class="sc-info" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sc-info-ic"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <div>
+              <div class="sc-info-label">Maktab</div>
+              <div class="sc-info-value" id="siSchoolName"></div>
+            </div>
+          </div>
+
+          <button class="btn" id="schoolCodeNextBtn" onclick="verifySchoolCode()" disabled>Kodni tekshirish</button>
+          <div class="back-link"><a class="link" onclick="backToRole()">← Rolni o'zgartirish</a></div>
+        </div>
+
         <div class="stage" id="stage1">
           <h2 class="card-title">Ro'yxatdan o'tish</h2>
           <p class="subtitle">Telefon raqamingizni kiriting. Tasdiqlash kodi yuboriladi.</p>
@@ -527,7 +647,7 @@
     </div>
   </div>
   <footer class="site-footer">
-    <div id="copyright">© 2025 Knowledge Arena. Barcha huquqlar himoyalangan.</div>
+    <div id="copyright">© 2025 IlmLiga. Barcha huquqlar himoyalangan.</div>
     <div class="footer-links">
       <a href="#">Maxfiylik siyosati</a>
       <a href="#">Foydalanish shartlari</a>
@@ -549,17 +669,17 @@
   <script src="/api.js"></script>
   <script>
     const BRAND = {
-      brandName: "Knowledge Arena",
-      brandSlogan: "Learn. Battle. Rise.",
-      logoText: "KA",
-      logoPath: "images/logo-placeholder.png",
-      mascotPath: "images/mascot-placeholder.png"
+      brandName: "IlmLiga",
+      brandSlogan: "Learn. Compete. Rise.",
+      logoText: "IL",
+      logoPath: "/images/brand/logo.png",
+      mascotPath: "/images/brand/mascot.png"
     };
     document.getElementById("brandName").textContent = BRAND.brandName;
     document.getElementById("brandSlogan").innerHTML = BRAND.brandSlogan;
     document.getElementById("logoName").textContent = BRAND.brandName;
-    document.getElementById("logoMark").textContent = BRAND.logoText;
-    document.getElementById("mascotBadge").textContent = BRAND.logoText;
+    // logoMark endi rasm (logo-icon.png) — matn fallback onerror da
+    // mascotBadge endi rasm (mascot.png)
     document.getElementById("copyright").textContent = "© 2025 " + BRAND.brandName + ". Barcha huquqlar himoyalangan.";
 
     function showModal(text, type) {
@@ -655,6 +775,8 @@
     }
 
     function selectRole(card) {
+      // "Tez orada" (disabled) kartalar tanlanmaydi
+      if (card.classList.contains("disabled")) return;
       document.querySelectorAll(".role-card").forEach(c => c.classList.remove("selected"));
       card.classList.add("selected");
       selectedRole = card.getAttribute("data-role");
@@ -663,11 +785,78 @@
 
     function roleNext() {
       if (!selectedRole) return;
+      // Maktab admini — avval kod bosqichiga (telefon EMAS)
+      if (selectedRole === "school_admin") {
+        document.getElementById("stage0").classList.remove("active");
+        document.querySelectorAll(".stage").forEach(s => s.classList.remove("active"));
+        document.getElementById("stageSchoolCode").classList.add("active");
+        return;
+      }
       var sf = document.getElementById("studentFields");
       if (sf) sf.style.display = (selectedRole === "parent") ? "none" : "block";
       document.getElementById("stage0").classList.remove("active");
       document.getElementById("progressSteps").style.display = "flex";
       goToStage(1);
+    }
+
+    // ====== MAKTAB KODI TEKSHIRUVI ======
+    let schoolCodeData = null;  // Tasdiqlangan maktab ma'lumoti
+
+    // Kod inputiga yozganda: tugmani boshqarish + eski natijani tozalash
+    document.getElementById("schoolCodeInput")?.addEventListener("input", function() {
+      const clean = this.value.replace(/[^A-Za-z0-9]/g, "");
+      document.getElementById("schoolCodeNextBtn").disabled = clean.length < 6;
+      document.getElementById("schoolInfoBox").style.display = "none";
+      document.getElementById("schoolCodeMsg").textContent = "";
+      document.getElementById("schoolCodeMsg").className = "sc-msg";
+      schoolCodeData = null;
+    });
+
+    async function verifySchoolCode() {
+      const code = document.getElementById("schoolCodeInput").value.trim();
+      const msg = document.getElementById("schoolCodeMsg");
+      const btn = document.getElementById("schoolCodeNextBtn");
+
+      btn.disabled = true;
+      btn.textContent = "Tekshirilyapti...";
+
+      try {
+        const res = await fetch("/verify-school-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          msg.textContent = data.error || "Kod noto'g'ri";
+          msg.className = "sc-msg error";
+          btn.disabled = false;
+          btn.textContent = "Kodni tekshirish";
+          return;
+        }
+
+        // Kod to'g'ri — maktabni ko'rsatamiz, keyin telefon bosqichiga
+        schoolCodeData = data;
+        document.getElementById("siSchoolName").textContent = data.school_name;
+        document.getElementById("schoolInfoBox").style.display = "flex";
+        msg.textContent = "✓ Kod tasdiqlandi";
+        msg.className = "sc-msg success";
+
+        // 1 soniyadan keyin telefon bosqichiga o'tamiz
+        setTimeout(() => {
+          document.getElementById("stageSchoolCode").classList.remove("active");
+          document.getElementById("progressSteps").style.display = "flex";
+          var sf = document.getElementById("studentFields");
+          if (sf) sf.style.display = "block";  // admin ham to'liq profil to'ldiradi
+          goToStage(1);
+        }, 1000);
+      } catch (err) {
+        msg.textContent = "Server bilan aloqa yo'q. Qayta urinib ko'ring.";
+        msg.className = "sc-msg error";
+        btn.disabled = false;
+        btn.textContent = "Kodni tekshirish";
+      }
     }
 
     function backToRole() {
@@ -871,6 +1060,15 @@
         code: verifiedCode,
         role: selectedRole
       };
+
+      // Maktab admini — kod va koddan olingan maktab ma'lumotini qo'shamiz
+      if (selectedRole === "school_admin" && schoolCodeData) {
+        data.school_code = document.getElementById("schoolCodeInput").value.trim();
+        data.school = schoolCodeData.school_name;
+        data.region = schoolCodeData.region || data.region;
+        data.district = schoolCodeData.district || data.district;
+      }
+      
       const required = isParent
         ? [
             { id: "firstName", val: data.first_name },

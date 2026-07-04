@@ -534,6 +534,74 @@
     @media (max-width: 1100px) { .layout-grid { grid-template-columns: 1fr; } }
     @media (max-width: 900px) { .admin-app { grid-template-columns: 1fr; } .sidebar { display: none; } .topsearch { max-width: none; } .top-profile .nm, .top-profile .rl { display: none; } }
     @media (max-width: 560px) { .row > div { min-width: 100%; } .prod-badge span { display: none; } .content { padding: 18px 16px 50px; } .topbar { padding: 12px 16px; } }
+  
+    /* ====== MAKTAB TAKLIF KODI ====== */
+    .inv-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: end;
+    }
+    .inv-field { display: flex; flex-direction: column; gap: 6px; }
+    .inv-field-full { grid-column: 1 / -1; }
+    .inv-field-btn { align-self: end; }
+    .inv-label { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+    .inv-input {
+      width: 100%; padding: 11px 13px; font-size: 14px;
+      background: var(--bg-2); border: 1px solid var(--border);
+      border-radius: var(--r-md); color: var(--text);
+      transition: border-color 0.15s;
+    }
+    .inv-input:focus { outline: none; border-color: var(--border-bright); }
+    .inv-field-btn .btn { width: 100%; justify-content: center; }
+
+    /* Yaratilgan kod natijasi */
+    .inv-result {
+      margin-top: 20px; padding: 18px;
+      background: rgba(52,211,153,0.06);
+      border: 1px solid rgba(52,211,153,0.3);
+      border-radius: var(--r-md);
+    }
+    .inv-result-top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .inv-result-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase; color: var(--green);
+    }
+    .inv-result-school { font-size: 13px; color: var(--text-dim); }
+    .inv-code-row { display: flex; align-items: center; gap: 12px; }
+    .inv-code {
+      flex: 1; font-family: 'Courier New', monospace;
+      font-size: 26px; font-weight: 700; letter-spacing: 3px;
+      color: var(--text); background: var(--bg);
+      padding: 12px 18px; border-radius: var(--r-md);
+      border: 1px dashed var(--border-bright); text-align: center;
+    }
+    .inv-copy { white-space: nowrap; }
+    .inv-warn {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 12px; font-size: 12px; color: var(--gold);
+      line-height: 1.4;
+    }
+    .inv-warn .ico-sm { flex-shrink: 0; }
+
+    /* Xato xabari */
+    .inv-error {
+      margin-top: 16px; padding: 12px 14px;
+      background: rgba(248,113,113,0.08);
+      border: 1px solid rgba(248,113,113,0.3);
+      border-radius: var(--r-md);
+      color: var(--red); font-size: 13px;
+    }
+
+    /* Mobil */
+    @media (max-width: 640px) {
+      .inv-form { grid-template-columns: 1fr; }
+      .inv-code { font-size: 20px; letter-spacing: 2px; }
+      .inv-code-row { flex-direction: column; align-items: stretch; }
+    }
   </style>
 </head>
 <body>
@@ -741,11 +809,64 @@
 
         <!-- ====== SCHOOLS VIEW ====== -->
         <div id="view-schools" style="display:none;">
-          <div class="page-head">
-            <div>
-              <h2 class="page-title-lg">Maktablar</h2>
-              <p class="page-sub">Maktablar bo'yicha o'quvchilar va statistika</p>
+          <!-- ====== MAKTAB TAKLIF KODI YARATISH ====== -->
+          <div class="card" style="margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+              <i data-lucide="ticket" style="width:20px;height:20px;color:var(--accent);"></i>
+              <h3 style="font-size:15px;font-weight:700;margin:0;">Maktab admini taklif kodi</h3>
             </div>
+            <p style="font-size:13px;color:var(--text-dim);margin:0 0 18px;line-height:1.5;">
+              Maktab rahbari uchun bir martalik kod yarating. Kod faqat bir marta ko'rsatiladi va bitta maktabga bitta admin ro'yxatdan o'ta oladi.
+            </p>
+
+            <div class="inv-form">
+              <div class="inv-field inv-field-full">
+                <label class="inv-label">Maktab nomi *</label>
+                <input type="text" id="invSchoolName" class="inv-input" placeholder="Masalan: 42-son maktab, Toshkent">
+              </div>
+              <div class="inv-field">
+                <label class="inv-label">Viloyat</label>
+                <input type="text" id="invRegion" class="inv-input" placeholder="Toshkent">
+              </div>
+              <div class="inv-field">
+                <label class="inv-label">Tuman</label>
+                <input type="text" id="invDistrict" class="inv-input" placeholder="Chilonzor">
+              </div>
+              <div class="inv-field">
+                <label class="inv-label">Amal qilish muddati</label>
+                <select id="invExpires" class="inv-input">
+                  <option value="7">7 kun</option>
+                  <option value="30" selected>30 kun</option>
+                  <option value="90">90 kun</option>
+                </select>
+              </div>
+              <div class="inv-field inv-field-btn">
+                <button class="btn" id="invGenerateBtn" onclick="generateSchoolInvite()">
+                  <i data-lucide="sparkles" class="ico-sm"></i> Kod yaratish
+                </button>
+              </div>
+            </div>
+
+            <!-- Yaratilgan kod natijasi (dastlab yashirin) -->
+            <div id="invResult" class="inv-result" style="display:none;">
+              <div class="inv-result-top">
+                <span class="inv-result-label">Yaratilgan kod</span>
+                <span class="inv-result-school" id="invResultSchool"></span>
+              </div>
+              <div class="inv-code-row">
+                <code class="inv-code" id="invCodeValue">————</code>
+                <button class="btn btn-ghost inv-copy" onclick="copySchoolInvite()">
+                  <i data-lucide="copy" class="ico-sm"></i> <span id="invCopyLabel">Nusxa</span>
+                </button>
+              </div>
+              <div class="inv-warn">
+                <i data-lucide="alert-triangle" class="ico-sm"></i>
+                Bu kodni hozir saqlang va maktab rahbariga bering. Xavfsizlik uchun u qayta ko'rsatilmaydi.
+              </div>
+            </div>
+
+            <!-- Xato xabari -->
+            <div id="invError" class="inv-error" style="display:none;"></div>
           </div>
           <div class="card">
             <div class="toolbar">
@@ -1678,7 +1799,7 @@
         if (d.school_count === 0) {
           box.innerHTML = '<span style="color:var(--gold);">⚠ Bu tumanda maktab topilmadi</span>';
         } else {
-          var list = d.schools.map(function (s) { return s.school + " (" + s.student_count + " o'quvchi)"; }).join(", ");
+          var list = d.schools.map(function (s) { return esc(s.school) + " (" + s.student_count + " o'quvchi)"; }).join(", ");
           box.innerHTML = '<b style="color:var(--accent);">' + d.school_count + ' ta maktab:</b> ' + list;
         }
       } catch (e) { box.innerHTML = '<span style="color:#f87171;">Xato</span>'; }
@@ -2046,6 +2167,77 @@
       if (view === "moderation") loadFlags(1);
       if (view === "reports") loadReports();
       if (view === "tournaments") loadTournaments();
+    }
+
+    // ====== MAKTAB TAKLIF KODI ======
+    let _lastInviteCode = "";  // Nusxa olish uchun (formatlanган)
+
+    async function generateSchoolInvite() {
+      const btn = document.getElementById("invGenerateBtn");
+      const errBox = document.getElementById("invError");
+      const resultBox = document.getElementById("invResult");
+
+      const school_name = document.getElementById("invSchoolName").value.trim();
+      const region = document.getElementById("invRegion").value.trim();
+      const district = document.getElementById("invDistrict").value.trim();
+      const expires_days = parseInt(document.getElementById("invExpires").value, 10);
+
+      // Frontend validatsiya
+      errBox.style.display = "none";
+      if (school_name.length < 3) {
+        errBox.textContent = "Maktab nomi kamida 3 harf bo'lishi kerak.";
+        errBox.style.display = "block";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader" class="ico-sm"></i> Yaratilyapti...';
+      if (window.lucide) lucide.createIcons();
+
+      try {
+        const res = await fetch("/admin/school-invites", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + ADMIN_TOKEN
+          },
+          body: JSON.stringify({ school_name, region, district, expires_days })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          errBox.textContent = data.error || "Kod yaratishda xato yuz berdi.";
+          errBox.style.display = "block";
+          resultBox.style.display = "none";
+          return;
+        }
+
+        // Muvaffaqiyat — kodni ko'rsatamiz (bir marta!)
+        _lastInviteCode = data.code;
+        document.getElementById("invCodeValue").textContent = data.code;
+        document.getElementById("invResultSchool").textContent = data.school_name;
+        resultBox.style.display = "block";
+        // Formani tozalaymiz (takroriy yaratishni oldini olish)
+        document.getElementById("invSchoolName").value = "";
+        document.getElementById("invRegion").value = "";
+        document.getElementById("invDistrict").value = "";
+      } catch (err) {
+        errBox.textContent = "Server bilan aloqa yo'q. Qayta urinib ko'ring.";
+        errBox.style.display = "block";
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="sparkles" class="ico-sm"></i> Kod yaratish';
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    function copySchoolInvite() {
+      if (!_lastInviteCode) return;
+      navigator.clipboard.writeText(_lastInviteCode).then(() => {
+        const label = document.getElementById("invCopyLabel");
+        label.textContent = "Nusxa olindi ✓";
+        setTimeout(() => { label.textContent = "Nusxa"; }, 2000);
+      });
     }
 
     // ===== AUDIT LOGS =====

@@ -3,7 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kirish — Knowledge Arena</title>
+  <title>Kirish — IlmLiga</title>
+  <!-- ===== IlmLiga BRAND META (deploy uchun) ===== -->
+  <meta name="application-name" content="IlmLiga">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+  <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+  <meta property="og:title" content="IlmLiga">
+  <meta property="og:description" content="Learn, compete, and rise in the rankings with IlmLiga.">
+  <meta property="og:image" content="/images/brand/og-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="IlmLiga">
+  <meta name="twitter:description" content="Learn, compete, and rise in the rankings with IlmLiga.">
+  <meta name="twitter:image" content="/images/brand/og-image.png">
+
   <style>
     /* ===== CSS RANG O'ZGARUVCHILARI (register.html bilan bir xil) ===== */
     :root {
@@ -30,10 +44,13 @@
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       background: var(--bg-main);
       color: var(--text-main);
-      height: 100vh;
-      overflow: hidden;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
+      background-attachment: fixed;
       background-image:
         radial-gradient(circle at 12% 40%, rgba(59,130,246,0.14), transparent 38%),
         radial-gradient(circle at 88% 25%, rgba(139,92,246,0.14), transparent 38%),
@@ -53,6 +70,8 @@
       font-weight: 800; font-size: 16px; color: #fff;
       box-shadow: 0 4px 14px rgba(59,130,246,0.4);
     }
+    .logo-mark.has-img { background: transparent; box-shadow: none; }
+    .logo-mark.has-img .logo-fallback { display: none; }
     .logo-name { font-size: 19px; font-weight: 700; }
     .header-right { display: flex; align-items: center; gap: 12px; }
     .header-btn {
@@ -69,6 +88,10 @@
     .auth-layout {
       flex: 1; display: flex; align-items: center;
       padding: 0 32px 12px; gap: 32px; min-height: 0;
+    }
+    /* Desktopda vertikal markazlash saqlanadi (kontent qisqa bo'lsa) */
+    @media (min-height: 700px) and (min-width: 981px) {
+      .auth-layout { align-items: center; }
     }
 
     /* CHAP: BRENDING */
@@ -311,19 +334,30 @@
 
     /* RESPONSIVE */
     @media (max-width: 980px) {
-      .auth-layout { flex-direction: column; padding: 0 16px 24px; }
-      .brand-side { flex: none; max-width: 100%; text-align: center; padding: 16px 8px; }
+      .auth-layout {
+        flex-direction: column;
+        padding: 0 16px 24px;
+        align-items: stretch;
+      }
+      /* Mobilda KIRISH KARTASI yuqoriga, brending pastga */
+      .auth-side  { order: 1; flex: none; width: 100%; }
+      .brand-side { order: 2; flex: none; max-width: 100%; text-align: center; padding: 20px 8px 0; }
       .brand-title { font-size: 38px; }
       .mascot { height: 200px; }
       .features { grid-template-columns: 1fr; }
-      .auth-side { flex: none; width: 100%; }
       .card { padding: 28px 20px; }
     }
     @media (max-width: 520px) {
       .site-header { padding: 14px 16px; }
       .logo-name { font-size: 17px; }
       .footer-links { gap: 14px; }
+      /* Bezak elementlari mobilda yashiriladi — joy egallamasin */
+      .mascot { display: none; }
       .features { display: none; }
+      .brand-title { font-size: 30px; margin-bottom: 8px; }
+      .brand-slogan { font-size: 16px; margin-bottom: 0; }
+      .auth-layout { padding-top: 8px; }
+      .card { padding: 24px 18px; }
     }
   </style>
 </head>
@@ -332,8 +366,8 @@
   <!-- HEADER -->
   <header class="site-header">
     <div class="logo">
-      <div class="logo-mark" id="logoMark">KA</div>
-      <div class="logo-name" id="logoName">Knowledge Arena</div>
+      <img src="/images/brand/logo-icon.png" alt="IlmLiga" style="height:40px;width:auto;object-fit:contain;display:block;" onerror="this.style.display='none'">
+      <div class="logo-name" id="logoName">IlmLiga</div>
     </div>
     <div class="header-right">
       <button class="header-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Uz <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg></button>
@@ -346,11 +380,10 @@
 
     <!-- CHAP: BRENDING -->
     <div class="brand-side">
-      <div class="brand-title" id="brandName">Knowledge Arena</div>
-      <div class="brand-slogan" id="brandSlogan">Learn. Battle. Rise.</div>
+      <div class="brand-title" id="brandName">IlmLiga</div>
+      <div class="brand-slogan" id="brandSlogan">Learn. Compete. Rise.</div>
       <div class="mascot">
-        <div class="mascot-badge" id="mascotBadge">KA</div>
-        <div class="mascot-hint">Mascot (vaqtincha) — keyin haqiqiy rasm qo'yiladi</div>
+        <img src="/images/brand/logo-icon.png" alt="IlmLiga" style="width:auto;height:180px;object-fit:contain;filter:drop-shadow(0 12px 40px rgba(37,99,235,0.5));" onerror="this.style.display='none'">
       </div>
       <div class="features">
         <div class="feature-card">
@@ -411,7 +444,7 @@
 
   <!-- FOOTER -->
   <footer class="site-footer">
-    <div id="copyright">© 2025 Knowledge Arena. Barcha huquqlar himoyalangan.</div>
+    <div id="copyright">© 2025 IlmLiga. Barcha huquqlar himoyalangan.</div>
     <div class="footer-links">
       <a href="#">Maxfiylik siyosati</a>
       <a href="#">Foydalanish shartlari</a>
@@ -437,17 +470,17 @@
   <script>
     // ===== BREND KONFIGURATSIYASI (register.html bilan bir xil) =====
     const BRAND = {
-      brandName: "Knowledge Arena",
-      brandSlogan: "Learn. Battle. Rise.",
-      logoText: "KA",
-      logoPath: "images/logo-placeholder.png",
-      mascotPath: "images/mascot-placeholder.png"
+      brandName: "IlmLiga",
+      brandSlogan: "Learn. Compete. Rise.",
+      logoText: "IL",
+      logoPath: "/images/brand/logo.png",
+      mascotPath: "/images/brand/mascot.png"
     };
     document.getElementById("brandName").textContent = BRAND.brandName;
     document.getElementById("brandSlogan").innerHTML = BRAND.brandSlogan;
     document.getElementById("logoName").textContent = BRAND.brandName;
-    document.getElementById("logoMark").textContent = BRAND.logoText;
-    document.getElementById("mascotBadge").textContent = BRAND.logoText;
+    // logoMark endi rasm (logo-icon.png) — matn fallback onerror da
+    // mascotBadge endi rasm (mascot.png)
     document.getElementById("copyright").textContent = "© 2025 " + BRAND.brandName + ". Barcha huquqlar himoyalangan.";
 
     // ===== MODAL =====

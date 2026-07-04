@@ -298,7 +298,8 @@
         if (h.rating_change > 0) { rpCls = "up"; rpText = "+" + h.rating_change; }
         else if (h.rating_change < 0) { rpCls = "down"; rpText = "" + h.rating_change; }
 
-        const oppName = h.opponent_name || "Raqib";
+        // Sprint 1: raqib ismi innerHTML'ga kirishidan oldin escape (sbEsc — sidebar.js)
+        const oppName = sbEsc(h.opponent_name || "Raqib");
         const oppAva = avatarHTML(oppName, h.opponent_picture);
         const oppLeague = h.opponent_rating ? leagueShort(h.opponent_rating) : null;
         const oppSub = oppLeague

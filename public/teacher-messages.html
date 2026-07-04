@@ -199,37 +199,39 @@
       </header>
 
       <div class="chat-wrap">
-        <div class="chat-grid" id="chatGrid">
-          <!-- Chap: suhbatlar -->
-          <div class="conv-col">
-            <div class="conv-search">
-              <div class="conv-search-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input id="convSearch" type="text" placeholder="Qidirish..." oninput="onSearch(this.value)" />
+        <!-- Sprint 2B: Xabarlar tizimi backend'i hali tayyor emas.
+             "Fake data yo'q" qoidasiga muvofiq — buzilgan chat o'rniga
+             professional "tez orada" holati ko'rsatiladi. -->
+        <div class="soon-wrap" style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px;">
+          <div class="soon-card" style="max-width:520px;text-align:center;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);padding:48px 40px;">
+            <div style="width:76px;height:76px;margin:0 auto 22px;border-radius:20px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div style="display:inline-block;font-size:12px;font-weight:700;color:var(--primary);background:var(--primary-soft);padding:5px 12px;border-radius:999px;letter-spacing:.4px;margin-bottom:16px;">TEZ ORADA</div>
+            <h2 style="font-size:23px;font-weight:800;color:var(--text);margin-bottom:12px;">Xabarlar tizimi ishlab chiqilmoqda</h2>
+            <p style="font-size:14.5px;line-height:1.7;color:var(--text-sub);margin-bottom:26px;">
+              O'quvchilar va ota-onalar bilan bevosita muloqot qilish imkoniyati tayyorlanmoqda.
+              Xavfsiz, moderatsiyalangan va faqat o'z sinfingiz doirasida ishlaydigan xabar
+              tizimini yaqin orada taqdim etamiz.
+            </p>
+            <div style="display:flex;flex-direction:column;gap:12px;text-align:left;background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px 20px;margin-bottom:26px;">
+              <div style="display:flex;align-items:center;gap:11px;font-size:13.5px;color:var(--text-sub);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>
+                Faqat o'z sinfingizdagi o'quvchilar bilan yozishuv
               </div>
-              <button class="conv-new-btn" onclick="comingSoon('Yangi suhbat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              <div style="display:flex;align-items:center;gap:11px;font-size:13.5px;color:var(--text-sub);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>
+                Bolalar xavfsizligi uchun to'liq moderatsiya
+              </div>
+              <div style="display:flex;align-items:center;gap:11px;font-size:13.5px;color:var(--text-sub);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>
+                Real vaqtda yetkazish va o'qilganlik tasdig'i
+              </div>
             </div>
-            <div class="conv-tabs">
-              <button class="conv-tab active" id="ctAll" onclick="switchConvTab('all')">Barchasi <span class="cnt" id="cntAll">0</span></button>
-              <button class="conv-tab" id="ctUnread" onclick="switchConvTab('unread')">O'qilmagan <span class="cnt" id="cntUnread">0</span></button>
-              <button class="conv-tab" id="ctImportant" onclick="switchConvTab('important')">Muhim</button>
-            </div>
-            <div class="conv-list" id="convList"></div>
-            <div class="conv-archive" onclick="comingSoon('Arxiv')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-              Arxivlangan xabarlar
-              <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
-            </div>
-          </div>
-
-          <!-- O'rta: chat (bo'sh holatda placeholder) -->
-          <div class="chat-col" id="chatCol">
-            <div class="chat-empty-mid" id="chatMid">Suhbatni tanlang yoki yangi xabar boshlang</div>
-          </div>
-
-          <!-- O'ng: profil -->
-          <div class="prof-col" id="profCol">
-            <div class="chat-empty-mid" style="border:none">Suhbat tanlanganda<br>ma'lumot ko'rinadi</div>
+            <a href="/teacher.html" class="soon-back-btn" style="display:inline-flex;align-items:center;gap:8px;background:var(--primary);color:#fff;font-size:14px;font-weight:700;padding:12px 24px;border-radius:var(--radius-sm);transition:opacity .15s;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Boshqaruv paneliga qaytish
+            </a>
           </div>
         </div>
       </div>
@@ -243,129 +245,51 @@
   <script src="/premium-modal.js"></script>
   <script src="/teacher-sidebar.js"></script>
   <script>
-    // ===== TEMA =====
-    (function initTheme() {
-      var saved = localStorage.getItem("eb_theme") || "light";
-      document.documentElement.setAttribute("data-theme", saved);
-      updateThemeIcon(saved);
+    // Sprint 2B: xabarlar backend'i yo'q — sahifa faqat "tez orada" holatini ko'rsatadi.
+    // Sidebar va topbar render qilinadi, lekin server'ga hech qanday so'rov yuborilmaydi
+    // (avvalgi /teacher/conversations chaqiruvi olib tashlandi — u endpoint mavjud emas edi).
+    renderTeacherSidebar("messages");
+
+    // Foydalanuvchi ismini localStorage'dan ko'rsatamiz (topbar uchun)
+    (function () {
+      try {
+        var u = JSON.parse(localStorage.getItem("user") || "{}");
+        var nameEl = document.getElementById("userName");
+        var avaEl = document.getElementById("userAvatar");
+        if (u.first_name && nameEl) {
+          var full = ((u.first_name || "") + " " + (u.last_name || "")).trim();
+          nameEl.textContent = full;
+          if (avaEl) avaEl.textContent = (u.first_name[0] || "T").toUpperCase();
+        }
+      } catch (e) {}
     })();
+
+    // ===== TEMA — boshqa sahifalar bilan BIR XIL (eb_theme kaliti) =====
+    // Muhim: kalit "eb_theme" bo'lishi shart, aks holda sahifalar orasida sinxron bo'lmaydi.
     function toggleTheme() {
       var cur = document.documentElement.getAttribute("data-theme");
       var next = cur === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", next);
-      localStorage.setItem("eb_theme", next);
+      try { localStorage.setItem("eb_theme", next); } catch (e) {}
       updateThemeIcon(next);
     }
     function updateThemeIcon(theme) {
       var el = document.getElementById("themeIcon");
       if (!el) return;
-      el.innerHTML = theme === "dark"
-        ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
-        : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>';
+      if (theme === "dark") {
+        // Oy (dark rejimda)
+        el.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+      } else {
+        // Quyosh (light rejimda)
+        el.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>';
+      }
     }
-
-    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada tayyor bo'ladi"); }
-    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
-    function showToast(text) { var t = document.getElementById("toast"); t.textContent = text; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2600); }
-
-    // ===== AUTH =====
-    var userData = localStorage.getItem("user");
-    if (!userData || !localStorage.getItem("token")) { window.location.href = "/index.html"; }
-    var user = userData ? JSON.parse(userData) : {};
-    if (user.role && user.role !== "teacher") {
-      var R = { student: "/lobby.html", parent: "/parent.html", school_admin: "/school-admin.html" };
-      if (R[user.role]) window.location.href = R[user.role];
-    }
-    renderTeacherSidebar("messages");
-
-    var fn = user.first_name || "", ln = user.last_name || "";
-    document.getElementById("userName").textContent = (fn + " " + ln).trim() || "O'qituvchi";
-    document.getElementById("userAvatar").textContent = (fn || "T").charAt(0).toUpperCase();
-
-    var AV_COLORS = ["#2f6bff", "#16b06a", "#7c5cfc", "#f59e0b", "#06b6d4", "#ef4655"];
-    function avColor(name) { var s = 0; for (var i = 0; i < (name || "").length; i++) s += name.charCodeAt(i); return AV_COLORS[s % AV_COLORS.length]; }
-    function initials(n) { var p = (n || "").trim().split(" "); return ((p[0] || "").charAt(0) + (p[1] || "").charAt(0)).toUpperCase() || "?"; }
-
-    var currentConvTab = "all";
-    var allConvs = [], filtered = [];
-
-    // ===== SUHBATLARNI YUKLASH =====
-    async function loadConversations() {
-      try {
-        var res = await authFetch("/teacher/conversations");
-        if (!res.ok) { showEmpty(); return; }
-        var data = await res.json();
-        allConvs = data.conversations || [];
-        filtered = allConvs.slice();
-        if (!allConvs.length) { showEmpty(); return; }
-        renderConvList();
-        updateCounts(data);
-      } catch (e) { showEmpty(); }
-    }
-
-    function showEmpty() {
-      // Suhbatlar ro'yxati bo'sh
-      document.getElementById("convList").innerHTML = '';
-      document.getElementById("cntAll").textContent = "0";
-      document.getElementById("cntUnread").textContent = "0";
-      // O'rta: to'liq bo'sh holat (3 ustunni egallaydi)
-      var grid = document.getElementById("chatGrid");
-      grid.innerHTML =
-        '<div class="empty-full"><div class="empty-inner">' +
-          '<div class="empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>' +
-          '<div class="empty-title">Hali xabar yo\'q</div>' +
-          '<div class="empty-text">O\'quvchilar, ota-onalar va hamkasblar bilan muloqot shu yerda bo\'ladi. Xabar almashish tez orada ochiladi — o\'quvchilaringizga topshiriq eslatmalari, natija izohlari va savol-javoblar uchun.</div>' +
-        '</div></div>';
-    }
-
-    function updateCounts(data) {
-      document.getElementById("cntAll").textContent = allConvs.length;
-      var unread = allConvs.filter(function (c) { return (c.unread_count || 0) > 0; }).length;
-      document.getElementById("cntUnread").textContent = unread;
-    }
-
-    function switchConvTab(tab) {
-      currentConvTab = tab;
-      ["all", "unread", "important"].forEach(function (t) {
-        var id = "ct" + t.charAt(0).toUpperCase() + t.slice(1);
-        var el = document.getElementById(id);
-        if (el) el.classList.toggle("active", t === tab);
-      });
-      applyFilter();
-    }
-
-    function applyFilter() {
-      var q = (document.getElementById("convSearch").value || "").trim().toLowerCase();
-      filtered = allConvs.filter(function (c) {
-        if (currentConvTab === "unread" && !(c.unread_count > 0)) return false;
-        if (currentConvTab === "important" && !c.is_important) return false;
-        if (q && (c.name || "").toLowerCase().indexOf(q) === -1) return false;
-        return true;
-      });
-      renderConvList();
-    }
-
-    function renderConvList() {
-      var box = document.getElementById("convList");
-      if (!filtered.length) { box.innerHTML = '<div style="padding:30px 20px;text-align:center;color:var(--text-dim);font-size:13px">Suhbat topilmadi</div>'; return; }
-      box.innerHTML = filtered.map(function (c) {
-        var name = c.name || "Foydalanuvchi";
-        return '<div class="conv-item" onclick="openConv(' + c.id + ')">' +
-          '<div class="conv-av" style="background:' + avColor(name) + '">' + initials(name) + (c.online ? '<span class="online"></span>' : '') + '</div>' +
-          '<div class="conv-info"><div class="conv-top"><span class="conv-name">' + esc(name) + '</span>' + (c.tag ? '<span class="conv-tag">' + esc(c.tag) + '</span>' : '') + '<span class="conv-time">' + esc(c.last_time || '') + '</span></div>' +
-            '<div class="conv-last">' + esc(c.last_message || '') + '</div></div>' +
-          ((c.unread_count > 0) ? '<span class="conv-unread">' + c.unread_count + '</span>' : '') +
-        '</div>';
-      }).join("");
-    }
-
-    function openConv(id) { comingSoon("Suhbat"); }
-
-    var searchTimer = null;
-    function onSearch(q) { clearTimeout(searchTimer); searchTimer = setTimeout(applyFilter, 250); }
-
-    // ===== ISHGA TUSHIRISH =====
-    loadConversations();
+    (function initTheme() {
+      var saved = "light";
+      try { saved = localStorage.getItem("eb_theme") || "light"; } catch (e) {}
+      document.documentElement.setAttribute("data-theme", saved);
+      updateThemeIcon(saved);
+    })();
   </script>
 </body>
 </html>

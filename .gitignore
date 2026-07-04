@@ -37,3 +37,17 @@ db-backup-*.sql
 # Foydalanuvchi yuklagan fayllar
 public/uploads/*
 !public/uploads/.gitkeep
+
+backup.bat
+backups/
+backup_*.sql
+
+node_modules/
+.env
+.env.*
+!.env.example
+public/uploads/
+backups/
+*.log
+.DS_Store
+npm-debug.log*

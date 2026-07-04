@@ -45,8 +45,11 @@ body {
 
 /* ===== SIDEBAR ===== */
 .sidebar { display: flex; flex-direction: column; }
-.logo-box { padding: 8px 12px 24px; }
-.logo-box .crest { font-size: 28px; font-weight: 800; letter-spacing: 1px; line-height: 1; }
+.logo-box { padding: 6px 8px 22px 4px; }
+.logo-box .crest { font-size: 28px; font-weight: 800; letter-spacing: 1px; line-height: 1; text-align: left; }
+.logo-box .crest { padding-left: 0; margin-left: 0; }
+.logo-box .brand-logo-img { margin-left: 0 !important; }
+.logo-box .brand-logo-img { height: 56px !important; margin-bottom: 8px !important; }
 .logo-box .crest .e { color: #fff; }
 .logo-box .crest .b {
   background: linear-gradient(135deg, var(--gold), #d97706);

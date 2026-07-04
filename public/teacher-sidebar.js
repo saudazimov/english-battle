@@ -20,7 +20,9 @@
     '.tsb{width:256px;flex:0 0 256px;background:var(--tsb-bg);border-right:1px solid var(--tsb-border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:22px 16px;font-family:"Plus Jakarta Sans",system-ui,sans-serif;box-sizing:border-box;}' +
     '.tsb *{box-sizing:border-box;}' +
     '.tsb-logo{display:flex;align-items:center;gap:12px;padding:4px 8px 22px;}' +
-    '.tsb-logo-mark{width:42px;height:42px;border-radius:12px;flex:0 0 auto;background:linear-gradient(135deg,var(--tsb-accent),var(--tsb-primary));display:grid;place-items:center;box-shadow:0 6px 18px rgba(124,92,252,.32);}' +
+    '.tsb-logo-mark{position:relative;width:42px;height:42px;border-radius:12px;flex:0 0 auto;background:linear-gradient(135deg,var(--tsb-accent),var(--tsb-primary));display:grid;place-items:center;box-shadow:0 6px 18px rgba(124,92,252,.32);}' +
+    '.tsb-logo-mark.has-img{background:transparent;box-shadow:none;}' +
+    '.tsb-logo-mark.has-img svg{display:none;}' +
     '.tsb-logo-mark svg{width:23px;height:23px;color:#fff;}' +
     '.tsb-logo-name{font-size:17px;font-weight:800;letter-spacing:-.3px;color:var(--tsb-text);}' +
     '.tsb-logo-sub{font-size:11.5px;color:var(--tsb-dim);font-weight:600;margin-top:1px;}' +
@@ -65,7 +67,7 @@
       svg: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
     { key: "ai", label: "AI Hisobotlar", href: "/teacher-ai.html", tag: "Yangi",
       svg: '<path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/>' },
-    { key: "messages", label: "Xabarlar", href: "/teacher-messages.html",
+    { key: "messages", label: "Xabarlar", href: "/teacher-messages.html", tag: "Tez orada",
       svg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
     { key: "resources", label: "Resurslar", href: "/teacher-resources.html",
       svg: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>' },
@@ -105,8 +107,8 @@
     mount.innerHTML =
       '<aside class="tsb">' +
         '<div class="tsb-logo">' +
-          '<div class="tsb-logo-mark">' + svgWrap('<path d="M12 2L3 7v6c0 5 3.5 8 9 9 5.5-1 9-4 9-9V7z"/>') + '</div>' +
-          '<div><div class="tsb-logo-name">English Battle</div><div class="tsb-logo-sub">Teacher Panel</div></div>' +
+          '<div class="tsb-logo-mark has-img">' + svgWrap('<path d="M12 2L3 7v6c0 5 3.5 8 9 9 5.5-1 9-4 9-9V7z"/>') + '<img src="/images/brand/logo-icon.png" alt="IlmLiga" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" onerror="this.parentNode.classList.remove(\'has-img\');this.remove();"></div>' +
+          '<div><div class="tsb-logo-name">IlmLiga</div><div class="tsb-logo-sub">Teacher Panel</div></div>' +
         '</div>' +
         '<nav class="tsb-nav">' + navHtml + '</nav>' +
         '<div class="tsb-promo" id="tsbPromo">' +

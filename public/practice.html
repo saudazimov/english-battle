@@ -275,9 +275,8 @@
       showScreen("quizScreen");
       document.getElementById("answersBox").innerHTML = '<div class="pr-loading">Savollar yuklanmoqda...</div>';
       try {
-        var res = await fetch("/practice/start?level=" + selectedLevel + "&count=" + selectedCount, {
-          headers: { "Authorization": "Bearer " + token }
-        });
+        // Sprint 2A: authFetch — token avtomatik qo'shiladi, 401 bo'lsa login'ga qaytaradi
+        var res = await authFetch("/practice/start?level=" + selectedLevel + "&count=" + selectedCount);
         var data = await res.json();
         if (!res.ok) { alert(data.error || "Xato"); showScreen("setupScreen"); return; }
         questions = data.questions || [];
@@ -382,9 +381,9 @@
       // Natijani serverga yuboramiz (XP olish)
       var xpEarned = 0;
       try {
-        var res = await fetch("/practice/finish", {
+        var res = await authFetch("/practice/finish", {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ correct: correctCount, total: total })
         });
         var data = await res.json();

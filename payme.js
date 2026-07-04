@@ -195,13 +195,35 @@ async function cancelTransaction(id, params) {
 
   const cancelTime = Date.now();
   let newState;
-  if (tx.state === STATE.PERFORMED) {
-    newState = STATE.CANCELLED_AFTER_PERFORM; // -2
-    // To'lov qaytarildi → obunani bekor qilish kerak (ixtiyoriy — hozir faqat payment status)
+
+  // IDEMPOTENTLIK: faqat HAQIQIY holat o'tishida obunaga tegamiz.
+  // Agar tx allaqachon bekor qilingan bo'lsa (refund ikki marta kelsa),
+  // tx.state != PERFORMED bo'ladi → revoke qayta chaqirilmaydi.
+  const wasPerformedNow = (tx.state === STATE.PERFORMED);
+
+  if (wasPerformedNow) {
+    newState = STATE.CANCELLED_AFTER_PERFORM; // -2 (to'lov bajarilgandan keyin qaytarildi)
+    await pool.query("UPDATE payments SET status = 'cancelled', updated_at = NOW() WHERE id = $1", [tx.payment_id]);
+
+    // To'lov qaytarildi → premium obunani bekor qilamiz (business rule).
+    // revokeSubscription o'zi ham idempotent (faqat 'active' obunaga tegadi).
+    try {
+      const pRes = await pool.query("SELECT user_id, plan FROM payments WHERE id = $1", [tx.payment_id]);
+      if (pRes.rows.length > 0) {
+        const p = pRes.rows[0];
+        await premium.revokeSubscription(p.user_id, p.plan);
+        console.log(`[Payme] Refund → obuna bekor qilindi: user ${p.user_id}, ${p.plan}`);
+      }
+    } catch (e) {
+      // Obuna bekor qilish xatosi Payme javobini BUZMASIN (protokol 200 qaytishi kerak).
+      console.error("[Payme] Refund'da obunani bekor qilish xatosi:", e.message);
+    }
+  } else if (tx.state === STATE.CREATED) {
+    newState = STATE.CANCELLED; // -1 (bajarilmasdan bekor qilindi — obuna berilmagan edi)
     await pool.query("UPDATE payments SET status = 'cancelled', updated_at = NOW() WHERE id = $1", [tx.payment_id]);
   } else {
-    newState = STATE.CANCELLED; // -1
-    await pool.query("UPDATE payments SET status = 'cancelled', updated_at = NOW() WHERE id = $1", [tx.payment_id]);
+    // Allaqachon bekor qilingan (idempotent qayta chaqiruv) — holatni saqlaymiz
+    newState = tx.state;
   }
 
   await pool.query(

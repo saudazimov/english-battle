@@ -178,6 +178,13 @@
     }
   }
 
+  // Sprint 1: XSS himoya — lokal escape (sidebar.js yuklanmagan sahifalar uchun ham)
+  function fpEsc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
   function renderFpCard(data) {
     var u = data.user || {};
     var s = data.stats || {};
@@ -208,7 +215,7 @@
     document.getElementById("fpCard").innerHTML =
       '<div class="fpc-avatar">' + avatarHTML(u.first_name, u.profile_picture) + '</div>' +
       '<div class="fpc-info">' +
-        '<div class="fpc-name">' + name + '</div>' +
+        '<div class="fpc-name">' + fpEsc(name) + '</div>' +
         '<div class="fpc-meta">' +
           '<span class="fpc-cefr">CEFR <b>' + (u.cefr_level || "A1") + '</b></span> ' +
           '<span>' + (fpCefrLabels[u.cefr_level] || "Beginner") + '</span>' +

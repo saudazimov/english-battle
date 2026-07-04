@@ -15,7 +15,7 @@ function renderSidebar(activePage) {
     }
   } catch (e) {}
   // Brand markaziy config'dan (brand.js). Yuklanmagan bo'lsa — zaxira qiymat.
-  const B = window.BRAND || { nameLine1: "KNOWLEDGE", nameLine2: "ARENA", sloganEn: "Learn. Battle. Rise." };
+  const B = window.BRAND || { nameLine1: "ILM", nameLine2: "LIGA", sloganEn: "Learn. Compete. Rise." };
 
   // School_admin uchun ALOHIDA menyu (o'ynamaydi — faqat boshqaruv)
   let _saUser = {};
@@ -35,10 +35,11 @@ function renderSidebar(activePage) {
     saNavHtml += '<a class="nav-item" onclick="sidebarLogout()" style="cursor:pointer;">' +
       '<i data-lucide="log-out" class="ic"></i> Chiqish</a>';
 
-    const B2 = window.BRAND || { nameLine1: "KNOWLEDGE", nameLine2: "ARENA", sloganEn: "Learn. Battle. Rise." };
+    const B2 = window.BRAND || { nameLine1: "ILM", nameLine2: "LIGA", sloganEn: "Learn. Compete. Rise." };
     const saSidebar =
       '<div class="logo-box"><div class="crest">' +
-        '<span class="e">' + B2.nameLine1 + '</span><br><span class="b">' + B2.nameLine2 + '</span>' +
+        '<img src="/images/brand/logo.png" alt="IlmLiga" class="brand-logo-img" style="width:auto;max-width:100%;height:44px;display:block;margin:0;" onerror="this.style.display=\'none\';document.getElementById(\'crestFallback2\').style.display=\'block\';">' +
+        '<div id="crestFallback2" style="display:none;"><span class="e">' + B2.nameLine1 + '</span><br><span class="b">' + B2.nameLine2 + '</span></div>' +
         '<div style="font-size:11px;font-weight:500;color:var(--text-faint);letter-spacing:0.5px;margin-top:4px;">Maktab paneli</div>' +
       '</div></div>' +
       '<nav class="nav">' + saNavHtml + '</nav>' +
@@ -57,7 +58,7 @@ function renderSidebar(activePage) {
   // ready:false => sahifa hali tayyor emas (coming soon), broken link bo'lmaydi
   const menu = [
     { id: "battle", icon: "swords", label: "Battle", href: "/lobby.html", ready: true },
-    { id: "practice", icon: "dumbbell", label: "Practice", href: "/practice.html", ready: false },
+    { id: "practice", icon: "dumbbell", label: "Practice", href: "/practice.html", ready: true }, // Sprint 2A: ochildi
     { id: "myclasses", icon: "book-open", label: "Sinflarim", href: "/student-classes.html", ready: true },
     { id: "exam", icon: "graduation-cap", label: "Daraja imtihoni", href: "/exam.html", ready: true },
     { id: "ranking", icon: "trophy", label: "Ranking", href: "/leaderboard.html", ready: true },
@@ -100,12 +101,13 @@ function renderSidebar(activePage) {
 
   const sidebarHtml =
     '<div class="logo-box"><div class="crest">' +
-      '<span class="e">' + B.nameLine1 + '</span><br><span class="b">' + B.nameLine2 + '</span>' +
+      '<img src="/images/brand/logo.png" alt="IlmLiga" class="brand-logo-img" style="width:auto;max-width:100%;height:44px;display:block;margin:0;" onerror="this.style.display=\'none\';document.getElementById(\'crestFallback\').style.display=\'block\';">' +
+      '<div id="crestFallback" style="display:none;"><span class="e">' + B.nameLine1 + '</span><br><span class="b">' + B.nameLine2 + '</span></div>' +
       '<div style="font-size:11px;font-weight:500;color:var(--text-faint);letter-spacing:0.5px;margin-top:4px;">' + (B.sloganEn || "") + '</div>' +
     '</div></div>' +
     '<nav class="nav">' + navHtml + '</nav>' +
     '<div class="sidebar-foot"><div class="mascot-box">' +
-      '<div style="font-size:34px;">🏆</div>' +
+      '<img src="/images/brand/logo-icon.png" alt="IlmLiga" style="height:56px;width:auto;display:block;margin:0 auto;filter:drop-shadow(0 6px 16px rgba(37,99,235,0.35));" onerror="this.outerHTML=\'<div style=&quot;font-size:34px;&quot;>🏆</div>\'">' +
       '<div style="margin-top:6px;">Battle va o\'rganish orqali eng yuqori o\'ringa chiqing!</div>' +
       '<a href="/leaderboard.html" style="display:block;margin-top:10px;padding:9px;background:linear-gradient(95deg,var(--accent),var(--accent-2));color:#fff;border-radius:10px;font-size:12.5px;font-weight:700;text-decoration:none;">Rankingga o\'tish</a>' +
     '</div></div>';
@@ -218,8 +220,19 @@ function doLogout() {
 // ===== UMUMIY AVATAR (rasm yoki harf) =====
 // firstName — ism, picPath — rasm yo'li (yoki null)
 // Rasm bor bo'lsa <img>, yo'q bo'lsa ismning birinchi harfi
+// ===== XSS himoya (Sprint 1): HTML escape yordamchisi =====
+// Foydalanuvchi kiritgan matn (ism, xabar) innerHTML'ga qo'shilishidan oldin
+// DOIM shu funksiyadan o'tishi kerak.
+function sbEsc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
 function avatarHTML(firstName, picPath) {
-  const letter = (firstName || "?").charAt(0).toUpperCase();
+  // Sprint 1: harf va rasm yo'li attribute ichiga kirishidan oldin escape qilinadi
+  const letter = sbEsc((firstName || "?").charAt(0).toUpperCase());
+  picPath = picPath ? sbEsc(picPath) : picPath;
   if (picPath) {
     // Xavfsiz usul: position:absolute ISHLATILMAYDI (u butun sahifani egallashi mumkin).
     // object-fit:cover + to'liq o'lcham => konteynerni to'ldiradi, chekkada bo'shliq qolmaydi.
@@ -265,7 +278,7 @@ function renderTopbar(opts) {
     '</div>' +
     '<div class="user-chip" id="userChip" onclick="toggleUserMenu(event)">' +
       '<div class="ava" id="topAva">' + (fullName[0] || "?").toUpperCase() + '</div>' +
-      '<div><div class="uname">' + fullName + '</div><div class="ulevel">Level <span>' + level + '</span></div></div>' +
+      '<div><div class="uname">' + sbEsc(fullName) + '</div><div class="ulevel">Level <span>' + level + '</span></div></div>' +
       '<i data-lucide="chevron-down" class="chip-arrow"></i>' +
       '<div class="tb-dropdown">' +
         '<div class="tb-dd-item" onclick="event.stopPropagation();window.location.href=\'/profile.html\'"><i data-lucide="user"></i> Profil</div>' +
@@ -409,7 +422,7 @@ function renderNotifList() {
     '<div class="notif-item ' + (n.is_read ? "" : "unread") + '" onclick="openNotif(' + n.id + ')">' +
       '<div class="notif-ic"><i data-lucide="' + notifIcon(n.type) + '"></i></div>' +
       '<div class="notif-body">' +
-        '<div class="notif-msg">' + (n.message || "") + '</div>' +
+        '<div class="notif-msg">' + sbEsc(n.message || "") + '</div>' +
         '<div class="notif-time">' + notifTimeAgo(n.created_at) + '</div>' +
       '</div>' +
       '<div class="notif-x" onclick="deleteNotif(event, ' + n.id + ')" title="O\'chirish"><i data-lucide="x"></i></div>' +
@@ -470,7 +483,7 @@ function showNotifToast(text) {
   }
   toast.innerHTML =
     '<div class="notif-toast-ic"><i data-lucide="user-plus"></i></div>' +
-    '<div class="notif-toast-text">' + text + '</div>';
+    '<div class="notif-toast-text">' + sbEsc(text) + '</div>'; // Sprint 1: XSS himoya
   if (window.lucide) lucide.createIcons();
 
   toast.classList.add("show");

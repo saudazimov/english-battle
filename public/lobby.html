@@ -1233,7 +1233,7 @@
         battles.slice(0, 4).forEach(b => {
           const isWin = b.outcome === "win";
           const isDraw = b.outcome === "draw";
-          const oppName = b.opponent_name || "Raqib";
+          const oppName = escapeHtml(b.opponent_name || "Raqib"); // Sprint 1: XSS himoya
           const ratingChange = b.rating_change >= 0 ? "+" + b.rating_change : b.rating_change;
           const ratingColor = b.rating_change >= 0 ? "var(--green)" : "#f87171";
 
@@ -1472,7 +1472,7 @@
               avatarHTML(f.first_name, f.profile_picture) +
               '<span style="position:absolute; bottom:2px; right:2px; width:12px; height:12px; border-radius:50%; background:#34d399; border:2px solid #070b16;"></span>' +
             '</div>' +
-            '<div style="font-size:11px; margin-top:6px; text-align:center;">' + f.first_name + '</div>' +
+            '<div style="font-size:11px; margin-top:6px; text-align:center;">' + escapeHtml(f.first_name || "") + '</div>' +
             '<div style="font-size:10px; color:#34d399; text-align:center;">Online</div>';
           box.appendChild(chip);
         });

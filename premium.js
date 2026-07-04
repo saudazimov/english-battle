@@ -209,6 +209,30 @@ async function grantSubscription(userId, plan, days) {
   return r.rows[0];
 }
 
+// Obunani bekor qilish (to'lov qaytarilganda — Payme refund/cancel-after-perform).
+// IDEMPOTENT: faqat 'active' obunaga tegadi. Ikkinchi marta chaqirilsa (refund
+// ikki marta kelsa) — allaqachon 'cancelled', UPDATE 0 qator → zarar yo'q.
+// Qaytaradi: { revoked: <nechta obuna bekor qilindi> }.
+async function revokeSubscription(userId, plan) {
+  const validPlans = ["student_premium", "parent_premium", "teacher_pro", "center_pro"];
+  if (!validPlans.includes(plan)) throw new Error("Noto'g'ri plan: " + plan);
+
+  const r = await pool.query(
+    `UPDATE subscriptions
+       SET status = 'cancelled', updated_at = NOW()
+     WHERE user_id = $1 AND plan = $2 AND status = 'active'
+     RETURNING id`,
+    [userId, plan]
+  );
+
+  if (r.rows.length > 0) {
+    console.log(`[Premium] Obuna bekor qilindi (refund): user ${userId}, ${plan}, ${r.rows.length} ta`);
+  } else {
+    console.log(`[Premium] revokeSubscription: user ${userId}, ${plan} — aktiv obuna yo'q (idempotent, zarar yo'q)`);
+  }
+  return { revoked: r.rows.length };
+}
+
 module.exports = {
   PLAN_GROUPS,
   TEACHER_FREE_LIMITS,
@@ -220,4 +244,5 @@ module.exports = {
   requirePremium,
   expireOldSubscriptions,
   grantSubscription,
+  revokeSubscription,
 };

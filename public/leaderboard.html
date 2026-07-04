@@ -434,7 +434,7 @@
       row.onclick = () => openProfileModal(p.id);
       row.innerHTML =
         '<div class="lb-rank ' + rankCls + '">' + rank + '</div>' +
-        '<div class="lb-player"><div class="lb-ava">' + avatarHTML(p.first_name, p.profile_picture) + '</div><div class="lb-name">' + name + '</div></div>' +
+        '<div class="lb-player"><div class="lb-ava">' + avatarHTML(p.first_name, p.profile_picture) + '</div><div class="lb-name">' + esc(name) + '</div></div>' +
         '<div><span class="lb-level">' + (p.cefr_level || "A1") + '</span></div>' +
         '<div class="lb-league">' + leagueFull(p.rating) + '</div>' +
         '<div class="lb-wins">' + (p.wins || 0) + '</div>' +
@@ -516,7 +516,7 @@
           crown +
           '<div class="podium-rank">' + o.rank + '</div>' +
           '<div class="podium-ava">' + avatarHTML(o.p.first_name, o.p.profile_picture) + '</div>' +
-          '<div class="podium-name">' + name + '</div>' +
+          '<div class="podium-name">' + esc(name) + '</div>' +
           '<div class="podium-league">' + leagueFull(o.p.rating) + '</div>' +
           ((currentPeriod === "all")
             ? '<div class="podium-rating"><i data-lucide="trophy"></i> ' + o.p.rating + '</div>'

@@ -635,6 +635,12 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/sidebar.js"></script>
   <script>
+    // ===== XSS himoya (Sprint 1): HTML escape yordamchisi =====
+    function fEsc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
     const user = JSON.parse(userData);
@@ -737,7 +743,7 @@
         lengthKey: selectedLength,
       });
       showOverlay(
-        "⏳ " + challengeTarget.name + " ga chaqiruv yuborildi, javob kutilmoqda...",
+        "⏳ " + fEsc(challengeTarget.name) + " ga chaqiruv yuborildi, javob kutilmoqda...",
         '<button class="ov-btn ov-reject" onclick="cancelChallenge()">Chaqiruvni bekor qilish</button>'
       );
     }
@@ -806,7 +812,7 @@
       document.getElementById("fpCard").innerHTML =
         '<div class="fpc-avatar">' + avatarHTML(u.first_name, u.profile_picture) + '</div>' +
         '<div class="fpc-info">' +
-          '<div class="fpc-name">' + name + '</div>' +
+          '<div class="fpc-name">' + fEsc(name) + '</div>' +
           '<div class="fpc-meta">' +
             '<span class="fpc-cefr">CEFR <b>' + (u.cefr_level || "A1") + '</b></span> ' +
             '<span>' + (fpCefrLabels[u.cefr_level] || "Beginner") + '</span>' +
@@ -978,7 +984,7 @@
           mutualHtml +=
             '<div class="fp-mutual-item" onclick="viewProfile(' + m.id + ')">' +
               '<div class="fp-mutual-ava">' + mutualAvatar(m.first_name, m.profile_picture) + '</div>' +
-              '<div class="fp-mutual-name">' + mName + '</div>' +
+              '<div class="fp-mutual-name">' + fEsc(mName) + '</div>' +
               '<div class="fp-mutual-rp">' + (m.rating || 1000) + '</div>' +
             '</div>';
         });
@@ -1007,7 +1013,7 @@
     socket.on("challengeReceived", (data) => {
       incomingChallenge = data;
       showOverlay(
-        "⚔️ <b>" + data.fromName + "</b> sizni jangga chaqiryapti!",
+        "⚔️ <b>" + fEsc(data.fromName) + "</b> sizni jangga chaqiryapti!",
         '<button class="ov-btn ov-accept" onclick="acceptChallenge()">✓ Qabul</button>' +
         '<button class="ov-btn ov-reject" style="margin-left:8px;" onclick="declineChallenge()">✕ Rad</button>'
       );
@@ -1143,7 +1149,7 @@
           const row = document.createElement("div");
           row.className = "fl-row";
           row.innerHTML =
-            '<div class="fl-friend"><div class="fl-ava">' + avatarHTML(f.first_name, f.profile_picture) + '</div><div class="fl-name">' + name + '</div></div>' +
+            '<div class="fl-friend"><div class="fl-ava">' + avatarHTML(f.first_name, f.profile_picture) + '</div><div class="fl-name">' + fEsc(name) + '</div></div>' +
             '<div><span class="fl-level">' + (f.cefr_level || "A1") + '</span></div>' +
             '<div class="fl-league"><div class="fl-league-name">' + lg.icon + ' ' + lg.name + '</div><div class="fl-league-rp">' + f.rating + ' RP</div></div>' +
             statusHtml +
@@ -1181,7 +1187,7 @@
           row.className = "req-row";
           row.innerHTML =
             '<div class="req-ava">' + avatarHTML(r.first_name, r.profile_picture) + '</div>' +
-            '<div class="req-info"><div class="req-name">' + name + '</div><div class="req-sub">' + (r.cefr_level || "A1") + ' · ' + r.rating + ' RP</div></div>' +
+            '<div class="req-info"><div class="req-name">' + fEsc(name) + '</div><div class="req-sub">' + (r.cefr_level || "A1") + ' · ' + r.rating + ' RP</div></div>' +
             '<div class="req-actions">' +
               '<button class="req-btn req-accept" onclick="respond(' + r.friendship_id + ',\'accept\',this)"><i data-lucide="check"></i> Qabul</button>' +
               '<button class="req-btn req-decline" onclick="respond(' + r.friendship_id + ',\'reject\',this)"><i data-lucide="x"></i> Rad</button>' +
@@ -1245,7 +1251,7 @@
 
           row.innerHTML =
             '<div class="srch-ava">' + avatarHTML(u.first_name, u.profile_picture) + '</div>' +
-            '<div class="srch-info"><div class="srch-name">' + name + '</div><div class="srch-sub">' + (u.cefr_level || "A1") + ' · ' + u.rating + ' RP</div></div>' +
+            '<div class="srch-info"><div class="srch-name">' + fEsc(name) + '</div><div class="srch-sub">' + (u.cefr_level || "A1") + ' · ' + u.rating + ' RP</div></div>' +
             actionBtn;
           results.appendChild(row);
         });
@@ -1335,7 +1341,7 @@
           row.innerHTML =
             '<div class="tf-rank ' + rankCls + '">' + rank + '</div>' +
             '<div class="tf-ava">' + avatarHTML(f.first_name, f.profile_picture) + '</div>' +
-            '<div class="tf-name ' + (f.isMe ? "me" : "") + '">' + name + '</div>' +
+            '<div class="tf-name ' + (f.isMe ? "me" : "") + '">' + fEsc(name) + '</div>' +
             '<div class="tf-rating"><i data-lucide="trophy"></i> ' + f.rating + '</div>';
           tf.appendChild(row);
         });
@@ -1383,8 +1389,8 @@
           item.innerHTML =
             '<div class="ra-avatar"><div class="ra-pic">' + avatarHTML(a.friendFirst, a.friendPic) + '</div><div class="ra-emoji ' + iconCls + '">' + icon + '</div></div>' +
             '<div class="ra-body">' +
-              '<div class="ra-title"><b>' + a.friendName + '</b> ' + resWord + '</div>' +
-              '<div class="ra-desc">' + a.myScore + ' : ' + a.oppScore + ' · ' + rc + ' RP · ' + (a.opponentName || "raqib") + 'ga qarshi</div>' +
+              '<div class="ra-title"><b>' + fEsc(a.friendName) + '</b> ' + resWord + '</div>' +
+              '<div class="ra-desc">' + a.myScore + ' : ' + a.oppScore + ' · ' + rc + ' RP · ' + fEsc(a.opponentName || "raqib") + 'ga qarshi</div>' +
               '<div class="ra-time">' + timeAgo(a.time) + '</div>' +
               '<button class="ra-btn" onclick="challengeFriend(' + a.friendId + ', \'' + a.friendName.replace(/'/g, "\\'") + '\')"><i data-lucide="swords"></i> Chaqirish</button>' +
             '</div>';

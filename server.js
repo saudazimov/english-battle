@@ -3,6 +3,10 @@ const bcrypt = require("bcrypt");
 const pool = require("./db");
 const http = require("http");
 const { Server } = require("socket.io");
+// ===== XAVFSIZLIK PAKETLARI (Sprint 1) =====
+const helmet = require("helmet");
+const cors = require("cors");
+const compression = require("compression");
 
 const multer = require("multer");
 const path = require("path");
@@ -22,6 +26,7 @@ const { signToken, authMiddleware, requireTeacher, requireStudent, requireParent
 const { saveBattleSession, loadBattleSession, finishBattleSession, loadActiveSessions } = require("./battleStore");
 const { recoverActiveBattles } = require("./battleRecovery");
 const parentCode = require("./parentCode");
+const schoolInvite = require("./schoolInvite");   // ← YANGI QATOR
 const premium = require("./premium");
 const payme = require("./payme");                        // ← YANGI
 const aiService = require("./aiService");
@@ -30,9 +35,59 @@ const aiSnapshot = require("./aiSnapshot");
 const { validateRegionDistrict, REGIONS } = require("./regions");
 
 const app = express();
+
+// ===== REVERSE PROXY ISHONCHI (production) =====
+// VPS'da Nginx reverse proxy oldida turadi. Express'ga real client IP'ni
+// X-Forwarded-For'dan olishini aytamiz. LEKIN "hammaga ishonish" (true) xavfli —
+// hujumchi to'g'ridan-to'g'ri ulanolsa header'ni soxtalashtiradi.
+//   TRUST_PROXY_HOPS=1  → bitta ishonchli proxy (Nginx) — production uchun to'g'ri
+//   berilmagan / 0      → hech kimga ishonmaydi (local dev) — req.ip = socket manzili
+// Bu sozlangач req.ip ISHONCHLI bo'ladi va raw x-forwarded-for'ga tegmaymiz.
+const TRUST_PROXY_HOPS = parseInt(process.env.TRUST_PROXY_HOPS || "0", 10);
+if (TRUST_PROXY_HOPS > 0) {
+  app.set("trust proxy", TRUST_PROXY_HOPS);
+}
+
+// ===== ISHONCHLI CLIENT IP HELPER =====
+// Barcha rate-limit / audit joylar shu funksiyani ishlatadi (izchillik).
+// trust proxy sozlangan bo'lsa req.ip = real client (Express X-Forwarded-For'ni
+// TRUST_PROXY_HOPS asosida xavfsiz parslaydi). Sozlanmagan bo'lsa req.ip = socket.
+// Fallback'lar faqat req.ip mavjud bo'lmagan chekka holatlar uchun.
+function clientIp(req) {
+  return (req && (req.ip || (req.socket && req.socket.remoteAddress))) || "unknown";
+}
+
 const server = http.createServer(app);
-const io = new Server(server);
-const PORT = 3000;
+
+// ===== CORS SIYOSATI (Sprint 1) =====
+// Frontend shu serverning o'zidan (same-origin) xizmat qilinadi, shuning uchun
+// odatda CORS umuman kerak emas. CLIENT_ORIGIN .env'da berilsa (masalan mobil
+// ilova yoki alohida domen uchun), FAQAT o'sha origin(lar)ga ruxsat beriladi.
+// Hech qachon "*" ishlatilmaydi.
+//   .env misol:  CLIENT_ORIGIN=https://englishbattle.uz,https://app.englishbattle.uz
+const ALLOWED_ORIGINS = (process.env.CLIENT_ORIGIN || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // origin yo'q = same-origin sahifa, curl, server-to-server (Payme webhook) — ruxsat
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    // Lokal ishlab chiqishni buzmaslik uchun: productiondan tashqarida localhostga ruxsat
+    if (process.env.NODE_ENV !== "production" && /^https?:\/\/localhost(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+    // Ro'yxatda yo'q origin: xato tashlamaymiz (500 bo'lib qolmasin) —
+    // shunchaki CORS header bermaymiz, brauzer o'zi bloklaydi.
+    return callback(null, false);
+  },
+  credentials: true,
+};
+
+const io = new Server(server, { cors: corsOptions });
+const PORT = process.env.PORT || 3000;
 
 // ===== SOCKET XAVFSIZLIGI: JWT autentifikatsiya =====
 // Har bir socket ulanishida tokenni tekshiramiz. Token to'g'ri bo'lsa, haqiqiy
@@ -52,19 +107,47 @@ io.use((socket, next) => {
   next(); // ulanishga doimo ruxsat (authUserId orqali himoyalaymiz)
 });
 
-// JSON ma'lumotlarni o'qiy olish uchun
-app.use(express.json());
-// Xavfsizlik headerlari (paketsiz, CSP'siz — mavjud sahifalarni buzmaydi)
-app.use(function (req, res, next) {
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("X-Frame-Options", "SAMEORIGIN");
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  next();
-});
+// ===== XAVFSIZLIK MIDDLEWARE (Sprint 1) =====
+// helmet: standart xavfsizlik headerlari (nosniff, frameguard, HSTS va h.k.)
+// CSP hozircha O'CHIQ — sahifalar inline script va CDN (lucide) ishlatadi,
+// CSP yoqilsa hammasi buziladi. CSP alohida sprintda nonce bilan yoqiladi.
+app.use(
+  helmet({
+    contentSecurityPolicy: false,       // keyingi sprint: nonce-asosli CSP
+    crossOriginEmbedderPolicy: false,   // CDN resurslarini buzmaslik uchun
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  })
+);
+app.use(cors(corsOptions));
+app.use(compression());
+// JSON ma'lumotlarni o'qiy olish uchun (hajm chegarasi: JSON-bomba himoyasi)
+app.use(express.json({ limit: "1mb" }));
 app.use(express.static("public"));
 // Asosiy sahifa
 app.get("/", (req, res) => {
   res.send("English Battle serveri ishlayapti!");
+});
+
+// ===== HEALTH / READINESS ENDPOINTLAR (deploy monitoring uchun) =====
+// /health — process tirikmi (DB'ni tekshirmaydi). Yengil, tez.
+//   PaaS / uptime monitor "process yiqildimi" ni tekshirish uchun ishlatadi.
+// Sensitive config yoki stack trace QAYTARILMAYDI.
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", uptime: Math.floor(process.uptime()) });
+});
+
+// /ready — DB bilan birga to'liq tayyormi. PostgreSQL SELECT 1.
+//   DB ishlasa → 200 (trafik qabul qilishga tayyor)
+//   DB ishlamasa → 503 (proxy/monitor bu instance'ga trafik yubormasin)
+// Xato tafsiloti (stack/config) mijozga QAYTARILMAYDI — faqat log'ga.
+app.get("/ready", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    res.status(200).json({ status: "ready" });
+  } catch (err) {
+    console.error("Readiness check DB xatosi:", err.message);
+    res.status(503).json({ status: "not_ready" });
+  }
 });
 
 
@@ -140,7 +223,7 @@ function generateOtpCode() {
 // Ikki mexanizm: countLimiter (har chaqiruvni sanaydi) + failGate/noteFail/noteOk (faqat noto'g'ri urinish).
 var _rl = {}; // { bucket: { key: { count, firstAt, blockedUntil } } }
 function _bucket(n) { if (!_rl[n]) _rl[n] = {}; return _rl[n]; }
-function _ipOf(req) { return (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.socket.remoteAddress || "unknown"; }
+function _ipOf(req) { return clientIp(req); }
 function _phoneIpKey(req) { return (req.body && req.body.phone ? String(req.body.phone).trim() : "no-phone") + "|" + _ipOf(req); }
 
 // 1) Har chaqiruvni sanaydigan limiter (OTP yuborish uchun)
@@ -289,7 +372,7 @@ app.post("/otp/verify", otpVerifyGate, async (req, res) => {
 // RO'YXATDAN O'TISH (register)
 app.post("/register", otpVerifyGate, async (req, res) => {
   try {
-    const {
+    let {
       first_name, last_name, phone, password,
       birth_date, birth_year, region, district, village, school,
       code, role
@@ -303,6 +386,36 @@ app.post("/register", otpVerifyGate, async (req, res) => {
     // Rolni tekshirish (faqat ruxsat etilgan rollar)
     const allowedRoles = ["student", "teacher", "parent", "school_admin"];
     const userRole = allowedRoles.includes(role) ? role : "student";
+
+    // ===== MAKTAB ADMINI: taklif kodini tekshirish (anti-abuse) =====
+    let schoolInviteId = null;
+    if (userRole === "school_admin") {
+      const { school_code } = req.body;
+      if (!school_code) {
+        return res.status(400).json({ error: "Maktab admini uchun taklif kodi majburiy" });
+      }
+      const codeHash = schoolInvite.hashCode(school_code);
+      const inv = await pool.query(
+        `SELECT id, school_name, region, district, used_by, expires_at
+         FROM school_invites WHERE code_hash = $1`,
+        [codeHash]
+      );
+      if (inv.rows.length === 0) {
+        return res.status(400).json({ error: "Taklif kodi noto'g'ri" });
+      }
+      const invite = inv.rows[0];
+      if (invite.used_by) {
+        return res.status(400).json({ error: "Bu kod allaqachon ishlatilgan" });
+      }
+      if (invite.expires_at && new Date() > new Date(invite.expires_at)) {
+        return res.status(400).json({ error: "Kod muddati tugagan" });
+      }
+      schoolInviteId = invite.id;
+      // Maktab/viloyat/tuman KODDAN olinadi — frontendga ishonmaymiz
+      school = invite.school_name;
+      region = invite.region || region;
+      district = invite.district || district;
+    }
 
     // Telefon allaqachon ro'yxatdan o'tganmi
     const existingUser = await pool.query(
@@ -370,8 +483,18 @@ app.post("/register", otpVerifyGate, async (req, res) => {
       ]
     );
 
+    // Maktab kodini "ishlatilgan" deb belgilaymiz (bir martalik)
+    if (schoolInviteId) {
+      await pool.query(
+        `UPDATE school_invites SET used_by = $1, used_at = NOW() WHERE id = $2`,
+        [newUser.rows[0].id, schoolInviteId]
+      );
+    }
+
     // Ishlatilgan OTP kodni o'chiramiz
     await pool.query("DELETE FROM otp_codes WHERE phone = $1", [phone]);
+
+    
 
     const token = signToken(newUser.rows[0]);
 
@@ -446,92 +569,12 @@ app.post("/login", loginGate, async (req, res) => {
 
 
 // ============ JANG TIZIMI ============
+// XAVFSIZLIK (Sprint 1): Eski REST endpointlar (/battle/start, /battle/submit)
+// OLIB TASHLANDI. Ular authsiz edi va /battle/submit to'g'ri javoblarni
+// autentifikatsiyasiz qaytarar edi. Hozirgi jang tizimi to'liq Socket.io
+// orqali ishlaydi (findMatch, submitAnswer) — server-side tekshiruv bilan.
+// Hech bir frontend sahifa bu endpointlarni chaqirmasdi (2026-07-03 auditi).
 
-// 1. JANGNI BOSHLASH - savollarni olish
-app.get("/battle/start", async (req, res) => {
-  try {
-    const level = req.query.level || "A1";
-
-    // Shu darajadagi 5 ta tasodifiy savol olish
-    const result = await pool.query(
-      `SELECT id, question_text, option_a, option_b, option_c, option_d, skill
-       FROM questions
-       WHERE cefr_level = $1
-       ORDER BY RANDOM()
-       LIMIT 5`,
-      [level]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Bu daraja uchun savol topilmadi" });
-    }
-
-    // DIQQAT: correct_option YUBORILMAYDI! (firibgarlikni oldini olish)
-    res.json({
-      message: "Jang boshlandi!",
-      level: level,
-      total_questions: result.rows.length,
-      questions: result.rows,
-    });
-  } catch (err) {
-    console.error("Jang boshlashda xato:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
-
-// 2. JAVOBLARNI TEKSHIRISH - ballni hisoblash
-app.post("/battle/submit", async (req, res) => {
-  try {
-    // answers = [{ question_id: 1, answer: "B" }, ...]
-    const { answers } = req.body;
-
-    if (!answers || !Array.isArray(answers) || answers.length === 0) {
-      return res.status(400).json({ error: "Javoblar yuborilmadi" });
-    }
-
-    let correctCount = 0;
-    const results = [];
-
-    // Har bir javobni bazadagi to'g'ri javob bilan solishtirish
-    for (const ans of answers) {
-      const q = await pool.query(
-        "SELECT correct_option, explanation FROM questions WHERE id = $1",
-        [ans.question_id]
-      );
-
-      if (q.rows.length > 0) {
-        const correct = q.rows[0].correct_option;
-        const isCorrect = correct === ans.answer;
-        if (isCorrect) correctCount++;
-
-        results.push({
-          question_id: ans.question_id,
-          your_answer: ans.answer,
-          correct_answer: correct,
-          is_correct: isCorrect,
-          explanation: q.rows[0].explanation,
-        });
-      }
-    }
-
-    const total = answers.length;
-    const accuracy = Math.round((correctCount / total) * 100);
-    const xpEarned = correctCount * 10;
-
-    res.json({
-      message: "Jang tugadi!",
-      score: `${correctCount}/${total}`,
-      correct: correctCount,
-      total: total,
-      accuracy: accuracy + "%",
-      xp_earned: xpEarned,
-      results: results,
-    });
-  } catch (err) {
-    console.error("Javob tekshirishda xato:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
 // ============ SOCKET.IO (REAL-TIME) ============
 
 // ============ BOT RAQIB ============
@@ -673,6 +716,17 @@ function getLeagueName(rating) {
 function stripUnsafe(s, maxLen) {
   if (s == null) return s;
   var out = String(s).replace(/[<>"`\\]/g, "").replace(/\s+/g, " ").trim();
+  return maxLen ? out.slice(0, maxLen) : out;
+}
+
+// ===== SANITIZE (Sprint 1): sarlavha/nom/tavsif uchun yumshoqroq tozalash =====
+// stripUnsafe'dan farqi: qo'shtirnoq va apostrofga TEGMAYDI (ingliz sarlavhalarida
+// "Past Simple" kabi qo'shtirnoqlar normal). Faqat < va > olib tashlanadi —
+// HTML teg ochib bo'lmaydi, stored-XSS imkonsiz bo'ladi. Renderda baribir
+// escape qilinadi (ikki qatlamli himoya).
+function sanitizeText(s, maxLen) {
+  if (s == null) return s;
+  var out = String(s).replace(/[<>]/g, "").replace(/\s+/g, " ").trim();
   return maxLen ? out.slice(0, maxLen) : out;
 }
 
@@ -1355,6 +1409,8 @@ io.on("connection", (socket) => {
   // User disconnect
   // Rematch: bir o'yinchi qayta jang so'raydi
   socket.on("requestRematch", ({ opponentId, myUserId, myName, level, lengthKey }) => {
+    myUserId = socket.userId || myUserId; // Sprint 2B (IDOR): ishonchli ID
+    myName = stripUnsafe(myName, 60) || "O'yinchi"; // Sprint 1: XSS himoya
     const targetSocketId = onlineUsers[String(opponentId)];
     if (!targetSocketId) {
       socket.emit("rematchUnavailable", { message: "Raqib hozir mavjud emas" });
@@ -1371,6 +1427,9 @@ io.on("connection", (socket) => {
 
   // Rematch javobi
   socket.on("rematchResponse", async ({ accepted, fromSocketId, fromUserId, fromName, myUserId, myName, level, lengthKey }) => {
+    myUserId = socket.userId || myUserId; // Sprint 2B (IDOR): javob beruvchi = shu socket egasi
+    fromName = stripUnsafe(fromName, 60) || "O'yinchi"; // Sprint 1: XSS himoya
+    myName = stripUnsafe(myName, 60) || "O'yinchi";
     const requesterSocket = io.sockets.sockets.get(fromSocketId);
     if (!accepted) {
       if (requesterSocket) requesterSocket.emit("rematchDeclined", { byName: myName });
@@ -1408,8 +1467,9 @@ io.on("connection", (socket) => {
 
   // Party yaratish (lider bo'lib)
   socket.on("createParty", ({ userId, name, teamMode, profile_picture }) => {
-    if (!userId) return;
-    var uid = String(userId);
+    // Sprint 2B (IDOR): client userId'ga ishonmaymiz — token'dan kelgan socket.userId
+    var uid = socket.userId || (userId != null ? String(userId) : null);
+    if (!uid) return;
 
     // Avvalgi partydan chiqaramiz (agar bor bo'lsa)
     if (userParty[uid]) removeFromParty(uid);
@@ -1423,7 +1483,7 @@ io.on("connection", (socket) => {
       teamMode: mode,
       maxSize: maxSize,
       status: "forming",
-      members: [{ userId: uid, name: name || "O'yinchi", socketId: socket.id, isLeader: true, profile_picture: profile_picture || null }],
+      members: [{ userId: uid, name: stripUnsafe(name, 60) || "O'yinchi", socketId: socket.id, isLeader: true, profile_picture: profile_picture || null }],
     };
     userParty[uid] = partyId;
 
@@ -1434,6 +1494,7 @@ io.on("connection", (socket) => {
 
   // Do'stni partyga taklif qilish
   socket.on("inviteToParty", ({ partyId, fromName, toUserId }) => {
+    fromName = stripUnsafe(fromName, 60) || "O'yinchi"; // Sprint 1: XSS himoya
     var party = parties[partyId];
     if (!party) { socket.emit("partyError", { message: "Party topilmadi" }); return; }
     if (party.members.length >= party.maxSize) { socket.emit("partyError", { message: "Party to'la" }); return; }
@@ -1458,6 +1519,7 @@ io.on("connection", (socket) => {
 
   // Taklifni qabul qilish
   socket.on("acceptPartyInvite", ({ partyId, userId, name, profile_picture }) => {
+    userId = socket.userId || userId; // Sprint 2B (IDOR): ishonchli ID
     var party = parties[partyId];
     if (!party) { socket.emit("partyError", { message: "Party endi mavjud emas" }); return; }
     if (party.members.length >= party.maxSize) { socket.emit("partyError", { message: "Party to'lib qoldi" }); return; }
@@ -1468,7 +1530,7 @@ io.on("connection", (socket) => {
 
     // Allaqachon a'zomi?
     if (!party.members.find(function (m) { return m.userId === uid; })) {
-      party.members.push({ userId: uid, name: name || "O'yinchi", socketId: socket.id, isLeader: false, profile_picture: profile_picture || null });
+      party.members.push({ userId: uid, name: stripUnsafe(name, 60) || "O'yinchi", socketId: socket.id, isLeader: false, profile_picture: profile_picture || null });
       userParty[uid] = partyId;
     }
     broadcastParty(partyId);
@@ -1485,15 +1547,18 @@ io.on("connection", (socket) => {
 
   // Partydan chiqish
   socket.on("leaveParty", ({ userId }) => {
+    userId = socket.userId || userId; // Sprint 2B (IDOR): ishonchli ID
     removeFromParty(String(userId));
     socket.emit("partyLeft", {});
   });
 
   // Lider party jangini boshlaydi
   socket.on("startPartyQueue", ({ partyId, userId }) => {
+    // Sprint 2B (IDOR): lider tekshiruvi endi ishonchli socket.userId asosida
+    var uid = socket.userId || (userId != null ? String(userId) : null);
     var party = parties[partyId];
     if (!party) { socket.emit("partyError", { message: "Party topilmadi" }); return; }
-    if (String(party.leader) !== String(userId)) { socket.emit("partyError", { message: "Faqat lider boshlay oladi" }); return; }
+    if (String(party.leader) !== String(uid)) { socket.emit("partyError", { message: "Faqat lider boshlay oladi" }); return; }
     if (party.members.length < 2) { socket.emit("partyError", { message: "Kamida 2 o'yinchi kerak" }); return; }
 
     party.status = "in_battle";
@@ -1522,8 +1587,8 @@ io.on("connection", (socket) => {
       io.to(socket.id).emit("partyMatchExpired", {});
       return;
     }
-    var uid = String(userId);
-    pending.arrived[uid] = { socketId: socket.id, userId: uid, name: name || "O'yinchi", level: level || "A1", rating: 1000, lengthKey: lengthKey || "standard", profile_picture: profile_picture || null };
+    var uid = socket.userId || String(userId); // Sprint 2B (IDOR): ishonchli ID
+    pending.arrived[uid] = { socketId: socket.id, userId: uid, name: stripUnsafe(name, 60) || "O'yinchi", level: level || "A1", rating: 1000, lengthKey: lengthKey || "standard", profile_picture: profile_picture || null };
 
     console.log("Party a'zosi yetib keldi: " + uid + " -> " + partyId + " (" + Object.keys(pending.arrived).length + "/" + pending.expected.length + ")");
 
@@ -1540,6 +1605,8 @@ io.on("connection", (socket) => {
 
   // Do'stga jang chaqiruvi yuborish
   socket.on("challengeFriend", async ({ fromUserId, fromName, toUserId, level, lengthKey }) => {
+    // Sprint 2B (IDOR): chaqiruvchi ID token'dan — boshqa nomidan chaqiruv yuborib bo'lmaydi
+    fromUserId = socket.userId || fromUserId;
     console.log("Chaqiruv:", fromUserId, "->", toUserId, "| Onlayn:", Object.keys(onlineUsers));
     const targetSocketId = onlineUsers[String(toUserId)];
 
@@ -1548,16 +1615,21 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Chaqiruvchining rasmini olamiz (modal uchun)
+    // Chaqiruvchining rasmini VA ISMINI bazadan olamiz (Sprint 1: XSS/spoof himoya —
+    // client yuborgan fromName'ga ishonmaymiz, qabul qiluvchiga DB'dagi ism boradi)
     let fromPic = null;
+    let dbName = null;
     try {
-      const r = await pool.query("SELECT profile_picture FROM users WHERE id = $1", [fromUserId]);
-      if (r.rows[0]) fromPic = r.rows[0].profile_picture;
+      const r = await pool.query("SELECT profile_picture, first_name, last_name FROM users WHERE id = $1", [fromUserId]);
+      if (r.rows[0]) {
+        fromPic = r.rows[0].profile_picture;
+        dbName = ((r.rows[0].first_name || "") + " " + (r.rows[0].last_name || "")).trim();
+      }
     } catch (e) {}
 
     io.to(targetSocketId).emit("challengeReceived", {
       fromUserId: fromUserId,
-      fromName: fromName,
+      fromName: dbName || stripUnsafe(fromName, 60) || "O'yinchi",
       fromSocketId: socket.id,
       fromPic: fromPic,
       level: level,
@@ -1569,6 +1641,7 @@ io.on("connection", (socket) => {
 
   // Chaqiruvni bekor qilish (yuboruvchi) — do'stdagi taklifni yo'qotamiz
   socket.on("cancelChallenge", ({ fromUserId, toUserId }) => {
+    fromUserId = socket.userId || fromUserId; // Sprint 2B (IDOR): ishonchli ID
     const targetSocketId = onlineUsers[String(toUserId)];
     if (targetSocketId) {
       io.to(targetSocketId).emit("challengeCancelled", { fromUserId });
@@ -1577,6 +1650,9 @@ io.on("connection", (socket) => {
 
   // Chaqiruvga javob (qabul yoki rad)
   socket.on("challengeResponse", async ({ accepted, fromSocketId, fromUserId, fromName, myUserId, myName, level, lengthKey }) => {
+    myUserId = socket.userId || myUserId; // Sprint 2B (IDOR): javob beruvchi = shu socket egasi
+    fromName = stripUnsafe(fromName, 60) || "O'yinchi"; // Sprint 1: XSS himoya
+    myName = stripUnsafe(myName, 60) || "O'yinchi";
     const challengerSocket = io.sockets.sockets.get(fromSocketId);
 
     if (!accepted) {
@@ -1634,6 +1710,7 @@ io.on("connection", (socket) => {
 
   // Do'st jangi: battle.html ochilganda o'yinchi "tayyorman" deydi
   socket.on("joinFriendBattle", ({ roomId, userId }) => {
+    userId = socket.userId || userId; // Sprint 2B (IDOR): ishonchli ID
     socket.join(roomId);
     const pending = pendingBattles[roomId];
     if (!pending) return;
@@ -1660,11 +1737,12 @@ io.on("connection", (socket) => {
   socket.on("findMatch", async (playerData) => {
     console.log("Jang qidirilyapti:", socket.id);
     removeFromQueue(socket.id); // bitta socket bir vaqtda bir marta
+    playerData = playerData || {};
 
     const me = {
       socketId: socket.id,
-      userId: playerData.userId,
-      name: playerData.name || "O'yinchi",
+      userId: socket.userId || playerData.userId, // Sprint 2B (IDOR): ishonchli ID
+      name: stripUnsafe(playerData.name, 60) || "O'yinchi",
       level: playerData.level || "A1",
       rating: playerData.rating || 1000,
       mode: playerData.mode || "ranked",
@@ -1713,6 +1791,8 @@ io.on("connection", (socket) => {
 
   // ============ JAMOA MATCHMAKING (Duo 2v2 / Squad 4v4) — yagona pool ============
   socket.on("findTeamMatch", async (playerData) => {
+    playerData = playerData || {};
+    if (socket.userId) playerData.userId = socket.userId; // Sprint 2B (IDOR): ishonchli ID
     try {
       var teamMode = playerData.teamMode === "squad" ? "squad" : "duo";
       var entry = {
@@ -1722,7 +1802,7 @@ io.on("connection", (socket) => {
         players: [{
           socketId: socket.id,
           userId: playerData.userId,
-          name: playerData.name || "O'yinchi",
+          name: stripUnsafe(playerData.name, 60) || "O'yinchi",
           level: playerData.level || "A1",
           lengthKey: playerData.lengthKey || "standard",
           rating: playerData.rating || 1000,
@@ -1914,6 +1994,7 @@ io.on("connection", (socket) => {
 
   // ===== RECONNECT: client ulanганda "men aktiv jangda bormanmi?" deb so'raydi =====
  socket.on("battle:reconnectCheck", async ({ userId, expectedRoom }) => {
+    userId = socket.userId || userId; // Sprint 2B (IDOR): ishonchli ID
     if (!userId) { socket.emit("battle:noActive", {}); return; }
 
     // XAVFSIZLIK: token bor bo'lsa — FAQAT token'dagi userId'ga ishonamiz (IDOR himoyasi).
@@ -3348,7 +3429,7 @@ async function logAudit(req, action, opts) {
   opts = opts || {};
   try {
     var adminName = (req.admin && req.admin.name) ? req.admin.name : "Admin";
-    var ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "";
+    var ip = clientIp(req);
     await pool.query(
       `INSERT INTO audit_logs (admin_name, action, entity_type, entity_id, details, ip_address)
        VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -3363,7 +3444,7 @@ async function logAudit(req, action, opts) {
 // Brute-force himoyasi: bir IP'dan ketma-ket noto'g'ri urinishlarni cheklaydi
 var _adminLoginAttempts = {}; // { ip: { count, firstAt, blockedUntil } }
 function adminLoginRateLimit(req, res, next) {
-  var ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
+  var ip = clientIp(req);
   var now = Date.now();
   var rec = _adminLoginAttempts[ip];
 
@@ -3380,7 +3461,7 @@ function adminLoginRateLimit(req, res, next) {
 
 // Noto'g'ri urinishni qayd qilish
 function recordFailedLogin(req) {
-  var ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
+  var ip = clientIp(req);
   var now = Date.now();
   if (!_adminLoginAttempts[ip]) _adminLoginAttempts[ip] = { count: 0, firstAt: now };
   _adminLoginAttempts[ip].count++;
@@ -3390,7 +3471,7 @@ function recordFailedLogin(req) {
   }
 }
 function clearLoginAttempts(req) {
-  var ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
+  var ip = clientIp(req);
   delete _adminLoginAttempts[ip];
 }
 
@@ -3745,13 +3826,21 @@ app.get("/practice/start", authMiddleware, async (req, res) => {
 });
 
 // Practice yakunlash — XP berish (reyting YO'Q, faqat XP)
-app.post("/practice/finish", authMiddleware, async (req, res) => {
+// Sprint 2A: XP-farming himoyasi — soatiga max 12 ta practice yakunlash (user boyicha)
+var practiceFinishLimiter = countLimiter("practice_finish", {
+  keyFn: function (req) { return "u:" + (req.user && req.user.id); },
+  max: 12, windowMs: 60 * 60 * 1000, blockMs: 30 * 60 * 1000,
+  message: "Juda ko'p practice yakunlandi.",
+});
+
+app.post("/practice/finish", authMiddleware, practiceFinishLimiter, async (req, res) => {
   try {
     var userId = req.user.id;
     var correct = parseInt(req.body.correct) || 0;
     var total = parseInt(req.body.total) || 0;
 
-    if (total <= 0 || correct < 0 || correct > total) {
+    // Sprint 2A: total'ga yuqori chegara — practice max 30 savol, undan katta so'rov = firibgarlik
+    if (total <= 0 || total > 30 || correct < 0 || correct > total) {
       return res.status(400).json({ error: "Noto'g'ri natija" });
     }
 
@@ -3831,6 +3920,7 @@ app.post("/admin/tournaments/create", requireAdmin, async (req, res) => {
     // Validatsiya
     if (!name || !name.trim()) return res.status(400).json({ error: "Turnir nomi kerak" });
     if (!region || !district) return res.status(400).json({ error: "Viloyat va tuman tanlang" });
+    const safeTournamentName = sanitizeText(name, 200); // Sprint 1: XSS himoya
 
     const teamSize = parseInt(team_size) || 5;
     const reserveSize = parseInt(reserve_size) || 2;
@@ -3858,7 +3948,7 @@ app.post("/admin/tournaments/create", requireAdmin, async (req, res) => {
          questions_per_match, seconds_per_match, registration_deadline, starts_at, created_by)
        VALUES ($1, 'district', $2, $3, 'registration', $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [name.trim(), district, region, teamSize, reserveSize, qpm, spm,
+      [safeTournamentName, district, region, teamSize, reserveSize, qpm, spm,
        registration_deadline || null, starts_at || null, null]
     );
 
@@ -6625,8 +6715,9 @@ app.post("/teacher/resources", authMiddleware, requireTeacher, uploadResource.si
     const teacherId = req.user.id;
     if (!req.file) return res.status(400).json({ error: "Fayl yuklanmadi" });
 
-    const title = (req.body.title || "").trim() || req.file.originalname;
-    const description = (req.body.description || "").trim();
+    // Sprint 1: XSS himoya — teg belgilari olib tashlanadi
+    const title = sanitizeText((req.body.title || "").trim() || req.file.originalname, 200);
+    const description = sanitizeText(req.body.description || "", 1000);
     const cefrLevel = (req.body.cefr_level || "").trim() || null;
     const skill = (req.body.skill || "").trim() || null;
     const classId = req.body.class_id ? parseInt(req.body.class_id, 10) : null;
@@ -7397,6 +7488,9 @@ app.post("/teacher/classes", authMiddleware, requireTeacher, async (req, res) =>
     if (name.trim().length > 120) {
       return res.status(400).json({ error: "Sinf nomi juda uzun (120 belgidan oshmasin)" });
     }
+    // XSS himoya (Sprint 1): teg belgilarini olib tashlaymiz
+    const safeName = sanitizeText(name, 120);
+    const safeDescription = sanitizeText(description, 500);
 
     // ===== LIMIT: Free teacher faqat 1 sinf =====
     const classLimit = await premium.checkTeacherLimit(teacherId, "classes");
@@ -7419,7 +7513,7 @@ app.post("/teacher/classes", authMiddleware, requireTeacher, async (req, res) =>
       `INSERT INTO classes (teacher_id, school_id, name, description, join_code)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, teacher_id, school_id, name, description, join_code, created_at, archived_at`,
-      [teacherId, schoolId, name.trim(), (description || "").trim() || null, joinCode]
+      [teacherId, schoolId, safeName, safeDescription || null, joinCode]
     );
 
     res.status(201).json({
@@ -7439,10 +7533,10 @@ app.put("/teacher/classes/:classId", authMiddleware, requireTeacher, async (req,
     const classId = parseInt(req.params.classId);
     if (!classId) return res.status(400).json({ error: "Noto'g'ri ID" });
 
-    const name = (req.body.name || "").trim();
-    const description = (req.body.description || "").trim();
+    // XSS himoya (Sprint 1): teg belgilari yozuvdan oldin olib tashlanadi
+    const name = sanitizeText(req.body.name || "", 120);
+    const description = sanitizeText(req.body.description || "", 500);
     if (!name) return res.status(400).json({ error: "Sinf nomini kiriting" });
-    if (name.length > 120) return res.status(400).json({ error: "Sinf nomi juda uzun" });
 
     // Ownership: bu sinf shu teacher'niki ekanini tekshiramiz
     const own = await pool.query(
@@ -8269,6 +8363,101 @@ function maskParentPhone(phone) {
   return "+" + d.slice(0, 3) + " ** *** ** " + d.slice(-2);
 }
 
+// ============================================================================
+// MAKTAB TAKLIF KODI ENDPOINTLARI
+// ============================================================================
+
+// --- Kodni tekshirish (ro'yxatdan o'tish oldidan, OCHIQ endpoint) ---
+app.post("/verify-school-code", async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: "Kod kiritilmadi" });
+
+    const codeHash = schoolInvite.hashCode(code);
+    const result = await pool.query(
+      `SELECT id, school_name, region, district, used_by, expires_at
+       FROM school_invites WHERE code_hash = $1`,
+      [codeHash]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: "Kod noto'g'ri" });
+    }
+    const invite = result.rows[0];
+    if (invite.used_by) {
+      return res.status(400).json({ error: "Bu kod allaqachon ishlatilgan" });
+    }
+    if (invite.expires_at && new Date() > new Date(invite.expires_at)) {
+      return res.status(400).json({ error: "Kod muddati tugagan" });
+    }
+
+    res.json({
+      valid: true,
+      school_name: invite.school_name,
+      region: invite.region,
+      district: invite.district
+    });
+  } catch (err) {
+    console.error("School code tekshirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// --- Kod yaratish (FAQAT platforma admini) ---
+app.post("/admin/school-invites", requireAdmin, async (req, res) => {
+  try {
+    const { school_name, region, district, expires_days } = req.body;
+
+    if (!school_name || school_name.trim().length < 3) {
+      return res.status(400).json({ error: "Maktab nomi majburiy (kamida 3 harf)" });
+    }
+    const schoolNorm = normalizeSchool(school_name);
+
+    // Bu maktab uchun ISHLATILMAGAN faol kod bormi?
+    const existing = await pool.query(
+      `SELECT id FROM school_invites
+       WHERE school_name = $1 AND used_by IS NULL
+         AND (expires_at IS NULL OR expires_at > NOW())`,
+      [schoolNorm]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: "Bu maktab uchun faol kod allaqachon mavjud" });
+    }
+
+    // Bu maktabда allaqachon admin bormi? (1 admin qoidasi)
+    const adminExists = await pool.query(
+      `SELECT id FROM users WHERE role = 'school_admin' AND school = $1`,
+      [schoolNorm]
+    );
+    if (adminExists.rows.length > 0) {
+      return res.status(400).json({ error: "Bu maktabда allaqachon admin bor" });
+    }
+
+    const rawCode = schoolInvite.generateRawCode();
+    const codeHash = schoolInvite.hashCode(rawCode);
+    const expiresAt = expires_days
+      ? new Date(Date.now() + expires_days * 24 * 60 * 60 * 1000)
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    await pool.query(
+      `INSERT INTO school_invites (code_hash, school_name, region, district, created_by, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [codeHash, schoolNorm, region || null, district || null, req.user?.id || null, expiresAt]
+    );
+
+    // Raw kod FAQAT shu yerда bir marta qaytariladi
+    res.status(201).json({
+      message: "Kod yaratildi. Maktab rahbariga bering (qayta ko'rsatilmaydi!)",
+      code: rawCode,
+      school_name: schoolNorm,
+      expires_at: expiresAt
+    });
+  } catch (err) {
+    console.error("School invite yaratish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // --- Kod holatini olish: amaldagi kod BOR-YO'Qligini bildiradi, lekin RAW kodni
 //     QAYTA KO'RSATMAYDI (hash'dan tiklab bo'lmaydi — xuddi parol kabi). ---
 app.get("/student/parent-code", authMiddleware, requireStudent, async (req, res) => {
@@ -8402,7 +8591,7 @@ function activityLabel(ts) {
 
 // Ulanish urinishlari uchun oddiy in-memory rate-limit (brute-force'ga qarshi)
 const _parentLinkFails = new Map();
-function _plKey(req) { return req.user.id + "|" + (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "ip"); }
+function _plKey(req) { return req.user.id + "|" + clientIp(req); }
 function parentLinkBlocked(req) {
   const rec = _parentLinkFails.get(_plKey(req));
   if (!rec) return false;
@@ -8865,9 +9054,10 @@ app.post("/teacher/classes/:classId/assignments", authMiddleware, requireTeacher
 
   let { title, description, cefr_level, skill, question_count, due_at, max_attempts } = req.body;
 
-  // Validatsiya
-  title = (title || "").trim();
-  if (title.length < 3 || title.length > 150) return res.status(400).json({ error: "Sarlavha 3–150 belgi bo'lishi kerak" });
+  // Validatsiya (Sprint 1: sanitizeText — XSS himoya)
+  title = sanitizeText(title || "", 150);
+  description = sanitizeText(description || "", 1000);
+  if (title.length < 3) return res.status(400).json({ error: "Sarlavha 3–150 belgi bo'lishi kerak" });
   if (!ASSIGN_LEVELS.includes(cefr_level)) return res.status(400).json({ error: "Noto'g'ri CEFR daraja" });
   skill = ASSIGN_SKILLS.includes(skill) ? skill : "mixed";
   question_count = parseInt(question_count, 10);
@@ -8953,9 +9143,10 @@ app.post("/teacher/exams", authMiddleware, requireTeacher, async (req, res) => {
   let { class_id, title, description, cefr_level, skill, question_count,
         duration_minutes, pass_percent, max_attempts, starts_at, ends_at } = req.body;
 
-  // Validatsiya
-  title = (title || "").trim();
-  if (title.length < 3 || title.length > 200) return res.status(400).json({ error: "Sarlavha 3–200 belgi bo'lishi kerak" });
+  // Validatsiya (Sprint 1: sanitizeText — XSS himoya)
+  title = sanitizeText(title || "", 200);
+  description = sanitizeText(description || "", 1000);
+  if (title.length < 3) return res.status(400).json({ error: "Sarlavha 3–200 belgi bo'lishi kerak" });
   if (!ASSIGN_LEVELS.includes(cefr_level)) return res.status(400).json({ error: "Noto'g'ri CEFR daraja" });
   skill = ASSIGN_SKILLS.includes(skill) ? skill : "mixed";
   question_count = parseInt(question_count, 10);
@@ -10339,3 +10530,49 @@ server.listen(PORT, async () => {
 
   await recoverActiveBattles();
 });
+
+// ============================================================================
+// GRACEFUL SHUTDOWN — deploy/restart paytida toza to'xtash
+// Oqim: yangi ulanishlarni to'xtatish → server.close() → pool.end() → exit.
+// PM2/systemd/Docker SIGTERM yuboradi; Ctrl+C SIGINT yuboradi.
+// Double-shutdown himoyasi: ikkinchi signal e'tiborsiz qoldiriladi.
+// Timeout: agar 10s ichida yopilmasa — majburan chiqamiz (osilib qolmaslik).
+// ============================================================================
+let _shuttingDown = false;
+async function gracefulShutdown(signal) {
+  if (_shuttingDown) {
+    console.log(`[Shutdown] ${signal} qayta keldi — allaqachon to'xtayapmiz, e'tiborsiz.`);
+    return;
+  }
+  _shuttingDown = true;
+  console.log(`[Shutdown] ${signal} qabul qilindi — toza to'xtash boshlandi...`);
+
+  // Majburiy chiqish taymeri (yopilish osilib qolmasin)
+  const forceTimer = setTimeout(() => {
+    console.error("[Shutdown] 10s ichida yopilmadi — majburan chiqamiz.");
+    process.exit(1);
+  }, 10000);
+  forceTimer.unref();
+
+  // 1) Yangi HTTP/Socket ulanishlarni to'xtatamiz, mavjudlari tugashini kutamiz
+  server.close(async (err) => {
+    if (err) console.error("[Shutdown] server.close xatosi:", err.message);
+    else console.log("[Shutdown] HTTP server yopildi (yangi ulanish qabul qilinmaydi).");
+
+    // 2) PostgreSQL pool'ni yopamiz
+    try {
+      await pool.end();
+      console.log("[Shutdown] PostgreSQL pool yopildi.");
+    } catch (e) {
+      console.error("[Shutdown] pool.end xatosi:", e.message);
+    }
+
+    // 3) Toza chiqish
+    clearTimeout(forceTimer);
+    console.log("[Shutdown] Tugadi. Xayr.");
+    process.exit(0);
+  });
+}
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
