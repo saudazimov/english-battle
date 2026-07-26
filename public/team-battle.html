@@ -258,6 +258,7 @@
     .ov-danger { background: linear-gradient(135deg, var(--red), #dc2626); color: #fff; }
     .ov-msg { text-align: center; font-size: 13px; margin-top: 10px; min-height: 16px; }
   </style>
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
   <div class="stage">
@@ -437,7 +438,7 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/vendor/lucide.min.js"></script>
   <script>
     var token = localStorage.getItem("token");
     if (!token) window.location.href = "/index.html";
@@ -470,6 +471,11 @@
     var SCORE_MULT = 1;
 
     var socket = io({ auth: { token: localStorage.getItem("token") } });
+    socket.on("connect_error", function (err) {
+      if (["AUTH_REQUIRED", "ACCOUNT_NOT_FOUND", "ACCOUNT_BANNED"].indexOf(err && err.message) === -1) return;
+      localStorage.removeItem("token"); localStorage.removeItem("user");
+      window.location.href = "/?screen=login";
+    });
     var roomId = null;
     var battleLevel = "A1";
     var questions = [];

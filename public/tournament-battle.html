@@ -100,6 +100,7 @@
     .tb-back { display: inline-flex; align-items: center; gap: 6px; color: var(--text-dim); text-decoration: none; font-size: 14px; margin-bottom: 16px; }
     .tb-back:hover { color: var(--text); }
   </style>
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
   <div class="tb-wrap">
@@ -110,7 +111,7 @@
   </div>
 
   <script src="/api.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const userData = localStorage.getItem("user");
@@ -123,6 +124,10 @@
     if (!matchId) document.getElementById("tbContent").innerHTML = '<div class="tb-error">Match ID topilmadi</div>';
 
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function schoolLabel(school, schoolKey) {
+      var parts = String(schoolKey || "").split("\x1f");
+      return school && parts.length === 3 && parts[1] ? school + " · " + parts[1] : school;
+    }
     function avatarHtml(name, pic) {
       if (pic) return '<img src="' + esc(pic) + '" alt="">';
       return '<div class="tb-member-ava-init">' + esc((name || "?").charAt(0).toUpperCase()) + '</div>';
@@ -133,6 +138,11 @@
 
     // Socket
     const socket = io({ auth: { token: localStorage.getItem("token") } });
+    socket.on("connect_error", function (err) {
+      if (["AUTH_REQUIRED", "ACCOUNT_NOT_FOUND", "ACCOUNT_BANNED"].indexOf(err && err.message) === -1) return;
+      localStorage.removeItem("token"); localStorage.removeItem("user");
+      window.location.href = "/?screen=login";
+    });
     socket.on("connect", () => { socket.emit("registerUser", user.id); });
 
     // Real-time: kimdir check-in qildi
@@ -156,8 +166,9 @@
         if (battle) {
           battle.status = "done";
           battle.match.winner_school = data.winner;
-          battle.team_scores[data.school_a] = data.score_a;
-          battle.team_scores[data.school_b] = data.score_b;
+          battle.match.winner_school_key = data.winner_key;
+          battle.team_scores[battle.match.school_a_key] = data.score_a;
+          battle.team_scores[battle.match.school_b_key] = data.score_b;
           renderResult();
         } else {
           loadState();
@@ -201,6 +212,9 @@
         var d = await r.json();
         if (d.status === "live" || d.status === "done") {
           battle = d;
+          answeredMap = {};
+          (d.answered_question_ids || []).forEach(function (id) { answeredMap[String(id)] = true; });
+          qIndex = 0;
           renderBattle();
         } else {
           render(); // hali live emas
@@ -212,7 +226,7 @@
 
     function renderBattle() {
       var m = battle.match;
-      var mySchool = battle.my_school;
+      var mySchoolKey = battle.my_school_key;
 
       // Match tugagan bo'lsa — natija ekrani
       if (battle.status === "done") {
@@ -226,8 +240,8 @@
         return;
       }
 
-      var scoreA = battle.team_scores[m.school_a] || 0;
-      var scoreB = battle.team_scores[m.school_b] || 0;
+      var scoreA = battle.team_scores[m.school_a_key] || 0;
+      var scoreB = battle.team_scores[m.school_b_key] || 0;
       var total = battle.questions.length;
 
       // Joriy savolga o'tamiz (javob berilmaganini topamiz)
@@ -244,9 +258,9 @@
       var html = '';
       // Scoreboard
       html += '<div class="tb-scoreboard">' +
-        '<div class="tb-sb-team' + (m.school_a === mySchool ? " mine" : "") + '"><div class="tb-sb-name">' + esc(m.school_a) + '</div><div class="tb-sb-score">' + scoreA + '</div></div>' +
+        '<div class="tb-sb-team' + (m.school_a_key === mySchoolKey ? " mine" : "") + '"><div class="tb-sb-name">' + esc(schoolLabel(m.school_a, m.school_a_key)) + '</div><div class="tb-sb-score">' + scoreA + '</div></div>' +
         '<div><div class="tb-sb-timer"><div class="tb-sb-timer-time" id="battleTimer">--:--</div><div class="tb-sb-timer-label">qolgan vaqt</div></div></div>' +
-        '<div class="tb-sb-team' + (m.school_b === mySchool ? " mine" : "") + '"><div class="tb-sb-name">' + esc(m.school_b) + '</div><div class="tb-sb-score">' + scoreB + '</div></div>' +
+        '<div class="tb-sb-team' + (m.school_b_key === mySchoolKey ? " mine" : "") + '"><div class="tb-sb-name">' + esc(schoolLabel(m.school_b, m.school_b_key)) + '</div><div class="tb-sb-score">' + scoreB + '</div></div>' +
       '</div>';
 
       // Progress
@@ -329,15 +343,22 @@
       var m = battle.match;
       var sbScores = document.querySelectorAll(".tb-sb-score");
       if (sbScores.length === 2) {
-        sbScores[0].textContent = battle.team_scores[m.school_a] || 0;
-        sbScores[1].textContent = battle.team_scores[m.school_b] || 0;
+        sbScores[0].textContent = battle.team_scores[m.school_a_key] || 0;
+        sbScores[1].textContent = battle.team_scores[m.school_b_key] || 0;
       }
     }
 
     async function finishBattle() {
       try {
-        await authFetch("/tournament/match/" + matchId + "/finish", { method: "POST" });
-      } catch (e) {}
+        var r = await authFetch("/tournament/match/" + matchId + "/finish", { method: "POST" });
+        if (!r.ok) {
+          await loadBattle();
+          return;
+        }
+      } catch (e) {
+        await loadBattle();
+        return;
+      }
       battle.my_finished = true;
       renderWaiting();
     }
@@ -346,11 +367,11 @@
       if (battleTimer) clearInterval(battleTimer);
       var m = battle.match;
       var html = '<div class="tb-head"><div class="tb-tournament">' + esc(m.tournament_name) + '</div>' +
-        '<div class="tb-vs-title">' + esc(m.school_a) + ' vs ' + esc(m.school_b) + '</div></div>';
+        '<div class="tb-vs-title">' + esc(schoolLabel(m.school_a, m.school_a_key)) + ' vs ' + esc(schoolLabel(m.school_b, m.school_b_key)) + '</div></div>';
       html += '<div class="tb-finished-box">' +
         '<div class="tb-finished-ic wait"><i data-lucide="hourglass"></i></div>' +
         '<div class="tb-finished-title">Siz tugatdingiz!</div>' +
-        '<div class="tb-final-score">' + esc(m.school_a) + ' ' + (battle.team_scores[m.school_a] || 0) + ' — ' + (battle.team_scores[m.school_b] || 0) + ' ' + esc(m.school_b) + '</div>' +
+        '<div class="tb-final-score">' + esc(schoolLabel(m.school_a, m.school_a_key)) + ' ' + (battle.team_scores[m.school_a_key] || 0) + ' — ' + (battle.team_scores[m.school_b_key] || 0) + ' ' + esc(schoolLabel(m.school_b, m.school_b_key)) + '</div>' +
         '<div class="tb-finished-sub">Boshqa o\'yinchilar tugatishini kuting. Natija avtomatik chiqadi.</div>' +
       '</div>';
       document.getElementById("tbContent").innerHTML = html;
@@ -360,10 +381,10 @@
     function renderResult() {
       if (battleTimer) clearInterval(battleTimer);
       var m = battle.match;
-      var scoreA = battle.team_scores[m.school_a] || 0;
-      var scoreB = battle.team_scores[m.school_b] || 0;
+      var scoreA = battle.team_scores[m.school_a_key] || 0;
+      var scoreB = battle.team_scores[m.school_b_key] || 0;
       var winner = m.winner_school;
-      var iWon = (winner === battle.my_school);
+      var iWon = (m.winner_school_key === battle.my_school_key);
       var isDraw = !winner;
 
       var icCls = isDraw ? "wait" : (iWon ? "win" : "lose");
@@ -371,12 +392,12 @@
       var title = isDraw ? "Durang!" : (iWon ? "G'alaba! 🎉" : "Mag'lubiyat");
 
       var html = '<div class="tb-head"><div class="tb-tournament">' + esc(m.tournament_name) + '</div>' +
-        '<div class="tb-vs-title">' + esc(m.school_a) + ' vs ' + esc(m.school_b) + '</div></div>';
+        '<div class="tb-vs-title">' + esc(schoolLabel(m.school_a, m.school_a_key)) + ' vs ' + esc(schoolLabel(m.school_b, m.school_b_key)) + '</div></div>';
       html += '<div class="tb-finished-box">' +
         '<div class="tb-finished-ic ' + icCls + '"><i data-lucide="' + icName + '"></i></div>' +
         '<div class="tb-finished-title">' + title + '</div>' +
-        '<div class="tb-final-score">' + esc(m.school_a) + ' ' + scoreA + ' — ' + scoreB + ' ' + esc(m.school_b) + '</div>' +
-        (winner ? '<div class="tb-finished-sub">G\'olib: <b>' + esc(winner) + '</b></div>' : '<div class="tb-finished-sub">Natija teng yakunlandi</div>') +
+        '<div class="tb-final-score">' + esc(schoolLabel(m.school_a, m.school_a_key)) + ' ' + scoreA + ' — ' + scoreB + ' ' + esc(schoolLabel(m.school_b, m.school_b_key)) + '</div>' +
+        (winner ? '<div class="tb-finished-sub">G\'olib: <b>' + esc(schoolLabel(winner, m.winner_school_key)) + '</b></div>' : '<div class="tb-finished-sub">Natija teng yakunlandi</div>') +
         '<div style="margin-top:24px;"><a href="/school-tournaments.html" class="tb-ready-btn" style="text-decoration:none;display:inline-block;background:var(--panel-2);color:var(--text);">Turnirlarga qaytish</a></div>' +
       '</div>';
       document.getElementById("tbContent").innerHTML = html;
@@ -405,7 +426,7 @@
 
     function render() {
       var m = state.match;
-      var mySchool = state.my_school;
+      var mySchoolKey = state.my_school_key;
 
       // Status banner
       var statusMap = {
@@ -418,7 +439,7 @@
 
       var html = '<div class="tb-head">' +
         '<div class="tb-tournament">' + esc(m.tournament_name) + '</div>' +
-        '<div class="tb-vs-title">' + esc(m.school_a) + ' <span style="color:var(--text-faint);">vs</span> ' + esc(m.school_b) + '</div>' +
+        '<div class="tb-vs-title">' + esc(schoolLabel(m.school_a, m.school_a_key)) + ' <span style="color:var(--text-faint);">vs</span> ' + esc(schoolLabel(m.school_b, m.school_b_key)) + '</div>' +
       '</div>';
 
       html += '<div class="tb-status-banner ' + stt.cls + '"><i data-lucide="' + stt.icon + '"></i> ' + stt.text + '</div>';
@@ -430,9 +451,9 @@
 
       // Ikki jamoa
       html += '<div class="tb-teams">';
-      html += renderTeam(m.school_a, mySchool);
+      html += renderTeam(m.school_a, m.school_a_key, mySchoolKey);
       html += '<div class="tb-vs-divider">VS</div>';
-      html += renderTeam(m.school_b, mySchool);
+      html += renderTeam(m.school_b, m.school_b_key, mySchoolKey);
       html += '</div>';
 
       // Tayyorman tugma (faqat checkin va men hali tayyor bo'lmagan bo'lsam)
@@ -453,16 +474,17 @@
       if (m.status === "checkin" && m.scheduled_at) startCountdown(m.scheduled_at);
     }
 
-    function renderTeam(school, mySchool) {
+    function renderTeam(school, schoolKey, mySchoolKey) {
       if (!school) return '<div class="tb-team"></div>';
-      var members = state.teams[school] || [];
+      var team = state.teams[schoolKey] || { members: [] };
+      var members = team.members || [];
       var readyCount = members.filter(function (p) { return p.checked_in; }).length;
-      var isMine = (school === mySchool);
+      var isMine = (schoolKey === mySchoolKey);
 
       var html = '<div class="tb-team' + (isMine ? " mine" : "") + '">' +
         '<div class="tb-team-head">' +
           '<div class="tb-team-ic"><i data-lucide="building-2"></i></div>' +
-          '<div class="tb-team-name">' + esc(school) + '</div>' +
+          '<div class="tb-team-name">' + esc(schoolLabel(school, schoolKey)) + '</div>' +
         '</div>' +
         '<div class="tb-team-ready" style="margin-bottom:10px;"><b>' + readyCount + '</b> / ' + members.length + ' tayyor</div>';
 

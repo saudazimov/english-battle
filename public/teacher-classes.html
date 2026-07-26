@@ -179,6 +179,7 @@
     @media (max-width: 1000px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 700px) { .stats-row { grid-template-columns: 1fr; } .class-row { gap: 14px; } .class-id, .class-metric, .class-asg { width: auto; } .topbar { flex-wrap: wrap; padding: 18px; } .content { padding: 14px 16px 28px; } }
   </style>
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
   <div class="layout">
@@ -430,7 +431,7 @@
     function renderStats(list) {
       var totalClasses = list.length;
       var totalStudents = list.reduce(function (s, c) { return s + (c.student_count || 0); }, 0);
-      var activeClasses = totalClasses; // hozircha barcha sinf faol
+      var activeClasses = totalClasses; // API faqat arxivlanmagan sinflarni qaytaradi
       // O'rtacha natija — avg_score bor sinflar bo'yicha
       var withAvg = list.filter(function (c) { return c.avg_score != null; });
       var avgScore = withAvg.length ? Math.round(withAvg.reduce(function (s, c) { return s + c.avg_score; }, 0) / withAvg.length) : null;
@@ -449,9 +450,12 @@
       setBar("ssAsgBar", Math.min(100, totalAsg * 10));
       document.getElementById("ssAvg").textContent = avgScore != null ? avgScore + "%" : "—";
       setBar("ssAvgBar", avgScore || 0);
-      // Bajarilish — hozircha avg bilan bir xil taxminiy (real overview kerak)
-      document.getElementById("ssComp").textContent = avgScore != null ? avgScore + "%" : "—";
-      setBar("ssCompBar", avgScore || 0);
+      var classesWithWork = list.filter(function (c) { return (c.active_assignments || 0) > 0; });
+      var completion = classesWithWork.length
+        ? Math.round(classesWithWork.reduce(function (s, c) { return s + (c.completion_percent || 0); }, 0) / classesWithWork.length)
+        : null;
+      document.getElementById("ssComp").textContent = completion != null ? completion + "%" : "—";
+      setBar("ssCompBar", completion || 0);
     }
     function setBar(id, pct) { var el = document.getElementById(id); if (el) el.style.width = Math.max(0, Math.min(100, pct)) + "%"; }
 

@@ -6,7 +6,8 @@ require("dotenv").config();
 
 // Maxfiy kalit .env dan olinadi. Agar yo'q bo'lsa — server ishga tushmasin (xavfsizlik).
 const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "30d";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const pool = require("./db");
 
 if (!JWT_SECRET) {
   console.error("XATO: JWT_SECRET .env faylida topilmadi! Server to'xtatildi.");
@@ -20,6 +21,7 @@ function signToken(user) {
   const payload = {
     id: user.id,
     phone: user.phone,
+    ver: Number(user.auth_version) || 0,
   };
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
@@ -27,7 +29,7 @@ function signToken(user) {
 // 2. TOKENNI TEKSHIRISH (MIDDLEWARE)
 // Himoyalangan route'larda ishlatiladi. Token to'g'ri bo'lsa req.user ni o'rnatadi.
 // Step 1A da hali hech bir route buni ishlatmaydi — biz faqat tayyorlab qo'yamiz.
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
   try {
     const authHeader = req.headers["authorization"];
 
@@ -41,8 +43,19 @@ function authMiddleware(req, res, next) {
     // Tokenni tekshirish
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // MUHIM: bundan keyin route faqat shu ma'lumotga ishonadi, frontend yuborgan userId ga emas.
-    req.user = { id: decoded.id, phone: decoded.phone };
+    const result = await pool.query(
+      "SELECT id, phone, is_banned, auth_version FROM users WHERE id = $1",
+      [decoded.id]
+    );
+    const user = result.rows[0];
+    if (!user) return res.status(401).json({ error: "Hisob topilmadi, qaytadan kiring" });
+    if (user.is_banned) return res.status(401).json({ error: "Hisobingiz bloklangan" });
+    if ((Number(decoded.ver) || 0) !== (Number(user.auth_version) || 0)) {
+      return res.status(401).json({ error: "Sessiya bekor qilingan, qaytadan kiring" });
+    }
+
+    // MUHIM: bundan keyin route faqat bazada tasdiqlangan ma'lumotga ishonadi.
+    req.user = { id: user.id, phone: user.phone, auth_version: Number(user.auth_version) || 0 };
 
     next();
   } catch (err) {
@@ -58,8 +71,6 @@ function authMiddleware(req, res, next) {
 // Faqat role="teacher" (yoki "school_admin") bo'lgan foydalanuvchilarni o'tkazadi.
 // MUHIM: rolni bazadan tekshiradi (frontend yoki eski tokenga ishonmaydi).
 // Avval authMiddleware ishlashi kerak (req.user.id bo'lishi uchun).
-const pool = require("./db");
-
 function requireTeacher(req, res, next) {
   // authMiddleware allaqachon req.user ni o'rnatgan bo'lishi kerak
   if (!req.user || !req.user.id) {
@@ -144,9 +155,9 @@ function requireParent(req, res, next) {
 // Oddiy user tokenidan farq qiladi (admin huquqlari uchun).
 const ADMIN_TOKEN_EXPIRES = "24h"; // admin token 24 soat amal qiladi
 
-function signAdminToken(adminName) {
+function signAdminToken(adminName, authVersion) {
   return jwt.sign(
-    { isAdmin: true, adminName: adminName || "Admin", role: "super_admin" },
+    { isAdmin: true, adminName: adminName || "Admin", role: "super_admin", ver: Number(authVersion) || 0 },
     JWT_SECRET,
     { expiresIn: ADMIN_TOKEN_EXPIRES }
   );
@@ -154,7 +165,7 @@ function signAdminToken(adminName) {
 
 // Admin himoyalangan endpointlar uchun middleware.
 // Token'ni tekshiradi, isAdmin:true bo'lishini talab qiladi.
-function requireAdmin(req, res, next) {
+async function requireAdmin(req, res, next) {
   try {
     const authHeader = req.headers["authorization"];
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -166,6 +177,14 @@ function requireAdmin(req, res, next) {
     // MUHIM: faqat isAdmin:true bo'lgan token o'tadi (oddiy user tokeni emas)
     if (!decoded.isAdmin) {
       return res.status(403).json({ error: "Admin huquqi kerak" });
+    }
+
+    const versionResult = await pool.query(
+      "SELECT setting_value FROM admin_settings WHERE setting_key = 'admin_auth_version'"
+    );
+    const currentVersion = versionResult.rows.length ? Number(versionResult.rows[0].setting_value) || 0 : 0;
+    if ((Number(decoded.ver) || 0) !== currentVersion) {
+      return res.status(401).json({ error: "Admin sessiyasi bekor qilingan, qaytadan kiring" });
     }
 
     req.admin = { name: decoded.adminName || "Admin", role: decoded.role || "admin" };
@@ -187,7 +206,7 @@ function verifySocketToken(token) {
     // "Bearer xxx" formatida kelsa, prefiksni olib tashlaymiz
     if (token.startsWith("Bearer ")) token = token.split(" ")[1];
     const decoded = jwt.verify(token, JWT_SECRET);
-    return { id: decoded.id, phone: decoded.phone };
+    return { id: decoded.id, phone: decoded.phone, ver: Number(decoded.ver) || 0 };
   } catch (err) {
     return null; // muddati o'tgan yoki soxta
   }

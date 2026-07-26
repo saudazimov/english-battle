@@ -1,0 +1,257 @@
+/* ============================================================================
+   responsive.css — English Battle: Markaziy mobil-moslik qatlami
+   ----------------------------------------------------------------------------
+   MAQSAD: Butun platformada scroll'ni tiklash va har sahifani mobil/planshet
+   ekraniga moslash. Har sahifaning inline <style> blokidan KEYIN ulanadi,
+   shuning uchun bu yerdagi qoidalar ustuvor (CSS cascade — oxirgi yutadi).
+
+   ULANISH: har HTML faylning <head> ichida, inline <style> dan KEYIN:
+       <link rel="stylesheet" href="responsive.css">
+   (public/ ichida bo'lsa: href="responsive.css" — nisbiy yo'l ishlaydi)
+
+   TUZILISH:
+     1. Global scroll tuzatish (100vh + overflow:hidden qotishini bekor qilish)
+     2. Universal quality floor (focus, reduced-motion, tap-target)
+     3. Breakpoint: planshet (<=980px)
+     4. Breakpoint: mobil (<=640px)
+     5. Breakpoint: kichik mobil (<=400px)
+     6. Utility klasslar (mobilda yashirish/ko'rsatish)
+   ============================================================================ */
+
+
+/* ============================================================================
+   1. GLOBAL SCROLL TUZATISH  ⭐ ENG MUHIM QISM
+   ----------------------------------------------------------------------------
+   Muammo: ko'p sahifada body/konteyner "height:100vh; overflow:hidden" bilan
+   qotgan — mobilda kontent kesiladi, scroll ishlamaydi.
+   Yechim: qotishni bekor qilamiz. Sahifa tabiiy scroll bo'ladi, 100dvh bilan
+   mobil address-bar hisobga olinadi.
+   ============================================================================ */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;   /* iOS avto-zoom matnni buzmasin */
+}
+
+body {
+  /* Qotgan balandlikni bo'shatamiz — kontent qancha bo'lsa shuncha cho'ziladi */
+  min-height: 100vh;
+  min-height: 100dvh;               /* dinamik viewport — mobil brauzer address-bar */
+  height: auto !important;          /* har sahifaning "height:100vh" ini bekor qiladi */
+  /* Vertikal scroll ochiq, gorizontal yopiq (yon siljish bo'lmasin) */
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* iOS silliq scroll */
+}
+
+
+/* ============================================================================
+   2. UNIVERSAL QUALITY FLOOR
+   Barcha sahifalarga qulaylik (accessibility) va sifat minimumi.
+   ============================================================================ */
+
+/* Klaviatura fokusi ko'rinsin (Tab bilan yurganda) — a11y */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--border-focus, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* Harakatni kamaytirish so'ralsa — animatsiyalarni o'chir (a11y) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Rasm va media konteyneridan oshib ketmasin */
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+
+/* ============================================================================
+   3. PLANSHET va kichik laptop  (<= 980px)
+   Sidebar'li layout'lar ustunga tushadi, gridlar torayadi.
+   ============================================================================ */
+
+@media (max-width: 980px) {
+
+  /* Ko'p sahifada header 32px padding — planshetda kamaytiramiz */
+  .site-header {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  /* Asosiy kontent konteyneri — ichki scroll'ni bo'shatamiz */
+  .main,
+  .content,
+  .page-content,
+  .app-main,
+  .dashboard-main {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Sidebar + kontent grid — planshetda ustunga (sidebar tepaga) */
+  .app,
+  .app-shell,
+  .layout,
+  .with-sidebar {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* 3+ ustunli gridlar — 2 ustunga */
+  .grid-3,
+  .grid-4,
+  .cards-grid,
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+
+/* ============================================================================
+   4. MOBIL  (<= 640px)   ⭐ ASOSIY MOBIL QATLAM
+   Hamma ustunli layout bitta ustunga, header ixcham, matn kichrayadi.
+   ============================================================================ */
+
+@media (max-width: 640px) {
+
+  /* --- Header: ixcham, o'ralmasin --- */
+  .site-header {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .logo-name { font-size: 17px; }
+  .logo-mark { width: 36px; height: 36px; }
+
+  /* --- Barcha ko'p ustunli gridlar → 1 ustun --- */
+  .grid-2, .grid-3, .grid-4,
+  .cards-grid, .stats-grid,
+  .role-grid, .two-col, .three-col {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* --- Sidebar butunlay ustunga --- */
+  .sidebar,
+  .side-nav {
+    width: 100% !important;
+    height: auto !important;
+    position: static !important;
+    border-right: none !important;
+  }
+
+  /* --- Kartalar: kichikroq padding, to'liq kenglik --- */
+  .card,
+  .panel,
+  .box {
+    padding: 18px 16px !important;
+    width: 100% !important;
+  }
+
+  /* --- Sarlavhalar mobil o'lchamga --- */
+  h1, .page-title-lg { font-size: 24px !important; line-height: 1.25; }
+  h2, .page-title    { font-size: 20px !important; }
+  h3                 { font-size: 16px !important; }
+
+  /* --- Asosiy konteyner padding --- */
+  .main,
+  .content,
+  .page-content,
+  .container {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* --- Jadvallar: gorizontal scroll (kesilmasin) --- */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* --- Tugmalar: tap uchun yetarli balandlik (min 44px — Apple HIG) --- */
+  .btn,
+  button.btn,
+  .btn-primary,
+  .btn-ghost {
+    min-height: 44px;
+    padding-top: 11px;
+    padding-bottom: 11px;
+  }
+
+  /* --- Modal/dialog mobilda deyarli to'liq ekran --- */
+  .modal,
+  .dialog,
+  .modal-card {
+    width: 94vw !important;
+    max-width: 94vw !important;
+    max-height: 90dvh !important;
+    overflow-y: auto !important;
+  }
+
+  /* --- Toolbar (tugmalar qatori) o'ralsin --- */
+  .toolbar,
+  .actions,
+  .btn-row {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+}
+
+
+/* ============================================================================
+   5. KICHIK MOBIL  (<= 400px)
+   Eng tor ekranlar (iPhone SE, eski Android) uchun nozik sozlash.
+   ============================================================================ */
+
+@media (max-width: 400px) {
+
+  .site-header { padding: 10px 12px; }
+  .logo-name { font-size: 15px; }
+
+  .card, .panel, .box { padding: 14px 12px !important; }
+
+  h1, .page-title-lg { font-size: 21px !important; }
+
+  /* Matnlar juda kichrayib ketmasin — o'qilishi uchun minimum */
+  body { font-size: 14px; }
+
+  .btn { font-size: 14px; }
+}
+
+
+/* ============================================================================
+   6. UTILITY KLASSLAR
+   HTML'da qo'lda ishlatish uchun (ixtiyoriy).
+   ============================================================================ */
+
+/* Faqat mobilda yashirish (bezak, ikkilamchi elementlar uchun) */
+@media (max-width: 640px) {
+  .hide-mobile { display: none !important; }
+}
+
+/* Faqat desktopda yashirish (mobil-only elementlar uchun) */
+@media (min-width: 641px) {
+  .hide-desktop { display: none !important; }
+}
+
+/* Mobilda to'liq kenglik majburlash */
+@media (max-width: 640px) {
+  .full-mobile { width: 100% !important; display: block !important; }
+}

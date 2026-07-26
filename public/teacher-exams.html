@@ -234,6 +234,7 @@
     .vq-meta { font-size: 11.5px; color: var(--text-dim); margin-top: 5px; }
     @media (max-width: 560px) { .ex-row2, .ex-row3 { grid-template-columns: 1fr; } }
   </style>
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
   <div class="layout">
@@ -546,7 +547,6 @@
       document.getElementById("statTotal").textContent = s.total != null ? s.total : 0;
       document.getElementById("statActive").textContent = s.active != null ? s.active : 0;
       document.getElementById("statDone").textContent = s.finished != null ? s.finished : 0;
-      // O'rtacha natija Faza 2'da (student topshirgach) — hozircha neytral
       document.getElementById("statAvg").textContent = s.avg_score ? s.avg_score + "%" : "—";
       document.getElementById("statDur").innerHTML = s.avg_duration != null ? s.avg_duration + ' <small>daqiqa</small>' : "—";
     }

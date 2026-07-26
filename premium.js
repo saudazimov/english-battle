@@ -172,39 +172,22 @@ async function expireOldSubscriptions() {
 
 // Obuna yaratish/uzaytirish (dev/admin yoki keyin payment callback chaqiradi)
 // Mavjud aktiv obuna bo'lsa — muddatini uzaytiradi (yangi qator emas).
-async function grantSubscription(userId, plan, days) {
+async function grantSubscription(userId, plan, days, dbClient) {
   const validPlans = ["student_premium", "parent_premium", "teacher_pro", "center_pro"];
   if (!validPlans.includes(plan)) throw new Error("Noto'g'ri plan: " + plan);
   const d = parseInt(days);
   if (isNaN(d) || d < 1 || d > 3650) throw new Error("Noto'g'ri kun soni");
 
-  // Mavjud aktiv obuna bormi?
-  const existing = await pool.query(
-    `SELECT id, expires_at FROM subscriptions
-     WHERE user_id = $1 AND plan = $2 AND status = 'active'
-     LIMIT 1`,
-    [userId, plan]
-  );
-
-  if (existing.rows.length > 0) {
-    // Uzaytiramiz: agar hali amal qilsa — joriy muddatdan, o'tgan bo'lsa — hozirdan
-    const cur = existing.rows[0];
-    const base = new Date(cur.expires_at) > new Date() ? new Date(cur.expires_at) : new Date();
-    const newExpiry = new Date(base.getTime() + d * 86400000);
-    const r = await pool.query(
-      `UPDATE subscriptions SET expires_at = $1, status = 'active', updated_at = NOW()
-       WHERE id = $2 RETURNING *`,
-      [newExpiry, cur.id]
-    );
-    return r.rows[0];
-  }
-
-  // Yangi obuna
-  const expiresAt = new Date(Date.now() + d * 86400000);
-  const r = await pool.query(
+  const db = dbClient || pool;
+  const r = await db.query(
     `INSERT INTO subscriptions (user_id, plan, status, started_at, expires_at)
-     VALUES ($1, $2, 'active', NOW(), $3) RETURNING *`,
-    [userId, plan, expiresAt]
+     VALUES ($1, $2, 'active', NOW(), NOW() + ($3::int * INTERVAL '1 day'))
+     ON CONFLICT (user_id, plan) WHERE status = 'active'
+     DO UPDATE SET
+       expires_at = GREATEST(subscriptions.expires_at, NOW()) + ($3::int * INTERVAL '1 day'),
+       updated_at = NOW()
+     RETURNING *`,
+    [userId, plan, d]
   );
   return r.rows[0];
 }
@@ -213,11 +196,12 @@ async function grantSubscription(userId, plan, days) {
 // IDEMPOTENT: faqat 'active' obunaga tegadi. Ikkinchi marta chaqirilsa (refund
 // ikki marta kelsa) — allaqachon 'cancelled', UPDATE 0 qator → zarar yo'q.
 // Qaytaradi: { revoked: <nechta obuna bekor qilindi> }.
-async function revokeSubscription(userId, plan) {
+async function revokeSubscription(userId, plan, dbClient) {
   const validPlans = ["student_premium", "parent_premium", "teacher_pro", "center_pro"];
   if (!validPlans.includes(plan)) throw new Error("Noto'g'ri plan: " + plan);
 
-  const r = await pool.query(
+  const db = dbClient || pool;
+  const r = await db.query(
     `UPDATE subscriptions
        SET status = 'cancelled', updated_at = NOW()
      WHERE user_id = $1 AND plan = $2 AND status = 'active'
@@ -233,6 +217,34 @@ async function revokeSubscription(userId, plan) {
   return { revoked: r.rows.length };
 }
 
+// Refund qilingan to'lov bergan muddatnigina qaytarib oladi. Foydalanuvchining
+// boshqa to'lovlardan yig'ilgan qolgan muddati saqlanib qoladi.
+async function revokeSubscriptionDays(userId, plan, days, dbClient) {
+  const validPlans = ["student_premium", "parent_premium", "teacher_pro", "center_pro"];
+  if (!validPlans.includes(plan)) throw new Error("Noto'g'ri plan: " + plan);
+  const d = parseInt(days, 10);
+  if (!Number.isInteger(d) || d < 1 || d > 3650) throw new Error("Noto'g'ri kun soni");
+
+  const db = dbClient || pool;
+  const r = await db.query(
+    `UPDATE subscriptions
+        SET expires_at = expires_at - ($3::int * INTERVAL '1 day'),
+            status = CASE
+              WHEN expires_at - ($3::int * INTERVAL '1 day') <= NOW() THEN 'cancelled'
+              ELSE 'active'
+            END,
+            cancelled_at = CASE
+              WHEN expires_at - ($3::int * INTERVAL '1 day') <= NOW() THEN NOW()
+              ELSE cancelled_at
+            END,
+            updated_at = NOW()
+      WHERE user_id = $1 AND plan = $2 AND status = 'active'
+      RETURNING id, status, expires_at`,
+    [userId, plan, d]
+  );
+  return { revoked: r.rows.length, subscription: r.rows[0] || null };
+}
+
 module.exports = {
   PLAN_GROUPS,
   TEACHER_FREE_LIMITS,
@@ -245,4 +257,5 @@ module.exports = {
   expireOldSubscriptions,
   grantSubscription,
   revokeSubscription,
+  revokeSubscriptionDays,
 };

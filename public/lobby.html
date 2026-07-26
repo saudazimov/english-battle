@@ -656,7 +656,7 @@
     .pip-decline { background: rgba(248,113,113,0.15); color: var(--red); }
     .pip-accept i, .pip-decline i { width: 18px; height: 18px; }
   </style>
-
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
   <div class="app">
@@ -870,7 +870,7 @@
   </div>
 
   <script src="/api.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/profile-modal.js"></script>
@@ -1256,8 +1256,8 @@
             '<div class="recent-score">' + b.my_score + ' - ' + b.opponent_score + '</div>' +
             '<div class="recent-rating" style="color:' + ratingColor + ';">' + ratingChange + '</div>' +
             '<div>' +
-              '<button class="rematch-btn" onclick="viewOppProfile(\'' + oppId + '\')">' +
-                '<i data-lucide="user"></i> Profil' +
+              '<button class="rematch-btn" ' + (oppId ? 'onclick="requestRematch(\'' + oppId + '\')"' : 'disabled') + '>' +
+                '<i data-lucide="rotate-ccw"></i> Qayta jang' +
               '</button>' +
             '</div>';
           list.appendChild(row);
@@ -1282,8 +1282,17 @@
     }
 
     loadRecent();
-    // Rematch tugmasi bosilganda — hozircha frontend xabari
-    // (haqiqiy rematch backend bosqichida ulanadi)
+    function requestRematch(opponentId) {
+      var s = partySocket();
+      if (!s || !s.connected) return showToast("Serverga ulanish kutilmoqda");
+      s.emit("requestRematch", {
+        opponentId: opponentId,
+        myName: ((user.first_name || "") + " " + (user.last_name || "")).trim(),
+        level: user.cefr_level || "A1",
+        lengthKey: "standard",
+      });
+      showToast("Qayta jang so'rovi yuborildi");
+    }
     // Raqib profilini ko'rish (o'sha sahifada modal'da ochiladi)
     function viewOppProfile(opponentId) {
       if (!opponentId) return;
@@ -1525,6 +1534,20 @@
     })();
 
     function attachPartyEvents(s) {
+      s.on("rematchRequested", function (d) {
+        var accepted = window.confirm((d.fromName || "Raqib") + " sizni qayta jangga chaqirdi. Qabul qilasizmi?");
+        s.emit("rematchResponse", {
+          accepted: accepted,
+          fromSocketId: d.fromSocketId,
+          fromUserId: d.fromUserId,
+          fromName: d.fromName,
+          myName: ((user.first_name || "") + " " + (user.last_name || "")).trim(),
+          level: d.level || user.cefr_level || "A1",
+          lengthKey: d.lengthKey || "standard",
+        });
+      });
+      s.on("rematchUnavailable", function (d) { showToast((d && d.message) || "Raqib hozir mavjud emas"); });
+      s.on("rematchDeclined", function (d) { showToast((d && d.byName ? d.byName : "Raqib") + " so'rovni rad etdi"); });
       s.on("partyCreated", function (d) {
         // party yaratildi — panel ochiladi (partyUpdated bilan to'ladi)
       });

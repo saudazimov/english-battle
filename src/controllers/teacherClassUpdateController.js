@@ -1,0 +1,43 @@
+function createTeacherClassUpdateController({ pool, sanitizeText, logAudit, logger = console }) {
+  async function update(req, res) {
+    try {
+      const teacherId = req.user.id;
+      const classId = parseInt(req.params.classId);
+      if (!classId) return res.status(400).json({ error: "Noto'g'ri ID" });
+
+      const name = sanitizeText(req.body.name || "", 120);
+      const description = sanitizeText(req.body.description || "", 500);
+      if (!name) return res.status(400).json({ error: "Sinf nomini kiriting" });
+
+      const own = await pool.query(
+        "SELECT id FROM classes WHERE id = $1 AND teacher_id = $2 AND archived_at IS NULL",
+        [classId, teacherId]
+      );
+      if (own.rows.length === 0) {
+        return res.status(404).json({ error: "Sinf topilmadi" });
+      }
+
+      await pool.query(
+        "UPDATE classes SET name = $1, description = $2 WHERE id = $3",
+        [name, description, classId]
+      );
+
+      if (typeof logAudit === "function") {
+        logAudit(req, "class_updated", {
+          entityType: "class",
+          entityId: classId,
+          details: { name },
+        });
+      }
+
+      return res.json({ success: true });
+    } catch (error) {
+      logger.error("Sinf tahrirlash xatosi:", error.message);
+      return res.status(500).json({ error: "Server xatosi" });
+    }
+  }
+
+  return { update };
+}
+
+module.exports = { createTeacherClassUpdateController };

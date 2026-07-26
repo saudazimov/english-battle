@@ -1,1134 +1,163 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ro'yxatdan o'tish — IlmLiga</title>
-  <!-- ===== IlmLiga BRAND META (deploy uchun) ===== -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ro‘yxatdan o‘tish — IlmLiga</title>
   <meta name="application-name" content="IlmLiga">
-  <meta name="theme-color" content="#2563eb">
+  <meta name="theme-color" content="#090d1b">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
   <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
-  <meta property="og:title" content="IlmLiga">
-  <meta property="og:description" content="Learn, compete, and rise in the rankings with IlmLiga.">
-  <meta property="og:image" content="/images/brand/og-image.png">
-  <meta property="og:type" content="website">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="IlmLiga">
-  <meta name="twitter:description" content="Learn, compete, and rise in the rankings with IlmLiga.">
-  <meta name="twitter:image" content="/images/brand/og-image.png">
-
-  <style>
-    :root {
-      --bg-main: #070b18;
-      --bg-card: #10172a;
-      --bg-input: #0b1322;
-      --bg-soft: #0e1526;
-      --border: #1e2a44;
-      --border-focus: #3b82f6;
-      --primary: #3b82f6;
-      --secondary: #8b5cf6;
-      --accent: #22d3ee;
-      --gold: #facc15;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
-      --error-bg: #3a1d22;
-      --error-text: #ff9a9a;
-      --error-border: #6e2a2a;
-      --success-bg: #14321f;
-      --success-text: #86efac;
-      --success-border: #2a6e44;
-      --radius: 16px;
-      --radius-sm: 10px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg-main);
-      color: var(--text-main);
-      min-height: 100vh;
-      min-height: 100dvh;
-      overflow-x: hidden;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      background-attachment: fixed;
-      background-image:
-        radial-gradient(circle at 12% 40%, rgba(59,130,246,0.14), transparent 38%),
-        radial-gradient(circle at 88% 25%, rgba(139,92,246,0.14), transparent 38%),
-        radial-gradient(circle at 50% 95%, rgba(34,211,238,0.06), transparent 45%);
-    }
-    .site-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 32px; position: relative; z-index: 5;
-    }
-    .logo { display: flex; align-items: center; gap: 12px; }
-    .logo-mark {
-      width: 40px; height: 40px; border-radius: 11px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 16px; color: #fff;
-      box-shadow: 0 4px 14px rgba(59,130,246,0.4);
-    }
-    .logo-mark.has-img { background: transparent; box-shadow: none; }
-    .logo-mark.has-img .logo-fallback { display: none; }
-    .logo-name { font-size: 19px; font-weight: 700; }
-    .header-right { display: flex; align-items: center; gap: 12px; }
-    .header-btn {
-      display: flex; align-items: center; gap: 7px; padding: 9px 14px;
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); color: var(--text-muted);
-      font-size: 14px; cursor: pointer; transition: border-color 0.15s, color 0.15s;
-    }
-    .header-btn:hover { border-color: var(--border-focus); color: var(--text-main); }
-    .header-btn svg { display: block; flex: 0 0 auto; }
-    .auth-layout {
-      flex: 1; display: flex; align-items: center;
-      padding: 20px 32px; gap: 32px; min-height: 0;
-    }
-    .brand-side {
-      flex: 1.1; display: flex; flex-direction: column; justify-content: center;
-      padding: 24px 24px 24px 60px; max-width: 680px;
-    }
-    .brand-title {
-      font-size: 60px; font-weight: 800; line-height: 1.05; letter-spacing: -1.5px;
-      margin-bottom: 14px;
-      background: linear-gradient(100deg, #ffffff 0%, #ffffff 30%, var(--primary) 70%, var(--secondary) 100%);
-      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .brand-slogan { font-size: 20px; color: var(--text-muted); margin-bottom: 20px; }
-    .brand-slogan b { color: var(--accent); font-weight: 700; }
-    .mascot {
-      height: 280px; border-radius: var(--radius);
-      background:
-        radial-gradient(circle at 30% 30%, rgba(59,130,246,0.2), transparent 55%),
-        radial-gradient(circle at 70% 70%, rgba(139,92,246,0.2), transparent 55%),
-        linear-gradient(135deg, #0a0f24, #0d1428);
-      border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      position: relative; overflow: hidden; margin-bottom: 14px;
-    }
-    .mascot-badge {
-      width: 130px; height: 130px; border-radius: 34px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 54px; font-weight: 800; color: #fff;
-      box-shadow: 0 10px 40px rgba(59,130,246,0.5);
-    }
-    .mascot-hint { position: absolute; bottom: 14px; font-size: 12px; color: var(--text-dim); }
-    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .feature-card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); padding: 13px;
-    }
-    .feature-icon { margin-bottom: 8px; color: var(--accent); }
-    .feature-icon svg { width: 26px; height: 26px; }
-    .feature-card h3 { font-size: 14px; margin-bottom: 5px; }
-    .feature-card p { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
-    .auth-side { flex: 1; display: flex; align-items: center; justify-content: center; }
-    .card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 28px 44px;
-      width: 100%; max-width: 620px; box-shadow: 0 24px 70px rgba(0,0,0,0.45);
-      max-height: calc(100dvh - 170px);
-      overflow-y: auto;
-    }
-    /* Karta ichidagi scroll chizig'ini chiroyli qilamiz */
-    .card::-webkit-scrollbar { width: 8px; }
-    .card::-webkit-scrollbar-track { background: transparent; }
-    .card::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
-    .card::-webkit-scrollbar-thumb:hover { background: var(--border-focus); }
-    .steps { display: flex; align-items: flex-start; justify-content: center; margin-bottom: 28px; }
-    .step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 auto; }
-    .step-dot {
-      width: 46px; height: 46px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      background: var(--bg-input); color: var(--text-muted);
-      font-weight: 700; font-size: 15px; border: 2px solid var(--border); transition: all 0.2s;
-    }
-    .step-label { font-size: 12px; color: var(--text-muted); }
-    .step.active .step-dot {
-      background: var(--primary); color: #fff; border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(59,130,246,0.18);
-    }
-    .step.active .step-label { color: var(--primary); font-weight: 600; }
-    .step.done .step-dot { background: #16794d; color: #fff; border-color: #16794d; }
-    .step-line { height: 2px; width: 64px; background: var(--border); margin: 22px 8px 0; flex: 0 0 auto; }
-    .step-line.filled { background: var(--primary); }
-    h2.card-title { font-size: 30px; text-align: center; margin-bottom: 8px; font-weight: 800; }
-    .subtitle { text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 26px; line-height: 1.5; }
-    label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 7px; margin-top: 16px; font-weight: 500; }
-    input, select {
-      width: 100%; padding: 14px; background: var(--bg-input);
-      border: 1px solid var(--border); border-radius: var(--radius-sm);
-      color: var(--text-main); font-size: 15px; transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    input::placeholder { color: var(--text-dim); }
-    input:focus, select:focus {
-      outline: none; border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
-    }
-    input.invalid, select.invalid { border-color: #e05a5a; }
-    .phone-input {
-      display: flex; align-items: stretch; background: var(--bg-input);
-      border: 1px solid var(--border); border-radius: var(--radius-sm);
-      overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .phone-input:focus-within { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
-    .phone-prefix {
-      display: flex; align-items: center; gap: 8px; padding: 0 14px;
-      background: var(--bg-soft); border-right: 1px solid var(--border);
-      font-size: 15px; font-weight: 600; white-space: nowrap;
-    }
-    .flag {
-      width: 24px; height: 17px; border-radius: 3px;
-      background: linear-gradient(180deg, #1eb53a 33%, #fff 33%, #fff 66%, #0099b5 66%);
-      display: inline-block;
-    }
-    .phone-country { position: relative; display: flex; }
-    .cc-trigger {
-      display: flex; align-items: center; gap: 7px;
-      background: var(--bg-soft); border: none; border-right: 1px solid var(--border);
-      padding: 0 12px; font-size: 15px; font-weight: 600; color: inherit; cursor: pointer; white-space: nowrap;
-    }
-    .cc-trigger .cc-caret { width: 13px; height: 13px; opacity: 0.55; transition: transform 0.15s; }
-    .phone-country.open .cc-caret { transform: rotate(180deg); }
-    .cc-menu {
-      position: absolute; top: calc(100% + 8px); left: 0; z-index: 60;
-      min-width: 220px; max-width: calc(100vw - 48px);
-      background: var(--bg-soft); border: 1px solid var(--border);
-      border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,0.45); padding: 6px; display: none;
-    }
-    .phone-country.open .cc-menu { display: block; }
-    .cc-item {
-      display: flex; align-items: center; gap: 11px; width: 100%;
-      background: transparent; border: none; border-radius: 9px; padding: 10px 11px;
-      font-size: 14px; font-weight: 600; color: inherit; cursor: pointer; text-align: left;
-    }
-    .cc-item:hover { background: rgba(255,255,255,0.06); }
-    .cc-item .cc-name { flex: 1; }
-    .cc-item .cc-dial { opacity: 0.6; }
-    .phone-input input { border: none; border-radius: 0; background: transparent; flex: 1; }
-    .phone-input input:focus { box-shadow: none; }
-    .btn {
-      width: 100%; padding: 15px; margin-top: 22px;
-      background: linear-gradient(95deg, var(--primary), var(--secondary));
-      border: none; border-radius: var(--radius-sm);
-      color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      box-shadow: 0 8px 24px rgba(59,130,246,0.32);
-      transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
-    }
-    .btn:hover { opacity: 0.94; box-shadow: 0 10px 30px rgba(59,130,246,0.4); }
-    .btn:active { transform: translateY(1px); }
-    .btn:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
-    .row { display: flex; gap: 12px; }
-    .row > * { flex: 1; }
-    .divider {
-      display: flex; align-items: center; gap: 12px; margin: 20px 0;
-      color: var(--text-dim); font-size: 13px;
-    }
-    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
-    .login-hint { text-align: center; color: var(--text-muted); font-size: 14px; }
-    .safety-banner {
-      display: flex; align-items: flex-start; gap: 12px; margin-top: 20px; padding: 14px;
-      background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm);
-    }
-    .safety-icon {
-      flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px;
-      background: var(--bg-input); display: flex; align-items: center; justify-content: center;
-      color: var(--accent);
-    }
-    .safety-icon svg { width: 19px; height: 19px; }
-    .safety-text { font-size: 13px; line-height: 1.45; }
-    .safety-text b { display: block; margin-bottom: 3px; color: var(--text-main); }
-    .safety-text span { color: var(--text-muted); }
-    .otp-boxes { display: flex; gap: 10px; justify-content: center; margin: 26px 0; }
-    .otp-boxes input {
-      width: 52px; height: 62px; text-align: center; font-size: 24px; font-weight: 700;
-      padding: 0; background: var(--bg-input); border: 1.5px solid var(--border); border-radius: 12px;
-    }
-    .otp-boxes input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
-    .resend-box {
-      width: 100%; padding: 13px; margin-top: 8px; background: var(--bg-soft);
-      border: 1px solid var(--border); border-radius: var(--radius-sm);
-      color: var(--text-muted); font-size: 14px; text-align: center;
-    }
-    .resend-box .link { color: var(--accent); }
-    .resend-box.disabled { opacity: 0.55; }
-    .back-link { text-align: center; margin-top: 16px; }
-    .role-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-      margin: 24px 0 8px;
-    }
-    .role-card {
-      position: relative; background: var(--bg-input); border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm); padding: 20px 14px; text-align: center; cursor: pointer;
-      transition: border-color 0.15s, background 0.15s, transform 0.1s;
-      display: flex; flex-direction: column; align-items: center;
-      min-height: 148px; justify-content: center;
-    }
-    .role-card:hover { border-color: var(--border-focus); background: var(--bg-soft); }
-    .role-card:active { transform: translateY(1px); }
-    .role-card.selected {
-      border-color: var(--primary); background: rgba(59,130,246,0.08);
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
-    }
-    /* "Tez orada" — tanlab bo'lmaydigan (disabled) kartalar */
-    .role-card.disabled {
-      cursor: not-allowed; opacity: 0.55;
-    }
-    .role-card.disabled:hover {
-      border-color: var(--border); background: var(--bg-input);
-    }
-    .role-card.disabled:active { transform: none; }
-    .role-icon {
-      width: 52px; height: 52px; margin: 0 auto 12px; border-radius: 14px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: flex; align-items: center; justify-content: center; color: #fff;
-      flex-shrink: 0;
-    }
-    .role-icon svg { width: 26px; height: 26px; }
-    .role-card h3 { font-size: 15px; margin-bottom: 4px; }
-    .role-card p { font-size: 12px; color: var(--text-muted); line-height: 1.35; }
-    .role-soon {
-      position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 600;
-      background: var(--bg-soft); color: var(--gold); padding: 3px 7px; border-radius: 999px;
-      border: 1px solid var(--border); white-space: nowrap; z-index: 2;
-    }
-    .phone-badge {
-      display: inline-flex; align-items: center; gap: 8px; margin: 0 auto 6px; padding: 9px 16px;
-      background: var(--bg-soft); border: 1px solid var(--border); border-radius: 999px; font-size: 14px;
-    }
-    .phone-badge .verified { color: #5ad17e; font-weight: 600; }
-    .badge-wrap { text-align: center; }
-    .terms-note { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 14px; line-height: 1.5; }
-    .terms-note a { color: var(--accent); text-decoration: none; }
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(3, 6, 15, 0.65); backdrop-filter: blur(3px);
-      display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
-    }
-    .modal-overlay.show { display: flex; }
-    .modal-box {
-      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 28px; width: 100%; max-width: 380px; text-align: center;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.6); transform: scale(0.95); animation: modalPop 0.18s ease forwards;
-    }
-    @keyframes modalPop { to { transform: scale(1); } }
-    .modal-icon {
-      width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 16px;
-      display: flex; align-items: center; justify-content: center; font-size: 28px;
-    }
-    .modal-icon.error { background: rgba(239,68,68,0.15); }
-    .modal-icon.success { background: rgba(34,197,94,0.15); }
-    .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-    .modal-text { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 22px; }
-    .modal-btn {
-      width: 100%; padding: 13px; background: linear-gradient(95deg, var(--primary), var(--secondary));
-      border: none; border-radius: var(--radius-sm); color: #fff; font-size: 15px; font-weight: 700;
-      cursor: pointer; transition: opacity 0.15s;
-    }
-    .modal-btn:hover { opacity: 0.92; }
-    .link { color: var(--accent); cursor: pointer; text-decoration: none; }
-    .link:hover { text-decoration: underline; }
-    .center { text-align: center; }
-    .muted { color: var(--text-muted); font-size: 14px; }
-    .mt { margin-top: 16px; }
-    .stage { display: none; }
-    .stage.active { display: block; }
-    .site-footer {
-      display: flex; align-items: center; justify-content: space-between; padding: 14px 32px;
-      border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted);
-      flex-wrap: wrap; gap: 12px;
-    }
-    .footer-links { display: flex; gap: 20px; }
-    .footer-links a { color: var(--text-muted); text-decoration: none; }
-    .footer-links a:hover { color: var(--text-main); }
-    .footer-social { display: flex; gap: 10px; }
-    .footer-social span svg { display: block; }
-    .footer-social span:hover { color: var(--accent); border-color: var(--border-focus); }
-    .footer-social span {
-      width: 34px; height: 34px; border-radius: 9px; background: var(--bg-card);
-      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: var(--text-muted); transition: color 0.15s, border-color 0.15s;
-    }
-    @media (max-width: 980px) {
-      .auth-layout {
-        flex-direction: column;
-        padding: 0 16px 24px;
-        align-items: stretch;   /* karta to'liq kenglik oladi */
-      }
-      .brand-side { flex: none; max-width: 100%; text-align: center; padding: 16px 8px; }
-      .brand-title { font-size: 38px; }
-      .mascot { height: 200px; }
-      .features { grid-template-columns: 1fr; }
-      .auth-side { flex: none; width: 100%; }
-      /* MUHIM: mobilda karta ichida alohida scroll YO'Q — butun sahifa scroll bo'ladi */
-      .card {
-        padding: 28px 20px;
-        max-height: none;       /* balandlik chegarasi olib tashlandi */
-        overflow-y: visible;    /* ichki scroll o'chirildi */
-      }
-    }
-    @media (max-width: 520px) {
-      .site-header { padding: 14px 16px; }
-      .logo-name { font-size: 17px; }
-      .footer-links { gap: 14px; }
-      .otp-boxes input { width: 44px; height: 54px; font-size: 20px; }
-      .step-line { width: 28px; }
-      .features { display: none; }
-      /* --- ROL GRID mobil sozlamasi --- */
-      .role-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .role-card { min-height: 132px; padding: 16px 10px; }
-      .role-icon { width: 46px; height: 46px; margin-bottom: 10px; }
-      .role-icon svg { width: 23px; height: 23px; }
-      .role-card h3 { font-size: 14px; }
-      .role-card p { font-size: 11px; }
-      .role-soon { font-size: 9px; padding: 2px 6px; top: 6px; right: 6px; }
-    }
-
-    /* ====== "Kod kerak" belgisi (role-soon o'rniga) ====== */
-    .role-code-badge {
-      position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 600;
-      background: rgba(59,130,246,0.15); color: var(--primary);
-      padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(59,130,246,0.3);
-      white-space: nowrap; z-index: 2;
-    }
-
-    /* ====== Maktab kodi bosqichi ====== */
-    .sc-head { text-align: center; margin-bottom: 4px; }
-    .sc-icon {
-      width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 20px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: flex; align-items: center; justify-content: center; color: #fff;
-      box-shadow: 0 10px 30px rgba(59,130,246,0.4);
-    }
-    .sc-icon svg { width: 30px; height: 30px; }
-    .sc-code-input {
-      text-transform: uppercase; letter-spacing: 4px; text-align: center;
-      font-size: 22px; font-weight: 700; font-family: 'Courier New', monospace;
-    }
-    .sc-code-input::placeholder {
-      letter-spacing: 3px; font-weight: 400; color: var(--text-dim);
-    }
-    .sc-msg { font-size: 13px; margin-top: 10px; min-height: 18px; text-align: center; }
-    .sc-msg.error { color: var(--red, #f87171); }
-    .sc-msg.success { color: #5ad17e; font-weight: 600; }
-    .sc-info {
-      display: flex; align-items: center; gap: 12px;
-      margin-top: 16px; padding: 14px 16px;
-      background: rgba(52,211,153,0.08);
-      border: 1px solid rgba(52,211,153,0.3); border-radius: var(--radius-sm);
-    }
-    .sc-info-ic { width: 26px; height: 26px; color: #5ad17e; flex-shrink: 0; }
-    .sc-info-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .sc-info-value { font-size: 15px; font-weight: 600; color: var(--text-main); margin-top: 2px; }
-    #schoolCodeNextBtn { width: 100%; margin-top: 20px; justify-content: center; }
-
-  </style>
+  <link rel="stylesheet" href="/vendor/flag-icons/css/flag-icons.min.css">
+  <link rel="stylesheet" href="/auth.css">
 </head>
-<body>
-  <header class="site-header">
-    <div class="logo">
-      <div class="logo-mark has-img" id="logoMark" style="position:relative;"><span class="logo-fallback" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">IL</span><img src="/images/brand/logo-icon.png" alt="IlmLiga" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" onerror="this.closest('.logo-mark').classList.remove('has-img');this.remove();"></div>
-      <div class="logo-name" id="logoName">IlmLiga</div>
-    </div>
-    <div class="header-right">
-      <button class="header-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Uz <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg></button>
-      <button class="header-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Yordam</button>
-    </div>
-  </header>
-  <div class="auth-layout">
-    <div class="brand-side">
-      <div class="brand-title" id="brandName">IlmLiga</div>
-      <div class="brand-slogan" id="brandSlogan">Learn. Compete. Rise.</div>
-      <div class="mascot">
-        <img src="/images/brand/mascot.png" alt="IlmLiga mascot" class="mascot-badge" id="mascotBadge" style="width:auto;height:180px;object-fit:contain;background:transparent;box-shadow:none;" onerror="this.outerHTML='<div class=&quot;mascot-badge&quot;>IL</div>'">
-        <div class="mascot-hint">Learn. Compete. Rise.</div>
+<body class="auth-page">
+  <div class="auth-art" aria-hidden="true"><div class="auth-stars"></div><div class="auth-grid"></div></div>
+
+  <main class="auth-shell" id="registerShell">
+    <header class="auth-topbar">
+      <a class="mini-brand" href="/" aria-label="IlmLiga bosh sahifasi">
+        <span data-logo></span><span>Ilm<span class="brand-accent">Liga</span></span>
+      </a>
+      <div class="language-switch">
+        <button type="button" class="language-button" data-language-toggle aria-label="Tilni almashtirish"><span data-language-current><span class="fi fi-uz auth-flag auth-flag--current" aria-hidden="true"></span><span>UZ</span></span><span data-icon="chevron-down" data-icon-class="control-chevron"></span></button>
+        <div class="language-menu" data-language-menu></div>
       </div>
-      <div class="features">
-        <div class="feature-card">
-          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/></svg></div>
-          <h3>Real-time battles</h3>
-          <p>Dunyo bo'ylab o'quvchilar bilan real vaqtda bellashing.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-          <h3>Secure signup</h3>
-          <p>Ma'lumotlaringiz xavfsiz va maxfiy saqlanadi.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></div>
-          <h3>School rankings</h3>
-          <p>Maktabingiz uchun ochko yig'ing va reytingda yuqoriga ko'taring.</p>
-        </div>
+    </header>
+
+    <div class="progress" aria-label="Ro‘yxatdan o‘tish bosqichlari">
+      <div class="progress-step active" data-progress-step="phone"><span class="progress-dot">1</span><span data-i18n="register.stepPhone">Telefon</span></div>
+      <span class="progress-line" data-progress-line="otp"></span>
+      <div class="progress-step" data-progress-step="otp"><span class="progress-dot">2</span><span data-i18n="register.stepOtp">Tasdiqlash</span></div>
+      <span class="progress-line" data-progress-line="role"></span>
+      <div class="progress-step" data-progress-step="role"><span class="progress-dot">3</span><span data-i18n="register.stepRole">Rol</span></div>
+      <span class="progress-line" data-progress-line="profile"></span>
+      <div class="progress-step" data-progress-step="profile"><span class="progress-dot">4</span><span data-i18n="register.stepProfile">Profil</span></div>
+    </div>
+
+    <section class="auth-screen active" id="register-phone" aria-labelledby="phoneTitle">
+      <div class="auth-card">
+        <button type="button" class="back-button" id="phoneBack"><span data-icon="arrow-left"></span><span data-i18n="common.back">Orqaga</span></button>
+        <p class="compact-brand">Ilm<span class="brand-accent">Liga</span></p>
+        <h1 class="auth-title auth-title--with-icon" id="phoneTitle"><span data-i18n="register.phoneTitle">Xush kelibsiz!</span><span class="title-icon title-icon--sparkles" data-icon="sparkles"></span></h1>
+        <p class="auth-subtitle" data-i18n="register.phoneSubtitle">Davom etish uchun telefon raqamingizni kiriting</p>
+        <form class="auth-form" id="phoneForm" novalidate>
+          <div class="field">
+            <label for="registerPhone" data-i18n="register.phoneLabel">Telefon raqami</label>
+            <div class="phone-control">
+              <button type="button" class="country-trigger" id="registerCountryButton"><span class="fi fi-uz auth-flag" aria-hidden="true"></span><span>+998</span><span data-icon="chevron-down" data-icon-class="control-chevron"></span></button>
+              <input class="phone-number" id="registerPhone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="90 123 45 67">
+            </div>
+          </div>
+          <button type="submit" class="primary-button" id="phoneSubmit" disabled data-i18n="register.sendCode">Kodni yuborish</button>
+        </form>
+        <p class="privacy-hint" data-i18n="register.phoneHint">Kod SMS orqali yuboriladi va faqat siz ko‘rasiz</p>
+        <p class="auth-footer-copy"><span data-i18n="register.haveAccount">Allaqachon hisobingiz bormi?</span> <a class="inline-link" href="/?screen=login" data-i18n="welcome.login">Kirish</a></p>
       </div>
-    </div>
-    <div class="auth-side">
-      <div class="card">
-        <div class="stage active" id="stage0">
-          <h2 class="card-title">Kim sifatida qo'shilasiz?</h2>
-          <p class="subtitle">Hisob turini tanlang. Bu sizning imkoniyatlaringizni belgilaydi.</p>
-          <div class="role-grid">
-            <div class="role-card" data-role="student" onclick="selectRole(this)">
-              <div class="role-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-              <h3>O'quvchi</h3>
-              <p>Bellash, imtihon top va reyting yig'</p>
-            </div>
-            <div class="role-card" data-role="teacher" onclick="selectRole(this)">
-              <div class="role-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
-              <h3>O'qituvchi</h3>
-              <p>Sinflar yarat, natijalarni kuzat</p>
-            </div>
-            <div class="role-card" data-role="parent" onclick="selectRole(this)">
-              <div class="role-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-              <h3>Ota-ona</h3>
-              <p>Farzandingiz natijasini kuzating</p>
-            </div>
-            <div class="role-card" data-role="school_admin" onclick="selectRole(this)">
-              <span class="role-code-badge">Kod kerak</span>
-              <div class="role-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/><path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/></svg></div>
-              <h3>Maktab admini</h3>
-              <p>Maktab statistikasini boshqaring</p>
-            </div>
-          </div>
-          <button class="btn" id="roleNextBtn" onclick="roleNext()" disabled>Davom etish</button>
-          <div class="divider">yoki</div>
-          <p class="login-hint">Allaqachon hisobingiz bormi? <a class="link" href="/index.html">Kirish</a></p>
-        </div>
-        <div class="steps" id="progressSteps" style="display:none;">
-          <div class="step active" id="step1">
-            <div class="step-dot" id="dot1">1</div>
-            <div class="step-label">Telefon</div>
-          </div>
-          <div class="step-line" id="line1"></div>
-          <div class="step" id="step2">
-            <div class="step-dot" id="dot2">2</div>
-            <div class="step-label">Tasdiqlash</div>
-          </div>
-          <div class="step-line" id="line2"></div>
-          <div class="step" id="step3">
-            <div class="step-dot" id="dot3">3</div>
-            <div class="step-label">Profil</div>
-          </div>
-        </div>
+    </section>
 
-        <!-- ====== MAKTAB TAKLIF KODI BOSQICHI (faqat school_admin) ====== -->
-        <div class="stage" id="stageSchoolCode">
-          <div class="sc-head">
-            <div class="sc-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/><path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/></svg>
-            </div>
-            <h2 class="card-title">Maktab taklif kodi</h2>
-            <p class="subtitle">Maktab admini bo'lish uchun sizga berilgan kodni kiriting. Kodni maktab yoki platforma administratori beradi.</p>
+    <section class="auth-screen" id="register-otp" aria-labelledby="otpTitle">
+      <div class="auth-card">
+        <button type="button" class="back-button" id="otpBack"><span data-icon="arrow-left"></span><span data-i18n="common.back">Orqaga</span></button>
+        <p class="compact-brand">Ilm<span class="brand-accent">Liga</span></p>
+        <h1 class="auth-title" id="otpTitle" data-i18n="register.otpTitle">Tasdiqlash kodi</h1>
+        <p class="auth-subtitle"><span class="otp-phone" id="otpPhoneText"></span> — <span data-i18n="register.otpSubtitle">raqamiga yuborilgan 6 xonali kodni kiriting</span></p>
+        <form class="auth-form" id="otpForm" novalidate>
+          <div class="otp-row" id="registerOtp" aria-label="Tasdiqlash kodi">
+            <input class="otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="1-raqam"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="2-raqam"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="3-raqam"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="4-raqam"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="5-raqam"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="6-raqam">
           </div>
-
-          <label>Taklif kodi</label>
-          <input type="text" id="schoolCodeInput" class="sc-code-input"
-                 placeholder="XXXX-XXXX-XX" maxlength="14" autocomplete="off">
-          <div id="schoolCodeMsg" class="sc-msg"></div>
-
-          <!-- Kod to'g'ri bo'lsa maktab ma'lumoti chiqadi -->
-          <div id="schoolInfoBox" class="sc-info" style="display:none;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sc-info-ic"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            <div>
-              <div class="sc-info-label">Maktab</div>
-              <div class="sc-info-value" id="siSchoolName"></div>
-            </div>
-          </div>
-
-          <button class="btn" id="schoolCodeNextBtn" onclick="verifySchoolCode()" disabled>Kodni tekshirish</button>
-          <div class="back-link"><a class="link" onclick="backToRole()">← Rolni o'zgartirish</a></div>
-        </div>
-
-        <div class="stage" id="stage1">
-          <h2 class="card-title">Ro'yxatdan o'tish</h2>
-          <p class="subtitle">Telefon raqamingizni kiriting. Tasdiqlash kodi yuboriladi.</p>
-          <label>Telefon raqami</label>
-          <div class="phone-input">
-            <div class="phone-country" id="countrySelect">
-              <button type="button" class="cc-trigger" onclick="toggleCountryMenu(event)">
-                <span class="flag"></span> <span id="ccDial">+998</span>
-                <svg class="cc-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </button>
-              <div class="cc-menu" id="ccMenu">
-                <button type="button" class="cc-item" onclick="selectCountry('UZ')"><span class="flag"></span> <span class="cc-name">O'zbekiston</span> <span class="cc-dial">+998</span></button>
-              </div>
-            </div>
-            <input type="tel" id="phone" inputmode="numeric" autocomplete="tel-national" placeholder="90 123 45 67" oninput="onPhoneInput(event)" />
-          </div>
-          <button class="btn" id="sendBtn" onclick="sendCode()">Kod yuborish ✈</button>
-          <div class="back-link">
-            <a class="link" onclick="backToRole()">← Rolni o'zgartirish</a>
-          </div>
-          <div class="divider">yoki</div>
-          <p class="login-hint">Allaqachon hisobingiz bormi? <a class="link" href="/index.html">Kirish</a></p>
-          <div class="safety-banner">
-            <div class="safety-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-            <div class="safety-text">
-              <b>Telefon raqamingiz xavfsiz saqlanadi</b>
-              <span>Biz spam yubormaymiz va raqamingizni uchinchi shaxslarga bermaymiz.</span>
-            </div>
-          </div>
-        </div>
-        <div class="stage" id="stage2">
-          <h2 class="card-title">Tasdiqlash kodi</h2>
-          <p class="subtitle"><span id="phoneDisplay"></span> raqamiga yuborilgan 6 xonali kodni kiriting.</p>
-          <div class="otp-boxes">
-            <input type="text" maxlength="1" inputmode="numeric" class="otp" />
-            <input type="text" maxlength="1" inputmode="numeric" class="otp" />
-            <input type="text" maxlength="1" inputmode="numeric" class="otp" />
-            <input type="text" maxlength="1" inputmode="numeric" class="otp" />
-            <input type="text" maxlength="1" inputmode="numeric" class="otp" />
-            <input type="text" maxlength="1" inputmode="numeric" class="otp" />
-          </div>
-          <button class="btn" id="verifyBtn" onclick="verifyCode()">Tasdiqlash</button>
-          <div class="resend-box" id="resendBox">
-            Kod kelmadimi?
-            <a class="link" id="resendLink" onclick="resendCode()">Qayta yuborish</a>
-            <span id="resendTimer" class="muted"></span>
-          </div>
-          <div class="back-link">
-            <a class="link" onclick="goToStage(1)">← Telefonni o'zgartirish</a>
-          </div>
-        </div>
-        <div class="stage" id="stage3">
-          <h2 class="card-title">Profil ma'lumotlari</h2>
-          <p class="subtitle">Akkauntingizni yaratish uchun ma'lumotlarni to'ldiring.</p>
-          <div class="badge-wrap">
-            <div class="phone-badge">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="vertical-align:middle"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> <span id="phoneConfirmed"></span> <span class="verified">✓ Tasdiqlangan</span>
-            </div>
-          </div>
-          <div class="row">
-            <div>
-              <label>Ism</label>
-              <input type="text" id="firstName" placeholder="Ismingiz" />
-            </div>
-            <div>
-              <label>Familiya</label>
-              <input type="text" id="lastName" placeholder="Familiyangiz" />
-            </div>
-          </div>
-          <div id="studentFields">
-            <label>Tug'ilgan sana</label>
-            <div class="row">
-              <select id="bDay"><option value="">Kun</option></select>
-              <select id="bMonth"><option value="">Oy</option></select>
-              <select id="bYear"><option value="">Yil</option></select>
-            </div>
-            <label>Viloyat</label>
-            <select id="region" onchange="loadDistricts()"><option value="">Viloyatni tanlang</option></select>
-            <label>Tuman</label>
-            <select id="district"><option value="">Avval viloyatni tanlang</option></select>
-            <label>Maktab</label>
-            <select id="school" onchange="toggleCustomSchool()">
-              <option value="">Maktabni tanlang</option>
-            </select>
-            <div id="customSchoolBox" style="display:none;">
-              <label>Xususiy maktab nomi</label>
-              <input type="text" id="customSchool" placeholder="Maktab to'liq nomini yozing" />
-              <p class="terms-note" style="text-align:left; margin-top:8px;">
-                Bu maktab adminga tekshirish uchun yuboriladi.
-              </p>
-            </div>
-          </div>
-          <label>Parol</label>
-          <input type="password" id="password" placeholder="Parol yarating" />
-          <button class="btn" id="registerBtn" onclick="doRegister()">Ro'yxatdan o'tish ✈</button>
-          <p class="terms-note">
-            Ro'yxatdan o'tish orqali siz <a href="#">Maxfiylik siyosati</a> va
-            <a href="#">Foydalanish shartlariga</a> rozilik bildirgan bo'lasiz.
-          </p>
-        </div>
+          <button type="submit" class="primary-button" id="otpSubmit" disabled data-i18n="register.verify">Tasdiqlash</button>
+        </form>
+        <div class="resend-row"><button type="button" class="text-link" id="resendButton" disabled><span data-i18n="register.resend">Kodni qayta yuborish</span> <span id="resendTimer">(60s)</span></button></div>
       </div>
-    </div>
-  </div>
-  <footer class="site-footer">
-    <div id="copyright">© 2025 IlmLiga. Barcha huquqlar himoyalangan.</div>
-    <div class="footer-links">
-      <a href="#">Maxfiylik siyosati</a>
-      <a href="#">Foydalanish shartlari</a>
-    </div>
-    <div class="footer-social">
-      <span title="Telegram"><svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M21.94 4.66a1.5 1.5 0 0 0-1.56-.22L3.4 11.67c-1.18.5-1.13 2.2.08 2.62l4.3 1.48 1.62 5.05a1 1 0 0 0 1.64.4l2.32-2.18 4.3 3.16a1.5 1.5 0 0 0 2.36-.93l3-15a1.5 1.5 0 0 0-.58-1.6zM9.7 14.4l8.3-5.1-6.5 6a1 1 0 0 0-.3.6l-.3 2.2-1.2-3.7z"/></svg></span>
-      <span title="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></span>
-      <span title="YouTube"><svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M23 9.71a8.5 8.5 0 0 0-.91-4.13 2.92 2.92 0 0 0-1.72-1A78.36 78.36 0 0 0 12 4.27a78.45 78.45 0 0 0-8.34.3 2.87 2.87 0 0 0-1.46.74c-.9.83-1 2.25-1.1 3.45a48.29 48.29 0 0 0 0 6.48 9.55 9.55 0 0 0 .3 2 3.14 3.14 0 0 0 .71 1.36 2.86 2.86 0 0 0 1.49.78 45.18 45.18 0 0 0 6.5.33c3.5.05 6.57 0 10.2-.28a2.88 2.88 0 0 0 1.53-.78 2.49 2.49 0 0 0 .61-1 10.58 10.58 0 0 0 .52-3.4c.04-.56.04-3.94.04-4.94zM9.74 14.85V8.66l5.92 3.11c-1.66.92-3.85 1.96-5.92 3.08z"/></svg></span>
-    </div>
-  </footer>
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal-box">
-      <div class="modal-icon error" id="modalIcon">⚠️</div>
-      <div class="modal-title" id="modalTitle">Xatolik</div>
-      <div class="modal-text" id="modalText"></div>
-      <button class="modal-btn" onclick="closeModal()">Tushunarli</button>
-    </div>
-  </div>
-  <script src="/api.js"></script>
-  <script>
-    const BRAND = {
-      brandName: "IlmLiga",
-      brandSlogan: "Learn. Compete. Rise.",
-      logoText: "IL",
-      logoPath: "/images/brand/logo.png",
-      mascotPath: "/images/brand/mascot.png"
-    };
-    document.getElementById("brandName").textContent = BRAND.brandName;
-    document.getElementById("brandSlogan").innerHTML = BRAND.brandSlogan;
-    document.getElementById("logoName").textContent = BRAND.brandName;
-    // logoMark endi rasm (logo-icon.png) — matn fallback onerror da
-    // mascotBadge endi rasm (mascot.png)
-    document.getElementById("copyright").textContent = "© 2025 " + BRAND.brandName + ". Barcha huquqlar himoyalangan.";
+    </section>
 
-    function showModal(text, type) {
-      const overlay = document.getElementById("modalOverlay");
-      const icon = document.getElementById("modalIcon");
-      const title = document.getElementById("modalTitle");
-      const textEl = document.getElementById("modalText");
-      if (type === "success") {
-        icon.className = "modal-icon success"; icon.textContent = "✓"; title.textContent = "Muvaffaqiyatli";
-      } else {
-        icon.className = "modal-icon error"; icon.textContent = "⚠️"; title.textContent = "Xatolik";
-      }
-      textEl.textContent = text;
-      overlay.classList.add("show");
-    }
-    function closeModal() { document.getElementById("modalOverlay").classList.remove("show"); }
-    document.getElementById("modalOverlay").addEventListener("click", (e) => {
-      if (e.target.id === "modalOverlay") closeModal();
-    });
+    <section class="auth-screen" id="register-role" aria-labelledby="roleTitle">
+      <div class="auth-card role-card-shell">
+        <button type="button" class="back-button" id="roleBack"><span data-icon="arrow-left"></span><span data-i18n="common.back">Orqaga</span></button>
+        <div class="role-heading-icon" aria-hidden="true"><span data-icon="users"></span></div>
+        <h1 class="auth-title" id="roleTitle" data-i18n="register.roleTitle">IlmLiga’dan qanday foydalanasiz?</h1>
+        <p class="auth-subtitle" data-i18n="register.roleSubtitle">Sizga mos imkoniyatlarni tayyorlashimiz uchun hisob turini tanlang</p>
 
-    let verifiedPhone = "";
-    let verifiedCode = "";
-    let selectedRole = "";
-    let resendInterval = null;
+        <div class="role-choice-grid" id="roleChoices" role="radiogroup" aria-labelledby="roleTitle">
+          <button type="button" class="role-choice" data-role-choice="student" role="radio" aria-checked="false">
+            <span class="role-choice-icon student"><span data-icon="graduation-cap"></span></span>
+            <span class="role-choice-copy"><strong data-i18n="register.roleStudent">O‘quvchi</strong><small data-i18n="register.roleStudentText">Ingliz tilini o‘rganaman, topshiriq bajaraman va reytingda qatnashaman</small><span class="role-feature" data-i18n="register.roleStudentFeature">Battle • Practice • Sinflar</span></span>
+            <span class="role-radio"><span></span></span>
+          </button>
+          <button type="button" class="role-choice" data-role-choice="teacher" role="radio" aria-checked="false">
+            <span class="role-choice-icon teacher"><span data-icon="presentation"></span></span>
+            <span class="role-choice-copy"><strong data-i18n="register.roleTeacher">O‘qituvchi</strong><small data-i18n="register.roleTeacherText">Sinflar yarataman, topshiriq beraman va o‘quvchilar natijasini kuzataman</small><span class="role-feature" data-i18n="register.roleTeacherFeature">Sinf • Davomat • Hisobot</span></span>
+            <span class="role-radio"><span></span></span>
+          </button>
+          <button type="button" class="role-choice" data-role-choice="parent" role="radio" aria-checked="false">
+            <span class="role-choice-icon parent"><span data-icon="heart-handshake"></span></span>
+            <span class="role-choice-copy"><strong data-i18n="register.roleParent">Ota-ona</strong><small data-i18n="register.roleParentText">Farzandimning o‘qishi, faolligi va natijalarini xavfsiz kuzataman</small><span class="role-feature" data-i18n="register.roleParentFeature">Farzand • Progress • AI hisobot</span></span>
+            <span class="role-radio"><span></span></span>
+          </button>
+        </div>
 
-    const REGIONS = {
-      "Toshkent shahri": ["Bektemir", "Chilonzor", "Mirobod", "Mirzo Ulug'bek", "Sergeli", "Shayxontohur", "Olmazor", "Uchtepa", "Yakkasaroy", "Yashnobod", "Yunusobod"],
-      "Toshkent viloyati": ["Angren", "Bekobod", "Chirchiq", "Ohangaron", "Olmaliq", "Yangiyo'l", "Bo'ka", "Qibray", "Zangiota"],
-      "Andijon": ["Andijon shahri", "Asaka", "Baliqchi", "Bo'ston", "Buloqboshi", "Izboskan", "Jalaquduq", "Marhamat", "Oltinko'l", "Paxtaobod", "Shahrixon", "Xo'jaobod"],
-      "Buxoro": ["Buxoro shahri", "G'ijduvon", "Kogon", "Olot", "Peshku", "Qorako'l", "Romitan", "Shofirkon", "Vobkent"],
-      "Farg'ona": ["Farg'ona shahri", "Beshariq", "Bog'dod", "Buvayda", "Dang'ara", "Furqat", "Quva", "Marg'ilon", "Qo'qon", "Rishton", "So'x", "Toshloq", "Uchko'prik", "O'zbekiston", "Yozyovon"],
-      "Jizzax": ["Jizzax shahri", "Arnasoy", "Baxmal", "Do'stlik", "Forish", "G'allaorol", "Mirzacho'l", "Paxtakor", "Yangiobod", "Zafarobod", "Zarbdor", "Zomin"],
-      "Xorazm": ["Urganch", "Bog'ot", "Gurlan", "Hazorasp", "Xonqa", "Xiva", "Qo'shko'pir", "Shovot", "Yangiariq", "Yangibozor"],
-      "Namangan": ["Namangan shahri", "Chortoq", "Chust", "Kosonsoy", "Mingbuloq", "Norin", "Pop", "To'raqo'rg'on", "Uchqo'rg'on", "Uychi", "Yangiqo'rg'on"],
-      "Navoiy": ["Navoiy shahri", "Karmana", "Konimex", "Navbahor", "Nurota", "Qiziltepa", "Tomdi", "Uchquduq", "Xatirchi", "Zarafshon"],
-      "Qashqadaryo": ["Qarshi", "Chiroqchi", "Dehqonobod", "G'uzor", "Kasbi", "Kitob", "Koson", "Mirishkor", "Muborak", "Nishon", "Qamashi", "Shahrisabz", "Yakkabog'"],
-      "Qoraqalpog'iston": ["Nukus", "Amudaryo", "Beruniy", "Chimboy", "Ellikqal'a", "Kegeyli", "Mo'ynoq", "Nukus tumani", "Qanliko'l", "Qo'ng'irot", "Qorao'zak", "Shumanay", "Taxtako'pir", "To'rtko'l", "Xo'jayli"],
-      "Samarqand": ["Samarqand shahri", "Bulung'ur", "Ishtixon", "Jomboy", "Kattaqo'rg'on", "Narpay", "Nurobod", "Oqdaryo", "Past darg'om", "Paxtachi", "Payariq", "Qo'shrabot", "Toyloq", "Urgut"],
-      "Sirdaryo": ["Guliston", "Boyovut", "Mirzaobod", "Oqoltin", "Sardoba", "Sayxunobod", "Sirdaryo tumani", "Xovos", "Yangiyer"],
-      "Surxondaryo": ["Termiz", "Angor", "Bandixon", "Boysun", "Denov", "Jarqo'rg'on", "Muzrabot", "Oltinsoy", "Qiziriq", "Qumqo'rg'on", "Sariosiyo", "Sherobod", "Sho'rchi", "Termiz tumani", "Uzun"]
-    };
+        <div class="role-security-note"><span data-icon="shield-check"></span><span data-i18n="register.roleSecurity">Rol keyinchalik faqat administrator tasdig‘i bilan o‘zgartiriladi.</span></div>
+        <button type="button" class="primary-button" id="roleContinue" disabled data-i18n="language.continue">Davom etish</button>
+      </div>
+    </section>
 
-    (function fillDropdowns() {
-      const regionSel = document.getElementById("region");
-      Object.keys(REGIONS).forEach(r => {
-        const o = document.createElement("option"); o.value = r; o.textContent = r; regionSel.appendChild(o);
-      });
-      const daySel = document.getElementById("bDay");
-      for (let d = 1; d <= 31; d++) {
-        const o = document.createElement("option"); o.value = d; o.textContent = d; daySel.appendChild(o);
-      }
-      const months = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
-      const monthSel = document.getElementById("bMonth");
-      months.forEach((m, i) => {
-        const o = document.createElement("option"); o.value = i + 1; o.textContent = m; monthSel.appendChild(o);
-      });
-      const yearSel = document.getElementById("bYear");
-      const cy = new Date().getFullYear();
-      for (let y = cy - 5; y >= cy - 70; y--) {
-        const o = document.createElement("option"); o.value = y; o.textContent = y; yearSel.appendChild(o);
-      }
+    <section class="auth-screen" id="register-profile" aria-labelledby="profileTitle">
+      <div class="auth-card profile-card">
+        <button type="button" class="back-button" id="profileBack"><span data-icon="arrow-left"></span><span data-i18n="common.back">Orqaga</span></button>
+        <div class="selected-role-banner" id="selectedRoleBanner"><span class="selected-role-icon" id="selectedRoleIcon"></span><span><small data-i18n="register.selectedRole">Tanlangan hisob turi</small><strong id="selectedRoleName">O‘quvchi</strong></span><button type="button" id="changeRoleButton" data-i18n="register.changeRole">O‘zgartirish</button></div>
+        <h1 class="auth-title" id="profileTitle" data-i18n="register.profileTitle">Profil ma’lumotlari</h1>
+        <p class="auth-subtitle" id="profileSubtitle" data-i18n="register.profileSubtitle">Hisobingizni yakunlash uchun ma’lumotlarni kiriting</p>
+        <form class="auth-form" id="profileForm" novalidate>
+          <div class="field-row">
+            <div class="field"><label for="firstName" data-i18n="register.firstName">Ism</label><input class="text-input" id="firstName" type="text" autocomplete="given-name" maxlength="100" data-i18n-placeholder="register.firstNamePlaceholder" placeholder="Ismingiz"></div>
+            <div class="field"><label for="lastName" data-i18n="register.lastName">Familiya</label><input class="text-input" id="lastName" type="text" autocomplete="family-name" maxlength="100" data-i18n-placeholder="register.lastNamePlaceholder" placeholder="Familiyangiz"></div>
+          </div>
 
-      // Maktab raqamlari (1-350) + Boshqa
-      const schoolSel = document.getElementById("school");
-      for (let s = 1; s <= 350; s++) {
-        const o = document.createElement("option");
-        o.value = s + "-maktab";
-        o.textContent = s + "-maktab";
-        schoolSel.appendChild(o);
-      }
-      const otherOpt = document.createElement("option");
-      otherOpt.value = "__other__";
-      otherOpt.textContent = "Boshqa / Xususiy maktab";
-      schoolSel.appendChild(otherOpt);
-    })();
+          <div class="field-row">
+            <div class="field">
+              <label for="profilePassword" data-i18n="register.password">Parol</label>
+              <div class="password-control"><input class="text-input" id="profilePassword" type="password" autocomplete="new-password" maxlength="128" data-i18n-placeholder="register.passwordPlaceholder" placeholder="Kamida 8 belgi, harf va raqam"><button type="button" class="password-toggle" data-password-toggle="profilePassword" aria-label="Show password"><span data-icon="eye"></span></button></div>
+              <div class="strength-bars" id="profileStrengthBars" data-strength="empty"><span></span><span></span><span></span></div>
+              <p class="field-hint" id="profileStrength"></p>
+            </div>
+            <div class="field">
+              <label for="confirmPassword" data-i18n="register.confirm">Parolni tasdiqlang</label>
+              <div class="password-control"><input class="text-input" id="confirmPassword" type="password" autocomplete="new-password" maxlength="128" data-i18n-placeholder="register.confirmPlaceholder" placeholder="Parolni qayta kiriting"><button type="button" class="password-toggle" data-password-toggle="confirmPassword" aria-label="Show password"><span data-icon="eye"></span></button></div>
+              <p class="field-hint" id="passwordMatch"></p>
+            </div>
+          </div>
 
-    // "Boshqa" tanlanganda matn maydonini ko'rsatish/yashirish
-    function toggleCustomSchool() {
-      const sel = document.getElementById("school").value;
-      const box = document.getElementById("customSchoolBox");
-      box.style.display = (sel === "__other__") ? "block" : "none";
-    }
+          <div id="profileLocationFields">
+            <div class="field-row">
+              <div class="field"><label for="regionSelect" data-i18n="register.region">Viloyat</label><div class="select-control"><select class="select-input" id="regionSelect"><option value="" data-i18n="register.regionPlaceholder">Viloyatni tanlang</option></select><span class="select-chevron" data-icon="chevron-down" aria-hidden="true"></span></div></div>
+              <div class="field"><label for="districtSelect" data-i18n="register.district">Tuman yoki shahar</label><div class="select-control"><select class="select-input" id="districtSelect" disabled><option value="" data-i18n="register.districtFirst">Avval viloyatni tanlang</option></select><span class="select-chevron" data-icon="chevron-down" aria-hidden="true"></span></div></div>
+            </div>
 
-    function loadDistricts() {
-      const region = document.getElementById("region").value;
-      const ds = document.getElementById("district");
-      ds.innerHTML = "";
-      if (!region) { ds.innerHTML = '<option value="">Avval viloyatni tanlang</option>'; return; }
-      ds.innerHTML = '<option value="">Tumanni tanlang</option>';
-      REGIONS[region].forEach(d => {
-        const o = document.createElement("option"); o.value = d; o.textContent = d; ds.appendChild(o);
-      });
-    }
+            <div class="field" id="schoolField"><label for="schoolSelect" id="schoolLabel" data-i18n="register.school">Maktab</label><div class="select-control"><select class="select-input" id="schoolSelect" required disabled><option value="" data-i18n="register.schoolFirst">Avval tumanni tanlang</option></select><span class="select-chevron" data-icon="chevron-down" aria-hidden="true"></span></div></div>
+          </div>
 
-    function selectRole(card) {
-      // "Tez orada" (disabled) kartalar tanlanmaydi
-      if (card.classList.contains("disabled")) return;
-      document.querySelectorAll(".role-card").forEach(c => c.classList.remove("selected"));
-      card.classList.add("selected");
-      selectedRole = card.getAttribute("data-role");
-      document.getElementById("roleNextBtn").disabled = false;
-    }
+          <div class="field">
+            <div class="field-label-row"><label for="usernameInput" data-i18n="register.username">Username</label><span class="character-count" id="usernameCount" aria-live="polite">0/32</span></div>
+            <input class="text-input" id="usernameInput" type="text" inputmode="text" autocomplete="username" minlength="5" maxlength="32" placeholder="username" autocapitalize="none" spellcheck="false">
+            <p class="field-hint" id="usernameHint" data-i18n="register.usernameNeutral">5–32 belgi: a-z, 0-9 va _</p>
+          </div>
 
-    function roleNext() {
-      if (!selectedRole) return;
-      // Maktab admini — avval kod bosqichiga (telefon EMAS)
-      if (selectedRole === "school_admin") {
-        document.getElementById("stage0").classList.remove("active");
-        document.querySelectorAll(".stage").forEach(s => s.classList.remove("active"));
-        document.getElementById("stageSchoolCode").classList.add("active");
-        return;
-      }
-      var sf = document.getElementById("studentFields");
-      if (sf) sf.style.display = (selectedRole === "parent") ? "none" : "block";
-      document.getElementById("stage0").classList.remove("active");
-      document.getElementById("progressSteps").style.display = "flex";
-      goToStage(1);
-    }
+          <button type="submit" class="primary-button" id="profileSubmit" disabled data-i18n="register.submit">Ro‘yxatdan o‘tish</button>
+        </form>
+        <p class="privacy-hint">IlmLiga akkauntini yaratish orqali platforma qoidalari va maxfiylik shartlariga rozilik bildirasiz.</p>
+      </div>
+    </section>
+  </main>
 
-    // ====== MAKTAB KODI TEKSHIRUVI ======
-    let schoolCodeData = null;  // Tasdiqlangan maktab ma'lumoti
+  <dialog class="country-dialog" id="countryDialog">
+    <div class="dialog-head"><h2 data-i18n="common.selectCountry">Davlatni tanlang</h2><button type="button" class="dialog-close" data-dialog-close aria-label="Close"><span data-icon="x"></span></button></div>
+    <input class="text-input country-search" id="countrySearch" type="search" data-i18n-placeholder="common.searchCountry" placeholder="Davlat nomi yoki kodi">
+    <div class="country-list" id="countryList"></div>
+  </dialog>
+  <div class="toast-region" aria-live="polite"><div class="toast" id="authToast"></div></div>
 
-    // Kod inputiga yozganda: tugmani boshqarish + eski natijani tozalash
-    document.getElementById("schoolCodeInput")?.addEventListener("input", function() {
-      const clean = this.value.replace(/[^A-Za-z0-9]/g, "");
-      document.getElementById("schoolCodeNextBtn").disabled = clean.length < 6;
-      document.getElementById("schoolInfoBox").style.display = "none";
-      document.getElementById("schoolCodeMsg").textContent = "";
-      document.getElementById("schoolCodeMsg").className = "sc-msg";
-      schoolCodeData = null;
-    });
-
-    async function verifySchoolCode() {
-      const code = document.getElementById("schoolCodeInput").value.trim();
-      const msg = document.getElementById("schoolCodeMsg");
-      const btn = document.getElementById("schoolCodeNextBtn");
-
-      btn.disabled = true;
-      btn.textContent = "Tekshirilyapti...";
-
-      try {
-        const res = await fetch("/verify-school-code", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code })
-        });
-        const data = await res.json();
-
-        if (!res.ok) {
-          msg.textContent = data.error || "Kod noto'g'ri";
-          msg.className = "sc-msg error";
-          btn.disabled = false;
-          btn.textContent = "Kodni tekshirish";
-          return;
-        }
-
-        // Kod to'g'ri — maktabni ko'rsatamiz, keyin telefon bosqichiga
-        schoolCodeData = data;
-        document.getElementById("siSchoolName").textContent = data.school_name;
-        document.getElementById("schoolInfoBox").style.display = "flex";
-        msg.textContent = "✓ Kod tasdiqlandi";
-        msg.className = "sc-msg success";
-
-        // 1 soniyadan keyin telefon bosqichiga o'tamiz
-        setTimeout(() => {
-          document.getElementById("stageSchoolCode").classList.remove("active");
-          document.getElementById("progressSteps").style.display = "flex";
-          var sf = document.getElementById("studentFields");
-          if (sf) sf.style.display = "block";  // admin ham to'liq profil to'ldiradi
-          goToStage(1);
-        }, 1000);
-      } catch (err) {
-        msg.textContent = "Server bilan aloqa yo'q. Qayta urinib ko'ring.";
-        msg.className = "sc-msg error";
-        btn.disabled = false;
-        btn.textContent = "Kodni tekshirish";
-      }
-    }
-
-    function backToRole() {
-      document.querySelectorAll(".stage").forEach(s => s.classList.remove("active"));
-      document.getElementById("stage0").classList.add("active");
-      document.getElementById("progressSteps").style.display = "none";
-    }
-
-    function goToStage(n) {
-      document.querySelectorAll(".stage").forEach(s => s.classList.remove("active"));
-      document.getElementById("stage" + n).classList.add("active");
-      const step1 = document.getElementById("step1");
-      const step2 = document.getElementById("step2");
-      const step3 = document.getElementById("step3");
-      const line1 = document.getElementById("line1");
-      const line2 = document.getElementById("line2");
-      const dot1 = document.getElementById("dot1");
-      const dot2 = document.getElementById("dot2");
-      const dot3 = document.getElementById("dot3");
-      step1.className = "step"; step2.className = "step"; step3.className = "step";
-      line1.className = "step-line"; line2.className = "step-line";
-      dot1.textContent = "1"; dot2.textContent = "2"; dot3.textContent = "3";
-      if (n === 1) { step1.className = "step active"; }
-      if (n === 2) {
-        step1.className = "step done"; dot1.textContent = "✓"; line1.className = "step-line filled";
-        step2.className = "step active";
-      }
-      if (n === 3) {
-        step1.className = "step done"; dot1.textContent = "✓"; line1.className = "step-line filled";
-        step2.className = "step done"; dot2.textContent = "✓"; line2.className = "step-line filled";
-        step3.className = "step active";
-      }
-    }
-
-    // ===== MAMLAKAT + TELEFON FORMAT (hozircha faqat O'zbekiston) =====
-    // Yangi mamlakat qo'shish: shu ro'yxatga qator + <select>ga <option> qo'shing.
-    const COUNTRIES = {
-      UZ: { name: "O'zbekiston", flag: "🇺🇿", dial: "998", natLen: 9, groups: [2,3,2,2], placeholder: "90 123 45 67" },
-      // KZ: { name: "Qozog'iston", flag: "🇰🇿", dial: "7", natLen: 10, groups: [3,3,2,2], placeholder: "700 123 45 67" },
-    };
-    let currentCountry = COUNTRIES.UZ;
-
-    // Faqat raqam qoldiramiz, mamlakat kodini (998) olib tashlaymiz, natLen gacha qisqartiramiz
-    function normalizeNational(raw) {
-      let d = String(raw).replace(/\D/g, "");
-      const dial = currentCountry.dial;
-      // Foydalanuvchi 998 ni ham yozsa/paste qilsa — olib tashlaymiz
-      if (d.length > currentCountry.natLen && d.startsWith(dial)) d = d.slice(dial.length);
-      return d.slice(0, currentCountry.natLen); // 9 tadan ko'p yozdirmaymiz
-    }
-    // Guruhlab formatlash: 90 123 45 67
-    function formatNational(d) {
-      const g = currentCountry.groups; const out = []; let i = 0;
-      for (const len of g) { if (i >= d.length) break; out.push(d.slice(i, i + len)); i += len; }
-      return out.join(" ");
-    }
-    function onPhoneInput(e) { e.target.value = formatNational(normalizeNational(e.target.value)); }
-    function getNationalDigits() { return String(document.getElementById("phone").value).replace(/\D/g, ""); }
-    function getFullPhone() { return "+" + currentCountry.dial + getNationalDigits(); } // +998901234567
-    function formatFullDisplay() { return "+" + currentCountry.dial + " " + formatNational(getNationalDigits()); }
-    function updateCountry() {
-      currentCountry = COUNTRIES[document.getElementById("countryCode").value] || COUNTRIES.UZ;
-      const inp = document.getElementById("phone");
-      inp.placeholder = currentCountry.placeholder;
-      inp.value = ""; // mamlakat o'zgarsa tozalaymiz
-    }
-
-    async function sendCode() {
-      const nat = getNationalDigits();
-      if (nat.length !== currentCountry.natLen) {
-        return showModal("Telefon raqamini to'liq kiriting: +" + currentCountry.dial + " dan keyin " + currentCountry.natLen + " ta raqam.", "error");
-      }
-      const phone = getFullPhone(); // to'liq: +998901234567
-      const btn = document.getElementById("sendBtn");
-      btn.disabled = true;
-      btn.textContent = "Yuborilmoqda...";
-      try {
-        const res = await fetch("/otp/send", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone })
-        });
-        const data = await res.json();
-        if (!res.ok) { showModal(data.error || "Xato", "error"); return; }
-        verifiedPhone = phone;
-        document.getElementById("phoneDisplay").textContent = formatFullDisplay();
-        document.getElementById("phoneConfirmed").textContent = formatFullDisplay();
-        goToStage(2);
-        startResendTimer();
-        document.querySelector(".otp").focus();
-      } catch (err) {
-        showModal("Server bilan aloqa yo'q. Internet aloqangizni tekshiring.", "error");
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Kod yuborish ✈";
-      }
-    }
-
-    const otpInputs = document.querySelectorAll(".otp");
-    otpInputs.forEach((input, idx) => {
-      input.addEventListener("input", () => {
-        input.value = input.value.replace(/[^0-9]/g, "");
-        if (input.value && idx < otpInputs.length - 1) { otpInputs[idx + 1].focus(); }
-      });
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Backspace" && !input.value && idx > 0) { otpInputs[idx - 1].focus(); }
-      });
-    });
-
-    function getOtpCode() {
-      let code = "";
-      otpInputs.forEach(i => code += i.value);
-      return code;
-    }
-
-    async function verifyCode() {
-      const code = getOtpCode();
-      if (code.length !== 6) { return showModal("6 xonali kodni to'liq kiriting", "error"); }
-      const btn = document.getElementById("verifyBtn");
-      btn.disabled = true;
-      btn.textContent = "Tekshirilmoqda...";
-      try {
-        const res = await fetch("/otp/verify", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: verifiedPhone, code })
-        });
-        const data = await res.json();
-        if (!res.ok) { showModal(data.error || "Kod noto'g'ri. Qayta urinib ko'ring.", "error"); return; }
-        verifiedCode = code;
-        goToStage(3);
-      } catch (err) {
-        showModal("Server bilan aloqa yo'q. Internet aloqangizni tekshiring.", "error");
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Tasdiqlash";
-      }
-    }
-
-    function startResendTimer() {
-      let seconds = 60;
-      const link = document.getElementById("resendLink");
-      const timerSpan = document.getElementById("resendTimer");
-      const box = document.getElementById("resendBox");
-      link.style.pointerEvents = "none";
-      box.classList.add("disabled");
-      if (resendInterval) clearInterval(resendInterval);
-      timerSpan.textContent = " (" + seconds + "s)";
-      resendInterval = setInterval(() => {
-        seconds--;
-        timerSpan.textContent = " (" + seconds + "s)";
-        if (seconds <= 0) {
-          clearInterval(resendInterval);
-          timerSpan.textContent = "";
-          link.style.pointerEvents = "auto";
-          box.classList.remove("disabled");
-        }
-      }, 1000);
-    }
-
-    async function resendCode() {
-      try {
-        const res = await fetch("/otp/send", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: verifiedPhone })
-        });
-        const data = await res.json();
-        if (!res.ok) { showModal(data.error || "Xato", "error"); return; }
-        showModal("Yangi kod yuborildi", "success");
-        startResendTimer();
-      } catch (err) {
-        showModal("Server bilan aloqa yo'q. Internet aloqangizni tekshiring.", "error");
-      }
-    }
-
-    // Maktab qiymati: dropdown yoki xususiy matn
-    function getSchoolValue() {
-      const sel = document.getElementById("school").value;
-      if (sel === "__other__") {
-        return document.getElementById("customSchool").value.trim();
-      }
-      return sel;
-    }
-
-    async function doRegister() {
-      const day = document.getElementById("bDay").value;
-      const month = document.getElementById("bMonth").value;
-      const year = document.getElementById("bYear").value;
-      let birthDate = null;
-      if (day && month && year) {
-        birthDate = year + "-" + String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
-      }
-      const isParent = selectedRole === "parent";
-      const data = {
-        first_name: document.getElementById("firstName").value,
-        last_name: document.getElementById("lastName").value,
-        birth_date: isParent ? null : birthDate,
-        region: isParent ? null : document.getElementById("region").value,
-        district: isParent ? null : document.getElementById("district").value,
-        school: isParent ? null : getSchoolValue(),
-        password: document.getElementById("password").value,
-        phone: verifiedPhone,
-        code: verifiedCode,
-        role: selectedRole
-      };
-
-      // Maktab admini — kod va koddan olingan maktab ma'lumotini qo'shamiz
-      if (selectedRole === "school_admin" && schoolCodeData) {
-        data.school_code = document.getElementById("schoolCodeInput").value.trim();
-        data.school = schoolCodeData.school_name;
-        data.region = schoolCodeData.region || data.region;
-        data.district = schoolCodeData.district || data.district;
-      }
-      
-      const required = isParent
-        ? [
-            { id: "firstName", val: data.first_name },
-            { id: "lastName", val: data.last_name },
-            { id: "password", val: data.password }
-          ]
-        : [
-            { id: "firstName", val: data.first_name },
-            { id: "lastName", val: data.last_name },
-            { id: "bDay", val: day },
-            { id: "bMonth", val: month },
-            { id: "bYear", val: year },
-            { id: "region", val: data.region },
-            { id: "district", val: data.district },
-            { id: "school", val: data.school },
-            { id: "password", val: data.password }
-          ];
-      document.querySelectorAll(".invalid").forEach(el => el.classList.remove("invalid"));
-      let hasError = false;
-      required.forEach(f => {
-        const el = document.getElementById(f.id);
-        if (!f.val || String(f.val).trim() === "") { el.classList.add("invalid"); hasError = true; }
-      });
-      if (hasError) { return showModal("Iltimos, barcha majburiy maydonlarni to'ldiring", "error"); }
-      const btn = document.getElementById("registerBtn");
-      btn.disabled = true;
-      btn.textContent = "Yaratilmoqda...";
-      try {
-        const res = await fetch("/register", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
-        const result = await res.json();
-        if (!res.ok) { showModal(result.error || "Xato", "error"); return; }
-        localStorage.setItem("user", JSON.stringify(result.user));
-        if (result.token) localStorage.setItem("token", result.token);
-        // Rol bo'yicha yo'naltirish
-        if (result.user.role === "school_admin") {
-          window.location.href = "/school-admin.html";
-        } else if (result.user.role === "teacher") {
-          window.location.href = "/teacher.html";
-        } else if (result.user.role === "student") {
-          window.location.href = "/lobby.html";
-        } else if (result.user.role === "parent") {
-          window.location.href = "/parent.html";
-        } else {
-          window.location.href = "/dashboard.html";
-        }
-      } catch (err) {
-        showModal("Server bilan aloqa yo'q. Internet aloqangizni tekshiring.", "error");
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Ro'yxatdan o'tish ✈";
-      }
-    }
-
-    document.querySelectorAll("#stage3 input, #stage3 select").forEach(el => {
-      el.addEventListener("input", () => el.classList.remove("invalid"));
-      el.addEventListener("change", () => el.classList.remove("invalid"));
-    });
-  </script>
+  <script src="/auth-common.js"></script>
+  <script src="/auth-register.js"></script>
 </body>
 </html>

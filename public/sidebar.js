@@ -180,9 +180,20 @@ function closeLogoutModal() {
 }
 
 // Haqiqiy chiqish
-function doLogout() {
+async function doLogout() {
+  const token = localStorage.getItem("token");
+  if (token) {
+    try {
+      await fetch("/logout", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token },
+        keepalive: true,
+      });
+    } catch (e) {}
+  }
+  localStorage.removeItem("token");
   localStorage.removeItem("user");
-  window.location.href = "/index.html";
+  window.location.href = "/?screen=login";
 }
 
 // ===== GLOBAL SOCKET (online status uchun) =====
@@ -200,6 +211,7 @@ function doLogout() {
     }
     if (typeof io === "undefined") return;
     window.globalSocket = io({ auth: { token: localStorage.getItem("token") } });
+    window.globalSocket.on("connect_error", handleSocketAuthError);
     window.globalSocket.on("connect", () => {
       window.globalSocket.emit("registerUser", user.id);
     });
@@ -731,3 +743,13 @@ document.addEventListener("click", function (e) {
   }
   attachHandlers();
 })();
+
+// Socket tokeni yaroqsiz bo'lsa himoyalangan sahifada eski sessiyani ushlab
+// turmaymiz. Server bilan bir xil auth xato kodlari ishlatiladi.
+function handleSocketAuthError(err) {
+  const authErrors = ["AUTH_REQUIRED", "ACCOUNT_NOT_FOUND", "ACCOUNT_BANNED", "SESSION_REVOKED"];
+  if (!err || authErrors.indexOf(err.message) === -1) return;
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  window.location.href = "/?screen=login";
+}

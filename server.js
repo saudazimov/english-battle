@@ -11,11 +11,12 @@ const compression = require("compression");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 
 // ===== Upload papkalarini avtomatik yaratish (server startda) =====
 [
   path.join(__dirname, "public/uploads"),
-  path.join(__dirname, "public/uploads/resources"),
+  path.join(__dirname, "uploads/resources"),
 ].forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
@@ -28,11 +29,112 @@ const { recoverActiveBattles } = require("./battleRecovery");
 const parentCode = require("./parentCode");
 const schoolInvite = require("./schoolInvite");   // ← YANGI QATOR
 const premium = require("./premium");
-const payme = require("./payme");                        // ← YANGI
 const aiService = require("./aiService");
 const aiSnapshot = require("./aiSnapshot");
+const rootRoutes = require("./src/routes/rootRoutes");
+const { createHealthRoutes } = require("./src/routes/healthRoutes");
+const { createLocationRoutes } = require("./src/routes/locationRoutes");
+const logoutRoutes = require("./src/routes/logoutRoutes");
+const subscriptionRoutes = require("./src/routes/subscriptionRoutes");
+const paymentCreateRoutes = require("./src/routes/paymentCreateRoutes");
+const paymentStatusRoutes = require("./src/routes/paymentStatusRoutes");
+const paymeRoutes = require("./src/routes/paymeWebhookRoutes");
+const adminMeRoutes = require("./src/routes/adminMeRoutes");
+const adminFlagCountRoutes = require("./src/routes/adminFlagCountRoutes");
+const adminSettingsInfoRoutes = require("./src/routes/adminSettingsInfoRoutes");
+const adminUserMessagesRoutes = require("./src/routes/adminUserMessagesRoutes");
+const adminRoomMessagesRoutes = require("./src/routes/adminRoomMessagesRoutes");
+const notificationListRoutes = require("./src/routes/notificationListRoutes");
+const notificationReadRoutes = require("./src/routes/notificationReadRoutes");
+const notificationClearRoutes = require("./src/routes/notificationClearRoutes");
+const notificationDeleteRoutes = require("./src/routes/notificationDeleteRoutes");
+const schoolRankingsRoutes = require("./src/routes/schoolRankingsRoutes");
+const regionRankingsRoutes = require("./src/routes/regionRankingsRoutes");
+const districtRankingsRoutes = require("./src/routes/districtRankingsRoutes");
+const friendSearchRoutes = require("./src/routes/friendSearchRoutes");
+const friendSuggestedRoutes = require("./src/routes/friendSuggestedRoutes");
+const friendRequestRoutes = require("./src/routes/friendRequestRoutes");
+const friendRespondRoutes = require("./src/routes/friendRespondRoutes");
+const friendRemoveRoutes = require("./src/routes/friendRemoveRoutes");
+const friendRequestsRoutes = require("./src/routes/friendRequestsRoutes");
+const friendListRoutes = require("./src/routes/friendListRoutes");
+const friendWinsRoutes = require("./src/routes/friendWinsRoutes");
+const friendActivityRoutes = require("./src/routes/friendActivityRoutes");
+const teacherResourceUploadRoutes = require("./src/routes/teacherResourceUploadRoutes");
+const teacherResourceListRoutes = require("./src/routes/teacherResourceListRoutes");
+const teacherResourceDownloadRoutes = require("./src/routes/teacherResourceDownloadRoutes");
+const teacherResourceDeleteRoutes = require("./src/routes/teacherResourceDeleteRoutes");
+const profilePictureRoutes = require("./src/routes/profilePictureRoutes");
+const schoolOverviewRoutes = require("./src/routes/schoolOverviewRoutes");
+const schoolTournamentsRoutes = require("./src/routes/schoolTournamentsRoutes");
+const schoolTournamentStudentsRoutes = require("./src/routes/schoolTournamentStudentsRoutes");
+const schoolTournamentBracketRoutes = require("./src/routes/schoolTournamentBracketRoutes");
+const schoolTournamentTeamListRoutes = require("./src/routes/schoolTournamentTeamListRoutes");
+const schoolTournamentTeamSaveRoutes = require("./src/routes/schoolTournamentTeamSaveRoutes");
+const teacherConversationsRoutes = require("./src/routes/teacherConversationsRoutes");
+const teacherConversationMessagesListRoutes = require("./src/routes/teacherConversationMessagesListRoutes");
+const teacherSettingsProfileReadRoutes = require("./src/routes/teacherSettingsProfileReadRoutes");
+const teacherSettingsProfileUpdateRoutes = require("./src/routes/teacherSettingsProfileUpdateRoutes");
+const teacherSettingsPasswordRoutes = require("./src/routes/teacherSettingsPasswordRoutes");
+const teacherDashboardRoutes = require("./src/routes/teacherDashboardRoutes");
+const teacherConversationMessageSendRoutes = require("./src/routes/teacherConversationMessageSendRoutes");
+const studentTeacherMessageSendRoutes = require("./src/routes/studentTeacherMessageSendRoutes");
+const { teacherStudentLinked } = require("./src/services/teacherStudentLinkService");
+const { ownedActiveClass } = require("./src/services/ownedActiveClassService");
+const { activeClassMembership } = require("./src/services/activeClassMembershipService");
+const { validMeetingUrl } = require("./src/utils/meetingUrl");
+const { maskParentPhone } = require("./src/utils/parentPhone");
+const { activityLabel } = require("./src/utils/parentActivity");
+const { parentLeagueName } = require("./src/utils/parentLeague");
+const { getNextLevel } = require("./src/utils/levelProgression");
+const { detectFileType } = require("./src/utils/resourceFileType");
+const { generateOtpCode } = require("./src/utils/otpCode");
+const { requireNormalizedPhone } = require("./src/middleware/requireNormalizedPhone");
+const { schoolIdentityKey } = require("./src/utils/schoolIdentity");
+const { mmCompatible } = require("./src/utils/matchmakingCompatibility");
+const { seedOrder } = require("./src/utils/tournamentSeeding");
+const { stripUnsafe } = require("./src/utils/stripUnsafe");
+const { sanitizeText } = require("./src/utils/sanitizeText");
+const { findPlayerKeyByUser } = require("./src/utils/battlePlayerLookup");
+const { makePartyId } = require("./src/utils/partyId");
+const { getLeagueName } = require("./src/utils/leagueName");
+const { currentSeason } = require("./src/utils/currentSeason");
+const { getRandomBotName } = require("./src/utils/botName");
+const { BATTLE_LENGTHS, lengthConfig } = require("./src/utils/battleLength");
+const { resourceAbsolutePath } = require("./src/utils/resourceAbsolutePath");
+const { removeUploadedFile } = require("./src/utils/uploadedFileCleanup");
+const { makeTeamBot } = require("./src/utils/teamBot");
+const { normalizeSchool } = require("./src/utils/schoolNormalization");
+const { adminTotpValid } = require("./src/utils/adminTotp");
+const { uploadedContentMatches } = require("./src/utils/uploadedContentMatcher");
+const { filterProfanity } = require("./src/utils/profanityFilter");
+const { validatePassword } = require("./src/utils/passwordValidator");
+const { clientIp } = require("./src/utils/clientIp");
+const { createSchoolAdminLookupService } = require("./src/services/schoolAdminLookupService");
+const getSchoolAdmin = createSchoolAdminLookupService({ pool, schoolIdentityKey });
+const { createOpponentCardService } = require("./src/services/opponentCardService");
+const getOpponentCardInfo = createOpponentCardService({ pool });
+const { createNotificationService } = require("./src/services/notificationService");
+const createNotification = createNotificationService({ pool, logger: console });
+const { createFriendStatusService } = require("./src/services/friendStatusService");
+const { createTournamentMatchPlayerService } = require("./src/services/tournamentMatchPlayerService");
+const getMatchPlayer = createTournamentMatchPlayerService({ pool });
+const { getSeededWinner } = require("./src/services/seededWinnerService");
+const teacherClassArchiveRoutes = require("./src/routes/teacherClassArchiveRoutes");
+const teacherClassUpdateRoutes = require("./src/routes/teacherClassUpdateRoutes");
+const teacherClassCreateRoutes = require("./src/routes/teacherClassCreateRoutes");
+const teacherClassListRoutes = require("./src/routes/teacherClassListRoutes");
+const teacherClassAnnouncementsListRoutes = require("./src/routes/teacherClassAnnouncementsListRoutes");
+const studentClassAnnouncementsListRoutes = require("./src/routes/studentClassAnnouncementsListRoutes");
+const teacherClassAnnouncementDeleteRoutes = require("./src/routes/teacherClassAnnouncementDeleteRoutes");
+const teacherClassAnnouncementCreateRoutes = require("./src/routes/teacherClassAnnouncementCreateRoutes");
+const teacherClassAnnouncementUpdateRoutes = require("./src/routes/teacherClassAnnouncementUpdateRoutes");
 
-const { validateRegionDistrict, REGIONS } = require("./regions");
+const {
+  validateRegionDistrict,
+  validateGlobalLocation,
+  REGIONS,
+} = require("./regions");
 
 const app = express();
 
@@ -46,15 +148,6 @@ const app = express();
 const TRUST_PROXY_HOPS = parseInt(process.env.TRUST_PROXY_HOPS || "0", 10);
 if (TRUST_PROXY_HOPS > 0) {
   app.set("trust proxy", TRUST_PROXY_HOPS);
-}
-
-// ===== ISHONCHLI CLIENT IP HELPER =====
-// Barcha rate-limit / audit joylar shu funksiyani ishlatadi (izchillik).
-// trust proxy sozlangan bo'lsa req.ip = real client (Express X-Forwarded-For'ni
-// TRUST_PROXY_HOPS asosida xavfsiz parslaydi). Sozlanmagan bo'lsa req.ip = socket.
-// Fallback'lar faqat req.ip mavjud bo'lmagan chekka holatlar uchun.
-function clientIp(req) {
-  return (req && (req.ip || (req.socket && req.socket.remoteAddress))) || "unknown";
 }
 
 const server = http.createServer(app);
@@ -95,25 +188,62 @@ const PORT = process.env.PORT || 3000;
 // EMAS, faqat socket.authUserId'ga ishonamiz (IDOR himoyasi).
 // Token yo'q bo'lsa ham ulanishga ruxsat beramiz (authUserId = null) — eski
 // xatti-harakat buzilmasin, lekin himoyalangan amallar authUserId'ni talab qiladi.
-io.use((socket, next) => {
-  try {
-    const token = (socket.handshake.auth && socket.handshake.auth.token) ||
-                  (socket.handshake.query && socket.handshake.query.token) || null;
-    const decoded = verifySocketToken(token);
-    socket.authUserId = decoded ? String(decoded.id) : null;
-  } catch (e) {
-    socket.authUserId = null;
+io.use(async (socket, next) => {
+  const token = (socket.handshake.auth && socket.handshake.auth.token) ||
+                (socket.handshake.query && socket.handshake.query.token) || null;
+  const decoded = verifySocketToken(token);
+
+  if (!decoded || decoded.id == null) {
+    return next(new Error("AUTH_REQUIRED"));
   }
-  next(); // ulanishga doimo ruxsat (authUserId orqali himoyalaymiz)
+
+  try {
+    const userResult = await pool.query(
+      "SELECT id, is_banned, auth_version FROM users WHERE id = $1",
+      [decoded.id]
+    );
+    const user = userResult.rows[0];
+    if (!user) return next(new Error("ACCOUNT_NOT_FOUND"));
+    if (user.is_banned) return next(new Error("ACCOUNT_BANNED"));
+    if ((Number(decoded.ver) || 0) !== (Number(user.auth_version) || 0)) {
+      return next(new Error("SESSION_REVOKED"));
+    }
+
+    // Barcha event handlerlar faqat JWT'dan olingan shu ID'ni ishlatadi.
+    socket.authUserId = String(user.id);
+    socket.userId = String(user.id);
+    return next();
+  } catch (err) {
+    console.error("Socket autentifikatsiya xatosi:", err.message);
+    return next(new Error("AUTH_SERVICE_ERROR"));
+  }
 });
 
 // ===== XAVFSIZLIK MIDDLEWARE (Sprint 1) =====
 // helmet: standart xavfsizlik headerlari (nosniff, frameguard, HSTS va h.k.)
-// CSP hozircha O'CHIQ — sahifalar inline script va CDN (lucide) ishlatadi,
-// CSP yoqilsa hammasi buziladi. CSP alohida sprintda nonce bilan yoqiladi.
+// CSP mavjud inline sahifalar va ruxsat etilgan CDNlar bilan mos baseline siyosat.
+// object/base/frame manbalari qat'iy yopilgan; inline scriptlar keyingi refaktorda nonce'ga o'tadi.
 app.use(
   helmet({
-    contentSecurityPolicy: false,       // keyingi sprint: nonce-asosli CSP
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdn.jsdelivr.net"],
+        // Hozirgi sahifalarda onclick/onkeydown handlerlari bor. Ular alohida
+        // modullarga ko'chirilguncha Helmet'ning default script-src-attr 'none'
+        // qoidasi barcha tugmalarni ishdan chiqarmasligi kerak.
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "blob:", "https://flagcdn.com"],
+        connectSrc: ["'self'", "ws:", "wss:"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        frameAncestors: ["'none'"],
+        formAction: ["'self'", "https://checkout.paycom.uz"],
+        upgradeInsecureRequests: process.env.NODE_ENV === "production" ? [] : null,
+      },
+    },
     crossOriginEmbedderPolicy: false,   // CDN resurslarini buzmaslik uchun
     referrerPolicy: { policy: "strict-origin-when-cross-origin" },
   })
@@ -122,33 +252,23 @@ app.use(cors(corsOptions));
 app.use(compression());
 // JSON ma'lumotlarni o'qiy olish uchun (hajm chegarasi: JSON-bomba himoyasi)
 app.use(express.json({ limit: "1mb" }));
+app.use(
+  "/vendor/flag-icons",
+  express.static(path.join(__dirname, "node_modules", "flag-icons"))
+);
+// O'qituvchi resurslari faqat autentifikatsiyalangan download endpoint orqali beriladi.
+// Eski public/uploads/resources fayllari ham to'g'ridan-to'g'ri ochilmaydi.
+app.use("/uploads/resources", (req, res) => res.status(404).json({ error: "Topilmadi" }));
 app.use(express.static("public"));
 // Asosiy sahifa
-app.get("/", (req, res) => {
-  res.send("English Battle serveri ishlayapti!");
-});
+app.use(rootRoutes());
 
 // ===== HEALTH / READINESS ENDPOINTLAR (deploy monitoring uchun) =====
-// /health — process tirikmi (DB'ni tekshirmaydi). Yengil, tez.
-//   PaaS / uptime monitor "process yiqildimi" ni tekshirish uchun ishlatadi.
-// Sensitive config yoki stack trace QAYTARILMAYDI.
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok", uptime: Math.floor(process.uptime()) });
-});
+app.use(createHealthRoutes({ pool }));
 
-// /ready — DB bilan birga to'liq tayyormi. PostgreSQL SELECT 1.
-//   DB ishlasa → 200 (trafik qabul qilishga tayyor)
-//   DB ishlamasa → 503 (proxy/monitor bu instance'ga trafik yubormasin)
-// Xato tafsiloti (stack/config) mijozga QAYTARILMAYDI — faqat log'ga.
-app.get("/ready", async (req, res) => {
-  try {
-    await pool.query("SELECT 1");
-    res.status(200).json({ status: "ready" });
-  } catch (err) {
-    console.error("Readiness check DB xatosi:", err.message);
-    res.status(503).json({ status: "not_ready" });
-  }
-});
+// ===== AUTH UCHUN JOYLASHUV KATALOGI =====
+// Mobil ilovadagi country-state-city oqimini web bilan bir xil qiladi.
+app.use(createLocationRoutes());
 
 
 // ============ OTP (TELEFON TASDIQLASH) ============
@@ -213,68 +333,113 @@ async function sendSms(phone, code) {
   console.log("SMS yuborildi:", to, "(Eskiz:", data.id || data.status || "ok", ")");
 }
 
-// 6 xonali tasodifiy kod yaratish
-function generateOtpCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
 // ============ RATE LIMIT (auth himoyasi — in-memory, tashqi paketsiz) ============
 // Maqsad: OTP spam / SMS xarajat suiiste'moli / parol-kod brute-force'ini cheklash.
 // Ikki mexanizm: countLimiter (har chaqiruvni sanaydi) + failGate/noteFail/noteOk (faqat noto'g'ri urinish).
-var _rl = {}; // { bucket: { key: { count, firstAt, blockedUntil } } }
-function _bucket(n) { if (!_rl[n]) _rl[n] = {}; return _rl[n]; }
 function _ipOf(req) { return clientIp(req); }
 function _phoneIpKey(req) { return (req.body && req.body.phone ? String(req.body.phone).trim() : "no-phone") + "|" + _ipOf(req); }
 
 // 1) Har chaqiruvni sanaydigan limiter (OTP yuborish uchun)
 function countLimiter(name, opts) {
-  return function (req, res, next) {
-    var store = _bucket(name), key = opts.keyFn(req), now = Date.now(), rec = store[key];
-    if (rec && rec.blockedUntil && now > rec.blockedUntil) { delete store[key]; rec = null; }
-    if (rec && rec.blockedUntil) {
-      var w = Math.ceil((rec.blockedUntil - now) / 60000);
-      return res.status(429).json({ error: (opts.message || "Juda ko'p so'rov.") + " " + w + " daqiqadan keyin urinib ko'ring." });
+  return async function (req, res, next) {
+    const key = String(opts.keyFn(req)).slice(0, 240);
+    try {
+      const result = await pool.query(
+        `INSERT INTO request_rate_limits (bucket, key_value, request_count, window_started)
+         VALUES ($1, $2, 1, NOW())
+         ON CONFLICT (bucket, key_value) DO UPDATE SET
+           request_count = CASE
+             WHEN request_rate_limits.blocked_until > NOW() THEN request_rate_limits.request_count
+             WHEN request_rate_limits.window_started < NOW() - ($3::bigint * INTERVAL '1 millisecond') THEN 1
+             ELSE request_rate_limits.request_count + 1 END,
+           window_started = CASE
+             WHEN request_rate_limits.window_started < NOW() - ($3::bigint * INTERVAL '1 millisecond') THEN NOW()
+             ELSE request_rate_limits.window_started END,
+           blocked_until = CASE
+             WHEN request_rate_limits.blocked_until > NOW() THEN request_rate_limits.blocked_until
+             ELSE NULL END,
+           updated_at = NOW()
+         RETURNING request_count, blocked_until`,
+        [name, key, opts.windowMs]
+      );
+      const rec = result.rows[0];
+      if (rec.blocked_until && new Date(rec.blocked_until) > new Date()) {
+        const wait = Math.max(1, Math.ceil((new Date(rec.blocked_until) - Date.now()) / 60000));
+        return res.status(429).json({ error: (opts.message || "Juda ko'p so'rov.") + " " + wait + " daqiqadan keyin urinib ko'ring." });
+      }
+      if (Number(rec.request_count) > opts.max) {
+        await pool.query(
+          "UPDATE request_rate_limits SET blocked_until = NOW() + ($3::bigint * INTERVAL '1 millisecond'), updated_at = NOW() WHERE bucket = $1 AND key_value = $2",
+          [name, key, opts.blockMs]
+        );
+        return res.status(429).json({ error: (opts.message || "Juda ko'p so'rov.") + " " + Math.ceil(opts.blockMs / 60000) + " daqiqadan keyin urinib ko'ring." });
+      }
+      next();
+    } catch (err) {
+      console.error("Rate limit DB xatosi:", err.message);
+      next();
     }
-    if (rec && (now - rec.firstAt) > opts.windowMs) { delete store[key]; rec = null; }
-    if (!rec) rec = store[key] = { count: 0, firstAt: now };
-    rec.count++;
-    if (rec.count > opts.max) {
-      rec.blockedUntil = now + opts.blockMs;
-      var w2 = Math.ceil(opts.blockMs / 60000);
-      return res.status(429).json({ error: (opts.message || "Juda ko'p so'rov.") + " " + w2 + " daqiqadan keyin urinib ko'ring." });
-    }
-    next();
   };
 }
 
 // 2) Faqat NOTO'G'RI urinishni cheklaydigan gate (login / kod uchun — muvaffaqiyatli user bloklanmaydi)
 function failGate(name, opts) {
-  return function (req, res, next) {
-    var store = _bucket(name), key = opts.keyFn(req), now = Date.now(), rec = store[key];
-    if (rec && rec.blockedUntil && now > rec.blockedUntil) { delete store[key]; rec = null; }
-    if (rec && rec.blockedUntil) {
-      var w = Math.ceil((rec.blockedUntil - now) / 60000);
-      return res.status(429).json({ error: (opts.message || "Juda ko'p noto'g'ri urinish.") + " " + w + " daqiqadan keyin urinib ko'ring." });
+  return async function (req, res, next) {
+    const key = String(opts.keyFn(req)).slice(0, 240);
+    try {
+      const result = await pool.query(
+        "SELECT blocked_until FROM request_rate_limits WHERE bucket = $1 AND key_value = $2",
+        [name, key]
+      );
+      const blockedUntil = result.rows[0] && result.rows[0].blocked_until;
+      if (blockedUntil && new Date(blockedUntil) > new Date()) {
+        const wait = Math.max(1, Math.ceil((new Date(blockedUntil) - Date.now()) / 60000));
+        return res.status(429).json({ error: (opts.message || "Juda ko'p noto'g'ri urinish.") + " " + wait + " daqiqadan keyin urinib ko'ring." });
+      }
+      next();
+    } catch (err) {
+      console.error("Rate limit gate DB xatosi:", err.message);
+      next();
     }
-    next();
   };
 }
 function noteFail(name, key, max, blockMs) {
-  var store = _bucket(name), now = Date.now();
-  if (!store[key]) store[key] = { count: 0, firstAt: now };
-  store[key].count++;
-  if (store[key].count >= max) store[key].blockedUntil = now + blockMs;
+  pool.query(
+    `INSERT INTO request_rate_limits (bucket, key_value, request_count, window_started, blocked_until)
+     VALUES ($1, $2, 1, NOW(), NULL)
+     ON CONFLICT (bucket, key_value) DO UPDATE SET
+       request_count = CASE
+         WHEN request_rate_limits.blocked_until IS NOT NULL AND request_rate_limits.blocked_until <= NOW() THEN 1
+         WHEN request_rate_limits.window_started < NOW() - ($4::bigint * INTERVAL '1 millisecond') THEN 1
+         ELSE request_rate_limits.request_count + 1 END,
+       window_started = CASE
+         WHEN request_rate_limits.blocked_until IS NOT NULL AND request_rate_limits.blocked_until <= NOW() THEN NOW()
+         WHEN request_rate_limits.window_started < NOW() - ($4::bigint * INTERVAL '1 millisecond') THEN NOW()
+         ELSE request_rate_limits.window_started END,
+       blocked_until = CASE
+         WHEN request_rate_limits.blocked_until IS NOT NULL AND request_rate_limits.blocked_until <= NOW() THEN NULL
+         WHEN request_rate_limits.request_count + 1 >= $3 THEN NOW() + ($4::bigint * INTERVAL '1 millisecond')
+         ELSE request_rate_limits.blocked_until END,
+       updated_at = NOW()`,
+    [name, String(key).slice(0, 240), max, blockMs]
+  ).catch((err) => console.error("Rate limit fail yozish xatosi:", err.message));
 }
-function noteOk(name, key) { delete _bucket(name)[key]; }
+function noteOk(name, key) {
+  pool.query("DELETE FROM request_rate_limits WHERE bucket = $1 AND key_value = $2", [name, String(key).slice(0, 240)])
+    .catch((err) => console.error("Rate limit tozalash xatosi:", err.message));
+}
 
 // ----- Maxsus limiterlar -----
 var otpSendPerPhone = countLimiter("otp_send_phone", { keyFn: _phoneIpKey, max: 5,  windowMs: 15*60*1000, blockMs: 30*60*1000, message: "Bu raqamga juda ko'p kod yuborildi." });
 var otpSendPerIp    = countLimiter("otp_send_ip",    { keyFn: _ipOf,       max: 60, windowMs: 60*60*1000, blockMs: 30*60*1000, message: "Juda ko'p so'rov." });
 var otpVerifyGate   = failGate("otp_verify", { keyFn: _phoneIpKey, message: "Juda ko'p noto'g'ri kod urinishi." });
 var loginGate       = failGate("login",      { keyFn: _phoneIpKey, message: "Juda ko'p noto'g'ri kirish urinishi." });
+var usernameLookupLimiter = countLimiter("username_lookup", { keyFn: _ipOf, max: 60, windowMs: 60*1000, blockMs: 10*60*1000, message: "Username tekshiruvi juda ko'p." });
+var schoolCodeLookupLimiter = countLimiter("school_code_lookup", { keyFn: _ipOf, max: 15, windowMs: 15*60*1000, blockMs: 30*60*1000, message: "Taklif kodi urinishlari juda ko'p." });
+var directMessageLimiter = countLimiter("direct_message", { keyFn: (req) => req.user ? req.user.id : _ipOf(req), max: 30, windowMs: 60*1000, blockMs: 5*60*1000, message: "Xabarlar juda tez yuborilmoqda." });
 
 // KOD YUBORISH endpoint (rate-limit: IP + telefon)
-app.post("/otp/send", otpSendPerIp, otpSendPerPhone, async (req, res) => {
+app.post("/otp/send", requireNormalizedPhone, otpSendPerIp, otpSendPerPhone, async (req, res) => {
   try {
     const { phone } = req.body;
 
@@ -327,7 +492,7 @@ app.post("/otp/send", otpSendPerIp, otpSendPerPhone, async (req, res) => {
 });
 
 // KOD TEKSHIRISH endpoint (2-bosqich: "Tasdiqlash" bosilganda)
-app.post("/otp/verify", otpVerifyGate, async (req, res) => {
+app.post("/otp/verify", requireNormalizedPhone, otpVerifyGate, async (req, res) => {
   try {
     const { phone, code } = req.body;
 
@@ -369,13 +534,52 @@ app.post("/otp/verify", otpVerifyGate, async (req, res) => {
   }
 });
 
+// Telegram uslubi: 5-32 belgi, lotin harflari, raqamlar va pastki chiziq.
+// Username kichik harfda saqlanadi, shu sababli noyoblik registrga bog'liq emas.
+const USERNAME_REGEX = /^[a-z0-9_]{5,32}$/;
+
+// ===== USERNAME BAND EMASLIGINI TEKSHIRISH (ro'yxatdan o'tishda real-time) =====
+// Ochiq endpoint. Foydalanuvchi username yozganda darrov tekshiriladi.
+app.post("/check-username", usernameLookupLimiter, async (req, res) => {
+  try {
+    let { username } = req.body;
+    if (!username) {
+      return res.status(400).json({ error: "Username kiritilmadi" });
+    }
+    username = String(username).toLowerCase().trim();
+
+    // Format tekshiruvi
+    if (!USERNAME_REGEX.test(username)) {
+      return res.json({
+        available: false,
+        reason: "format",
+        message: "Username 5-32 belgi bo'lishi va faqat a-z, 0-9, _ belgilaridan iborat bo'lishi kerak"
+      });
+    }
+
+    // Band emasligini tekshirish
+    const taken = await pool.query(
+      "SELECT id FROM users WHERE username = $1",
+      [username]
+    );
+
+    res.json({
+      available: taken.rows.length === 0,
+      message: taken.rows.length === 0 ? "Username bo'sh" : "Username band"
+    });
+  } catch (err) {
+    console.error("Username tekshirish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // RO'YXATDAN O'TISH (register)
-app.post("/register", otpVerifyGate, async (req, res) => {
+app.post("/register", requireNormalizedPhone, otpVerifyGate, async (req, res) => {
   try {
     let {
       first_name, last_name, phone, password,
       birth_date, birth_year, region, district, village, school,
-      code, role
+      code, role, username, country
     } = req.body;
 
     // Majburiy maydonlar
@@ -383,9 +587,53 @@ app.post("/register", otpVerifyGate, async (req, res) => {
       return res.status(400).json({ error: "Ism, familiya, telefon va parol majburiy" });
     }
 
-    // Rolni tekshirish (faqat ruxsat etilgan rollar)
-    const allowedRoles = ["student", "teacher", "parent", "school_admin"];
-    const userRole = allowedRoles.includes(role) ? role : "student";
+    // Parol kuchini tekshirish (bolalar platformasi — xavfsizlik, 13-qoida)
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.valid) {
+      return res.status(400).json({ error: passwordCheck.error });
+    }
+
+    // ===== USERNAME VALIDATSIYASI (Telegram uslubi) =====
+    if (!username) {
+      return res.status(400).json({ error: "Username majburiy" });
+    }
+    // Kichik harfga o'tkazamiz (@Jasurbek = @jasurbek)
+    username = String(username).toLowerCase().trim();
+    // Format: 5-32 belgi, a-z 0-9 _
+    if (!USERNAME_REGEX.test(username)) {
+      return res.status(400).json({
+        error: "Username 5-32 belgi bo'lishi va faqat a-z, 0-9, _ belgilaridan iborat bo'lishi kerak"
+      });
+    }
+    // Band emasligini tekshirish
+    const usernameTaken = await pool.query(
+      "SELECT id FROM users WHERE username = $1",
+      [username]
+    );
+    if (usernameTaken.rows.length > 0) {
+      return res.status(400).json({ error: "Bu username band. Boshqasini tanlang." });
+    }
+
+    // ===== COUNTRY (davlat kodi — reyting qamrovi uchun, 10/12-qoida) =====
+    // Mobil ilovadan keladi (masalan 'UZ', 'KZ'). Faqat 2 harfli ISO kod.
+    if (country) {
+      country = String(country).toUpperCase().trim();
+      if (!/^[A-Z]{2}$/.test(country)) {
+        country = 'UZ'; // noto'g'ri format — default
+      }
+    } else {
+      country = 'UZ'; // yuborilmasa — default O'zbekiston
+    }
+
+    // Ommaviy ro'yxatdan o'tish faqat o'quvchi uchun. Maktab admini faqat
+    // bir martalik taklif kodi bilan o'tadi. Teacher/parent rollari alohida
+    // taklif yoki admin oqimida berilishi kerak — client yuborgan rolga ishonmaymiz.
+    const requestedRole = String(role || "student").trim().toLowerCase();
+    const publicRoles = new Set(["student", "teacher", "parent"]);
+    if (!publicRoles.has(requestedRole) && requestedRole !== "school_admin") {
+      return res.status(400).json({ error: "Hisob turi noto'g'ri tanlangan" });
+    }
+    const userRole = requestedRole;
 
     // ===== MAKTAB ADMINI: taklif kodini tekshirish (anti-abuse) =====
     let schoolInviteId = null;
@@ -415,6 +663,17 @@ app.post("/register", otpVerifyGate, async (req, res) => {
       school = invite.school_name;
       region = invite.region || region;
       district = invite.district || district;
+    }
+
+    // O'quvchilar maktabi yagona formatda saqlanadi: 1-maktab ... 200-maktab.
+    // Frontend ro'yxatiga ishonmaymiz — API orqali yuborilgan qiymatni ham tekshiramiz.
+    if (userRole === "student" || userRole === "teacher") {
+      const schoolMatch = String(school || "").trim().toLowerCase().match(/^(\d{1,3})-maktab$/);
+      const schoolNumber = schoolMatch ? Number(schoolMatch[1]) : 0;
+      if (!Number.isInteger(schoolNumber) || schoolNumber < 1 || schoolNumber > 200) {
+        return res.status(400).json({ error: "Maktabni 1-maktabdan 200-maktabgacha bo'lgan ro'yxatdan tanlang" });
+      }
+      school = schoolNumber + "-maktab";
     }
 
     // Telefon allaqachon ro'yxatdan o'tganmi
@@ -458,12 +717,12 @@ app.post("/register", otpVerifyGate, async (req, res) => {
     noteOk("otp_verify", _phoneIpKey(req));
     // ============ OTP TEKSHIRUVI TUGADI ============
 
-    // Viloyat-tuman juftligini tekshiramiz (frontendga ishonmaymiz — anti-abuse)
+    // Viloyat-tuman juftligini tekshiramiz (frontendga ishonmaymiz — anti-abuse, 10/12-qoida)
     // Ota-ona uchun viloyat/tuman shart emas (faqat farzand kuzatuvi)
     if (userRole !== "parent") {
-      const regionCheck = validateRegionDistrict(region, district);
-      if (!regionCheck.valid) {
-        return res.status(400).json({ error: regionCheck.error });
+      const locationCheck = validateGlobalLocation(country, region, district);
+      if (!locationCheck.valid) {
+        return res.status(400).json({ error: locationCheck.error });
       }
     }
 
@@ -471,15 +730,15 @@ app.post("/register", otpVerifyGate, async (req, res) => {
 
     const newUser = await pool.query(
       `INSERT INTO users
-       (first_name, last_name, phone, password, birth_date, birth_year, region, district, village, school, role)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-       RETURNING id, first_name, last_name, phone, cefr_level, xp, rating, coins,
-                 region, district, school, role, created_at`,
+       (first_name, last_name, phone, password, birth_date, birth_year, region, district, village, school, role, username, country)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       RETURNING id, first_name, last_name, username, phone, cefr_level, xp, rating, coins,
+                 region, district, school, role, country, created_at`,
       [
         stripUnsafe(first_name, 100), stripUnsafe(last_name, 100), phone, hashedPassword,
         birth_date || null, birth_year || null,
         region || null, district || null, stripUnsafe(village, 150), normalizeSchool(school),
-        userRole
+        userRole, username, country
       ]
     );
 
@@ -509,8 +768,113 @@ app.post("/register", otpVerifyGate, async (req, res) => {
   }
 });
 
+// ============ PAROLNI TIKLASH — KOD YUBORISH (12/13-qoida) ============
+// Register'ning AKSI: telefon ro'yxatdan O'TGAN bo'lishi SHART.
+app.post("/password-reset/send", requireNormalizedPhone, otpSendPerIp, otpSendPerPhone, async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone || phone.trim().length < 9) {
+      return res.status(400).json({ error: "To'g'ri telefon raqamini kiriting" });
+    }
+
+    // Parol tiklash uchun hisob MAVJUD bo'lishi shart
+    const existingUser = await pool.query("SELECT id FROM users WHERE phone = $1", [phone]);
+    // Hisob mavjudligini oshkor qilmaymiz. Aks holda bu endpoint orqali
+    // ro'yxatdan o'tgan telefon raqamlarini aniqlash mumkin bo'ladi.
+    if (existingUser.rows.length === 0) {
+      return res.json({ message: "Agar hisob mavjud bo'lsa, tasdiqlash kodi yuborildi" });
+    }
+
+    // OTP yaratish (register'dagi kabi)
+    const code = generateOtpCode();
+    const hashedCode = await bcrypt.hash(code, 10);
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    await pool.query("DELETE FROM otp_codes WHERE phone = $1", [phone]);
+    await pool.query(
+      "INSERT INTO otp_codes (phone, code, expires_at) VALUES ($1, $2, $3)",
+      [phone, hashedCode, expiresAt]
+    );
+
+    try {
+      await sendSms(phone, code);
+    } catch (smsErr) {
+      console.error("SMS yuborish xatosi:", smsErr.message);
+      return res.status(502).json({ error: "SMS yuborib bo'lmadi. Birozdan keyin qayta urinib ko'ring." });
+    }
+
+    res.json({ message: "Tasdiqlash kodi yuborildi" });
+  } catch (err) {
+    console.error("Parol tiklash OTP xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ============ PAROLNI TIKLASH — TASDIQLASH VA YANGILASH ============
+// Kod + yangi parol keladi; kod qayta tekshiriladi; parol yangilanadi.
+app.post("/password-reset/confirm", requireNormalizedPhone, otpVerifyGate, async (req, res) => {
+  try {
+    const { phone, code, new_password } = req.body;
+
+    if (!phone || !code || !new_password) {
+      return res.status(400).json({ error: "Telefon, kod va yangi parol kiritilishi shart" });
+    }
+
+    // Parol validatsiyasi (kamida 8 belgi, harf + raqam)
+    if (new_password.length < 8 || new_password.length > 128) {
+      return res.status(400).json({ error: "Parol 8-128 belgi bo'lishi kerak" });
+    }
+    if (!/[a-zA-Z]/.test(new_password) || !/[0-9]/.test(new_password)) {
+      return res.status(400).json({ error: "Parolda kamida 1 harf va 1 raqam bo'lishi kerak" });
+    }
+
+    // OTP qayta tekshiruvi (frontendga ishonmaymiz — anti-abuse)
+    const otpResult = await pool.query(
+      "SELECT * FROM otp_codes WHERE phone = $1 ORDER BY created_at DESC LIMIT 1",
+      [phone]
+    );
+    if (otpResult.rows.length === 0) {
+      return res.status(400).json({ error: "Avval tasdiqlash kodini oling" });
+    }
+
+    const otpRecord = otpResult.rows[0];
+    if (new Date() > new Date(otpRecord.expires_at)) {
+      return res.status(400).json({ error: "Kod muddati tugagan, yangi kod oling" });
+    }
+
+    const codeValid = await bcrypt.compare(String(code), otpRecord.code);
+    if (!codeValid) {
+      noteFail("otp_verify", _phoneIpKey(req), 5, 15 * 60 * 1000);
+      return res.status(400).json({ error: "Kod noto'g'ri" });
+    }
+    noteOk("otp_verify", _phoneIpKey(req));
+
+    // Hisob bor-yo'qligini tekshiramiz
+    const userResult = await pool.query("SELECT id FROM users WHERE phone = $1", [phone]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "Hisob topilmadi" });
+    }
+
+    // Yangi parolni hashlab saqlaymiz
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+    await pool.query(
+      "UPDATE users SET password = $1, auth_version = auth_version + 1 WHERE phone = $2",
+      [hashedPassword, phone]
+    );
+
+    // Ishlatilgan kodni o'chiramiz (qayta ishlatilmasin)
+    await pool.query("DELETE FROM otp_codes WHERE phone = $1", [phone]);
+
+    res.json({ message: "Parol muvaffaqiyatli o'zgartirildi" });
+  } catch (err) {
+    console.error("Parol tiklash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
 // TIZIMGA KIRISH (login)
-app.post("/login", loginGate, async (req, res) => {
+app.post("/login", requireNormalizedPhone, loginGate, async (req, res) => {
   try {
     const { phone, password } = req.body;
 
@@ -552,6 +916,7 @@ app.post("/login", loginGate, async (req, res) => {
         id: user.id,
         first_name: user.first_name,
         last_name: user.last_name,
+        username: user.username,
         phone: user.phone,
         cefr_level: user.cefr_level,
         xp: user.xp,
@@ -578,25 +943,6 @@ app.post("/login", loginGate, async (req, res) => {
 // ============ SOCKET.IO (REAL-TIME) ============
 
 // ============ BOT RAQIB ============
-
-// Bot uchun tasodifiy ismlar
-const BOT_NAMES = ["Aziz", "Malika", "Bobur", "Nigora", "Sardor", "Dilnoza", "Jahongir", "Zarina"];
-
-function getRandomBotName() {
-  return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
-}
-
-// ============ BATTLE FORMATLARI (savol soni / vaqt / XP) ============
-const BATTLE_LENGTHS = {
-  quick:    { label: "Quick",    questions: 10, secondsPerQuestion: 15, totalSeconds: 150, xp: 4,  coins: 1 },
-  standard: { label: "Standard", questions: 20, secondsPerQuestion: 15, totalSeconds: 300, xp: 8,  coins: 2 },
-  extended: { label: "Extended", questions: 30, secondsPerQuestion: 15, totalSeconds: 450, xp: 12, coins: 3 },
-  marathon: { label: "Marathon", questions: 40, secondsPerQuestion: 15, totalSeconds: 600, xp: 16, coins: 4 },
-};
-// Format kalitidan savol sonini olamiz (noto'g'ri bo'lsa — standard)
-function lengthConfig(key) {
-  return BATTLE_LENGTHS[key] || BATTLE_LENGTHS.standard;
-}
 
 // ===== SERVER-AUTHORITATIVE TIMER (har savol uchun) =====
 const TIME_PER_QUESTION_MS = 15000; // har savolga 15 sekund
@@ -692,126 +1038,11 @@ async function startBotBattle(roomId, humanPlayer) {
   }
 }
 
-// ============ LIGA (SERVER) ============
-const SERVER_LEAGUES = [
-  { name: "Bronze", min: 0, max: 999 },
-  { name: "Silver", min: 1000, max: 1199 },
-  { name: "Gold", min: 1200, max: 1399 },
-  { name: "Platinum", min: 1400, max: 1599 },
-  { name: "Diamond", min: 1600, max: 1799 },
-  { name: "Master", min: 1800, max: 1999 },
-  { name: "Grandmaster", min: 2000, max: Infinity },
-];
-
-function getLeagueName(rating) {
-  for (const league of SERVER_LEAGUES) {
-    if (rating >= league.min && rating <= league.max) return league.name;
-  }
-  return "Bronze";
-}
-
 // ============ MAKTAB NOMINI BIR XIL QILISH (normalizatsiya) ============
-// XSS himoyasi: foydalanuvchi matnidan HTML/skript belgilarini olib tashlaydi (ism, maktab, chat)
-// Apostrof (') va o'zbekcha ʻ saqlanadi — faqat < > " ` \ olib tashlanadi.
-function stripUnsafe(s, maxLen) {
-  if (s == null) return s;
-  var out = String(s).replace(/[<>"`\\]/g, "").replace(/\s+/g, " ").trim();
-  return maxLen ? out.slice(0, maxLen) : out;
-}
-
-// ===== SANITIZE (Sprint 1): sarlavha/nom/tavsif uchun yumshoqroq tozalash =====
-// stripUnsafe'dan farqi: qo'shtirnoq va apostrofga TEGMAYDI (ingliz sarlavhalarida
-// "Past Simple" kabi qo'shtirnoqlar normal). Faqat < va > olib tashlanadi —
-// HTML teg ochib bo'lmaydi, stored-XSS imkonsiz bo'ladi. Renderda baribir
-// escape qilinadi (ikki qatlamli himoya).
-function sanitizeText(s, maxLen) {
-  if (s == null) return s;
-  var out = String(s).replace(/[<>]/g, "").replace(/\s+/g, " ").trim();
-  return maxLen ? out.slice(0, maxLen) : out;
-}
-
 // ===== SO'KINISH FILTRI (bolalar xavfsizligi) =====
 // Yomon so'zlar ro'yxati. Topilsa — yulduzcha bilan almashtiriladi.
 // Ro'yxat to'liq emas, lekin eng keng tarqalganlarni qamrab oladi.
 // O'zbek, ingliz, rus tillarida. Yangi so'zlarni shu massivga qo'shish mumkin.
-const PROFANITY_LIST = [
-  // Ingliz
-  "fuck", "shit", "bitch", "asshole", "dick", "pussy", "cunt", "bastard", "whore", "slut", "fag", "nigger", "nigga", "retard",
-  // Rus (lotin va kirill)
-  "blyat", "blyad", "suka", "pizdec", "pizda", "khuy", "huy", "ebal", "yebat", "mudak", "gandon",
-  "блять", "блядь", "сука", "пизда", "хуй", "ебать", "мудак", "гандон", "ебал",
-  // O'zbek (keng tarqalgan haqoratlar)
-  "jalab", "qotoq", "qoToq", "ko'toq", "kotoq", "am ", "amini", "amaki seni", "enagni", "onangni", "dalbayob", "dolboyob", "tasqara",
-];
-
-// Matnda so'kinish bormi tekshiradi va yulduzcha bilan almashtiradi.
-function filterProfanity(text) {
-  if (!text) return text;
-  var filtered = text;
-  for (var i = 0; i < PROFANITY_LIST.length; i++) {
-    var word = PROFANITY_LIST[i];
-    if (!word) continue;
-    // So'z chegarasi bilan qidirish (katta-kichik harfsiz). Maxsus belgilarni ekran qilamiz.
-    var escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    var re = new RegExp(escaped, "gi");
-    filtered = filtered.replace(re, function (m) { return "*".repeat(m.length); });
-  }
-  return filtered;
-}
-
-function normalizeSchool(school) {
-  if (!school) return null;
-
-  // 1. Bosh va oxirgi bo'shliqlarni olib tashlash + kichik harf
-  let s = school.trim().toLowerCase();
-
-  if (s === "") return null;
-
-  // 2. Raqam bor-yo'qligini tekshirish (masalan "5", "23")
-  const numberMatch = s.match(/\d+/);
-
-  if (numberMatch) {
-    // Raqam topildi -> "RAQAM-maktab" formatiga keltirish
-    const number = numberMatch[0];
-    return number + "-maktab";
-  }
-
-  // 3. Raqam yo'q bo'lsa (masalan nom bilan) - bo'shliq + xavfli belgilarni tozalash
-  return stripUnsafe(s, 200);
-}
-
-// ============ BILDIRISHNOMA YARATISH ============
-async function createNotification(userId, type, message) {
-  try {
-    await pool.query(
-      "INSERT INTO notifications (user_id, type, message) VALUES ($1, $2, $3)",
-      [userId, type, message]
-    );
-  } catch (err) {
-    console.error("Bildirishnoma yaratish xatosi:", err.message);
-  }
-}
-
-// Foydalanuvchi onlayn/offlayn bo'lganda, uning do'stlariga xabar berish
-async function notifyFriendsStatus(userId, isOnline) {
-  try {
-    const result = await pool.query(
-      `SELECT requester_id, receiver_id FROM friendships
-       WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
-      [userId]
-    );
-    result.rows.forEach(row => {
-      const friendId = String(row.requester_id) === String(userId) ? row.receiver_id : row.requester_id;
-      const friendSocket = onlineUsers[String(friendId)];
-      if (friendSocket) {
-        io.to(friendSocket).emit("friendStatusChanged", { userId: String(userId), isOnline: isOnline });
-      }
-    });
-  } catch (err) {
-    console.error("notifyFriendsStatus xatosi:", err.message);
-  }
-}
-
 // Bot javoblarini taqlid qilish
 function simulateBotAnswers(roomId, botId, questions) {
   let qIndex = 0;
@@ -859,22 +1090,6 @@ function simulateBotAnswers(roomId, botId, questions) {
 
 // ===== 1v1 MATCHMAKING QUEUE (V1) =====
 let waitingQueue = []; // entry: { socketId, userId, name, level, rating, mode, lengthKey, joinedAt, botName, botTimer, expandTimers }
-
-// rating oynasi kutish vaqtiga qarab kengayadi
-function mmRatingWindow(joinedAt) {
-  const waited = Date.now() - joinedAt;
-  if (waited >= 45000) return 200;
-  if (waited >= 20000) return 150;
-  return 100;
-}
-
-// ikki entry mos keladimi (mode + level + rating oynasi)
-function mmCompatible(a, b) {
-  if (a.mode !== b.mode) return false;
-  if (a.level !== b.level) return false;
-  const window = Math.max(mmRatingWindow(a.joinedAt), mmRatingWindow(b.joinedAt));
-  return Math.abs((a.rating || 1000) - (b.rating || 1000)) <= window;
-}
 
 // navbatdan o'chirish + timerlarni tozalash
 function removeFromQueue(socketId) {
@@ -1037,14 +1252,14 @@ function addTeamEntry(mode, entry) {
 }
 const pendingBattles = {}; // Do'st janglari: battle.html'da tayyor bo'lishni kutayotgan
 const onlineUsers = {}; // { userId: socketId }
+const notifyFriendsStatus = createFriendStatusService({ pool, io, onlineUsers, logger: console });
+const pendingRematches = new Map(); // "qabul qiluvchiSocket:so'rovchiSocket" -> server tasdiqlagan so'rov
 const userToRoom = {}; // { userId: roomId } — reconnect uchun: kim qaysi aktiv jangda
 const recentlyFinished = {}; // { userId: roomId } — yaqinda tugagan jang (refresh natijani topishi uchun)
 
 // ============ PARTY (Do'stlar jamoasi) ============
 const parties = {};      // { partyId: { leader, teamMode, maxSize, members: [{userId, name, socketId, isLeader}], status } }
 const userParty = {};    // { userId: partyId } — tez qidirish uchun
-
-function makePartyId() { return "party_" + Date.now() + "_" + Math.floor(Math.random() * 10000); }
 
 // Party holatini barcha a'zolarga yuborish
 function broadcastParty(partyId) {
@@ -1089,20 +1304,6 @@ function removeFromParty(userId) {
 // Pending party janglar (a'zolar team-battle.html ga yetib kelishini kutadi)
 const pendingPartyMatches = {}; // { partyId: { teamMode, teamSize, expected:[uid], arrived:{uid:{...}}, timer } }
 
-var TEAM_BOT_NAMES = ["Sardor", "Jasur", "Aziz", "Bobur", "Dilshod", "Kamol", "Nodir", "Olim", "Rustam", "Sherzod", "Tohir", "Umid"];
-function makeTeamBot(refPlayer, idx) {
-  var bn = TEAM_BOT_NAMES[Math.floor(Math.random() * TEAM_BOT_NAMES.length)];
-  return {
-    socketId: "pbot_" + Date.now() + "_" + idx + "_" + Math.floor(Math.random() * 1000),
-    userId: null,
-    name: bn,
-    level: refPlayer ? refPlayer.level : "A1",
-    lengthKey: refPlayer ? refPlayer.lengthKey : "standard",
-    rating: (refPlayer && refPlayer.rating ? Math.max(800, refPlayer.rating + Math.floor(Math.random() * 200 - 100)) : (1000 + Math.floor(Math.random() * 700))),
-    isBot: true,
-  };
-}
-
 // Party jang qidiruvi — party butun guruh sifatida YAGONA POOLGA kiradi
 function startPartyBattle(partyId) {
   var pending = pendingPartyMatches[partyId];
@@ -1136,39 +1337,8 @@ function startPartyBattle(partyId) {
 }
 
 
-// Raqib kartasi uchun: rating + win rate olish (matchmaking overlay'da ko'rsatish uchun)
-async function getOpponentCardInfo(userId) {
-  if (!userId) return { rating: 1000, win_rate: 0 };
-  try {
-    const r = await pool.query("SELECT rating FROM users WHERE id = $1", [userId]);
-    const rating = r.rows[0] ? r.rows[0].rating : 1000;
-
-    const s = await pool.query(
-      `SELECT COUNT(*) AS total,
-              COUNT(*) FILTER (WHERE outcome = 'win') AS wins
-       FROM battle_history WHERE user_id = $1`,
-      [userId]
-    );
-    const total = parseInt(s.rows[0].total) || 0;
-    const wins = parseInt(s.rows[0].wins) || 0;
-    const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
-
-    return { rating: rating, win_rate: winRate };
-  } catch (e) {
-    return { rating: 1000, win_rate: 0 };
-  }
-}
-
-
 // Jangni boshlash funksiyasi
 // ============ RECONNECT YORDAMCHILARI (Option B) ============
-// Jangdagi o'yinchini userId bo'yicha topish (socket.id kalit qoladi, faqat qidiramiz)
-function findPlayerKeyByUser(battle, userId) {
-  return Object.keys(battle.players).find(
-    (k) => String(battle.players[k].userId) === String(userId)
-  ) || null;
-}
-
 // Reconnect: eski socket.id yozuvini yangi socket.id'ga ko'chirish
 // (battle.players strukturasi o'zgarmaydi — faqat bitta yozuv yangi kalitga o'tadi)
 function rebindPlayerSocket(roomId, userId, newSocketId) {
@@ -1318,11 +1488,11 @@ io.on("connection", (socket) => {
   });
 
   // User online registration
-  socket.on("registerUser", async (userId) => {
+  socket.on("registerUser", async () => {
     // XAVFSIZLIK: token bor bo'lsa — FAQAT token'dagi userId'ga ishonamiz.
     // Client yuborgan userId e'tiborsiz qoldiriladi (IDOR himoyasi).
     // Token yo'q (eski client) bo'lsa — orqaga moslik uchun client userId'ni olamiz.
-    const trustedUserId = socket.authUserId || (userId != null ? String(userId) : null);
+    const trustedUserId = socket.userId;
 
     if (!trustedUserId) {
       socket.emit("errorMessage", {
@@ -1348,7 +1518,7 @@ io.on("connection", (socket) => {
     // If you only allow one active socket per user:
     onlineUsers[normalizedUserId] = socket.id;
 
-    console.log("User online:", normalizedUserId + (socket.authUserId ? " (token)" : " (token yo'q)"));
+    console.log("User online:", normalizedUserId + " (token)");
 
     // Notify user's friends that this user is online
     notifyFriendsStatus(normalizedUserId, true);
@@ -1408,34 +1578,88 @@ io.on("connection", (socket) => {
 
   // User disconnect
   // Rematch: bir o'yinchi qayta jang so'raydi
-  socket.on("requestRematch", ({ opponentId, myUserId, myName, level, lengthKey }) => {
-    myUserId = socket.userId || myUserId; // Sprint 2B (IDOR): ishonchli ID
-    myName = stripUnsafe(myName, 60) || "O'yinchi"; // Sprint 1: XSS himoya
+  socket.on("requestRematch", async ({ opponentId, level, lengthKey }) => {
+    const myUserId = socket.userId;
+    if (!opponentId || String(opponentId) === String(myUserId)) {
+      socket.emit("rematchUnavailable", { message: "Rematch so'rovi noto'g'ri" });
+      return;
+    }
     const targetSocketId = onlineUsers[String(opponentId)];
     if (!targetSocketId) {
       socket.emit("rematchUnavailable", { message: "Raqib hozir mavjud emas" });
       return;
     }
-    io.to(targetSocketId).emit("rematchRequested", {
-      fromUserId: myUserId,
-      fromName: myName,
-      fromSocketId: socket.id,
-      level: level || "A1",
-      lengthKey: lengthKey || "standard",
-    });
+    try {
+      const recent = await pool.query(
+        `SELECT u.first_name, u.last_name
+         FROM users u
+         WHERE u.id=$1 AND EXISTS (
+           SELECT 1 FROM battle_history bh
+           WHERE bh.user_id=$1 AND bh.opponent_id=$2
+             AND bh.created_at > NOW() - INTERVAL '2 hours'
+         )`,
+        [myUserId, opponentId]
+      );
+      if (!recent.rows[0]) {
+        socket.emit("rematchUnavailable", { message: "Faqat yaqinda jang qilgan raqibga rematch yuboriladi" });
+        return;
+      }
+      const fromName = stripUnsafe(
+        ((recent.rows[0].first_name || "") + " " + (recent.rows[0].last_name || "")).trim(),
+        60
+      ) || "O'yinchi";
+      const request = {
+        fromSocketId: socket.id,
+        fromUserId: String(myUserId),
+        toUserId: String(opponentId),
+        fromName,
+        level: ["A1", "A2", "B1", "B2", "C1"].includes(level) ? level : "A1",
+        lengthKey: BATTLE_LENGTHS[lengthKey] ? lengthKey : "standard",
+        expiresAt: Date.now() + 60000,
+      };
+      const rematchKey = targetSocketId + ":" + socket.id;
+      pendingRematches.set(rematchKey, request);
+      const cleanup = setTimeout(() => {
+        if (pendingRematches.get(rematchKey) === request) pendingRematches.delete(rematchKey);
+      }, 61000);
+      cleanup.unref();
+      io.to(targetSocketId).emit("rematchRequested", request);
+    } catch (err) {
+      console.error("Rematch tekshirish xatosi:", err.message);
+      socket.emit("rematchUnavailable", { message: "Rematchni tekshirib bo'lmadi" });
+    }
   });
 
   // Rematch javobi
-  socket.on("rematchResponse", async ({ accepted, fromSocketId, fromUserId, fromName, myUserId, myName, level, lengthKey }) => {
-    myUserId = socket.userId || myUserId; // Sprint 2B (IDOR): javob beruvchi = shu socket egasi
-    fromName = stripUnsafe(fromName, 60) || "O'yinchi"; // Sprint 1: XSS himoya
-    myName = stripUnsafe(myName, 60) || "O'yinchi";
+  socket.on("rematchResponse", async ({ accepted, fromSocketId }) => {
+    const myUserId = socket.userId;
+    const requestKey = socket.id + ":" + fromSocketId;
+    const request = pendingRematches.get(requestKey);
+    pendingRematches.delete(requestKey);
+    if (!request || request.expiresAt < Date.now() || request.toUserId !== String(myUserId)) {
+      socket.emit("rematchUnavailable", { message: "Rematch so'rovi eskirgan yoki haqiqiy emas" });
+      return;
+    }
+    const fromUserId = request.fromUserId;
+    const fromName = request.fromName;
     const requesterSocket = io.sockets.sockets.get(fromSocketId);
+    if (!requesterSocket || String(requesterSocket.userId) !== String(fromUserId)) {
+      socket.emit("rematchUnavailable", { message: "Rematch so'rovi haqiqiy emas" });
+      return;
+    }
+    let myName = "O'yinchi";
+    try {
+      const meRes = await pool.query("SELECT first_name, last_name FROM users WHERE id=$1", [myUserId]);
+      if (meRes.rows[0]) {
+        myName = stripUnsafe(((meRes.rows[0].first_name || "") + " " + (meRes.rows[0].last_name || "")).trim(), 60) || myName;
+      }
+    } catch (e) {}
     if (!accepted) {
       if (requesterSocket) requesterSocket.emit("rematchDeclined", { byName: myName });
       return;
     }
-    const lk = lengthKey || "standard";
+    const level = request.level;
+    const lk = request.lengthKey;
     const roomId = "friend_battle_rematch_" + fromSocketId + "_" + socket.id + "_" + Date.now();
 
     let fromPic = null, myPic = null;
@@ -1468,7 +1692,7 @@ io.on("connection", (socket) => {
   // Party yaratish (lider bo'lib)
   socket.on("createParty", ({ userId, name, teamMode, profile_picture }) => {
     // Sprint 2B (IDOR): client userId'ga ishonmaymiz — token'dan kelgan socket.userId
-    var uid = socket.userId || (userId != null ? String(userId) : null);
+    var uid = socket.userId;
     if (!uid) return;
 
     // Avvalgi partydan chiqaramiz (agar bor bo'lsa)
@@ -1483,6 +1707,7 @@ io.on("connection", (socket) => {
       teamMode: mode,
       maxSize: maxSize,
       status: "forming",
+      invited: {},
       members: [{ userId: uid, name: stripUnsafe(name, 60) || "O'yinchi", socketId: socket.id, isLeader: true, profile_picture: profile_picture || null }],
     };
     userParty[uid] = partyId;
@@ -1497,6 +1722,7 @@ io.on("connection", (socket) => {
     fromName = stripUnsafe(fromName, 60) || "O'yinchi"; // Sprint 1: XSS himoya
     var party = parties[partyId];
     if (!party) { socket.emit("partyError", { message: "Party topilmadi" }); return; }
+    if (String(party.leader) !== String(socket.userId)) { socket.emit("partyError", { message: "Faqat lider taklif yubora oladi" }); return; }
     if (party.members.length >= party.maxSize) { socket.emit("partyError", { message: "Party to'la" }); return; }
 
     var targetSocket = onlineUsers[String(toUserId)];
@@ -1508,6 +1734,7 @@ io.on("connection", (socket) => {
       return;
     }
 
+    party.invited[String(toUserId)] = true;
     io.to(targetSocket).emit("partyInviteReceived", {
       partyId: partyId,
       fromName: fromName || "O'yinchi",
@@ -1519,9 +1746,10 @@ io.on("connection", (socket) => {
 
   // Taklifni qabul qilish
   socket.on("acceptPartyInvite", ({ partyId, userId, name, profile_picture }) => {
-    userId = socket.userId || userId; // Sprint 2B (IDOR): ishonchli ID
+    userId = socket.userId;
     var party = parties[partyId];
     if (!party) { socket.emit("partyError", { message: "Party endi mavjud emas" }); return; }
+    if (!party.invited || !party.invited[String(userId)]) { socket.emit("partyError", { message: "Party taklifi topilmadi" }); return; }
     if (party.members.length >= party.maxSize) { socket.emit("partyError", { message: "Party to'lib qoldi" }); return; }
 
     var uid = String(userId);
@@ -1533,6 +1761,7 @@ io.on("connection", (socket) => {
       party.members.push({ userId: uid, name: stripUnsafe(name, 60) || "O'yinchi", socketId: socket.id, isLeader: false, profile_picture: profile_picture || null });
       userParty[uid] = partyId;
     }
+    delete party.invited[uid];
     broadcastParty(partyId);
     console.log("Party qo'shildi: " + uid + " -> " + partyId);
   });
@@ -1547,7 +1776,7 @@ io.on("connection", (socket) => {
 
   // Partydan chiqish
   socket.on("leaveParty", ({ userId }) => {
-    userId = socket.userId || userId; // Sprint 2B (IDOR): ishonchli ID
+    userId = socket.userId;
     removeFromParty(String(userId));
     socket.emit("partyLeft", {});
   });
@@ -1555,7 +1784,7 @@ io.on("connection", (socket) => {
   // Lider party jangini boshlaydi
   socket.on("startPartyQueue", ({ partyId, userId }) => {
     // Sprint 2B (IDOR): lider tekshiruvi endi ishonchli socket.userId asosida
-    var uid = socket.userId || (userId != null ? String(userId) : null);
+    var uid = socket.userId;
     var party = parties[partyId];
     if (!party) { socket.emit("partyError", { message: "Party topilmadi" }); return; }
     if (String(party.leader) !== String(uid)) { socket.emit("partyError", { message: "Faqat lider boshlay oladi" }); return; }
@@ -1587,7 +1816,11 @@ io.on("connection", (socket) => {
       io.to(socket.id).emit("partyMatchExpired", {});
       return;
     }
-    var uid = socket.userId || String(userId); // Sprint 2B (IDOR): ishonchli ID
+    var uid = socket.userId;
+    if (pending.expected.indexOf(String(uid)) === -1) {
+      socket.emit("partyError", { message: "Siz bu party a'zosi emassiz" });
+      return;
+    }
     pending.arrived[uid] = { socketId: socket.id, userId: uid, name: stripUnsafe(name, 60) || "O'yinchi", level: level || "A1", rating: 1000, lengthKey: lengthKey || "standard", profile_picture: profile_picture || null };
 
     console.log("Party a'zosi yetib keldi: " + uid + " -> " + partyId + " (" + Object.keys(pending.arrived).length + "/" + pending.expected.length + ")");
@@ -1606,7 +1839,7 @@ io.on("connection", (socket) => {
   // Do'stga jang chaqiruvi yuborish
   socket.on("challengeFriend", async ({ fromUserId, fromName, toUserId, level, lengthKey }) => {
     // Sprint 2B (IDOR): chaqiruvchi ID token'dan — boshqa nomidan chaqiruv yuborib bo'lmaydi
-    fromUserId = socket.userId || fromUserId;
+    fromUserId = socket.userId;
     console.log("Chaqiruv:", fromUserId, "->", toUserId, "| Onlayn:", Object.keys(onlineUsers));
     const targetSocketId = onlineUsers[String(toUserId)];
 
@@ -1641,7 +1874,7 @@ io.on("connection", (socket) => {
 
   // Chaqiruvni bekor qilish (yuboruvchi) — do'stdagi taklifni yo'qotamiz
   socket.on("cancelChallenge", ({ fromUserId, toUserId }) => {
-    fromUserId = socket.userId || fromUserId; // Sprint 2B (IDOR): ishonchli ID
+    fromUserId = socket.userId;
     const targetSocketId = onlineUsers[String(toUserId)];
     if (targetSocketId) {
       io.to(targetSocketId).emit("challengeCancelled", { fromUserId });
@@ -1650,10 +1883,15 @@ io.on("connection", (socket) => {
 
   // Chaqiruvga javob (qabul yoki rad)
   socket.on("challengeResponse", async ({ accepted, fromSocketId, fromUserId, fromName, myUserId, myName, level, lengthKey }) => {
-    myUserId = socket.userId || myUserId; // Sprint 2B (IDOR): javob beruvchi = shu socket egasi
+    myUserId = socket.userId;
     fromName = stripUnsafe(fromName, 60) || "O'yinchi"; // Sprint 1: XSS himoya
     myName = stripUnsafe(myName, 60) || "O'yinchi";
     const challengerSocket = io.sockets.sockets.get(fromSocketId);
+    if (!challengerSocket || String(challengerSocket.userId) !== String(fromUserId)) {
+      socket.emit("challengeResult", { success: false, message: "Chaqiruv haqiqiy emas" });
+      return;
+    }
+    fromUserId = challengerSocket.userId;
 
     if (!accepted) {
       if (challengerSocket) {
@@ -1710,10 +1948,17 @@ io.on("connection", (socket) => {
 
   // Do'st jangi: battle.html ochilganda o'yinchi "tayyorman" deydi
   socket.on("joinFriendBattle", ({ roomId, userId }) => {
-    userId = socket.userId || userId; // Sprint 2B (IDOR): ishonchli ID
-    socket.join(roomId);
+    userId = socket.userId;
     const pending = pendingBattles[roomId];
     if (!pending) return;
+
+    const isExpectedPlayer = String(pending.player1.userId) === String(userId) ||
+                             String(pending.player2.userId) === String(userId);
+    if (!isExpectedPlayer) {
+      socket.emit("battleError", { message: "Bu jangga kirishga ruxsat yo'q" });
+      return;
+    }
+    socket.join(roomId);
 
     // Qaysi o'yinchi ekanini topib, tayyor + yangi socketId belgilash
     if (String(pending.player1.userId) === String(userId)) {
@@ -1741,7 +1986,7 @@ io.on("connection", (socket) => {
 
     const me = {
       socketId: socket.id,
-      userId: socket.userId || playerData.userId, // Sprint 2B (IDOR): ishonchli ID
+      userId: socket.userId,
       name: stripUnsafe(playerData.name, 60) || "O'yinchi",
       level: playerData.level || "A1",
       rating: playerData.rating || 1000,
@@ -1792,7 +2037,7 @@ io.on("connection", (socket) => {
   // ============ JAMOA MATCHMAKING (Duo 2v2 / Squad 4v4) — yagona pool ============
   socket.on("findTeamMatch", async (playerData) => {
     playerData = playerData || {};
-    if (socket.userId) playerData.userId = socket.userId; // Sprint 2B (IDOR): ishonchli ID
+    playerData.userId = socket.userId;
     try {
       var teamMode = playerData.teamMode === "squad" ? "squad" : "duo";
       var entry = {
@@ -1994,7 +2239,7 @@ io.on("connection", (socket) => {
 
   // ===== RECONNECT: client ulanганda "men aktiv jangda bormanmi?" deb so'raydi =====
  socket.on("battle:reconnectCheck", async ({ userId, expectedRoom }) => {
-    userId = socket.userId || userId; // Sprint 2B (IDOR): ishonchli ID
+    userId = socket.userId;
     if (!userId) { socket.emit("battle:noActive", {}); return; }
 
     // XAVFSIZLIK: token bor bo'lsa — FAQAT token'dagi userId'ga ishonamiz (IDOR himoyasi).
@@ -2633,12 +2878,6 @@ function fillTeamWithBots(teamMode, teamSize, needed) {
 }
 
 // ===== SCHOOL BATTLE: maktabga ochko yig'ish =====
-function currentSeason() {
-  var d = new Date();
-  var q = Math.floor(d.getMonth() / 3) + 1; // 3 oylik mavsum (chorak): Yan-Mar=1, Apr-Iyun=2...
-  return d.getFullYear() + "-S" + q; // masalan "2026-S2"
-}
-
 async function awardSchoolPoints(userId, points, source) {
   if (!userId || !points || points <= 0) return;
   try {
@@ -2742,7 +2981,7 @@ async function finishTeamBattle(roomId) {
         var result = await pool.query(
           `UPDATE users SET xp = xp + $1, coins = coins + $2, rating = GREATEST(0, rating + $3), ${streakSql}
            WHERE id = $4
-           RETURNING id, first_name, last_name, email, cefr_level, xp, rating, coins, win_streak, best_win_streak`,
+           RETURNING id, first_name, last_name, username, cefr_level, xp, rating, coins, win_streak, best_win_streak`,
           [xpEarned, coinsEarned, ratingDelta, me.userId]
         );
         if (result.rows.length > 0) {
@@ -2930,7 +3169,7 @@ async function finishBattle(roomId) {
                rating = GREATEST(0, rating + $3),
                ${streakSql}
            WHERE id = $4
-           RETURNING id, first_name, last_name, email, cefr_level, xp, rating, coins, win_streak, best_win_streak`,
+           RETURNING id, first_name, last_name, username, cefr_level, xp, rating, coins, win_streak, best_win_streak`,
           [xpEarned, coinsEarned, ratingDelta, me.userId]
         );
         if (result.rows.length > 0) {
@@ -3442,37 +3681,14 @@ async function logAudit(req, action, opts) {
 
 // ===== ADMIN LOGIN RATE LIMIT (in-memory, tashqi paketsiz) =====
 // Brute-force himoyasi: bir IP'dan ketma-ket noto'g'ri urinishlarni cheklaydi
-var _adminLoginAttempts = {}; // { ip: { count, firstAt, blockedUntil } }
-function adminLoginRateLimit(req, res, next) {
-  var ip = clientIp(req);
-  var now = Date.now();
-  var rec = _adminLoginAttempts[ip];
-
-  // Blok muddati o'tgan bo'lsa — tozalaymiz
-  if (rec && rec.blockedUntil && now > rec.blockedUntil) { delete _adminLoginAttempts[ip]; rec = null; }
-
-  // Bloklangan bo'lsa — rad etamiz
-  if (rec && rec.blockedUntil && now <= rec.blockedUntil) {
-    var waitMin = Math.ceil((rec.blockedUntil - now) / 60000);
-    return res.status(429).json({ error: "Juda ko'p urinish. " + waitMin + " daqiqadan keyin qayta urinib ko'ring." });
-  }
-  next();
-}
+var adminLoginRateLimit = failGate("admin_login", { keyFn: _ipOf, message: "Juda ko'p admin kirish urinishi." });
 
 // Noto'g'ri urinishni qayd qilish
 function recordFailedLogin(req) {
-  var ip = clientIp(req);
-  var now = Date.now();
-  if (!_adminLoginAttempts[ip]) _adminLoginAttempts[ip] = { count: 0, firstAt: now };
-  _adminLoginAttempts[ip].count++;
-  // 5 ta noto'g'ri urinishdan keyin — 15 daqiqa blok
-  if (_adminLoginAttempts[ip].count >= 5) {
-    _adminLoginAttempts[ip].blockedUntil = now + 15 * 60 * 1000;
-  }
+  noteFail("admin_login", _ipOf(req), 5, 15 * 60 * 1000);
 }
 function clearLoginAttempts(req) {
-  var ip = clientIp(req);
-  delete _adminLoginAttempts[ip];
+  noteOk("admin_login", _ipOf(req));
 }
 
 // ===== ADMIN AUTH ENDPOINTLAR =====
@@ -3480,16 +3696,21 @@ function clearLoginAttempts(req) {
 // Admin login — parolni tekshiradi, token beradi
 app.post("/admin/login", adminLoginRateLimit, async (req, res) => {
   try {
-    const { password } = req.body;
+    const { password, totp } = req.body;
     var passOk = await checkAdminPassword(password);
-    if (!passOk) {
+    const totpOk = adminTotpValid(totp);
+    if (!passOk || !totpOk) {
       recordFailedLogin(req);
       // Noto'g'ri login urinishini audit'ga yozamiz
-      await logAudit(req, "admin_login_failed", { details: "Noto'g'ri parol urinishi" });
-      return res.status(401).json({ error: "Noto'g'ri parol" });
+      await logAudit(req, "admin_login_failed", { details: "Noto'g'ri admin kirish urinishi" });
+      return res.status(401).json({ error: "Parol yoki 2FA kod noto'g'ri" });
     }
     clearLoginAttempts(req); // muvaffaqiyatli — urinishlarni tozalaymiz
-    const token = signAdminToken("Admin");
+    const versionResult = await pool.query(
+      "SELECT setting_value FROM admin_settings WHERE setting_key = 'admin_auth_version'"
+    );
+    const adminAuthVersion = versionResult.rows.length ? Number(versionResult.rows[0].setting_value) || 0 : 0;
+    const token = signAdminToken("Admin", adminAuthVersion);
     // req.admin'ni qo'lda o'rnatamiz (logAudit uchun)
     req.admin = { name: "Admin" };
     await logAudit(req, "admin_login_success", { details: "Admin tizimga kirdi" });
@@ -3501,13 +3722,18 @@ app.post("/admin/login", adminLoginRateLimit, async (req, res) => {
 });
 
 // Admin token tekshirish — sahifa qayta yuklanganda token hali amal qiladimi
-app.get("/admin/me", requireAdmin, (req, res) => {
-  res.json({ admin: req.admin });
-});
+app.use(adminMeRoutes);
 
 // Admin logout — token frontend'da o'chiriladi, bu yerda faqat audit
 app.post("/admin/logout", requireAdmin, async (req, res) => {
   await logAudit(req, "admin_logout", { details: "Admin tizimdan chiqdi" });
+  await pool.query(
+    `INSERT INTO admin_settings (setting_key, setting_value, updated_at)
+     VALUES ('admin_auth_version', '1', NOW())
+     ON CONFLICT (setting_key) DO UPDATE
+       SET setting_value = ((COALESCE(admin_settings.setting_value, '0'))::int + 1)::text,
+           updated_at = NOW()`
+  );
   res.json({ message: "Chiqildi" });
 });
 
@@ -3518,8 +3744,9 @@ app.post("/admin/settings/password", requireAdmin, async (req, res) => {
     if (!current_password || !new_password) {
       return res.status(400).json({ error: "Joriy va yangi parol kerak" });
     }
-    if (new_password.length < 6) {
-      return res.status(400).json({ error: "Yangi parol kamida 6 belgi bo'lishi kerak" });
+    const newPassCheck = validatePassword(new_password);
+    if (!newPassCheck.valid) {
+      return res.status(400).json({ error: newPassCheck.error });
     }
 
     // Joriy parolni tekshiramiz (xavfsizlik — eski parolni bilmasangiz o'zgartira olmaysiz)
@@ -3537,6 +3764,13 @@ app.post("/admin/settings/password", requireAdmin, async (req, res) => {
        ON CONFLICT (setting_key) DO UPDATE SET setting_value = $1, updated_at = NOW()`,
       [hashed]
     );
+    await pool.query(
+      `INSERT INTO admin_settings (setting_key, setting_value, updated_at)
+       VALUES ('admin_auth_version', '1', NOW())
+       ON CONFLICT (setting_key) DO UPDATE
+         SET setting_value = ((COALESCE(admin_settings.setting_value, '0'))::int + 1)::text,
+             updated_at = NOW()`
+    );
 
     await logAudit(req, "admin_password_changed", { details: "Admin parol o'zgartirildi" });
     res.json({ message: "Parol muvaffaqiyatli o'zgartirildi" });
@@ -3547,32 +3781,7 @@ app.post("/admin/settings/password", requireAdmin, async (req, res) => {
 });
 
 // Tizim ma'lumotlari (Settings sahifasi uchun)
-app.get("/admin/settings/info", requireAdmin, async (req, res) => {
-  try {
-    // Parol manbai: bazadami yoki _env (eski)?
-    var pwResult = await pool.query("SELECT updated_at FROM admin_settings WHERE setting_key = 'admin_password_hash'");
-    var passwordSource = pwResult.rows.length > 0 ? "database" : "env";
-    var passwordUpdated = pwResult.rows.length > 0 ? pwResult.rows[0].updated_at : null;
-
-    // Umumiy sonlar
-    var counts = await Promise.all([
-      pool.query("SELECT COUNT(*) AS c FROM users"),
-      pool.query("SELECT COUNT(*) AS c FROM questions"),
-      pool.query("SELECT COUNT(*) AS c FROM audit_logs"),
-    ]);
-
-    res.json({
-      passwordSource: passwordSource,
-      passwordUpdated: passwordUpdated,
-      totalUsers: parseInt(counts[0].rows[0].c),
-      totalQuestions: parseInt(counts[1].rows[0].c),
-      totalAuditLogs: parseInt(counts[2].rows[0].c),
-    });
-  } catch (err) {
-    console.error("Settings info xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminSettingsInfoRoutes());
 
 // ============ MODERATSIYA (SHIKOYAT / FLAG) ============
 
@@ -3690,48 +3899,13 @@ app.post("/admin/flags/resolve", requireAdmin, async (req, res) => {
 });
 
 // Admin: kutilayotgan shikoyatlar soni (sidebar badge uchun)
-app.get("/admin/flags/count", requireAdmin, async (req, res) => {
-  try {
-    var result = await pool.query("SELECT COUNT(*) AS c FROM flags WHERE status = 'pending'");
-    res.json({ pending: parseInt(result.rows[0].c) });
-  } catch (err) {
-    res.json({ pending: 0 });
-  }
-});
+app.use(adminFlagCountRoutes());
 
 // Admin: foydalanuvchining so'nggi chat xabarlari (moderatsiya uchun)
-app.get("/admin/users/:id/messages", requireAdmin, async (req, res) => {
-  try {
-    var id = parseInt(req.params.id);
-    if (!id) return res.status(400).json({ error: "Noto'g'ri ID" });
-
-    var result = await pool.query(
-      "SELECT message, room_id, created_at FROM chat_messages WHERE sender_id = $1 ORDER BY created_at DESC LIMIT 50",
-      [id]
-    );
-    res.json({ messages: result.rows });
-  } catch (err) {
-    console.error("Foydalanuvchi xabarlari xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminUserMessagesRoutes());
 
 // Admin: bitta jang (room) suhbati — ikkala o'yinchi xabarlari (moderatsiya)
-app.get("/admin/room-messages", requireAdmin, async (req, res) => {
-  try {
-    var roomId = (req.query.room || "").trim();
-    if (!roomId) return res.status(400).json({ error: "Room ID kerak" });
-
-    var result = await pool.query(
-      "SELECT sender_id, sender_name, message, created_at FROM chat_messages WHERE room_id = $1 ORDER BY created_at ASC LIMIT 200",
-      [roomId]
-    );
-    res.json({ messages: result.rows });
-  } catch (err) {
-    console.error("Room xabarlari xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminRoomMessagesRoutes());
 
 // ===== ADMIN: HISOBOTLAR (REPORTS) =====
 // Tahlil — vaqt oralig'i bo'yicha. Query: ?days=30 (yoki 7, 90)
@@ -3759,7 +3933,7 @@ app.get("/admin/reports", requireAdmin, async (req, res) => {
       // 7. Eng faol viloyatlar (top 6)
       pool.query("SELECT region, COUNT(*) AS c FROM users WHERE region IS NOT NULL AND region != '' GROUP BY region ORDER BY c DESC LIMIT 6"),
       // 8. Eng faol maktablar (top 6, o'quvchi soni bo'yicha)
-      pool.query("SELECT school, region, COUNT(*) AS c FROM users WHERE school IS NOT NULL AND school != '' GROUP BY school, region ORDER BY c DESC LIMIT 6"),
+      pool.query("SELECT school, region, district, COUNT(*) AS c FROM users WHERE school IS NOT NULL AND school != '' GROUP BY school, region, district ORDER BY c DESC LIMIT 6"),
     ]);
 
     res.json({
@@ -3799,7 +3973,7 @@ app.get("/practice/start", authMiddleware, async (req, res) => {
 
     // Savollarni olamiz (to'g'ri javob bilan — practice'da darhol ko'rsatamiz)
     var result = await pool.query(
-      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, skill
+      `SELECT id, question_text, option_a, option_b, option_c, option_d, skill
        FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
       [level, count]
     );
@@ -3807,7 +3981,7 @@ app.get("/practice/start", authMiddleware, async (req, res) => {
     // Yetarli savol bo'lmasa — har qanday darajadan to'ldiramiz
     if (result.rows.length < count) {
       var extra = await pool.query(
-        `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, skill
+        `SELECT id, question_text, option_a, option_b, option_c, option_d, skill
          FROM questions WHERE cefr_level != $1 ORDER BY RANDOM() LIMIT $2`,
         [level, count - result.rows.length]
       );
@@ -3818,7 +3992,15 @@ app.get("/practice/start", authMiddleware, async (req, res) => {
       return res.status(404).json({ error: "Hozircha savollar mavjud emas" });
     }
 
-    res.json({ level: level, total: result.rows.length, questions: result.rows });
+    const sessionId = crypto.randomUUID();
+    const questionIds = result.rows.map((q) => Number(q.id));
+    await pool.query(
+      `INSERT INTO practice_sessions (id, user_id, level, question_ids, expires_at)
+       VALUES ($1, $2, $3, $4, NOW() + INTERVAL '60 minutes')`,
+      [sessionId, req.user.id, level, questionIds]
+    );
+
+    res.json({ session_id: sessionId, level: level, total: result.rows.length, questions: result.rows });
   } catch (err) {
     console.error("Practice start xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
@@ -3827,6 +4009,87 @@ app.get("/practice/start", authMiddleware, async (req, res) => {
 
 // Practice yakunlash — XP berish (reyting YO'Q, faqat XP)
 // Sprint 2A: XP-farming himoyasi — soatiga max 12 ta practice yakunlash (user boyicha)
+// Practice javobini server tekshiradi. To'g'ri variant faqat shu savolga
+// birinchi javob berilgandan keyin qaytariladi.
+app.post("/practice/answer", authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const sessionId = String(req.body.session_id || "");
+    const questionId = parseInt(req.body.question_id, 10);
+    const answer = String(req.body.answer || "").toUpperCase();
+    if (!sessionId || !questionId || !["A", "B", "C", "D"].includes(answer)) {
+      return res.status(400).json({ error: "Noto'g'ri javob ma'lumoti" });
+    }
+
+    await client.query("BEGIN");
+    const sessionResult = await client.query(
+      `SELECT * FROM practice_sessions
+       WHERE id = $1 AND user_id = $2
+       FOR UPDATE`,
+      [sessionId, req.user.id]
+    );
+    const session = sessionResult.rows[0];
+    if (!session || session.status !== "active") {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Practice sessiyasi faol emas" });
+    }
+    if (new Date(session.expires_at) < new Date()) {
+      await client.query("UPDATE practice_sessions SET status='expired' WHERE id=$1", [sessionId]);
+      await client.query("COMMIT");
+      return res.status(400).json({ error: "Practice sessiyasi muddati tugagan" });
+    }
+
+    const questionIds = (session.question_ids || []).map(Number);
+    const answeredIds = (session.answered_ids || []).map(Number);
+    if (!questionIds.includes(questionId)) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Savol bu sessiyaga tegishli emas" });
+    }
+    if (answeredIds.includes(questionId)) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "Bu savolga allaqachon javob berilgan" });
+    }
+
+    const questionResult = await client.query(
+      "SELECT correct_option, explanation FROM questions WHERE id = $1",
+      [questionId]
+    );
+    if (!questionResult.rows[0]) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Savol topilmadi" });
+    }
+    const question = questionResult.rows[0];
+    const isCorrect = answer === question.correct_option;
+    const updated = await client.query(
+      `UPDATE practice_sessions
+       SET answered_ids = array_append(answered_ids, $1::integer),
+           correct_count = correct_count + $2
+       WHERE id = $3
+       RETURNING correct_count, cardinality(answered_ids) AS answered_count`,
+      [questionId, isCorrect ? 1 : 0, sessionId]
+    );
+    await client.query("COMMIT");
+
+    res.json({
+      is_correct: isCorrect,
+      correct_option: question.correct_option,
+      explanation: question.explanation || null,
+      correct_count: updated.rows[0].correct_count,
+      answered_count: updated.rows[0].answered_count,
+      total: questionIds.length,
+    });
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    console.error("Practice answer xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  } finally {
+    client.release();
+  }
+});
+
+// Logout token versiyasini oshiradi: shu hisobning oldingi JWT tokenlari darhol bekor bo'ladi.
+app.use(logoutRoutes());
+
 var practiceFinishLimiter = countLimiter("practice_finish", {
   keyFn: function (req) { return "u:" + (req.user && req.user.id); },
   max: 12, windowMs: 60 * 60 * 1000, blockMs: 30 * 60 * 1000,
@@ -3834,23 +4097,47 @@ var practiceFinishLimiter = countLimiter("practice_finish", {
 });
 
 app.post("/practice/finish", authMiddleware, practiceFinishLimiter, async (req, res) => {
+  const client = await pool.connect();
   try {
     var userId = req.user.id;
-    var correct = parseInt(req.body.correct) || 0;
-    var total = parseInt(req.body.total) || 0;
+    var sessionId = String(req.body.session_id || "");
+    if (!sessionId) return res.status(400).json({ error: "Practice sessiyasi topilmadi" });
+
+    await client.query("BEGIN");
+    const sessionResult = await client.query(
+      `SELECT * FROM practice_sessions
+       WHERE id = $1 AND user_id = $2
+       FOR UPDATE`,
+      [sessionId, userId]
+    );
+    const session = sessionResult.rows[0];
+    if (!session || session.status !== "active") {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Practice sessiyasi faol emas" });
+    }
+    const total = (session.question_ids || []).length;
+    const answered = (session.answered_ids || []).length;
+    const correct = Number(session.correct_count) || 0;
 
     // Sprint 2A: total'ga yuqori chegara — practice max 30 savol, undan katta so'rov = firibgarlik
-    if (total <= 0 || total > 30 || correct < 0 || correct > total) {
-      return res.status(400).json({ error: "Noto'g'ri natija" });
+    if (total <= 0 || answered !== total) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Barcha savollarga javob bering" });
     }
 
     // Practice XP: har to'g'ri javob uchun 2 XP (rankedّdan kam — bu mashq)
     var xpEarned = correct * 2;
 
-    var updated = await pool.query(
+    await client.query(
+      "UPDATE practice_sessions SET status='finished', finished_at=NOW() WHERE id=$1",
+      [sessionId]
+    );
+    var updated = await client.query(
       "UPDATE users SET xp = xp + $1 WHERE id = $2 RETURNING id, xp, cefr_level, rating",
       [xpEarned, userId]
     );
+
+    await client.query("COMMIT");
 
     // Topshiriq progressini ham yangilaymiz (practice ham "javob berish" hisoblanadi)
     await updateQuestProgress(userId, { won: false, correctAnswers: correct, xpEarned: xpEarned });
@@ -3862,8 +4149,11 @@ app.post("/practice/finish", authMiddleware, practiceFinishLimiter, async (req, 
       updated_user: updated.rows[0],
     });
   } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
     console.error("Practice finish xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
+  } finally {
+    client.release();
   }
 });
 
@@ -3977,23 +4267,6 @@ app.get("/admin/tournaments/list", requireAdmin, async (req, res) => {
 
 // ===== SETKA GENERATSIYASI (Bosqich 4) =====
 
-// Standart seeding tartibi (kuchlilar finalda uchrashadi)
-function seedOrder(size) {
-  // 2 lik asosдан boshlab rekursiv quramiz
-  let rounds = Math.log2(size);
-  let order = [1, 2];
-  for (let r = 1; r < rounds; r++) {
-    const next = [];
-    const sum = order.length * 2 + 1;
-    for (const x of order) {
-      next.push(x);
-      next.push(sum - x);
-    }
-    order = next;
-  }
-  return order; // masalan size=8 → [1,8,5,4,3,6,7,2] tartibida pozitsiyalar
-}
-
 // Setkani yaratish — seeding + bracket + jadval
 app.post("/admin/tournaments/:id/generate-bracket", requireAdmin, async (req, res) => {
   const client = await pool.connect();
@@ -4011,7 +4284,7 @@ app.post("/admin/tournaments/:id/generate-bracket", requireAdmin, async (req, re
 
     // Qatnashuvchi maktablar (jamoa tuzganlar) — reyting bo'yicha
     const schoolsQ = await client.query(
-      `SELECT school, region, district, avg_rating
+      `SELECT school, region, district, school_key, avg_rating
        FROM tournament_schools
        WHERE tournament_id = $1
        ORDER BY avg_rating DESC, school ASC`,
@@ -4033,8 +4306,8 @@ app.post("/admin/tournaments/:id/generate-bracket", requireAdmin, async (req, re
     await client.query("BEGIN");
     for (let i = 0; i < n; i++) {
       await client.query(
-        "UPDATE tournament_schools SET seed = $1, eliminated = false, placement = NULL WHERE tournament_id = $2 AND school = $3",
-        [i + 1, tid, schools[i].school]
+        "UPDATE tournament_schools SET seed = $1, eliminated = false, placement = NULL WHERE tournament_id = $2 AND school_key = $3",
+        [i + 1, tid, schools[i].school_key]
       );
     }
 
@@ -4049,7 +4322,7 @@ app.post("/admin/tournaments/:id/generate-bracket", requireAdmin, async (req, re
     const positions = seedOrder(size); // size uzunlikdagi massiv, qiymatlar 1..size
     // Har pozitsiyaga maktab (seed) yoki null (bye) joylaymiz
     // positions[i] = shu slotda turadigan seed raqami
-    const slots = positions.map(seedNo => (seedNo <= n ? schools[seedNo - 1].school : null));
+    const slots = positions.map(seedNo => (seedNo <= n ? schools[seedNo - 1] : null));
 
     // 1-raund matchlari: slotларни juft-juft olamiz
     const startsAt = t.starts_at ? new Date(t.starts_at) : new Date(Date.now() + 24 * 3600 * 1000);
@@ -4072,9 +4345,12 @@ app.post("/admin/tournaments/:id/generate-bracket", requireAdmin, async (req, re
       const sched = (status === "pending") ? new Date(matchTime) : null;
       const ins = await client.query(
         `INSERT INTO tournament_matches
-          (tournament_id, round, match_no, school_a, school_b, winner_school, status, scheduled_at, finished_at)
-         VALUES ($1, 1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-        [tid, m + 1, a, b, winner, status, sched, (status === "done" ? new Date() : null)]
+          (tournament_id, round, match_no, school_a, school_b, school_a_key, school_b_key,
+           winner_school, winner_school_key, status, scheduled_at, finished_at)
+         VALUES ($1, 1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+        [tid, m + 1, a && a.school, b && b.school, a && a.school_key, b && b.school_key,
+         winner && winner.school, winner && winner.school_key, status, sched,
+         (status === "done" ? new Date() : null)]
       );
 
       if (status === "pending") matchTime = new Date(matchTime.getTime() + gapMin * 60000);
@@ -4129,18 +4405,19 @@ app.post("/admin/tournaments/:id/generate-bracket", requireAdmin, async (req, re
 async function propagateByes(client, tid) {
   // 1-raunddagi 'done' (bye) matchlardan g'oliblarni keyingi raundga qo'yamiz
   const r1 = await client.query(
-    "SELECT match_no, winner_school FROM tournament_matches WHERE tournament_id = $1 AND round = 1 AND status = 'done' ORDER BY match_no",
+    "SELECT match_no, winner_school, winner_school_key FROM tournament_matches WHERE tournament_id = $1 AND round = 1 AND status = 'done' ORDER BY match_no",
     [tid]
   );
   for (const row of r1.rows) {
-    if (!row.winner_school) continue;
+    if (!row.winner_school || !row.winner_school_key) continue;
     // Keyingi raunddagi match: (match_no+1)/2, tomonni aniqlaymiz
     const nextMatchNo = Math.ceil(row.match_no / 2);
     const isA = (row.match_no % 2 === 1); // toq matchlar -> A tomon
     const col = isA ? "school_a" : "school_b";
+    const keyCol = isA ? "school_a_key" : "school_b_key";
     await client.query(
-      `UPDATE tournament_matches SET ${col} = $1 WHERE tournament_id = $2 AND round = 2 AND match_no = $3`,
-      [row.winner_school, tid, nextMatchNo]
+      `UPDATE tournament_matches SET ${col} = $1, ${keyCol} = $2 WHERE tournament_id = $3 AND round = 2 AND match_no = $4`,
+      [row.winner_school, row.winner_school_key, tid, nextMatchNo]
     );
   }
 }
@@ -4155,14 +4432,14 @@ app.get("/admin/tournaments/:id/bracket", requireAdmin, async (req, res) => {
 
     // Qatnashuvchi maktablar (seed bilan)
     const schoolsQ = await pool.query(
-      "SELECT school, seed, avg_rating, eliminated, placement FROM tournament_schools WHERE tournament_id = $1 ORDER BY seed ASC",
+      "SELECT school, region, district, school_key, seed, avg_rating, eliminated, placement FROM tournament_schools WHERE tournament_id = $1 ORDER BY seed ASC",
       [tid]
     );
 
     // Barcha matchlar
     const matchesQ = await pool.query(
-      `SELECT id, round, match_no, school_a, school_b, score_a, score_b,
-              winner_school, status, scheduled_at, started_at, finished_at
+      `SELECT id, round, match_no, school_a, school_b, school_a_key, school_b_key, score_a, score_b,
+              winner_school, winner_school_key, status, scheduled_at, started_at, finished_at
        FROM tournament_matches
        WHERE tournament_id = $1
        ORDER BY round ASC, match_no ASC`,
@@ -4708,7 +4985,7 @@ app.post("/admin/users/role", requireAdmin, async (req, res) => {
   try {
     const { id, role } = req.body;
     if (!id || !role) return res.status(400).json({ error: "id va role kerak" });
-    var validRoles = ["student", "teacher", "school_admin"];
+    var validRoles = ["student", "teacher", "parent", "school_admin"];
     if (validRoles.indexOf(role) === -1) return res.status(400).json({ error: "Noto'g'ri rol" });
 
     var result = await pool.query("UPDATE users SET role = $1 WHERE id = $2 RETURNING first_name, last_name", [role, id]);
@@ -4729,7 +5006,10 @@ app.post("/admin/users/ban", requireAdmin, async (req, res) => {
     const { id, banned } = req.body;
     if (!id) return res.status(400).json({ error: "id kerak" });
 
-    var result = await pool.query("UPDATE users SET is_banned = $1 WHERE id = $2 RETURNING first_name, last_name", [banned === true, id]);
+    var result = await pool.query(
+      "UPDATE users SET is_banned = $1, auth_version = auth_version + 1 WHERE id = $2 RETURNING first_name, last_name",
+      [banned === true, id]
+    );
     if (result.rows.length === 0) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
 
     var name = result.rows[0].first_name + " " + result.rows[0].last_name;
@@ -5100,20 +5380,7 @@ app.get("/team-battle/result/:roomId", authMiddleware, async (req, res) => {
 // ============ PREMIUM OBUNA ============
 
 // Foydalanuvchining joriy obunasi (frontend premium holatni bilishi uchun)
-app.get("/me/subscription", authMiddleware, async (req, res) => {
-  try {
-    const plan = await premium.getUserPlan(req.user.id);
-    res.json({
-      is_premium: !!plan,
-      plan: plan ? plan.plan : null,
-      status: plan ? plan.status : "free",
-      expires_at: plan ? plan.expires_at : null,
-    });
-  } catch (err) {
-    console.error("Subscription holat xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(subscriptionRoutes());
 
 // DEV/ADMIN: obuna aktivlashtirish (payment hali yo'q — test uchun).
 // Payme/Click qo'shilganda bu o'rniga payment callback ishlatiladi.
@@ -5137,62 +5404,15 @@ app.post("/dev/subscription/activate", requireAdmin, async (req, res) => {
 
 // ============ TO'LOV (PAYME) ============
 
-// Plan narxlari (TIYIN — 1 so'm = 100 tiyin)
-const PLAN_PRICES = {
-  student_premium: 5000000,   // 50,000 so'm/oy
-  parent_premium:  5000000,   // 50,000 so'm/oy
-  teacher_pro:     15000000,  // 150,000 so'm/oy
-  center_pro:      50000000,  // 500,000 so'm/oy
-};
-
 // To'lov yaratish — foydalanuvchi plan tanlab "to'lash" bosganда
-app.post("/payments/create", authMiddleware, async (req, res) => {
-  try {
-    const { plan, months } = req.body;
-    const validPlans = Object.keys(PLAN_PRICES);
-    if (!validPlans.includes(plan)) return res.status(400).json({ error: "Noto'g'ri plan" });
-    const m = parseInt(months) || 1;
-    if (m < 1 || m > 12) return res.status(400).json({ error: "1-12 oy oralig'ida" });
-    const amount = PLAN_PRICES[plan] * m; // tiyin
-    const r = await pool.query(
-      `INSERT INTO payments (user_id, plan, months, amount, provider, status)
-       VALUES ($1,$2,$3,$4,'payme','pending') RETURNING id`,
-      [req.user.id, plan, m, amount]
-    );
-    const paymentId = r.rows[0].id;
-    const merchantId = process.env.PAYME_MERCHANT_ID || "TEST_MERCHANT";
-    const checkoutParams = `m=${merchantId};ac.payment_id=${paymentId};a=${amount}`;
-    const checkoutUrl = "https://checkout.paycom.uz/" + Buffer.from(checkoutParams).toString("base64");
-    res.json({ payment_id: paymentId, amount: amount, checkout_url: checkoutUrl });
-  } catch (err) {
-    console.error("Payment create xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(paymentCreateRoutes());
 
 // To'lov holatини tekshirish (frontend polling uchun)
-app.get("/payments/:id/status", authMiddleware, async (req, res) => {
-  try {
-    const r = await pool.query("SELECT id, status, plan, amount FROM payments WHERE id=$1 AND user_id=$2",
-      [parseInt(req.params.id), req.user.id]);
-    if (r.rows.length === 0) return res.status(404).json({ error: "Topilmadi" });
-    res.json(r.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(paymentStatusRoutes());
 
 // Payme webhook — Payme serveri 5 metod yuboradi (JSON-RPC)
 // MUHIM: authMiddleware ISHLATMAYDI — Payme o'z Basic auth'ини yuboradi
-app.post("/payments/payme", async (req, res) => {
-  try {
-    const result = await payme.handlePaymeRequest(req.body, req.headers.authorization);
-    res.json(result);
-  } catch (err) {
-    console.error("Payme webhook xatosi:", err.message);
-    res.json({ jsonrpc: "2.0", id: (req.body && req.body.id) || 0, error: { code: -32300, message: "Server xatosi" } });
-  }
-});
+app.use(paymeRoutes());
 
 // ============ AI: PARENT WEEKLY REPORT ============
 
@@ -5604,41 +5824,48 @@ app.post("/quests", authMiddleware, async (req, res) => {
 
 // Mukofotni olish (bajarilgan topshiriq uchun)
 app.post("/quests/claim", authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
     const userId = req.user.id;
     const { userQuestId } = req.body;
     if (!userQuestId) return res.status(400).json({ error: "userQuestId kerak" });
 
     // Topshiriqni tekshirish
-    const result = await pool.query(
+    await client.query("BEGIN");
+    const result = await client.query(
       `SELECT uq.is_completed, uq.reward_claimed, q.xp_reward
        FROM user_quests uq
        JOIN quests q ON uq.quest_id = q.id
-       WHERE uq.id = $1 AND uq.user_id = $2`,
+       WHERE uq.id = $1 AND uq.user_id = $2
+       FOR UPDATE OF uq`,
       [userQuestId, userId]
     );
 
     if (result.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ error: "Topshiriq topilmadi" });
     }
 
     const quest = result.rows[0];
 
     if (!quest.is_completed) {
+      await client.query("ROLLBACK");
       return res.status(400).json({ error: "Topshiriq hali bajarilmagan" });
     }
     if (quest.reward_claimed) {
+      await client.query("ROLLBACK");
       return res.status(400).json({ error: "Mukofot allaqachon olingan" });
     }
 
     // Mukofotni berish: XP qo'shish + claimed belgilash
-    await pool.query("UPDATE user_quests SET reward_claimed = true WHERE id = $1", [userQuestId]);
+    await client.query("UPDATE user_quests SET reward_claimed = true WHERE id = $1", [userQuestId]);
 
-    const updated = await pool.query(
+    const updated = await client.query(
       `UPDATE users SET xp = xp + $1 WHERE id = $2
-       RETURNING id, first_name, last_name, email, cefr_level, xp, rating, coins`,
+       RETURNING id, first_name, last_name, username, cefr_level, xp, rating, coins`,
       [quest.xp_reward, userId]
     );
+    await client.query("COMMIT");
 
     res.json({
       message: "Mukofot olindi!",
@@ -5646,8 +5873,11 @@ app.post("/quests/claim", authMiddleware, async (req, res) => {
       updated_user: updated.rows[0],
     });
   } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
     console.error("Mukofot xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
+  } finally {
+    client.release();
   }
 });
 
@@ -5658,9 +5888,9 @@ app.get("/profile/:userId", authMiddleware, async (req, res) => {
 
     // Asosiy foydalanuvchi ma'lumoti
     const userResult = await pool.query(
-      `SELECT id, first_name, last_name, cefr_level, rating, xp, coins,
+      `SELECT id, first_name, last_name, username, cefr_level, rating, xp, coins,
               current_streak, longest_streak, win_streak, best_win_streak,
-              region, district, village, school, birth_date, phone, profile_picture
+              region, district, village, school, profile_picture
        FROM users WHERE id = $1`,
       [userId]
     );
@@ -5742,6 +5972,13 @@ app.get("/profile/:userId", authMiddleware, async (req, res) => {
       } catch (e) {}
     }
 
+    // Aniq yashash va maktab ma'lumotlari faqat profil egasi yoki tasdiqlangan do'stga.
+    if (friendStatus !== "self" && friendStatus !== "friends") {
+      delete user.district;
+      delete user.village;
+      delete user.school;
+    }
+
     res.json({
       user: user,
       friendStatus: friendStatus,
@@ -5763,14 +6000,6 @@ app.get("/profile/:userId", authMiddleware, async (req, res) => {
 });
 
 // ============ DARAJA IMTIHONI ============
-
-// Keyingi daraja (A1 -> A2, A2 -> B1, ...)
-const LEVEL_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
-function getNextLevel(current) {
-  const idx = LEVEL_ORDER.indexOf(current);
-  if (idx === -1 || idx === LEVEL_ORDER.length - 1) return null;
-  return LEVEL_ORDER[idx + 1];
-}
 
 // Imtihon ochilish holatini tekshirish
 app.get("/exam/status/:userId", authMiddleware, async (req, res) => {
@@ -5866,7 +6095,19 @@ app.get("/exam/start/:userId", authMiddleware, async (req, res) => {
       });
     }
 
+    await pool.query(
+      "UPDATE exam_sessions SET status='expired' WHERE user_id=$1 AND status='active'",
+      [userId]
+    );
+    const sessionId = crypto.randomUUID();
+    await pool.query(
+      `INSERT INTO exam_sessions (id, user_id, from_level, question_ids, expires_at)
+       VALUES ($1, $2, $3, $4, NOW() + INTERVAL '30 minutes')`,
+      [sessionId, userId, currentLevel, result.rows.map((q) => Number(q.id))]
+    );
+
     res.json({
+      session_id: sessionId,
       level: currentLevel,
       total: result.rows.length,
       questions: result.rows, // to'g'ri javobsiz
@@ -5881,11 +6122,33 @@ app.get("/exam/start/:userId", authMiddleware, async (req, res) => {
 app.post("/exam/submit", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { answers } = req.body;
+    const { answers, session_id } = req.body;
     // answers = [{ question_id, answer }, ...]
 
-    if (!answers || !Array.isArray(answers)) {
+    if (!session_id || !answers || !Array.isArray(answers)) {
       return res.status(400).json({ error: "Javoblar yuborilmadi" });
+    }
+
+    const sessionResult = await pool.query(
+      `SELECT * FROM exam_sessions
+       WHERE id=$1 AND user_id=$2 AND status='active'`,
+      [session_id, userId]
+    );
+    const examSession = sessionResult.rows[0];
+    if (!examSession) return res.status(400).json({ error: "Imtihon sessiyasi faol emas" });
+    if (new Date(examSession.expires_at) < new Date()) {
+      await pool.query("UPDATE exam_sessions SET status='expired' WHERE id=$1", [session_id]);
+      return res.status(400).json({ error: "Imtihon vaqti tugagan" });
+    }
+    const sessionQuestionIds = (examSession.question_ids || []).map(Number);
+    const submittedIds = answers.map((a) => parseInt(a.question_id, 10));
+    const uniqueIds = new Set(submittedIds);
+    const validAnswerSet = answers.every((a) =>
+      a && sessionQuestionIds.includes(parseInt(a.question_id, 10)) &&
+      (a.answer == null || ["A", "B", "C", "D"].includes(String(a.answer).toUpperCase()))
+    );
+    if (answers.length !== sessionQuestionIds.length || uniqueIds.size !== sessionQuestionIds.length || !validAnswerSet) {
+      return res.status(400).json({ error: "Imtihon savollari sessiyaga mos emas" });
     }
 
     const userResult = await pool.query(
@@ -5896,6 +6159,9 @@ app.post("/exam/submit", authMiddleware, async (req, res) => {
       return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
     }
     const currentLevel = userResult.rows[0].cefr_level;
+    if (currentLevel !== examSession.from_level) {
+      return res.status(400).json({ error: "Foydalanuvchi darajasi o'zgargan, yangi imtihon boshlang" });
+    }
     const nextLevel = getNextLevel(currentLevel);
 
     // ===== ANTI-ABUSE 1: eng yuqori darajada imtihon yo'q =====
@@ -5945,24 +6211,28 @@ app.post("/exam/submit", authMiddleware, async (req, res) => {
     let totalCorrect = 0;
     const skillStats = {}; // { grammar: {correct, total}, ... }
 
-    for (const ans of answers) {
-      const q = await pool.query(
-        "SELECT correct_option, skill FROM questions WHERE id = $1",
-        [ans.question_id]
-      );
-      if (q.rows.length === 0) continue;
+    const questionResult = await pool.query(
+      "SELECT id, correct_option, skill FROM questions WHERE id = ANY($1::int[])",
+      [sessionQuestionIds]
+    );
+    const questionMap = new Map(questionResult.rows.map((q) => [Number(q.id), q]));
+    if (questionMap.size !== sessionQuestionIds.length) {
+      return res.status(400).json({ error: "Imtihon savollaridan biri topilmadi" });
+    }
 
-      const skill = q.rows[0].skill || "other";
+    for (const ans of answers) {
+      const q = questionMap.get(parseInt(ans.question_id, 10));
+      const skill = q.skill || "other";
       if (!skillStats[skill]) skillStats[skill] = { correct: 0, total: 0 };
       skillStats[skill].total++;
 
-      if (q.rows[0].correct_option === ans.answer) {
+      if (q.correct_option === String(ans.answer || "").toUpperCase()) {
         totalCorrect++;
         skillStats[skill].correct++;
       }
     }
 
-    const total = answers.length;
+    const total = sessionQuestionIds.length;
     const overallPercent = total > 0 ? Math.round((totalCorrect / total) * 100) : 0;
 
     // O'tish shartlari
@@ -5988,6 +6258,17 @@ app.post("/exam/submit", authMiddleware, async (req, res) => {
     try {
       await client.query("BEGIN");
 
+      const lockedSession = await client.query(
+        `SELECT status FROM exam_sessions
+         WHERE id=$1 AND user_id=$2
+         FOR UPDATE`,
+        [session_id, userId]
+      );
+      if (!lockedSession.rows[0] || lockedSession.rows[0].status !== "active") {
+        await client.query("ROLLBACK");
+        return res.status(400).json({ error: "Imtihon sessiyasi allaqachon yakunlangan" });
+      }
+
       if (levelChanged) {
         await client.query("UPDATE users SET cefr_level = $1 WHERE id = $2", [nextLevel, userId]);
         newLevel = nextLevel;
@@ -6002,6 +6283,11 @@ app.post("/exam/submit", authMiddleware, async (req, res) => {
          PASS_OVERALL, PASS_SKILL, JSON.stringify(skillResults), passed, levelChanged]
       );
 
+      await client.query(
+        "UPDATE exam_sessions SET status='submitted', submitted_at=NOW() WHERE id=$1",
+        [session_id]
+      );
+
       await client.query("COMMIT");
     } catch (txErr) {
       await client.query("ROLLBACK");
@@ -6012,7 +6298,7 @@ app.post("/exam/submit", authMiddleware, async (req, res) => {
 
     // Yangilangan foydalanuvchi
     const updated = await pool.query(
-      `SELECT id, first_name, last_name, email, cefr_level, xp, rating, coins,
+      `SELECT id, first_name, last_name, username, phone, cefr_level, xp, rating, coins,
               current_streak, longest_streak
        FROM users WHERE id = $1`,
       [userId]
@@ -6081,574 +6367,56 @@ app.get("/exam/history/:userId", authMiddleware, async (req, res) => {
 // ============ MAKTAB / VILOYAT REYTINGI ============
 
 // Maktab reytingi (jami reyting bo'yicha)
-app.get("/rankings/schools", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT
-         school,
-         region,
-         COUNT(*) AS player_count,
-         SUM(rating) AS total_rating,
-         ROUND(AVG(rating)) AS avg_rating
-       FROM users
-       WHERE school IS NOT NULL AND school <> ''
-       GROUP BY school, region
-       ORDER BY total_rating DESC
-       LIMIT 50`
-    );
-
-    res.json({ schools: result.rows });
-  } catch (err) {
-    console.error("Maktab reytingi xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(schoolRankingsRoutes());
 
 // Viloyat reytingi
-app.get("/rankings/regions", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT
-         region,
-         COUNT(*) AS player_count,
-         SUM(rating) AS total_rating,
-         ROUND(AVG(rating)) AS avg_rating
-       FROM users
-       WHERE region IS NOT NULL AND region <> ''
-       GROUP BY region
-       ORDER BY total_rating DESC
-       LIMIT 50`
-    );
-
-    res.json({ regions: result.rows });
-  } catch (err) {
-    console.error("Viloyat reytingi xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(regionRankingsRoutes());
 
 // Tumanlar reytingi
-app.get("/rankings/districts", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT district, region,
-              COUNT(*) as player_count,
-              SUM(rating) as total_rating,
-              ROUND(AVG(rating)) as avg_rating
-       FROM users
-       WHERE district IS NOT NULL AND district != ''
-       GROUP BY district, region
-       ORDER BY total_rating DESC`
-    );
-    res.json({ districts: result.rows });
-  } catch (err) {
-    console.error("Tuman reyting xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(districtRankingsRoutes());
 
 // ============ DO'STLAR TIZIMI ============
 
 // Foydalanuvchi qidirish (telefon yoki ism bo'yicha)
-app.get("/friends/search", authMiddleware, async (req, res) => {
-  try {
-    const { q } = req.query;
-    const userId = req.user.id;
-    if (!q || q.trim() === "") {
-      return res.json({ results: [] });
-    }
-
-    const searchTerm = "%" + q.trim() + "%";
-    const result = await pool.query(
-      `SELECT id, first_name, last_name, cefr_level, rating, phone, profile_picture
-       FROM users
-       WHERE (first_name ILIKE $1
-              OR last_name ILIKE $1
-              OR phone ILIKE $1
-              OR (first_name || ' ' || last_name) ILIKE $1
-              OR (last_name || ' ' || first_name) ILIKE $1)
-         AND id != $2
-       LIMIT 20`,
-      [searchTerm, userId || 0]
-    );
-
-    // Har bir natija uchun do'stlik holatini aniqlash
-    const myId = userId || 0;
-    const enriched = [];
-    for (const u of result.rows) {
-      const rel = await pool.query(
-        `SELECT status FROM friendships
-         WHERE (requester_id = $1 AND receiver_id = $2)
-            OR (requester_id = $2 AND receiver_id = $1)`,
-        [myId, u.id]
-      );
-      let friendStatus = "none"; // none, pending, friend
-      if (rel.rows.length > 0) {
-        friendStatus = rel.rows[0].status === "accepted" ? "friend" : "pending";
-      }
-      enriched.push({ ...u, friendStatus: friendStatus });
-    }
-
-    res.json({ results: enriched });
-  } catch (err) {
-    console.error("Do'st qidirish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(friendSearchRoutes());
 
 // Tavsiya etilgan do'stlar (maktab + tuman + region + daraja bo'yicha ballash)
-app.get("/friends/suggested/:userId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    // Joriy foydalanuvchi ma'lumoti
-    const meRes = await pool.query(
-      "SELECT region, district, school, cefr_level, rating FROM users WHERE id = $1",
-      [userId]
-    );
-    if (meRes.rows.length === 0) return res.status(404).json({ error: "Topilmadi" });
-    const me = meRes.rows[0];
-
-    // Allaqachon do'st yoki so'rov bo'lganlarning id'lari
-    const relRes = await pool.query(
-      `SELECT requester_id, receiver_id FROM friendships
-       WHERE requester_id = $1 OR receiver_id = $1`,
-      [userId]
-    );
-    const excludeIds = new Set([parseInt(userId)]);
-    relRes.rows.forEach(r => {
-      excludeIds.add(r.requester_id);
-      excludeIds.add(r.receiver_id);
-    });
-
-    // Boshqa foydalanuvchilar (o'zi va do'stlardan tashqari)
-    const usersRes = await pool.query(
-      `SELECT id, first_name, last_name, cefr_level, rating, region, district, school
-       FROM users WHERE id != $1`,
-      [userId]
-    );
-
-    // Ballash
-    const scored = [];
-    usersRes.rows.forEach(u => {
-      if (excludeIds.has(u.id)) return; // do'st/so'rov borlarni o'tkazib yuborish
-
-      let score = 0;
-      const reasons = [];
-
-      // Bir xil maktab + tuman (haqiqiy maktabdosh)
-      if (u.school && me.school && u.district && me.district &&
-          u.school === me.school && u.district === me.district) {
-        score += 100;
-        reasons.push("Maktabdosh");
-      } else if (u.district && me.district && u.district === me.district) {
-        // Bir xil tuman (boshqa maktab)
-        score += 50;
-        reasons.push("Bir tumandan");
-      } else if (u.region && me.region && u.region === me.region) {
-        // Bir xil region
-        score += 20;
-        reasons.push("Bir viloyatdan");
-      }
-
-      // Bir xil daraja
-      if (u.cefr_level === me.cefr_level) {
-        score += 30;
-        reasons.push(u.cefr_level + " daraja");
-      }
-
-      // Yaqin reyting (±200)
-      if (Math.abs((u.rating || 1000) - (me.rating || 1000)) <= 200) {
-        score += 15;
-      }
-
-      if (score > 0) {
-        scored.push({
-          id: u.id, first_name: u.first_name, last_name: u.last_name,
-          cefr_level: u.cefr_level, rating: u.rating,
-          score: score, reason: reasons[0] || "Tavsiya",
-        });
-      }
-    });
-
-    // Ball bo'yicha tartiblash, top 6
-    scored.sort((a, b) => b.score - a.score);
-    res.json({ suggested: scored.slice(0, 6) });
-  } catch (err) {
-    console.error("Suggested xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(friendSuggestedRoutes());
 
 // Do'st so'rovi yuborish
-app.post("/friends/request", authMiddleware, async (req, res) => {
-  try {
-    const requesterId = req.user.id;
-    const { receiverId } = req.body;
-    console.log("So'rov keldi:", requesterId, "->", receiverId);
-    if (!receiverId) {
-      return res.status(400).json({ error: "receiverId kerak" });
-    }
-    if (String(requesterId) === String(receiverId)) {
-      return res.status(400).json({ error: "O'zingizga so'rov yubora olmaysiz" });
-    }
-
-    // Allaqachon so'rov yoki do'stlik bormi (ikki yo'nalishda ham)
-    const existing = await pool.query(
-      `SELECT * FROM friendships
-       WHERE (requester_id = $1 AND receiver_id = $2)
-          OR (requester_id = $2 AND receiver_id = $1)`,
-      [requesterId, receiverId]
-    );
-
-    if (existing.rows.length > 0) {
-      const f = existing.rows[0];
-      if (f.status === "accepted") {
-        return res.status(400).json({ error: "Siz allaqachon do'stsiz" });
-      }
-      return res.status(400).json({ error: "So'rov allaqachon yuborilgan" });
-    }
-
-    await pool.query(
-      `INSERT INTO friendships (requester_id, receiver_id, status)
-       VALUES ($1, $2, 'pending')`,
-      [requesterId, receiverId]
-    );
-
-    // Qabul qiluvchiga bildirishnoma + real-time signal
-    const requesterInfo = await pool.query(
-      "SELECT first_name, last_name FROM users WHERE id = $1",
-      [requesterId]
-    );
-    if (requesterInfo.rows.length > 0) {
-      const name = requesterInfo.rows[0].first_name + " " + requesterInfo.rows[0].last_name;
-      await createNotification(receiverId, "friend_request", name + " sizga do'st so'rovi yubordi");
-
-      // Real-time signal (agar qabul qiluvchi onlayn bo'lsa)
-      const targetSocketId = onlineUsers[String(receiverId)];
-      console.log("So'rov signal:", receiverId, "-> socket:", targetSocketId, "| Onlayn:", Object.keys(onlineUsers));
-      if (targetSocketId) {
-        io.to(targetSocketId).emit("newFriendRequest", { fromName: name });
-        console.log("Signal yuborildi!");
-      } else {
-        console.log("Qabul qiluvchi onlayn emas!");
-      }
-    }
-
-    res.json({ message: "So'rov yuborildi!" });
-
-  } catch (err) {
-    console.error("So'rov yuborish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(friendRequestRoutes({ createNotification, io, onlineUsers }));
 
 // So'rovni qabul qilish yoki rad etish
-app.post("/friends/respond", authMiddleware, async (req, res) => {
-  try {
-    const myId = req.user.id;
-    const { friendshipId, action } = req.body; // action: 'accept' yoki 'reject'
-    if (!friendshipId || !action) {
-      return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
-    }
-
-    // So'rovning kimdan-kimga ekanini topamiz
-    const fsInfo = await pool.query(
-      "SELECT requester_id, receiver_id FROM friendships WHERE id = $1",
-      [friendshipId]
-    );
-    if (fsInfo.rows.length === 0) {
-      return res.status(404).json({ error: "So'rov topilmadi" });
-    }
-    const requesterId = fsInfo.rows[0].requester_id;
-    const receiverId = fsInfo.rows[0].receiver_id;
-
-    // XAVFSIZLIK: faqat O'ZIMGA kelgan so'rovga javob bera olaman
-    if (String(receiverId) !== String(myId)) {
-      return res.status(403).json({ error: "Bu so'rov sizga tegishli emas" });
-    }
-
-    if (action === "accept") {
-      // Qabul - do'st bo'lishadi
-      await pool.query(
-        "UPDATE friendships SET status = 'accepted' WHERE id = $1",
-        [friendshipId]
-      );
-
-      // So'rov yuborganga bildirishnoma
-      const accepterInfo = await pool.query(
-        "SELECT first_name, last_name FROM users WHERE id = $1",
-        [receiverId]
-      );
-      if (accepterInfo.rows.length > 0) {
-        const name = accepterInfo.rows[0].first_name + " " + accepterInfo.rows[0].last_name;
-        await createNotification(requesterId, "friend_accepted", name + " do'st so'rovingizni qabul qildi");
-      }
-    } else {
-      // Rad - yozuvni o'chirish (keyin yana so'rov yuborsa bo'lsin)
-      await pool.query("DELETE FROM friendships WHERE id = $1", [friendshipId]);
-    }
-
-    // So'rov yuboruvchiga real-time signal (tugmasi o'zgarsin)
-    const requesterSocket = onlineUsers[String(requesterId)];
-    if (requesterSocket) {
-      const responderInfo = await pool.query(
-        "SELECT first_name, last_name FROM users WHERE id = $1",
-        [receiverId]
-      );
-      const responderName = responderInfo.rows.length > 0
-        ? responderInfo.rows[0].first_name + " " + responderInfo.rows[0].last_name : "Foydalanuvchi";
-      io.to(requesterSocket).emit("requestResponded", {
-        action: action,
-        byUserId: receiverId,
-        byName: responderName,
-      });
-    }
-
-    res.json({ message: action === "accept" ? "Do'st qo'shildi!" : "So'rov rad etildi" });
-  } catch (err) {
-    console.error("So'rovga javob xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(friendRespondRoutes({ createNotification, io, onlineUsers }));
 
 // Do'stni o'chirish
-app.post("/friends/remove", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { friendId } = req.body;
-    if (!friendId) return res.status(400).json({ error: "friendId kerak" });
-
-    // Ikki yo'nalishdagi do'stlikni o'chirish (kim so'rasa ham)
-    await pool.query(
-      `DELETE FROM friendships
-       WHERE (requester_id = $1 AND receiver_id = $2)
-          OR (requester_id = $2 AND receiver_id = $1)`,
-      [userId, friendId]
-    );
-
-    // O'chirilgan do'stga (B) real-time signal (uning ro'yxatidan ham o'chsin)
-    const friendSocket = onlineUsers[String(friendId)];
-    if (friendSocket) {
-      io.to(friendSocket).emit("friendRemoved", { byUserId: userId });
-    }
-
-    res.json({ message: "Do'st o'chirildi" });
-  } catch (err) {
-    console.error("Do'st o'chirish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(friendRemoveRoutes({ io, onlineUsers }));
 
 // Kelgan so'rovlar (men qabul qilishim kerak bo'lganlar)
-app.get("/friends/requests/:userId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const result = await pool.query(
-      `SELECT f.id AS friendship_id, u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.profile_picture
-       FROM friendships f
-       JOIN users u ON u.id = f.requester_id
-       WHERE f.receiver_id = $1 AND f.status = 'pending'
-       ORDER BY f.created_at DESC`,
-      [userId]
-    );
-    res.json({ requests: result.rows });
-  } catch (err) {
-    console.error("So'rovlar xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(friendRequestsRoutes());
 
 // Do'stlar ro'yxati (qabul qilingan)
-app.get("/friends/:userId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const result = await pool.query(
-      `SELECT u.id, u.first_name, u.last_name, u.cefr_level, u.rating, u.profile_picture
-       FROM friendships f
-       JOIN users u ON (u.id = f.requester_id OR u.id = f.receiver_id)
-       WHERE (f.requester_id = $1 OR f.receiver_id = $1)
-         AND f.status = 'accepted'
-         AND u.id != $1
-       ORDER BY u.rating DESC`,
-      [userId]
-    );
-    // Har bir do'st onlayn yoki yo'qligini belgilash
-    const friendsWithStatus = result.rows.map(f => ({
-      ...f,
-      isOnline: !!onlineUsers[String(f.id)],
-    }));
-
-    res.json({ friends: friendsWithStatus });
-  } catch (err) {
-    console.error("Do'stlar xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(friendListRoutes({ onlineUsers }));
 
 // Do'stlarga qarshi g'alabalar soni
-app.get("/friends/wins/:userId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    // Do'st id'larini olish
-    const friendsRes = await pool.query(
-      `SELECT requester_id, receiver_id FROM friendships
-       WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
-      [userId]
-    );
-    const friendIds = friendsRes.rows.map(r =>
-      String(r.requester_id) === String(userId) ? r.receiver_id : r.requester_id
-    );
-
-    if (friendIds.length === 0) {
-      return res.json({ wins: 0, total: 0 });
-    }
-
-    // Do'stlarga qarshi janglar (opponent_id do'stlardan biri bo'lsa)
-    const winsRes = await pool.query(
-      `SELECT
-         COUNT(*) FILTER (WHERE outcome = 'win') AS wins,
-         COUNT(*) AS total
-       FROM battle_history
-       WHERE user_id = $1 AND opponent_id = ANY($2)`,
-      [userId, friendIds]
-    );
-
-    res.json({
-      wins: parseInt(winsRes.rows[0].wins) || 0,
-      total: parseInt(winsRes.rows[0].total) || 0,
-    });
-  } catch (err) {
-    console.error("Wins vs friends xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(friendWinsRoutes());
 
 // Do'stlar faoliyati (Recent Activity)
-app.get("/friends/activity/:userId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    // Do'st id'larini olish
-    const friendsRes = await pool.query(
-      `SELECT requester_id, receiver_id FROM friendships
-       WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
-      [userId]
-    );
-    const friendIds = friendsRes.rows.map(r =>
-      String(r.requester_id) === String(userId) ? r.receiver_id : r.requester_id
-    );
-
-    if (friendIds.length === 0) {
-      return res.json({ activities: [] });
-    }
-
-    // Do'stlarning so'nggi janglari (har do'stning oxirgi 5 jangi)
-    const battlesRes = await pool.query(
-      `SELECT bh.user_id, bh.opponent_name, bh.my_score, bh.opponent_score,
-              bh.outcome, bh.rating_change, bh.played_at,
-              u.first_name, u.last_name, u.rating, u.profile_picture
-       FROM battle_history bh
-       JOIN users u ON u.id = bh.user_id
-       WHERE bh.user_id = ANY($1)
-       ORDER BY bh.played_at DESC
-       LIMIT 10`,
-      [friendIds]
-    );
-
-    const activities = battlesRes.rows.map(b => ({
-      type: "battle",
-      friendId: b.user_id,
-      friendName: b.first_name + " " + b.last_name,
-      friendFirst: b.first_name,
-      friendPic: b.profile_picture,
-      outcome: b.outcome,
-      myScore: b.my_score,
-      oppScore: b.opponent_score,
-      opponentName: b.opponent_name,
-      ratingChange: b.rating_change,
-      rating: b.rating,
-      time: b.played_at,
-    }));
-
-    res.json({ activities: activities });
-  } catch (err) {
-    console.error("Faoliyat xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(friendActivityRoutes());
 
 // ============ BILDIRISHNOMALAR ============
 
 // Foydalanuvchining bildirishnomalari
-app.get("/notifications/:userId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const result = await pool.query(
-      `SELECT id, type, message, is_read, created_at
-       FROM notifications
-       WHERE user_id = $1
-       ORDER BY created_at DESC
-       LIMIT 30`,
-      [userId]
-    );
-
-    // O'qilmaganlar soni
-    const unread = result.rows.filter(n => !n.is_read).length;
-
-    res.json({ notifications: result.rows, unread: unread });
-  } catch (err) {
-    console.error("Bildirishnoma olish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(notificationListRoutes());
 
 // Hammasini o'qilgan deb belgilash
-app.post("/notifications/read/:userId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    await pool.query(
-      "UPDATE notifications SET is_read = TRUE WHERE user_id = $1 AND is_read = FALSE",
-      [userId]
-    );
-    res.json({ message: "O'qilgan deb belgilandi" });
-  } catch (err) {
-    console.error("Bildirishnoma o'qish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(notificationReadRoutes());
 
 // Barcha bildirishnomalarni o'chirish (bar yopilganda — eski xabarlarni tozalash)
-app.post("/notifications/clear/:userId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    await pool.query("DELETE FROM notifications WHERE user_id = $1", [userId]);
-    res.json({ message: "Barcha xabarlar o'chirildi" });
-  } catch (err) {
-    console.error("Bildirishnomalarni tozalash xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(notificationClearRoutes());
 
 // Bitta bildirishnomani o'chirish (X tugmasi uchun)
-app.delete("/notifications/:notifId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const notifId = parseInt(req.params.notifId, 10);
-    if (isNaN(notifId)) return res.status(400).json({ error: "Noto'g'ri ID" });
-    // Faqat o'ziniki bo'lgan xabarni o'chira oladi
-    const result = await pool.query(
-      "DELETE FROM notifications WHERE id = $1 AND user_id = $2 RETURNING id",
-      [notifId, userId]
-    );
-    if (result.rows.length === 0) return res.status(404).json({ error: "Topilmadi" });
-    res.json({ message: "O'chirildi", id: notifId });
-  } catch (err) {
-    console.error("Bildirishnoma o'chirish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(notificationDeleteRoutes());
 
 // ===== PROFIL RASM YUKLASH =====
 const uploadStorage = multer.diskStorage({
@@ -6656,15 +6424,15 @@ const uploadStorage = multer.diskStorage({
     cb(null, path.join(__dirname, "public/uploads"));
   },
   filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    cb(null, "user_" + req.params.userId + "_" + Date.now() + ext);
+    const extByMime = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif" };
+    cb(null, "user_" + req.user.id + "_" + Date.now() + (extByMime[file.mimetype] || ".img"));
   },
 });
 const upload = multer({
   storage: uploadStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: function (req, file, cb) {
-    if (file.mimetype.startsWith("image/")) cb(null, true);
+    if (["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.mimetype)) cb(null, true);
     else cb(new Error("Faqat rasm fayllari!"));
   },
 });
@@ -6672,11 +6440,20 @@ const upload = multer({
 // ===== RESURSLAR uchun multer (hujjat + rasm) =====
 const resourceStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "public/uploads/resources"));
+    cb(null, path.join(__dirname, "uploads/resources"));
   },
   filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    cb(null, "res_" + req.user.id + "_" + Date.now() + ext);
+    const extByMime = {
+      "application/pdf": ".pdf", "application/msword": ".doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+      "application/vnd.ms-powerpoint": ".ppt",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+      "application/vnd.ms-excel": ".xls",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+      "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif",
+      "text/plain": ".txt",
+    };
+    cb(null, "res_" + req.user.id + "_" + Date.now() + (extByMime[file.mimetype] || ".bin"));
   },
 });
 const ALLOWED_RESOURCE_TYPES = [
@@ -6699,176 +6476,39 @@ const uploadResource = multer({
   },
 });
 
+
+
 // Fayl turini aniqlash (ikonка uchun)
-function detectFileType(mimetype) {
-  if (mimetype === "application/pdf") return "pdf";
-  if (mimetype.indexOf("word") !== -1 || mimetype === "application/msword") return "doc";
-  if (mimetype.indexOf("presentation") !== -1 || mimetype.indexOf("powerpoint") !== -1) return "ppt";
-  if (mimetype.indexOf("sheet") !== -1 || mimetype.indexOf("excel") !== -1) return "xls";
-  if (mimetype.startsWith("image/")) return "image";
-  return "other";
-}
-
 // ===== RESURS YUKLASH =====
-app.post("/teacher/resources", authMiddleware, requireTeacher, uploadResource.single("file"), async (req, res) => {
-  try {
-    const teacherId = req.user.id;
-    if (!req.file) return res.status(400).json({ error: "Fayl yuklanmadi" });
-
-    // Sprint 1: XSS himoya — teg belgilari olib tashlanadi
-    const title = sanitizeText((req.body.title || "").trim() || req.file.originalname, 200);
-    const description = sanitizeText(req.body.description || "", 1000);
-    const cefrLevel = (req.body.cefr_level || "").trim() || null;
-    const skill = (req.body.skill || "").trim() || null;
-    const classId = req.body.class_id ? parseInt(req.body.class_id, 10) : null;
-
-    const filePath = "/uploads/resources/" + req.file.filename;
-    const fileType = detectFileType(req.file.mimetype);
-
-    const result = await pool.query(
-      `INSERT INTO teacher_resources
-        (teacher_id, title, description, file_path, file_name, file_type, file_size, cefr_level, skill, class_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       RETURNING id, created_at`,
-      [teacherId, title, description, filePath, req.file.originalname, fileType, req.file.size, cefrLevel, skill, classId]
-    );
-
-    if (typeof logAudit === "function") logAudit(req, "resource_uploaded", { entityType: "resource", entityId: result.rows[0].id });
-
-    res.json({ success: true, id: result.rows[0].id });
-  } catch (err) {
-    console.error("Resurs yuklash xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(teacherResourceUploadRoutes({
+  uploadResource,
+  uploadedContentMatches,
+  removeUploadedFile,
+  sanitizeText,
+  detectFileType,
+  logAudit,
+}));
 
 // ===== RESURSLAR RO'YXATI =====
-app.get("/teacher/resources", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const teacherId = req.user.id;
-    const result = await pool.query(
-      `SELECT r.id, r.title, r.description, r.file_path, r.file_name, r.file_type,
-              r.file_size, r.cefr_level, r.skill, r.class_id, r.download_count, r.created_at,
-              c.name AS class_name
-       FROM teacher_resources r
-       LEFT JOIN classes c ON c.id = r.class_id
-       WHERE r.teacher_id = $1
-       ORDER BY r.created_at DESC`,
-      [teacherId]
-    );
-
-    // Statistika
-    const total = result.rows.length;
-    const totalSize = result.rows.reduce((a, r) => a + (r.file_size || 0), 0);
-    const totalDownloads = result.rows.reduce((a, r) => a + (r.download_count || 0), 0);
-    const byType = {};
-    result.rows.forEach((r) => { byType[r.file_type] = (byType[r.file_type] || 0) + 1; });
-
-    res.json({
-      resources: result.rows,
-      stats: {
-        total,
-        total_size: totalSize,
-        total_downloads: totalDownloads,
-        by_type: byType,
-      },
-    });
-  } catch (err) {
-    console.error("Resurslar ro'yxati xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(teacherResourceListRoutes());
 
 // ===== RESURS YUKLAB OLISH (download hisoblagich bilan) =====
-app.get("/teacher/resources/:id/download", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const teacherId = req.user.id;
-    const resId = parseInt(req.params.id, 10);
-    if (isNaN(resId)) return res.status(400).json({ error: "Noto'g'ri ID" });
-
-    const result = await pool.query(
-      "SELECT file_path, file_name FROM teacher_resources WHERE id = $1 AND teacher_id = $2",
-      [resId, teacherId]
-    );
-    if (result.rows.length === 0) return res.status(404).json({ error: "Resurs topilmadi" });
-
-    // Download hisoblagichni oshiramiz
-    pool.query("UPDATE teacher_resources SET download_count = download_count + 1 WHERE id = $1", [resId]).catch(() => {});
-
-    const r = result.rows[0];
-    const absPath = path.join(__dirname, "public", r.file_path);
-    res.download(absPath, r.file_name);
-  } catch (err) {
-    console.error("Resurs yuklab olish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(teacherResourceDownloadRoutes({ resourceAbsolutePath }));
 
 // ===== RESURS O'CHIRISH =====
-app.delete("/teacher/resources/:id", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const teacherId = req.user.id;
-    const resId = parseInt(req.params.id, 10);
-    if (isNaN(resId)) return res.status(400).json({ error: "Noto'g'ri ID" });
-
-    const result = await pool.query(
-      "SELECT file_path FROM teacher_resources WHERE id = $1 AND teacher_id = $2",
-      [resId, teacherId]
-    );
-    if (result.rows.length === 0) return res.status(404).json({ error: "Resurs topilmadi" });
-
-    // Bazadan o'chiramiz
-    await pool.query("DELETE FROM teacher_resources WHERE id = $1", [resId]);
-
-    // Diskdagi faylni ham o'chiramiz (xato bo'lsa jim o'tamiz)
-    try {
-      const fs = require("fs");
-      const absPath = path.join(__dirname, "public", result.rows[0].file_path);
-      if (fs.existsSync(absPath)) fs.unlinkSync(absPath);
-    } catch (e) { /* fayl allaqachon yo'q bo'lishi mumkin */ }
-
-    if (typeof logAudit === "function") logAudit(req, "resource_deleted", { entityType: "resource", entityId: resId });
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Resurs o'chirish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(teacherResourceDeleteRoutes({ resourceAbsolutePath, logAudit }));
 
 // Profil rasm yuklash endpoint
-app.post("/profile/:userId/picture", authMiddleware, upload.single("picture"), async (req, res) => {
-  try {
-    const userId = req.user.id;
-    if (!req.file) return res.status(400).json({ error: "Rasm yuklanmadi" });
-
-    const filePath = "/uploads/" + req.file.filename;
-
-    await pool.query(
-      "UPDATE users SET profile_picture = $1 WHERE id = $2",
-      [filePath, userId]
-    );
-
-    res.json({ message: "Rasm yangilandi", profile_picture: filePath });
-  } catch (err) {
-    console.error("Rasm yuklash xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(profilePictureRoutes({
+  upload,
+  uploadedContentMatches,
+  removeUploadedFile,
+  uploadsDirectory: path.join(__dirname, "public/uploads"),
+}));
 
 // ============================================================
 // SCHOOL CUP — Bosqich 3: School Admin jamoa tuzish
 // ============================================================
-
-// Yordamchi: foydalanuvchi school_admin ekanini va maktabini qaytaradi
-async function getSchoolAdmin(userId) {
-  const r = await pool.query("SELECT id, first_name, last_name, role, school, region, district FROM users WHERE id = $1", [userId]);
-  if (r.rows.length === 0) return { ok: false, error: "Foydalanuvchi topilmadi" };
-  const u = r.rows[0];
-  if (u.role !== "school_admin") return { ok: false, error: "Faqat maktab admini uchun" };
-  if (!u.school || !u.school.trim()) return { ok: false, error: "Maktabingiz belgilanmagan" };
-  return { ok: true, user: u };
-}
 
 // School admin profil — shaxsiy + maktab + boshqaruv ma'lumotlari
 app.get("/school/profile", authMiddleware, async (req, res) => {
@@ -6888,8 +6528,9 @@ app.get("/school/profile", authMiddleware, async (req, res) => {
     const statsQ = await pool.query(
       `SELECT COUNT(*) AS total, ROUND(AVG(rating)) AS avg_rating, MAX(rating) AS top_rating
        FROM users
-       WHERE school = $1 AND (role = 'student' OR role IS NULL) AND (is_banned IS NULL OR is_banned = false)`,
-      [me.school]
+       WHERE region = $1 AND district = $2 AND school = $3
+         AND (role = 'student' OR role IS NULL) AND (is_banned IS NULL OR is_banned = false)`,
+      [me.region, me.district, me.school]
     );
     const st = statsQ.rows[0];
 
@@ -6910,8 +6551,8 @@ app.get("/school/profile", authMiddleware, async (req, res) => {
 
     // Maktab tuzgan jamoalar soni (nechta turnirda jamoa tuzilgan)
     const teamQ = await pool.query(
-      `SELECT COUNT(DISTINCT tournament_id) AS c FROM tournament_team_members WHERE school = $1`,
-      [me.school]
+      `SELECT COUNT(DISTINCT tournament_id) AS c FROM tournament_team_members WHERE school_key = $1`,
+      [me.school_key]
     );
 
     res.json({
@@ -6943,296 +6584,22 @@ app.get("/school/profile", authMiddleware, async (req, res) => {
 });
 
 // School admin bosh panel — maktab umumiy ko'rinishi
-app.get("/school/overview", authMiddleware, async (req, res) => {
-  try {
-    const sa = await getSchoolAdmin(req.user.id);
-    if (!sa.ok) return res.status(403).json({ error: sa.error });
-    const me = sa.user;
-
-    // Maktab o'quvchilari statistikasi
-    const statsQ = await pool.query(
-      `SELECT COUNT(*) AS total,
-              ROUND(AVG(rating)) AS avg_rating,
-              MAX(rating) AS top_rating
-       FROM users
-       WHERE school = $1 AND (role = 'student' OR role IS NULL) AND (is_banned IS NULL OR is_banned = false)`,
-      [me.school]
-    );
-    const st = statsQ.rows[0];
-
-    // Eng yaxshi 5 o'quvchi
-    const topQ = await pool.query(
-      `SELECT id, first_name, last_name, rating, cefr_level, profile_picture
-       FROM users
-       WHERE school = $1 AND (role = 'student' OR role IS NULL) AND (is_banned IS NULL OR is_banned = false)
-       ORDER BY rating DESC LIMIT 5`,
-      [me.school]
-    );
-
-    // Faol turnirlar soni (maktab tegishli)
-    const tournQ = await pool.query(
-      `SELECT COUNT(*) AS c FROM tournaments t
-       WHERE t.status IN ('registration','bracket','live')
-         AND (
-           (t.level = 'district' AND t.scope_value = $1 AND t.region = $2)
-           OR (t.level = 'region' AND t.scope_value = $2)
-           OR (t.level = 'country')
-         )`,
-      [me.district, me.region]
-    );
-
-    res.json({
-      admin: { first_name: me.first_name, last_name: me.last_name },
-      school: me.school, region: me.region, district: me.district,
-      stats: {
-        total_students: parseInt(st.total) || 0,
-        avg_rating: parseInt(st.avg_rating) || 0,
-        top_rating: parseInt(st.top_rating) || 0,
-        active_tournaments: parseInt(tournQ.rows[0].c) || 0,
-      },
-      top_students: topQ.rows,
-    });
-  } catch (err) {
-    console.error("School overview xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(schoolOverviewRoutes({ getSchoolAdmin }));
 
 // 1. Mening maktabim qatnashishi mumkin bo'lgan faol turnirlar
-app.get("/school/tournaments", authMiddleware, async (req, res) => {
-  try {
-    const sa = await getSchoolAdmin(req.user.id);
-    if (!sa.ok) return res.status(403).json({ error: sa.error });
-    const me = sa.user;
-
-    // Maktab joylashgan tuman/viloyatdagi turnirlar (registration yoki undan keyingi)
-    // Tuman darajasi: scope_value = mening tumanim, region = mening viloyatim
-    const q = await pool.query(
-      `SELECT t.*,
-              (SELECT COUNT(*) FROM tournament_team_members tm
-               WHERE tm.tournament_id = t.id AND tm.school = $1) AS my_team_count
-       FROM tournaments t
-       WHERE t.status IN ('registration','bracket','live','finished')
-         AND (
-           (t.level = 'district' AND t.scope_value = $2 AND t.region = $3)
-           OR (t.level = 'region' AND t.scope_value = $3)
-           OR (t.level = 'country')
-         )
-       ORDER BY t.created_at DESC`,
-      [me.school, me.district, me.region]
-    );
-    res.json({
-      school: me.school, region: me.region, district: me.district,
-      tournaments: q.rows,
-    });
-  } catch (err) {
-    console.error("School turnirlar xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(schoolTournamentsRoutes({ getSchoolAdmin }));
 
 // 2. Maktabimning o'quvchilari (reyting bo'yicha — jamoa tanlash uchun)
-app.get("/school/tournaments/:id/students", authMiddleware, async (req, res) => {
-  try {
-    const sa = await getSchoolAdmin(req.user.id);
-    if (!sa.ok) return res.status(403).json({ error: sa.error });
-    const me = sa.user;
-
-    const q = await pool.query(
-      `SELECT id, first_name, last_name, rating, cefr_level, profile_picture
-       FROM users
-       WHERE school = $1 AND (role = 'student' OR role IS NULL) AND (is_banned IS NULL OR is_banned = false)
-       ORDER BY rating DESC, first_name ASC`,
-      [me.school]
-    );
-    res.json({ students: q.rows });
-  } catch (err) {
-    console.error("Maktab o'quvchilari xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(schoolTournamentStudentsRoutes({ getSchoolAdmin }));
 
 // School admin: o'z maktabi qatnashgan turnir setkasini ko'rish
-app.get("/school/tournaments/:id/bracket", authMiddleware, async (req, res) => {
-  try {
-    const sa = await getSchoolAdmin(req.user.id);
-    if (!sa.ok) return res.status(403).json({ error: sa.error });
-    const me = sa.user;
-    const tid = req.params.id;
-
-    const tr = await pool.query("SELECT * FROM tournaments WHERE id = $1", [tid]);
-    if (tr.rows.length === 0) return res.status(404).json({ error: "Turnir topilmadi" });
-    const t = tr.rows[0];
-
-    // Bu maktab turnirda qatnashayaptimi? (tournament_schools da bormi)
-    const partQ = await pool.query(
-      "SELECT seed, eliminated, placement FROM tournament_schools WHERE tournament_id = $1 AND school = $2",
-      [tid, me.school]
-    );
-    const myPart = partQ.rows[0] || null;
-
-    // Qatnashuvchi maktablar (seed bilan)
-    const schoolsQ = await pool.query(
-      "SELECT school, seed, avg_rating, eliminated, placement FROM tournament_schools WHERE tournament_id = $1 ORDER BY seed ASC",
-      [tid]
-    );
-
-    // Barcha matchlar
-    const matchesQ = await pool.query(
-      `SELECT id, round, match_no, school_a, school_b, score_a, score_b,
-              winner_school, status, scheduled_at, started_at, finished_at
-       FROM tournament_matches
-       WHERE tournament_id = $1
-       ORDER BY round ASC, match_no ASC`,
-      [tid]
-    );
-
-    // Raundlarga guruhlaymiz + mening maktabim ishtirok etgan matchni belgilaymiz
-    const rounds = {};
-    matchesQ.rows.forEach(m => {
-      if (!rounds[m.round]) rounds[m.round] = [];
-      m.is_mine = (m.school_a === me.school || m.school_b === me.school);
-      rounds[m.round].push(m);
-    });
-
-    res.json({
-      tournament: {
-        id: t.id, name: t.name, status: t.status,
-        bracket_size: t.bracket_size, level: t.level,
-        scope_value: t.scope_value, region: t.region, team_size: t.team_size,
-      },
-      my_school: me.school,
-      my_participation: myPart,  // seed, eliminated, placement (qatnashmasa null)
-      schools: schoolsQ.rows,
-      rounds: rounds,
-      total_rounds: t.bracket_size ? Math.log2(t.bracket_size) : 0,
-    });
-  } catch (err) {
-    console.error("School bracket xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(schoolTournamentBracketRoutes({ getSchoolAdmin }));
 
 // 3. Joriy jamoa (saqlangan bo'lsa)
-app.get("/school/tournaments/:id/team", authMiddleware, async (req, res) => {
-  try {
-    const sa = await getSchoolAdmin(req.user.id);
-    if (!sa.ok) return res.status(403).json({ error: sa.error });
-    const me = sa.user;
-
-    const q = await pool.query(
-      `SELECT tm.user_id, tm.member_role, tm.slot_order,
-              u.first_name, u.last_name, u.rating, u.cefr_level, u.profile_picture
-       FROM tournament_team_members tm
-       JOIN users u ON u.id = tm.user_id
-       WHERE tm.tournament_id = $1 AND tm.school = $2
-       ORDER BY tm.member_role DESC, tm.slot_order ASC`,
-      [req.params.id, me.school]
-    );
-    res.json({ team: q.rows });
-  } catch (err) {
-    console.error("Jamoa olish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(schoolTournamentTeamListRoutes({ getSchoolAdmin }));
 
 // 4. Jamoani saqlash (asosiy + zaxira o'quvchilar)
-app.post("/school/tournaments/:id/team", authMiddleware, async (req, res) => {
-  const client = await pool.connect();
-  try {
-    const sa = await getSchoolAdmin(req.user.id);
-    if (!sa.ok) { client.release(); return res.status(403).json({ error: sa.error }); }
-    const me = sa.user;
-    const tid = req.params.id;
-
-    // Turnirni tekshiramiz
-    const tr = await client.query("SELECT * FROM tournaments WHERE id = $1", [tid]);
-    if (tr.rows.length === 0) { client.release(); return res.status(404).json({ error: "Turnir topilmadi" }); }
-    const t = tr.rows[0];
-
-    // Faqat registration bosqichida jamoa tuzish/o'zgartirish mumkin
-    if (t.status !== "registration") {
-      client.release();
-      return res.status(400).json({ error: "Ro'yxatdan o'tish yopilgan — jamoani o'zgartirib bo'lmaydi" });
-    }
-    // Deadline tekshiruvi
-    if (t.registration_deadline && new Date() > new Date(t.registration_deadline)) {
-      client.release();
-      return res.status(400).json({ error: "Jamoa tuzish muddati tugagan" });
-    }
-
-    const { starters, reserves } = req.body; // user_id massivlari
-    const startersArr = Array.isArray(starters) ? starters : [];
-    const reservesArr = Array.isArray(reserves) ? reserves : [];
-
-    // Validatsiya: asosiy a'zo soni = team_size
-    if (startersArr.length !== t.team_size) {
-      client.release();
-      return res.status(400).json({ error: "Asosiy o'yinchilar soni " + t.team_size + " ta bo'lishi kerak (hozir: " + startersArr.length + ")" });
-    }
-    if (reservesArr.length > t.reserve_size) {
-      client.release();
-      return res.status(400).json({ error: "Zaxira o'yinchilar " + t.reserve_size + " tadan oshmasligi kerak" });
-    }
-    // Takrorlanish tekshiruvi
-    const all = startersArr.concat(reservesArr);
-    if (new Set(all).size !== all.length) {
-      client.release();
-      return res.status(400).json({ error: "Bir o'quvchi ikki marta tanlangan" });
-    }
-
-    // Tanlangan o'quvchilar haqiqatan shu maktabdanmi?
-    const check = await client.query(
-      `SELECT id FROM users WHERE id = ANY($1) AND school = $2 AND (role = 'student' OR role IS NULL)`,
-      [all, me.school]
-    );
-    if (check.rows.length !== all.length) {
-      client.release();
-      return res.status(400).json({ error: "Ba'zi o'quvchilar bu maktabga tegishli emas" });
-    }
-
-    // Saqlash: eski jamoani o'chirib, yangisini yozamiz (last-write-wins)
-    await client.query("BEGIN");
-    await client.query("DELETE FROM tournament_team_members WHERE tournament_id = $1 AND school = $2", [tid, me.school]);
-
-    let slot = 1;
-    for (const uid of startersArr) {
-      await client.query(
-        "INSERT INTO tournament_team_members (tournament_id, school, user_id, member_role, slot_order) VALUES ($1, $2, $3, 'starter', $4)",
-        [tid, me.school, uid, slot++]
-      );
-    }
-    slot = 1;
-    for (const uid of reservesArr) {
-      await client.query(
-        "INSERT INTO tournament_team_members (tournament_id, school, user_id, member_role, slot_order) VALUES ($1, $2, $3, 'reserve', $4)",
-        [tid, me.school, uid, slot++]
-      );
-    }
-
-    // Maktabni turnir ishtirokchilariga qo'shamiz (agar yo'q bo'lsa)
-    const avgQ = await client.query(
-      `SELECT ROUND(AVG(rating)) AS avg FROM users WHERE id = ANY($1)`, [startersArr]
-    );
-    const avgRating = parseInt(avgQ.rows[0].avg) || 1000;
-    await client.query(
-      `INSERT INTO tournament_schools (tournament_id, school, region, district, avg_rating)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (tournament_id, school)
-       DO UPDATE SET avg_rating = $5`,
-      [tid, me.school, me.region, me.district, avgRating]
-    );
-
-    await client.query("COMMIT");
-    client.release();
-    res.json({ success: true, starters: startersArr.length, reserves: reservesArr.length });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    client.release();
-    console.error("Jamoa saqlash xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi: " + err.message });
-  }
-});
+app.use(schoolTournamentTeamSaveRoutes({ getSchoolAdmin }));
 
 
 // ============================================================
@@ -7241,49 +6608,38 @@ app.post("/school/tournaments/:id/team", authMiddleware, async (req, res) => {
 // (avval token tekshiriladi, keyin rol bazadan tekshiriladi)
 // ============================================================
 
+app.use(teacherConversationsRoutes({ onlineUsers }));
+
+app.use(teacherConversationMessagesListRoutes({ teacherStudentLinked }));
+
+app.use(teacherConversationMessageSendRoutes({
+  teacherStudentLinked,
+  directMessageLimiter,
+  sanitizeText,
+  filterProfanity,
+  onlineUsers,
+  io,
+  createNotification,
+}));
+
+app.use(studentTeacherMessageSendRoutes({
+  teacherStudentLinked,
+  directMessageLimiter,
+  sanitizeText,
+  filterProfanity,
+  onlineUsers,
+  io,
+  createNotification,
+}));
+
+app.use(teacherSettingsProfileReadRoutes());
+
+app.use(teacherSettingsProfileUpdateRoutes({ sanitizeText }));
+
+app.use(teacherSettingsPasswordRoutes({ validatePassword }));
+
 // Dashboard asosiy ma'lumotlari (Phase 1 — hozircha bo'sh/boshlang'ich holat)
-app.get("/teacher/dashboard", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const teacherId = req.user.id;
-
-    // O'qituvchi ma'lumotlari
-    const teacher = await pool.query(
-      "SELECT id, first_name, last_name, school, profile_picture FROM users WHERE id = $1",
-      [teacherId]
-    );
-
-    // Sinflar soni (haqiqiy — classes jadvalidan)
-    const classCount = await pool.query(
-      "SELECT COUNT(*) AS count FROM classes WHERE teacher_id = $1 AND archived_at IS NULL",
-      [teacherId]
-    );
-
-    // O'quvchilar soni (haqiqiy — shu o'qituvchining sinflaridagi faol o'quvchilar, takrorlanmas)
-    const studentCount = await pool.query(
-      `SELECT COUNT(DISTINCT cs.student_id) AS count
-       FROM class_students cs
-       JOIN classes c ON c.id = cs.class_id
-       WHERE c.teacher_id = $1 AND c.archived_at IS NULL AND cs.status = 'active'`,
-      [teacherId]
-    );
-
-    // Phase 2: topshiriqlar jadvali hali yo'q, shuning uchun 0.
-    const stats = {
-      totalClasses: parseInt(classCount.rows[0].count, 10),
-      totalStudents: parseInt(studentCount.rows[0].count, 10),
-      activeAssignments: 0,
-      averagePerformance: 0
-    };
-
-    res.json({
-      teacher: teacher.rows[0] || null,
-      stats: stats
-    });
-  } catch (err) {
-    console.error("Teacher dashboard xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(teacherDashboardRoutes());
 
 // Teacher bosh sahifa uchun to'liq real ma'lumot (statistika + grafik + vazifalar + faoliyat)
 app.get("/teacher/overview", authMiddleware, requireTeacher, async (req, res) => {
@@ -7360,20 +6716,28 @@ app.get("/teacher/overview", authMiddleware, requireTeacher, async (req, res) =>
 
     // ===== 2. GRAFIK — oxirgi 30 kun, har 5 kunlik bo'lak (topshiriq topshirishlar) =====
     const chartRes = await pool.query(
-      `SELECT TO_CHAR(s.submitted_at, 'DD Mon') AS day,
-              DATE_TRUNC('day', s.submitted_at) AS d,
-              COUNT(*)::int AS cnt
-       FROM assignment_submissions s
-       JOIN assignments a ON a.id = s.assignment_id
-       WHERE a.class_id = ANY($1) AND s.submitted_at >= NOW() - INTERVAL '30 days'
-         AND s.status IN ('submitted','late_submitted')
-       GROUP BY day, d ORDER BY d ASC`,
+      `WITH events AS (
+         SELECT DATE_TRUNC('day', s.submitted_at) AS d, 'assignment' AS kind
+         FROM assignment_submissions s
+         JOIN assignments a ON a.id = s.assignment_id
+         WHERE a.class_id = ANY($1) AND s.submitted_at >= NOW() - INTERVAL '30 days'
+           AND s.status IN ('submitted','late_submitted')
+         UNION ALL
+         SELECT DATE_TRUNC('day', ta.submitted_at) AS d, 'exam' AS kind
+         FROM teacher_exam_attempts ta
+         JOIN teacher_exams e ON e.id = ta.exam_id
+         WHERE e.class_id = ANY($1) AND ta.submitted_at >= NOW() - INTERVAL '30 days'
+           AND ta.status = 'submitted'
+       )
+       SELECT TO_CHAR(d, 'DD Mon') AS day, d,
+              COUNT(*) FILTER (WHERE kind='assignment')::int AS assignment_count,
+              COUNT(*) FILTER (WHERE kind='exam')::int AS exam_count
+       FROM events GROUP BY d ORDER BY d ASC`,
       [classIds]
     );
-    // Soddalik uchun: kunlik topshiriqlar (imtihon ma'lumoti hozircha yo'q → 0)
     const chartLabels = chartRes.rows.map((r) => r.day);
-    const chartAssignments = chartRes.rows.map((r) => r.cnt);
-    const chartExams = chartRes.rows.map(() => 0);
+    const chartAssignments = chartRes.rows.map((r) => r.assignment_count);
+    const chartExams = chartRes.rows.map((r) => r.exam_count);
 
     // ===== 3. KELAYOTGAN VAZIFALAR — tekshirilиши kerak (topshirilган, lekin ko'p) =====
     const tasksRes = await pool.query(
@@ -7451,195 +6815,17 @@ app.get("/teacher/overview", authMiddleware, requireTeacher, async (req, res) =>
 // SINF BOSHQARUVI (Teacher Panel Phase 2B)
 // ============================================================
 
-// join_code generator: 6 belgili (katta harf + raqam), unique
-// Adashtiruvchi belgilar (0/O, 1/I) chiqarib tashlangan — o'qish oson bo'lsin.
-function generateClassCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
-
-// Unique join_code yaratish (bazada bormi tekshiradi, yo'q topilguncha urinadi)
-async function generateUniqueClassCode() {
-  for (let attempt = 0; attempt < 10; attempt++) {
-    const code = generateClassCode();
-    const existing = await pool.query("SELECT id FROM classes WHERE join_code = $1", [code]);
-    if (existing.rows.length === 0) {
-      return code;
-    }
-  }
-  // Juda kam ehtimol — 10 urinishda ham topilmasa, xato
-  throw new Error("Join code yaratib bo'lmadi, qayta urinib ko'ring");
-}
-
 // YANGI SINF YARATISH
-app.post("/teacher/classes", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const teacherId = req.user.id;
-    const { name, description } = req.body;
-
-    // name majburiy
-    if (!name || name.trim() === "") {
-      return res.status(400).json({ error: "Sinf nomi majburiy" });
-    }
-    if (name.trim().length > 120) {
-      return res.status(400).json({ error: "Sinf nomi juda uzun (120 belgidan oshmasin)" });
-    }
-    // XSS himoya (Sprint 1): teg belgilarini olib tashlaymiz
-    const safeName = sanitizeText(name, 120);
-    const safeDescription = sanitizeText(description, 500);
-
-    // ===== LIMIT: Free teacher faqat 1 sinf =====
-    const classLimit = await premium.checkTeacherLimit(teacherId, "classes");
-    if (!classLimit.allowed) {
-      await logAudit(req, "teacher_limit_blocked_class", {
-        entityType: "class", entityId: teacherId,
-        details: "teacher=" + teacherId + " count=" + classLimit.current + " limit=" + classLimit.limit + " plan=free"
-      }).catch(() => {});
-      return res.status(402).json(premium.teacherLimitError("classes"));
-    }
-
-    // school_id — o'qituvchining maktabidan (hozircha matn, FK yo'q, shuning uchun null)
-    // Maktab tizimi qurilganda bu yerda haqiqiy school_id qo'yiladi.
-    const schoolId = null;
-
-    // Unique join_code yaratamiz
-    const joinCode = await generateUniqueClassCode();
-
-    const newClass = await pool.query(
-      `INSERT INTO classes (teacher_id, school_id, name, description, join_code)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, teacher_id, school_id, name, description, join_code, created_at, archived_at`,
-      [teacherId, schoolId, safeName, safeDescription || null, joinCode]
-    );
-
-    res.status(201).json({
-      message: "Sinf yaratildi",
-      class: newClass.rows[0]
-    });
-  } catch (err) {
-    console.error("Sinf yaratish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(teacherClassCreateRoutes({ sanitizeText, logAudit }));
 
 // SINFNI TAHRIRLASH (nom + tavsif)
-app.put("/teacher/classes/:classId", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const teacherId = req.user.id;
-    const classId = parseInt(req.params.classId);
-    if (!classId) return res.status(400).json({ error: "Noto'g'ri ID" });
-
-    // XSS himoya (Sprint 1): teg belgilari yozuvdan oldin olib tashlanadi
-    const name = sanitizeText(req.body.name || "", 120);
-    const description = sanitizeText(req.body.description || "", 500);
-    if (!name) return res.status(400).json({ error: "Sinf nomini kiriting" });
-
-    // Ownership: bu sinf shu teacher'niki ekanini tekshiramiz
-    const own = await pool.query(
-      "SELECT id FROM classes WHERE id = $1 AND teacher_id = $2 AND archived_at IS NULL",
-      [classId, teacherId]
-    );
-    if (own.rows.length === 0) return res.status(404).json({ error: "Sinf topilmadi" });
-
-    await pool.query(
-      "UPDATE classes SET name = $1, description = $2 WHERE id = $3",
-      [name, description, classId]
-    );
-
-    // Audit (agar logAudit funksiyangiz bo'lsa)
-    if (typeof logAudit === "function") {
-      logAudit(req, "class_updated", { entityType: "class", entityId: classId, details: { name } });
-    }
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Sinf tahrirlash xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(teacherClassUpdateRoutes({ sanitizeText, logAudit }));
 
 // SINFNI ARXIVLASH (yumshoq o'chirish: archived_at = NOW())
-app.post("/teacher/classes/:classId/archive", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const teacherId = req.user.id;
-    const classId = parseInt(req.params.classId);
-    if (!classId) return res.status(400).json({ error: "Noto'g'ri ID" });
-
-    // Ownership
-    const own = await pool.query(
-      "SELECT id FROM classes WHERE id = $1 AND teacher_id = $2 AND archived_at IS NULL",
-      [classId, teacherId]
-    );
-    if (own.rows.length === 0) return res.status(404).json({ error: "Sinf topilmadi" });
-
-    await pool.query(
-      "UPDATE classes SET archived_at = NOW() WHERE id = $1",
-      [classId]
-    );
-
-    if (typeof logAudit === "function") {
-      logAudit(req, "class_archived", { entityType: "class", entityId: classId });
-    }
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Sinf arxivlash xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(teacherClassArchiveRoutes({ logAudit }));
 
 // O'QITUVCHINING SINFLARI RO'YXATI
-app.get("/teacher/classes", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    // Sinflar + har biri uchun: o'quvchi soni, o'rtacha natija, faol topshiriqlar
-    const classes = await pool.query(
-      `SELECT c.id, c.name, c.description, c.join_code, c.created_at,
-              COUNT(DISTINCT cs.student_id) FILTER (WHERE cs.status = 'active') AS student_count,
-              COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'active') AS active_assignments,
-              ROUND(AVG(sub.percent)) AS avg_score
-       FROM classes c
-       LEFT JOIN class_students cs ON cs.class_id = c.id
-       LEFT JOIN assignments a ON a.class_id = c.id AND a.status = 'active'
-       LEFT JOIN assignment_submissions sub ON sub.assignment_id = a.id
-            AND sub.status IN ('submitted','late_submitted') AND sub.percent IS NOT NULL
-       WHERE c.teacher_id = $1 AND c.archived_at IS NULL
-       GROUP BY c.id
-       ORDER BY c.created_at DESC`,
-      [req.user.id]
-    );
-
-    // Har sinf uchun keyingi topshiriq (eng yaqin due_at, kelajakda)
-    const classList = classes.rows;
-    for (const cls of classList) {
-      const nextAsg = await pool.query(
-        `SELECT title, due_at FROM assignments
-         WHERE class_id = $1 AND status = 'active' AND due_at >= NOW()
-         ORDER BY due_at ASC LIMIT 1`,
-        [cls.id]
-      );
-      if (nextAsg.rows.length > 0) {
-        cls.next_assignment_title = nextAsg.rows[0].title;
-        cls.next_assignment_due = nextAsg.rows[0].due_at;
-      } else {
-        cls.next_assignment_title = null;
-        cls.next_assignment_due = null;
-      }
-      // avg_score raqamga aylantirish (NULL bo'lsa null qoladi)
-      cls.avg_score = cls.avg_score != null ? Number(cls.avg_score) : null;
-      cls.active_assignments = Number(cls.active_assignments) || 0;
-      cls.student_count = Number(cls.student_count) || 0;
-    }
-
-    res.json({ classes: classList });
-  } catch (err) {
-    console.error("Sinflar ro'yxati xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(teacherClassListRoutes());
 
 // Barcha topshiriqlar (Topshiriqlar sahifasi)
 app.get("/teacher/assignments", authMiddleware, requireTeacher, async (req, res) => {
@@ -7652,9 +6838,10 @@ app.get("/teacher/assignments", authMiddleware, requireTeacher, async (req, res)
               a.due_at, a.status, a.created_at, a.class_id,
               c.name AS class_name,
               (SELECT COUNT(*)::int FROM class_students cs WHERE cs.class_id = a.class_id AND cs.status = 'active') AS class_student_count,
-              ,(SELECT COUNT(*) FROM teacher_exam_attempts a WHERE a.exam_id = e.id AND a.status = 'submitted')::int AS submitted_count
-              ,(SELECT ROUND(AVG(a.percent)) FROM teacher_exam_attempts a WHERE a.exam_id = e.id AND a.status = 'submitted')::int AS avg_percent
-              (SELECT COUNT(*)::int FROM assignment_submissions sub WHERE sub.assignment_id = a.id AND sub.status IN ('submitted','late_submitted')) AS submitted_count
+              (SELECT COUNT(DISTINCT sub.student_id)::int
+               FROM assignment_submissions sub
+               WHERE sub.assignment_id = a.id
+                 AND sub.status IN ('submitted','late_submitted')) AS submitted_count
        FROM assignments a
        JOIN classes c ON c.id = a.class_id
        WHERE a.teacher_id = $1 AND c.archived_at IS NULL
@@ -8004,7 +7191,7 @@ app.get("/student/classes", authMiddleware, requireStudent, async (req, res) => 
     // Faqat shu o'quvchi a'zo bo'lgan faol sinflar.
     // O'qituvchi nomi + sinfdagi jami faol o'quvchilar soni (kartada ko'rsatish uchun).
     const classes = await pool.query(
-      `SELECT c.id, c.name, c.description, c.join_code, c.cefr_level, c.created_at, c.schedule,
+      `SELECT c.id, c.name, c.description, c.join_code, c.cefr_level, c.created_at, c.schedule, c.teacher_id,
               t.first_name AS teacher_first_name, t.last_name AS teacher_last_name,
               (SELECT COUNT(*) FROM class_students m WHERE m.class_id = c.id AND m.status = 'active') AS student_count
        FROM class_students cs
@@ -8018,6 +7205,274 @@ app.get("/student/classes", authMiddleware, requireStudent, async (req, res) => 
     res.json({ classes: classes.rows });
   } catch (err) {
     console.error("O'quvchi sinflari xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== Class announcements =====
+app.use(teacherClassAnnouncementsListRoutes({ ownedActiveClass }));
+
+app.use(teacherClassAnnouncementCreateRoutes({ sanitizeText, ownedActiveClass, io }));
+
+app.use(teacherClassAnnouncementUpdateRoutes({ sanitizeText, ownedActiveClass, io }));
+
+app.use(teacherClassAnnouncementDeleteRoutes({ ownedActiveClass, io }));
+
+app.use(studentClassAnnouncementsListRoutes({ activeClassMembership }));
+
+// ===== Student class actions and ranking =====
+app.post("/student/classes/:classId/leave", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
+    const membership = await activeClassMembership(classId, req.user.id);
+    if (!membership) return res.status(404).json({ error: "Siz bu sinfda emassiz" });
+    await pool.query(
+      "UPDATE class_students SET status='left' WHERE class_id=$1 AND student_id=$2 AND status='active'",
+      [classId, req.user.id]
+    );
+    io.to("class_" + String(classId)).emit("classStudentLeft", { classId, studentId: req.user.id });
+    res.json({ success: true, message: "Sinf tark etildi" });
+  } catch (err) {
+    console.error("Sinfni tark etish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+app.get("/student/classes/:classId/ranking", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
+    if (!(await activeClassMembership(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
+    const rows = await pool.query(
+      `WITH best_submissions AS (
+         SELECT DISTINCT ON (s.student_id, s.assignment_id)
+                s.student_id, s.assignment_id, s.percent
+           FROM assignment_submissions s
+           JOIN assignments a ON a.id=s.assignment_id
+          WHERE a.class_id=$1 AND s.status IN ('submitted','late_submitted')
+          ORDER BY s.student_id, s.assignment_id, s.percent DESC NULLS LAST, s.submitted_at DESC
+       ), scores AS (
+         SELECT student_id, ROUND(AVG(percent))::int AS avg_percent, COUNT(*)::int AS completed
+           FROM best_submissions GROUP BY student_id
+       )
+       SELECT u.id, u.first_name, u.last_name, u.profile_picture, u.rating,
+              COALESCE(sc.avg_percent,0) AS avg_percent, COALESCE(sc.completed,0) AS completed
+         FROM class_students cs
+         JOIN users u ON u.id=cs.student_id
+         LEFT JOIN scores sc ON sc.student_id=u.id
+        WHERE cs.class_id=$1 AND cs.status='active'
+        ORDER BY COALESCE(sc.avg_percent,0) DESC, COALESCE(sc.completed,0) DESC,
+                 COALESCE(u.rating,0) DESC, u.id ASC`, [classId]
+    );
+    const ranking = rows.rows.map((row, index) => ({ ...row, rank: index + 1 }));
+    res.json({ ranking, my_rank: (ranking.find(r => r.id === req.user.id) || {}).rank || null });
+  } catch (err) {
+    console.error("Sinf reytingi xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== Attendance =====
+app.get("/teacher/classes/:classId/attendance", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
+    if (!(await ownedActiveClass(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
+    const sessions = await pool.query(
+      `SELECT s.id, s.title, s.session_date, s.status, s.created_at,
+              COUNT(r.id)::int AS marked_count,
+              COUNT(r.id) FILTER (WHERE r.status='present')::int AS present_count
+         FROM class_attendance_sessions s
+         LEFT JOIN class_attendance_records r ON r.session_id=s.id
+        WHERE s.class_id=$1 GROUP BY s.id ORDER BY s.session_date DESC, s.created_at DESC`, [classId]
+    );
+    const students = await pool.query(
+      `SELECT u.id, u.first_name, u.last_name FROM class_students cs
+       JOIN users u ON u.id=cs.student_id
+       WHERE cs.class_id=$1 AND cs.status='active' ORDER BY u.first_name, u.last_name`, [classId]
+    );
+    let records = [];
+    const requestedId = parseInt(req.query.sessionId, 10);
+    const sessionId = Number.isInteger(requestedId) ? requestedId : (sessions.rows[0] && Number(sessions.rows[0].id));
+    if (sessionId) {
+      const result = await pool.query(
+        `SELECT r.student_id, r.status FROM class_attendance_records r
+         JOIN class_attendance_sessions s ON s.id=r.session_id
+         WHERE r.session_id=$1 AND s.class_id=$2`, [sessionId, classId]
+      );
+      records = result.rows;
+    }
+    res.json({ sessions: sessions.rows, students: students.rows, selected_session_id: sessionId || null, records });
+  } catch (err) {
+    console.error("Davomatni yuklash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+app.post("/teacher/classes/:classId/attendance", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    const title = sanitizeText(req.body.title || "", 160) || "Dars davomati";
+    const sessionDate = /^\d{4}-\d{2}-\d{2}$/.test(req.body.session_date || "") ? req.body.session_date : null;
+    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
+    if (!(await ownedActiveClass(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
+    const inserted = await pool.query(
+      `INSERT INTO class_attendance_sessions (class_id, teacher_id, title, session_date)
+       VALUES ($1,$2,$3,COALESCE($4::date,CURRENT_DATE))
+       RETURNING id, title, session_date, status, created_at`,
+      [classId, req.user.id, title, sessionDate]
+    );
+    res.status(201).json({ session: inserted.rows[0] });
+  } catch (err) {
+    console.error("Davomat yaratish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+app.put("/teacher/classes/:classId/attendance/:sessionId", authMiddleware, requireTeacher, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    const sessionId = parseInt(req.params.sessionId, 10);
+    const records = Array.isArray(req.body.records) ? req.body.records : [];
+    if (!Number.isInteger(classId) || !Number.isInteger(sessionId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+    if (!records.length || records.length > 500) return res.status(400).json({ error: "Davomat belgilarini kiriting" });
+    if (!(await ownedActiveClass(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
+    const session = await client.query(
+      "SELECT id, status FROM class_attendance_sessions WHERE id=$1 AND class_id=$2 AND teacher_id=$3",
+      [sessionId, classId, req.user.id]
+    );
+    if (!session.rows.length) return res.status(404).json({ error: "Davomat topilmadi" });
+    if (session.rows[0].status === "closed") return res.status(409).json({ error: "Yopilgan davomatni o'zgartirib bo'lmaydi" });
+    const allowed = new Set((await client.query(
+      "SELECT student_id FROM class_students WHERE class_id=$1 AND status='active'", [classId]
+    )).rows.map(r => Number(r.student_id)));
+    const validStatuses = new Set(["present", "absent", "late", "excused"]);
+    for (const item of records) {
+      if (!allowed.has(Number(item.student_id)) || !validStatuses.has(item.status)) {
+        return res.status(400).json({ error: "Davomat ma'lumotlari noto'g'ri" });
+      }
+    }
+    await client.query("BEGIN");
+    for (const item of records) {
+      await client.query(
+        `INSERT INTO class_attendance_records (session_id, student_id, status)
+         VALUES ($1,$2,$3)
+         ON CONFLICT (session_id, student_id)
+         DO UPDATE SET status=EXCLUDED.status, marked_at=NOW()`,
+        [sessionId, Number(item.student_id), item.status]
+      );
+    }
+    if (req.body.close === true) {
+      await client.query("UPDATE class_attendance_sessions SET status='closed', updated_at=NOW() WHERE id=$1", [sessionId]);
+    }
+    await client.query("COMMIT");
+    io.to("class_" + String(classId)).emit("classAttendanceUpdated", { classId });
+    res.json({ success: true });
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    console.error("Davomat saqlash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  } finally {
+    client.release();
+  }
+});
+
+app.get("/student/classes/:classId/attendance", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
+    if (!(await activeClassMembership(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
+    const rows = await pool.query(
+      `SELECT s.id, s.title, s.session_date, s.status AS session_status, r.status
+         FROM class_attendance_sessions s
+         LEFT JOIN class_attendance_records r ON r.session_id=s.id AND r.student_id=$2
+        WHERE s.class_id=$1 ORDER BY s.session_date DESC, s.created_at DESC`, [classId, req.user.id]
+    );
+    const marked = rows.rows.filter(r => r.status);
+    const attended = marked.filter(r => r.status === "present" || r.status === "late").length;
+    res.json({ records: rows.rows, summary: { total: marked.length, attended, percent: marked.length ? Math.round(attended * 100 / marked.length) : null } });
+  } catch (err) {
+    console.error("O'quvchi davomati xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+// ===== Live lessons =====
+app.get("/teacher/classes/:classId/lessons", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
+    if (!(await ownedActiveClass(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
+    const rows = await pool.query(
+      `SELECT id, title, description, meeting_url, status, starts_at, ended_at, created_at
+         FROM class_lessons WHERE class_id=$1 ORDER BY created_at DESC LIMIT 20`, [classId]
+    );
+    res.json({ lessons: rows.rows });
+  } catch (err) {
+    console.error("Darslarni yuklash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+app.post("/teacher/classes/:classId/lessons", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    const title = sanitizeText(req.body.title || "", 160);
+    const description = sanitizeText(req.body.description || "", 1000);
+    const meetingUrl = String(req.body.meeting_url || "").trim();
+    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
+    if (!title || !validMeetingUrl(meetingUrl)) return res.status(400).json({ error: "Dars nomi va to'g'ri havolani kiriting" });
+    if (!(await ownedActiveClass(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
+    await pool.query("UPDATE class_lessons SET status='finished', ended_at=NOW(), updated_at=NOW() WHERE class_id=$1 AND status='live'", [classId]);
+    const inserted = await pool.query(
+      `INSERT INTO class_lessons (class_id, teacher_id, title, description, meeting_url, status, starts_at)
+       VALUES ($1,$2,$3,$4,$5,'live',NOW())
+       RETURNING id, title, description, meeting_url, status, starts_at, created_at`,
+      [classId, req.user.id, title, description || null, meetingUrl]
+    );
+    io.to("class_" + String(classId)).emit("classLessonStarted", { classId });
+    res.status(201).json({ lesson: inserted.rows[0] });
+  } catch (err) {
+    console.error("Dars boshlash xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+app.post("/teacher/classes/:classId/lessons/:lessonId/finish", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    const lessonId = parseInt(req.params.lessonId, 10);
+    if (!Number.isInteger(classId) || !Number.isInteger(lessonId)) return res.status(400).json({ error: "Noto'g'ri ID" });
+    if (!(await ownedActiveClass(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
+    const updated = await pool.query(
+      `UPDATE class_lessons SET status='finished', ended_at=NOW(), updated_at=NOW()
+        WHERE id=$1 AND class_id=$2 AND teacher_id=$3 AND status='live' RETURNING id`,
+      [lessonId, classId, req.user.id]
+    );
+    if (!updated.rows.length) return res.status(404).json({ error: "Faol dars topilmadi" });
+    io.to("class_" + String(classId)).emit("classLessonFinished", { classId });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Darsni tugatish xatosi:", err.message);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
+
+app.get("/student/classes/:classId/live-lesson", authMiddleware, requireStudent, async (req, res) => {
+  try {
+    const classId = parseInt(req.params.classId, 10);
+    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
+    if (!(await activeClassMembership(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
+    const rows = await pool.query(
+      `SELECT id, title, description, meeting_url, status, starts_at
+         FROM class_lessons WHERE class_id=$1 AND status='live'
+        ORDER BY starts_at DESC LIMIT 1`, [classId]
+    );
+    res.json({ lesson: rows.rows[0] || null });
+  } catch (err) {
+    console.error("Faol dars xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
   }
 });
@@ -8356,19 +7811,12 @@ async function assignNewParentCode(studentId) {
   throw new Error("Kod yaratib bo'lmadi (collision)");
 }
 
-function maskParentPhone(phone) {
-  if (!phone) return "";
-  const d = String(phone).replace(/\D/g, "");
-  if (d.length < 4) return "***";
-  return "+" + d.slice(0, 3) + " ** *** ** " + d.slice(-2);
-}
-
 // ============================================================================
 // MAKTAB TAKLIF KODI ENDPOINTLARI
 // ============================================================================
 
 // --- Kodni tekshirish (ro'yxatdan o'tish oldidan, OCHIQ endpoint) ---
-app.post("/verify-school-code", async (req, res) => {
+app.post("/verify-school-code", schoolCodeLookupLimiter, async (req, res) => {
   try {
     const { code } = req.body;
     if (!code) return res.status(400).json({ error: "Kod kiritilmadi" });
@@ -8412,13 +7860,16 @@ app.post("/admin/school-invites", requireAdmin, async (req, res) => {
       return res.status(400).json({ error: "Maktab nomi majburiy (kamida 3 harf)" });
     }
     const schoolNorm = normalizeSchool(school_name);
+    if (!schoolIdentityKey(region, district, schoolNorm)) {
+      return res.status(400).json({ error: "Viloyat, tuman va maktab to'liq kiritilishi kerak" });
+    }
 
     // Bu maktab uchun ISHLATILMAGAN faol kod bormi?
     const existing = await pool.query(
       `SELECT id FROM school_invites
-       WHERE school_name = $1 AND used_by IS NULL
+       WHERE school_name = $1 AND region = $2 AND district = $3 AND used_by IS NULL
          AND (expires_at IS NULL OR expires_at > NOW())`,
-      [schoolNorm]
+      [schoolNorm, region.trim(), district.trim()]
     );
     if (existing.rows.length > 0) {
       return res.status(400).json({ error: "Bu maktab uchun faol kod allaqachon mavjud" });
@@ -8426,8 +7877,9 @@ app.post("/admin/school-invites", requireAdmin, async (req, res) => {
 
     // Bu maktabда allaqachon admin bormi? (1 admin qoidasi)
     const adminExists = await pool.query(
-      `SELECT id FROM users WHERE role = 'school_admin' AND school = $1`,
-      [schoolNorm]
+      `SELECT id FROM users
+       WHERE role = 'school_admin' AND region = $1 AND district = $2 AND school = $3`,
+      [region.trim(), district.trim(), schoolNorm]
     );
     if (adminExists.rows.length > 0) {
       return res.status(400).json({ error: "Bu maktabда allaqachon admin bor" });
@@ -8442,7 +7894,7 @@ app.post("/admin/school-invites", requireAdmin, async (req, res) => {
     await pool.query(
       `INSERT INTO school_invites (code_hash, school_name, region, district, created_by, expires_at)
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [codeHash, schoolNorm, region || null, district || null, req.user?.id || null, expiresAt]
+      [codeHash, schoolNorm, region.trim(), district.trim(), req.user?.id || null, expiresAt]
     );
 
     // Raw kod FAQAT shu yerда bir marta qaytariladi
@@ -8568,26 +8020,6 @@ app.delete("/student/parents/:parentId", authMiddleware, requireStudent, async (
 const MAX_PARENTS_PER_STUDENT = 5;
 const MAX_CHILDREN_PER_PARENT = 10;
 const REL_ALLOWED = ["mother", "father", "guardian", "other"];
-
-function parentLeagueName(rating) {
-  const r = rating || 0;
-  if (r >= 2000) return "Grandmaster";
-  if (r >= 1800) return "Master";
-  if (r >= 1600) return "Diamond";
-  if (r >= 1400) return "Platinum";
-  if (r >= 1200) return "Gold";
-  if (r >= 1000) return "Silver";
-  return "Bronze";
-}
-function activityLabel(ts) {
-  if (!ts) return "Hali faollik yo'q";
-  const days = Math.floor((Date.now() - new Date(ts).getTime()) / 86400000);
-  if (days <= 0) return "Bugun";
-  if (days === 1) return "Kecha";
-  if (days <= 7) return "Shu hafta";
-  if (days <= 30) return "Shu oy";
-  return "30 kundan oldin";
-}
 
 // Ulanish urinishlari uchun oddiy in-memory rate-limit (brute-force'ga qarshi)
 const _parentLinkFails = new Map();
@@ -9748,21 +9180,6 @@ app.get("/teacher/assignments/:id/results", authMiddleware, requireTeacher, asyn
 // SCHOOL CUP — Bosqich 6.2: Check-in backend
 // ============================================================
 
-// Yordamchi: foydalanuvchi shu matchda o'ynashga haqlimi (jamoa a'zosimi)
-async function getMatchPlayer(matchId, userId) {
-  const r = await pool.query(
-    `SELECT mp.id, mp.match_id, mp.user_id, mp.school, mp.checked_in, mp.score, mp.finished,
-            tm.member_role, tm.slot_order
-     FROM tournament_match_players mp
-     LEFT JOIN tournament_team_members tm
-       ON tm.tournament_id = (SELECT tournament_id FROM tournament_matches WHERE id = mp.match_id)
-       AND tm.user_id = mp.user_id
-     WHERE mp.match_id = $1 AND mp.user_id = $2`,
-    [matchId, userId]
-  );
-  return r.rows[0] || null;
-}
-
 // ============================================================
 // SCHOOL CUP — Bosqich 7: O'quvchi turnir markazi
 // ============================================================
@@ -9780,7 +9197,7 @@ app.get("/student/tournaments", authMiddleware, async (req, res) => {
     const tq = await pool.query(
       `SELECT DISTINCT t.id, t.name, t.status, t.level, t.scope_value, t.region,
               t.bracket_size, t.team_size, t.created_at,
-              tm.member_role, tm.school
+              tm.member_role, tm.school, tm.school_key
        FROM tournament_team_members tm
        JOIN tournaments t ON t.id = tm.tournament_id
        WHERE tm.user_id = $1
@@ -9793,13 +9210,13 @@ app.get("/student/tournaments", authMiddleware, async (req, res) => {
     for (const t of tq.rows) {
       // Mening maktabim ishtirok etgan matchlar
       const mq = await pool.query(
-        `SELECT id, round, match_no, school_a, school_b, score_a, score_b,
-                winner_school, status, scheduled_at
+        `SELECT id, round, match_no, school_a, school_b, school_a_key, school_b_key, score_a, score_b,
+                winner_school, winner_school_key, status, scheduled_at
          FROM tournament_matches
          WHERE tournament_id = $1
-           AND (school_a = $2 OR school_b = $2)
+           AND (school_a_key = $2 OR school_b_key = $2)
          ORDER BY round ASC, match_no ASC`,
-        [t.id, t.school]
+        [t.id, t.school_key]
       );
 
       // Joriy/keyingi match (live > checkin > pending > done tartibida muhimligi)
@@ -9819,6 +9236,7 @@ app.get("/student/tournaments", authMiddleware, async (req, res) => {
         scope_value: t.scope_value,
         region: t.region,
         my_school: t.school,
+        my_school_key: t.school_key,
         my_role: t.member_role,
         bracket_size: t.bracket_size,
         active_match: activeMatch,
@@ -9841,23 +9259,24 @@ app.get("/student/tournaments/:id/bracket", authMiddleware, async (req, res) => 
 
     // O'quvchi shu turnirda a'zomi?
     const memQ = await pool.query(
-      "SELECT school FROM tournament_team_members WHERE tournament_id = $1 AND user_id = $2 LIMIT 1",
+      "SELECT school, school_key FROM tournament_team_members WHERE tournament_id = $1 AND user_id = $2 LIMIT 1",
       [tid, uid]
     );
     if (memQ.rows.length === 0) return res.status(403).json({ error: "Siz bu turnir ishtirokchisi emassiz" });
     const mySchool = memQ.rows[0].school;
+    const mySchoolKey = memQ.rows[0].school_key;
 
     const tr = await pool.query("SELECT * FROM tournaments WHERE id = $1", [tid]);
     if (tr.rows.length === 0) return res.status(404).json({ error: "Turnir topilmadi" });
     const t = tr.rows[0];
 
     const schoolsQ = await pool.query(
-      "SELECT school, seed, avg_rating, eliminated, placement FROM tournament_schools WHERE tournament_id = $1 ORDER BY seed ASC",
+      "SELECT school, region, district, school_key, seed, avg_rating, eliminated, placement FROM tournament_schools WHERE tournament_id = $1 ORDER BY seed ASC",
       [tid]
     );
     const matchesQ = await pool.query(
-      `SELECT id, round, match_no, school_a, school_b, score_a, score_b,
-              winner_school, status, scheduled_at
+      `SELECT id, round, match_no, school_a, school_b, school_a_key, school_b_key, score_a, score_b,
+              winner_school, winner_school_key, status, scheduled_at
        FROM tournament_matches WHERE tournament_id = $1
        ORDER BY round ASC, match_no ASC`,
       [tid]
@@ -9865,13 +9284,14 @@ app.get("/student/tournaments/:id/bracket", authMiddleware, async (req, res) => 
     const rounds = {};
     matchesQ.rows.forEach(m => {
       if (!rounds[m.round]) rounds[m.round] = [];
-      m.is_mine = (m.school_a === mySchool || m.school_b === mySchool);
+      m.is_mine = (m.school_a_key === mySchoolKey || m.school_b_key === mySchoolKey);
       rounds[m.round].push(m);
     });
 
     res.json({
       tournament: { id: t.id, name: t.name, status: t.status, bracket_size: t.bracket_size, scope_value: t.scope_value, region: t.region },
       my_school: mySchool,
+      my_school_key: mySchoolKey,
       schools: schoolsQ.rows,
       rounds: rounds,
       total_rounds: t.bracket_size ? Math.log2(t.bracket_size) : 0,
@@ -9905,7 +9325,7 @@ app.get("/tournament/match/:id/checkin-state", authMiddleware, async (req, res) 
 
     // Ikkala maktab a'zolari (checked_in holati bilan)
     const playersQ = await pool.query(
-      `SELECT mp.user_id, mp.school, mp.checked_in,
+      `SELECT mp.user_id, mp.school, mp.school_key, mp.checked_in,
               u.first_name, u.last_name, u.profile_picture, u.rating,
               tm.member_role, tm.slot_order
        FROM tournament_match_players mp
@@ -9913,16 +9333,18 @@ app.get("/tournament/match/:id/checkin-state", authMiddleware, async (req, res) 
        LEFT JOIN tournament_team_members tm
          ON tm.tournament_id = $2 AND tm.user_id = mp.user_id
        WHERE mp.match_id = $1
-       ORDER BY mp.school ASC, tm.member_role DESC, tm.slot_order ASC`,
+       ORDER BY mp.school_key ASC, tm.member_role DESC, tm.slot_order ASC`,
       [matchId, match.tournament_id]
     );
 
     // Maktablarga ajratamiz
     const teams = {};
-    [match.school_a, match.school_b].forEach(s => { if (s) teams[s] = []; });
+    [[match.school_a_key, match.school_a], [match.school_b_key, match.school_b]].forEach(([key, name]) => {
+      if (key) teams[key] = { school: name, members: [] };
+    });
     playersQ.rows.forEach(p => {
-      if (!teams[p.school]) teams[p.school] = [];
-      teams[p.school].push({
+      if (!teams[p.school_key]) teams[p.school_key] = { school: p.school, members: [] };
+      teams[p.school_key].members.push({
         user_id: p.user_id,
         name: ((p.first_name || "") + " " + (p.last_name || "")).trim(),
         profile_picture: p.profile_picture,
@@ -9939,12 +9361,15 @@ app.get("/tournament/match/:id/checkin-state", authMiddleware, async (req, res) 
         status: match.status,
         school_a: match.school_a,
         school_b: match.school_b,
+        school_a_key: match.school_a_key,
+        school_b_key: match.school_b_key,
         scheduled_at: match.scheduled_at,
         tournament_name: match.tournament_name,
         questions_per_match: match.questions_per_match,
         seconds_per_match: match.seconds_per_match,
       },
       my_school: me.school,
+      my_school_key: me.school_key,
       my_checked_in: me.checked_in,
       teams: teams,
     });
@@ -9956,35 +9381,75 @@ app.get("/tournament/match/:id/checkin-state", authMiddleware, async (req, res) 
 
 // "Tayyorman" — check-in qilish
 app.post("/tournament/match/:id/checkin", authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
     const matchId = req.params.id;
     const uid = req.user.id;
 
-    // Match holati checkin yoki live bo'lishi kerak
-    const mq = await pool.query("SELECT status FROM tournament_matches WHERE id = $1", [matchId]);
-    if (mq.rows.length === 0) return res.status(404).json({ error: "Match topilmadi" });
-    const status = mq.rows[0].status;
-    if (status !== "checkin" && status !== "live") {
-      return res.status(400).json({ error: "Check-in hozir ochiq emas (holat: " + status + ")" });
+    await client.query("BEGIN");
+    // Match qatori bloklanadi: parallel check-inlar jamoa limitini oshira olmaydi.
+    const mq = await client.query(
+      `SELECT m.status, t.team_size
+       FROM tournament_matches m
+       JOIN tournaments t ON t.id = m.tournament_id
+       WHERE m.id = $1
+       FOR UPDATE OF m`,
+      [matchId]
+    );
+    if (mq.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Match topilmadi" });
+    }
+    const match = mq.rows[0];
+    if (match.status !== "checkin") {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Check-in hozir ochiq emas (holat: " + match.status + ")" });
     }
 
-    // A'zomi?
-    const me = await getMatchPlayer(matchId, uid);
-    if (!me) return res.status(403).json({ error: "Siz bu matchning ishtirokchisi emassiz" });
-
-    // Check-in belgilash
-    await pool.query(
-      "UPDATE tournament_match_players SET checked_in = true WHERE match_id = $1 AND user_id = $2",
+    const meQ = await client.query(
+      `SELECT id, school_key, checked_in
+       FROM tournament_match_players
+       WHERE match_id = $1 AND user_id = $2`,
       [matchId, uid]
     );
+    const me = meQ.rows[0];
+    if (!me) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ error: "Siz bu matchning ishtirokchisi emassiz" });
+    }
+    if (me.checked_in) {
+      await client.query("COMMIT");
+      return res.json({ success: true, checked_in: true });
+    }
+
+    const readyQ = await client.query(
+      `SELECT COUNT(*) AS c
+       FROM tournament_match_players
+       WHERE match_id = $1 AND school_key = $2 AND checked_in = true`,
+      [matchId, me.school_key]
+    );
+    if ((parseInt(readyQ.rows[0].c, 10) || 0) >= match.team_size) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "Jamoaning barcha jang o'rinlari band" });
+    }
+
+    // Check-in belgilash
+    await client.query(
+      "UPDATE tournament_match_players SET checked_in = true, checked_in_at = NOW() WHERE match_id = $1 AND user_id = $2",
+      [matchId, uid]
+    );
+    await client.query("COMMIT");
 
     // Boshqa a'zolarga "kimdir tayyor bo'ldi" xabari (real-time yangilanish)
     notifyMatchPlayers(matchId, "checkinUpdate", { matchId: parseInt(matchId), userId: uid });
 
     res.json({ success: true, checked_in: true });
   } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
     console.error("Checkin xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
+  } finally {
+    client.release();
   }
 });
 
@@ -10029,29 +9494,39 @@ app.get("/tournament/match/:id/battle-state", authMiddleware, async (req, res) =
       "SELECT score, finished FROM tournament_match_players WHERE match_id = $1 AND user_id = $2",
       [matchId, uid]
     );
+    const answeredQ = await pool.query(
+      `SELECT question_id FROM tournament_match_answers
+       WHERE match_id = $1 AND user_id = $2
+       ORDER BY created_at ASC`,
+      [matchId, uid]
+    );
 
     // Real-time jamoa ballari
     const teamScores = await pool.query(
-      `SELECT school, COALESCE(SUM(score),0) AS total
-       FROM tournament_match_players WHERE match_id = $1 GROUP BY school`,
+      `SELECT school_key, COALESCE(SUM(score),0) AS total
+       FROM tournament_match_players WHERE match_id = $1 GROUP BY school_key`,
       [matchId]
     );
     const scores = {};
-    teamScores.rows.forEach(r => { scores[r.school] = parseInt(r.total) || 0; });
+    teamScores.rows.forEach(r => { scores[r.school_key] = parseInt(r.total) || 0; });
 
     res.json({
       status: match.status,
       match: {
         id: match.id,
         school_a: match.school_a, school_b: match.school_b,
+        school_a_key: match.school_a_key, school_b_key: match.school_b_key,
         tournament_name: match.tournament_name,
         seconds_per_match: match.seconds_per_match,
         started_at: match.started_at,
         winner_school: match.winner_school,
+        winner_school_key: match.winner_school_key,
       },
       my_school: me.school,
+      my_school_key: me.school_key,
       my_score: myProgress.rows[0] ? myProgress.rows[0].score : 0,
       my_finished: myProgress.rows[0] ? myProgress.rows[0].finished : false,
+      answered_question_ids: answeredQ.rows.map((row) => row.question_id),
       questions: questions,
       team_scores: scores,
     });
@@ -10063,59 +9538,94 @@ app.get("/tournament/match/:id/battle-state", authMiddleware, async (req, res) =
 
 // Jangda javob yuborish — ball hisoblash
 app.post("/tournament/match/:id/answer", authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
     const matchId = req.params.id;
     const uid = req.user.id;
     const { questionId, answer } = req.body; // answer: 'a'|'b'|'c'|'d'
+    const normalizedAnswer = String(answer || "").toLowerCase();
+    if (!["a", "b", "c", "d"].includes(normalizedAnswer)) {
+      return res.status(400).json({ error: "Javob varianti noto'g'ri" });
+    }
 
-    // A'zomi?
-    const me = await getMatchPlayer(matchId, uid);
-    if (!me) return res.status(403).json({ error: "Siz bu matchning ishtirokchisi emassiz" });
-
-    // Match live mi?
-    const mq = await pool.query("SELECT status, questions_data FROM tournament_matches WHERE id = $1", [matchId]);
+    await client.query("BEGIN");
+    // Match qatorini bloklash javob va timeout bir vaqtda yakunlanishini oldini oladi.
+    const mq = await client.query(
+      `SELECT m.status, m.questions_data, m.started_at, t.seconds_per_match
+       FROM tournament_matches m
+       JOIN tournaments t ON t.id = m.tournament_id
+       WHERE m.id = $1
+       FOR UPDATE OF m`,
+      [matchId]
+    );
     const match = mq.rows[0];
     if (!match || match.status !== "live") {
+      await client.query("ROLLBACK");
       return res.status(400).json({ error: "Jang faol emas" });
     }
 
-    // Bu o'quvchi allaqachon javob bergan savollarni kuzatamiz (tournament_match_answers)
-    const already = await pool.query(
-      "SELECT id FROM tournament_match_answers WHERE match_id = $1 AND user_id = $2 AND question_id = $3",
-      [matchId, uid, questionId]
+    const meQ = await client.query(
+      `SELECT id, checked_in, finished
+       FROM tournament_match_players
+       WHERE match_id = $1 AND user_id = $2`,
+      [matchId, uid]
     );
-    if (already.rows.length > 0) {
-      return res.status(400).json({ error: "Bu savolga allaqachon javob bergansiz" });
+    const me = meQ.rows[0];
+    if (!me || !me.checked_in) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ error: "Siz bu matchning faol ishtirokchisi emassiz" });
+    }
+    if (me.finished) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Siz jangni allaqachon yakunlagansiz" });
+    }
+
+    const deadline = new Date(match.started_at).getTime() + Number(match.seconds_per_match) * 1000;
+    if (!Number.isFinite(deadline) || Date.now() >= deadline) {
+      await client.query("ROLLBACK");
+      await expireTournamentMatch(matchId);
+      return res.status(400).json({ error: "Jang vaqti tugagan" });
     }
 
     // To'g'ri javobni topamiz (questions_data dan)
     const raw = typeof match.questions_data === "string" ? JSON.parse(match.questions_data) : match.questions_data;
-    const q = raw.find(x => String(x.id) === String(questionId));
-    if (!q) return res.status(400).json({ error: "Savol topilmadi" });
+    const q = Array.isArray(raw) ? raw.find(x => String(x.id) === String(questionId)) : null;
+    if (!q) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Savol topilmadi" });
+    }
 
-    const isCorrect = (String(answer).toLowerCase() === String(q.correct_option).toLowerCase());
+    const isCorrect = (normalizedAnswer === String(q.correct_option).toLowerCase());
 
-    // Javobni yozamiz
-    await pool.query(
-      "INSERT INTO tournament_match_answers (match_id, user_id, question_id, answer, is_correct) VALUES ($1, $2, $3, $4, $5)",
-      [matchId, uid, questionId, answer, isCorrect]
+    // UNIQUE indeks + ON CONFLICT parallel so'rovda ham faqat bitta javobni qabul qiladi.
+    const inserted = await client.query(
+      `INSERT INTO tournament_match_answers (match_id, user_id, question_id, answer, is_correct)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (match_id, user_id, question_id) DO NOTHING
+       RETURNING id`,
+      [matchId, uid, q.id, normalizedAnswer, isCorrect]
     );
+    if (inserted.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "Bu savolga allaqachon javob bergansiz" });
+    }
 
     // To'g'ri bo'lsa, ballni oshiramiz
     if (isCorrect) {
-      await pool.query(
+      await client.query(
         "UPDATE tournament_match_players SET score = score + 1 WHERE match_id = $1 AND user_id = $2",
         [matchId, uid]
       );
     }
 
     // Yangilangan jamoa ballari
-    const teamScores = await pool.query(
-      `SELECT school, COALESCE(SUM(score),0) AS total FROM tournament_match_players WHERE match_id = $1 GROUP BY school`,
+    const teamScores = await client.query(
+      `SELECT school_key, COALESCE(SUM(score),0) AS total FROM tournament_match_players WHERE match_id = $1 GROUP BY school_key`,
       [matchId]
     );
     const scores = {};
-    teamScores.rows.forEach(r => { scores[r.school] = parseInt(r.total) || 0; });
+    teamScores.rows.forEach(r => { scores[r.school_key] = parseInt(r.total) || 0; });
+    await client.query("COMMIT");
 
     // Real-time: barcha o'yinchilarga yangi ballarni yuboramiz
     notifyMatchPlayers(matchId, "scoreUpdate", { matchId: parseInt(matchId), team_scores: scores });
@@ -10127,97 +9637,179 @@ app.post("/tournament/match/:id/answer", authMiddleware, async (req, res) => {
       team_scores: scores,
     });
   } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
     console.error("Answer xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
+  } finally {
+    client.release();
   }
 });
 
 // Jangni yakunlash (o'quvchi barcha savollarni tugatganda)
 app.post("/tournament/match/:id/finish", authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
     const matchId = req.params.id;
     const uid = req.user.id;
-    const me = await getMatchPlayer(matchId, uid);
-    if (!me) return res.status(403).json({ error: "Ishtirokchi emassiz" });
+    await client.query("BEGIN");
+    const matchQ = await client.query(
+      `SELECT m.status, m.questions_data, m.started_at, t.seconds_per_match
+       FROM tournament_matches m
+       JOIN tournaments t ON t.id = m.tournament_id
+       WHERE m.id = $1
+       FOR UPDATE OF m`,
+      [matchId]
+    );
+    const match = matchQ.rows[0];
+    if (!match || match.status !== "live") {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Jang faol emas" });
+    }
 
-    await pool.query(
+    const meQ = await client.query(
+      `SELECT checked_in, finished FROM tournament_match_players
+       WHERE match_id = $1 AND user_id = $2`,
+      [matchId, uid]
+    );
+    const me = meQ.rows[0];
+    if (!me || !me.checked_in) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ error: "Faol ishtirokchi emassiz" });
+    }
+    if (me.finished) {
+      await client.query("COMMIT");
+      return res.json({ success: true, already_finished: true });
+    }
+
+    const questions = typeof match.questions_data === "string"
+      ? JSON.parse(match.questions_data)
+      : match.questions_data;
+    const totalQuestions = Array.isArray(questions) ? questions.length : 0;
+    const answeredQ = await client.query(
+      `SELECT COUNT(*) AS c FROM tournament_match_answers
+       WHERE match_id = $1 AND user_id = $2`,
+      [matchId, uid]
+    );
+    const answeredCount = parseInt(answeredQ.rows[0].c, 10) || 0;
+    const deadline = new Date(match.started_at).getTime() + Number(match.seconds_per_match) * 1000;
+    const timedOut = !Number.isFinite(deadline) || Date.now() >= deadline;
+    if (!timedOut && answeredCount < totalQuestions) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Avval barcha savollarga javob bering" });
+    }
+
+    await client.query(
       "UPDATE tournament_match_players SET finished = true, finished_at = NOW() WHERE match_id = $1 AND user_id = $2",
       [matchId, uid]
     );
+    await client.query("COMMIT");
 
     // Hamma tugatdimi tekshiramiz → match natijasini hisoblaymiz
-    await checkMatchCompletion(matchId);
+    if (timedOut) await expireTournamentMatch(matchId);
+    else await checkMatchCompletion(matchId);
 
     res.json({ success: true });
   } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
     console.error("Finish xatosi:", err.message);
     res.status(500).json({ error: "Server xatosi" });
+  } finally {
+    client.release();
   }
 });
 
-// Match tugadimi (hamma o'yinchi finished) → natijani hisoblash
 async function checkMatchCompletion(matchId) {
   const client = await pool.connect();
   try {
+    await client.query("BEGIN");
+    const matchQ = await client.query(
+      "SELECT * FROM tournament_matches WHERE id = $1 FOR UPDATE",
+      [matchId]
+    );
+    const match = matchQ.rows[0];
+    if (!match || match.status === "done") {
+      await client.query("ROLLBACK");
+      return;
+    }
+
     // Faqat check-in qilganlar (haqiqiy o'yinchilar) hisobga olinadi
     const playersQ = await client.query(
-      "SELECT user_id, school, score, finished, checked_in FROM tournament_match_players WHERE match_id = $1 AND checked_in = true",
+      "SELECT user_id, school, school_key, score, finished, checked_in FROM tournament_match_players WHERE match_id = $1 AND checked_in = true",
       [matchId]
     );
     const players = playersQ.rows;
-    if (players.length === 0) { client.release(); return; }
+    if (players.length === 0) {
+      await client.query("ROLLBACK");
+      return;
+    }
 
     // Hamma tugatdimi?
     const allFinished = players.every(p => p.finished);
-    if (!allFinished) { client.release(); return; }
+    if (!allFinished) {
+      await client.query("ROLLBACK");
+      return;
+    }
 
     // Jamoa ballari
-    const matchQ = await client.query("SELECT * FROM tournament_matches WHERE id = $1", [matchId]);
-    const match = matchQ.rows[0];
     let scoreA = 0, scoreB = 0;
     players.forEach(p => {
-      if (p.school === match.school_a) scoreA += p.score;
-      else if (p.school === match.school_b) scoreB += p.score;
+      if (p.school_key === match.school_a_key) scoreA += p.score;
+      else if (p.school_key === match.school_b_key) scoreB += p.score;
     });
 
     let winner = null;
-    if (scoreA > scoreB) winner = match.school_a;
-    else if (scoreB > scoreA) winner = match.school_b;
+    let winnerKey = null;
+    if (scoreA > scoreB) { winner = match.school_a; winnerKey = match.school_a_key; }
+    else if (scoreB > scoreA) { winner = match.school_b; winnerKey = match.school_b_key; }
     else {
       // DURANG — tezroq tugatgan jamoa yutadi (jamoaning oxirgi a'zosi qachon tugatdi)
       // Har maktab uchun eng oxirgi finished_at ni topamiz (jamoa to'liq tugagan vaqti)
       const timeQ = await client.query(
-        `SELECT school, MAX(finished_at) AS last_finish
+        `SELECT school_key, MAX(finished_at) AS last_finish
          FROM tournament_match_players
          WHERE match_id = $1 AND checked_in = true AND finished = true
-         GROUP BY school`,
+         GROUP BY school_key`,
         [matchId]
       );
       let timeA = null, timeB = null;
       timeQ.rows.forEach(r => {
-        if (r.school === match.school_a) timeA = r.last_finish;
-        else if (r.school === match.school_b) timeB = r.last_finish;
+        if (r.school_key === match.school_a_key) timeA = r.last_finish;
+        else if (r.school_key === match.school_b_key) timeB = r.last_finish;
       });
       if (timeA && timeB) {
         // Ertaroq tugatgan (kichikroq vaqt) yutadi
-        winner = (new Date(timeA) <= new Date(timeB)) ? match.school_a : match.school_b;
+        const timeAMs = new Date(timeA).getTime();
+        const timeBMs = new Date(timeB).getTime();
+        if (timeAMs !== timeBMs) {
+          const aWon = timeAMs < timeBMs;
+          winner = aWon ? match.school_a : match.school_b;
+          winnerKey = aWon ? match.school_a_key : match.school_b_key;
+        } else {
+          const seeded = await getSeededWinner(
+            client, match.tournament_id,
+            match.school_a, match.school_a_key, match.school_b, match.school_b_key
+          );
+          winner = seeded.school;
+          winnerKey = seeded.school_key;
+        }
         console.log(`[Turnir] Match #${matchId} DURANG (${scoreA}-${scoreB}) → tezlik bo'yicha g'olib: ${winner}`);
       } else if (timeA) {
         winner = match.school_a;
+        winnerKey = match.school_a_key;
       } else if (timeB) {
         winner = match.school_b;
+        winnerKey = match.school_b_key;
       }
       // Agar ikkalasi ham null bo'lsa (kam ehtimol) — winner null qoladi
     }
 
-    await client.query("BEGIN");
     await client.query(
-      "UPDATE tournament_matches SET status = 'done', score_a = $1, score_b = $2, winner_school = $3, finished_at = NOW() WHERE id = $4",
-      [scoreA, scoreB, winner, matchId]
+      "UPDATE tournament_matches SET status = 'done', score_a = $1, score_b = $2, winner_school = $3, winner_school_key = $4, finished_at = NOW() WHERE id = $5",
+      [scoreA, scoreB, winner, winnerKey, matchId]
     );
     // G'olibni keyingi raundga
     if (winner) {
-      await advanceWinner(client, match.tournament_id, match.round, match.match_no, winner);
+      await advanceWinner(client, match.tournament_id, match.round, match.match_no, winner, winnerKey);
     }
     await client.query("COMMIT");
 
@@ -10229,6 +9821,7 @@ async function checkMatchCompletion(matchId) {
       score_a: scoreA, score_b: scoreB,
       school_a: match.school_a, school_b: match.school_b,
       winner: winner,
+      winner_key: winnerKey,
     });
   } catch (err) {
     await client.query("ROLLBACK");
@@ -10246,6 +9839,43 @@ async function checkMatchCompletion(matchId) {
 
 const CHECKIN_LEAD_MIN = 15; // necha daqiqa oldin check-in ochiladi
 
+async function expireTournamentMatch(matchId) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const matchQ = await client.query(
+      `SELECT m.status,
+              m.started_at + (t.seconds_per_match * INTERVAL '1 second') AS deadline
+       FROM tournament_matches m
+       JOIN tournaments t ON t.id = m.tournament_id
+       WHERE m.id = $1
+       FOR UPDATE OF m`,
+      [matchId]
+    );
+    const match = matchQ.rows[0];
+    if (!match || match.status !== "live" || new Date(match.deadline) > new Date()) {
+      await client.query("ROLLBACK");
+      return false;
+    }
+
+    await client.query(
+      `UPDATE tournament_match_players
+       SET finished = true, finished_at = COALESCE(finished_at, $2)
+       WHERE match_id = $1 AND checked_in = true AND finished = false`,
+      [matchId, match.deadline]
+    );
+    await client.query("COMMIT");
+    await checkMatchCompletion(matchId);
+    return true;
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    console.error("Match timeout xatosi:", err.message);
+    return false;
+  } finally {
+    client.release();
+  }
+}
+
 async function tournamentMatchWatcher() {
   try {
     const now = new Date();
@@ -10253,14 +9883,13 @@ async function tournamentMatchWatcher() {
     // 1) pending → checkin: scheduled_at dan 15 daqiqa qolganlar
     const checkinThreshold = new Date(now.getTime() + CHECKIN_LEAD_MIN * 60000);
     const toCheckin = await pool.query(
-      `SELECT id, tournament_id, round, match_no, school_a, school_b, scheduled_at
+      `SELECT id, tournament_id, round, match_no, school_a, school_b, school_a_key, school_b_key, scheduled_at
        FROM tournament_matches
        WHERE status = 'pending'
          AND school_a IS NOT NULL AND school_b IS NOT NULL
          AND scheduled_at IS NOT NULL
-         AND scheduled_at <= $1
-         AND scheduled_at > $2`,
-      [checkinThreshold, now]
+         AND scheduled_at <= $1`,
+      [checkinThreshold]
     );
     for (const m of toCheckin.rows) {
       await openMatchCheckin(m);
@@ -10268,7 +9897,7 @@ async function tournamentMatchWatcher() {
 
     // 2) checkin → live: scheduled_at vaqti kelgan matchlar
     const toLive = await pool.query(
-      `SELECT id, tournament_id, round, match_no, school_a, school_b, scheduled_at
+      `SELECT id, tournament_id, round, match_no, school_a, school_b, school_a_key, school_b_key, scheduled_at
        FROM tournament_matches
        WHERE status = 'checkin'
          AND scheduled_at IS NOT NULL
@@ -10277,6 +9906,21 @@ async function tournamentMatchWatcher() {
     );
     for (const m of toLive.rows) {
       await startMatchLive(m);
+    }
+
+    // 3) live match vaqti tugasa, javob bermay qolgan o'yinchilarni ham
+    // server yakunlaydi. Brauzer yopilib qolsa ham turnir osilib qolmaydi.
+    const expiredLive = await pool.query(
+      `SELECT m.id
+       FROM tournament_matches m
+       JOIN tournaments t ON t.id = m.tournament_id
+       WHERE m.status = 'live'
+         AND m.started_at IS NOT NULL
+         AND m.started_at + (t.seconds_per_match * INTERVAL '1 second') <= $1`,
+      [now]
+    );
+    for (const m of expiredLive.rows) {
+      await expireTournamentMatch(m.id);
     }
   } catch (err) {
     console.error("Match watcher xatosi:", err.message);
@@ -10294,13 +9938,16 @@ async function openMatchCheckin(match) {
 
     // Ikkala maktab jamoasi a'zolarini tournament_match_players ga yozamiz (agar yo'q bo'lsa)
     // Faqat starter va reserve — checked_in = false bilan
-    for (const school of [match.school_a, match.school_b]) {
-      if (!school) continue;
+    for (const team of [
+      { school: match.school_a, schoolKey: match.school_a_key },
+      { school: match.school_b, schoolKey: match.school_b_key },
+    ]) {
+      if (!team.school || !team.schoolKey) continue;
       const members = await client.query(
         `SELECT user_id, member_role FROM tournament_team_members
-         WHERE tournament_id = $1 AND school = $2
+         WHERE tournament_id = $1 AND school_key = $2
          ORDER BY member_role DESC, slot_order ASC`,
-        [match.tournament_id, school]
+        [match.tournament_id, team.schoolKey]
       );
       for (const mem of members.rows) {
         // Allaqachon yozilganmi?
@@ -10310,9 +9957,9 @@ async function openMatchCheckin(match) {
         );
         if (exists.rows.length === 0) {
           await client.query(
-            `INSERT INTO tournament_match_players (match_id, user_id, school, is_bot, checked_in, score, finished)
-             VALUES ($1, $2, $3, false, false, 0, false)`,
-            [match.id, mem.user_id, school]
+            `INSERT INTO tournament_match_players (match_id, user_id, school, school_key, is_bot, checked_in, score, finished)
+             VALUES ($1, $2, $3, $4, false, false, 0, false)`,
+            [match.id, mem.user_id, team.school, team.schoolKey]
           );
         }
       }
@@ -10337,46 +9984,66 @@ async function openMatchCheckin(match) {
 }
 
 // Matchni live holatiga o'tkazish (jang boshlanadi) yoki walkover
+function notifyTournamentResult(match, winnerSchool, winnerSchoolKey, scoreA = 0, scoreB = 0) {
+  notifyMatchPlayers(match.id, "matchFinished", {
+    matchId: parseInt(match.id),
+    score_a: scoreA,
+    score_b: scoreB,
+    school_a: match.school_a,
+    school_b: match.school_b,
+    winner: winnerSchool,
+    winner_key: winnerSchoolKey,
+  });
+}
+
 async function startMatchLive(match) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    await client.query(
+      "UPDATE tournaments SET status = 'live' WHERE id = $1 AND status IN ('bracket', 'registration')",
+      [match.tournament_id]
+    );
 
     // Har maktabdan nechta o'yinchi check-in qilgan?
     const checkedQ = await client.query(
-      `SELECT school, COUNT(*) FILTER (WHERE checked_in = true) AS ready
+      `SELECT school_key, COUNT(*) FILTER (WHERE checked_in = true) AS ready
        FROM tournament_match_players
        WHERE match_id = $1
-       GROUP BY school`,
+       GROUP BY school_key`,
       [match.id]
     );
     const readyMap = {};
-    checkedQ.rows.forEach(r => { readyMap[r.school] = parseInt(r.ready) || 0; });
-    const aReady = readyMap[match.school_a] || 0;
-    const bReady = readyMap[match.school_b] || 0;
+    checkedQ.rows.forEach(r => { readyMap[r.school_key] = parseInt(r.ready) || 0; });
+    const aReady = readyMap[match.school_a_key] || 0;
+    const bReady = readyMap[match.school_b_key] || 0;
 
     // WALKOVER holatlari (bot yo'q — hech kim kelmasa raqib o'tadi)
     if (aReady === 0 && bReady === 0) {
-      // Ikkalasidan ham hech kim yo'q → match bekor (durang, hech kim o'tmaydi)
-      await client.query(
-        "UPDATE tournament_matches SET status = 'done', winner_school = NULL, finished_at = NOW() WHERE id = $1",
-        [match.id]
+      // Ikkala jamoa ham kelmasa setka osilib qolmasligi uchun yuqori seed o'tadi.
+      const seeded = await getSeededWinner(
+        client, match.tournament_id,
+        match.school_a, match.school_a_key, match.school_b, match.school_b_key
       );
+      await finishMatchWithWinner(client, match, seeded.school, seeded.school_key, 0, 0, true);
       await client.query("COMMIT");
-      console.log(`[Turnir] Match #${match.id} — ikkala maktab ham kelmadi, bekor qilindi`);
+      notifyTournamentResult(match, seeded.school, seeded.school_key);
+      console.log(`[Turnir] Match #${match.id} — ikkala maktab ham kelmadi, yuqori seed o'tdi: ${seeded.school}`);
       return;
     }
     if (aReady === 0) {
       // A kelmadi → B walkover
-      await finishMatchWithWinner(client, match, match.school_b, 0, 0, true);
+      await finishMatchWithWinner(client, match, match.school_b, match.school_b_key, 0, 0, true);
       await client.query("COMMIT");
+      notifyTournamentResult(match, match.school_b, match.school_b_key);
       console.log(`[Turnir] Match #${match.id} — ${match.school_a} kelmadi, ${match.school_b} walkover g'olib`);
       return;
     }
     if (bReady === 0) {
       // B kelmadi → A walkover
-      await finishMatchWithWinner(client, match, match.school_a, 0, 0, true);
+      await finishMatchWithWinner(client, match, match.school_a, match.school_a_key, 0, 0, true);
       await client.query("COMMIT");
+      notifyTournamentResult(match, match.school_a, match.school_a_key);
       console.log(`[Turnir] Match #${match.id} — ${match.school_b} kelmadi, ${match.school_a} walkover g'olib`);
       return;
     }
@@ -10428,23 +10095,41 @@ async function startMatchLive(match) {
 }
 
 // G'olibni belgilab matchni tugatish (walkover yoki normal)
-async function finishMatchWithWinner(client, match, winnerSchool, scoreA, scoreB, isWalkover) {
+async function finishMatchWithWinner(client, match, winnerSchool, winnerSchoolKey, scoreA, scoreB, isWalkover) {
   await client.query(
     `UPDATE tournament_matches
-     SET status = 'done', winner_school = $1, score_a = $2, score_b = $3, finished_at = NOW()
-     WHERE id = $4`,
-    [winnerSchool, scoreA, scoreB, match.id]
+     SET status = 'done', winner_school = $1, winner_school_key = $2,
+         score_a = $3, score_b = $4, finished_at = NOW()
+     WHERE id = $5`,
+    [winnerSchool, winnerSchoolKey, scoreA, scoreB, match.id]
   );
   // G'olibni keyingi raundga ko'chirish (6.8 da to'liq, hozir asos)
-  await advanceWinner(client, match.tournament_id, match.round, match.match_no, winnerSchool);
+  await advanceWinner(client, match.tournament_id, match.round, match.match_no, winnerSchool, winnerSchoolKey);
 }
 
 // G'olibni keyingi raundga joylashtirish
-async function advanceWinner(client, tid, round, matchNo, winnerSchool) {
-  if (!winnerSchool) return;
+async function advanceWinner(client, tid, round, matchNo, winnerSchool, winnerSchoolKey) {
+  if (!winnerSchool || !winnerSchoolKey) return;
+  const currentMatch = await client.query(
+    `SELECT school_a_key, school_b_key
+     FROM tournament_matches
+     WHERE tournament_id = $1 AND round = $2 AND match_no = $3`,
+    [tid, round, matchNo]
+  );
+  if (currentMatch.rows.length > 0) {
+    const current = currentMatch.rows[0];
+    const loserKey = current.school_a_key === winnerSchoolKey ? current.school_b_key : current.school_a_key;
+    if (loserKey) {
+      await client.query(
+        "UPDATE tournament_schools SET eliminated = true WHERE tournament_id = $1 AND school_key = $2",
+        [tid, loserKey]
+      );
+    }
+  }
   const nextMatchNo = Math.ceil(matchNo / 2);
   const isA = (matchNo % 2 === 1);
   const col = isA ? "school_a" : "school_b";
+  const keyCol = isA ? "school_a_key" : "school_b_key";
   // Keyingi raund mavjudmi?
   const next = await client.query(
     "SELECT id FROM tournament_matches WHERE tournament_id = $1 AND round = $2 AND match_no = $3",
@@ -10452,27 +10137,29 @@ async function advanceWinner(client, tid, round, matchNo, winnerSchool) {
   );
   if (next.rows.length > 0) {
     await client.query(
-      `UPDATE tournament_matches SET ${col} = $1 WHERE id = $2`,
-      [winnerSchool, next.rows[0].id]
+      `UPDATE tournament_matches SET ${col} = $1, ${keyCol} = $2 WHERE id = $3`,
+      [winnerSchool, winnerSchoolKey, next.rows[0].id]
     );
   } else {
     // Keyingi raund yo'q → bu final edi → g'olib chempion
     await client.query(
-      "UPDATE tournament_schools SET placement = 1 WHERE tournament_id = $1 AND school = $2",
-      [tid, winnerSchool]
+      "UPDATE tournament_schools SET placement = 1 WHERE tournament_id = $1 AND school_key = $2",
+      [tid, winnerSchoolKey]
     );
     // Final mag'lubi → 2-o'rin
     const finalMatch = await client.query(
-      "SELECT school_a, school_b FROM tournament_matches WHERE tournament_id = $1 AND round = $2 AND match_no = $3",
+      "SELECT school_a, school_b, school_a_key, school_b_key FROM tournament_matches WHERE tournament_id = $1 AND round = $2 AND match_no = $3",
       [tid, round, matchNo]
     );
     if (finalMatch.rows.length > 0) {
       const fm = finalMatch.rows[0];
-      const runnerUp = (fm.school_a === winnerSchool) ? fm.school_b : fm.school_a;
-      if (runnerUp) {
+      const winnerIsA = fm.school_a_key === winnerSchoolKey;
+      const runnerUp = winnerIsA ? fm.school_b : fm.school_a;
+      const runnerUpKey = winnerIsA ? fm.school_b_key : fm.school_a_key;
+      if (runnerUp && runnerUpKey) {
         await client.query(
-          "UPDATE tournament_schools SET placement = 2 WHERE tournament_id = $1 AND school = $2",
-          [tid, runnerUp]
+          "UPDATE tournament_schools SET placement = 2 WHERE tournament_id = $1 AND school_key = $2",
+          [tid, runnerUpKey]
         );
       }
     }
@@ -10504,6 +10191,23 @@ async function notifyMatchPlayers(matchId, event, payload) {
 // Watcher'ni har 30 soniyada ishga tushiramiz
 setInterval(tournamentMatchWatcher, 30000);
 
+// API xatolari har doim JSON bo'lib qaytadi; Multer default HTML sahifasi va
+// ichki stack trace brauzerga chiqib ketmaydi.
+app.use((err, req, res, next) => {
+  if (!err) return next();
+  if (err instanceof multer.MulterError) {
+    const message = err.code === "LIMIT_FILE_SIZE"
+      ? "Fayl hajmi ruxsat etilgan limitdan katta"
+      : "Faylni yuklashda xato";
+    return res.status(400).json({ error: message });
+  }
+  if (err.message && /fayl|format|rasm|image|pdf/i.test(err.message)) {
+    return res.status(400).json({ error: err.message });
+  }
+  console.error("HTTP handler xatosi:", err && err.stack ? err.stack : err);
+  return res.status(500).json({ error: "Server xatosi" });
+});
+
 // ===== CRASH HIMOYASI: server o'chib qolmasligi uchun =====
 // Ushlanmagan xato yoki rad etilgan promise butun serverni o'chirib yuborishi mumkin.
 // Bu hodisalarni ushlab, loglaymiz va serverni ishlatib turamiz (barcha o'yinchilar
@@ -10522,6 +10226,14 @@ server.listen(PORT, async () => {
   if (process.env.NODE_ENV === "production" && (!process.env.ESKIZ_EMAIL || !process.env.ESKIZ_PASSWORD)) {
     console.error("‼️ XAVFSIZLIK: NODE_ENV=production, lekin ESKIZ_EMAIL/ESKIZ_PASSWORD yo'q!");
     console.error("   OTP kodlar SMS o'rniga konsolga chiqadi — bu xavfli. Server to'xtatildi.");
+    process.exit(1);
+  }
+  if (process.env.NODE_ENV === "production" && (!process.env.PAYME_MERCHANT_ID || !process.env.PAYME_KEY)) {
+    console.error("XAVFSIZLIK: production rejimida PAYME_MERCHANT_ID va PAYME_KEY majburiy.");
+    process.exit(1);
+  }
+  if (process.env.NODE_ENV === "production" && (!process.env.ADMIN_PASSWORD || !process.env.ADMIN_TOTP_SECRET)) {
+    console.error("XAVFSIZLIK: production rejimida ADMIN_PASSWORD va ADMIN_TOTP_SECRET majburiy.");
     process.exit(1);
   }
   if (!process.env.ESKIZ_EMAIL || !process.env.ESKIZ_PASSWORD) {

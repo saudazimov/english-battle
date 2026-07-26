@@ -134,6 +134,7 @@
 
     @keyframes prFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   </style>
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
   <aside class="sidebar"></aside>
@@ -221,7 +222,7 @@
   </div>
 
   <script src="/api.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/vendor/lucide.min.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/profile-modal.js"></script>
   <script>
@@ -234,6 +235,7 @@
     var currentIndex = 0;
     var correctCount = 0;
     var answered = false;
+    var practiceSessionId = null;
 
     function icons() { if (window.lucide) lucide.createIcons(); }
 
@@ -280,6 +282,7 @@
         var data = await res.json();
         if (!res.ok) { alert(data.error || "Xato"); showScreen("setupScreen"); return; }
         questions = data.questions || [];
+        practiceSessionId = data.session_id || null;
         if (questions.length === 0) { alert("Savol topilmadi"); showScreen("setupScreen"); return; }
         currentIndex = 0;
         correctCount = 0;
@@ -323,19 +326,37 @@
       icons();
     }
 
-    function selectAnswer(letter) {
+    async function selectAnswer(letter) {
       if (answered) return;
       answered = true;
       var q = questions[currentIndex];
-      var isCorrect = (letter === q.correct_option);
-      if (isCorrect) correctCount++;
 
-      // Barcha tugmalarni o'chiramiz, to'g'ri/xato belgilaymiz
       document.querySelectorAll("#answersBox .pr-answer").forEach(function (btn) {
         btn.disabled = true;
+      });
+
+      var result;
+      try {
+        var response = await authFetch("/practice/answer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: practiceSessionId, question_id: q.id, answer: letter })
+        });
+        result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Javobni tekshirib bo'lmadi");
+      } catch (err) {
+        answered = false;
+        document.querySelectorAll("#answersBox .pr-answer").forEach(function (btn) { btn.disabled = false; });
+        alert(err.message || "Server xatosi");
+        return;
+      }
+
+      var isCorrect = result.is_correct;
+      correctCount = Number(result.correct_count) || 0;
+      document.querySelectorAll("#answersBox .pr-answer").forEach(function (btn) {
         var bl = btn.getAttribute("data-letter");
         var mark = btn.querySelector(".pr-answer-mark");
-        if (bl === q.correct_option) {
+        if (bl === result.correct_option) {
           btn.classList.add("correct");
           mark.innerHTML = '<i data-lucide="check-circle"></i>';
         } else if (bl === letter && !isCorrect) {
@@ -344,18 +365,16 @@
         }
       });
 
-      // Feedback
       var fb = document.getElementById("feedback");
       fb.className = "pr-feedback show " + (isCorrect ? "correct" : "wrong");
       document.getElementById("feedbackTitle").innerHTML = isCorrect
         ? '<i data-lucide="check-circle"></i> To\'g\'ri!'
         : '<i data-lucide="x-circle"></i> Noto\'g\'ri';
-      var explain = q.explanation && q.explanation.trim()
-        ? q.explanation
-        : (isCorrect ? "Ajoyib, davom eting!" : "To'g'ri javob: " + q.correct_option);
+      var explain = result.explanation && result.explanation.trim()
+        ? result.explanation
+        : (isCorrect ? "Ajoyib, davom eting!" : "To'g'ri javob: " + result.correct_option);
       document.getElementById("feedbackText").textContent = explain;
 
-      // Next tugma
       var nextBtn = document.getElementById("nextBtn");
       nextBtn.className = "pr-next-btn show";
       nextBtn.innerHTML = (currentIndex === questions.length - 1)
@@ -384,10 +403,13 @@
         var res = await authFetch("/practice/finish", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ correct: correctCount, total: total })
+          body: JSON.stringify({ session_id: practiceSessionId })
         });
         var data = await res.json();
         if (res.ok) {
+          correctCount = Number(data.correct) || 0;
+          total = Number(data.total) || total;
+          percent = Math.round((correctCount / total) * 100);
           xpEarned = data.xp_earned || 0;
           // localStorage'dagi user XP'ni yangilaymiz
           if (data.updated_user) {

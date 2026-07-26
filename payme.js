@@ -13,6 +13,7 @@
 
 const pool = require("./db");
 const premium = require("./premium");
+const crypto = require("crypto");
 
 const PAYME_KEY = process.env.PAYME_KEY || "";          // test yoki prod kalit
 const PAYME_TEST_KEY = process.env.PAYME_TEST_KEY || ""; // (ixtiyoriy) alohida test kalit
@@ -58,7 +59,9 @@ function checkAuth(authHeader) {
     const idx = decoded.indexOf(":");
     if (idx === -1) return false;
     const passedKey = decoded.slice(idx + 1);
-    return passedKey === key;
+    const expected = Buffer.from(key, "utf8");
+    const received = Buffer.from(passedKey, "utf8");
+    return expected.length === received.length && crypto.timingSafeEqual(received, expected);
   } catch (e) {
     return false;
   }
@@ -120,117 +123,188 @@ async function checkPerform(id, params) {
 
 // ===== 2. CreateTransaction =====
 async function createTransaction(id, params) {
+  if (!params || !params.id) return rpcError(id, ERR.TX_NOT_FOUND, "Tranzaksiya ID topilmadi");
   const txId = params.id; // Payme'ning transaction id
-  // Bu tranzaksiya allaqachon yaratilganmi?
-  const existing = await pool.query("SELECT * FROM payme_transactions WHERE paycom_transaction_id = $1", [txId]);
-  if (existing.rows.length > 0) {
-    const tx = existing.rows[0];
-    if (tx.state === STATE.CREATED) {
-      return rpcResult(id, { create_time: parseInt(tx.create_time), transaction: String(tx.id), state: tx.state });
+  const paymentId = parseInt(params.account && params.account.payment_id, 10);
+  if (!Number.isInteger(paymentId)) return rpcError(id, ERR.ORDER_NOT_FOUND, "Order topilmadi");
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const existing = await client.query(
+      "SELECT * FROM payme_transactions WHERE paycom_transaction_id = $1 FOR UPDATE",
+      [txId]
+    );
+    if (existing.rows.length > 0) {
+      const tx = existing.rows[0];
+      await client.query("COMMIT");
+      if (tx.state === STATE.CREATED) {
+        return rpcResult(id, { create_time: parseInt(tx.create_time), transaction: String(tx.id), state: tx.state });
+      }
+      return rpcError(id, ERR.CANT_PERFORM, "Tranzaksiya holati noto'g'ri");
     }
-    return rpcError(id, ERR.CANT_PERFORM, "Tranzaksiya holati noto'g'ri");
-  }
 
-  // Yangi tranzaksiya: order tekshiruvi
-  const f = await findPayment(params);
-  if (f.error) return rpcError(id, ERR.ORDER_NOT_FOUND, "Order topilmadi");
-  const p = f.payment;
-  if (parseInt(params.amount) !== parseInt(p.amount)) {
-    return rpcError(id, ERR.INVALID_AMOUNT, "Noto'g'ri summa");
-  }
-  if (p.status === "paid") {
-    return rpcError(id, ERR.ORDER_AVAILABLE, "Order allaqachon to'langan");
-  }
+    const pRes = await client.query("SELECT * FROM payments WHERE id = $1 FOR UPDATE", [paymentId]);
+    if (pRes.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return rpcError(id, ERR.ORDER_NOT_FOUND, "Order topilmadi");
+    }
+    const p = pRes.rows[0];
+    if (parseInt(params.amount, 10) !== parseInt(p.amount, 10)) {
+      await client.query("ROLLBACK");
+      return rpcError(id, ERR.INVALID_AMOUNT, "Noto'g'ri summa");
+    }
+    if (p.status !== "pending") {
+      await client.query("ROLLBACK");
+      return rpcError(id, ERR.ORDER_AVAILABLE, "Order to'lovga tayyor emas");
+    }
 
-  const createTime = Date.now();
-  const ins = await pool.query(
-    `INSERT INTO payme_transactions (paycom_transaction_id, payment_id, paycom_time, amount, state, create_time)
-     VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
-    [txId, p.id, params.time || createTime, p.amount, STATE.CREATED, createTime]
-  );
-  return rpcResult(id, { create_time: createTime, transaction: String(ins.rows[0].id), state: STATE.CREATED });
+    const byPayment = await client.query(
+      "SELECT * FROM payme_transactions WHERE payment_id = $1 FOR UPDATE",
+      [p.id]
+    );
+    if (byPayment.rows.length > 0) {
+      await client.query("ROLLBACK");
+      return rpcError(id, ERR.CANT_PERFORM, "Order boshqa tranzaksiyaga bog'langan");
+    }
+
+    const createTime = Date.now();
+    const ins = await client.query(
+      `INSERT INTO payme_transactions (paycom_transaction_id, payment_id, paycom_time, amount, state, create_time)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
+      [txId, p.id, params.time || createTime, p.amount, STATE.CREATED, createTime]
+    );
+    await client.query("COMMIT");
+    return rpcResult(id, { create_time: createTime, transaction: String(ins.rows[0].id), state: STATE.CREATED });
+  } catch (e) {
+    await client.query("ROLLBACK").catch(() => {});
+    if (e && e.code === "23505") {
+      const existing = await pool.query(
+        "SELECT * FROM payme_transactions WHERE paycom_transaction_id = $1",
+        [txId]
+      );
+      if (existing.rows[0] && existing.rows[0].state === STATE.CREATED) {
+        const tx = existing.rows[0];
+        return rpcResult(id, { create_time: parseInt(tx.create_time), transaction: String(tx.id), state: tx.state });
+      }
+    }
+    throw e;
+  } finally {
+    client.release();
+  }
 }
 
 // ===== 3. PerformTransaction (to'lov amalga oshdi → obuna ber) =====
 async function performTransaction(id, params) {
-  const txRes = await pool.query("SELECT * FROM payme_transactions WHERE paycom_transaction_id = $1", [params.id]);
-  if (txRes.rows.length === 0) return rpcError(id, ERR.TX_NOT_FOUND, "Tranzaksiya topilmadi");
-  const tx = txRes.rows[0];
-
-  if (tx.state === STATE.PERFORMED) {
-    // Allaqachon bajarilgan — idempotent javob
-    return rpcResult(id, { transaction: String(tx.id), perform_time: parseInt(tx.perform_time), state: STATE.PERFORMED });
-  }
-  if (tx.state !== STATE.CREATED) {
-    return rpcError(id, ERR.CANT_PERFORM, "Tranzaksiyani bajarib bo'lmaydi");
-  }
-
-  const performTime = Date.now();
-  // Tranzaksiyani performed qilamiz
-  await pool.query(
-    "UPDATE payme_transactions SET state = $1, perform_time = $2, updated_at = NOW() WHERE id = $3",
-    [STATE.PERFORMED, performTime, tx.id]
-  );
-  // Payment'ни paid qilamiz + obuna beramiz
-  const pRes = await pool.query("SELECT * FROM payments WHERE id = $1", [tx.payment_id]);
-  if (pRes.rows.length > 0) {
-    const p = pRes.rows[0];
-    await pool.query("UPDATE payments SET status = 'paid', paid_at = NOW(), updated_at = NOW() WHERE id = $1", [p.id]);
-    // Obuna ber (grantSubscription — premium.js)
-    try {
-      await premium.grantSubscription(p.user_id, p.plan, (p.months || 1) * 30);
-      console.log(`[Payme] To'lov muvaffaqiyatli: user ${p.user_id}, ${p.plan}, ${p.months} oy`);
-    } catch (e) {
-      console.error("[Payme] Obuna berishда xato:", e.message);
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const txRes = await client.query(
+      "SELECT * FROM payme_transactions WHERE paycom_transaction_id = $1 FOR UPDATE",
+      [params && params.id]
+    );
+    if (txRes.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return rpcError(id, ERR.TX_NOT_FOUND, "Tranzaksiya topilmadi");
     }
+    const tx = txRes.rows[0];
+    if (tx.state === STATE.PERFORMED) {
+      await client.query("COMMIT");
+      return rpcResult(id, { transaction: String(tx.id), perform_time: parseInt(tx.perform_time), state: STATE.PERFORMED });
+    }
+    if (tx.state !== STATE.CREATED) {
+      await client.query("ROLLBACK");
+      return rpcError(id, ERR.CANT_PERFORM, "Tranzaksiyani bajarib bo'lmaydi");
+    }
+
+    const pRes = await client.query("SELECT * FROM payments WHERE id = $1 FOR UPDATE", [tx.payment_id]);
+    if (pRes.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return rpcError(id, ERR.ORDER_NOT_FOUND, "Order topilmadi");
+    }
+    const p = pRes.rows[0];
+    if (p.status === "cancelled" || p.status === "failed") {
+      await client.query("ROLLBACK");
+      return rpcError(id, ERR.CANT_PERFORM, "Order to'lovga tayyor emas");
+    }
+
+    const performTime = Date.now();
+    await premium.grantSubscription(p.user_id, p.plan, (p.months || 1) * 30, client);
+    await client.query(
+      "UPDATE payments SET status = 'paid', paid_at = NOW(), updated_at = NOW() WHERE id = $1",
+      [p.id]
+    );
+    await client.query(
+      "UPDATE payme_transactions SET state = $1, perform_time = $2, updated_at = NOW() WHERE id = $3",
+      [STATE.PERFORMED, performTime, tx.id]
+    );
+    await client.query("COMMIT");
+    console.log(`[Payme] To'lov muvaffaqiyatli: user ${p.user_id}, ${p.plan}, ${p.months} oy`);
+    return rpcResult(id, { transaction: String(tx.id), perform_time: performTime, state: STATE.PERFORMED });
+  } catch (e) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw e;
+  } finally {
+    client.release();
   }
-  return rpcResult(id, { transaction: String(tx.id), perform_time: performTime, state: STATE.PERFORMED });
 }
 
 // ===== 4. CancelTransaction =====
 async function cancelTransaction(id, params) {
-  const txRes = await pool.query("SELECT * FROM payme_transactions WHERE paycom_transaction_id = $1", [params.id]);
-  if (txRes.rows.length === 0) return rpcError(id, ERR.TX_NOT_FOUND, "Tranzaksiya topilmadi");
-  const tx = txRes.rows[0];
-
-  const cancelTime = Date.now();
-  let newState;
-
-  // IDEMPOTENTLIK: faqat HAQIQIY holat o'tishida obunaga tegamiz.
-  // Agar tx allaqachon bekor qilingan bo'lsa (refund ikki marta kelsa),
-  // tx.state != PERFORMED bo'ladi → revoke qayta chaqirilmaydi.
-  const wasPerformedNow = (tx.state === STATE.PERFORMED);
-
-  if (wasPerformedNow) {
-    newState = STATE.CANCELLED_AFTER_PERFORM; // -2 (to'lov bajarilgandan keyin qaytarildi)
-    await pool.query("UPDATE payments SET status = 'cancelled', updated_at = NOW() WHERE id = $1", [tx.payment_id]);
-
-    // To'lov qaytarildi → premium obunani bekor qilamiz (business rule).
-    // revokeSubscription o'zi ham idempotent (faqat 'active' obunaga tegadi).
-    try {
-      const pRes = await pool.query("SELECT user_id, plan FROM payments WHERE id = $1", [tx.payment_id]);
-      if (pRes.rows.length > 0) {
-        const p = pRes.rows[0];
-        await premium.revokeSubscription(p.user_id, p.plan);
-        console.log(`[Payme] Refund → obuna bekor qilindi: user ${p.user_id}, ${p.plan}`);
-      }
-    } catch (e) {
-      // Obuna bekor qilish xatosi Payme javobini BUZMASIN (protokol 200 qaytishi kerak).
-      console.error("[Payme] Refund'da obunani bekor qilish xatosi:", e.message);
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const txRes = await client.query(
+      "SELECT * FROM payme_transactions WHERE paycom_transaction_id = $1 FOR UPDATE",
+      [params && params.id]
+    );
+    if (txRes.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return rpcError(id, ERR.TX_NOT_FOUND, "Tranzaksiya topilmadi");
     }
-  } else if (tx.state === STATE.CREATED) {
-    newState = STATE.CANCELLED; // -1 (bajarilmasdan bekor qilindi — obuna berilmagan edi)
-    await pool.query("UPDATE payments SET status = 'cancelled', updated_at = NOW() WHERE id = $1", [tx.payment_id]);
-  } else {
-    // Allaqachon bekor qilingan (idempotent qayta chaqiruv) — holatni saqlaymiz
-    newState = tx.state;
-  }
+    const tx = txRes.rows[0];
 
-  await pool.query(
-    "UPDATE payme_transactions SET state = $1, reason = $2, cancel_time = $3, updated_at = NOW() WHERE id = $4",
-    [newState, params.reason || null, cancelTime, tx.id]
-  );
-  return rpcResult(id, { transaction: String(tx.id), cancel_time: cancelTime, state: newState });
+    // Takroriy cancel aynan avvalgi vaqt va holatni qaytaradi.
+    if (tx.state === STATE.CANCELLED || tx.state === STATE.CANCELLED_AFTER_PERFORM) {
+      await client.query("COMMIT");
+      return rpcResult(id, {
+        transaction: String(tx.id),
+        cancel_time: parseInt(tx.cancel_time) || 0,
+        state: tx.state,
+      });
+    }
+
+    const pRes = await client.query("SELECT * FROM payments WHERE id = $1 FOR UPDATE", [tx.payment_id]);
+    if (pRes.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return rpcError(id, ERR.ORDER_NOT_FOUND, "Order topilmadi");
+    }
+    const p = pRes.rows[0];
+    const cancelTime = Date.now();
+    const newState = tx.state === STATE.PERFORMED
+      ? STATE.CANCELLED_AFTER_PERFORM
+      : STATE.CANCELLED;
+
+    if (tx.state === STATE.PERFORMED) {
+      await premium.revokeSubscriptionDays(p.user_id, p.plan, (p.months || 1) * 30, client);
+      console.log(`[Payme] Refund → obuna bekor qilindi: user ${p.user_id}, ${p.plan}`);
+    }
+    await client.query(
+      "UPDATE payments SET status = 'cancelled', updated_at = NOW() WHERE id = $1",
+      [p.id]
+    );
+    await client.query(
+      "UPDATE payme_transactions SET state = $1, reason = $2, cancel_time = $3, updated_at = NOW() WHERE id = $4",
+      [newState, params && params.reason != null ? params.reason : null, cancelTime, tx.id]
+    );
+    await client.query("COMMIT");
+    return rpcResult(id, { transaction: String(tx.id), cancel_time: cancelTime, state: newState });
+  } catch (e) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw e;
+  } finally {
+    client.release();
+  }
 }
 
 // ===== 5. CheckTransaction =====

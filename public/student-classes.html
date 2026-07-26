@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sinflarim — Knowledge Arena</title>
   <link rel="stylesheet" href="/app.css">
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/vendor/lucide.min.js"></script>
   <style>
     .app { max-width: 1680px; grid-template-columns: 230px 1fr 340px; gap: 20px; padding: 20px; margin: 0 auto; }
     @media (max-width: 1200px) { .app { grid-template-columns: 200px 1fr; } .rightbar { display: none; } }
@@ -196,6 +196,7 @@
 
     @media (max-width: 600px) { .tb-uname, .tb-ulevel, .currency .plus { display: none; } .topbar { gap: 10px; } .back-link span { display: none; } }
   </style>
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
   <div class="app">
@@ -455,7 +456,7 @@
                   '<div class="cc-dropdown">' +
                     '<div class="cc-dd-item" onclick="classInfo('+c.id+')"><i data-lucide="info"></i> Sinf ma\'lumotlari</div>' +
                     '<div class="cc-dd-item" onclick="teacherProfile('+c.id+')"><i data-lucide="user"></i> O\'qituvchi profili</div>' +
-                    '<div class="cc-dd-item disabled" onclick="event.stopPropagation()"><i data-lucide="log-out"></i> Sinfni tark etish <span class="dd-soon">tez orada</span></div>' +
+                    '<div class="cc-dd-item" onclick="leaveClass(event,'+c.id+')"><i data-lucide="log-out"></i> Sinfni tark etish</div>' +
                   '</div>' +
                 '</div>' +
               '</div>' +
@@ -505,9 +506,23 @@
     function teacherProfile(id) {
       closeAllMenus();
       var c = allClasses.find(function(x){ return x.id === id; });
+      if (!c || !c.teacher_id) return showToast("O'qituvchi topilmadi", "error");
+      window.location.href = "/profile.html?id=" + encodeURIComponent(c.teacher_id);
+    }
+    async function leaveClass(event, id) {
+      event.stopPropagation();
+      closeAllMenus();
+      var c = allClasses.find(function(x){ return String(x.id) === String(id); });
       if (!c) return;
-      var teacher = ((c.teacher_first_name||"")+" "+(c.teacher_last_name||"")).trim() || "ko'rsatilmagan";
-      showToast("O'qituvchi profili tez orada: " + teacher, "info");
+      if (!window.confirm('“' + (c.name || "Sinf") + '” sinfini tark etmoqchimisiz? Keyin sinf kodi orqali qayta qo‘shilishingiz mumkin.')) return;
+      try {
+        var res = await authFetch("/student/classes/" + encodeURIComponent(id) + "/leave", { method:"POST" });
+        var data = await res.json();
+        if (!res.ok) return showToast(data.error || "Sinfni tark etib bo'lmadi", "error");
+        allClasses = allClasses.filter(function(x){ return String(x.id) !== String(id); });
+        renderClasses();
+        showToast("Sinf tark etildi", "success");
+      } catch (_) { showToast("Server bilan aloqa yo'q", "error"); }
     }
 
     // === Sort menu ===

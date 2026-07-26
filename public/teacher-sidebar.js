@@ -49,6 +49,8 @@
     '.tsb-promo-btn{width:100%;padding:9px;border:none;border-radius:9px;cursor:pointer;background:linear-gradient(135deg,var(--tsb-accent),var(--tsb-primary));color:#fff;font-size:12.5px;font-weight:700;font-family:inherit;}' +
     '.tsb-foot{margin-top:14px;padding-top:14px;border-top:1px solid var(--tsb-border);display:flex;align-items:center;gap:9px;color:var(--tsb-dim);font-size:13px;font-weight:600;cursor:pointer;padding-left:8px;}' +
     '.tsb-foot svg{width:18px;height:18px;}' +
+    '.tsb-foot + .tsb-foot{margin-top:8px;padding-top:0;border-top:0;}' +
+    '.tsb-foot.tsb-logout:hover{color:var(--tsb-red);}' +
     '@media (max-width:920px){.tsb{display:none;}}';
 
   // Bo'limlar: kalit, label, ikonka(svg path), href yoki comingSoon, qo'shimcha (tag/badge)
@@ -67,7 +69,7 @@
       svg: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
     { key: "ai", label: "AI Hisobotlar", href: "/teacher-ai.html", tag: "Yangi",
       svg: '<path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/>' },
-    { key: "messages", label: "Xabarlar", href: "/teacher-messages.html", tag: "Tez orada",
+    { key: "messages", label: "Xabarlar", href: "/teacher-messages.html",
       svg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
     { key: "resources", label: "Resurslar", href: "/teacher-resources.html",
       svg: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>' },
@@ -121,6 +123,10 @@
           svgWrap('<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>') +
           'Yordam markazi' +
         '</div>' +
+        '<div class="tsb-foot tsb-logout" onclick="window.__teacherLogout()">' +
+          svgWrap('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>') +
+          'Tizimdan chiqish' +
+        '</div>' +
       '</aside>';
 
     // Premium card real holatga ulaymiz (agar authFetch bor bo'lsa)
@@ -131,6 +137,17 @@
   window.__tsbSoon = function (name) {
     if (typeof window.comingSoon === "function") { window.comingSoon(name); return; }
     alert((name ? name + ": " : "") + "tez orada tayyor bo'ladi");
+  };
+
+  window.__teacherLogout = async function () {
+    try {
+      if (typeof authFetch === "function") await authFetch("/logout", { method: "POST" });
+    } catch (_) {}
+    try {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    } catch (_) {}
+    window.location.href = "/?screen=login";
   };
 
   // Premium card — free/Pro holat (/me/subscription)

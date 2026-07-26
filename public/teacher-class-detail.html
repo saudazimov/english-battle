@@ -430,8 +430,34 @@
     .st-badge.late_submitted { background:rgba(245,158,11,.14); color:#fcd34d; }
     .st-badge.not_started { background:var(--bg-soft); color:var(--text-dim); border:1px solid var(--border); }
     .st-badge.in_progress { background:rgba(59,130,246,.14); color:#bfdbfe; }
+    .manage-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .manage-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+    .manage-title { font-size:16px; font-weight:750; margin-bottom:5px; }
+    .manage-sub { font-size:12px; color:var(--text-muted); line-height:1.45; margin-bottom:16px; }
+    .inline-check { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-muted); margin:8px 0 14px; }
+    .announce-item { border:1px solid var(--border); border-radius:11px; padding:13px; margin-top:10px; }
+    .announce-item.pinned { border-color:rgba(59,130,246,.42); background:rgba(59,130,246,.06); }
+    .announce-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .announce-name { font-size:13.5px; font-weight:700; }
+    .announce-body { font-size:12.5px; line-height:1.5; color:var(--text-muted); white-space:pre-wrap; margin-top:6px; }
+    .mini-actions { display:flex; gap:6px; }
+    .mini-btn { border:1px solid var(--border); background:var(--bg-soft); color:var(--text-muted); border-radius:7px; padding:5px 8px; font:600 11px inherit; cursor:pointer; }
+    .mini-btn:hover { color:var(--text-main); border-color:var(--border-focus); }
+    .live-status { display:flex; align-items:center; gap:8px; padding:11px 12px; border-radius:10px; background:var(--bg-soft); border:1px solid var(--border); font-size:12.5px; margin-bottom:14px; }
+    .live-dot { width:8px; height:8px; border-radius:50%; background:var(--text-dim); }
+    .live-status.on .live-dot { background:var(--red); box-shadow:0 0 0 4px rgba(239,68,68,.12); }
+    .attendance-head { display:flex; gap:10px; align-items:end; flex-wrap:wrap; margin-bottom:18px; }
+    .attendance-head .form-row { margin:0; flex:1; min-width:180px; }
+    .attendance-list { border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .attendance-row { display:grid; grid-template-columns:1fr 180px; gap:16px; align-items:center; padding:12px 15px; border-bottom:1px solid var(--border); }
+    .attendance-row:last-child { border-bottom:0; }
+    .attendance-student { display:flex; align-items:center; gap:10px; font-size:13.5px; font-weight:650; }
+    .attendance-student .student-avatar { width:32px; height:32px; }
+    .attendance-empty { padding:28px; text-align:center; color:var(--text-muted); font-size:13px; }
     @media (max-width:680px){ .res-summary { grid-template-columns:repeat(2,1fr); } .form-row.two { grid-template-columns:1fr; } }
+    @media (max-width:900px){ .manage-grid { grid-template-columns:1fr; } .tabs-bar { overflow-x:auto; } .tab-btn { white-space:nowrap; } }
   </style>
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
   <div class="layout">
@@ -525,6 +551,14 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
               Topshiriqlar <span class="tab-num" id="tabCountAssignments">0</span>
             </button>
+            <button class="tab-btn" id="tabBtnManage" onclick="switchTab('manage')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h6"/></svg>
+              E'lon va dars
+            </button>
+            <button class="tab-btn" id="tabBtnAttendance" onclick="switchTab('attendance')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Davomat
+            </button>
             <button class="tab-btn" id="tabBtnAI" onclick="switchTab('ai')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>
               AI tahlil <span class="ai-tab-badge">PRO</span>
@@ -585,6 +619,47 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Yangi topshiriq
               </button>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tabManage">
+            <div class="manage-grid">
+              <div class="manage-card">
+                <div class="manage-title">Sinf e'lonlari</div>
+                <div class="manage-sub">O'quvchilar sinf sahifasida darhol ko'radigan xabarni joylang.</div>
+                <div class="form-row"><label class="form-label">Sarlavha</label><input class="form-input" id="annTitle" maxlength="160" placeholder="Masalan: Ertangi dars haqida"></div>
+                <div class="form-row"><label class="form-label">E'lon matni</label><textarea class="form-textarea" id="annBody" maxlength="2000" placeholder="E'lon tafsilotlari"></textarea></div>
+                <label class="inline-check"><input type="checkbox" id="annPinned"> Muhim e'lon sifatida tepaga mahkamlash</label>
+                <button class="btn-primary" id="annSubmit" onclick="createAnnouncement()">E'lon joylash</button>
+                <div id="announcementList"></div>
+              </div>
+              <div class="manage-card">
+                <div class="manage-title">Jonli dars</div>
+                <div class="manage-sub">Google Meet, Zoom yoki boshqa xavfsiz dars havolasini o'quvchilarga oching.</div>
+                <div class="live-status" id="liveStatus"><span class="live-dot"></span><span>Faol dars yo'q</span></div>
+                <div id="lessonForm">
+                  <div class="form-row"><label class="form-label">Dars nomi</label><input class="form-input" id="lessonTitle" maxlength="160" placeholder="Masalan: Present Simple — jonli dars"></div>
+                  <div class="form-row"><label class="form-label">Dars havolasi</label><input class="form-input" id="lessonUrl" type="url" maxlength="500" placeholder="https://meet.google.com/..."></div>
+                  <div class="form-row"><label class="form-label">Qisqa izoh (ixtiyoriy)</label><textarea class="form-textarea" id="lessonDescription" maxlength="1000"></textarea></div>
+                  <button class="btn-primary" id="lessonStartBtn" onclick="startLiveLesson()">Jonli darsni boshlash</button>
+                </div>
+                <div id="liveLessonActions" style="display:none;margin-top:12px"><button class="btn-ghost danger" onclick="finishLiveLesson()">Darsni tugatish</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tabAttendance">
+            <div class="manage-card">
+              <div class="manage-title">Davomat</div>
+              <div class="manage-sub">Dars sanasini yarating, har bir o'quvchining holatini belgilang va saqlang.</div>
+              <div class="attendance-head">
+                <div class="form-row"><label class="form-label">Mavjud davomat</label><select class="form-select" id="attendanceSession" onchange="loadAttendance(this.value)"><option value="">Davomat yaratilmagan</option></select></div>
+                <div class="form-row"><label class="form-label">Yangi dars nomi</label><input class="form-input" id="attendanceTitle" maxlength="160" placeholder="Masalan: 5-dars"></div>
+                <div class="form-row"><label class="form-label">Sana</label><input class="form-input" id="attendanceDate" type="date"></div>
+                <button class="btn-primary" onclick="createAttendance()">Yangi davomat</button>
+              </div>
+              <div id="attendanceRows" class="attendance-list"><div class="attendance-empty">Davomatni tanlang yoki yangisini yarating.</div></div>
+              <div id="attendanceActions" style="display:none;justify-content:flex-end;gap:10px;margin-top:14px"><button class="btn-ghost" style="flex:0 0 auto" onclick="saveAttendance(false)">Saqlash</button><button class="btn-primary" onclick="saveAttendance(true)">Saqlash va yopish</button></div>
             </div>
           </div>
 
@@ -715,6 +790,7 @@
     document.getElementById("avatar").textContent = (fname[0] || "T").toUpperCase();
 
     let currentJoinCode = "";
+    let classStudents = [];
 
     // URL'dan id olamiz
     const params = new URLSearchParams(window.location.search);
@@ -794,6 +870,7 @@
     function renderDetail(data) {
       const cls = data.class || {};
       const students = data.students || [];
+      classStudents = students;
 
       // Sinf ma'lumoti
       const name = cls.name || "Sinf";
@@ -901,12 +978,155 @@
     function switchTab(tab) {
       document.getElementById("tabBtnStudents").classList.toggle("active", tab === "students");
       document.getElementById("tabBtnAssignments").classList.toggle("active", tab === "assignments");
+      document.getElementById("tabBtnManage").classList.toggle("active", tab === "manage");
+      document.getElementById("tabBtnAttendance").classList.toggle("active", tab === "attendance");
       document.getElementById("tabBtnAI").classList.toggle("active", tab === "ai");
       document.getElementById("tabStudents").classList.toggle("active", tab === "students");
       document.getElementById("tabAssignments").classList.toggle("active", tab === "assignments");
+      document.getElementById("tabManage").classList.toggle("active", tab === "manage");
+      document.getElementById("tabAttendance").classList.toggle("active", tab === "attendance");
       document.getElementById("tabAI").classList.toggle("active", tab === "ai");
       if (tab === "assignments" && !assignmentsLoaded) loadAssignments();
+      if (tab === "manage") { loadAnnouncements(); loadLessons(); }
+      if (tab === "attendance") loadAttendance();
       if (tab === "ai" && !aiLoaded) loadClassAI();
+    }
+
+    async function loadAnnouncements() {
+      const wrap = document.getElementById("announcementList");
+      wrap.innerHTML = '<div class="manage-sub" style="margin-top:14px">Yuklanmoqda...</div>';
+      try {
+        const res = await authFetch("/teacher/classes/" + encodeURIComponent(classId) + "/announcements");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "xato");
+        const rows = data.announcements || [];
+        wrap.innerHTML = rows.length ? rows.map(a => `
+          <div class="announce-item ${a.is_pinned ? "pinned" : ""}">
+            <div class="announce-top"><div class="announce-name">${a.is_pinned ? "📌 " : ""}${esc(a.title)}</div>
+              <div class="mini-actions"><button class="mini-btn" onclick="editAnnouncement(${a.id})">Tahrirlash</button><button class="mini-btn" onclick="deleteAnnouncement(${a.id})">O'chirish</button></div></div>
+            <div class="announce-body">${esc(a.body)}</div>
+          </div>`).join("") : '<div class="manage-sub" style="margin-top:14px">Hali e\'lon joylanmagan.</div>';
+        window._classAnnouncements = rows;
+      } catch (_) { wrap.innerHTML='<div class="manage-sub" style="margin-top:14px;color:#fca5a5">E\'lonlarni yuklab bo\'lmadi.</div>'; }
+    }
+
+    async function createAnnouncement() {
+      const title=document.getElementById("annTitle").value.trim();
+      const body=document.getElementById("annBody").value.trim();
+      if(!title || !body) return showToast("Sarlavha va e'lon matnini kiriting");
+      const btn=document.getElementById("annSubmit"); btn.disabled=true;
+      try {
+        const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/announcements", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,body,is_pinned:document.getElementById("annPinned").checked})});
+        const data=await res.json();
+        if(!res.ok) return showToast(data.error||"E'lon joylanmadi");
+        document.getElementById("annTitle").value=""; document.getElementById("annBody").value=""; document.getElementById("annPinned").checked=false;
+        showToast("E'lon joylandi"); loadAnnouncements();
+      } catch(_){ showToast("Server bilan aloqa yo'q"); } finally { btn.disabled=false; }
+    }
+
+    async function editAnnouncement(id) {
+      const item=(window._classAnnouncements||[]).find(a=>String(a.id)===String(id));
+      if(!item) return;
+      const title=window.prompt("E'lon sarlavhasi:", item.title); if(title===null) return;
+      const body=window.prompt("E'lon matni:", item.body); if(body===null) return;
+      try {
+        const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/announcements/"+encodeURIComponent(id), {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:title.trim(),body:body.trim(),is_pinned:item.is_pinned})});
+        const data=await res.json(); if(!res.ok) return showToast(data.error||"E'lon yangilanmadi");
+        showToast("E'lon yangilandi"); loadAnnouncements();
+      } catch(_){ showToast("Server bilan aloqa yo'q"); }
+    }
+
+    async function deleteAnnouncement(id) {
+      if(!window.confirm("E'lonni o'chirmoqchimisiz?")) return;
+      try {
+        const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/announcements/"+encodeURIComponent(id), {method:"DELETE"});
+        const data=await res.json(); if(!res.ok) return showToast(data.error||"E'lon o'chirilmadi");
+        showToast("E'lon o'chirildi"); loadAnnouncements();
+      } catch(_){ showToast("Server bilan aloqa yo'q"); }
+    }
+
+    let activeLesson=null;
+    async function loadLessons() {
+      try {
+        const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/lessons");
+        const data=await res.json();
+        activeLesson=res.ok ? (data.lessons||[]).find(l=>l.status==="live") : null;
+      } catch(_){ activeLesson=null; }
+      const status=document.getElementById("liveStatus");
+      status.classList.toggle("on",!!activeLesson);
+      status.querySelector("span:last-child").textContent=activeLesson ? "Jonli: "+activeLesson.title : "Faol dars yo'q";
+      document.getElementById("lessonForm").style.display=activeLesson?"none":"block";
+      document.getElementById("liveLessonActions").style.display=activeLesson?"block":"none";
+    }
+
+    async function startLiveLesson() {
+      const title=document.getElementById("lessonTitle").value.trim();
+      const meeting_url=document.getElementById("lessonUrl").value.trim();
+      const description=document.getElementById("lessonDescription").value.trim();
+      if(!title || !meeting_url) return showToast("Dars nomi va havolasini kiriting");
+      const btn=document.getElementById("lessonStartBtn"); btn.disabled=true;
+      try {
+        const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/lessons", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,meeting_url,description})});
+        const data=await res.json(); if(!res.ok) return showToast(data.error||"Dars boshlanmadi");
+        showToast("Jonli dars boshlandi"); await loadLessons();
+      } catch(_){ showToast("Server bilan aloqa yo'q"); } finally { btn.disabled=false; }
+    }
+
+    async function finishLiveLesson() {
+      if(!activeLesson || !window.confirm("Jonli darsni tugatmoqchimisiz?")) return;
+      try {
+        const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/lessons/"+encodeURIComponent(activeLesson.id)+"/finish", {method:"POST"});
+        const data=await res.json(); if(!res.ok) return showToast(data.error||"Dars tugatilmadi");
+        showToast("Jonli dars tugatildi"); await loadLessons();
+      } catch(_){ showToast("Server bilan aloqa yo'q"); }
+    }
+
+    let attendanceData=null;
+    async function loadAttendance(sessionId) {
+      try {
+        const url="/teacher/classes/"+encodeURIComponent(classId)+"/attendance"+(sessionId?"?sessionId="+encodeURIComponent(sessionId):"");
+        const res=await authFetch(url); const data=await res.json();
+        if(!res.ok) return showToast(data.error||"Davomat yuklanmadi");
+        attendanceData=data;
+        const select=document.getElementById("attendanceSession");
+        select.innerHTML=(data.sessions||[]).length ? data.sessions.map(s=>'<option value="'+s.id+'">'+esc(s.title)+' — '+new Date(s.session_date).toLocaleDateString("uz-UZ")+(s.status==="closed"?" (yopilgan)":"")+'</option>').join("") : '<option value="">Davomat yaratilmagan</option>';
+        if(data.selected_session_id) select.value=String(data.selected_session_id);
+        renderAttendanceRows();
+      } catch(_){ showToast("Server bilan aloqa yo'q"); }
+    }
+
+    function renderAttendanceRows() {
+      const wrap=document.getElementById("attendanceRows");
+      const actions=document.getElementById("attendanceActions");
+      if(!attendanceData || !attendanceData.selected_session_id) { wrap.innerHTML='<div class="attendance-empty">Davomatni tanlang yoki yangisini yarating.</div>'; actions.style.display="none"; return; }
+      const map={}; (attendanceData.records||[]).forEach(r=>map[r.student_id]=r.status);
+      const students=attendanceData.students||classStudents;
+      if(!students.length) { wrap.innerHTML='<div class="attendance-empty">Sinfda o\'quvchi yo\'q.</div>'; actions.style.display="none"; return; }
+      wrap.innerHTML=students.map(s=>{const name=((s.first_name||"")+" "+(s.last_name||"")).trim()||"O'quvchi";const val=map[s.id]||"present";return '<div class="attendance-row"><div class="attendance-student"><div class="student-avatar">'+esc(name[0])+'</div>'+esc(name)+'</div><select class="form-select attendance-value" data-student="'+s.id+'"><option value="present" '+(val==="present"?"selected":"")+'>Qatnashdi</option><option value="late" '+(val==="late"?"selected":"")+'>Kechikdi</option><option value="absent" '+(val==="absent"?"selected":"")+'>Kelmagan</option><option value="excused" '+(val==="excused"?"selected":"")+'>Sababli</option></select></div>';}).join("");
+      const current=(attendanceData.sessions||[]).find(s=>String(s.id)===String(attendanceData.selected_session_id));
+      const isClosed=current && current.status==="closed";
+      wrap.querySelectorAll("select").forEach(el=>el.disabled=!!isClosed);
+      actions.style.display=isClosed?"none":"flex";
+    }
+
+    async function createAttendance() {
+      const title=document.getElementById("attendanceTitle").value.trim()||"Dars davomati";
+      const session_date=document.getElementById("attendanceDate").value;
+      try {
+        const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/attendance", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,session_date})});
+        const data=await res.json(); if(!res.ok) return showToast(data.error||"Davomat yaratilmadi");
+        document.getElementById("attendanceTitle").value=""; showToast("Davomat yaratildi"); await loadAttendance(data.session.id);
+      } catch(_){ showToast("Server bilan aloqa yo'q"); }
+    }
+
+    async function saveAttendance(close) {
+      if(!attendanceData || !attendanceData.selected_session_id) return;
+      const records=Array.from(document.querySelectorAll(".attendance-value")).map(el=>({student_id:Number(el.dataset.student),status:el.value}));
+      try {
+        const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/attendance/"+encodeURIComponent(attendanceData.selected_session_id), {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({records,close:!!close})});
+        const data=await res.json(); if(!res.ok) return showToast(data.error||"Davomat saqlanmadi");
+        showToast(close?"Davomat saqlandi va yopildi":"Davomat saqlandi"); await loadAttendance(attendanceData.selected_session_id);
+      } catch(_){ showToast("Server bilan aloqa yo'q"); }
     }
 
     function fmtDateTime(iso) {
@@ -1204,6 +1424,11 @@
       if (!classId || typeof io === "undefined") return;
       try {
         classSocket = io({ auth: { token: localStorage.getItem("token") } });
+        classSocket.on("connect_error", function (err) {
+          if (["AUTH_REQUIRED", "ACCOUNT_NOT_FOUND", "ACCOUNT_BANNED"].indexOf(err && err.message) === -1) return;
+          localStorage.removeItem("token"); localStorage.removeItem("user");
+          window.location.href = "/?screen=login";
+        });
         classSocket.on("connect", function () {
           // Shu sinfni kuzatishni boshlaymiz
           classSocket.emit("watchClass", classId);

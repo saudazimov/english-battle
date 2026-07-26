@@ -80,6 +80,9 @@
     .skill-val.fail { color: var(--red); }
     .result-actions { display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
   </style>
+
+  <link rel="stylesheet" href="responsive.css">
+
 </head>
 <body>
   <div class="exam-wrap">
@@ -146,7 +149,7 @@
   </div>
 
   <script src="/api.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/vendor/lucide.min.js"></script>
   <script>
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
@@ -156,6 +159,7 @@
     let currentIndex = 0;
     let userAnswers = {};
     let timerInterval = null;
+    let examSessionId = null;
 
     function showScreen(id) {
       document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
@@ -200,6 +204,7 @@
         const data = await res.json();
         if (!res.ok) { alert(data.error || "Xato"); return; }
         questions = data.questions;
+        examSessionId = data.session_id || null;
         currentIndex = 0;
         userAnswers = {};
         showScreen("examScreen");
@@ -274,7 +279,7 @@
         const res = await authFetch("/exam/submit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: user.id, answers: answersArr }),
+          body: JSON.stringify({ session_id: examSessionId, answers: answersArr }),
         });
         const data = await res.json();
         showResult(data);

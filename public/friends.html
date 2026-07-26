@@ -456,6 +456,8 @@
     .length-start:hover { opacity: 0.93; }
     .length-start i { width: 18px; height: 18px; }
   </style>
+  <link rel="stylesheet" href="responsive.css">
+
 </head>
 <body>
   <div class="app">
@@ -632,7 +634,7 @@
 
   <script src="/api.js"></script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/vendor/lucide.min.js"></script>
   <script src="/sidebar.js"></script>
   <script>
     // ===== XSS himoya (Sprint 1): HTML escape yordamchisi =====
@@ -652,6 +654,7 @@
 
     // ===== SOCKET.IO (real-time) =====
     const socket = io({ auth: { token: localStorage.getItem("token") } });
+    socket.on("connect_error", handleSocketAuthError);
     socket.on("connect", () => {
       socket.emit("registerUser", user.id);
     });
@@ -807,12 +810,13 @@
       const s = data.stats || {};
       const lg = fpLeague(u.rating || 1000);
       const name = (u.first_name || "") + " " + (u.last_name || "");
+      const username = u.username ? "@" + u.username : "";
 
       document.getElementById("fpCard").className = "fp-card";
       document.getElementById("fpCard").innerHTML =
         '<div class="fpc-avatar">' + avatarHTML(u.first_name, u.profile_picture) + '</div>' +
         '<div class="fpc-info">' +
-          '<div class="fpc-name">' + fEsc(name) + '</div>' +
+          '<div class="fpc-name">' + fEsc(name) + (username ? ' <span style="font-size:14px;color:var(--text-faint);font-weight:600">' + fEsc(username) + '</span>' : '') + '</div>' +
           '<div class="fpc-meta">' +
             '<span class="fpc-cefr">CEFR <b>' + (u.cefr_level || "A1") + '</b></span> ' +
             '<span>' + (fpCefrLabels[u.cefr_level] || "Beginner") + '</span>' +
@@ -1236,6 +1240,7 @@
         results.innerHTML = "";
         found.forEach(u => {
           const name = u.first_name + " " + u.last_name;
+          const username = u.username ? "@" + u.username + " · " : "";
           const row = document.createElement("div");
           row.className = "srch-row";
 
@@ -1251,7 +1256,7 @@
 
           row.innerHTML =
             '<div class="srch-ava">' + avatarHTML(u.first_name, u.profile_picture) + '</div>' +
-            '<div class="srch-info"><div class="srch-name">' + fEsc(name) + '</div><div class="srch-sub">' + (u.cefr_level || "A1") + ' · ' + u.rating + ' RP</div></div>' +
+            '<div class="srch-info"><div class="srch-name">' + fEsc(name) + '</div><div class="srch-sub">' + fEsc(username) + (u.cefr_level || "A1") + ' · ' + u.rating + ' RP</div></div>' +
             actionBtn;
           results.appendChild(row);
         });

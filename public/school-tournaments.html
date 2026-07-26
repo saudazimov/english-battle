@@ -86,6 +86,7 @@
     .tm-foot-msg.success { color: var(--green); }
     .tm-search { width: 100%; margin-bottom: 12px; padding: 9px 12px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 9px; color: var(--text); font-size: 13px; }
   </style>
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
   <div class="app">
@@ -179,7 +180,7 @@
   </div>
 
   <script src="/api.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/sidebar.js"></script>
   <script>
@@ -191,6 +192,10 @@
     renderSidebar("tournaments");
 
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function schoolLabel(school, schoolKey) {
+      var parts = String(schoolKey || "").split("\x1f");
+      return school && parts.length === 3 && parts[1] ? school + " · " + parts[1] : school;
+    }
     function avatarHtml(firstName, pic) {
       if (pic) return '<img src="' + esc(pic) + '" alt="">';
       return '<div class="tm-ava-init">' + esc((firstName || "?").charAt(0).toUpperCase()) + '</div>';
@@ -331,7 +336,7 @@
         var statusTxt = mp.placement === 1 ? "🏆 Chempion!" : (mp.eliminated ? "Turnirdan chiqgan" : "Turnirda davom etmoqda");
         html += '<div class="br-my-status">' +
           '<span class="br-my-seed">#' + mp.seed + '</span>' +
-          '<div><div class="br-my-txt">' + esc(d.my_school) + ' — Seed ' + mp.seed + '</div>' +
+          '<div><div class="br-my-txt">' + esc(schoolLabel(d.my_school, d.my_school_key)) + ' — Seed ' + mp.seed + '</div>' +
           '<div class="br-my-sub">' + statusTxt + '</div></div>' +
         '</div>';
       }
@@ -340,13 +345,13 @@
       roundKeys.forEach(function (rnd) {
         html += '<div class="br-round"><div class="br-round-title">' + roundName(parseInt(rnd)) + '</div>';
         rounds[rnd].forEach(function (m) {
-          var aWin = m.winner_school && m.winner_school === m.school_a;
-          var bWin = m.winner_school && m.winner_school === m.school_b;
+          var aWin = m.winner_school_key && m.winner_school_key === m.school_a_key;
+          var bWin = m.winner_school_key && m.winner_school_key === m.school_b_key;
           var isBye = (m.status === "done" && (!m.school_a || !m.school_b));
 
           html += '<div class="br-match' + (m.is_mine ? " mine" : "") + '">';
-          html += brTeamRow(m.school_a, m.score_a, aWin, m.status, d.my_school);
-          html += brTeamRow(m.school_b, m.score_b, bWin, m.status, d.my_school);
+          html += brTeamRow(m.school_a, m.school_a_key, m.score_a, aWin, m.status, d.my_school_key);
+          html += brTeamRow(m.school_b, m.school_b_key, m.score_b, bWin, m.status, d.my_school_key);
           if (isBye) {
             html += '<div class="br-match-status">Avtomatik o\'tdi</div>';
           } else {
@@ -363,11 +368,11 @@
       lucide.createIcons();
     }
 
-    function brTeamRow(school, score, isWinner, status, mySchool) {
+    function brTeamRow(school, schoolKey, score, isWinner, status, mySchoolKey) {
       var showScore = (status === "done" || status === "live");
-      var isMe = (school && school === mySchool);
+      var isMe = (schoolKey && schoolKey === mySchoolKey);
       var name = school
-        ? '<span class="br-team-name">' + esc(school) + '</span>'
+        ? '<span class="br-team-name">' + esc(schoolLabel(school, schoolKey)) + '</span>'
         : '<span class="br-team-name tbd">— kutilmoqda —</span>';
       return '<div class="br-team' + (isWinner ? " winner" : "") + (isMe ? " is-me" : "") + '">' +
         name +

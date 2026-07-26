@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sinf topshiriqlari — Knowledge Arena</title>
   <link rel="stylesheet" href="/app.css">
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/vendor/lucide.min.js"></script>
   <style>
     .app { max-width: 1560px; grid-template-columns: 230px 1fr; gap: 24px; padding: 24px 28px; margin: 0 auto; }
     .main { padding-right: 0; grid-column: 2 / 3; min-width: 0; }
@@ -30,7 +30,7 @@
     .cb-meta span { display: flex; align-items: center; gap: 6px; }
     .cb-meta i { width: 14px; height: 14px; color: var(--accent); }
 
-    /* Filtrlar (ko'rinish uchun, disabled hozircha) */
+    /* Topshiriq holati bo'yicha interaktiv filtrlar */
     .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
     .filter-chip { padding: 8px 16px; border-radius: 999px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 600; }
     .filter-chip.active { background: rgba(91,140,255,0.14); border-color: rgba(91,140,255,0.4); color: #a9c1ff; }
@@ -189,6 +189,20 @@
     .cx-panel-sub { font-size: 12px; font-weight: 500; color: var(--text-dim); margin-left: auto; }
     .cx-soon { padding: 24px 16px; text-align: center; font-size: 13px; color: var(--text-faint); background: rgba(255,255,255,.02); border-radius: 10px; border: 1px dashed var(--border); }
     .cx-loading-row { padding: 20px; text-align: center; font-size: 13px; color: var(--text-dim); }
+    .cx-ann { padding: 14px 15px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,.018); margin-bottom: 10px; }
+    .cx-ann:last-child { margin-bottom: 0; }
+    .cx-ann.pinned { border-color: rgba(91,140,255,.48); background: rgba(91,140,255,.06); }
+    .cx-ann-title { display:flex; align-items:center; gap:7px; font-size:14px; font-weight:750; margin-bottom:7px; }
+    .cx-ann-title i { width:15px; height:15px; color:var(--accent); }
+    .cx-ann-body { color:var(--text-dim); font-size:13px; line-height:1.55; white-space:pre-wrap; }
+    .cx-ann-date { color:var(--text-faint); font-size:11px; margin-top:9px; }
+    .cx-rank-row { display:grid; grid-template-columns:26px 32px 1fr auto; gap:9px; align-items:center; padding:9px 5px; border-bottom:1px solid var(--border); }
+    .cx-rank-row:last-child { border-bottom:0; }
+    .cx-rank-row.me { margin:0 -7px; padding-left:12px; padding-right:12px; border-radius:9px; background:rgba(91,140,255,.1); }
+    .cx-rank-num { font-size:12px; font-weight:800; color:var(--text-dim); text-align:center; }
+    .cx-rank-ava { width:32px; height:32px; border-radius:50%; background:var(--panel-2); display:grid; place-items:center; color:var(--accent); font-size:12px; font-weight:800; }
+    .cx-rank-name { min-width:0; font-size:12.5px; font-weight:650; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .cx-rank-score { font-size:12px; font-weight:800; color:var(--green); }
 
     /* Imtihon jadvali */
     .cx-etable { width: 100%; border-collapse: collapse; }
@@ -239,6 +253,7 @@
     @media (max-width: 1100px) { .cx-cols { grid-template-columns: 1fr; } .cx-stats { grid-template-columns: repeat(3, 1fr); } .cx-head-side { width: 220px; } }
     @media (max-width: 760px) { .cx-banner { flex-direction: column; } .cx-head-side { width: 100%; } .cx-stats { grid-template-columns: repeat(2, 1fr); } }
   </style>
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
   <div class="app">
@@ -281,8 +296,8 @@
               <div class="cx-code-label">Sinf kodi:</div>
               <div class="cx-code-row"><span class="cx-code" id="cbCode">—</span><button class="cx-copy" onclick="copyCode()" title="Nusxa olish"><i data-lucide="copy"></i></button></div>
             </div>
-            <button class="cx-btn primary" onclick="comingSoon('Darsga kirish')"><i data-lucide="book-open"></i> Darsga kirish</button>
-            <button class="cx-btn ghost" onclick="comingSoon('O\'qituvchiga yozish')"><i data-lucide="message-circle"></i> O'qituvchiga yozish</button>
+            <button class="cx-btn primary" id="joinLessonBtn" onclick="joinLiveLesson()"><i data-lucide="video"></i> Darsga kirish</button>
+            <button class="cx-btn ghost" onclick="messageTeacher()"><i data-lucide="message-circle"></i> O'qituvchiga yozish</button>
           </div>
         </div>
 
@@ -303,7 +318,7 @@
             <div class="cx-panel">
               <div class="cx-panel-head"><i data-lucide="megaphone"></i> E'lonlar</div>
               <div id="announceArea">
-                <div class="cx-soon">O'qituvchi e'lonlari tez orada shu yerda ko'rinadi.</div>
+                <div class="cx-loading-row">Yuklanmoqda...</div>
               </div>
             </div>
 
@@ -361,7 +376,7 @@
             <!-- SINF REYTINGI -->
             <div class="cx-panel">
               <div class="cx-panel-head sm"><i data-lucide="trophy"></i> Sinf reytingi</div>
-              <div class="cx-soon">Sinf reytingi tez orada shu yerda ko'rinadi.</div>
+              <div id="classRank"><div class="cx-loading-row">Yuklanmoqda...</div></div>
             </div>
 
             <!-- SINF HAQIDA -->
@@ -452,6 +467,19 @@
     function showToast(t){ var el=document.getElementById("cxToast"); if(!el){ el=document.createElement("div"); el.id="cxToast"; el.style.cssText="position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#111a2e;color:#fff;padding:13px 22px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:9000;transition:opacity .3s;"; document.body.appendChild(el); } el.textContent=t; el.style.opacity="1"; clearTimeout(window._cxT); window._cxT=setTimeout(function(){el.style.opacity="0";},2600); }
     var curClassData = null;
     function copyCode(){ var code=curClassData&&curClassData.join_code; if(!code) return; navigator.clipboard.writeText(code).then(function(){ showToast("Sinf kodi nusxalandi"); }).catch(function(){ showToast(code); }); }
+    async function messageTeacher() {
+      if (!curClassData || !curClassData.teacher_id) return showToast("O'qituvchi topilmadi");
+      var text = window.prompt("O'qituvchiga xabar yozing:");
+      if (!text || !text.trim()) return;
+      try {
+        var res = await authFetch("/student/teachers/" + curClassData.teacher_id + "/messages", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text.trim() }),
+        });
+        var data = await res.json();
+        showToast(res.ok ? "Xabar yuborildi" : (data.error || "Xabar yuborilmadi"));
+      } catch (e) { showToast("Server bilan aloqa xatosi"); }
+    }
     function showState(s) {
       document.getElementById("loadingState").style.display = s === "loading" ? "block" : "none";
       document.getElementById("content").style.display = s === "content" ? "block" : "none";
@@ -509,6 +537,74 @@
       if (window.lucide) lucide.createIcons();
       loadAssignments();
       loadExams();
+      loadAnnouncements();
+      loadClassRanking();
+      loadAttendance();
+      checkLiveLesson();
+    }
+
+    async function loadAnnouncements() {
+      var area = document.getElementById("announceArea");
+      try {
+        var res = await authFetch("/student/classes/" + encodeURIComponent(classId) + "/announcements");
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || "xato");
+        var items = data.announcements || [];
+        if (!items.length) { area.innerHTML = '<div class="cx-soon">O\'qituvchi hali e\'lon joylamagan.</div>'; return; }
+        area.innerHTML = items.map(function(a){
+          return '<div class="cx-ann '+(a.is_pinned?'pinned':'')+'">' +
+            '<div class="cx-ann-title">'+(a.is_pinned?'<i data-lucide="pin"></i>':'')+esc(a.title)+'</div>' +
+            '<div class="cx-ann-body">'+esc(a.body)+'</div>' +
+            '<div class="cx-ann-date">'+new Date(a.created_at).toLocaleString("uz-UZ")+'</div></div>';
+        }).join("");
+        if (window.lucide) lucide.createIcons();
+      } catch (_) { area.innerHTML = '<div class="cx-soon">E\'lonlarni yuklab bo\'lmadi.</div>'; }
+    }
+
+    async function loadClassRanking() {
+      var area = document.getElementById("classRank");
+      try {
+        var res = await authFetch("/student/classes/" + encodeURIComponent(classId) + "/ranking");
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || "xato");
+        var rows = data.ranking || [];
+        if (!rows.length) { area.innerHTML='<div class="cx-soon">Reyting uchun o\'quvchilar yo\'q.</div>'; return; }
+        area.innerHTML = rows.slice(0, 10).map(function(r){
+          var name=((r.first_name||"")+" "+(r.last_name||"")).trim()||"O'quvchi";
+          var medal=r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':r.rank;
+          return '<div class="cx-rank-row '+(String(r.id)===String(user.id)?'me':'')+'"><div class="cx-rank-num">'+medal+'</div>'+
+            '<div class="cx-rank-ava">'+esc(name.charAt(0).toUpperCase())+'</div><div class="cx-rank-name">'+esc(name)+'</div>'+
+            '<div class="cx-rank-score">'+Number(r.avg_percent||0)+'%</div></div>';
+        }).join("");
+      } catch (_) { area.innerHTML='<div class="cx-soon">Reytingni yuklab bo\'lmadi.</div>'; }
+    }
+
+    async function loadAttendance() {
+      try {
+        var res=await authFetch("/student/classes/"+encodeURIComponent(classId)+"/attendance");
+        var data=await res.json();
+        if (!res.ok) return;
+        document.getElementById("stAttend").textContent=data.summary && data.summary.percent!=null ? data.summary.percent+"%" : "—";
+      } catch (_) {}
+    }
+
+    var currentLiveLesson=null;
+    async function checkLiveLesson() {
+      try {
+        var res=await authFetch("/student/classes/"+encodeURIComponent(classId)+"/live-lesson");
+        var data=await res.json();
+        currentLiveLesson=res.ok ? data.lesson : null;
+        var btn=document.getElementById("joinLessonBtn");
+        if (currentLiveLesson) { btn.innerHTML='<i data-lucide="radio"></i> Jonli darsga kirish'; btn.style.boxShadow='0 0 0 4px rgba(91,140,255,.12)'; }
+        else { btn.innerHTML='<i data-lucide="video"></i> Darsga kirish'; btn.style.boxShadow='none'; }
+        if(window.lucide) lucide.createIcons();
+      } catch (_) { currentLiveLesson=null; }
+    }
+    async function joinLiveLesson() {
+      await checkLiveLesson();
+      if (!currentLiveLesson || !currentLiveLesson.meeting_url) return showToast("Hozir faol jonli dars yo'q");
+      var opened=window.open(currentLiveLesson.meeting_url,"_blank","noopener,noreferrer");
+      if (!opened) window.location.href=currentLiveLesson.meeting_url;
     }
 
     // ===== Topshiriqlar ro'yxati =====
@@ -560,8 +656,6 @@
       } else {
         document.getElementById("stAvg").textContent = "—";
       }
-      // Davomat — backend yo'q → tez orada
-      document.getElementById("stAttend").textContent = "—";
       // Progress ring (bajarilgan / jami)
       var pct = total > 0 ? Math.round((done.length / total) * 100) : 0;
       document.getElementById("progPct").textContent = pct + "%";

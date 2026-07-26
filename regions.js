@@ -44,4 +44,88 @@ function validateRegionDistrict(region, district) {
   return { valid: true };
 }
 
-module.exports = { REGIONS, validateRegionDistrict };
+// ===== GLOBAL validatsiya (country-state-city — barcha davlatlar, 10/12-qoida) =====
+const { Country, State, City } = require('country-state-city');
+
+// Auth frontend uchun joylashuv katalogi. country-state-city server tomonda
+// yagona manba bo'lib qoladi; brauzerga faqat kerakli, xavfsiz maydonlar chiqadi.
+function getCountries() {
+  const popular = ["UZ", "KZ", "KG", "TJ", "TM", "RU", "TR"];
+  return Country.getAllCountries()
+    .map((country) => ({
+      code: country.isoCode,
+      name: country.name,
+      flag: country.flag,
+      dialCode: "+" + String(country.phonecode || "").replace(/\D/g, ""),
+    }))
+    .filter((country) => country.code && country.dialCode !== "+")
+    .sort((a, b) => {
+      const ai = popular.indexOf(a.code);
+      const bi = popular.indexOf(b.code);
+      if (ai !== -1 || bi !== -1) {
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      }
+      return a.name.localeCompare(b.name);
+    });
+}
+
+function getStates(countryCode) {
+  return State.getStatesOfCountry(String(countryCode || "").toUpperCase()).map((state) => ({
+    code: state.isoCode,
+    name: state.name,
+  }));
+}
+
+function getCities(countryCode, stateCode) {
+  return City.getCitiesOfState(
+    String(countryCode || "").toUpperCase(),
+    String(stateCode || "")
+  ).map((city) => city.name);
+}
+
+// Davlat + viloyat + tuman to'g'ri juftlikmi (anti-abuse: frontendga ishonmaymiz)
+function validateGlobalLocation(countryCode, region, district) {
+  // Davlat kodi shart (2 harfli ISO)
+  if (!countryCode || !/^[A-Z]{2}$/.test(countryCode)) {
+    return { valid: false, error: "Davlat kodi noto'g'ri" };
+  }
+
+  // Viloyat shart
+  if (!region || typeof region !== 'string' || region.trim() === '') {
+    return { valid: false, error: 'Viloyat tanlanmagan' };
+  }
+
+  // Bu davlatning viloyatlari
+  const states = State.getStatesOfCountry(countryCode);
+  const matchedState = states.find((s) => s.name === region.trim());
+  if (!matchedState) {
+    return { valid: false, error: 'Bunday viloyat topilmadi' };
+  }
+
+  // Tuman (shahar) — bu viloyatda shaharlar bo'lsa, tekshiramiz; bo'sh ro'yxatda ixtiyoriy
+  const cities = City.getCitiesOfState(countryCode, matchedState.isoCode);
+  if (cities.length > 0) {
+    // Shaharlar bor — tuman shart va to'g'ri bo'lishi kerak
+    if (!district || district.trim() === '') {
+      return { valid: false, error: 'Tuman tanlanmagan' };
+    }
+    const matchedCity = cities.find((c) => c.name === district.trim());
+    if (!matchedCity) {
+      return { valid: false, error: 'Bunday tuman topilmadi' };
+    }
+  }
+  // Shaharlar yo'q bo'lsa — tuman ixtiyoriy (o'tkazib yuboramiz)
+
+  return { valid: true };
+}
+
+module.exports = {
+  REGIONS,
+  validateRegionDistrict,
+  validateGlobalLocation,
+  getCountries,
+  getStates,
+  getCities,
+};

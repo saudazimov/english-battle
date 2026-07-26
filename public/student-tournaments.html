@@ -80,6 +80,7 @@
     .br-match-status.live { color: #f87171; font-weight: 700; }
     .br-match-status.done { color: var(--green); }
   </style>
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
   <div class="app">
@@ -113,7 +114,7 @@
   </div>
 
   <script src="/api.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/sidebar.js"></script>
   <script>
@@ -125,11 +126,16 @@
     renderSidebar("tournaments");
 
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function schoolLabel(school, schoolKey) {
+      var parts = String(schoolKey || "").split("\x1f");
+      return school && parts.length === 3 && parts[1] ? school + " · " + parts[1] : school;
+    }
 
     var statusLabels = { registration: "Ro'yxat", bracket: "Setka", live: "Jonli", finished: "Tugagan" };
 
     // Socket — match holati o'zgarsa yangilash
     const socket = io({ auth: { token: localStorage.getItem("token") } });
+    socket.on("connect_error", handleSocketAuthError);
     socket.on("connect", () => { socket.emit("registerUser", user.id); });
     socket.on("matchCheckinOpen", () => loadTournaments());
     socket.on("matchLiveStart", () => loadTournaments());
@@ -174,13 +180,14 @@
 
       var m = urgent.match;
       var isLive = (m.status === "live");
-      var opponent = (m.school_a === urgent.tournament.my_school) ? m.school_b : m.school_a;
+      var urgentIsA = (m.school_a_key === urgent.tournament.my_school_key);
+      var opponent = schoolLabel(urgentIsA ? m.school_b : m.school_a, urgentIsA ? m.school_b_key : m.school_a_key);
 
       bw.innerHTML = '<div class="active-banner ' + (isLive ? "live" : "checkin") + '">' +
         '<div class="ab-ic"><i data-lucide="' + (isLive ? "swords" : "clock") + '"></i></div>' +
         '<div class="ab-info">' +
           '<div class="ab-title">' + (isLive ? "Jangingiz boshlandi!" : "Check-in ochiq — jangga tayyorlaning!") + '</div>' +
-          '<div class="ab-sub">' + esc(urgent.tournament.name) + ' · ' + esc(urgent.tournament.my_school) + ' vs ' + esc(opponent) + '</div>' +
+          '<div class="ab-sub">' + esc(urgent.tournament.name) + ' · ' + esc(schoolLabel(urgent.tournament.my_school, urgent.tournament.my_school_key)) + ' vs ' + esc(opponent) + '</div>' +
         '</div>' +
         '<button class="ab-btn" onclick="enterMatch(' + m.id + ')">' + (isLive ? "Jangga kirish" : "Tayyorlanish") + '</button>' +
       '</div>';
@@ -193,9 +200,10 @@
 
       var matchHtml = "";
       if (m) {
-        var opponent = (m.school_a === t.my_school) ? m.school_b : m.school_a;
-        var myScore = (m.school_a === t.my_school) ? m.score_a : m.score_b;
-        var oppScore = (m.school_a === t.my_school) ? m.score_b : m.score_a;
+        var isA = (m.school_a_key === t.my_school_key);
+        var opponent = schoolLabel(isA ? m.school_b : m.school_a, isA ? m.school_b_key : m.school_a_key);
+        var myScore = isA ? m.score_a : m.score_b;
+        var oppScore = isA ? m.score_b : m.score_a;
 
         var statusLine = "", actionBtn = "";
         if (m.status === "pending") {
@@ -208,7 +216,7 @@
           statusLine = '<div class="mm-status-line" style="color:#f87171;font-weight:700;">Jang davom etmoqda!</div>';
           actionBtn = '<button class="btn" onclick="enterMatch(' + m.id + ')"><i data-lucide="swords" style="width:16px;height:16px;"></i> Jangga kirish</button>';
         } else if (m.status === "done") {
-          var iWon = (m.winner_school === t.my_school);
+          var iWon = (m.winner_school_key === t.my_school_key);
           var isDraw = !m.winner_school;
           statusLine = '<div class="mm-status-line ' + (iWon ? "win" : (isDraw ? "" : "lose")) + '">' + (isDraw ? "Durang" : (iWon ? "✓ G'alaba" : "Mag'lubiyat")) + '</div>';
         }
@@ -216,9 +224,9 @@
         matchHtml = '<div class="my-match-box">' +
           '<div class="mm-label">Mening matchim · ' + roundLabel(m.round, t.bracket_size) + '</div>' +
           '<div class="mm-teams">' +
-            '<span class="mm-team' + (m.school_a === t.my_school ? " me" : "") + '">' + esc(m.school_a || "?") + '</span>' +
+            '<span class="mm-team' + (m.school_a_key === t.my_school_key ? " me" : "") + '">' + esc(schoolLabel(m.school_a, m.school_a_key) || "?") + '</span>' +
             (m.status === "done" || m.status === "live" ? '<span class="mm-score">' + (myScore||0) + ' : ' + (oppScore||0) + '</span>' : '<span class="mm-vs">vs</span>') +
-            '<span class="mm-team' + (m.school_b === t.my_school ? " me" : "") + '">' + esc(m.school_b || "?") + '</span>' +
+            '<span class="mm-team' + (m.school_b_key === t.my_school_key ? " me" : "") + '">' + esc(schoolLabel(m.school_b, m.school_b_key) || "?") + '</span>' +
           '</div>' +
           statusLine +
         '</div>' +
@@ -232,7 +240,7 @@
         '<div class="stcard-head">' +
           '<div class="stcard-ic"><i data-lucide="trophy"></i></div>' +
           '<div style="flex:1;"><div class="stcard-name">' + esc(t.name) + '</div>' +
-          '<div class="stcard-meta">' + levelLabel + ' · ' + esc(t.my_school) + ' (' + (t.my_role === "reserve" ? "Zaxira" : "Asosiy") + ')</div></div>' +
+          '<div class="stcard-meta">' + levelLabel + ' · ' + esc(schoolLabel(t.my_school, t.my_school_key)) + ' (' + (t.my_role === "reserve" ? "Zaxira" : "Asosiy") + ')</div></div>' +
           '<span class="stcard-status sts-' + t.status + '">' + (statusLabels[t.status] || t.status) + '</span>' +
         '</div>' +
         '<div class="stcard-body">' + matchHtml + '</div>' +
@@ -289,12 +297,12 @@
       roundKeys.forEach(function (rnd) {
         html += '<div class="br-round"><div class="br-round-title">' + roundName(parseInt(rnd)) + '</div>';
         rounds[rnd].forEach(function (m) {
-          var aWin = m.winner_school && m.winner_school === m.school_a;
-          var bWin = m.winner_school && m.winner_school === m.school_b;
+          var aWin = m.winner_school_key && m.winner_school_key === m.school_a_key;
+          var bWin = m.winner_school_key && m.winner_school_key === m.school_b_key;
           var isBye = (m.status === "done" && (!m.school_a || !m.school_b));
           html += '<div class="br-match' + (m.is_mine ? " mine" : "") + '">';
-          html += brTeam(m.school_a, m.score_a, aWin, m.status, d.my_school);
-          html += brTeam(m.school_b, m.score_b, bWin, m.status, d.my_school);
+          html += brTeam(m.school_a, m.school_a_key, m.score_a, aWin, m.status, d.my_school_key);
+          html += brTeam(m.school_b, m.school_b_key, m.score_b, bWin, m.status, d.my_school_key);
           if (isBye) {
             html += '<div class="br-match-status">Avtomatik o\'tdi</div>';
           } else {
@@ -311,10 +319,10 @@
       lucide.createIcons();
     }
 
-    function brTeam(school, score, isWinner, status, mySchool) {
+    function brTeam(school, schoolKey, score, isWinner, status, mySchoolKey) {
       var showScore = (status === "done" || status === "live");
-      var isMe = (school && school === mySchool);
-      var name = school ? '<span class="br-team-name">' + esc(school) + '</span>' : '<span class="br-team-name tbd">— kutilmoqda —</span>';
+      var isMe = (schoolKey && schoolKey === mySchoolKey);
+      var name = school ? '<span class="br-team-name">' + esc(schoolLabel(school, schoolKey)) + '</span>' : '<span class="br-team-name tbd">— kutilmoqda —</span>';
       return '<div class="br-team' + (isWinner ? " winner" : "") + (isMe ? " is-me" : "") + '">' + name +
         (showScore && school ? '<span class="br-score">' + (score || 0) + '</span>' : "") + '</div>';
     }

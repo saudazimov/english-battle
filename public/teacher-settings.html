@@ -150,6 +150,7 @@
     @media (max-width: 900px) { .profile-grid { grid-template-columns: 1fr; } .field-grid { grid-template-columns: 1fr; } .col-side { grid-template-columns: 1fr; } }
     @media (max-width: 700px) { .topbar { flex-wrap: wrap; padding: 18px; } .content { padding: 14px 16px 28px; } }
   </style>
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
   <div class="layout">
@@ -197,14 +198,15 @@
               <div class="profile-grid">
                 <div class="avatar-col">
                   <div class="avatar-big" id="avatarBig">T</div>
-                  <button class="avatar-btn" onclick="comingSoon('Rasmni o\'zgartirish')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Rasmni o'zgartirish</button>
-                  <div class="avatar-hint">JPG, PNG yoki WEBP. Maks. 2MB</div>
+                  <button class="avatar-btn" onclick="document.getElementById('avatarFile').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Rasmni o'zgartirish</button>
+                  <input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onchange="uploadAvatar(this.files[0])" />
+                  <div class="avatar-hint">JPG, PNG, WEBP yoki GIF. Maks. 5MB</div>
                 </div>
                 <div>
                   <div class="field-grid">
                     <div class="field"><label>To'liq ism</label><input id="inpName" type="text" placeholder="Ism familiya" /></div>
-                    <div class="field"><label>Email</label><input id="inpEmail" type="email" placeholder="email@example.com" /><span class="field-note">Hozircha o'zgartirib bo'lmaydi</span></div>
-                    <div class="field"><label>Telefon raqam</label><input id="inpPhone" type="text" placeholder="+998 90 123 45 67" /></div>
+                    <div class="field"><label>Email</label><input id="inpEmail" type="email" placeholder="email@example.com" /></div>
+                    <div class="field"><label>Telefon raqam</label><input id="inpPhone" type="text" disabled placeholder="+998 90 123 45 67" /><span class="field-note">Telefon faqat OTP orqali almashtiriladi</span></div>
                     <div class="field"><label>Fan</label><select id="inpSubject"><option>English</option><option>Boshqa</option></select></div>
                     <div class="field full"><label>Qisqacha bio</label><textarea id="inpBio" placeholder="O'zingiz haqingizda qisqacha yozing..."></textarea></div>
                   </div>
@@ -348,6 +350,52 @@
     document.getElementById("inpEmail").value = user.email || "";
     document.getElementById("inpBio").value = user.bio || "";
 
+    function renderServerProfile(profile) {
+      if (!profile) return;
+      var name = ((profile.first_name || "") + " " + (profile.last_name || "")).trim();
+      document.getElementById("inpName").value = name;
+      document.getElementById("inpPhone").value = profile.phone || "";
+      document.getElementById("inpEmail").value = profile.email || "";
+      document.getElementById("inpBio").value = profile.bio || "";
+      document.getElementById("inpSubject").value = profile.teaching_subject || "English";
+      document.getElementById("userName").textContent = name || "O'qituvchi";
+      if (profile.profile_picture) {
+        var image = '<img src="' + esc(profile.profile_picture) + '" alt="">';
+        document.getElementById("userAvatar").innerHTML = image;
+        document.getElementById("avatarBig").innerHTML = image;
+      }
+      if (profile.created_at) {
+        try { document.getElementById("joinDate").textContent = new Date(profile.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); } catch (e) {}
+      }
+    }
+
+    (async function loadServerProfile() {
+      try {
+        var res = await authFetch("/teacher/settings/profile");
+        var data = await res.json();
+        if (res.ok && data.profile) {
+          user = Object.assign({}, user, data.profile);
+          localStorage.setItem("user", JSON.stringify(user));
+          renderServerProfile(data.profile);
+        }
+      } catch (e) {}
+    })();
+
+    async function uploadAvatar(file) {
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) return showToast("Rasm 5MB dan oshmasin");
+      var form = new FormData(); form.append("picture", file);
+      try {
+        var res = await authFetch("/profile/" + user.id + "/picture", { method: "POST", body: form });
+        var data = await res.json();
+        if (!res.ok) return showToast(data.error || "Rasm yuklanmadi");
+        user.profile_picture = data.profile_picture;
+        localStorage.setItem("user", JSON.stringify(user));
+        renderServerProfile(user);
+        showToast("Rasm yangilandi");
+      } catch (e) { showToast("Rasm yuklashda aloqa xatosi"); }
+    }
+
     // Til (localStorage'dan)
     var savedLang = localStorage.getItem("eb_lang") || "uz";
     document.getElementById("inpLang").value = savedLang;
@@ -376,9 +424,25 @@
     async function saveProfile() {
       var name = document.getElementById("inpName").value.trim();
       if (!name) { showToast("Ism bo'sh bo'lmasligi kerak"); return; }
-      // Backend endpoint hozircha yo'q — localStorage'ga saqlaymiz va xabar beramiz
-      // (server /me/update qo'shilganda shu yerda authFetch chaqiriladi)
-      comingSoon("Profil saqlash");
+      var parts = name.split(/\s+/);
+      if (parts.length < 2) { showToast("Ism va familiyani kiriting"); return; }
+      try {
+        var res = await authFetch("/teacher/settings/profile", {
+          method: "PUT", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            first_name: parts.shift(), last_name: parts.join(" "),
+            email: document.getElementById("inpEmail").value.trim(),
+            bio: document.getElementById("inpBio").value.trim(),
+            teaching_subject: document.getElementById("inpSubject").value,
+          }),
+        });
+        var data = await res.json();
+        if (!res.ok) return showToast(data.error || "Saqlab bo'lmadi");
+        user = Object.assign({}, user, data.profile);
+        localStorage.setItem("user", JSON.stringify(user));
+        renderServerProfile(data.profile);
+        showToast("Profil saqlandi");
+      } catch (e) { showToast("Server bilan aloqa xatosi"); }
     }
 
     // ===== PAROL O'ZGARTIRISH =====
@@ -391,10 +455,18 @@
       var nw = document.getElementById("pwNew").value;
       var cf = document.getElementById("pwConfirm").value;
       if (!cur || !nw || !cf) { showToast("Barcha parol maydonlarini to'ldiring"); return; }
-      if (nw.length < 6) { showToast("Yangi parol kamida 6 belgi bo'lsin"); return; }
+      if (nw.length < 8 || !/[A-Za-z]/.test(nw) || !/\d/.test(nw)) { showToast("Parol kamida 8 belgi, harf va raqamdan iborat bo'lsin"); return; }
       if (nw !== cf) { showToast("Yangi parollar mos kelmadi"); return; }
-      // Backend teacher parol endpoint hozircha yo'q
-      comingSoon("Parolni yangilash");
+      try {
+        var res = await authFetch("/teacher/settings/password", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ current_password: cur, new_password: nw }),
+        });
+        var data = await res.json();
+        if (!res.ok) return showToast(data.error || "Parol yangilanmadi");
+        localStorage.removeItem("token"); localStorage.removeItem("user");
+        window.location.href = "/?screen=login";
+      } catch (e) { showToast("Server bilan aloqa xatosi"); }
     }
 
     // ===== TIL/VAQT SAQLASH =====
