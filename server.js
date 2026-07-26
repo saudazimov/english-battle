@@ -31,6 +31,9 @@ const schoolInvite = require("./schoolInvite");   // ← YANGI QATOR
 const premium = require("./premium");
 const aiService = require("./aiService");
 const aiSnapshot = require("./aiSnapshot");
+const { createSmsService } = require("./src/services/smsService");
+const { createPersistentRateLimitService } = require("./src/services/persistentRateLimitService");
+const { createExamAttemptGradingService } = require("./src/services/examAttemptGradingService");
 const rootRoutes = require("./src/routes/rootRoutes");
 const { createHealthRoutes } = require("./src/routes/healthRoutes");
 const { createLocationRoutes } = require("./src/routes/locationRoutes");
@@ -40,7 +43,10 @@ const paymentCreateRoutes = require("./src/routes/paymentCreateRoutes");
 const paymentStatusRoutes = require("./src/routes/paymentStatusRoutes");
 const paymeRoutes = require("./src/routes/paymeWebhookRoutes");
 const adminMeRoutes = require("./src/routes/adminMeRoutes");
+const adminLogoutRoutes = require("./src/routes/adminLogoutRoutes");
+const { createAdminAuthRoutes } = require("./src/routes/adminAuthRoutes");
 const adminFlagCountRoutes = require("./src/routes/adminFlagCountRoutes");
+const moderationFlagRoutes = require("./src/routes/moderationFlagRoutes");
 const adminSettingsInfoRoutes = require("./src/routes/adminSettingsInfoRoutes");
 const adminUserMessagesRoutes = require("./src/routes/adminUserMessagesRoutes");
 const adminRoomMessagesRoutes = require("./src/routes/adminRoomMessagesRoutes");
@@ -120,6 +126,55 @@ const { createFriendStatusService } = require("./src/services/friendStatusServic
 const { createTournamentMatchPlayerService } = require("./src/services/tournamentMatchPlayerService");
 const getMatchPlayer = createTournamentMatchPlayerService({ pool });
 const { getSeededWinner } = require("./src/services/seededWinnerService");
+const { createSchoolBattlePointsService } = require("./src/services/schoolBattlePointsService");
+const awardSchoolPoints = createSchoolBattlePointsService({ pool, currentSeason, logger: console });
+const { createParentCodeAssignmentService } = require("./src/services/parentCodeAssignmentService");
+const assignNewParentCode = createParentCodeAssignmentService({ pool, parentCode });
+const { createAdminPasswordService } = require("./src/services/adminPasswordService");
+const checkAdminPassword = createAdminPasswordService({ pool, bcrypt, environment: process.env, logger: console });
+const { createAdminLoginAttemptService } = require("./src/services/adminLoginAttemptService");
+const { createAuditLogService } = require("./src/services/auditLogService");
+const logAudit = createAuditLogService({ pool, clientIp, logger: console });
+const { createTournamentResultNotifier } = require("./src/services/tournamentResultNotifier");
+const { createMatchPlayerNotificationService } = require("./src/services/matchPlayerNotificationService");
+const { propagateByes } = require("./src/services/tournamentByePropagationService");
+const { createDailyQuestService } = require("./src/services/dailyQuestService");
+const getOrCreateDailyQuests = createDailyQuestService({ pool });
+const { createDailyQuestProgressService } = require("./src/services/dailyQuestProgressService");
+const updateQuestProgress = createDailyQuestProgressService({ pool, getOrCreateDailyQuests, logger: console });
+const { createTournamentWinnerAdvancementService } = require("./src/services/tournamentWinnerAdvancementService");
+const advanceWinner = createTournamentWinnerAdvancementService({ logger: console });
+const { createTournamentMatchCompletionService } = require("./src/services/tournamentMatchCompletionService");
+const finishMatchWithWinner = createTournamentMatchCompletionService({ advanceWinner });
+const { createTournamentMatchCompletionCheckService } = require("./src/services/tournamentMatchCompletionCheckService");
+const { createTournamentMatchExpiryService } = require("./src/services/tournamentMatchExpiryService");
+const { createTournamentMatchWatcherService } = require("./src/services/tournamentMatchWatcherService");
+const { createTournamentMatchCheckinService } = require("./src/services/tournamentMatchCheckinService");
+const { createTournamentMatchLiveService } = require("./src/services/tournamentMatchLiveService");
+const { createBattleSocketRebindService } = require("./src/services/battleSocketRebindService");
+const { createMatchmakingQueueRemovalService } = require("./src/services/matchmakingQueueRemovalService");
+const { createMatchmakingQueueMatchService } = require("./src/services/matchmakingQueueMatchService");
+const { createMatchmakingPairService } = require("./src/services/matchmakingPairService");
+const { createBattleBotAnswerSimulationService } = require("./src/services/battleBotAnswerSimulationService");
+const { createBotBattleStartService } = require("./src/services/botBattleStartService");
+const { createBattleStartService } = require("./src/services/battleStartService");
+const { createBattleFinishService } = require("./src/services/battleFinishService");
+const { createTeamQueueStatusService } = require("./src/services/teamQueueStatusService");
+const { createTeamMatchEntryService } = require("./src/services/teamMatchEntryService");
+const { createTeamMatchFormationService } = require("./src/services/teamMatchFormationService");
+const { createTeamMatchBotFillService } = require("./src/services/teamMatchBotFillService");
+const { createLegacyTeamBotFillService } = require("./src/services/legacyTeamBotFillService");
+const { createTeamBattleCompletionCheckService } = require("./src/services/teamBattleCompletionCheckService");
+const { createTeamBattleProgressService } = require("./src/services/teamBattleProgressService");
+const { createTeamBattleFinishService } = require("./src/services/teamBattleFinishService");
+const { createTeamBotAnswerSimulationService } = require("./src/services/teamBotAnswerSimulationService");
+const { createTeamBattleStartService } = require("./src/services/teamBattleStartService");
+const { createPartyBroadcastService } = require("./src/services/partyBroadcastService");
+const { createPartyMemberRemovalService } = require("./src/services/partyMemberRemovalService");
+const { createPartyBattleStartService } = require("./src/services/partyBattleStartService");
+const { createParentLinkAttemptService } = require("./src/services/parentLinkAttemptService");
+const { parentLinkBlocked, parentLinkNoteFail, parentLinkNoteOk } = createParentLinkAttemptService({ clientIp, now: Date.now });
+const { createGracefulShutdownService } = require("./src/services/gracefulShutdownService");
 const teacherClassArchiveRoutes = require("./src/routes/teacherClassArchiveRoutes");
 const teacherClassUpdateRoutes = require("./src/routes/teacherClassUpdateRoutes");
 const teacherClassCreateRoutes = require("./src/routes/teacherClassCreateRoutes");
@@ -127,8 +182,43 @@ const teacherClassListRoutes = require("./src/routes/teacherClassListRoutes");
 const teacherClassAnnouncementsListRoutes = require("./src/routes/teacherClassAnnouncementsListRoutes");
 const studentClassAnnouncementsListRoutes = require("./src/routes/studentClassAnnouncementsListRoutes");
 const teacherClassAnnouncementDeleteRoutes = require("./src/routes/teacherClassAnnouncementDeleteRoutes");
+const studentClassLeaveRoutes = require("./src/routes/studentClassLeaveRoutes");
+const classLessonRoutes = require("./src/routes/classLessonRoutes");
+const classAttendanceRoutes = require("./src/routes/classAttendanceRoutes");
 const teacherClassAnnouncementCreateRoutes = require("./src/routes/teacherClassAnnouncementCreateRoutes");
 const teacherClassAnnouncementUpdateRoutes = require("./src/routes/teacherClassAnnouncementUpdateRoutes");
+const adminTournamentRegionsRoutes = require("./src/routes/adminTournamentRegionsRoutes");
+const adminTournamentDetailRoutes = require("./src/routes/adminTournamentDetailRoutes");
+const adminQuestionDeleteRoutes = require("./src/routes/adminQuestionDeleteRoutes");
+const adminTournamentListRoutes = require("./src/routes/adminTournamentListRoutes");
+const adminUserRoleRoutes = require("./src/routes/adminUserRoleRoutes");
+const adminUserBanRoutes = require("./src/routes/adminUserBanRoutes");
+const adminTournamentDistrictSchoolsRoutes = require("./src/routes/adminTournamentDistrictSchoolsRoutes");
+const adminTournamentDeleteRoutes = require("./src/routes/adminTournamentDeleteRoutes");
+const adminQuestionListRoutes = require("./src/routes/adminQuestionListRoutes");
+const adminQuestionCreateRoutes = require("./src/routes/adminQuestionCreateRoutes");
+const adminQuestionUpdateRoutes = require("./src/routes/adminQuestionUpdateRoutes");
+const adminQuestionStatsRoutes = require("./src/routes/adminQuestionStatsRoutes");
+const adminQuestionHealthRoutes = require("./src/routes/adminQuestionHealthRoutes");
+const adminAuditLogListRoutes = require("./src/routes/adminAuditLogListRoutes");
+const adminOverviewRoutes = require("./src/routes/adminOverviewRoutes");
+const adminUserDetailRoutes = require("./src/routes/adminUserDetailRoutes");
+const adminUserListRoutes = require("./src/routes/adminUserListRoutes");
+const adminUserUpdateRoutes = require("./src/routes/adminUserUpdateRoutes");
+const adminSchoolStudentListRoutes = require("./src/routes/adminSchoolStudentListRoutes");
+const adminSchoolListRoutes = require("./src/routes/adminSchoolListRoutes");
+const battleHistoryListRoutes = require("./src/routes/battleHistoryListRoutes");
+const battleResultRoutes = require("./src/routes/battleResultRoutes");
+const teamBattleResultRoutes = require("./src/routes/teamBattleResultRoutes");
+const devSubscriptionActivateRoutes = require("./src/routes/devSubscriptionActivateRoutes");
+const parentAiReportListRoutes = require("./src/routes/parentAiReportListRoutes");
+const teacherAiReportDetailRoutes = require("./src/routes/teacherAiReportDetailRoutes");
+const teacherAiReportListRoutes = require("./src/routes/teacherAiReportListRoutes");
+const questListRoutes = require("./src/routes/questListRoutes");
+const studentWeeklyAiReportRoutes = require("./src/routes/studentWeeklyAiReportRoutes");
+const teacherWeeklyAiReportRoutes = require("./src/routes/teacherWeeklyAiReportRoutes");
+const streakCheckinRoutes = require("./src/routes/streakCheckinRoutes");
+const questClaimRoutes = require("./src/routes/questClaimRoutes");
 
 const {
   validateRegionDistrict,
@@ -273,161 +363,19 @@ app.use(createLocationRoutes());
 
 // ============ OTP (TELEFON TASDIQLASH) ============
 
-// ===== SMS yuborish (Eskiz.uz) =====
-// .env: ESKIZ_EMAIL, ESKIZ_PASSWORD, ESKIZ_FROM (ixtiyoriy; default "4546" = test sender)
-// Kredensial yo'q bo'lsa — DEV rejim: kodni terminalga chiqaradi (SMS ketmaydi).
-const ESKIZ_BASE = "https://notify.eskiz.uz/api";
-let _eskizToken = null; // token keshda (~30 kun amal qiladi)
-
-async function eskizLogin() {
-  const res = await fetch(ESKIZ_BASE + "/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: process.env.ESKIZ_EMAIL, password: process.env.ESKIZ_PASSWORD }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !(data.data && data.data.token)) {
-    throw new Error("Eskiz login xatosi: " + (data.message || res.status));
-  }
-  _eskizToken = data.data.token;
-  return _eskizToken;
-}
-
-async function eskizSend(token, to, message) {
-  return fetch(ESKIZ_BASE + "/message/sms/send", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-    body: JSON.stringify({ mobile_phone: to, message: message, from: process.env.ESKIZ_FROM || "4546" }),
-  });
-}
-
-async function sendSms(phone, code) {
-  const to = String(phone).replace(/\D/g, ""); // faqat raqam: 998901234567
-  const message = "English Battle: tasdiqlash kodingiz " + code + ". Kodni hech kimga bermang.";
-
-  // DEV REJIM (kredensialsiz) — terminalga chiqaramiz, SMS ketmaydi
-  if (!process.env.ESKIZ_EMAIL || !process.env.ESKIZ_PASSWORD) {
-    console.log("========================================");
-    console.log("📱 SMS (DEV rejim — Eskiz kredensiali yo'q)");
-    console.log("   Telefon: +" + to);
-    console.log("   Kod: " + code);
-    console.log("========================================");
-    return;
-  }
-
-  // PRODUKSIYA — Eskiz orqali
-  if (!_eskizToken) await eskizLogin();
-  let res = await eskizSend(_eskizToken, to, message);
-
-  // Token eskirgan bo'lsa (401) — qayta login qilib bir marta urinamiz
-  if (res.status === 401) {
-    await eskizLogin();
-    res = await eskizSend(_eskizToken, to, message);
-  }
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.status === "error") {
-    console.error("Eskiz SMS xatosi:", data.message || res.status);
-    throw new Error("SMS yuborib bo'lmadi");
-  }
-  console.log("SMS yuborildi:", to, "(Eskiz:", data.id || data.status || "ok", ")");
-}
+const sendSms = createSmsService({ environment: process.env, logger: console });
 
 // ============ RATE LIMIT (auth himoyasi — in-memory, tashqi paketsiz) ============
 // Maqsad: OTP spam / SMS xarajat suiiste'moli / parol-kod brute-force'ini cheklash.
 // Ikki mexanizm: countLimiter (har chaqiruvni sanaydi) + failGate/noteFail/noteOk (faqat noto'g'ri urinish).
-function _ipOf(req) { return clientIp(req); }
-function _phoneIpKey(req) { return (req.body && req.body.phone ? String(req.body.phone).trim() : "no-phone") + "|" + _ipOf(req); }
-
-// 1) Har chaqiruvni sanaydigan limiter (OTP yuborish uchun)
-function countLimiter(name, opts) {
-  return async function (req, res, next) {
-    const key = String(opts.keyFn(req)).slice(0, 240);
-    try {
-      const result = await pool.query(
-        `INSERT INTO request_rate_limits (bucket, key_value, request_count, window_started)
-         VALUES ($1, $2, 1, NOW())
-         ON CONFLICT (bucket, key_value) DO UPDATE SET
-           request_count = CASE
-             WHEN request_rate_limits.blocked_until > NOW() THEN request_rate_limits.request_count
-             WHEN request_rate_limits.window_started < NOW() - ($3::bigint * INTERVAL '1 millisecond') THEN 1
-             ELSE request_rate_limits.request_count + 1 END,
-           window_started = CASE
-             WHEN request_rate_limits.window_started < NOW() - ($3::bigint * INTERVAL '1 millisecond') THEN NOW()
-             ELSE request_rate_limits.window_started END,
-           blocked_until = CASE
-             WHEN request_rate_limits.blocked_until > NOW() THEN request_rate_limits.blocked_until
-             ELSE NULL END,
-           updated_at = NOW()
-         RETURNING request_count, blocked_until`,
-        [name, key, opts.windowMs]
-      );
-      const rec = result.rows[0];
-      if (rec.blocked_until && new Date(rec.blocked_until) > new Date()) {
-        const wait = Math.max(1, Math.ceil((new Date(rec.blocked_until) - Date.now()) / 60000));
-        return res.status(429).json({ error: (opts.message || "Juda ko'p so'rov.") + " " + wait + " daqiqadan keyin urinib ko'ring." });
-      }
-      if (Number(rec.request_count) > opts.max) {
-        await pool.query(
-          "UPDATE request_rate_limits SET blocked_until = NOW() + ($3::bigint * INTERVAL '1 millisecond'), updated_at = NOW() WHERE bucket = $1 AND key_value = $2",
-          [name, key, opts.blockMs]
-        );
-        return res.status(429).json({ error: (opts.message || "Juda ko'p so'rov.") + " " + Math.ceil(opts.blockMs / 60000) + " daqiqadan keyin urinib ko'ring." });
-      }
-      next();
-    } catch (err) {
-      console.error("Rate limit DB xatosi:", err.message);
-      next();
-    }
-  };
-}
-
-// 2) Faqat NOTO'G'RI urinishni cheklaydigan gate (login / kod uchun — muvaffaqiyatli user bloklanmaydi)
-function failGate(name, opts) {
-  return async function (req, res, next) {
-    const key = String(opts.keyFn(req)).slice(0, 240);
-    try {
-      const result = await pool.query(
-        "SELECT blocked_until FROM request_rate_limits WHERE bucket = $1 AND key_value = $2",
-        [name, key]
-      );
-      const blockedUntil = result.rows[0] && result.rows[0].blocked_until;
-      if (blockedUntil && new Date(blockedUntil) > new Date()) {
-        const wait = Math.max(1, Math.ceil((new Date(blockedUntil) - Date.now()) / 60000));
-        return res.status(429).json({ error: (opts.message || "Juda ko'p noto'g'ri urinish.") + " " + wait + " daqiqadan keyin urinib ko'ring." });
-      }
-      next();
-    } catch (err) {
-      console.error("Rate limit gate DB xatosi:", err.message);
-      next();
-    }
-  };
-}
-function noteFail(name, key, max, blockMs) {
-  pool.query(
-    `INSERT INTO request_rate_limits (bucket, key_value, request_count, window_started, blocked_until)
-     VALUES ($1, $2, 1, NOW(), NULL)
-     ON CONFLICT (bucket, key_value) DO UPDATE SET
-       request_count = CASE
-         WHEN request_rate_limits.blocked_until IS NOT NULL AND request_rate_limits.blocked_until <= NOW() THEN 1
-         WHEN request_rate_limits.window_started < NOW() - ($4::bigint * INTERVAL '1 millisecond') THEN 1
-         ELSE request_rate_limits.request_count + 1 END,
-       window_started = CASE
-         WHEN request_rate_limits.blocked_until IS NOT NULL AND request_rate_limits.blocked_until <= NOW() THEN NOW()
-         WHEN request_rate_limits.window_started < NOW() - ($4::bigint * INTERVAL '1 millisecond') THEN NOW()
-         ELSE request_rate_limits.window_started END,
-       blocked_until = CASE
-         WHEN request_rate_limits.blocked_until IS NOT NULL AND request_rate_limits.blocked_until <= NOW() THEN NULL
-         WHEN request_rate_limits.request_count + 1 >= $3 THEN NOW() + ($4::bigint * INTERVAL '1 millisecond')
-         ELSE request_rate_limits.blocked_until END,
-       updated_at = NOW()`,
-    [name, String(key).slice(0, 240), max, blockMs]
-  ).catch((err) => console.error("Rate limit fail yozish xatosi:", err.message));
-}
-function noteOk(name, key) {
-  pool.query("DELETE FROM request_rate_limits WHERE bucket = $1 AND key_value = $2", [name, String(key).slice(0, 240)])
-    .catch((err) => console.error("Rate limit tozalash xatosi:", err.message));
-}
+const {
+  ipOf: _ipOf,
+  phoneIpKey: _phoneIpKey,
+  countLimiter,
+  failGate,
+  noteFail,
+  noteOk,
+} = createPersistentRateLimitService({ pool, clientIp, logger: console });
 
 // ----- Maxsus limiterlar -----
 var otpSendPerPhone = countLimiter("otp_send_phone", { keyFn: _phoneIpKey, max: 5,  windowMs: 15*60*1000, blockMs: 30*60*1000, message: "Bu raqamga juda ko'p kod yuborildi." });
@@ -948,203 +896,31 @@ app.post("/login", requireNormalizedPhone, loginGate, async (req, res) => {
 const TIME_PER_QUESTION_MS = 15000; // har savolga 15 sekund
 const ANSWER_GRACE_MS = 2000;       // tarmoq kechikishi uchun zaxira (2+ savollar)
 const FIRST_Q_GRACE_MS = 6000;      // 1-savol uchun qo'shimcha zaxira (countdown/render)
-// Bot bilan jang boshlash
-async function startBotBattle(roomId, humanPlayer) {
-  try {
-    // Tanlangan format bo'yicha savol soni (yo'q bo'lsa — standard)
-    const cfg = lengthConfig(humanPlayer.lengthKey);
-    const qCount = cfg.questions;
-
-    let result = await pool.query(
-      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, skill
-       FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
-      [humanPlayer.level, qCount]
-    );
-
-    // Zaxira: o'yinchi darajasi uchun savol bo'lmasa, har qanday darajadan olamiz
-    if (result.rows.length === 0) {
-      console.log("'" + humanPlayer.level + "' uchun savol yo'q — zaxira savollar olinmoqda");
-      result = await pool.query(
-        `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
-         FROM questions ORDER BY RANDOM() LIMIT $1`,
-        [qCount]
-      );
-    }
-
-    const questions = result.rows;
-
-    // Hech qanday savol topilmasa — jangni boshlamaymiz
-    if (questions.length === 0) {
-      io.to(humanPlayer.socketId).emit("battleError", { message: "Hozircha savollar mavjud emas. Keyinroq urinib ko'ring." });
-      console.error("Bazada umuman savol yo'q!");
-      return;
-    }
-    const botId = "bot_" + roomId;
-
-    // Jang holatini saqlash (bot ham bor)
-    battles[roomId] = {
-      questions: questions,
-      isBot: true,
-      botId: botId,
-      level: humanPlayer.level || "A1",
-      lengthKey: humanPlayer.lengthKey || "standard",
-      mode: humanPlayer.mode || "ranked",
-      createdAt: Date.now(),
-      players: {
-        [humanPlayer.socketId]: { userId: humanPlayer.userId, name: humanPlayer.name, score: 0, finished: false, answeredCount: 0, answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS },
-        [botId]: { userId: null, name: humanPlayer.botName, score: 0, finished: false, answeredCount: 0, isBot: true },
-      },
-    };
-
-    // Savollarni o'yinchiga yuborish (to'g'ri javobsiz)
-    const safeQuestions = questions.map((q) => ({
-      id: q.id, question_text: q.question_text,
-      option_a: q.option_a, option_b: q.option_b,
-      option_c: q.option_c, option_d: q.option_d,
-    }));
-
-    // Foydalanuvchining rasmini DB'dan olamiz (natija + jang ekranida ko'rsatish uchun)
-    let myPic = null;
-    if (humanPlayer.userId) {
-      try {
-        const pr = await pool.query("SELECT profile_picture FROM users WHERE id = $1", [humanPlayer.userId]);
-        if (pr.rows[0]) myPic = pr.rows[0].profile_picture;
-      } catch (e) {}
-    }
-
-    io.to(humanPlayer.socketId).emit("battleStart", {
-      total_questions: safeQuestions.length,
-      questions: safeQuestions,
-      myPicture: myPic,
-      opponentPicture: null,                 // bot — rasm yo'q
-      opponentName: humanPlayer.botName,
-      opponentId: null,                      // bot — userId yo'q
-      myName: humanPlayer.name,
-      level: humanPlayer.level || "A1",
-    });
-
-    console.log("Bot bilan jang boshlandi:", roomId);
-
-    // PERSISTENCE + RECONNECT (bot jangi)
-    battles[roomId].battleType = "1v1";
-    battles[roomId].players[humanPlayer.socketId].socketId = humanPlayer.socketId;
-    if (humanPlayer.userId) userToRoom[humanPlayer.userId] = roomId;
-    await saveBattleSession(roomId, battles[roomId]);
-
-    // Botning javoblarini "simulyatsiya" qilish
-    simulateBotAnswers(roomId, botId, questions);
-  } catch (err) {
-    console.error("Bot jang xatosi:", err.message);
-  }
-}
-
 // ============ MAKTAB NOMINI BIR XIL QILISH (normalizatsiya) ============
 // ===== SO'KINISH FILTRI (bolalar xavfsizligi) =====
 // Yomon so'zlar ro'yxati. Topilsa — yulduzcha bilan almashtiriladi.
 // Ro'yxat to'liq emas, lekin eng keng tarqalganlarni qamrab oladi.
 // O'zbek, ingliz, rus tillarida. Yangi so'zlarni shu massivga qo'shish mumkin.
-// Bot javoblarini taqlid qilish
-function simulateBotAnswers(roomId, botId, questions) {
-  let qIndex = 0;
-
-  function answerNext() {
-    const battle = battles[roomId];
-    if (!battle || !battle.players[botId]) return; // jang tugagan bo'lsa to'xta
-    if (qIndex >= questions.length) {
-      // Bot hamma savolga javob berdi
-      battle.players[botId].finished = true;
-      const allFinished = Object.values(battle.players).every((p) => p.finished);
-      if (allFinished) finishBattle(roomId);
-      return;
-    }
-
-    const question = questions[qIndex];
-    const bot = battle.players[botId];
-
-    // Bot 65% ehtimol bilan to'g'ri javob beradi
-    const isCorrect = Math.random() < 0.65;
-    if (isCorrect) bot.score++;
-    bot.answeredCount++;
-
-    // O'yinchiga botning progressini ko'rsatish
-    io.to(roomId).emit("opponentProgress", { answeredCount: bot.answeredCount });
-
-    qIndex++;
-
-    // Bot tugatdimi?
-    if (bot.answeredCount >= questions.length) {
-      bot.finished = true;
-      const allFinished = Object.values(battle.players).every((p) => p.finished);
-      if (allFinished) finishBattle(roomId);
-      return;
-    }
-
-    // Keyingi javob uchun tasodifiy vaqt (3-8 soniya) — inson kabi
-    const delay = 3000 + Math.random() * 5000;
-    setTimeout(answerNext, delay);
-  }
-
-  // Birinchi javobni boshlash (2-5 soniyadan keyin)
-  setTimeout(answerNext, 2000 + Math.random() * 3000);
-}
-
 // ===== 1v1 MATCHMAKING QUEUE (V1) =====
 let waitingQueue = []; // entry: { socketId, userId, name, level, rating, mode, lengthKey, joinedAt, botName, botTimer, expandTimers }
+const removeFromQueue = createMatchmakingQueueRemovalService({ waitingQueue });
 
-// navbatdan o'chirish + timerlarni tozalash
-function removeFromQueue(socketId) {
-  const idx = waitingQueue.findIndex((e) => e.socketId === socketId);
-  if (idx === -1) return null;
-  const entry = waitingQueue[idx];
-  if (entry.botTimer) clearTimeout(entry.botTimer);
-  if (entry.expandTimers) entry.expandTimers.forEach((t) => clearTimeout(t));
-  waitingQueue.splice(idx, 1);
-  return entry;
-}
+const pairPlayers = createMatchmakingPairService({
+  io,
+  pool,
+  getOpponentCardInfo,
+  startBattle,
+});
 
-// ikki o'yinchini juftlash (xona + kartalar + battleStart)
-async function pairPlayers(a, b) {
-  const roomId = "battle_" + a.socketId + "_" + b.socketId;
-  io.sockets.sockets.get(a.socketId)?.join(roomId);
-  io.sockets.sockets.get(b.socketId)?.join(roomId);
-
-  const aCard = await getOpponentCardInfo(a.userId);
-  const bCard = await getOpponentCardInfo(b.userId);
-  let aPic = null, bPic = null;
-  try {
-    const picRes = await pool.query("SELECT id, profile_picture FROM users WHERE id = ANY($1)", [[a.userId, b.userId]]);
-    picRes.rows.forEach((r) => {
-      if (String(r.id) === String(a.userId)) aPic = r.profile_picture;
-      if (String(r.id) === String(b.userId)) bPic = r.profile_picture;
-    });
-  } catch (e) {}
-
-  const foundForA = { roomId, opponent: { name: b.name, profile_picture: bPic, rating: bCard.rating, win_rate: bCard.win_rate, level: b.level }, message: "Raqib topildi!" };
-  const foundForB = { roomId, opponent: { name: a.name, profile_picture: aPic, rating: aCard.rating, win_rate: aCard.win_rate, level: a.level }, message: "Raqib topildi!" };
-  io.to(a.socketId).emit("matchFound", foundForA); io.to(a.socketId).emit("matchmaking:found", foundForA);
-  io.to(b.socketId).emit("matchFound", foundForB); io.to(b.socketId).emit("matchmaking:found", foundForB);
-
-  setTimeout(() => startBattle(roomId, a, b), 6000);
-}
-
-// navbatdagi bitta o'yinchiga mos raqib izlash
-function tryQueueMatch(socketId) {
-  const me = waitingQueue.find((e) => e.socketId === socketId);
-  if (!me) return false;
-  // Raqib: boshqa socket VA boshqa userId (o'zini o'ziga moslab qo'ymaslik uchun)
-  const opp = waitingQueue.find(
-    (e) =>
-      e.socketId !== socketId &&
-      String(e.userId) !== String(me.userId) &&
-      mmCompatible(e, me)
-  );
-  if (!opp) return false;
-  removeFromQueue(me.socketId);
-  removeFromQueue(opp.socketId);
-  pairPlayers(opp, me);
-  return true;
-}
+const tryQueueMatch = createMatchmakingQueueMatchService({
+  waitingQueue,
+  mmCompatible,
+  removeFromQueue,
+  pairPlayers,
+});
 const battles = {}; // Faol janglar: roomId -> jang ma'lumoti
+const simulateBotAnswers = createBattleBotAnswerSimulationService({ battles, io, finishBattle });
+const rebindPlayerSocket = createBattleSocketRebindService({ battles, findPlayerKeyByUser });
 
 // Jamoa janglar navbati (eski — endi ishlatilmaydi, xavfsizlik uchun qoldirildi)
 const teamQueues = { duo: [], squad: [] };
@@ -1153,320 +929,79 @@ const teamQueueTimers = {};
 // ===== YAGONA JAMOA MATCHMAKING POOL (party + solo birga) =====
 const teamMatchPool = { duo: [], squad: [] }; // entry: {id, type:"solo"|"party", size, players:[...], partyId?}
 const teamMatchTimers = {};
+const emitTeamQueueStatus = createTeamQueueStatusService({ teamMatchPool, io });
 
-// Navbat holatini barcha kutayotganlarga yuborish
-function emitTeamQueueStatus(mode) {
-  var teamSize = mode === "squad" ? 4 : 2;
-  var needed = teamSize * 2;
-  var pool = teamMatchPool[mode];
-  var count = pool.reduce(function (s, e) { return s + e.size; }, 0);
-  pool.forEach(function (e) {
-    e.players.forEach(function (p) {
-      if (!p.isBot && p.socketId) io.to(p.socketId).emit("teamQueueUpdate", { current: count, needed: needed, teamMode: mode });
-    });
-  });
-}
+const tryFormTeamMatch = createTeamMatchFormationService({
+  teamMatchPool,
+  teamMatchTimers,
+  startTeamBattle,
+});
 
-// 2 ta jamoa tuzishga harakat (party butun bir jamoaga, solo bo'sh joyni to'ldiradi)
-function tryFormTeamMatch(mode) {
-  var teamSize = mode === "squad" ? 4 : 2;
-  var pool = teamMatchPool[mode];
-  if (pool.length === 0) return false;
+const botFillTeamMatch = createTeamMatchBotFillService({
+  teamMatchPool,
+  teamMatchTimers,
+  makeTeamBot,
+  startTeamBattle,
+});
 
-  function assembleTeam(avail) {
-    var team = [], used = [];
-    // Avval party joylaymiz (guruh buzilmaydi)
-    for (var i = 0; i < avail.length && team.length < teamSize; i++) {
-      var e = avail[i];
-      if (e.type === "party" && e.size <= (teamSize - team.length)) {
-        team = team.concat(e.players); used.push(e.id);
-        avail.splice(i, 1); i--;
-      }
-    }
-    // Qolgan joyni solo bilan to'ldiramiz
-    for (var j = 0; j < avail.length && team.length < teamSize; j++) {
-      var e2 = avail[j];
-      if (e2.type === "solo") {
-        team = team.concat(e2.players); used.push(e2.id);
-        avail.splice(j, 1); j--;
-      }
-    }
-    return team.length === teamSize ? { team: team, used: used } : null;
-  }
-
-  var avail = pool.slice();
-  var A = assembleTeam(avail);
-  if (!A) return false;
-  var B = assembleTeam(avail);
-  if (!B) return false;
-
-  var usedIds = A.used.concat(B.used);
-  teamMatchPool[mode] = pool.filter(function (e) { return usedIds.indexOf(e.id) === -1; });
-  if (teamMatchPool[mode].length === 0 && teamMatchTimers[mode]) { clearTimeout(teamMatchTimers[mode]); delete teamMatchTimers[mode]; }
-
-  console.log("Jamoa match topildi [" + mode + "]: A=" + A.team.length + " B=" + B.team.length + " (haqiqiy o'yinchilar)");
-  startTeamBattle(A.team.concat(B.team), mode, teamSize);
-  return true;
-}
-
-// Vaqt tugadi — kutayotganlarni bot bilan to'ldirib jang boshlash
-function botFillTeamMatch(mode) {
-  var teamSize = mode === "squad" ? 4 : 2;
-  var pool = teamMatchPool[mode];
-  if (pool.length === 0) return;
-
-  var avail = pool.slice();
-  teamMatchPool[mode] = [];
-  if (teamMatchTimers[mode]) { clearTimeout(teamMatchTimers[mode]); delete teamMatchTimers[mode]; }
-
-  function takeTeam() {
-    var team = [];
-    for (var i = 0; i < avail.length && team.length < teamSize; i++) {
-      if (avail[i].type === "party" && avail[i].size <= (teamSize - team.length)) { team = team.concat(avail[i].players); avail.splice(i, 1); i--; }
-    }
-    for (var j = 0; j < avail.length && team.length < teamSize; j++) {
-      if (avail[j].type === "solo") { team = team.concat(avail[j].players); avail.splice(j, 1); j--; }
-    }
-    return team;
-  }
-  var teamA = takeTeam();
-  var teamB = takeTeam();
-  var ref = teamA[0] || teamB[0];
-  var bi = 0;
-  while (teamA.length < teamSize) teamA.push(makeTeamBot(ref, bi++));
-  while (teamB.length < teamSize) teamB.push(makeTeamBot(ref, bi++));
-
-  console.log("Jamoa match bot bilan to'ldirildi [" + mode + "]");
-  startTeamBattle(teamA.concat(teamB), mode, teamSize);
-}
-
-// Poolga entry qo'shish + match urinishi + bot-fill timer
-function addTeamEntry(mode, entry) {
-  teamMatchPool[mode].push(entry);
-  emitTeamQueueStatus(mode);
-  var formed = tryFormTeamMatch(mode);
-  if (!formed) {
-    if (teamMatchTimers[mode]) clearTimeout(teamMatchTimers[mode]);
-    teamMatchTimers[mode] = setTimeout(function () { botFillTeamMatch(mode); }, 15000);
-  }
-}
+const addTeamEntry = createTeamMatchEntryService({
+  teamMatchPool,
+  teamMatchTimers,
+  emitTeamQueueStatus,
+  tryFormTeamMatch,
+  botFillTeamMatch,
+});
 const pendingBattles = {}; // Do'st janglari: battle.html'da tayyor bo'lishni kutayotgan
 const onlineUsers = {}; // { userId: socketId }
 const notifyFriendsStatus = createFriendStatusService({ pool, io, onlineUsers, logger: console });
+const notifyMatchPlayers = createMatchPlayerNotificationService({ pool, io, onlineUsers, logger: console });
+const notifyTournamentResult = createTournamentResultNotifier({ notifyMatchPlayers });
 const pendingRematches = new Map(); // "qabul qiluvchiSocket:so'rovchiSocket" -> server tasdiqlagan so'rov
 const userToRoom = {}; // { userId: roomId } — reconnect uchun: kim qaysi aktiv jangda
 const recentlyFinished = {}; // { userId: roomId } — yaqinda tugagan jang (refresh natijani topishi uchun)
+const startBotBattle = createBotBattleStartService({
+  pool,
+  io,
+  battles,
+  userToRoom,
+  lengthConfig,
+  saveBattleSession,
+  simulateBotAnswers,
+  firstQuestionGraceMs: FIRST_Q_GRACE_MS,
+  timePerQuestionMs: TIME_PER_QUESTION_MS,
+  logger: console,
+});
 
 // ============ PARTY (Do'stlar jamoasi) ============
 const parties = {};      // { partyId: { leader, teamMode, maxSize, members: [{userId, name, socketId, isLeader}], status } }
 const userParty = {};    // { userId: partyId } — tez qidirish uchun
-
-// Party holatini barcha a'zolarga yuborish
-function broadcastParty(partyId) {
-  var party = parties[partyId];
-  if (!party) return;
-  var payload = {
-    partyId: partyId,
-    teamMode: party.teamMode,
-    maxSize: party.maxSize,
-    status: party.status,
-    leaderId: party.leader,
-    members: party.members.map(function (m) { return { userId: m.userId, name: m.name, isLeader: m.userId === party.leader, profile_picture: m.profile_picture || null }; }),
-  };
-  party.members.forEach(function (m) {
-    if (m.socketId) io.to(m.socketId).emit("partyUpdated", payload);
-  });
-}
-
-// A'zoni partydan chiqarish (disconnect yoki leave)
-function removeFromParty(userId) {
-  var partyId = userParty[userId];
-  if (!partyId) return;
-  var party = parties[partyId];
-  if (!party) { delete userParty[userId]; return; }
-
-  party.members = party.members.filter(function (m) { return m.userId !== userId; });
-  delete userParty[userId];
-
-  if (party.members.length === 0) {
-    // Bo'sh party — o'chiramiz
-    delete parties[partyId];
-    return;
-  }
-
-  // Agar lider chiqgan bo'lsa — keyingi a'zo lider bo'ladi
-  if (party.leader === userId) {
-    party.leader = party.members[0].userId;
-  }
-  broadcastParty(partyId);
-}
+const broadcastParty = createPartyBroadcastService({ parties, io });
+const removeFromParty = createPartyMemberRemovalService({ parties, userParty, broadcastParty });
 
 // Pending party janglar (a'zolar team-battle.html ga yetib kelishini kutadi)
 const pendingPartyMatches = {}; // { partyId: { teamMode, teamSize, expected:[uid], arrived:{uid:{...}}, timer } }
-
-// Party jang qidiruvi — party butun guruh sifatida YAGONA POOLGA kiradi
-function startPartyBattle(partyId) {
-  var pending = pendingPartyMatches[partyId];
-  if (!pending) return;
-  delete pendingPartyMatches[partyId];
-
-  var teamMode = pending.teamMode;
-  var teamSize = pending.teamSize;
-  var arrivedPlayers = Object.keys(pending.arrived).map(function (uid) { return pending.arrived[uid]; });
-  if (arrivedPlayers.length === 0) return;
-
-  // Xavfsizlik: party a'zolari teamSize dan oshmasin
-  if (arrivedPlayers.length > teamSize) arrivedPlayers = arrivedPlayers.slice(0, teamSize);
-
-  // Party holatini tozalaymiz (endi jang qidiruvida)
-  if (parties[partyId]) {
-    parties[partyId].members.forEach(function (m) { delete userParty[m.userId]; });
-    delete parties[partyId];
-  }
-
-  // Partyni yagona poolga qo'shamiz — party vs party / party vs solo / (yetmasa) bot
-  var entry = {
-    id: "party_" + partyId,
-    type: "party",
-    size: arrivedPlayers.length,
-    players: arrivedPlayers,
-    partyId: partyId,
-  };
-  console.log("Party poolga qo'shildi [" + teamMode + "]: party=" + partyId + " (" + arrivedPlayers.length + " a'zo)");
-  addTeamEntry(teamMode, entry);
-}
+const startPartyBattle = createPartyBattleStartService({
+  pendingPartyMatches,
+  parties,
+  userParty,
+  addTeamEntry,
+});
 
 
-// Jangni boshlash funksiyasi
-// ============ RECONNECT YORDAMCHILARI (Option B) ============
-// Reconnect: eski socket.id yozuvini yangi socket.id'ga ko'chirish
-// (battle.players strukturasi o'zgarmaydi — faqat bitta yozuv yangi kalitga o'tadi)
-function rebindPlayerSocket(roomId, userId, newSocketId) {
-  const battle = battles[roomId];
-  if (!battle) return false;
-  const oldKey = findPlayerKeyByUser(battle, userId);
-  if (!oldKey) return false;
-  if (oldKey !== newSocketId) {
-    battle.players[newSocketId] = battle.players[oldKey];
-    delete battle.players[oldKey];
-    // JAMOA JANG: teams arraylaridagi eski socket ID'ni yangisiga almashtiramiz
-    if (battle.isTeam && battle.teams) {
-      ["A", "B"].forEach(function (t) {
-        if (!battle.teams[t]) return;
-        var idx = battle.teams[t].indexOf(oldKey);
-        if (idx !== -1) battle.teams[t][idx] = newSocketId;
-      });
-    }
-  }
-  // socketId maydonini ham yangilaymiz (agar ishlatilsa)
-  battle.players[newSocketId].socketId = newSocketId;
-  return true;
-}
+const startBattleService = createBattleStartService({
+  pool,
+  io,
+  battles,
+  userToRoom,
+  lengthConfig,
+  saveBattleSession,
+  firstQuestionGraceMs: FIRST_Q_GRACE_MS,
+  timePerQuestionMs: TIME_PER_QUESTION_MS,
+  logger: console,
+});
 
 async function startBattle(roomId, player1, player2) {
-  try {
-    // Tanlangan format bo'yicha savol soni (player1 tanlovi)
-    const cfg = lengthConfig(player1.lengthKey);
-    const qCount = cfg.questions;
-    console.log("[BATTLE DEBUG] startBattle. player1.lengthKey:", player1.lengthKey, "| qCount (kerakli):", qCount, "| level:", player1.level);
-
-    let result = await pool.query(
-      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, skill
-       FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
-      [player1.level, qCount]
-    );
-
-    // Zaxira: bu daraja uchun savol bo'lmasa, har qanday darajadan olamiz
-    if (result.rows.length === 0) {
-      console.log("'" + player1.level + "' uchun savol yo'q — zaxira savollar olinmoqda");
-      result = await pool.query(
-        `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
-         FROM questions ORDER BY RANDOM() LIMIT $1`,
-        [qCount]
-      );
-    }
-
-    const questions = result.rows;
-    console.log("[BATTLE DEBUG] Bazadan olingan savollar soni:", questions.length, "(kerakli:", qCount, ")");
-
-    // Hech qanday savol topilmasa — ikkala o'yinchiga xato yuboramiz
-    if (questions.length === 0) {
-      io.to(player1.socketId).emit("battleError", { message: "Hozircha savollar mavjud emas. Keyinroq urinib ko'ring." });
-      io.to(player2.socketId).emit("battleError", { message: "Hozircha savollar mavjud emas. Keyinroq urinib ko'ring." });
-      console.error("Bazada umuman savol yo'q!");
-      return;
-    }
-
-    // Jang holatini saqlash
-    battles[roomId] = {
-      questions: questions,
-      level: player1.level || "A1",
-      lengthKey: player1.lengthKey || "standard",
-      mode: player1.mode || "ranked",
-      createdAt: Date.now(),
-      players: {
-        [player1.socketId]: { userId: player1.userId, name: player1.name, score: 0, finished: false, answeredCount: 0, answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS },
-        [player2.socketId]: { userId: player2.userId, name: player2.name, score: 0, finished: false, answeredCount: 0, answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS },
-      },
-    };
-
-    // To'g'ri javobsiz savollarni o'yinchilarga yuborish
-    const safeQuestions = questions.map((q) => ({
-      id: q.id,
-      question_text: q.question_text,
-      option_a: q.option_a,
-      option_b: q.option_b,
-      option_c: q.option_c,
-      option_d: q.option_d,
-    }));
-
-    // Ikki o'yinchining rasmini bazadan olish
-    let pic1 = null, pic2 = null;
-    try {
-      const picRes = await pool.query("SELECT id, profile_picture FROM users WHERE id = ANY($1)", [[player1.userId, player2.userId]]);
-      picRes.rows.forEach(r => {
-        if (String(r.id) === String(player1.userId)) pic1 = r.profile_picture;
-        if (String(r.id) === String(player2.userId)) pic2 = r.profile_picture;
-      });
-    } catch (e) {}
-
-    // Har o'yinchiga ALOHIDA yuborish: o'z rasmi + raqib rasmi
-    io.to(player1.socketId).emit("battleStart", {
-      total_questions: safeQuestions.length,
-      questions: safeQuestions,
-      myPicture: pic1,
-      opponentPicture: pic2,
-      opponentName: player2.name,
-      opponentId: player2.userId,
-      myName: player1.name,
-      level: player1.level,
-    });
-    io.to(player2.socketId).emit("battleStart", {
-      total_questions: safeQuestions.length,
-      questions: safeQuestions,
-      myPicture: pic2,
-      opponentPicture: pic1,
-      opponentName: player1.name,
-      opponentId: player1.userId,
-      myName: player2.name,
-      level: player2.level,
-    });
-
-    console.log("Jang boshlandi, xona:", roomId);
-
-    // PERSISTENCE: jang holatini DB'ga saqlash (restart/reconnect uchun)
-    battles[roomId].battleType = "1v1";
-    await saveBattleSession(roomId, battles[roomId]);
-
-    // RECONNECT: kim qaysi jangda — userToRoom'ga yozamiz
-    if (player1.userId) userToRoom[player1.userId] = roomId;
-    if (player2.userId) userToRoom[player2.userId] = roomId;
-    // socketId maydonini har o'yinchiga qo'shamiz (rebind uchun)
-    if (battles[roomId].players[player1.socketId]) battles[roomId].players[player1.socketId].socketId = player1.socketId;
-    if (battles[roomId].players[player2.socketId]) battles[roomId].players[player2.socketId].socketId = player2.socketId;
-  } catch (err) {
-    console.error("Jang boshlashda xato:", err.message);
-  }
+  return startBattleService(roomId, player1, player2);
 }
 
 io.on("connection", (socket) => {
@@ -2599,665 +2134,75 @@ io.on("connection", (socket) => {
 
 // ============ TOPSHIRIQ (QUEST) YORDAMCHILARI ============
 
-// O'yinchining bugungi topshiriqlarini olish (yo'q bo'lsa — yaratish)
-async function getOrCreateDailyQuests(userId) {
-  // Bugungi topshiriqlar bormi?
-  const existing = await pool.query(
-    `SELECT uq.id, uq.quest_id, uq.progress, uq.is_completed, uq.reward_claimed,
-            q.quest_type, q.target, q.xp_reward, q.title, q.description
-     FROM user_quests uq
-     JOIN quests q ON uq.quest_id = q.id
-     WHERE uq.user_id = $1 AND uq.quest_date = CURRENT_DATE`,
-    [userId]
-  );
+const emitTeamProgress = createTeamBattleProgressService({ battles, io });
 
-  if (existing.rows.length > 0) {
-    return existing.rows;
-  }
+const checkTeamFinish = createTeamBattleCompletionCheckService({ battles, finishTeamBattle });
 
-  // Yo'q — bugun uchun yangi topshiriqlar yaratamiz (3 tasini tasodifiy)
-  const allQuests = await pool.query(
-    "SELECT id FROM quests WHERE is_active = true ORDER BY RANDOM() LIMIT 3"
-  );
-
-  for (const q of allQuests.rows) {
-    await pool.query(
-      `INSERT INTO user_quests (user_id, quest_id, quest_date)
-       VALUES ($1, $2, CURRENT_DATE)
-       ON CONFLICT (user_id, quest_id, quest_date) DO NOTHING`,
-      [userId, q.id]
-    );
-  }
-
-  // Yangi yaratilganlarni qaytarish
-  const created = await pool.query(
-    `SELECT uq.id, uq.quest_id, uq.progress, uq.is_completed, uq.reward_claimed,
-            q.quest_type, q.target, q.xp_reward, q.title, q.description
-     FROM user_quests uq
-     JOIN quests q ON uq.quest_id = q.id
-     WHERE uq.user_id = $1 AND uq.quest_date = CURRENT_DATE`,
-    [userId]
-  );
-  return created.rows;
-}
-
-// Jang natijasiga qarab topshiriq progressini yangilash
-async function updateQuestProgress(userId, { won, correctAnswers, xpEarned }) {
-  try {
-    const quests = await getOrCreateDailyQuests(userId);
-
-    for (const uq of quests) {
-      if (uq.is_completed) continue; // allaqachon bajarilgan
-
-      let increment = 0;
-      if (uq.quest_type === "play_battles") increment = 1;
-      else if (uq.quest_type === "win_battles") increment = won ? 1 : 0;
-      else if (uq.quest_type === "correct_answers") increment = correctAnswers;
-      else if (uq.quest_type === "earn_xp") increment = xpEarned;
-
-      if (increment > 0) {
-        const newProgress = uq.progress + increment;
-        const completed = newProgress >= uq.target;
-
-        await pool.query(
-          `UPDATE user_quests
-           SET progress = $1, is_completed = $2
-           WHERE id = $3`,
-          [Math.min(newProgress, uq.target), completed, uq.id]
-        );
-      }
-    }
-  } catch (err) {
-    console.error("Quest progress xatosi:", err.message);
-  }
-}
-
-// Jamoa progressini barcha real o'yinchilarga yuborish
-function emitTeamProgress(roomId) {
-  var battle = battles[roomId];
-  if (!battle) return;
-  function teamProg(ids) {
-    return ids.map(function (sid) {
-      var p = battle.players[sid];
-      if (!p) return null; // rebind'dan keyin eski socket — keyin filter qilamiz
-      return { name: p.name, answeredCount: p.answeredCount, score: p.score, finished: p.finished, isBot: p.isBot, level: p.level, rating: p.rating };
-    }).filter(function (x) { return x !== null; });
-  }
-  var progA = teamProg(battle.teams.A);
-  var progB = teamProg(battle.teams.B);
-  var totalA = progA.reduce(function (s, p) { return s + p.score; }, 0);
-  var totalB = progB.reduce(function (s, p) { return s + p.score; }, 0);
-
-  Object.keys(battle.players).forEach(function (sid) {
-    var p = battle.players[sid];
-    if (p.isBot) return;
-    var myTeam = p.team;
-    io.to(sid).emit("teamProgress", {
-      myTeamPlayers: myTeam === "A" ? progA : progB,
-      enemyTeamPlayers: myTeam === "A" ? progB : progA,
-      myTeamScore: myTeam === "A" ? totalA : totalB,
-      enemyTeamScore: myTeam === "A" ? totalB : totalA,
-    });
-  });
-}
-
-// Hamma tugatdimi — tekshirib, tugagan bo'lsa finishTeamBattle
-function checkTeamFinish(roomId) {
-  var battle = battles[roomId];
-  if (!battle || battle.finished) return;
-  var allFinished = Object.keys(battle.players).every(function (sid) { return battle.players[sid].finished; });
-  if (allFinished) finishTeamBattle(roomId);
-}
-
-// Bot javoblarini simulyatsiya qilish (jamoa)
-function simulateTeamBotAnswers(roomId, botId, questions) {
-  var qIndex = 0;
-  function answerNext() {
-    var battle = battles[roomId];
-    if (!battle || battle.finished) return;
-    var bot = battle.players[botId];
-    if (!bot || bot.finished) return;
-
-    if (qIndex >= questions.length) { bot.finished = true; emitTeamProgress(roomId); checkTeamFinish(roomId); return; }
-
-    var q = questions[qIndex];
-    var correct = Math.random() < 0.68; // bot ~68% aniqlik
-    if (correct) bot.score++;
-    bot.answeredCount++;
-    qIndex++;
-    if (bot.answeredCount >= questions.length) bot.finished = true;
-
-    emitTeamProgress(roomId);
-
-    if (bot.finished) {
-      checkTeamFinish(roomId);
-    } else {
-      setTimeout(answerNext, 2000 + Math.random() * 3500); // 2-5.5s har savol
-    }
-  }
-  setTimeout(answerNext, 2000 + Math.random() * 3500);
-}
+const simulateTeamBotAnswers = createTeamBotAnswerSimulationService({
+  battles,
+  emitTeamProgress,
+  checkTeamFinish,
+});
 
 // ============ JAMOA JANG (Duo/Squad) ============
 
-// Jamoa jangini boshlash (group = barcha o'yinchilar, 2 jamoaga bo'linadi)
+const startTeamBattleService = createTeamBattleStartService({
+  pool,
+  io,
+  battles,
+  userToRoom,
+  lengthConfig,
+  saveBattleSession,
+  simulateTeamBotAnswers,
+  firstQuestionGraceMs: FIRST_Q_GRACE_MS,
+  timePerQuestionMs: TIME_PER_QUESTION_MS,
+  logger: console,
+});
+
 async function startTeamBattle(group, teamMode, teamSize) {
-  try {
-    var roomId = "team_" + teamMode + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
-
-    // Jamoalarga bo'lamiz: birinchi yarmi = A, ikkinchi yarmi = B
-    var teamA = group.slice(0, teamSize);
-    var teamB = group.slice(teamSize, teamSize * 2);
-
-    // Format va daraja: birinchi o'yinchidan olamiz
-    var lengthKey = group[0].lengthKey || "standard";
-    var level = group[0].level || "A1";
-    var cfg = lengthConfig(lengthKey);
-    var qCount = cfg.questions;
-
-    // Savollarni olamiz
-    var result = await pool.query(
-      `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, skill
-       FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
-      [level, qCount]
-    );
-    if (result.rows.length === 0) {
-      result = await pool.query(
-        `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, explanation
-         FROM questions ORDER BY RANDOM() LIMIT $1`,
-        [qCount]
-      );
-    }
-    var questions = result.rows;
-    if (questions.length === 0) {
-      group.forEach(function (p) { io.to(p.socketId).emit("battleError", { message: "Hozircha savollar mavjud emas." }); });
-      return;
-    }
-
-    // Jang holatini quramiz — players (hammasi) + teams (A/B taqsimot)
-    var players = {};
-    var teamAIds = [], teamBIds = [];
-
-    teamA.forEach(function (p) {
-      players[p.socketId] = { userId: p.userId, name: p.name, socketId: p.socketId, level: p.level || "A1", rating: p.rating || 1000, profile_picture: p.profile_picture || null, score: 0, finished: false, answeredCount: 0, answers: [], answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS, team: "A", isBot: !!p.isBot };
-      teamAIds.push(p.socketId);
-    });
-    teamB.forEach(function (p) {
-      players[p.socketId] = { userId: p.userId, name: p.name, socketId: p.socketId, level: p.level || "A1", rating: p.rating || 1000, profile_picture: p.profile_picture || null, score: 0, finished: false, answeredCount: 0, answers: [], answeredIds: {}, qDeadline: Date.now() + FIRST_Q_GRACE_MS + TIME_PER_QUESTION_MS, team: "B", isBot: !!p.isBot };
-      teamBIds.push(p.socketId);
-    });
-
-    battles[roomId] = {
-      isTeam: true,
-      teamMode: teamMode,
-      battleType: teamMode === "squad" ? "4v4" : "2v2",
-      questions: questions,
-      level: level,
-      lengthKey: lengthKey,
-      createdAt: Date.now(),
-      teams: { A: teamAIds, B: teamBIds },
-      players: players,
-    };
-
-    // RECONNECT: kim qaysi jamoa jangida — userToRoom'ga yozamiz (faqat real o'yinchilar)
-    [].concat(teamAIds, teamBIds).forEach(function (sid) {
-      var pl = players[sid];
-      if (pl.userId && !pl.isBot) userToRoom[pl.userId] = roomId;
-    });
-    // PERSISTENCE: jamoa jang holatini DB'ga saqlash
-    saveBattleSession(roomId, battles[roomId]);
-
-    // Savollarni xavfsiz (to'g'ri javobsiz) tayyorlaymiz
-    var safeQuestions = questions.map(function (q) {
-      return { id: q.id, question_text: q.question_text, option_a: q.option_a, option_b: q.option_b, option_c: q.option_c, option_d: q.option_d };
-    });
-
-    // Har o'yinchiga jang boshlanishini yuboramiz (o'z jamoasi va raqib jamoasi ma'lumoti bilan)
-    function teamInfo(ids) {
-      return ids.map(function (sid) { return { name: players[sid].name, isBot: players[sid].isBot, userId: players[sid].userId, level: players[sid].level, rating: players[sid].rating, profile_picture: players[sid].profile_picture }; });
-    }
-    var infoA = teamInfo(teamAIds);
-    var infoB = teamInfo(teamBIds);
-
-    group.forEach(function (p) {
-      if (p.isBot) return; // botga yuborilmaydi
-      var myTeam = players[p.socketId].team;
-      io.to(p.socketId).emit("teamBattleStart", {
-        roomId: roomId,
-        teamMode: teamMode,
-        level: level,
-        total_questions: safeQuestions.length,
-        questions: safeQuestions,
-        myTeam: myTeam,
-        myTeamPlayers: myTeam === "A" ? infoA : infoB,
-        enemyTeamPlayers: myTeam === "A" ? infoB : infoA,
-      });
-    });
-
-    console.log("Jamoa jang boshlandi [" + teamMode + "]: " + roomId + " | A:" + teamAIds.length + " B:" + teamBIds.length);
-
-    // Botlar javobini simulyatsiya qilamiz
-    [].concat(teamAIds, teamBIds).forEach(function (sid) {
-      if (players[sid].isBot) simulateTeamBotAnswers(roomId, sid, questions);
-    });
-  } catch (err) {
-    console.error("startTeamBattle xatosi:", err.message);
-  }
+  return startTeamBattleService(group, teamMode, teamSize);
 }
 
-// Navbatni bot bilan to'ldirish (yetarli real o'yinchi yo'q bo'lsa)
-function fillTeamWithBots(teamMode, teamSize, needed) {
-  try {
-    var queue = teamQueues[teamMode];
-    if (queue.length === 0) return; // hech kim yo'q
+const fillTeamWithBots = createLegacyTeamBotFillService({
+  teamQueues,
+  teamQueueTimers,
+  startTeamBattle,
+});
 
-    var botNames = ["Sardor", "Jasur", "Aziz", "Bobur", "Dilshod", "Kamol", "Nodir", "Olim", "Rustam", "Sherzod"];
-    var group = queue.splice(0, queue.length); // mavjud real o'yinchilar
+const finishTeamBattleService = createTeamBattleFinishService({
+  pool,
+  io,
+  battles,
+  userToRoom,
+  recentlyFinished,
+  lengthConfig,
+  getLeagueName,
+  updateQuestProgress,
+  awardSchoolPoints,
+  finishBattleSession,
+  logger: console,
+});
 
-    // Yetishmagan joylarni bot bilan to'ldiramiz
-    var botsNeeded = needed - group.length;
-    for (var i = 0; i < botsNeeded; i++) {
-      var bn = botNames[Math.floor(Math.random() * botNames.length)];
-      group.push({
-        socketId: "tbot_" + teamMode + "_" + Date.now() + "_" + i,
-        userId: null,
-        name: bn,
-        level: group[0] ? group[0].level : "A1",
-        lengthKey: group[0] ? group[0].lengthKey : "standard",
-        rating: 1000,
-        isBot: true,
-      });
-    }
-
-    console.log("Jamoa navbati bot bilan to'ldirildi [" + teamMode + "]: " + group.length + " o'yinchi (" + botsNeeded + " bot)");
-    if (teamQueueTimers[teamMode]) { clearTimeout(teamQueueTimers[teamMode]); delete teamQueueTimers[teamMode]; }
-    startTeamBattle(group, teamMode, teamSize);
-  } catch (err) {
-    console.error("fillTeamWithBots xatosi:", err.message);
-  }
-}
-
-// ===== SCHOOL BATTLE: maktabga ochko yig'ish =====
-async function awardSchoolPoints(userId, points, source) {
-  if (!userId || !points || points <= 0) return;
-  try {
-    var u = await pool.query("SELECT region, district, school FROM users WHERE id = $1", [userId]);
-    if (!u.rows[0] || !u.rows[0].school) return; // maktab tanlanmagan — ochko yo'q
-    var row = u.rows[0];
-    await pool.query(
-      `INSERT INTO school_battle_points (user_id, region, district, school, points, source, season)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [userId, row.region, row.district, row.school, points, source, currentSeason()]
-    );
-    console.log("School ochko: +" + points + " (" + source + ") -> " + row.school + " [user " + userId + "]");
-  } catch (err) {
-    console.error("School Battle ochko xatosi:", err.message);
-  }
-}
-
-
-
-// Jamoa jangini yakunlash — jamoa balli (a'zolar yig'indisi), g'olib jamoa, baza
 async function finishTeamBattle(roomId) {
-  var battle = battles[roomId];
-  if (!battle || battle.finished) return;
-  battle.finished = true; // ikki marta yakunlanmasligi uchun
-
-  // Jamoa ballari = a'zolar ballari yig'indisi
-  function teamTotal(ids) {
-    return ids.reduce(function (s, sid) { return s + (battle.players[sid] ? battle.players[sid].score : 0); }, 0);
-  }
-  var totalA = teamTotal(battle.teams.A);
-  var totalB = teamTotal(battle.teams.B);
-
-  // FORFEIT: bir jamoaning HAMMA real o'yinchilari chiqib ketgan bo'lsa — o'sha jamoa mag'lub
-  function teamAllRealDisconnected(ids) {
-    var reals = ids.filter(function (sid) { return battle.players[sid] && !battle.players[sid].isBot; });
-    if (reals.length === 0) return false; // faqat botlar — forfeit emas
-    return reals.every(function (sid) { return battle.players[sid].disconnected; });
-  }
-  var aForfeit = teamAllRealDisconnected(battle.teams.A);
-  var bForfeit = teamAllRealDisconnected(battle.teams.B);
-
-  var winningTeam = null;
-  if (aForfeit && !bForfeit) {
-    winningTeam = "B"; // A jamoa to'liq chiqdi — B yutadi
-  } else if (bForfeit && !aForfeit) {
-    winningTeam = "A"; // B jamoa to'liq chiqdi — A yutadi
-  } else if (totalA > totalB) {
-    winningTeam = "A";
-  } else if (totalB > totalA) {
-    winningTeam = "B";
-  }
-  // teng bo'lsa — durang
-
-  var RATING_CHANGE = 20;
-  var fmtXp = lengthConfig(battle.lengthKey).xp;
-  var coinsEarned = lengthConfig(battle.lengthKey).coins; // format bo'yicha coin (Quick=1 ... Marathon=4)
-
-  // Jamoa tarkiblari (natijada ko'rsatish uchun)
-  function teamRoster(ids) {
-    return ids.map(function (sid) {
-      var p = battle.players[sid];
-      if (!p) return null;
-      return { name: p.name, score: p.score, isBot: p.isBot };
-    }).filter(function (x) { return x !== null; });
-  }
-  var rosterA = teamRoster(battle.teams.A);
-  var rosterB = teamRoster(battle.teams.B);
-
-  // Har bir REAL o'yinchini qayta ishlaymiz (botlar saqlanmaydi)
-  for (var sid of Object.keys(battle.players)) {
-    var me = battle.players[sid];
-    if (me.isBot) continue;
-
-    var myTeam = me.team;
-    var outcome = "draw";
-    var ratingDelta = 0;
-    if (winningTeam === myTeam) { outcome = "win"; ratingDelta = RATING_CHANGE; }
-    else if (winningTeam !== null) { outcome = "lose"; ratingDelta = -RATING_CHANGE; }
-
-    var xpEarned;
-    if (outcome === "win") xpEarned = fmtXp;
-    else if (outcome === "draw") xpEarned = Math.round(fmtXp / 2);
-    else xpEarned = Math.max(1, Math.round(fmtXp / 4));
-
-    var myTeamScore = (myTeam === "A") ? totalA : totalB;
-    var enemyTeamScore = (myTeam === "A") ? totalB : totalA;
-    var myRoster = (myTeam === "A") ? rosterA : rosterB;
-    var enemyRoster = (myTeam === "A") ? rosterB : rosterA;
-
-    var updatedUser = null;
-    if (me.userId) {
-      try {
-        var oldRatingResult = await pool.query("SELECT rating FROM users WHERE id = $1", [me.userId]);
-        var oldRating = oldRatingResult.rows[0] ? oldRatingResult.rows[0].rating : 1000;
-
-        var streakSql;
-        if (outcome === "win") streakSql = "win_streak = win_streak + 1, best_win_streak = GREATEST(best_win_streak, win_streak + 1)";
-        else if (outcome === "lose") streakSql = "win_streak = 0";
-        else streakSql = "win_streak = win_streak";
-
-        var result = await pool.query(
-          `UPDATE users SET xp = xp + $1, coins = coins + $2, rating = GREATEST(0, rating + $3), ${streakSql}
-           WHERE id = $4
-           RETURNING id, first_name, last_name, username, cefr_level, xp, rating, coins, win_streak, best_win_streak`,
-          [xpEarned, coinsEarned, ratingDelta, me.userId]
-        );
-        if (result.rows.length > 0) {
-          updatedUser = result.rows[0];
-          var oldLeague = getLeagueName(oldRating);
-          var newLeague = getLeagueName(updatedUser.rating);
-          if (oldLeague !== newLeague) {
-            me.leagueChange = { old: oldLeague, new: newLeague, promoted: updatedUser.rating > oldRating };
-          }
-        }
-
-        // Jang tarixiga yozish (raqib = raqib jamoa)
-        var enemyLabel = (battle.teamMode === "squad" ? "Squad" : "Duo") + " jamoa";
-        await pool.query(
-          `INSERT INTO battle_history
-           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level, mode, room_id)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-          [me.userId, enemyLabel, null, myTeamScore, enemyTeamScore, outcome, xpEarned, ratingDelta, battle.level || "A1", "school", roomId]
-        );
-        await updateQuestProgress(me.userId, { won: outcome === "win", correctAnswers: me.score, xpEarned: xpEarned });
-
-        // === SCHOOL BATTLE: maktabga ochko (win/draw — bot ham hisoblanadi) ===
-        var spTeam = (outcome === "win") ? 15 : (outcome === "draw" ? 7 : 0);
-        if (spTeam > 0) await awardSchoolPoints(me.userId, spTeam, "team_" + outcome);
-      } catch (err) {
-        console.error("Jamoa natijani saqlashda xato:", err.message);
-      }
-    }
-
-    // O'yinchiga natija yuboramiz
-    io.to(sid).emit("teamBattleEnd", {
-      outcome: outcome,
-      teamMode: battle.teamMode,
-      myTeam: myTeam,
-      myTeamScore: myTeamScore,
-      enemyTeamScore: enemyTeamScore,
-      myTeamPlayers: myRoster,
-      enemyTeamPlayers: enemyRoster,
-      myScore: me.score,
-      total: battle.questions.length,
-      lengthKey: battle.lengthKey || "standard",
-      xp_earned: xpEarned,
-      coins_earned: coinsEarned,
-      rewards: { xp: xpEarned, coins: coinsEarned, ratingChange: ratingDelta },
-      rating_change: ratingDelta,
-      updated_user: updatedUser,
-      answers: me.answers || [],
-      league_change: me.leagueChange || null,
-    });
-  }
-
-  console.log("Jamoa jang tugadi [" + battle.teamMode + "]: " + roomId + " | A:" + totalA + " B:" + totalB + " | G'olib: " + (winningTeam || "Durang"));
-
-  // RECONNECT: userToRoom tozalash + natija uchun recentlyFinished'ga yozish
-  Object.keys(battle.players).forEach(function (sid) {
-    var uid = battle.players[sid].userId;
-    if (uid && !battle.players[sid].isBot) {
-      if (userToRoom[uid] === roomId) delete userToRoom[uid];
-      recentlyFinished[uid] = roomId;
-      setTimeout(function () {
-        if (recentlyFinished[uid] === roomId) delete recentlyFinished[uid];
-      }, 5 * 60 * 1000);
-    }
-  });
-  // PERSISTENCE: live sessiyani 'finished' deb belgilash
-  finishBattleSession(roomId).catch(function () {});
-
-  // NATIJA SNAPSHOT: to'liq jamoa natijasini saqlaymiz (F5 refresh uchun)
-  // Har o'yinchi: ism, ball, rasm, userId, jamoa. + jamoa ballari + g'olib.
-  try {
-    function rosterSnap(ids) {
-      return ids.map(function (sid) {
-        var p = battle.players[sid];
-        if (!p) return null;
-        return { name: p.name, userId: p.userId, score: p.score, isBot: p.isBot, level: p.level, rating: p.rating, profile_picture: p.profile_picture, answeredCount: p.answeredCount };
-      }).filter(function (x) { return x !== null; });
-    }
-    var snapshot = {
-      isTeamResult: true,
-      teamMode: battle.teamMode,
-      level: battle.level || "A1",
-      total_questions: battle.questions.length,
-      winningTeam: winningTeam,
-      teamAScore: totalA,
-      teamBScore: totalB,
-      teamA: rosterSnap(battle.teams.A),
-      teamB: rosterSnap(battle.teams.B),
-      // Har o'yinchining qaysi jamoada ekani (userId → team) — client o'zini topishi uchun
-      playerTeams: Object.keys(battle.players).reduce(function (acc, sid) {
-        var p = battle.players[sid];
-        if (p.userId) acc[String(p.userId)] = p.team;
-        return acc;
-      }, {}),
-    };
-    pool.query(
-      "UPDATE battle_sessions SET state = state || $2::jsonb, updated_at = NOW() WHERE room_id = $1",
-      [roomId, JSON.stringify({ result_snapshot: snapshot })]
-    ).catch(function (e) { console.error("Jamoa natija snapshot xato:", e.message); });
-  } catch (e) { console.error("Jamoa snapshot qurish xato:", e.message); }
-
-  // Jangni biroz keyin o'chiramiz (qayta ulanishlar uchun)
-  setTimeout(function () { delete battles[roomId]; }, 30000);
+  return finishTeamBattleService(roomId);
 }
 
-// Jangni yakunlash va g'olibni aniqlash
+const finishBattleService = createBattleFinishService({
+  pool,
+  io,
+  battles,
+  userToRoom,
+  recentlyFinished,
+  lengthConfig,
+  getLeagueName,
+  updateQuestProgress,
+  awardSchoolPoints,
+  finishBattleSession,
+  logger: console,
+});
+
 async function finishBattle(roomId) {
-  const battle = battles[roomId];
-  if (!battle) return;
-
-  const playerIds = Object.keys(battle.players);
-  const p1 = battle.players[playerIds[0]];
-  const p2 = battle.players[playerIds[1]];
-
-  let winnerId = null;
-  // FORFEIT: agar bir o'yinchi chiqib ketgan bo'lsa (disconnected/forfeited) — ikkinchisi g'olib
-  if (p1.disconnected && !p2.disconnected) {
-    winnerId = playerIds[1];
-  } else if (p2.disconnected && !p1.disconnected) {
-    winnerId = playerIds[0];
-  } else if (p1.score > p2.score) {
-    winnerId = playerIds[0];
-  } else if (p2.score > p1.score) {
-    winnerId = playerIds[1];
-  }
-
-  // Reyting o'zgarishi (oddiy tizim)
-  const RATING_CHANGE = 20;
-
-  for (const id of playerIds) {
-    const me = battle.players[id];
-    const opponentId = playerIds.find((pid) => pid !== id);
-    const opp = battle.players[opponentId];
-
-    let outcome = "draw";
-    let ratingDelta = 0;
-    if (winnerId === id) {
-      outcome = "win";
-      ratingDelta = RATING_CHANGE;
-    } else if (winnerId !== null) {
-      outcome = "lose";
-      ratingDelta = -RATING_CHANGE;
-    }
-    // Casual rejimda reyting o'zgarmaydi (faqat XP)
-    var isCasual = battle.mode === "casual";
-    if (isCasual) ratingDelta = 0;
-
-    // Tanlangan format bo'yicha XP va COIN (Quick=4/1 ... Marathon=16/4)
-    const fmtCfg = lengthConfig(battle.lengthKey);
-    const fmtXp = fmtCfg.xp;
-    const coinsEarned = fmtCfg.coins; // format bo'yicha qat'iy coin (ishtirok uchun)
-    let xpEarned;
-    if (outcome === "win") xpEarned = fmtXp;              // g'alaba — to'liq format XP
-    else if (outcome === "draw") xpEarned = Math.round(fmtXp / 2); // durang — yarmi
-    else xpEarned = Math.max(1, Math.round(fmtXp / 4));   // mag'lubiyat — ishtirok uchun ozroq
-
-    // BAZAGA SAQLASH (agar userId bor bo'lsa)
-    let updatedUser = null;
-    if (me.userId) {
-      try {
-        // Eski reytingni eslab qolish (liga o'zgarishini tekshirish uchun)
-        const oldRatingResult = await pool.query(
-          "SELECT rating FROM users WHERE id = $1",
-          [me.userId]
-        );
-        const oldRating = oldRatingResult.rows[0] ? oldRatingResult.rows[0].rating : 1000;
-
-        // Win streak mantiqi: g'alaba => +1, mag'lubiyat => 0, durang => o'zgarmaydi
-        // best_win_streak — eng yuqori rekord (hech qachon kamaymaydi)
-        let streakSql;
-        if (outcome === "win") {
-          // Yutdi: win_streak +1, agar yangi rekord bo'lsa best_win_streak ham yangilanadi
-          streakSql = "win_streak = win_streak + 1, best_win_streak = GREATEST(best_win_streak, win_streak + 1)";
-        } else if (outcome === "lose") {
-          // Yutqazdi: streak uziladi
-          streakSql = "win_streak = 0";
-        } else {
-          // Durang: o'zgarmaydi (eski qiymatni saqlaymiz)
-          streakSql = "win_streak = win_streak";
-        }
-
-        const result = await pool.query(
-          `UPDATE users
-           SET xp = xp + $1,
-               coins = coins + $2,
-               rating = GREATEST(0, rating + $3),
-               ${streakSql}
-           WHERE id = $4
-           RETURNING id, first_name, last_name, username, cefr_level, xp, rating, coins, win_streak, best_win_streak`,
-          [xpEarned, coinsEarned, ratingDelta, me.userId]
-        );
-        if (result.rows.length > 0) {
-          updatedUser = result.rows[0];
-
-          // Liga o'zgardimi?
-          const oldLeague = getLeagueName(oldRating);
-          const newLeague = getLeagueName(updatedUser.rating);
-          if (oldLeague !== newLeague) {
-            me.leagueChange = {
-              old: oldLeague,
-              new: newLeague,
-              promoted: updatedUser.rating > oldRating, // ko'tarildimi yoki tushdimi
-            };
-          }
-        }
-
-        // Jang tarixiga yozish
-        await pool.query(
-          `INSERT INTO battle_history
-           (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level, mode, total_questions, room_id)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-          [me.userId, opp.name, opp.userId || null, me.score, opp.score, outcome, xpEarned, ratingDelta, battle.level || "A1", (battle.mode === "casual" ? "casual" : "ranked"), battle.questions.length, roomId]
-        );
-        // Topshiriqlar progressini yangilash
-        await updateQuestProgress(me.userId, {
-          won: outcome === "win",
-          correctAnswers: me.score,
-          xpEarned: xpEarned,
-        });
-
-        // === SCHOOL BATTLE: maktabga ochko (ranked + win/draw — bot ham hisoblanadi) ===
-        if (!isCasual) {
-          var sp1v1 = (outcome === "win") ? 10 : (outcome === "draw" ? 5 : 0);
-          if (sp1v1 > 0) await awardSchoolPoints(me.userId, sp1v1, "ranked_" + outcome);
-        }
-
-      } catch (err) {
-        console.error("Natijani saqlashda xato:", err.message);
-      }
-    }
-
-    // Raqib rasmini olamiz (natija ekranida ko'rsatish uchun — bot bo'lsa null)
-    let oppPicture = null;
-    if (opp.userId) {
-      try {
-        const opr = await pool.query("SELECT profile_picture FROM users WHERE id = $1", [opp.userId]);
-        if (opr.rows[0]) oppPicture = opr.rows[0].profile_picture;
-      } catch (e) {}
-    }
-
-    // O'yinchiga natija yuborish (yangilangan ma'lumot bilan)
-    io.to(id).emit("battleEnd", {
-      outcome: outcome,
-      your_score: me.score,
-      opponent_score: opp.score,
-      total: battle.questions.length,
-      lengthKey: battle.lengthKey || "standard",
-      mode: battle.mode || "ranked",
-      xp_earned: xpEarned,
-      coins_earned: coinsEarned,
-      rewards: { xp: xpEarned, coins: coinsEarned, ratingChange: ratingDelta },
-      rating_change: ratingDelta,
-      updated_user: updatedUser,
-      answers: me.answers || [],
-      league_change: me.leagueChange || null,
-      opponent_picture: oppPicture,
-    });
-  }
-
-  console.log("Jang tugadi va saqlandi, xona:", roomId);
-
-  // PERSISTENCE: live sessiyani 'finished' deb belgilash (RAM tozalanadi)
-  await finishBattleSession(roomId);
-
-  // RECONNECT: userToRoom'dan tozalash (jang tugadi), lekin natija uchun eslab qolamiz
-  for (const id of playerIds) {
-    const uid = battle.players[id] && battle.players[id].userId;
-    if (uid) {
-      if (userToRoom[uid] === roomId) delete userToRoom[uid];
-      // Refresh natijani topishi uchun 5 daqiqa eslab qolamiz
-      recentlyFinished[uid] = roomId;
-      setTimeout(() => {
-        if (recentlyFinished[uid] === roomId) delete recentlyFinished[uid];
-      }, 5 * 60 * 1000);
-    }
-  }
-  delete battles[roomId];
+  return finishBattleService(roomId);
 }
 
 // ===== SCHOOL BATTLE: maktablar reytingi =====
@@ -3644,141 +2589,35 @@ app.get("/leaderboard/my-ranks", authMiddleware, async (req, res) => {
 
 // ============ ADMIN PANEL ============
 
-// Admin parolni tekshirish (yordamchi)
-// AVVAL bazadagi hashlangan parolni tekshiradi (admin o'zgartirgan bo'lsa).
-// Agar bazada parol yo'q bo'lsa — eski usul (_env). Shunda login hech qachon buzilmaydi.
-async function checkAdminPassword(password) {
-  if (!password) return false;
-  try {
-    var result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'admin_password_hash'");
-    if (result.rows.length > 0 && result.rows[0].setting_value) {
-      // Bazada hashlangan parol bor — bcrypt bilan solishtiramiz
-      return await bcrypt.compare(password, result.rows[0].setting_value);
-    }
-  } catch (err) {
-    console.error("Admin parol tekshirish (baza) xatosi:", err.message);
-  }
-  // Bazada yo'q — eski usul (_env)
-  return password === process.env.ADMIN_PASSWORD;
-}
-
-// ===== AUDIT LOG HELPER =====
-// Admin amallarini audit_logs jadvaliga yozadi (kim, nima, qachon)
-async function logAudit(req, action, opts) {
-  opts = opts || {};
-  try {
-    var adminName = (req.admin && req.admin.name) ? req.admin.name : "Admin";
-    var ip = clientIp(req);
-    await pool.query(
-      `INSERT INTO audit_logs (admin_name, action, entity_type, entity_id, details, ip_address)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [adminName, action, opts.entityType || null, opts.entityId ? String(opts.entityId) : null, opts.details || null, String(ip).slice(0, 60)]
-    );
-  } catch (err) {
-    console.error("Audit log xatosi:", err.message); // audit xatosi asosiy amalni to'xtatmaydi
-  }
-}
-
 // ===== ADMIN LOGIN RATE LIMIT (in-memory, tashqi paketsiz) =====
 // Brute-force himoyasi: bir IP'dan ketma-ket noto'g'ri urinishlarni cheklaydi
-var adminLoginRateLimit = failGate("admin_login", { keyFn: _ipOf, message: "Juda ko'p admin kirish urinishi." });
-
-// Noto'g'ri urinishni qayd qilish
-function recordFailedLogin(req) {
-  noteFail("admin_login", _ipOf(req), 5, 15 * 60 * 1000);
-}
-function clearLoginAttempts(req) {
-  noteOk("admin_login", _ipOf(req));
-}
+const { adminLoginRateLimit, recordFailedLogin, clearLoginAttempts } =
+  createAdminLoginAttemptService({ failGate, noteFail, noteOk, clientIp });
+const adminAuthRoutes = createAdminAuthRoutes({
+  adminLoginRateLimit,
+  recordFailedLogin,
+  clearLoginAttempts,
+  checkAdminPassword,
+  adminTotpValid,
+  pool,
+  signAdminToken,
+  logAudit,
+  validatePassword,
+  bcrypt,
+});
 
 // ===== ADMIN AUTH ENDPOINTLAR =====
 
 // Admin login — parolni tekshiradi, token beradi
-app.post("/admin/login", adminLoginRateLimit, async (req, res) => {
-  try {
-    const { password, totp } = req.body;
-    var passOk = await checkAdminPassword(password);
-    const totpOk = adminTotpValid(totp);
-    if (!passOk || !totpOk) {
-      recordFailedLogin(req);
-      // Noto'g'ri login urinishini audit'ga yozamiz
-      await logAudit(req, "admin_login_failed", { details: "Noto'g'ri admin kirish urinishi" });
-      return res.status(401).json({ error: "Parol yoki 2FA kod noto'g'ri" });
-    }
-    clearLoginAttempts(req); // muvaffaqiyatli — urinishlarni tozalaymiz
-    const versionResult = await pool.query(
-      "SELECT setting_value FROM admin_settings WHERE setting_key = 'admin_auth_version'"
-    );
-    const adminAuthVersion = versionResult.rows.length ? Number(versionResult.rows[0].setting_value) || 0 : 0;
-    const token = signAdminToken("Admin", adminAuthVersion);
-    // req.admin'ni qo'lda o'rnatamiz (logAudit uchun)
-    req.admin = { name: "Admin" };
-    await logAudit(req, "admin_login_success", { details: "Admin tizimga kirdi" });
-    res.json({ token: token, admin: { name: "Admin", role: "super_admin" } });
-  } catch (err) {
-    console.error("Admin login xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminAuthRoutes.loginRouter);
 
 // Admin token tekshirish — sahifa qayta yuklanganda token hali amal qiladimi
 app.use(adminMeRoutes);
 
-// Admin logout — token frontend'da o'chiriladi, bu yerda faqat audit
-app.post("/admin/logout", requireAdmin, async (req, res) => {
-  await logAudit(req, "admin_logout", { details: "Admin tizimdan chiqdi" });
-  await pool.query(
-    `INSERT INTO admin_settings (setting_key, setting_value, updated_at)
-     VALUES ('admin_auth_version', '1', NOW())
-     ON CONFLICT (setting_key) DO UPDATE
-       SET setting_value = ((COALESCE(admin_settings.setting_value, '0'))::int + 1)::text,
-           updated_at = NOW()`
-  );
-  res.json({ message: "Chiqildi" });
-});
+app.use(adminLogoutRoutes({ pool, logAudit }));
 
 // Admin parolini o'zgartirish (eski parolni tasdiqlash bilan)
-app.post("/admin/settings/password", requireAdmin, async (req, res) => {
-  try {
-    const { current_password, new_password } = req.body;
-    if (!current_password || !new_password) {
-      return res.status(400).json({ error: "Joriy va yangi parol kerak" });
-    }
-    const newPassCheck = validatePassword(new_password);
-    if (!newPassCheck.valid) {
-      return res.status(400).json({ error: newPassCheck.error });
-    }
-
-    // Joriy parolni tekshiramiz (xavfsizlik — eski parolni bilmasangiz o'zgartira olmaysiz)
-    var currentOk = await checkAdminPassword(current_password);
-    if (!currentOk) {
-      await logAudit(req, "admin_password_change_failed", { details: "Joriy parol noto'g'ri" });
-      return res.status(401).json({ error: "Joriy parol noto'g'ri" });
-    }
-
-    // Yangi parolni hashlash va bazaga saqlash (UPSERT)
-    var hashed = await bcrypt.hash(new_password, 10);
-    await pool.query(
-      `INSERT INTO admin_settings (setting_key, setting_value, updated_at)
-       VALUES ('admin_password_hash', $1, NOW())
-       ON CONFLICT (setting_key) DO UPDATE SET setting_value = $1, updated_at = NOW()`,
-      [hashed]
-    );
-    await pool.query(
-      `INSERT INTO admin_settings (setting_key, setting_value, updated_at)
-       VALUES ('admin_auth_version', '1', NOW())
-       ON CONFLICT (setting_key) DO UPDATE
-         SET setting_value = ((COALESCE(admin_settings.setting_value, '0'))::int + 1)::text,
-             updated_at = NOW()`
-    );
-
-    await logAudit(req, "admin_password_changed", { details: "Admin parol o'zgartirildi" });
-    res.json({ message: "Parol muvaffaqiyatli o'zgartirildi" });
-  } catch (err) {
-    console.error("Parol o'zgartirish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminAuthRoutes.passwordRouter);
 
 // Tizim ma'lumotlari (Settings sahifasi uchun)
 app.use(adminSettingsInfoRoutes());
@@ -3786,117 +2625,7 @@ app.use(adminSettingsInfoRoutes());
 // ============ MODERATSIYA (SHIKOYAT / FLAG) ============
 
 // O'quvchi shikoyat yuboradi (savol yoki foydalanuvchi ustidan)
-app.post("/flags/report", authMiddleware, async (req, res) => {
-  try {
-    const reporterId = req.user.id;
-    const { entity_type, entity_id, reason, comment } = req.body;
-
-    // Validatsiya
-    if (!entity_type || !entity_id || !reason) {
-      return res.status(400).json({ error: "Ma'lumot yetishmaydi" });
-    }
-    var validTypes = ["question", "user"];
-    if (validTypes.indexOf(entity_type) === -1) {
-      return res.status(400).json({ error: "Noto'g'ri tur" });
-    }
-    var validReasons = ["incorrect", "inappropriate", "spam", "offensive", "cheating", "other"];
-    if (validReasons.indexOf(reason) === -1) {
-      return res.status(400).json({ error: "Noto'g'ri sabab" });
-    }
-    // O'ziga shikoyat qila olmaydi
-    if (entity_type === "user" && parseInt(entity_id) === reporterId) {
-      return res.status(400).json({ error: "O'zingizga shikoyat qila olmaysiz" });
-    }
-
-    // Anti-abuse: bir foydalanuvchi bir narsaga faqat bir marta shikoyat qila oladi
-    var existing = await pool.query(
-      "SELECT id FROM flags WHERE reporter_id = $1 AND entity_type = $2 AND entity_id = $3 AND status = 'pending'",
-      [reporterId, entity_type, parseInt(entity_id)]
-    );
-    if (existing.rows.length > 0) {
-      return res.status(409).json({ error: "Siz bu haqda allaqachon shikoyat qilgansiz" });
-    }
-
-    var contextRoom = (req.body.context_room_id || "").trim().slice(0, 120) || null;
-    await pool.query(
-      "INSERT INTO flags (reporter_id, entity_type, entity_id, reason, comment, context_room_id) VALUES ($1, $2, $3, $4, $5, $6)",
-      [reporterId, entity_type, parseInt(entity_id), reason, (comment || "").trim().slice(0, 500) || null, contextRoom]
-    );
-
-    res.json({ message: "Shikoyat yuborildi. Rahmat!" });
-  } catch (err) {
-    console.error("Shikoyat xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
-
-// Admin: shikoyatlar ro'yxati (pagination, status filtr)
-app.get("/admin/flags", requireAdmin, async (req, res) => {
-  try {
-    var page = Math.max(1, parseInt(req.query.page) || 1);
-    var limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
-    var offset = (page - 1) * limit;
-    var status = (req.query.status || "pending").trim();
-
-    var conds = []; var params = []; var p = 0;
-    if (status && status !== "all") { p++; conds.push("f.status = $" + p); params.push(status); }
-    var whereClause = conds.length ? "WHERE " + conds.join(" AND ") : "";
-
-    var countResult = await pool.query("SELECT COUNT(*) AS total FROM flags f " + whereClause, params);
-    var total = parseInt(countResult.rows[0].total);
-
-    var dataParams = params.slice();
-    dataParams.push(limit); var li = dataParams.length;
-    dataParams.push(offset); var oi = dataParams.length;
-
-    // Shikoyat + shikoyatchi ismi + (savol bo'lsa) savol matni
-    var dataResult = await pool.query(
-      "SELECT f.id, f.entity_type, f.entity_id, f.reason, f.comment, f.status, " +
-      "f.reviewed_by, f.reviewed_at, f.created_at, f.reporter_id, f.context_room_id, " +
-      "r.first_name AS reporter_first, r.last_name AS reporter_last, " +
-      "q.question_text AS question_text, " +
-      "tu.first_name AS target_first, tu.last_name AS target_last " +
-      "FROM flags f " +
-      "LEFT JOIN users r ON r.id = f.reporter_id " +
-      "LEFT JOIN questions q ON (f.entity_type = 'question' AND q.id = f.entity_id) " +
-      "LEFT JOIN users tu ON (f.entity_type = 'user' AND tu.id = f.entity_id) " +
-      whereClause + " ORDER BY f.created_at DESC LIMIT $" + li + " OFFSET $" + oi,
-      dataParams
-    );
-
-    res.json({
-      flags: dataResult.rows,
-      pagination: { page: page, limit: limit, total: total, totalPages: Math.ceil(total / limit) },
-    });
-  } catch (err) {
-    console.error("Flags ro'yxat xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
-
-// Admin: shikoyatni hal qilish (resolved yoki dismissed)
-app.post("/admin/flags/resolve", requireAdmin, async (req, res) => {
-  try {
-    const { id, action } = req.body; // action: 'resolve' yoki 'dismiss'
-    if (!id || !action) return res.status(400).json({ error: "id va action kerak" });
-
-    var newStatus = action === "resolve" ? "resolved" : "dismissed";
-    var adminName = (req.admin && req.admin.name) ? req.admin.name : "Admin";
-
-    var result = await pool.query(
-      "UPDATE flags SET status = $1, reviewed_by = $2, reviewed_at = NOW() WHERE id = $3 RETURNING entity_type, entity_id",
-      [newStatus, adminName, id]
-    );
-    if (result.rows.length === 0) return res.status(404).json({ error: "Shikoyat topilmadi" });
-
-    var f = result.rows[0];
-    await logAudit(req, "flag_" + newStatus, { entityType: f.entity_type, entityId: f.entity_id, details: "Shikoyat " + (newStatus === "resolved" ? "tasdiqlandi" : "rad etildi") });
-    res.json({ message: newStatus === "resolved" ? "Shikoyat hal qilindi" : "Shikoyat rad etildi" });
-  } catch (err) {
-    console.error("Flag resolve xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(moderationFlagRoutes({ pool, logAudit }));
 
 // Admin: kutilayotgan shikoyatlar soni (sidebar badge uchun)
 app.use(adminFlagCountRoutes());
@@ -4161,44 +2890,9 @@ app.post("/practice/finish", authMiddleware, practiceFinishLimiter, async (req, 
 // SCHOOL CUP — TURNIR (Bosqich 2: Admin turnir yaratish)
 // ============================================================
 
-// Forma uchun viloyat-tuman ro'yxati
-app.get("/admin/tournaments/regions-list", requireAdmin, (req, res) => {
-  res.json({ regions: REGIONS });
-});
+app.use(adminTournamentRegionsRoutes());
 
-// Tanlangan tumandagi maktablar ro'yxati + o'quvchi soni (oldindan ko'rsatish)
-app.get("/admin/tournaments/schools-in-district", requireAdmin, async (req, res) => {
-  try {
-    const region = (req.query.region || "").trim();
-    const district = (req.query.district || "").trim();
-    if (!region || !district) return res.status(400).json({ error: "Viloyat va tuman kerak" });
-
-    const q = await pool.query(
-      `SELECT school,
-              COUNT(*) AS student_count,
-              ROUND(AVG(rating)) AS avg_rating
-       FROM users
-       WHERE region = $1 AND district = $2
-         AND school IS NOT NULL AND school <> ''
-         AND (role = 'student' OR role IS NULL)
-       GROUP BY school
-       ORDER BY avg_rating DESC, student_count DESC`,
-      [region, district]
-    );
-    res.json({
-      region, district,
-      school_count: q.rows.length,
-      schools: q.rows.map(r => ({
-        school: r.school,
-        student_count: parseInt(r.student_count),
-        avg_rating: parseInt(r.avg_rating) || 1000,
-      })),
-    });
-  } catch (err) {
-    console.error("Tumandagi maktablar xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminTournamentDistrictSchoolsRoutes({ pool }));
 
 // Turnir yaratish (tuman darajasi)
 app.post("/admin/tournaments/create", requireAdmin, async (req, res) => {
@@ -4249,21 +2943,7 @@ app.post("/admin/tournaments/create", requireAdmin, async (req, res) => {
   }
 });
 
-// Turnirlar ro'yxati (admin ko'radi)
-app.get("/admin/tournaments/list", requireAdmin, async (req, res) => {
-  try {
-    const q = await pool.query(
-      `SELECT t.*,
-              (SELECT COUNT(*) FROM tournament_schools ts WHERE ts.tournament_id = t.id) AS school_count
-       FROM tournaments t
-       ORDER BY t.created_at DESC`
-    );
-    res.json({ tournaments: q.rows });
-  } catch (err) {
-    console.error("Turnirlar ro'yxati xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminTournamentListRoutes({ pool }));
 
 // ===== SETKA GENERATSIYASI (Bosqich 4) =====
 
@@ -4401,27 +3081,6 @@ app.post("/admin/tournaments/:id/generate-bracket", requireAdmin, async (req, re
   }
 });
 
-// Bye g'oliblarini keyingi raundga avtomatik joylashtirish
-async function propagateByes(client, tid) {
-  // 1-raunddagi 'done' (bye) matchlardan g'oliblarni keyingi raundga qo'yamiz
-  const r1 = await client.query(
-    "SELECT match_no, winner_school, winner_school_key FROM tournament_matches WHERE tournament_id = $1 AND round = 1 AND status = 'done' ORDER BY match_no",
-    [tid]
-  );
-  for (const row of r1.rows) {
-    if (!row.winner_school || !row.winner_school_key) continue;
-    // Keyingi raunddagi match: (match_no+1)/2, tomonni aniqlaymiz
-    const nextMatchNo = Math.ceil(row.match_no / 2);
-    const isA = (row.match_no % 2 === 1); // toq matchlar -> A tomon
-    const col = isA ? "school_a" : "school_b";
-    const keyCol = isA ? "school_a_key" : "school_b_key";
-    await client.query(
-      `UPDATE tournament_matches SET ${col} = $1, ${keyCol} = $2 WHERE tournament_id = $3 AND round = 2 AND match_no = $4`,
-      [row.winner_school, row.winner_school_key, tid, nextMatchNo]
-    );
-  }
-}
-
 // Setkani o'qish — barcha matchlar + maktablar (admin va keyin o'quvchilar ko'radi)
 app.get("/admin/tournaments/:id/bracket", requireAdmin, async (req, res) => {
   try {
@@ -4470,17 +3129,7 @@ app.get("/admin/tournaments/:id/bracket", requireAdmin, async (req, res) => {
   }
 });
 
-// Bitta turnirni olish (tahrirlash modali uchun)
-app.get("/admin/tournaments/:id", requireAdmin, async (req, res) => {
-  try {
-    const q = await pool.query("SELECT * FROM tournaments WHERE id = $1", [req.params.id]);
-    if (q.rows.length === 0) return res.status(404).json({ error: "Turnir topilmadi" });
-    res.json({ tournament: q.rows[0] });
-  } catch (err) {
-    console.error("Turnir olish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminTournamentDetailRoutes({ pool }));
 
 // Turnirni tahrirlash (status'ga qarab xavfsiz)
 app.post("/admin/tournaments/:id/edit", requireAdmin, async (req, res) => {
@@ -4556,613 +3205,55 @@ app.post("/admin/tournaments/:id/edit", requireAdmin, async (req, res) => {
   }
 });
 
-// Turnirni o'chirish (bog'liq hamma narsa bilan)
-app.post("/admin/tournaments/:id/delete", requireAdmin, async (req, res) => {
-  const client = await pool.connect();
-  try {
-    const id = req.params.id;
-    const cur = await client.query("SELECT id FROM tournaments WHERE id = $1", [id]);
-    if (cur.rows.length === 0) {
-      client.release();
-      return res.status(404).json({ error: "Turnir topilmadi" });
-    }
-
-    // Tranzaksiya: bog'liq jadvallarni tartib bilan o'chiramiz
-    await client.query("BEGIN");
-    // match_players (matchlarga bog'liq)
-    await client.query(
-      `DELETE FROM tournament_match_players
-       WHERE match_id IN (SELECT id FROM tournament_matches WHERE tournament_id = $1)`,
-      [id]
-    );
-    await client.query("DELETE FROM tournament_matches WHERE tournament_id = $1", [id]);
-    await client.query("DELETE FROM tournament_team_members WHERE tournament_id = $1", [id]);
-    await client.query("DELETE FROM tournament_schools WHERE tournament_id = $1", [id]);
-    await client.query("DELETE FROM tournaments WHERE id = $1", [id]);
-    await client.query("COMMIT");
-    client.release();
-    res.json({ success: true });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    client.release();
-    console.error("Turnir o'chirish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi: " + err.message });
-  }
-});
+app.use(adminTournamentDeleteRoutes({ pool }));
 
 // Savollarni olish (admin) — pagination, search, filter bilan
 // GET, token bilan (parol emas). Query: ?page=1&limit=25&search=&level=&skill=&status=&date_from=&date_to=
-app.get("/admin/questions", requireAdmin, async (req, res) => {
-  try {
-    var page = Math.max(1, parseInt(req.query.page) || 1);
-    var limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
-    var offset = (page - 1) * limit;
-
-    var search = (req.query.search || "").trim();
-    var level = (req.query.level || "").trim();
-    var skill = (req.query.skill || "").trim();
-    var status = (req.query.status || "").trim();
-    var dateFrom = (req.query.date_from || "").trim();
-    var dateTo = (req.query.date_to || "").trim();
-
-    // WHERE shartlarni dinamik quramiz (SQL injection'dan himoya: parametrlar $1, $2...)
-    var conds = [];
-    var params = [];
-    var p = 0;
-
-    if (search) {
-      p++; conds.push("(LOWER(question_text) LIKE $" + p + " OR CAST(id AS TEXT) LIKE $" + p + ")");
-      params.push("%" + search.toLowerCase() + "%");
-    }
-    if (level) { p++; conds.push("cefr_level = $" + p); params.push(level); }
-    if (skill) { p++; conds.push("skill = $" + p); params.push(skill); }
-    if (status) { p++; conds.push("status = $" + p); params.push(status); }
-    if (dateFrom) { p++; conds.push("created_at >= $" + p); params.push(dateFrom); }
-    if (dateTo) { p++; conds.push("created_at <= $" + p); params.push(dateTo + " 23:59:59"); }
-
-    var whereClause = conds.length ? "WHERE " + conds.join(" AND ") : "";
-
-    // Jami sonni olamiz (pagination uchun)
-    var countResult = await pool.query("SELECT COUNT(*) AS total FROM questions " + whereClause, params);
-    var total = parseInt(countResult.rows[0].total);
-
-    // Sahifa ma'lumotini olamiz (limit + offset)
-    var dataParams = params.slice();
-    dataParams.push(limit); var limitIdx = dataParams.length;
-    dataParams.push(offset); var offsetIdx = dataParams.length;
-
-    var dataResult = await pool.query(
-      "SELECT id, question_text, option_a, option_b, option_c, option_d, " +
-      "correct_option, cefr_level, skill, difficulty, explanation, status, created_at, updated_at " +
-      "FROM questions " + whereClause +
-      " ORDER BY id DESC LIMIT $" + limitIdx + " OFFSET $" + offsetIdx,
-      dataParams
-    );
-
-    res.json({
-      questions: dataResult.rows,
-      pagination: {
-        page: page,
-        limit: limit,
-        total: total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
-  } catch (err) {
-    console.error("Admin savollar xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminQuestionListRoutes({ pool }));
 
 // Yangi savol qo'shish
-app.post("/admin/questions/add", requireAdmin, async (req, res) => {
-  try {
-    const { question_text, option_a, option_b, option_c, option_d,
-            correct_option, cefr_level, skill, explanation, status } = req.body;
+app.use(adminQuestionCreateRoutes({ pool, logAudit }));
 
-    // Tekshirish
-    if (!question_text || !option_a || !option_b || !option_c || !option_d || !correct_option) {
-      return res.status(400).json({ error: "Barcha maydonlarni to'ldiring" });
-    }
-    if (!["A", "B", "C", "D"].includes(correct_option)) {
-      return res.status(400).json({ error: "To'g'ri javob A, B, C yoki D bo'lishi kerak" });
-    }
-    // Status validatsiyasi
-    var st = status || "published";
-    if (!["published", "draft", "needs_review"].includes(st)) st = "published";
-
-    const result = await pool.query(
-      `INSERT INTO questions
-       (question_text, option_a, option_b, option_c, option_d, correct_option, cefr_level, skill, difficulty, explanation, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'easy', $9, $10)
-       RETURNING id`,
-      [question_text, option_a, option_b, option_c, option_d, correct_option,
-       cefr_level || "A1", skill || "grammar", explanation || "", st]
-    );
-
-    var newId = result.rows[0].id;
-    await logAudit(req, "question_created", { entityType: "question", entityId: newId, details: (cefr_level || "A1") + " · " + (skill || "grammar") });
-
-    res.json({ message: "Savol qo'shildi!", id: newId });
-  } catch (err) {
-    console.error("Savol qo'shish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
-
-// Savolni o'chirish
-app.post("/admin/questions/delete", requireAdmin, async (req, res) => {
-  try {
-    const { id } = req.body;
-    if (!id) return res.status(400).json({ error: "Savol ID kerak" });
-
-    await pool.query("DELETE FROM questions WHERE id = $1", [id]);
-    await logAudit(req, "question_deleted", { entityType: "question", entityId: id });
-    res.json({ message: "Savol o'chirildi!" });
-  } catch (err) {
-    console.error("Savol o'chirish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminQuestionDeleteRoutes({ pool, logAudit }));
 
 // Savolni tahrirlash (Edit)
-app.post("/admin/questions/edit", requireAdmin, async (req, res) => {
-  try {
-    const { id, question_text, option_a, option_b, option_c, option_d,
-            correct_option, cefr_level, skill, explanation, status } = req.body;
-
-    if (!id) return res.status(400).json({ error: "Savol ID kerak" });
-    if (!question_text || !option_a || !option_b || !option_c || !option_d || !correct_option) {
-      return res.status(400).json({ error: "Barcha maydonlarni to'ldiring" });
-    }
-    if (!["A", "B", "C", "D"].includes(correct_option)) {
-      return res.status(400).json({ error: "To'g'ri javob A, B, C yoki D bo'lishi kerak" });
-    }
-    var st = status || "published";
-    if (!["published", "draft", "needs_review"].includes(st)) st = "published";
-
-    const result = await pool.query(
-      `UPDATE questions SET
-         question_text = $1, option_a = $2, option_b = $3, option_c = $4, option_d = $5,
-         correct_option = $6, cefr_level = $7, skill = $8, explanation = $9, status = $10,
-         updated_at = NOW()
-       WHERE id = $11 RETURNING id`,
-      [question_text, option_a, option_b, option_c, option_d, correct_option,
-       cefr_level || "A1", skill || "grammar", explanation || "", st, id]
-    );
-
-    if (result.rows.length === 0) return res.status(404).json({ error: "Savol topilmadi" });
-
-    await logAudit(req, "question_updated", { entityType: "question", entityId: id, details: (cefr_level || "A1") + " · " + (skill || "grammar") });
-    res.json({ message: "Savol yangilandi!", id: id });
-  } catch (err) {
-    console.error("Savol tahrirlash xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminQuestionUpdateRoutes({ pool, logAudit }));
 
 // ===== QUESTION DISTRIBUTION (real statistika) =====
 // Daraja, ko'nikma, status bo'yicha savol taqsimoti — hammasi bazadan
-app.get("/admin/questions/stats", requireAdmin, async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT cefr_level, skill, status FROM questions"
-    );
-    const rows = result.rows;
-
-    var levels = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0 };
-    var skills = {};
-    var status = { published: 0, draft: 0, needs_review: 0 };
-
-    rows.forEach(function (q) {
-      // Daraja
-      if (levels[q.cefr_level] != null) levels[q.cefr_level]++;
-      // Ko'nikma
-      var sk = q.skill || "grammar";
-      skills[sk] = (skills[sk] || 0) + 1;
-      // Status
-      var st = q.status || "published";
-      if (status[st] != null) status[st]++;
-    });
-
-    // Eng ko'p / eng kam daraja
-    var mostLevel = null, leastLevel = null, maxC = -1, minC = Infinity;
-    Object.keys(levels).forEach(function (lv) {
-      if (levels[lv] > maxC) { maxC = levels[lv]; mostLevel = lv; }
-      if (levels[lv] < minC) { minC = levels[lv]; leastLevel = lv; }
-    });
-    // Eng ko'p ko'nikma
-    var mostSkill = null, maxSk = -1;
-    Object.keys(skills).forEach(function (sk) {
-      if (skills[sk] > maxSk) { maxSk = skills[sk]; mostSkill = sk; }
-    });
-
-    res.json({
-      totalQuestions: rows.length,
-      levels: levels,
-      skills: skills,
-      status: status,
-      mostCommonLevel: mostLevel,
-      leastCoveredLevel: leastLevel,
-      mostCommonSkill: mostSkill,
-    });
-  } catch (err) {
-    console.error("Stats xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminQuestionStatsRoutes({ pool }));
 
 // ===== QUESTION HEALTH (real validatsiya formulasi) =====
 // Validation Score = valid savollar / jami × 100. Hammasi bazadan hisoblanadi.
-app.get("/admin/questions/health", requireAdmin, async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT id, question_text, option_a, option_b, option_c, option_d,
-              correct_option, cefr_level, skill, status FROM questions`
-    );
-    const rows = result.rows;
-
-    var total = rows.length;
-    var valid = 0, missingFields = 0, invalidAnswerKey = 0;
-    var published = 0, draft = 0, needsReview = 0;
-    var validStatuses = ["published", "draft", "needs_review"];
-    var validAnswers = ["A", "B", "C", "D"];
-
-    // Duplicate aniqlash: normalized (lowercase, trim) matn bo'yicha
-    var seen = {};
-    var duplicateRisk = 0;
-
-    rows.forEach(function (q) {
-      // Status sanog'i
-      var st = q.status || "published";
-      if (st === "published") published++;
-      else if (st === "draft") draft++;
-      else if (st === "needs_review") needsReview++;
-
-      // Maydon to'liqligini tekshirish
-      var hasAllFields =
-        q.question_text && q.question_text.trim().length >= 3 &&
-        q.option_a && q.option_a.trim() &&
-        q.option_b && q.option_b.trim() &&
-        q.option_c && q.option_c.trim() &&
-        q.option_d && q.option_d.trim() &&
-        q.cefr_level && q.skill;
-
-      var answerOk = validAnswers.indexOf(q.correct_option) > -1;
-      var statusOk = validStatuses.indexOf(st) > -1;
-
-      if (!hasAllFields) missingFields++;
-      if (!answerOk) invalidAnswerKey++;
-
-      // Duplicate tekshiruvi
-      var norm = (q.question_text || "").toLowerCase().trim().replace(/\s+/g, " ");
-      if (norm) {
-        if (seen[norm]) duplicateRisk++;
-        else seen[norm] = true;
-      }
-
-      // Valid: hamma shart bajarilsa
-      if (hasAllFields && answerOk && statusOk) valid++;
-    });
-
-    var score = total > 0 ? Math.round((valid / total) * 1000) / 10 : 0;
-
-    res.json({
-      totalQuestions: total,
-      validQuestions: valid,
-      validationScore: score,
-      missingFields: missingFields,
-      invalidAnswerKey: invalidAnswerKey,
-      duplicateRisk: duplicateRisk,
-      needsReview: needsReview,
-      published: published,
-      draft: draft,
-    });
-  } catch (err) {
-    console.error("Health xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminQuestionHealthRoutes({ pool }));
 
 // ===== AUDIT LOGS RO'YXATI (Recent Admin Activity) =====
-app.get("/admin/audit-logs", requireAdmin, async (req, res) => {
-  try {
-    var page = Math.max(1, parseInt(req.query.page) || 1);
-    var limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
-    var offset = (page - 1) * limit;
-
-    var action = (req.query.action || "").trim();
-    var conds = []; var params = []; var p = 0;
-    if (action) { p++; conds.push("action = $" + p); params.push(action); }
-    var whereClause = conds.length ? "WHERE " + conds.join(" AND ") : "";
-
-    var countResult = await pool.query("SELECT COUNT(*) AS total FROM audit_logs " + whereClause, params);
-    var total = parseInt(countResult.rows[0].total);
-
-    var dataParams = params.slice();
-    dataParams.push(limit); var li = dataParams.length;
-    dataParams.push(offset); var oi = dataParams.length;
-
-    var dataResult = await pool.query(
-      "SELECT id, admin_name, action, entity_type, entity_id, details, created_at FROM audit_logs " +
-      whereClause + " ORDER BY id DESC LIMIT $" + li + " OFFSET $" + oi,
-      dataParams
-    );
-
-    res.json({
-      logs: dataResult.rows,
-      pagination: { page: page, limit: limit, total: total, totalPages: Math.ceil(total / limit) },
-    });
-  } catch (err) {
-    console.error("Audit logs xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminAuditLogListRoutes({ pool }));
 
 // ===== ADMIN OVERVIEW (umumiy dashboard statistikasi) =====
 // Jami savol, foydalanuvchi, maktab, jang — hammasi bazadan
-app.get("/admin/overview", requireAdmin, async (req, res) => {
-  try {
-    // Bir nechta so'rovni parallel bajaramiz (tezroq)
-    var results = await Promise.all([
-      pool.query("SELECT COUNT(*) AS c FROM questions"),
-      pool.query("SELECT COUNT(*) AS c FROM users WHERE role = 'student'"),
-      pool.query("SELECT COUNT(*) AS c FROM users WHERE role = 'teacher' OR role = 'school_admin'"),
-      pool.query("SELECT COUNT(DISTINCT school) AS c FROM users WHERE school IS NOT NULL AND school != ''"),
-      pool.query("SELECT COUNT(*) AS c FROM battle_history"),
-      pool.query("SELECT COUNT(*) AS c FROM users WHERE last_active_date = CURRENT_DATE"),
-      // Eng faol viloyatlar (top 5)
-      pool.query("SELECT region, COUNT(*) AS c FROM users WHERE region IS NOT NULL AND region != '' GROUP BY region ORDER BY c DESC LIMIT 5"),
-      // So'nggi 7 kun ichida qo'shilgan savollar (o'sish grafigi uchun)
-      pool.query("SELECT TO_CHAR(created_at, 'YYYY-MM-DD') AS day, COUNT(*) AS c FROM questions WHERE created_at >= CURRENT_DATE - INTERVAL '6 days' GROUP BY day ORDER BY day"),
-    ]);
-
-    res.json({
-      totalQuestions: parseInt(results[0].rows[0].c),
-      totalStudents: parseInt(results[1].rows[0].c),
-      totalTeachers: parseInt(results[2].rows[0].c),
-      totalSchools: parseInt(results[3].rows[0].c),
-      totalBattles: parseInt(results[4].rows[0].c),
-      activeToday: parseInt(results[5].rows[0].c),
-      topRegions: results[6].rows.map(function (r) { return { name: r.region, count: parseInt(r.c) }; }),
-      questionGrowth: results[7].rows.map(function (r) { return { day: r.day, count: parseInt(r.c) }; }),
-    });
-  } catch (err) {
-    console.error("Overview xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminOverviewRoutes({ pool }));
 
 // ===== ADMIN: FOYDALANUVCHILAR =====
 // Ro'yxat — pagination, qidiruv, filtr (rol, daraja, viloyat)
-app.get("/admin/users", requireAdmin, async (req, res) => {
-  try {
-    var page = Math.max(1, parseInt(req.query.page) || 1);
-    var limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
-    var offset = (page - 1) * limit;
+app.use(adminUserListRoutes({ pool }));
 
-    var search = (req.query.search || "").trim();
-    var role = (req.query.role || "").trim();
-    var level = (req.query.level || "").trim();
-    var region = (req.query.region || "").trim();
+app.use(adminUserRoleRoutes({ pool, logAudit }));
 
-    var conds = []; var params = []; var p = 0;
-    if (search) {
-      p++; conds.push("(LOWER(first_name) LIKE $" + p + " OR LOWER(last_name) LIKE $" + p + " OR phone LIKE $" + p + ")");
-      params.push("%" + search.toLowerCase() + "%");
-    }
-    if (role) { p++; conds.push("role = $" + p); params.push(role); }
-    if (level) { p++; conds.push("cefr_level = $" + p); params.push(level); }
-    if (region) { p++; conds.push("region = $" + p); params.push(region); }
-    var whereClause = conds.length ? "WHERE " + conds.join(" AND ") : "";
-
-    var countResult = await pool.query("SELECT COUNT(*) AS total FROM users " + whereClause, params);
-    var total = parseInt(countResult.rows[0].total);
-
-    var dataParams = params.slice();
-    dataParams.push(limit); var li = dataParams.length;
-    dataParams.push(offset); var oi = dataParams.length;
-
-    var dataResult = await pool.query(
-      "SELECT id, first_name, last_name, role, cefr_level, rating, region, district, school, " +
-      "phone, is_banned, created_at FROM users " + whereClause +
-      " ORDER BY id DESC LIMIT $" + li + " OFFSET $" + oi,
-      dataParams
-    );
-
-    res.json({
-      users: dataResult.rows,
-      pagination: { page: page, limit: limit, total: total, totalPages: Math.ceil(total / limit) },
-    });
-  } catch (err) {
-    console.error("Admin users xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
-
-// Rolni o'zgartirish
-app.post("/admin/users/role", requireAdmin, async (req, res) => {
-  try {
-    const { id, role } = req.body;
-    if (!id || !role) return res.status(400).json({ error: "id va role kerak" });
-    var validRoles = ["student", "teacher", "parent", "school_admin"];
-    if (validRoles.indexOf(role) === -1) return res.status(400).json({ error: "Noto'g'ri rol" });
-
-    var result = await pool.query("UPDATE users SET role = $1 WHERE id = $2 RETURNING first_name, last_name", [role, id]);
-    if (result.rows.length === 0) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
-
-    var name = result.rows[0].first_name + " " + result.rows[0].last_name;
-    await logAudit(req, "user_role_changed", { entityType: "user", entityId: id, details: name + " → " + role });
-    res.json({ message: "Rol o'zgartirildi" });
-  } catch (err) {
-    console.error("Rol o'zgartirish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
-
-// Ban / faolsizlantirish (toggle)
-app.post("/admin/users/ban", requireAdmin, async (req, res) => {
-  try {
-    const { id, banned } = req.body;
-    if (!id) return res.status(400).json({ error: "id kerak" });
-
-    var result = await pool.query(
-      "UPDATE users SET is_banned = $1, auth_version = auth_version + 1 WHERE id = $2 RETURNING first_name, last_name",
-      [banned === true, id]
-    );
-    if (result.rows.length === 0) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
-
-    var name = result.rows[0].first_name + " " + result.rows[0].last_name;
-    await logAudit(req, banned ? "user_banned" : "user_unbanned", { entityType: "user", entityId: id, details: name });
-    res.json({ message: banned ? "Foydalanuvchi bloklandi" : "Blok olib tashlandi" });
-  } catch (err) {
-    console.error("Ban xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminUserBanRoutes({ pool, logAudit }));
 
 // Foydalanuvchi ma'lumotini tahrirlash (viloyat, tuman, maktab, daraja)
-app.post("/admin/users/update", requireAdmin, async (req, res) => {
-  try {
-    const { id, region, district, school, cefr_level } = req.body;
-    if (!id) return res.status(400).json({ error: "Foydalanuvchi ID kerak" });
-
-    // Viloyat-tuman juftligini tekshiramiz (regions.js bilan — bir xil himoya)
-    const regionCheck = validateRegionDistrict(region, district);
-    if (!regionCheck.valid) {
-      return res.status(400).json({ error: regionCheck.error });
-    }
-
-    // CEFR daraja validatsiyasi
-    var validLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
-    var lvl = cefr_level || "A1";
-    if (validLevels.indexOf(lvl) === -1) lvl = "A1";
-
-    var result = await pool.query(
-      "UPDATE users SET region = $1, district = $2, school = $3, cefr_level = $4 WHERE id = $5 RETURNING first_name, last_name",
-      [region, district, normalizeSchool(school), lvl, id]
-    );
-    if (result.rows.length === 0) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
-
-    var name = result.rows[0].first_name + " " + result.rows[0].last_name;
-    await logAudit(req, "user_updated", { entityType: "user", entityId: id, details: name + " — " + region + ", " + district });
-    res.json({ message: "Foydalanuvchi yangilandi" });
-  } catch (err) {
-    console.error("Foydalanuvchi yangilash xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminUserUpdateRoutes({ pool, logAudit }));
 
 // Bitta foydalanuvchi to'liq ma'lumoti (modal uchun)
-app.get("/admin/users/:id", requireAdmin, async (req, res) => {
-  try {
-    var id = parseInt(req.params.id);
-    if (!id) return res.status(400).json({ error: "Noto'g'ri ID" });
-
-    var userResult = await pool.query(
-      `SELECT id, first_name, last_name, role, cefr_level, rating, xp, coins,
-              current_streak, longest_streak, win_streak, best_win_streak,
-              region, district, village, school, phone, birth_date,
-              profile_picture, is_banned, created_at
-       FROM users WHERE id = $1`,
-      [id]
-    );
-    if (userResult.rows.length === 0) return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
-
-    // Jang soni (qo'shimcha statistika)
-    var battleResult = await pool.query("SELECT COUNT(*) AS c FROM battle_history WHERE user_id = $1", [id]);
-    // G'alaba soni
-    var winResult = await pool.query("SELECT COUNT(*) AS c FROM battle_history WHERE user_id = $1 AND outcome = 'win'", [id]);
-
-    var user = userResult.rows[0];
-    user.total_battles = parseInt(battleResult.rows[0].c);
-    user.total_wins = parseInt(winResult.rows[0].c);
-
-    res.json({ user: user });
-  } catch (err) {
-    console.error("Foydalanuvchi ma'lumoti xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminUserDetailRoutes({ pool }));
 
 // ===== ADMIN: MAKTABLAR =====
 // Maktablar ro'yxati — viloyat + tuman + nom bo'yicha guruhlangan (sun'iy juftlik yo'q)
-app.get("/admin/schools", requireAdmin, async (req, res) => {
-  try {
-    var page = Math.max(1, parseInt(req.query.page) || 1);
-    var limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
-    var offset = (page - 1) * limit;
-    var search = (req.query.search || "").trim();
-    var region = (req.query.region || "").trim();
-
-    var conds = ["school IS NOT NULL", "school != ''"];
-    var params = []; var p = 0;
-    if (search) { p++; conds.push("LOWER(school) LIKE $" + p); params.push("%" + search.toLowerCase() + "%"); }
-    if (region) { p++; conds.push("region = $" + p); params.push(region); }
-    var whereClause = "WHERE " + conds.join(" AND ");
-
-    // MUHIM: viloyat + tuman + maktab bo'yicha guruhlaymiz (MAX emas!)
-    // Shunda "Toshkent, 5-maktab" va "Namangan, 5-maktab" alohida ko'rinadi (to'g'ri)
-    var countResult = await pool.query(
-      "SELECT COUNT(*) AS total FROM (SELECT school, region, district FROM users " + whereClause + " GROUP BY school, region, district) AS sub", params
-    );
-    var total = parseInt(countResult.rows[0].total);
-
-    var dataParams = params.slice();
-    dataParams.push(limit); var li = dataParams.length;
-    dataParams.push(offset); var oi = dataParams.length;
-
-    var dataResult = await pool.query(
-      "SELECT school, region, district, " +
-      "COUNT(*) AS student_count, " +
-      "ROUND(AVG(rating)) AS avg_rating " +
-      "FROM users " + whereClause +
-      " GROUP BY school, region, district ORDER BY student_count DESC LIMIT $" + li + " OFFSET $" + oi,
-      dataParams
-    );
-
-    res.json({
-      schools: dataResult.rows.map(function (r) {
-        return {
-          name: r.school,
-          studentCount: parseInt(r.student_count),
-          avgRating: r.avg_rating != null ? parseInt(r.avg_rating) : 0,
-          region: r.region || "—",
-          district: r.district || "—",
-        };
-      }),
-      pagination: { page: page, limit: limit, total: total, totalPages: Math.ceil(total / limit) },
-    });
-  } catch (err) {
-    console.error("Maktablar xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminSchoolListRoutes({ pool }));
 
 // Bitta maktab o'quvchilari (drill-down) — nom + viloyat + tuman bo'yicha
-app.get("/admin/schools/students", requireAdmin, async (req, res) => {
-  try {
-    var school = (req.query.school || "").trim();
-    var region = (req.query.region || "").trim();
-    var district = (req.query.district || "").trim();
-    if (!school) return res.status(400).json({ error: "Maktab nomi kerak" });
-
-    var conds = ["school = $1"];
-    var params = [school]; var p = 1;
-    if (region && region !== "—") { p++; conds.push("region = $" + p); params.push(region); }
-    if (district && district !== "—") { p++; conds.push("district = $" + p); params.push(district); }
-
-    var result = await pool.query(
-      "SELECT id, first_name, last_name, role, cefr_level, rating, is_banned " +
-      "FROM users WHERE " + conds.join(" AND ") + " ORDER BY rating DESC LIMIT 100",
-      params
-    );
-    res.json({ school: school, students: result.rows });
-  } catch (err) {
-    console.error("Maktab o'quvchilari xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(adminSchoolStudentListRoutes({ pool }));
 
 // ===== BULK IMPORT (CSV) =====
 // Frontend tahlil qilingan qatorlarni yuboradi. Backend HAR qatorni QAYTA validatsiya qiladi
@@ -5238,144 +3329,13 @@ app.post("/admin/questions/bulk-import", requireAdmin, async (req, res) => {
 });
 
 // ============ JANG TARIXI ============
-app.get("/history/:userId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const result = await pool.query(
-      `SELECT bh.opponent_name, bh.my_score, bh.opponent_score, bh.outcome,
-              bh.xp_earned, bh.rating_change, bh.played_at, bh.cefr_level,
-              bh.opponent_id, bh.mode,
-              opp.profile_picture AS opponent_picture,
-              opp.rating AS opponent_rating
-       FROM battle_history bh
-       LEFT JOIN users opp ON opp.id = bh.opponent_id
-       WHERE bh.user_id = $1
-       ORDER BY bh.played_at DESC
-       LIMIT 50`,
-      [userId]
-    );
-    res.json({ history: result.rows });
-  } catch (err) {
-    console.error("Tarix xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(battleHistoryListRoutes({ pool }));
 
 // ===== NATIJA (refresh-proof): roomId bo'yicha jang natijasini DB'dan olish =====
-app.get("/battle/result/:roomId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const roomId = req.params.roomId;
-
-    // Faqat o'sha jangda qatnashgan o'yinchi ko'ra oladi (IDOR himoyasi)
-    const bh = await pool.query(
-      `SELECT bh.opponent_name, bh.opponent_id, bh.my_score, bh.opponent_score, bh.outcome,
-              bh.xp_earned, bh.rating_change, bh.cefr_level, bh.mode,
-              bh.total_questions, bh.played_at,
-              opp.profile_picture AS opponent_picture,
-              opp.rating AS opponent_rating,
-              me.profile_picture AS my_picture
-       FROM battle_history bh
-       LEFT JOIN users opp ON opp.id = bh.opponent_id
-       LEFT JOIN users me ON me.id = bh.user_id
-       WHERE bh.room_id = $1 AND bh.user_id = $2
-       LIMIT 1`,
-      [roomId, userId]
-    );
-
-    if (bh.rows.length === 0) {
-      return res.status(404).json({ error: "Natija topilmadi" });
-    }
-    const result = bh.rows[0];
-
-    // Javoblar tahlili (battle_answers + questions matni bilan)
-    const ans = await pool.query(
-      `SELECT ba.question_id, ba.q_order, ba.selected_option AS your_answer,
-              ba.correct_option AS correct_answer, ba.is_correct,
-              q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.explanation
-       FROM battle_answers ba
-       JOIN questions q ON q.id = ba.question_id
-       WHERE ba.room_id = $1 AND ba.user_id = $2
-       ORDER BY ba.q_order ASC`,
-      [roomId, userId]
-    );
-
-    res.json({
-      result: result,
-      answers: ans.rows,
-    });
-  } catch (err) {
-    console.error("Natija olish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(battleResultRoutes({ pool }));
 
 // Jamoa jang natijasi (F5 refresh-proof) — snapshot'dan to'liq natija
-app.get("/team-battle/result/:roomId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const roomId = req.params.roomId;
-
-    // Sessiyadan snapshot + IDOR himoyasi (faqat qatnashgan o'yinchi)
-    const sess = await pool.query(
-      "SELECT state FROM battle_sessions WHERE room_id = $1 LIMIT 1",
-      [roomId]
-    );
-    if (sess.rows.length === 0 || !sess.rows[0].state || !sess.rows[0].state.result_snapshot) {
-      return res.status(404).json({ error: "Natija topilmadi" });
-    }
-    const snap = sess.rows[0].state.result_snapshot;
-
-    // IDOR: foydalanuvchi shu jangda qatnashganmi? (playerTeams ichida userId bormi)
-    const myTeam = snap.playerTeams ? snap.playerTeams[String(userId)] : null;
-    if (!myTeam) {
-      return res.status(403).json({ error: "Bu natijaga ruxsat yo'q" });
-    }
-
-    // Mening jamoam va raqib jamoa
-    const isA = myTeam === "A";
-    const myTeamPlayers = isA ? snap.teamA : snap.teamB;
-    const enemyTeamPlayers = isA ? snap.teamB : snap.teamA;
-    const myTeamScore = isA ? snap.teamAScore : snap.teamBScore;
-    const enemyTeamScore = isA ? snap.teamBScore : snap.teamAScore;
-
-    // Outcome (mening nuqtai nazarimdan)
-    let outcome = "draw";
-    if (snap.winningTeam === myTeam) outcome = "win";
-    else if (snap.winningTeam !== null) outcome = "lose";
-
-    // Mening shaxsiy ballim (myTeamPlayers ichidan userId bo'yicha)
-    const me = (myTeamPlayers || []).find(function (p) { return String(p.userId) === String(userId); });
-    const myScore = me ? me.score : 0;
-
-    // XP/rating: battle_history'dan (shu user, shu room)
-    let xpEarned = 0, ratingChange = 0;
-    try {
-      const bh = await pool.query(
-        "SELECT xp_earned, rating_change FROM battle_history WHERE room_id = $1 AND user_id = $2 LIMIT 1",
-        [roomId, userId]
-      );
-      if (bh.rows[0]) { xpEarned = bh.rows[0].xp_earned || 0; ratingChange = bh.rows[0].rating_change || 0; }
-    } catch (e) {}
-
-    res.json({
-      teamMode: snap.teamMode,
-      level: snap.level,
-      total: snap.total_questions,
-      outcome: outcome,
-      myScore: myScore,
-      myTeamScore: myTeamScore,
-      enemyTeamScore: enemyTeamScore,
-      myTeamPlayers: myTeamPlayers,
-      enemyTeamPlayers: enemyTeamPlayers,
-      xp_earned: xpEarned,
-      rating_change: ratingChange,
-    });
-  } catch (err) {
-    console.error("Jamoa natija olish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(teamBattleResultRoutes({ pool }));
 
 // ============ PREMIUM OBUNA ============
 
@@ -5384,23 +3344,7 @@ app.use(subscriptionRoutes());
 
 // DEV/ADMIN: obuna aktivlashtirish (payment hali yo'q — test uchun).
 // Payme/Click qo'shilganda bu o'rniga payment callback ishlatiladi.
-app.post("/dev/subscription/activate", requireAdmin, async (req, res) => {
-  try {
-    const { user_id, plan, days } = req.body;
-    if (!user_id || !plan || !days) {
-      return res.status(400).json({ error: "user_id, plan, days kerak" });
-    }
-    const sub = await premium.grantSubscription(parseInt(user_id), plan, parseInt(days));
-    await logAudit(req, "subscription_granted", {
-      entityType: "user", entityId: user_id,
-      details: plan + " — " + days + " kun"
-    });
-    res.json({ success: true, subscription: sub });
-  } catch (err) {
-    console.error("Obuna aktivlashtirish xatosi:", err.message);
-    res.status(400).json({ error: err.message });
-  }
-});
+app.use(devSubscriptionActivateRoutes({ premium, logAudit }));
 
 // ============ TO'LOV (PAYME) ============
 
@@ -5499,387 +3443,34 @@ app.post("/ai/reports/parent/children/:studentId/weekly",
 });
 
 // Parent: avval yaratilgan AI hisobotlar ro'yxati (bitta child uchun)
-app.get("/ai/reports/parent/children/:studentId",
-  authMiddleware, requireParent, premium.requirePremium("parent"),
-  async (req, res) => {
-  try {
-    const parentId = req.user.id;
-    const studentId = parseInt(req.params.studentId, 10);
-    if (isNaN(studentId)) return res.status(400).json({ error: "Noto'g'ri ID" });
-
-    const link = await pool.query(
-      "SELECT id FROM parent_links WHERE parent_id=$1 AND student_id=$2 AND status='active'",
-      [parentId, studentId]
-    );
-    if (link.rows.length === 0) return res.status(403).json({ error: "Ruxsat yo'q" });
-
-    const rows = await pool.query(
-      `SELECT id, period_start, period_end, ai_output, confidence, status, created_at
-       FROM ai_reports
-       WHERE target_student_id=$1 AND report_type='parent_weekly_report'
-       ORDER BY period_start DESC LIMIT 12`,
-      [studentId]
-    );
-    res.json({ reports: rows.rows });
-  } catch (err) {
-    console.error("AI hisobotlar ro'yxati xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(parentAiReportListRoutes({ pool, premium }));
 
 // ============ AI: STUDENT WEEKLY REPORT ============
 
 // O'quvchi o'ziga haftalik AI hisobot (premium student)
-app.post("/ai/reports/student/weekly",
-  authMiddleware, requireStudent, premium.requirePremium("student"),
-  async (req, res) => {
-  try {
-    const studentId = req.user.id;
-    const period = aiSnapshot.currentWeekPeriod();
-
-    // Cache: shu hafta uchun bormi?
-    const cached = await pool.query(
-      `SELECT ai_output, confidence, status, created_at FROM ai_reports
-       WHERE target_student_id=$1 AND report_type='student_weekly_report' AND period_start=$2
-       ORDER BY created_at DESC LIMIT 1`,
-      [studentId, period.start]
-    );
-    if (cached.rows.length > 0 && req.query.refresh !== "1") {
-      const c = cached.rows[0];
-      return res.json({ report: c.ai_output, cached: true, confidence: c.confidence, status: c.status, created_at: c.created_at });
-    }
-
-    const snapshot = await aiSnapshot.buildStudentWeeklySnapshot(studentId, period.start, period.end);
-    const result = await aiService.generateStudentWeeklyReport(snapshot);
-
-    const saved = await pool.query(
-      `INSERT INTO ai_reports (user_id, target_student_id, report_type, audience, period_start, period_end, input_snapshot, ai_output, confidence, status)
-       VALUES ($1,$1,'student_weekly_report','student',$2,$3,$4,$5,$6,$7) RETURNING id, created_at`,
-      [studentId, period.start, period.end, JSON.stringify(snapshot), JSON.stringify(result.report), result.confidence, result.status]
-    );
-    if (result.usage) {
-      pool.query(`INSERT INTO ai_usage_logs (user_id, report_id, model, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)`,
-        [studentId, saved.rows[0].id, result.model, result.usage.input, result.usage.output]).catch(()=>{});
-    }
-    res.json({ report: result.report, data_quality: snapshot.data_quality, cached: false, confidence: result.confidence, status: result.status, created_at: saved.rows[0].created_at });
-  } catch (err) {
-    console.error("Student AI report xatosi:", err.message);
-    res.status(500).json({ error: "Hozir hisobotni tayyorlab bo'lmadi. Keyinroq urinib ko'ring." });
-  }
-});
+app.use(studentWeeklyAiReportRoutes({ pool, premium, aiSnapshot, aiService }));
 
 // ============ AI: TEACHER CLASS REPORT ============
 
 // O'qituvchi sinf uchun haftalik AI tahlil (teacher pro, faqat o'z sinfi)
-app.post("/ai/reports/teacher/classes/:classId/weekly",
-  authMiddleware, requireTeacher, premium.requirePremium("teacher"),
-  async (req, res) => {
-  try {
-    const teacherId = req.user.id;
-    const classId = parseInt(req.params.classId, 10);
-    if (isNaN(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
-
-    // Egalik tekshiruvi (snapshot ichida ham bor, lekin oldindan ham tekshiramiz)
-    const own = await pool.query("SELECT id FROM classes WHERE id=$1 AND teacher_id=$2 AND archived_at IS NULL", [classId, teacherId]);
-    if (own.rows.length === 0) return res.status(403).json({ error: "Bu sinf sizga tegishli emas" });
-
-    const period = aiSnapshot.currentWeekPeriod();
-
-    const cached = await pool.query(
-      `SELECT ai_output, confidence, status, created_at FROM ai_reports
-       WHERE user_id=$1 AND report_type='teacher_class_report' AND period_start=$2
-         AND input_snapshot->'class'->>'id' = $3
-       ORDER BY created_at DESC LIMIT 1`,
-      [teacherId, period.start, String(classId)]
-    );
-    if (cached.rows.length > 0 && req.query.refresh !== "1") {
-      const c = cached.rows[0];
-      return res.json({ report: c.ai_output, cached: true, confidence: c.confidence, status: c.status, created_at: c.created_at });
-    }
-
-    const snapshot = await aiSnapshot.buildTeacherClassSnapshot(teacherId, classId, period.start, period.end);
-    const result = await aiService.generateTeacherClassReport(snapshot);
-
-    const saved = await pool.query(
-      `INSERT INTO ai_reports (user_id, target_student_id, report_type, audience, period_start, period_end, input_snapshot, ai_output, confidence, status)
-       VALUES ($1,NULL,'teacher_class_report','teacher',$2,$3,$4,$5,$6,$7) RETURNING id, created_at`,
-      [teacherId, period.start, period.end, JSON.stringify(snapshot), JSON.stringify(result.report), result.confidence, result.status]
-    );
-    if (result.usage) {
-      pool.query(`INSERT INTO ai_usage_logs (user_id, report_id, model, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)`,
-        [teacherId, saved.rows[0].id, result.model, result.usage.input, result.usage.output]).catch(()=>{});
-    }
-    res.json({ report: result.report, data_quality: snapshot.data_quality, cached: false, confidence: result.confidence, status: result.status, created_at: saved.rows[0].created_at });
-  } catch (err) {
-    console.error("Teacher AI report xatosi:", err.message);
-    res.status(500).json({ error: "Hozir hisobotni tayyorlab bo'lmadi. Keyinroq urinib ko'ring." });
-  }
-});
+app.use(teacherWeeklyAiReportRoutes({ pool, premium, aiSnapshot, aiService }));
 
 // Teacher yaratgan barcha AI hisobotlar (AI Hisobotlar sahifasi)
-app.get("/teacher/ai-reports", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const teacherId = req.user.id;
-
-    // Teacher'ning hisobotlari (audience=teacher yoki user_id=teacher)
-    const result = await pool.query(
-      `SELECT r.id, r.report_type, r.audience, r.period_start, r.period_end,
-              r.confidence, r.status, r.created_at, r.target_student_id,
-              r.ai_output,
-              tu.first_name AS target_first, tu.last_name AS target_last
-       FROM ai_reports r
-       LEFT JOIN users tu ON tu.id = r.target_student_id
-       WHERE r.user_id = $1 AND r.audience = 'teacher'
-       ORDER BY r.created_at DESC
-       LIMIT 200`,
-      [teacherId]
-    );
-
-    // Confidence -> aniqlik foizi (taxminiy ko'rsatish uchun)
-    const confPct = { high: 93, medium: 88, low: 78 };
-
-    const reports = result.rows.map((r) => {
-      const targetName = ((r.target_first || "") + " " + (r.target_last || "")).trim() || null;
-      // ai_output ichidan sarlavha/sinf/skill olishga harakat (agar saqlangan bo'lsa)
-      let title = null, className = null, skill = null;
-      try {
-        const out = typeof r.ai_output === "string" ? JSON.parse(r.ai_output) : r.ai_output;
-        if (out) { title = out.title || null; className = out.class_name || null; skill = out.skill || null; }
-      } catch (e) { /* ai_output JSON emas */ }
-
-      return {
-        id: r.id,
-        report_type: r.report_type,
-        confidence: r.confidence || "medium",
-        accuracy_pct: confPct[(r.confidence || "medium")] || 85,
-        status: r.status,
-        created_at: r.created_at,
-        period_start: r.period_start,
-        period_end: r.period_end,
-        target_name: targetName,
-        title: title,
-        class_name: className,
-        skill: skill,
-      };
-    });
-
-    // ===== Statistika =====
-    const total = reports.length;
-    // O'rtacha aniqlik
-    const avgAccuracy = total > 0
-      ? Math.round(reports.reduce((a, r) => a + (r.accuracy_pct || 0), 0) / total)
-      : null;
-    // Tahlil qilingan o'quvchilar (unikal target)
-    const studentSet = new Set();
-    reports.forEach((r) => { if (r.target_name) studentSet.add(r.target_name); });
-    const studentsAnalyzed = studentSet.size;
-    // Eng ko'p hisobot yaratilgan sinf
-    const classCount = {};
-    reports.forEach((r) => { if (r.class_name) classCount[r.class_name] = (classCount[r.class_name] || 0) + 1; });
-    let topClass = null, topClassCount = 0;
-    Object.keys(classCount).forEach((k) => { if (classCount[k] > topClassCount) { topClass = k; topClassCount = classCount[k]; } });
-    // Taxminiy tejaigan vaqt (har hisobot ~45 daqiqa qo'l mehnati)
-    const timeSaved = total > 0 ? Math.round((total * 45 / 60) * 10) / 10 : null;
-
-    res.json({
-      reports,
-      stats: {
-        total,
-        avg_accuracy: avgAccuracy,
-        students_analyzed: studentsAnalyzed,
-        top_class: topClass,
-        top_class_count: topClassCount,
-        time_saved: timeSaved,
-      },
-    });
-  } catch (err) {
-    console.error("/teacher/ai-reports xatosi:", err);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(teacherAiReportListRoutes({ pool }));
 
 // BITTA AI HISOBOTNI TO'LIQ OLISH (ai_output bilan — ko'rish modali uchun)
-app.get("/teacher/ai-reports/:id", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const teacherId = req.user.id;
-    const reportId = parseInt(req.params.id, 10);
-    if (isNaN(reportId)) return res.status(400).json({ error: "Noto'g'ri ID" });
-
-    const result = await pool.query(
-      `SELECT id, report_type, audience, ai_output, confidence, status,
-              period_start, period_end, created_at
-       FROM ai_reports
-       WHERE id = $1 AND user_id = $2 AND audience = 'teacher'`,
-      [reportId, teacherId]
-    );
-    if (result.rows.length === 0) return res.status(404).json({ error: "Hisobot topilmadi" });
-
-    const r = result.rows[0];
-    // ai_output JSON bo'lishi mumkin (string yoki object)
-    let aiOutput = r.ai_output;
-    if (typeof aiOutput === "string") {
-      try { aiOutput = JSON.parse(aiOutput); } catch (e) { /* string qoladi */ }
-    }
-
-    res.json({
-      id: r.id,
-      report_type: r.report_type,
-      ai_output: aiOutput,
-      confidence: r.confidence,
-      status: r.status,
-      period_start: r.period_start,
-      period_end: r.period_end,
-      created_at: r.created_at,
-    });
-  } catch (err) {
-    console.error("/teacher/ai-reports/:id xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(teacherAiReportDetailRoutes({ pool }));
 
 // ============ STREAK ============
-app.post("/streak/checkin", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    // Foydalanuvchining streak ma'lumotini olish
-    const userResult = await pool.query(
-      "SELECT current_streak, longest_streak, last_active_date FROM users WHERE id = $1",
-      [userId]
-    );
-
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
-    }
-
-    const user = userResult.rows[0];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // bugun (vaqtsiz)
-
-    let currentStreak = user.current_streak || 0;
-    let longestStreak = user.longest_streak || 0;
-    const lastActive = user.last_active_date ? new Date(user.last_active_date) : null;
-
-    if (lastActive) {
-      lastActive.setHours(0, 0, 0, 0);
-      const diffDays = Math.round((today - lastActive) / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 0) {
-        // Bugun allaqachon kirgan — o'zgartirmaymiz
-        return res.json({
-          current_streak: currentStreak,
-          longest_streak: longestStreak,
-          already_checked: true,
-        });
-      } else if (diffDays === 1) {
-        // Kecha kirgan, bugun ham keldi — streak +1
-        currentStreak++;
-      } else {
-        // Bir kundan ko'p o'tdi — streak uzildi, qaytadan
-        currentStreak = 1;
-      }
-    } else {
-      // Birinchi marta — streak 1
-      currentStreak = 1;
-    }
-
-    // Eng uzun streakni yangilash
-    if (currentStreak > longestStreak) {
-      longestStreak = currentStreak;
-    }
-
-    // Bazaga saqlash
-    await pool.query(
-      `UPDATE users
-       SET current_streak = $1, longest_streak = $2, last_active_date = CURRENT_DATE
-       WHERE id = $3`,
-      [currentStreak, longestStreak, userId]
-    );
-
-    res.json({
-      current_streak: currentStreak,
-      longest_streak: longestStreak,
-      already_checked: false,
-    });
-  } catch (err) {
-    console.error("Streak xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(streakCheckinRoutes({ pool }));
 
 // ============ TOPSHIRIQLAR ENDPOINT ============
 
 // O'yinchining bugungi topshiriqlarini olish
-app.post("/quests", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const quests = await getOrCreateDailyQuests(userId);
-    res.json({ quests: quests });
-  } catch (err) {
-    console.error("Quests xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(questListRoutes({ getOrCreateDailyQuests }));
 
 // Mukofotni olish (bajarilgan topshiriq uchun)
-app.post("/quests/claim", authMiddleware, async (req, res) => {
-  const client = await pool.connect();
-  try {
-    const userId = req.user.id;
-    const { userQuestId } = req.body;
-    if (!userQuestId) return res.status(400).json({ error: "userQuestId kerak" });
-
-    // Topshiriqni tekshirish
-    await client.query("BEGIN");
-    const result = await client.query(
-      `SELECT uq.is_completed, uq.reward_claimed, q.xp_reward
-       FROM user_quests uq
-       JOIN quests q ON uq.quest_id = q.id
-       WHERE uq.id = $1 AND uq.user_id = $2
-       FOR UPDATE OF uq`,
-      [userQuestId, userId]
-    );
-
-    if (result.rows.length === 0) {
-      await client.query("ROLLBACK");
-      return res.status(404).json({ error: "Topshiriq topilmadi" });
-    }
-
-    const quest = result.rows[0];
-
-    if (!quest.is_completed) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({ error: "Topshiriq hali bajarilmagan" });
-    }
-    if (quest.reward_claimed) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({ error: "Mukofot allaqachon olingan" });
-    }
-
-    // Mukofotni berish: XP qo'shish + claimed belgilash
-    await client.query("UPDATE user_quests SET reward_claimed = true WHERE id = $1", [userQuestId]);
-
-    const updated = await client.query(
-      `UPDATE users SET xp = xp + $1 WHERE id = $2
-       RETURNING id, first_name, last_name, username, cefr_level, xp, rating, coins`,
-      [quest.xp_reward, userId]
-    );
-    await client.query("COMMIT");
-
-    res.json({
-      message: "Mukofot olindi!",
-      xp_reward: quest.xp_reward,
-      updated_user: updated.rows[0],
-    });
-  } catch (err) {
-    await client.query("ROLLBACK").catch(() => {});
-    console.error("Mukofot xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  } finally {
-    client.release();
-  }
-});
+app.use(questClaimRoutes({ pool }));
 
 // ============ PROFIL STATISTIKA ============
 app.get("/profile/:userId", authMiddleware, async (req, res) => {
@@ -7221,23 +4812,7 @@ app.use(teacherClassAnnouncementDeleteRoutes({ ownedActiveClass, io }));
 app.use(studentClassAnnouncementsListRoutes({ activeClassMembership }));
 
 // ===== Student class actions and ranking =====
-app.post("/student/classes/:classId/leave", authMiddleware, requireStudent, async (req, res) => {
-  try {
-    const classId = parseInt(req.params.classId, 10);
-    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
-    const membership = await activeClassMembership(classId, req.user.id);
-    if (!membership) return res.status(404).json({ error: "Siz bu sinfda emassiz" });
-    await pool.query(
-      "UPDATE class_students SET status='left' WHERE class_id=$1 AND student_id=$2 AND status='active'",
-      [classId, req.user.id]
-    );
-    io.to("class_" + String(classId)).emit("classStudentLeft", { classId, studentId: req.user.id });
-    res.json({ success: true, message: "Sinf tark etildi" });
-  } catch (err) {
-    console.error("Sinfni tark etish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(studentClassLeaveRoutes({ pool, activeClassMembership, io }));
 
 app.get("/student/classes/:classId/ranking", authMiddleware, requireStudent, async (req, res) => {
   try {
@@ -7274,208 +4849,27 @@ app.get("/student/classes/:classId/ranking", authMiddleware, requireStudent, asy
 });
 
 // ===== Attendance =====
-app.get("/teacher/classes/:classId/attendance", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const classId = parseInt(req.params.classId, 10);
-    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
-    if (!(await ownedActiveClass(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
-    const sessions = await pool.query(
-      `SELECT s.id, s.title, s.session_date, s.status, s.created_at,
-              COUNT(r.id)::int AS marked_count,
-              COUNT(r.id) FILTER (WHERE r.status='present')::int AS present_count
-         FROM class_attendance_sessions s
-         LEFT JOIN class_attendance_records r ON r.session_id=s.id
-        WHERE s.class_id=$1 GROUP BY s.id ORDER BY s.session_date DESC, s.created_at DESC`, [classId]
-    );
-    const students = await pool.query(
-      `SELECT u.id, u.first_name, u.last_name FROM class_students cs
-       JOIN users u ON u.id=cs.student_id
-       WHERE cs.class_id=$1 AND cs.status='active' ORDER BY u.first_name, u.last_name`, [classId]
-    );
-    let records = [];
-    const requestedId = parseInt(req.query.sessionId, 10);
-    const sessionId = Number.isInteger(requestedId) ? requestedId : (sessions.rows[0] && Number(sessions.rows[0].id));
-    if (sessionId) {
-      const result = await pool.query(
-        `SELECT r.student_id, r.status FROM class_attendance_records r
-         JOIN class_attendance_sessions s ON s.id=r.session_id
-         WHERE r.session_id=$1 AND s.class_id=$2`, [sessionId, classId]
-      );
-      records = result.rows;
-    }
-    res.json({ sessions: sessions.rows, students: students.rows, selected_session_id: sessionId || null, records });
-  } catch (err) {
-    console.error("Davomatni yuklash xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
-
-app.post("/teacher/classes/:classId/attendance", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const classId = parseInt(req.params.classId, 10);
-    const title = sanitizeText(req.body.title || "", 160) || "Dars davomati";
-    const sessionDate = /^\d{4}-\d{2}-\d{2}$/.test(req.body.session_date || "") ? req.body.session_date : null;
-    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
-    if (!(await ownedActiveClass(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
-    const inserted = await pool.query(
-      `INSERT INTO class_attendance_sessions (class_id, teacher_id, title, session_date)
-       VALUES ($1,$2,$3,COALESCE($4::date,CURRENT_DATE))
-       RETURNING id, title, session_date, status, created_at`,
-      [classId, req.user.id, title, sessionDate]
-    );
-    res.status(201).json({ session: inserted.rows[0] });
-  } catch (err) {
-    console.error("Davomat yaratish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
-
-app.put("/teacher/classes/:classId/attendance/:sessionId", authMiddleware, requireTeacher, async (req, res) => {
-  const client = await pool.connect();
-  try {
-    const classId = parseInt(req.params.classId, 10);
-    const sessionId = parseInt(req.params.sessionId, 10);
-    const records = Array.isArray(req.body.records) ? req.body.records : [];
-    if (!Number.isInteger(classId) || !Number.isInteger(sessionId)) return res.status(400).json({ error: "Noto'g'ri ID" });
-    if (!records.length || records.length > 500) return res.status(400).json({ error: "Davomat belgilarini kiriting" });
-    if (!(await ownedActiveClass(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
-    const session = await client.query(
-      "SELECT id, status FROM class_attendance_sessions WHERE id=$1 AND class_id=$2 AND teacher_id=$3",
-      [sessionId, classId, req.user.id]
-    );
-    if (!session.rows.length) return res.status(404).json({ error: "Davomat topilmadi" });
-    if (session.rows[0].status === "closed") return res.status(409).json({ error: "Yopilgan davomatni o'zgartirib bo'lmaydi" });
-    const allowed = new Set((await client.query(
-      "SELECT student_id FROM class_students WHERE class_id=$1 AND status='active'", [classId]
-    )).rows.map(r => Number(r.student_id)));
-    const validStatuses = new Set(["present", "absent", "late", "excused"]);
-    for (const item of records) {
-      if (!allowed.has(Number(item.student_id)) || !validStatuses.has(item.status)) {
-        return res.status(400).json({ error: "Davomat ma'lumotlari noto'g'ri" });
-      }
-    }
-    await client.query("BEGIN");
-    for (const item of records) {
-      await client.query(
-        `INSERT INTO class_attendance_records (session_id, student_id, status)
-         VALUES ($1,$2,$3)
-         ON CONFLICT (session_id, student_id)
-         DO UPDATE SET status=EXCLUDED.status, marked_at=NOW()`,
-        [sessionId, Number(item.student_id), item.status]
-      );
-    }
-    if (req.body.close === true) {
-      await client.query("UPDATE class_attendance_sessions SET status='closed', updated_at=NOW() WHERE id=$1", [sessionId]);
-    }
-    await client.query("COMMIT");
-    io.to("class_" + String(classId)).emit("classAttendanceUpdated", { classId });
-    res.json({ success: true });
-  } catch (err) {
-    await client.query("ROLLBACK").catch(() => {});
-    console.error("Davomat saqlash xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  } finally {
-    client.release();
-  }
-});
-
-app.get("/student/classes/:classId/attendance", authMiddleware, requireStudent, async (req, res) => {
-  try {
-    const classId = parseInt(req.params.classId, 10);
-    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
-    if (!(await activeClassMembership(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
-    const rows = await pool.query(
-      `SELECT s.id, s.title, s.session_date, s.status AS session_status, r.status
-         FROM class_attendance_sessions s
-         LEFT JOIN class_attendance_records r ON r.session_id=s.id AND r.student_id=$2
-        WHERE s.class_id=$1 ORDER BY s.session_date DESC, s.created_at DESC`, [classId, req.user.id]
-    );
-    const marked = rows.rows.filter(r => r.status);
-    const attended = marked.filter(r => r.status === "present" || r.status === "late").length;
-    res.json({ records: rows.rows, summary: { total: marked.length, attended, percent: marked.length ? Math.round(attended * 100 / marked.length) : null } });
-  } catch (err) {
-    console.error("O'quvchi davomati xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(
+  classAttendanceRoutes({
+    pool,
+    sanitizeText,
+    ownedActiveClass,
+    activeClassMembership,
+    io,
+  })
+);
 
 // ===== Live lessons =====
-app.get("/teacher/classes/:classId/lessons", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const classId = parseInt(req.params.classId, 10);
-    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
-    if (!(await ownedActiveClass(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
-    const rows = await pool.query(
-      `SELECT id, title, description, meeting_url, status, starts_at, ended_at, created_at
-         FROM class_lessons WHERE class_id=$1 ORDER BY created_at DESC LIMIT 20`, [classId]
-    );
-    res.json({ lessons: rows.rows });
-  } catch (err) {
-    console.error("Darslarni yuklash xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
-
-app.post("/teacher/classes/:classId/lessons", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const classId = parseInt(req.params.classId, 10);
-    const title = sanitizeText(req.body.title || "", 160);
-    const description = sanitizeText(req.body.description || "", 1000);
-    const meetingUrl = String(req.body.meeting_url || "").trim();
-    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
-    if (!title || !validMeetingUrl(meetingUrl)) return res.status(400).json({ error: "Dars nomi va to'g'ri havolani kiriting" });
-    if (!(await ownedActiveClass(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
-    await pool.query("UPDATE class_lessons SET status='finished', ended_at=NOW(), updated_at=NOW() WHERE class_id=$1 AND status='live'", [classId]);
-    const inserted = await pool.query(
-      `INSERT INTO class_lessons (class_id, teacher_id, title, description, meeting_url, status, starts_at)
-       VALUES ($1,$2,$3,$4,$5,'live',NOW())
-       RETURNING id, title, description, meeting_url, status, starts_at, created_at`,
-      [classId, req.user.id, title, description || null, meetingUrl]
-    );
-    io.to("class_" + String(classId)).emit("classLessonStarted", { classId });
-    res.status(201).json({ lesson: inserted.rows[0] });
-  } catch (err) {
-    console.error("Dars boshlash xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
-
-app.post("/teacher/classes/:classId/lessons/:lessonId/finish", authMiddleware, requireTeacher, async (req, res) => {
-  try {
-    const classId = parseInt(req.params.classId, 10);
-    const lessonId = parseInt(req.params.lessonId, 10);
-    if (!Number.isInteger(classId) || !Number.isInteger(lessonId)) return res.status(400).json({ error: "Noto'g'ri ID" });
-    if (!(await ownedActiveClass(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
-    const updated = await pool.query(
-      `UPDATE class_lessons SET status='finished', ended_at=NOW(), updated_at=NOW()
-        WHERE id=$1 AND class_id=$2 AND teacher_id=$3 AND status='live' RETURNING id`,
-      [lessonId, classId, req.user.id]
-    );
-    if (!updated.rows.length) return res.status(404).json({ error: "Faol dars topilmadi" });
-    io.to("class_" + String(classId)).emit("classLessonFinished", { classId });
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Darsni tugatish xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
-
-app.get("/student/classes/:classId/live-lesson", authMiddleware, requireStudent, async (req, res) => {
-  try {
-    const classId = parseInt(req.params.classId, 10);
-    if (!Number.isInteger(classId)) return res.status(400).json({ error: "Noto'g'ri sinf ID" });
-    if (!(await activeClassMembership(classId, req.user.id))) return res.status(404).json({ error: "Sinf topilmadi" });
-    const rows = await pool.query(
-      `SELECT id, title, description, meeting_url, status, starts_at
-         FROM class_lessons WHERE class_id=$1 AND status='live'
-        ORDER BY starts_at DESC LIMIT 1`, [classId]
-    );
-    res.json({ lesson: rows.rows[0] || null });
-  } catch (err) {
-    console.error("Faol dars xatosi:", err.message);
-    res.status(500).json({ error: "Server xatosi" });
-  }
-});
+app.use(
+  classLessonRoutes({
+    pool,
+    sanitizeText,
+    validMeetingUrl,
+    ownedActiveClass,
+    activeClassMembership,
+    io,
+  })
+);
 
 // ============================================================
 // STUDENT ASSIGNMENTS — Stage 3: O'quvchi backend
@@ -7781,36 +5175,6 @@ app.get("/student/assignments/:id/review", authMiddleware, requireStudent, async
 // HASH bilan: raw kod faqat yaratilganda bir marta ko'rsatiladi, DB'da hash.
 // ============================================================
 
-// Unique kod yaratib o'quvchiga yozadi — RAW faqat qaytariladi, DB'da HASH saqlanadi
-async function assignNewParentCode(studentId) {
-  for (let attempt = 0; attempt < 6; attempt++) {
-    const rawCode = parentCode.generateRawCode();
-    const codeHash = parentCode.hashCode(rawCode);
-    try {
-      const r = await pool.query(
-        `UPDATE users
-         SET parent_connect_code_hash = $1,
-             parent_connect_code = NULL,
-             parent_connect_code_created_at = NOW(),
-             parent_connect_code_expires_at = NOW() + INTERVAL '${parentCode.PARENT_CODE_TTL_HOURS} hours'
-         WHERE id = $2
-         RETURNING parent_connect_code_created_at, parent_connect_code_expires_at`,
-        [codeHash, studentId]
-      );
-      // RAW kodni faqat shu yerda qaytaramiz (DB'da yo'q!)
-      return {
-        rawCode: rawCode,
-        created_at: r.rows[0].parent_connect_code_created_at,
-        expires_at: r.rows[0].parent_connect_code_expires_at,
-      };
-    } catch (e) {
-      if (e.code === "23505") continue; // hash collision (deyarli imkonsiz) — qayta urinamiz
-      throw e;
-    }
-  }
-  throw new Error("Kod yaratib bo'lmadi (collision)");
-}
-
 // ============================================================================
 // MAKTAB TAKLIF KODI ENDPOINTLARI
 // ============================================================================
@@ -8020,22 +5384,6 @@ app.delete("/student/parents/:parentId", authMiddleware, requireStudent, async (
 const MAX_PARENTS_PER_STUDENT = 5;
 const MAX_CHILDREN_PER_PARENT = 10;
 const REL_ALLOWED = ["mother", "father", "guardian", "other"];
-
-// Ulanish urinishlari uchun oddiy in-memory rate-limit (brute-force'ga qarshi)
-const _parentLinkFails = new Map();
-function _plKey(req) { return req.user.id + "|" + clientIp(req); }
-function parentLinkBlocked(req) {
-  const rec = _parentLinkFails.get(_plKey(req));
-  if (!rec) return false;
-  if (Date.now() - rec.first > 10 * 60 * 1000) { _parentLinkFails.delete(_plKey(req)); return false; }
-  return rec.count >= 5;
-}
-function parentLinkNoteFail(req) {
-  const k = _plKey(req); const rec = _parentLinkFails.get(k);
-  if (!rec || Date.now() - rec.first > 10 * 60 * 1000) _parentLinkFails.set(k, { count: 1, first: Date.now() });
-  else rec.count++;
-}
-function parentLinkNoteOk(req) { _parentLinkFails.delete(_plKey(req)); }
 
 // --- Farzandga ulanish (kod orqali) ---
 app.post("/parent/link", authMiddleware, requireParent, async (req, res) => {
@@ -8989,51 +6337,7 @@ app.get("/student/exams/attempts/:attemptId/result", authMiddleware, requireStud
   }
 });
 
-// ===== YORDAMCHI: urinishni baholash (server-side, aldashga qarshi) =====
-async function gradeAttempt(attemptId) {
-  const att = await pool.query("SELECT * FROM teacher_exam_attempts WHERE id = $1", [attemptId]);
-  if (att.rows.length === 0) return { error: "Urinish topilmadi" };
-  const attempt = att.rows[0];
-
-  // To'g'ri javoblar (faqat serverda — teacher_exam_questions)
-  const qs = await pool.query(
-    "SELECT id, correct_answer FROM teacher_exam_questions WHERE exam_id = $1",
-    [attempt.exam_id]
-  );
-  const answers = attempt.answers || {};
-
-  let correct = 0, wrong = 0, unanswered = 0;
-  qs.rows.forEach((q) => {
-    const given = (answers[q.id] || answers[String(q.id)] || "").toLowerCase();
-    if (!given) unanswered++;
-    else if (given === (q.correct_answer || "").toLowerCase()) correct++;
-    else wrong++;
-  });
-
-  const total = qs.rows.length;
-  const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
-
-  // pass_percent ni imtihondan olamiz
-  const examRes = await pool.query("SELECT pass_percent FROM teacher_exams WHERE id = $1", [attempt.exam_id]);
-  const passPercent = examRes.rows[0] ? examRes.rows[0].pass_percent : 60;
-  const passed = percent >= passPercent;
-
-  await pool.query(
-    `UPDATE teacher_exam_attempts
-     SET status = 'submitted', submitted_at = NOW(),
-         score = $1, total = $2, percent = $3,
-         correct_count = $1, wrong_count = $4, unanswered_count = $5, passed = $6
-     WHERE id = $7`,
-    [correct, total, percent, wrong, unanswered, passed, attemptId]
-  );
-
-  return {
-    success: true,
-    score: correct, total, percent,
-    correct_count: correct, wrong_count: wrong, unanswered_count: unanswered,
-    passed,
-  };
-}
+const gradeAttempt = createExamAttemptGradingService({ pool });
 
 // --- Sinf topshiriqlari ro'yxati (statistika bilan) ---
 app.get("/teacher/classes/:classId/assignments", authMiddleware, requireTeacher, async (req, res) => {
@@ -9718,118 +7022,13 @@ app.post("/tournament/match/:id/finish", authMiddleware, async (req, res) => {
   }
 });
 
-async function checkMatchCompletion(matchId) {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    const matchQ = await client.query(
-      "SELECT * FROM tournament_matches WHERE id = $1 FOR UPDATE",
-      [matchId]
-    );
-    const match = matchQ.rows[0];
-    if (!match || match.status === "done") {
-      await client.query("ROLLBACK");
-      return;
-    }
-
-    // Faqat check-in qilganlar (haqiqiy o'yinchilar) hisobga olinadi
-    const playersQ = await client.query(
-      "SELECT user_id, school, school_key, score, finished, checked_in FROM tournament_match_players WHERE match_id = $1 AND checked_in = true",
-      [matchId]
-    );
-    const players = playersQ.rows;
-    if (players.length === 0) {
-      await client.query("ROLLBACK");
-      return;
-    }
-
-    // Hamma tugatdimi?
-    const allFinished = players.every(p => p.finished);
-    if (!allFinished) {
-      await client.query("ROLLBACK");
-      return;
-    }
-
-    // Jamoa ballari
-    let scoreA = 0, scoreB = 0;
-    players.forEach(p => {
-      if (p.school_key === match.school_a_key) scoreA += p.score;
-      else if (p.school_key === match.school_b_key) scoreB += p.score;
-    });
-
-    let winner = null;
-    let winnerKey = null;
-    if (scoreA > scoreB) { winner = match.school_a; winnerKey = match.school_a_key; }
-    else if (scoreB > scoreA) { winner = match.school_b; winnerKey = match.school_b_key; }
-    else {
-      // DURANG — tezroq tugatgan jamoa yutadi (jamoaning oxirgi a'zosi qachon tugatdi)
-      // Har maktab uchun eng oxirgi finished_at ni topamiz (jamoa to'liq tugagan vaqti)
-      const timeQ = await client.query(
-        `SELECT school_key, MAX(finished_at) AS last_finish
-         FROM tournament_match_players
-         WHERE match_id = $1 AND checked_in = true AND finished = true
-         GROUP BY school_key`,
-        [matchId]
-      );
-      let timeA = null, timeB = null;
-      timeQ.rows.forEach(r => {
-        if (r.school_key === match.school_a_key) timeA = r.last_finish;
-        else if (r.school_key === match.school_b_key) timeB = r.last_finish;
-      });
-      if (timeA && timeB) {
-        // Ertaroq tugatgan (kichikroq vaqt) yutadi
-        const timeAMs = new Date(timeA).getTime();
-        const timeBMs = new Date(timeB).getTime();
-        if (timeAMs !== timeBMs) {
-          const aWon = timeAMs < timeBMs;
-          winner = aWon ? match.school_a : match.school_b;
-          winnerKey = aWon ? match.school_a_key : match.school_b_key;
-        } else {
-          const seeded = await getSeededWinner(
-            client, match.tournament_id,
-            match.school_a, match.school_a_key, match.school_b, match.school_b_key
-          );
-          winner = seeded.school;
-          winnerKey = seeded.school_key;
-        }
-        console.log(`[Turnir] Match #${matchId} DURANG (${scoreA}-${scoreB}) → tezlik bo'yicha g'olib: ${winner}`);
-      } else if (timeA) {
-        winner = match.school_a;
-        winnerKey = match.school_a_key;
-      } else if (timeB) {
-        winner = match.school_b;
-        winnerKey = match.school_b_key;
-      }
-      // Agar ikkalasi ham null bo'lsa (kam ehtimol) — winner null qoladi
-    }
-
-    await client.query(
-      "UPDATE tournament_matches SET status = 'done', score_a = $1, score_b = $2, winner_school = $3, winner_school_key = $4, finished_at = NOW() WHERE id = $5",
-      [scoreA, scoreB, winner, winnerKey, matchId]
-    );
-    // G'olibni keyingi raundga
-    if (winner) {
-      await advanceWinner(client, match.tournament_id, match.round, match.match_no, winner, winnerKey);
-    }
-    await client.query("COMMIT");
-
-    console.log(`[Turnir] Match #${matchId} TUGADI: ${match.school_a} ${scoreA} — ${scoreB} ${match.school_b}, g'olib: ${winner || "durang"}`);
-
-    // Barcha o'yinchilarga natija
-    notifyMatchPlayers(matchId, "matchFinished", {
-      matchId: parseInt(matchId),
-      score_a: scoreA, score_b: scoreB,
-      school_a: match.school_a, school_b: match.school_b,
-      winner: winner,
-      winner_key: winnerKey,
-    });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error("checkMatchCompletion xatosi:", err.message);
-  } finally {
-    client.release();
-  }
-}
+const checkMatchCompletion = createTournamentMatchCompletionCheckService({
+  pool,
+  getSeededWinner,
+  advanceWinner,
+  notifyMatchPlayers,
+  logger: console,
+});
 
 // ============================================================
 // SCHOOL CUP — Bosqich 6.1: Match holat kuzatuvchisi
@@ -9837,356 +7036,34 @@ async function checkMatchCompletion(matchId) {
 //   pending → checkin (15 daqiqa oldin) → live (vaqt kelganda)
 // ============================================================
 
-const CHECKIN_LEAD_MIN = 15; // necha daqiqa oldin check-in ochiladi
+const expireTournamentMatch = createTournamentMatchExpiryService({
+  pool,
+  checkMatchCompletion,
+  logger: console,
+});
 
-async function expireTournamentMatch(matchId) {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    const matchQ = await client.query(
-      `SELECT m.status,
-              m.started_at + (t.seconds_per_match * INTERVAL '1 second') AS deadline
-       FROM tournament_matches m
-       JOIN tournaments t ON t.id = m.tournament_id
-       WHERE m.id = $1
-       FOR UPDATE OF m`,
-      [matchId]
-    );
-    const match = matchQ.rows[0];
-    if (!match || match.status !== "live" || new Date(match.deadline) > new Date()) {
-      await client.query("ROLLBACK");
-      return false;
-    }
+const openMatchCheckin = createTournamentMatchCheckinService({
+  pool,
+  notifyMatchPlayers,
+  logger: console,
+});
 
-    await client.query(
-      `UPDATE tournament_match_players
-       SET finished = true, finished_at = COALESCE(finished_at, $2)
-       WHERE match_id = $1 AND checked_in = true AND finished = false`,
-      [matchId, match.deadline]
-    );
-    await client.query("COMMIT");
-    await checkMatchCompletion(matchId);
-    return true;
-  } catch (err) {
-    await client.query("ROLLBACK").catch(() => {});
-    console.error("Match timeout xatosi:", err.message);
-    return false;
-  } finally {
-    client.release();
-  }
-}
+const startMatchLive = createTournamentMatchLiveService({
+  pool,
+  getSeededWinner,
+  finishMatchWithWinner,
+  notifyTournamentResult,
+  notifyMatchPlayers,
+  logger: console,
+});
 
-async function tournamentMatchWatcher() {
-  try {
-    const now = new Date();
-
-    // 1) pending → checkin: scheduled_at dan 15 daqiqa qolganlar
-    const checkinThreshold = new Date(now.getTime() + CHECKIN_LEAD_MIN * 60000);
-    const toCheckin = await pool.query(
-      `SELECT id, tournament_id, round, match_no, school_a, school_b, school_a_key, school_b_key, scheduled_at
-       FROM tournament_matches
-       WHERE status = 'pending'
-         AND school_a IS NOT NULL AND school_b IS NOT NULL
-         AND scheduled_at IS NOT NULL
-         AND scheduled_at <= $1`,
-      [checkinThreshold]
-    );
-    for (const m of toCheckin.rows) {
-      await openMatchCheckin(m);
-    }
-
-    // 2) checkin → live: scheduled_at vaqti kelgan matchlar
-    const toLive = await pool.query(
-      `SELECT id, tournament_id, round, match_no, school_a, school_b, school_a_key, school_b_key, scheduled_at
-       FROM tournament_matches
-       WHERE status = 'checkin'
-         AND scheduled_at IS NOT NULL
-         AND scheduled_at <= $1`,
-      [now]
-    );
-    for (const m of toLive.rows) {
-      await startMatchLive(m);
-    }
-
-    // 3) live match vaqti tugasa, javob bermay qolgan o'yinchilarni ham
-    // server yakunlaydi. Brauzer yopilib qolsa ham turnir osilib qolmaydi.
-    const expiredLive = await pool.query(
-      `SELECT m.id
-       FROM tournament_matches m
-       JOIN tournaments t ON t.id = m.tournament_id
-       WHERE m.status = 'live'
-         AND m.started_at IS NOT NULL
-         AND m.started_at + (t.seconds_per_match * INTERVAL '1 second') <= $1`,
-      [now]
-    );
-    for (const m of expiredLive.rows) {
-      await expireTournamentMatch(m.id);
-    }
-  } catch (err) {
-    console.error("Match watcher xatosi:", err.message);
-  }
-}
-
-// Matchni checkin holatiga o'tkazish + a'zolar ro'yxatini tayyorlash
-async function openMatchCheckin(match) {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-
-    // Holatni checkin ga o'tkazamiz
-    await client.query("UPDATE tournament_matches SET status = 'checkin' WHERE id = $1", [match.id]);
-
-    // Ikkala maktab jamoasi a'zolarini tournament_match_players ga yozamiz (agar yo'q bo'lsa)
-    // Faqat starter va reserve — checked_in = false bilan
-    for (const team of [
-      { school: match.school_a, schoolKey: match.school_a_key },
-      { school: match.school_b, schoolKey: match.school_b_key },
-    ]) {
-      if (!team.school || !team.schoolKey) continue;
-      const members = await client.query(
-        `SELECT user_id, member_role FROM tournament_team_members
-         WHERE tournament_id = $1 AND school_key = $2
-         ORDER BY member_role DESC, slot_order ASC`,
-        [match.tournament_id, team.schoolKey]
-      );
-      for (const mem of members.rows) {
-        // Allaqachon yozilganmi?
-        const exists = await client.query(
-          "SELECT id FROM tournament_match_players WHERE match_id = $1 AND user_id = $2",
-          [match.id, mem.user_id]
-        );
-        if (exists.rows.length === 0) {
-          await client.query(
-            `INSERT INTO tournament_match_players (match_id, user_id, school, school_key, is_bot, checked_in, score, finished)
-             VALUES ($1, $2, $3, $4, false, false, 0, false)`,
-            [match.id, mem.user_id, team.school, team.schoolKey]
-          );
-        }
-      }
-    }
-
-    await client.query("COMMIT");
-    console.log(`[Turnir] Match #${match.id} (${match.school_a} vs ${match.school_b}) — CHECK-IN ochildi`);
-
-    // Socket orqali a'zolarga xabar (agar onlayn bo'lsa)
-    notifyMatchPlayers(match.id, "matchCheckinOpen", {
-      matchId: match.id,
-      scheduledAt: match.scheduled_at,
-      schoolA: match.school_a,
-      schoolB: match.school_b,
-    });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error("openMatchCheckin xatosi:", err.message);
-  } finally {
-    client.release();
-  }
-}
-
-// Matchni live holatiga o'tkazish (jang boshlanadi) yoki walkover
-function notifyTournamentResult(match, winnerSchool, winnerSchoolKey, scoreA = 0, scoreB = 0) {
-  notifyMatchPlayers(match.id, "matchFinished", {
-    matchId: parseInt(match.id),
-    score_a: scoreA,
-    score_b: scoreB,
-    school_a: match.school_a,
-    school_b: match.school_b,
-    winner: winnerSchool,
-    winner_key: winnerSchoolKey,
-  });
-}
-
-async function startMatchLive(match) {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query(
-      "UPDATE tournaments SET status = 'live' WHERE id = $1 AND status IN ('bracket', 'registration')",
-      [match.tournament_id]
-    );
-
-    // Har maktabdan nechta o'yinchi check-in qilgan?
-    const checkedQ = await client.query(
-      `SELECT school_key, COUNT(*) FILTER (WHERE checked_in = true) AS ready
-       FROM tournament_match_players
-       WHERE match_id = $1
-       GROUP BY school_key`,
-      [match.id]
-    );
-    const readyMap = {};
-    checkedQ.rows.forEach(r => { readyMap[r.school_key] = parseInt(r.ready) || 0; });
-    const aReady = readyMap[match.school_a_key] || 0;
-    const bReady = readyMap[match.school_b_key] || 0;
-
-    // WALKOVER holatlari (bot yo'q — hech kim kelmasa raqib o'tadi)
-    if (aReady === 0 && bReady === 0) {
-      // Ikkala jamoa ham kelmasa setka osilib qolmasligi uchun yuqori seed o'tadi.
-      const seeded = await getSeededWinner(
-        client, match.tournament_id,
-        match.school_a, match.school_a_key, match.school_b, match.school_b_key
-      );
-      await finishMatchWithWinner(client, match, seeded.school, seeded.school_key, 0, 0, true);
-      await client.query("COMMIT");
-      notifyTournamentResult(match, seeded.school, seeded.school_key);
-      console.log(`[Turnir] Match #${match.id} — ikkala maktab ham kelmadi, yuqori seed o'tdi: ${seeded.school}`);
-      return;
-    }
-    if (aReady === 0) {
-      // A kelmadi → B walkover
-      await finishMatchWithWinner(client, match, match.school_b, match.school_b_key, 0, 0, true);
-      await client.query("COMMIT");
-      notifyTournamentResult(match, match.school_b, match.school_b_key);
-      console.log(`[Turnir] Match #${match.id} — ${match.school_a} kelmadi, ${match.school_b} walkover g'olib`);
-      return;
-    }
-    if (bReady === 0) {
-      // B kelmadi → A walkover
-      await finishMatchWithWinner(client, match, match.school_a, match.school_a_key, 0, 0, true);
-      await client.query("COMMIT");
-      notifyTournamentResult(match, match.school_a, match.school_a_key);
-      console.log(`[Turnir] Match #${match.id} — ${match.school_b} kelmadi, ${match.school_a} walkover g'olib`);
-      return;
-    }
-
-    // Ikkala maktabdan ham kamida 1 o'yinchi bor → JANG boshlanadi
-    // Savollarni tanlaymiz (ikkala maktab bir xil savollarni oladi — Model B)
-    const tq = await client.query("SELECT questions_per_match, cefr_level FROM tournaments WHERE id = $1", [match.tournament_id]);
-    const qCount = tq.rows[0] ? tq.rows[0].questions_per_match : 20;
-    const cefr = tq.rows[0] ? tq.rows[0].cefr_level : "mixed";
-
-    let qRes;
-    if (cefr && cefr !== "mixed") {
-      qRes = await client.query(
-        "SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2",
-        [cefr, qCount]
-      );
-      // Yetarli savol bo'lmasa, aralashdan to'ldiramiz
-      if (qRes.rows.length < qCount) {
-        const extra = await client.query(
-          "SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option FROM questions WHERE cefr_level <> $1 ORDER BY RANDOM() LIMIT $2",
-          [cefr, qCount - qRes.rows.length]
-        );
-        qRes.rows = qRes.rows.concat(extra.rows);
-      }
-    } else {
-      qRes = await client.query(
-        "SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option FROM questions ORDER BY RANDOM() LIMIT $1",
-        [qCount]
-      );
-    }
-    const questions = qRes.rows;
-
-    // Savollarni match bilan saqlaymiz (JSON) — hamma bir xil ko'radi
-    await client.query(
-      "UPDATE tournament_matches SET status = 'live', started_at = NOW(), questions_data = $1 WHERE id = $2",
-      [JSON.stringify(questions), match.id]
-    );
-    await client.query("COMMIT");
-    console.log(`[Turnir] Match #${match.id} (${match.school_a} ${aReady} vs ${bReady} ${match.school_b}) — JANG BOSHLANDI, ${questions.length} savol`);
-
-    // Socket orqali jang boshlanganini bildiramiz
-    notifyMatchPlayers(match.id, "matchLiveStart", { matchId: match.id });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error("startMatchLive xatosi:", err.message);
-  } finally {
-    client.release();
-  }
-}
-
-// G'olibni belgilab matchni tugatish (walkover yoki normal)
-async function finishMatchWithWinner(client, match, winnerSchool, winnerSchoolKey, scoreA, scoreB, isWalkover) {
-  await client.query(
-    `UPDATE tournament_matches
-     SET status = 'done', winner_school = $1, winner_school_key = $2,
-         score_a = $3, score_b = $4, finished_at = NOW()
-     WHERE id = $5`,
-    [winnerSchool, winnerSchoolKey, scoreA, scoreB, match.id]
-  );
-  // G'olibni keyingi raundga ko'chirish (6.8 da to'liq, hozir asos)
-  await advanceWinner(client, match.tournament_id, match.round, match.match_no, winnerSchool, winnerSchoolKey);
-}
-
-// G'olibni keyingi raundga joylashtirish
-async function advanceWinner(client, tid, round, matchNo, winnerSchool, winnerSchoolKey) {
-  if (!winnerSchool || !winnerSchoolKey) return;
-  const currentMatch = await client.query(
-    `SELECT school_a_key, school_b_key
-     FROM tournament_matches
-     WHERE tournament_id = $1 AND round = $2 AND match_no = $3`,
-    [tid, round, matchNo]
-  );
-  if (currentMatch.rows.length > 0) {
-    const current = currentMatch.rows[0];
-    const loserKey = current.school_a_key === winnerSchoolKey ? current.school_b_key : current.school_a_key;
-    if (loserKey) {
-      await client.query(
-        "UPDATE tournament_schools SET eliminated = true WHERE tournament_id = $1 AND school_key = $2",
-        [tid, loserKey]
-      );
-    }
-  }
-  const nextMatchNo = Math.ceil(matchNo / 2);
-  const isA = (matchNo % 2 === 1);
-  const col = isA ? "school_a" : "school_b";
-  const keyCol = isA ? "school_a_key" : "school_b_key";
-  // Keyingi raund mavjudmi?
-  const next = await client.query(
-    "SELECT id FROM tournament_matches WHERE tournament_id = $1 AND round = $2 AND match_no = $3",
-    [tid, round + 1, nextMatchNo]
-  );
-  if (next.rows.length > 0) {
-    await client.query(
-      `UPDATE tournament_matches SET ${col} = $1, ${keyCol} = $2 WHERE id = $3`,
-      [winnerSchool, winnerSchoolKey, next.rows[0].id]
-    );
-  } else {
-    // Keyingi raund yo'q → bu final edi → g'olib chempion
-    await client.query(
-      "UPDATE tournament_schools SET placement = 1 WHERE tournament_id = $1 AND school_key = $2",
-      [tid, winnerSchoolKey]
-    );
-    // Final mag'lubi → 2-o'rin
-    const finalMatch = await client.query(
-      "SELECT school_a, school_b, school_a_key, school_b_key FROM tournament_matches WHERE tournament_id = $1 AND round = $2 AND match_no = $3",
-      [tid, round, matchNo]
-    );
-    if (finalMatch.rows.length > 0) {
-      const fm = finalMatch.rows[0];
-      const winnerIsA = fm.school_a_key === winnerSchoolKey;
-      const runnerUp = winnerIsA ? fm.school_b : fm.school_a;
-      const runnerUpKey = winnerIsA ? fm.school_b_key : fm.school_a_key;
-      if (runnerUp && runnerUpKey) {
-        await client.query(
-          "UPDATE tournament_schools SET placement = 2 WHERE tournament_id = $1 AND school_key = $2",
-          [tid, runnerUpKey]
-        );
-      }
-    }
-    // Turnir yakunlandi → 'finished' holatiga
-    await client.query(
-      "UPDATE tournaments SET status = 'finished' WHERE id = $1",
-      [tid]
-    );
-    console.log(`[Turnir] Turnir #${tid} YAKUNLANDI — Chempion: ${winnerSchool}`);
-  }
-}
-
-// Match a'zolariga socket xabar yuborish (onlayn bo'lganlarga)
-async function notifyMatchPlayers(matchId, event, payload) {
-  try {
-    const players = await pool.query(
-      "SELECT user_id FROM tournament_match_players WHERE match_id = $1 AND user_id IS NOT NULL",
-      [matchId]
-    );
-    for (const p of players.rows) {
-      const socketId = onlineUsers[String(p.user_id)];
-      if (socketId) io.to(socketId).emit(event, payload);
-    }
-  } catch (err) {
-    console.error("notifyMatchPlayers xatosi:", err.message);
-  }
-}
+const tournamentMatchWatcher = createTournamentMatchWatcherService({
+  pool,
+  openMatchCheckin,
+  startMatchLive,
+  expireTournamentMatch,
+  logger: console,
+});
 
 // Watcher'ni har 30 soniyada ishga tushiramiz
 setInterval(tournamentMatchWatcher, 30000);
@@ -10250,41 +7127,7 @@ server.listen(PORT, async () => {
 // Double-shutdown himoyasi: ikkinchi signal e'tiborsiz qoldiriladi.
 // Timeout: agar 10s ichida yopilmasa — majburan chiqamiz (osilib qolmaslik).
 // ============================================================================
-let _shuttingDown = false;
-async function gracefulShutdown(signal) {
-  if (_shuttingDown) {
-    console.log(`[Shutdown] ${signal} qayta keldi — allaqachon to'xtayapmiz, e'tiborsiz.`);
-    return;
-  }
-  _shuttingDown = true;
-  console.log(`[Shutdown] ${signal} qabul qilindi — toza to'xtash boshlandi...`);
-
-  // Majburiy chiqish taymeri (yopilish osilib qolmasin)
-  const forceTimer = setTimeout(() => {
-    console.error("[Shutdown] 10s ichida yopilmadi — majburan chiqamiz.");
-    process.exit(1);
-  }, 10000);
-  forceTimer.unref();
-
-  // 1) Yangi HTTP/Socket ulanishlarni to'xtatamiz, mavjudlari tugashini kutamiz
-  server.close(async (err) => {
-    if (err) console.error("[Shutdown] server.close xatosi:", err.message);
-    else console.log("[Shutdown] HTTP server yopildi (yangi ulanish qabul qilinmaydi).");
-
-    // 2) PostgreSQL pool'ni yopamiz
-    try {
-      await pool.end();
-      console.log("[Shutdown] PostgreSQL pool yopildi.");
-    } catch (e) {
-      console.error("[Shutdown] pool.end xatosi:", e.message);
-    }
-
-    // 3) Toza chiqish
-    clearTimeout(forceTimer);
-    console.log("[Shutdown] Tugadi. Xayr.");
-    process.exit(0);
-  });
-}
+const gracefulShutdown = createGracefulShutdownService({ server, pool });
 
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
