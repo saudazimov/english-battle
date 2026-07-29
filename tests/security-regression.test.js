@@ -54,6 +54,14 @@ test("payment, session and upload integrity guards remain present", () => {
   const premium = fs.readFileSync(path.join(root, "premium.js"), "utf8");
   const auth = fs.readFileSync(path.join(root, "auth.js"), "utf8");
   const server = fs.readFileSync(path.join(root, "server.js"), "utf8");
+  const questClaim = fs.readFileSync(
+    path.join(root, "src/controllers/questClaimController.js"),
+    "utf8"
+  );
+  const registerService = fs.readFileSync(
+    path.join(root, "src/services/registerService.js"),
+    "utf8"
+  );
 
   assert.match(payme, /timingSafeEqual/);
   assert.match(payme, /SELECT \* FROM payments WHERE id = \$1 FOR UPDATE/);
@@ -61,9 +69,9 @@ test("payment, session and upload integrity guards remain present", () => {
   assert.match(premium, /ON CONFLICT \(user_id, plan\) WHERE status = 'active'/);
   assert.match(auth, /auth_version/);
   assert.match(server, /uploadedContentMatches/);
-  assert.match(server, /FOR UPDATE OF uq/);
-  assert.match(server, /new Set\(\["student", "teacher", "parent"\]\)/);
-  assert.match(server, /requestedRole !== "school_admin"/);
+  assert.match(questClaim, /FOR UPDATE OF uq/);
+  assert.match(registerService, /new Set\(\["student", "teacher", "parent"\]\)/);
+  assert.match(registerService, /requestedRole !== "school_admin"/);
 });
 
 test("all required security migrations exist", () => {
