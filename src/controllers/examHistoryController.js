@@ -1,12 +1,19 @@
 const { createExamHistoryService } = require("../services/examHistoryService");
 
+function parsePositiveInteger(value) {
+  if (typeof value !== "string" || !/^[1-9]\d*$/.test(value)) return null;
+
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : null;
+}
+
 function createExamHistoryController({ pool }) {
   const service = createExamHistoryService({ pool });
 
   async function listAttempts(req, res) {
     try {
-      const targetId = parseInt(req.params.userId, 10);
-      if (isNaN(targetId)) {
+      const targetId = parsePositiveInteger(req.params.userId);
+      if (targetId === null) {
         return res.status(400).json({ error: "Noto'g'ri ID" });
       }
       if (targetId !== req.user.id) {

@@ -68,7 +68,7 @@ test("exam history preserves SQL and response mapping", async () => {
   assert.match(queries[0].sql, /FROM exam_attempts WHERE user_id = \$1 ORDER BY taken_at DESC LIMIT 50$/);
 });
 
-test("exam history controller preserves ID parsing and owner-only guards", async () => {
+test("exam history controller enforces exact IDs and owner-only guards", async () => {
   let calls = 0;
   const controller = createExamHistoryController({
     pool: {
@@ -79,17 +79,27 @@ test("exam history controller preserves ID parsing and owner-only guards", async
     },
   });
 
-  const invalidResponse = createResponse();
-  await controller.listAttempts(
-    { params: { userId: "invalid" }, user: { id: 7 } },
-    invalidResponse
-  );
-  assert.equal(invalidResponse.statusCode, 400);
-  assert.deepEqual(invalidResponse.body, { error: "Noto'g'ri ID" });
+  for (const userId of [
+    "invalid",
+    "7abc",
+    "0",
+    "-7",
+    "01",
+    "9007199254740993",
+    "",
+  ]) {
+    const invalidResponse = createResponse();
+    await controller.listAttempts(
+      { params: { userId }, user: { id: 7 } },
+      invalidResponse
+    );
+    assert.equal(invalidResponse.statusCode, 400);
+    assert.deepEqual(invalidResponse.body, { error: "Noto'g'ri ID" });
+  }
 
   const forbiddenResponse = createResponse();
   await controller.listAttempts(
-    { params: { userId: "7" }, user: { id: "7" } },
+    { params: { userId: "8" }, user: { id: 7 } },
     forbiddenResponse
   );
   assert.equal(forbiddenResponse.statusCode, 403);
@@ -97,7 +107,7 @@ test("exam history controller preserves ID parsing and owner-only guards", async
 
   const successResponse = createResponse();
   await controller.listAttempts(
-    { params: { userId: "7abc" }, user: { id: 7 } },
+    { params: { userId: "7" }, user: { id: 7 } },
     successResponse
   );
   assert.deepEqual(successResponse.body, { attempts: [] });
