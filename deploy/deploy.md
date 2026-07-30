@@ -58,7 +58,7 @@ git clone <SIZNING_REPO_URL> .
 
 # MUHIM: papka strukturasini tekshiring
 ls public/ | head        # HTML/CSS/JS shu yerda BO'LISHI KERAK
-ls migrations/           # 001..010 .sql shu yerda BO'LISHI KERAK
+ls migrations/*.sql | sort  # barcha versiyalangan migrationlar ko'rinishi kerak
 ```
 
 Agar `public/` yoki `migrations/` yo'q bo'lsa — deploy ishlamaydi (server.js va migrate.js ularni kutadi).
@@ -76,29 +76,43 @@ cp .env.example .env
 nano .env
 ```
 
-To'ldiring (MAJBURIY):
+To'ldiring (production validator uchun MAJBURIY):
 - `NODE_ENV=production`
 - `TRUST_PROXY_HOPS=1`  (Nginx ortida)
+- `CLIENT_ORIGIN=https://englishbattle.uz,https://www.englishbattle.uz` (faqat haqiqiy HTTPS originlar)
 - `DB_HOST=localhost`, `DB_PORT=5432`, `DB_USER=eb_user`, `DB_PASSWORD=...`, `DB_NAME=english_battle`
 - `DB_SSL=false`  (local PostgreSQL)
-- `JWT_SECRET=`  → `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
-- `ADMIN_PASSWORD=`  (kuchli)
-- `PARENT_CODE_PEPPER=`  → `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`
-- `ESKIZ_EMAIL=`, `ESKIZ_PASSWORD=`  (Eskiz.uz hisobi — production'da MAJBURIY, aks holda server o'chadi)
+- `JWT_SECRET=` (kamida 32 belgi)
+- `PARENT_CODE_PEPPER=`, `SCHOOL_INVITE_PEPPER=` (har biri kamida 32 belgi)
+- `ADMIN_PASSWORD=` (kamida 12 belgi), `ADMIN_TOTP_SECRET=` (kamida 16 belgili Base32)
+- `ESKIZ_EMAIL=`, `ESKIZ_PASSWORD=`  (Eskiz.uz production hisobi)
 - `ESKIZ_FROM=`  (tasdiqlangan sender nomi)
+- `PAYME_MERCHANT_ID=`, `PAYME_KEY=` (Payme production hisobi)
 
-Ixtiyoriy: `PAYME_*` (to'lov), `OPENAI_API_KEY`/`ANTHROPIC_API_KEY` (AI, aks holda fallback).
+JWT va pepperlarni alohida yarating; bir qiymatni qayta ishlatmang:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+AI ixtiyoriy. `AI_REPORTS_ENABLED=true` bo'lsa, tanlangan `AI_PROVIDER` uchun API key va model majburiy.
+
+Server yoki migratsiyani boshlashdan oldin konfiguratsiyani tekshiring. Buyruq secret qiymatlarni chiqarmaydi:
+
+```bash
+npm run config:check:production
+```
 
 ---
 
 ## 5. Upload papkasi permissions
 
-server.js startda `public/uploads/` va `public/uploads/resources/` ni yaratadi, lekin permission'ni ta'minlang:
+server.js startda `public/uploads/` va private `uploads/resources/` papkalarini yaratadi, lekin permission'ni ta'minlang:
 
 ```bash
-mkdir -p public/uploads/resources
+mkdir -p public/uploads uploads/resources logs
 # Node jarayoni yozа olishi uchun (PM2 sizning user'ingizda ishlaydi)
-chmod -R 755 public/uploads
+chmod -R 755 public/uploads uploads/resources logs
 ```
 
 MUHIM: VPS local disk PERSISTENT — restart'da fayllar YO'QOLMAYDI (Render/Railway'dan farqli). Shuning uchun bu deploy'da S3/R2 SHART EMAS. Lekin backup oling (7-qadam).
@@ -109,19 +123,21 @@ MUHIM: VPS local disk PERSISTENT — restart'da fayllar YO'QOLMAYDI (Render/Rail
 
 ```bash
 node migrate.js status   # qaysi migratsiyalar kutilmoqda
-node migrate.js          # barchasini qo'llaydi (001..010)
+node migrate.js          # barcha kutilayotgan migrationlarni qo'llaydi
+node migrate.js status   # yakuniy holatni qayta tekshiradi
 ```
 
-Kutilgan natija: "10 ta migratsiya qo'llandi" (yoki allaqachon qo'llangan bo'lsa o'tkazib yuboradi).
+Migrationlar sonini hardcode qilmang: repositorydagi barcha `.sql` fayllar `done` bo'lishi kerak. Migrationdan oldin 10-bo'limdagi backupni oling. Xato bo'lsa PM2'ni ishga tushirmang.
 
 ---
 
 ## 7. PM2 bilan ishga tushirish
 
 ```bash
+mkdir -p logs
 pm2 start deploy/ecosystem.config.js
-pm2 save                 # joriy holatни saqlaydi
 pm2 startup              # chiqqan buyruqni copy-paste qilib bajaring (bootga ulaydi)
+pm2 save                 # joriy holatni saqlaydi
 
 pm2 status               # ishlayaptimi
 pm2 logs english-battle  # loglar
@@ -132,6 +148,8 @@ Tekshiring (localdan):
 curl http://127.0.0.1:3000/health   # {"status":"ok",...}
 curl http://127.0.0.1:3000/ready    # {"status":"ready"} (DB ulangan bo'lsa)
 ```
+
+Ikkala endpoint ham `200` qaytarmaguncha Nginx orqali trafik bermang. `instances=1` va `fork` rejimida `pm2 restart` qisqa uzilish keltirishi mumkin; bu profil zero-downtime cluster emas.
 
 ---
 
@@ -170,12 +188,14 @@ MUHIM: SSL yoqilgach, Socket.IO avtomatik `wss://` (secure WebSocket) ishlatadi 
 
 ```bash
 mkdir -p ~/backups
+printf 'localhost:5432:english_battle:eb_user:SIZNING_DB_PAROL\n' > ~/.pgpass
+chmod 600 ~/.pgpass
 crontab -e
 ```
 
 Qo'shing (har kuni 03:00):
 ```
-0 3 * * * PGPASSWORD='SIZNING_DB_PAROL' pg_dump -U eb_user -h localhost english_battle > ~/backups/eb_$(date +\%Y-\%m-\%d).sql 2>> ~/backups/backup.log && find ~/backups -name "eb_*.sql" -mtime +14 -delete
+0 3 * * * pg_dump -U eb_user -h localhost -Fc english_battle > ~/backups/eb_$(date +\%Y-\%m-\%d).dump 2>> ~/backups/backup.log && find ~/backups -name "eb_*.dump" -mtime +14 -delete
 ```
 
 (14 kundan eski backuplar avtomatik o'chadi.)
@@ -186,17 +206,46 @@ Qo'shing (har kuni 03:00):
 
 ```bash
 cd /var/www/englishbattle
-git pull
+PREVIOUS_COMMIT=$(git rev-parse HEAD)
+git fetch origin main
+git pull --ff-only origin main
 npm ci --omit=dev
-node migrate.js          # yangi migratsiyalar bo'lsa
-pm2 reload english-battle   # zero-downtime (graceful shutdown bilan)
+npm run config:check:production
+npm test
+pg_dump -U eb_user -h localhost -Fc english_battle > ~/backups/predeploy_$(date +%Y-%m-%d_%H-%M-%S).dump
+node migrate.js status
+node migrate.js
+node migrate.js status
+pm2 restart deploy/ecosystem.config.js --update-env
+curl --fail http://127.0.0.1:3000/health
+curl --fail http://127.0.0.1:3000/ready
 ```
+
+`PREVIOUS_COMMIT` qiymatini deploy jurnalida saqlang. `npm run test:full` va `npm run test:e2e` ma'lumot o'zgartirishi mumkin; ularni production databasega qarshi bajarmang.
+
+---
+
+## Rollback
+
+Ilova kodi ishlamasa, oldingi commitni qaytaring va dependencylarni aynan lockfiledan tiklang:
+
+```bash
+cd /var/www/englishbattle
+git checkout "$PREVIOUS_COMMIT"
+npm ci --omit=dev
+npm run config:check:production
+pm2 restart deploy/ecosystem.config.js --update-env
+curl --fail http://127.0.0.1:3000/health
+curl --fail http://127.0.0.1:3000/ready
+```
+
+Migrationlar forward-only: kod rollbacki schema rollbacki emas. Migration production ma'lumotiga zarar yetkazgan bo'lsa, trafikni to'xtating va pre-deploy backupni alohida databasega restore qilib tekshirgandan keyingina recovery qiling.
 
 ---
 
 ## Muammolarni bartaraf qilish
 
-- **Server ko'tarilmaydi, "ESKIZ" xatosi**: production'da `ESKIZ_EMAIL`/`ESKIZ_PASSWORD` majburiy. `.env`ni to'ldiring.
+- **Server "Production konfiguratsiyasi xavfsiz emas" deb ko'tarilmaydi**: `npm run config:check:production` bajaring va ko'rsatilgan env nomlarini to'ldiring; secret qiymatlarni log yoki chatga yubormang.
 - **/ready 503 qaytaradi**: DB ulanmagan. `.env` DB kredensiallarini va PostgreSQL ishlayotganini tekshiring (`sudo systemctl status postgresql`).
 - **Live battle ulanmaydi**: Nginx `/socket.io/` blokidagi Upgrade headerlarини tekshiring, `nginx -t`.
 - **413 upload xatosi**: Nginx `client_max_body_size` (25M qo'yilgan).

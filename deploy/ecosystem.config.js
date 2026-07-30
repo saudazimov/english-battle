@@ -7,7 +7,7 @@
 //   pm2 save                 # restart'da avtomatik ko'tarilishi uchun
 //   pm2 startup              # systemd bilan bootga ulash (chiqqan buyruqni bajaring)
 //   pm2 logs english-battle  # loglarni ko'rish
-//   pm2 reload english-battle # zero-downtime qayta yuklash (graceful)
+//   pm2 restart english-battle # graceful qayta ishga tushirish
 //
 // MUHIM: instances=1 va fork rejimi — Redis YO'Q, real-time state RAM'da.
 //   Cluster mode (bir nechta instance) HOZIRCHA ISHLATILMAYDI — Socket.IO
@@ -42,6 +42,8 @@ module.exports = {
       // Bu yerda faqat NODE_ENV majburlanadi (env fayl ustidan).
       env: {
         NODE_ENV: "production",
+        PORT: "3000",
+        TRUST_PROXY_HOPS: "1",
       },
 
       // Loglar
