@@ -25,20 +25,33 @@ test("exam start preserves SQL order, UUID timing, and response", async () => {
     id: String(index + 1),
     question_text: `Question ${index + 1}`,
   }));
-  const queries = [];
+  const poolQueries = [];
+  const transactionQueries = [];
   const events = [];
   const responses = [
     { rows: [{ cefr_level: "A2" }] },
     { rows: questions },
-    { rows: [] },
-    { rows: [] },
   ];
+  const client = {
+    async query(sql, params) {
+      transactionQueries.push({ sql, params });
+      events.push(`client-query-${transactionQueries.length}`);
+      return { rows: [] };
+    },
+    release() {
+      events.push("release");
+    },
+  };
   const service = createExamStartService({
     pool: {
       async query(sql, params) {
-        queries.push({ sql, params });
-        events.push(`query-${queries.length}`);
+        poolQueries.push({ sql, params });
+        events.push(`query-${poolQueries.length}`);
         return responses.shift();
+      },
+      async connect() {
+        events.push("connect");
+        return client;
       },
     },
     randomUUID() {
@@ -56,8 +69,19 @@ test("exam start preserves SQL order, UUID timing, and response", async () => {
       questions,
     },
   });
-  assert.deepEqual(events, ["query-1", "query-2", "query-3", "uuid", "query-4"]);
-  assert.deepEqual(queries, [
+  assert.deepEqual(events, [
+    "query-1",
+    "query-2",
+    "uuid",
+    "connect",
+    "client-query-1",
+    "client-query-2",
+    "client-query-3",
+    "client-query-4",
+    "client-query-5",
+    "release",
+  ]);
+  assert.deepEqual(poolQueries, [
     {
       sql: "SELECT cefr_level FROM users WHERE id = $1",
       params: [5],
@@ -66,6 +90,13 @@ test("exam start preserves SQL order, UUID timing, and response", async () => {
       sql: `SELECT id, question_text, option_a, option_b, option_c, option_d, skill
        FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT 20`,
       params: ["A2"],
+    },
+  ]);
+  assert.deepEqual(transactionQueries, [
+    { sql: "BEGIN", params: undefined },
+    {
+      sql: "SELECT id FROM users WHERE id=$1 FOR UPDATE",
+      params: [5],
     },
     {
       sql: "UPDATE exam_sessions SET status='expired' WHERE user_id=$1 AND status='active'",
@@ -76,6 +107,7 @@ test("exam start preserves SQL order, UUID timing, and response", async () => {
        VALUES ($1, $2, $3, $4, NOW() + INTERVAL '30 minutes')`,
       params: ["session-1", 5, "A2", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]],
     },
+    { sql: "COMMIT", params: undefined },
   ]);
 });
 
@@ -101,6 +133,49 @@ test("exam start preserves missing-user and insufficient-question early returns"
     { status: "insufficient-questions" }
   );
   assert.equal(calls, 2);
+});
+
+test("exam start rolls back and releases the client when session replacement fails", async () => {
+  const questions = Array.from({ length: 10 }, (_, index) => ({ id: index + 1 }));
+  const transactionQueries = [];
+  let poolCalls = 0;
+  let released = false;
+  const service = createExamStartService({
+    pool: {
+      async query() {
+        poolCalls += 1;
+        return poolCalls === 1
+          ? { rows: [{ cefr_level: "B1" }] }
+          : { rows: questions };
+      },
+      async connect() {
+        return {
+          async query(sql) {
+            transactionQueries.push(sql);
+            if (sql.startsWith("INSERT INTO exam_sessions")) {
+              throw new Error("insert failed");
+            }
+            return { rows: [] };
+          },
+          release() {
+            released = true;
+          },
+        };
+      },
+    },
+    randomUUID: () => "session-rollback",
+  });
+
+  await assert.rejects(() => service.startExam(9), /insert failed/);
+  assert.deepEqual(transactionQueries, [
+    "BEGIN",
+    "SELECT id FROM users WHERE id=$1 FOR UPDATE",
+    "UPDATE exam_sessions SET status='expired' WHERE user_id=$1 AND status='active'",
+    `INSERT INTO exam_sessions (id, user_id, from_level, question_ids, expires_at)
+       VALUES ($1, $2, $3, $4, NOW() + INTERVAL '30 minutes')`,
+    "ROLLBACK",
+  ]);
+  assert.equal(released, true);
 });
 
 test("exam start controller enforces exact owner IDs and preserves error logging", async () => {
