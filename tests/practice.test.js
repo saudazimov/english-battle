@@ -86,18 +86,18 @@ function createHarness({
   };
 }
 
-test("practice start preserves level/count fallback, extra query, and session insert", async () => {
+test("practice start atomically replaces active sessions and preserves response", async () => {
   const primary = [{ id: "1", question_text: "One" }];
   const extra = [{ id: "2", question_text: "Two" }];
   const harness = createHarness({
-    poolResults: [{ rows: primary }, { rows: extra }, { rows: [] }],
+    poolResults: [{ rows: primary }, { rows: extra }],
   });
   const response = createResponse();
 
   await harness.controller.start(
     {
       user: { id: 7, cefr_level: "B1" },
-      query: { level: "invalid", count: "3" },
+      query: { level: "A1", count: "5" },
     },
     response
   );
@@ -105,12 +105,27 @@ test("practice start preserves level/count fallback, extra query, and session in
   assert.deepEqual(harness.calls[0][2], ["A1", 5]);
   assert.deepEqual(harness.calls[1][2], ["A1", 4]);
   assert.deepEqual(harness.calls[2], ["uuid"]);
-  assert.deepEqual(harness.calls[3][2], [
+  assert.deepEqual(harness.calls.slice(3).map((call) => call[0]), [
+    "connect",
+    "clientQuery",
+    "clientQuery",
+    "clientQuery",
+    "clientQuery",
+    "clientQuery",
+    "release",
+  ]);
+  assert.equal(harness.calls[4][1], "BEGIN");
+  assert.deepEqual(harness.calls[5][2], [7]);
+  assert.match(harness.calls[5][1], /FROM users WHERE id=\$1 FOR UPDATE/);
+  assert.deepEqual(harness.calls[6][2], [7]);
+  assert.match(harness.calls[6][1], /WHERE user_id=\$1 AND status='active'/);
+  assert.deepEqual(harness.calls[7][2], [
     VALID_SESSION_ID,
     7,
     "A1",
     [1, 2],
   ]);
+  assert.equal(harness.calls[8][1], "COMMIT");
   assert.deepEqual(response.body, {
     session_id: VALID_SESSION_ID,
     level: "A1",
@@ -130,9 +145,66 @@ test("practice start preserves no-question response before UUID and insert", asy
     response
   );
 
+  assert.deepEqual(harness.calls[0][2], ["A2", 10]);
+  assert.deepEqual(harness.calls[1][2], ["A2", 10]);
   assert.equal(harness.calls.some((call) => call[0] === "uuid"), false);
   assert.equal(response.statusCode, 404);
   assert.deepEqual(response.body, { error: "Hozircha savollar mavjud emas" });
+});
+
+test("practice start rejects malformed options before database access", async () => {
+  const queries = [
+    { level: "invalid", count: "10" },
+    { level: ["A1", "A2"], count: "10" },
+    { level: "A1", count: "10abc" },
+    { level: "A1", count: "4" },
+    { level: "A1", count: "31" },
+    { level: "A1", count: ["10", "20"] },
+  ];
+
+  for (const query of queries) {
+    const harness = createHarness();
+    const response = createResponse();
+    await harness.controller.start(
+      { user: { id: 7, cefr_level: "A1" }, query },
+      response
+    );
+
+    assert.deepEqual(harness.calls, []);
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(response.body, { error: "Noto'g'ri practice parametrlari" });
+  }
+});
+
+test("practice start rolls back atomic session replacement failures", async () => {
+  const questions = Array.from({ length: 5 }, (_, index) => ({ id: index + 1 }));
+  const harness = createHarness({
+    poolResults: [{ rows: questions }],
+    clientErrorAt: 2,
+  });
+  const response = createResponse();
+
+  await harness.controller.start(
+    { user: { id: 7, cefr_level: "A1" }, query: { count: "5" } },
+    response
+  );
+
+  assert.equal(response.statusCode, 500);
+  assert.deepEqual(
+    harness.calls.filter((call) => call[0] === "clientQuery").map((call) => call[1]),
+    [
+      "BEGIN",
+      "SELECT id FROM users WHERE id=$1 FOR UPDATE",
+      "UPDATE practice_sessions SET status='expired' WHERE user_id=$1 AND status='active'",
+      "ROLLBACK",
+    ]
+  );
+  assert.equal(harness.calls.some((call) => call[0] === "release"), true);
+  assert.deepEqual(harness.calls.at(-1), [
+    "error",
+    "Practice start xatosi:",
+    "client failed",
+  ]);
 });
 
 test("practice answer rejects malformed payloads before connecting", async () => {
