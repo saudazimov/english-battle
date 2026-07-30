@@ -27,6 +27,7 @@ test("HTTP bootstrap preserves CORS and Helmet security configuration", () => {
   });
 
   assert.equal(developmentCors.credentials, true);
+  assert.deepEqual(developmentCors.exposedHeaders, ["X-Request-ID"]);
   assert.deepEqual(resolveOrigin(developmentCors, undefined), { error: null, allowed: true });
   assert.deepEqual(resolveOrigin(developmentCors, "https://app.example.com"), {
     error: null,
@@ -118,6 +119,7 @@ test("HTTP application preserves construction and middleware order", () => {
       corsMiddleware: (options) => ({ type: "cors", options }),
       compressionMiddleware: () => ({ type: "compression" }),
       pathModule: { join: (...parts) => parts.join("/") },
+      requestContextFactory: () => ({ type: "request-context" }),
       socketServerFactory(dependencies) {
         socketCalls.push(dependencies);
         return io;
@@ -139,6 +141,7 @@ test("HTTP application preserves construction and middleware order", () => {
   assert.deepEqual(
     useCalls.map((args) => (args.length === 1 ? args[0].type : args[0])),
     [
+      "request-context",
       "helmet",
       "cors",
       "compression",
@@ -151,13 +154,13 @@ test("HTTP application preserves construction and middleware order", () => {
       "locations",
     ]
   );
-  assert.deepEqual(useCalls[3][0], { type: "json", options: { limit: "1mb" } });
-  assert.deepEqual(useCalls[4][1], {
+  assert.deepEqual(useCalls[4][0], { type: "json", options: { limit: "1mb" } });
+  assert.deepEqual(useCalls[5][1], {
     type: "static",
     directory: "project-root/node_modules/flag-icons",
   });
-  assert.deepEqual(useCalls[6][0], { type: "static", directory: "public" });
-  assert.deepEqual(useCalls[8][0], { type: "health", dependencies: { pool } });
+  assert.deepEqual(useCalls[7][0], { type: "static", directory: "public" });
+  assert.deepEqual(useCalls[9][0], { type: "health", dependencies: { pool } });
 
   const uploadResponse = {
     statusCode: null,
@@ -171,7 +174,7 @@ test("HTTP application preserves construction and middleware order", () => {
       return this;
     },
   };
-  useCalls[5][1]({}, uploadResponse);
+  useCalls[6][1]({}, uploadResponse);
   assert.equal(uploadResponse.statusCode, 404);
   assert.deepEqual(uploadResponse.body, { error: "Topilmadi" });
 });
@@ -206,7 +209,7 @@ test("HTTP error handler preserves Multer, file and server responses", () => {
         return this;
       },
     };
-    handler(error, {}, response, () => { nextCount += 1; });
+    handler(error, { requestId: "request-test-id" }, response, () => { nextCount += 1; });
     return { response, nextCount };
   }
 
@@ -227,7 +230,10 @@ test("HTTP error handler preserves Multer, file and server responses", () => {
   const genericResult = run(genericError);
   assert.equal(genericResult.response.statusCode, 500);
   assert.deepEqual(genericResult.response.body, { error: "Server xatosi" });
-  assert.deepEqual(logCalls, [["HTTP handler xatosi:", genericError.stack]]);
+  assert.deepEqual(logCalls, [[
+    "HTTP handler xatosi",
+    { requestId: "request-test-id", error: genericError },
+  ]]);
 });
 
 test("process error handlers preserve events and logging", () => {
@@ -266,6 +272,11 @@ test("HTTP startup preserves listen, recovery and shutdown signal order", async 
   };
   const pool = {};
   const gracefulShutdown = (signal) => gracefulSignals.push(signal);
+  const logger = {
+    log: (...args) => logCalls.push(["log", ...args]),
+    warn: (...args) => logCalls.push(["warn", ...args]),
+    error: (...args) => logCalls.push(["error", ...args]),
+  };
 
   const returned = startHttpServer({
     server,
@@ -282,11 +293,7 @@ test("HTTP startup preserves listen, recovery and shutdown signal order", async 
         order.push(["exit", code]);
       },
     },
-    logger: {
-      log: (...args) => logCalls.push(["log", ...args]),
-      warn: (...args) => logCalls.push(["warn", ...args]),
-      error: (...args) => logCalls.push(["error", ...args]),
-    },
+    logger,
     gracefulShutdownFactory(dependencies) {
       order.push(["graceful-factory", dependencies]);
       return gracefulShutdown;
@@ -296,7 +303,7 @@ test("HTTP startup preserves listen, recovery and shutdown signal order", async 
   assert.equal(returned, gracefulShutdown);
   assert.deepEqual(order, [
     ["listen", 3450],
-    ["graceful-factory", { server, pool }],
+    ["graceful-factory", { server, pool, logger }],
     ["on", "SIGTERM"],
     ["on", "SIGINT"],
   ]);

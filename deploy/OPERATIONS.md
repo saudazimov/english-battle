@@ -148,6 +148,8 @@ Quyidagilar hech qachon loglanmaydi: parol, OTP, JWT, `Authorization`/`Cookie` h
 
 Production loglari uchun rotation va retention belgilanadi; faqat operations roli kira oladi. Incident uchun kerakli audit loglar o'chirilishdan himoyalanadi.
 
+Har HTTP response'dagi `X-Request-ID` incident correlation uchun ishlatiladi. Support xabarida request ID so'ralishi mumkin, lekin request ID autentifikatsiya yoki ruxsat sifatida qabul qilinmaydi.
+
 ## 9. Production gate
 
 Quyidagilarning barchasi bajarilmaguncha bu operations bandi production-ready hisoblanmaydi:

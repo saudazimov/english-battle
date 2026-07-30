@@ -36,6 +36,7 @@ test("production operations defines alerts, incidents and privacy safeguards", (
   assert.match(operations, /postmortem/);
   assert.match(operations, /parol, OTP, JWT/);
   assert.match(operations, /Authorization.*Cookie/);
+  assert.match(operations, /X-Request-ID.*incident correlation/);
 });
 
 test("production operations includes executable gates and deploy guide linkage", () => {

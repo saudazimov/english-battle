@@ -11,6 +11,8 @@ const { createHealthRoutes } = require("../routes/healthRoutes");
 const { createLocationRoutes } = require("../routes/locationRoutes");
 const { createGracefulShutdownService } = require("./gracefulShutdownService");
 const { validateProductionEnvironment } = require("../config/productionEnvironment");
+const { createRequestContextMiddleware } = require("../middleware/requestContext");
+const { productionLogger } = require("../utils/structuredLogger");
 
 function createCorsOptions({ environment = process.env } = {}) {
   const allowedOrigins = (environment.CLIENT_ORIGIN || "")
@@ -31,6 +33,7 @@ function createCorsOptions({ environment = process.env } = {}) {
       return callback(null, false);
     },
     credentials: true,
+    exposedHeaders: ["X-Request-ID"],
   };
 }
 
@@ -74,6 +77,7 @@ function createHttpApplication({
     corsMiddleware = cors,
     compressionMiddleware = compression,
     pathModule = path,
+    requestContextFactory = createRequestContextMiddleware,
     socketServerFactory = createSocketServer,
     rootRouterFactory = rootRoutes,
     healthRouterFactory = createHealthRoutes,
@@ -88,8 +92,10 @@ function createHttpApplication({
 
   const server = httpModule.createServer(app);
   const corsOptions = createCorsOptions({ environment });
-  const io = socketServerFactory({ server, corsOptions, pool, logger });
+  const appLogger = productionLogger(logger, environment);
+  const io = socketServerFactory({ server, corsOptions, pool, logger: appLogger });
 
+  app.use(requestContextFactory({ environment, logger: appLogger }));
   app.use(helmetMiddleware(createHelmetOptions(environment)));
   app.use(corsMiddleware(corsOptions));
   app.use(compressionMiddleware());
@@ -115,7 +121,8 @@ function createHttpApplication({
   };
 }
 
-function registerHttpErrorHandler({ app, MulterError, logger = console }) {
+function registerHttpErrorHandler({ app, MulterError, environment = process.env, logger = console }) {
+  const appLogger = productionLogger(logger, environment);
   app.use((err, req, res, next) => {
     if (!err) return next();
     if (err instanceof MulterError) {
@@ -128,20 +135,25 @@ function registerHttpErrorHandler({ app, MulterError, logger = console }) {
     if (err.message && /fayl|format|rasm|image|pdf/i.test(err.message)) {
       return res.status(400).json({ error: err.message });
     }
-    logger.error("HTTP handler xatosi:", err && err.stack ? err.stack : err);
+    appLogger.error("HTTP handler xatosi", { requestId: req.requestId, error: err });
     return res.status(500).json({ error: "Server xatosi" });
   });
 }
 
-function registerProcessErrorHandlers({ processRef = process, logger = console } = {}) {
+function registerProcessErrorHandlers({
+  environment = process.env,
+  processRef = process,
+  logger = console,
+} = {}) {
+  const appLogger = productionLogger(logger, environment);
   processRef.on("uncaughtException", (err) => {
-    logger.error(
+    appLogger.error(
       "‼️ USHLANMAGAN XATO (server ishlashda davom etadi):",
       err && err.stack ? err.stack : err
     );
   });
   processRef.on("unhandledRejection", (reason) => {
-    logger.error(
+    appLogger.error(
       "‼️ RAD ETILGAN PROMISE (server ishlashda davom etadi):",
       reason && reason.stack ? reason.stack : reason
     );
@@ -158,10 +170,11 @@ function startHttpServer({
   logger = console,
   gracefulShutdownFactory = createGracefulShutdownService,
 }) {
+  const appLogger = productionLogger(logger, environment);
   server.listen(port, async () => {
-    logger.log("Server ishga tushdi: http://localhost:3000");
+    appLogger.log("Server ishga tushdi: http://localhost:3000");
     if (!environment.ESKIZ_EMAIL || !environment.ESKIZ_PASSWORD) {
-      logger.warn(
+      appLogger.warn(
         "⚠️  DIQQAT: SMS kredensiali yo'q — DEV rejim (OTP konsolga chiqadi). Production'da .env to'ldiring."
       );
     }
@@ -169,7 +182,7 @@ function startHttpServer({
     await recoverActiveBattles();
   });
 
-  const gracefulShutdown = gracefulShutdownFactory({ server, pool });
+  const gracefulShutdown = gracefulShutdownFactory({ server, pool, logger: appLogger });
   processRef.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
   processRef.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
