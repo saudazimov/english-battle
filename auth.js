@@ -30,19 +30,26 @@ function signToken(user) {
 // Himoyalangan route'larda ishlatiladi. Token to'g'ri bo'lsa req.user ni o'rnatadi.
 // Step 1A da hali hech bir route buni ishlatmaydi — biz faqat tayyorlab qo'yamiz.
 async function authMiddleware(req, res, next) {
+  const authHeader = req.headers["authorization"];
+
+  // Header bormi va "Bearer <token>" ko'rinishidami?
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Avtorizatsiya tokeni yo'q" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  let decoded;
   try {
-    const authHeader = req.headers["authorization"];
-
-    // Header bormi va "Bearer <token>" ko'rinishidami?
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Avtorizatsiya tokeni yo'q" });
-    }
-
-    const token = authHeader.split(" ")[1];
-
     // Tokenni tekshirish
-    const decoded = jwt.verify(token, JWT_SECRET);
+    decoded = jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Token muddati tugagan, qaytadan kiring" });
+    }
+    return res.status(401).json({ error: "Token noto'g'ri" });
+  }
 
+  try {
     const result = await pool.query(
       "SELECT id, phone, is_banned, auth_version FROM users WHERE id = $1",
       [decoded.id]
@@ -59,11 +66,8 @@ async function authMiddleware(req, res, next) {
 
     next();
   } catch (err) {
-    // Token muddati o'tgan yoki soxta
-    if (err.name === "TokenExpiredError") {
-      return res.status(401).json({ error: "Token muddati tugagan, qaytadan kiring" });
-    }
-    return res.status(401).json({ error: "Token noto'g'ri" });
+    console.error("authMiddleware xatosi:", err.message);
+    return res.status(500).json({ error: "Server xatosi" });
   }
 }
 
@@ -166,19 +170,27 @@ function signAdminToken(adminName, authVersion) {
 // Admin himoyalangan endpointlar uchun middleware.
 // Token'ni tekshiradi, isAdmin:true bo'lishini talab qiladi.
 async function requireAdmin(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Admin tokeni yo'q" });
+  }
+  const token = authHeader.split(" ")[1];
+  let decoded;
   try {
-    const authHeader = req.headers["authorization"];
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Admin tokeni yo'q" });
+    decoded = jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Admin token muddati tugagan, qaytadan kiring" });
     }
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
+    return res.status(401).json({ error: "Admin token noto'g'ri" });
+  }
 
-    // MUHIM: faqat isAdmin:true bo'lgan token o'tadi (oddiy user tokeni emas)
-    if (!decoded.isAdmin) {
-      return res.status(403).json({ error: "Admin huquqi kerak" });
-    }
+  // MUHIM: faqat isAdmin:true bo'lgan token o'tadi (oddiy user tokeni emas)
+  if (!decoded.isAdmin) {
+    return res.status(403).json({ error: "Admin huquqi kerak" });
+  }
 
+  try {
     const versionResult = await pool.query(
       "SELECT setting_value FROM admin_settings WHERE setting_key = 'admin_auth_version'"
     );
@@ -190,10 +202,8 @@ async function requireAdmin(req, res, next) {
     req.admin = { name: decoded.adminName || "Admin", role: decoded.role || "admin" };
     next();
   } catch (err) {
-    if (err.name === "TokenExpiredError") {
-      return res.status(401).json({ error: "Admin token muddati tugagan, qaytadan kiring" });
-    }
-    return res.status(401).json({ error: "Admin token noto'g'ri" });
+    console.error("requireAdmin xatosi:", err.message);
+    return res.status(500).json({ error: "Server xatosi" });
   }
 }
 
