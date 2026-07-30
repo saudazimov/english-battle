@@ -215,6 +215,8 @@ Snapshot ikkala upload root, fayl hajmlari va SHA-256 checksumlardan iborat mani
 
 ## Yangilanish (keyingi deploylar)
 
+GitHub'da `Production quality gate / quality` check'i `main` uchun required branch protection sifatida yoqilgan bo'lishi kerak. Push yoki pull request'dagi `npm ci`, High/Critical dependency audit, production contract, isolated PostgreSQL migration va `test:full` bosqichlari yashil bo'lmasa deployni boshlamang. Workflow production secret ishlatmaydi va avtomatik deploy qilmaydi.
+
 ```bash
 cd /var/www/englishbattle
 PREVIOUS_COMMIT=$(git rev-parse HEAD)

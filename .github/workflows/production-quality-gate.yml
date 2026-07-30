@@ -1,0 +1,86 @@
+name: Production quality gate
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci-postgres-password
+          POSTGRES_DB: english_battle_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_user -d english_battle_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      CI: "true"
+      NODE_ENV: test
+      PORT: "3000"
+      CLIENT_ORIGIN: http://127.0.0.1:3000
+      DB_HOST: 127.0.0.1
+      DB_PORT: "5432"
+      DB_USER: ci_user
+      DB_PASSWORD: ci-postgres-password
+      DB_NAME: english_battle_ci
+      DB_SSL: "false"
+      JWT_SECRET: ci-only-jwt-secret-with-at-least-32-characters
+      PARENT_CODE_PEPPER: ci-only-parent-pepper-with-at-least-32-characters
+      SCHOOL_INVITE_PEPPER: ci-only-school-pepper-with-at-least-32-characters
+      ADMIN_PASSWORD: CiOnlyAdminPassword123
+      ADMIN_TOTP_SECRET: JBSWY3DPEHPK3PXP
+      ESKIZ_EMAIL: ci@example.invalid
+      ESKIZ_PASSWORD: ci-only-eskiz-password
+      PAYME_MERCHANT_ID: ci-only-merchant
+      PAYME_KEY: ci-only-payme-key
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Block high and critical dependency vulnerabilities
+        run: npm run security:audit
+
+      - name: Verify production contracts without secrets
+        run: npm run test:production-contract
+
+      - name: Apply migrations to isolated CI database
+        run: npm run migrate
+        env:
+          NODE_ENV: production
+
+      - name: Run full test suite
+        run: npm run test:full

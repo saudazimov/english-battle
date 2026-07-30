@@ -13,8 +13,10 @@
     "uploads:backup:verify": "node scripts/upload-backup.js verify",
     "uploads:restore:drill": "node scripts/upload-backup.js restore-drill",
     "config:check:production": "node scripts/validate-production-env.js",
+    "security:audit": "npm audit --omit=dev --audit-level=high",
     "test": "node --test tests/security-regression.test.js",
     "test:e2e": "node --test tests/e2e-api.test.js",
+    "test:production-contract": "node --test tests/production-environment.test.js tests/production-deploy-config.test.js tests/production-operations.test.js",
     "test:full": "node scripts/run-full-tests.js"
   },
   "keywords": [],
