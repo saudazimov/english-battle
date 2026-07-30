@@ -2,11 +2,11 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const registerSoloMatchmakingSocket = require("../src/sockets/soloMatchmakingSocket");
 
-function createHarness({ immediateMatch = false } = {}) {
+function createHarness({ immediateMatch = false, initialQueue = [], nowValue = 123456 } = {}) {
   const calls = [];
   const listeners = [];
   const timers = [];
-  const waitingQueue = [];
+  const waitingQueue = initialQueue;
   const socket = {
     id: "socket-5",
     userId: 5,
@@ -52,7 +52,7 @@ function createHarness({ immediateMatch = false } = {}) {
     },
     now() {
       calls.push(["now"]);
-      return 123456;
+      return nowValue;
     },
     logger: {
       log(...args) {
@@ -125,8 +125,8 @@ test("waiting search preserves defaults, emits, and timer schedule", async () =>
     ["now"],
     ["botName"],
     ["tryMatch", "socket-5"],
-    ["emit", "waiting", { message: "Raqib qidirilmoqda..." }],
-    ["emit", "matchmaking:searching", { message: "Raqib qidirilmoqda..." }],
+    ["emit", "waiting", { message: "Raqib qidirilmoqda...", elapsedMs: 0 }],
+    ["emit", "matchmaking:searching", { message: "Raqib qidirilmoqda...", elapsedMs: 0 }],
     ["timer", 20000, "timer-1"],
     ["timer", 45000, "timer-2"],
     ["timer", 20000, "timer-3"],
@@ -144,6 +144,43 @@ test("waiting search preserves defaults, emits, and timer schedule", async () =>
     expandTimers: ["timer-1", "timer-2"],
     botTimer: "timer-3",
   });
+});
+
+test("refresh resumes the original queue time and remaining timers", async () => {
+  const original = {
+    socketId: "socket-old",
+    userId: 5,
+    name: "Ali",
+    level: "B1",
+    rating: 1450,
+    mode: "casual",
+    lengthKey: "extended",
+    joinedAt: 100000,
+    botName: "Bot Kamol",
+    disconnected: true,
+  };
+  const harness = createHarness({ initialQueue: [original], nowValue: 112000 });
+
+  await harness.handlers.findMatch({ name: "Changed", mode: "ranked", lengthKey: "quick" });
+
+  assert.equal(harness.waitingQueue.length, 1);
+  assert.deepEqual(harness.waitingQueue[0], {
+    socketId: "socket-5",
+    userId: 5,
+    name: "Ali",
+    level: "B1",
+    rating: 1450,
+    mode: "casual",
+    lengthKey: "extended",
+    joinedAt: 100000,
+    botName: "Bot Kamol",
+    expandTimers: ["timer-1", "timer-2"],
+    botTimer: "timer-3",
+  });
+  assert.deepEqual(harness.timers.map((timer) => timer.delay), [8000, 33000, 8000]);
+  assert.ok(harness.calls.some((call) =>
+    call[0] === "emit" && call[1] === "waiting" && call[2].elapsedMs === 12000
+  ));
 });
 
 test("expansion timers preserve queue check, windows, and retry", async () => {

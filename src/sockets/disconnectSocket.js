@@ -83,10 +83,20 @@ function createDisconnectHandler({
 }) {
   return function disconnect() {
     logger.log("O'yinchi uzildi:", socket.id);
-    removeFromQueue(socket.id);
-
     const disconnectedUserId = socket.userId;
     const disconnectedSocketId = socket.id;
+    var suspendedSearch = null;
+    if (typeof removeFromQueue.suspend === "function") {
+      suspendedSearch = removeFromQueue.suspend(socket.id);
+    } else {
+      removeFromQueue(socket.id);
+    }
+    if (suspendedSearch) {
+      setTimer(function removeExpiredSearch() {
+        removeFromQueue(disconnectedSocketId);
+      }, 15000);
+    }
+
     if (disconnectedUserId) {
       const roomId = userToRoom[disconnectedUserId];
       const battle = roomId ? battles[roomId] : null;

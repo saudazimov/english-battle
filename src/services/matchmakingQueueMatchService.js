@@ -6,11 +6,12 @@ function createMatchmakingQueueMatchService({
 }) {
   return function tryQueueMatch(socketId) {
     const player = waitingQueue.find((entry) => entry.socketId === socketId);
-    if (!player) return false;
+    if (!player || player.disconnected) return false;
 
     const opponent = waitingQueue.find(
       (entry) =>
         entry.socketId !== socketId &&
+        !entry.disconnected &&
         String(entry.userId) !== String(player.userId) &&
         mmCompatible(entry, player)
     );

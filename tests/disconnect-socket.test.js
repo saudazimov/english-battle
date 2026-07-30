@@ -17,6 +17,7 @@ function createHarness({
   battles = {},
   userToRoom = {},
   onlineUsers = {},
+  suspendSearch = false,
 } = {}) {
   const calls = [];
   const listeners = [];
@@ -36,14 +37,21 @@ function createHarness({
       };
     },
   };
+  function removeFromQueue(socketId) {
+    calls.push(["removeQueue", socketId]);
+  }
+  if (suspendSearch) {
+    removeFromQueue.suspend = function suspend(socketId) {
+      calls.push(["suspendQueue", socketId]);
+      return { socketId, userId };
+    };
+  }
   registerDisconnectSocket({
     socket,
     battles,
     userToRoom,
     onlineUsers,
-    removeFromQueue(socketId) {
-      calls.push(["removeQueue", socketId]);
-    },
+    removeFromQueue,
     notifyFriendsStatus(statusUserId, online) {
       calls.push(["notify", statusUserId, online]);
     },
@@ -94,6 +102,20 @@ test("disconnect without user preserves log and queue cleanup only", () => {
     ["log", "O'yinchi uzildi:", "socket-5"],
     ["removeQueue", "socket-5"],
   ]);
+});
+
+test("queued search receives a reconnect grace period before cleanup", () => {
+  const harness = createHarness({ suspendSearch: true });
+
+  harness.handler();
+
+  assert.deepEqual(harness.calls.slice(0, 3), [
+    ["log", "O'yinchi uzildi:", "socket-5"],
+    ["suspendQueue", "socket-5"],
+    ["timer", 15000],
+  ]);
+  harness.timers[0].callback();
+  assert.deepEqual(harness.calls.at(-1), ["removeQueue", "socket-5"]);
 });
 
 test("active battle preserves timer scheduling before online cleanup", () => {

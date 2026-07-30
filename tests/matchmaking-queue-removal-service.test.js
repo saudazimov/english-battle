@@ -62,3 +62,21 @@ test("queue removal preserves first-match behavior for duplicate socket IDs", ()
   assert.equal(removeFromQueue("duplicate"), first);
   assert.deepEqual(waitingQueue, [second]);
 });
+
+test("queue suspension clears timers but keeps the entry for reconnect", () => {
+  const target = {
+    socketId: "socket-1",
+    userId: 5,
+    botTimer: "bot-1",
+    expandTimers: ["expand-1", "expand-2"],
+  };
+  const waitingQueue = [target];
+  const { removeFromQueue, clearedTimers } = createHarness(waitingQueue);
+
+  assert.equal(removeFromQueue.suspend("socket-1"), target);
+  assert.deepEqual(clearedTimers, ["bot-1", "expand-1", "expand-2"]);
+  assert.deepEqual(waitingQueue, [target]);
+  assert.equal(target.disconnected, true);
+  assert.equal(target.botTimer, null);
+  assert.deepEqual(target.expandTimers, []);
+});

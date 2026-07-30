@@ -12,27 +12,39 @@ function createFindMatchHandler({
 }) {
   return async function findMatch(playerData) {
     logger.log("Jang qidirilyapti:", socket.id);
-    removeFromQueue(socket.id);
+    const existingSearch = waitingQueue.find(
+      (entry) => String(entry.userId) === String(socket.userId)
+    );
+    if (existingSearch) removeFromQueue(existingSearch.socketId);
+    else removeFromQueue(socket.id);
     playerData = playerData || {};
+    const safeName = stripUnsafe(playerData.name, 60);
+    const currentTime = now();
+    const isResuming = Boolean(existingSearch && existingSearch.disconnected);
+    const joinedAt = isResuming && Number.isFinite(existingSearch.joinedAt)
+      ? existingSearch.joinedAt
+      : currentTime;
+    const elapsedMs = Math.max(0, currentTime - joinedAt);
 
     const player = {
       socketId: socket.id,
       userId: socket.userId,
-      name: stripUnsafe(playerData.name, 60) || "O'yinchi",
-      level: playerData.level || "A1",
-      rating: playerData.rating || 1000,
-      mode: playerData.mode || "ranked",
-      lengthKey: playerData.lengthKey || "standard",
-      joinedAt: now(),
-      botName: getRandomBotName(),
+      name: isResuming ? existingSearch.name : (safeName || "O'yinchi"),
+      level: isResuming ? existingSearch.level : (playerData.level || "A1"),
+      rating: isResuming ? existingSearch.rating : (playerData.rating || 1000),
+      mode: isResuming ? existingSearch.mode : (playerData.mode || "ranked"),
+      lengthKey: isResuming ? existingSearch.lengthKey : (playerData.lengthKey || "standard"),
+      joinedAt,
+      botName: isResuming ? existingSearch.botName : getRandomBotName(),
     };
 
     waitingQueue.push(player);
     if (tryQueueMatch(player.socketId)) return;
 
-    socket.emit("waiting", { message: "Raqib qidirilmoqda..." });
+    socket.emit("waiting", { message: "Raqib qidirilmoqda...", elapsedMs });
     socket.emit("matchmaking:searching", {
       message: "Raqib qidirilmoqda...",
+      elapsedMs,
     });
 
     player.expandTimers = [
@@ -41,13 +53,13 @@ function createFindMatchHandler({
           socket.emit("matchmaking:expanded", { window: 150 });
           tryQueueMatch(player.socketId);
         }
-      }, 20000),
+      }, Math.max(0, 20000 - elapsedMs)),
       setTimer(() => {
         if (waitingQueue.find((entry) => entry.socketId === player.socketId)) {
           socket.emit("matchmaking:expanded", { window: 200 });
           tryQueueMatch(player.socketId);
         }
-      }, 45000),
+      }, Math.max(0, 45000 - elapsedMs)),
     ];
 
     player.botTimer = setTimer(() => {
@@ -69,7 +81,7 @@ function createFindMatchHandler({
       socket.emit("matchFound", botFound);
       socket.emit("matchmaking:found", botFound);
       setTimer(() => startBotBattle(roomId, player), 6000);
-    }, 20000);
+    }, Math.max(0, 20000 - elapsedMs));
   };
 }
 

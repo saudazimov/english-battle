@@ -203,59 +203,47 @@
     .mist-explain i { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
     
     /* ===== JAVOBLAR TAHLILI (ANSWER REVIEW) ===== */
-    /* Bitta-savol ko'rinishi: sahifa normal, scroll markazga bosilmaydi */
-    body:has(#mistakesScreen.active) { display: block; padding: 0; height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
-    body:has(#mistakesScreen.active) .battle-wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 40px; box-sizing: border-box; }
+    /* Desktopda tahlil ekrani to'liq viewportga sig'adi. */
+    body:has(#mistakesScreen.active) { display: block; padding: 0; height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
+    body:has(#mistakesScreen.active) .battle-wrap { max-width: 1240px; height: 100vh; height: 100dvh; margin: 0 auto; padding: 14px 20px; box-sizing: border-box; }
+    #mistakesScreen.active { height: 100%; display: flex; flex-direction: column; }
 
-    /* Javoblar tahlili — scrollbar dizaynga mos (chat/bildirishnoma bilan bir xil) */
-    body:has(#mistakesScreen.active) { scroll-behavior: smooth; }
-    html:has(#mistakesScreen.active) { scrollbar-width: thin; scrollbar-color: rgba(91,140,255,0.5) transparent; }
-    html:has(#mistakesScreen.active)::-webkit-scrollbar { width: 10px; }
-    html:has(#mistakesScreen.active)::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 999px; margin: 6px 0; }
-    html:has(#mistakesScreen.active)::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, var(--accent), var(--accent-2));
-      border-radius: 999px;
-      border: 2px solid transparent;
-      background-clip: padding-box;
-    }
-    html:has(#mistakesScreen.active)::-webkit-scrollbar-thumb:hover { filter: brightness(1.18); }
-
-    .rev-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; animation: revFadeDown 0.4s ease; }
-    .rev-head-left { display: flex; align-items: center; gap: 14px; }
-    .rev-head-ic { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, rgba(91,140,255,0.25), rgba(168,85,247,0.25)); border: 1px solid rgba(91,140,255,0.4); display: grid; place-items: center; flex-shrink: 0; }
-    .rev-head-ic i { width: 24px; height: 24px; color: var(--accent); }
-    .rev-title { font-size: 24px; font-weight: 800; color: #fff; line-height: 1.1; }
-    .rev-sub { font-size: 13.5px; color: var(--text-dim); margin-top: 3px; }
-    .rev-back-btn { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(91,140,255,0.35); color: #e8edf7; font-size: 14px; font-weight: 600; padding: 11px 20px; border-radius: 12px; cursor: pointer; transition: all 0.15s; }
+    .rev-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; animation: revFadeDown 0.4s ease; }
+    .rev-head-left { display: flex; align-items: center; gap: 11px; }
+    .rev-head-ic { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, rgba(91,140,255,0.25), rgba(168,85,247,0.25)); border: 1px solid rgba(91,140,255,0.4); display: grid; place-items: center; flex-shrink: 0; }
+    .rev-head-ic i { width: 21px; height: 21px; color: var(--accent); }
+    .rev-title { font-size: 21px; font-weight: 800; color: #fff; line-height: 1.1; }
+    .rev-sub { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
+    .rev-back-btn { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.04); border: 1px solid rgba(91,140,255,0.35); color: #e8edf7; font-size: 13px; font-weight: 600; padding: 8px 15px; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
     .rev-back-btn:hover { background: rgba(91,140,255,0.12); border-color: var(--accent); }
     .rev-back-btn i { width: 16px; height: 16px; }
 
-    .rev-main { display: flex; align-items: center; gap: 20px; }
+    .rev-main { display: flex; align-items: center; gap: 16px; min-height: 0; flex: 1; }
 
     /* Chap/o'ng strelka tugmalari */
-    .rev-nav-arrow { flex-shrink: 0; width: 78px; height: 92px; border-radius: 18px; background: rgba(10,15,35,0.7); border: 1px solid rgba(100,120,255,0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: all 0.18s; color: #cbd5e1; }
-    .rev-nav-arrow i { width: 30px; height: 30px; }
-    .rev-nav-arrow span { font-size: 12.5px; font-weight: 600; }
+    .rev-nav-arrow { flex-shrink: 0; width: 62px; height: 88px; border-radius: 14px; background: rgba(10,15,35,0.7); border: 1px solid rgba(100,120,255,0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; transition: all 0.18s; color: #cbd5e1; }
+    .rev-nav-arrow i { width: 24px; height: 24px; }
+    .rev-nav-arrow span { font-size: 11px; font-weight: 600; }
     .rev-nav-arrow:hover:not(:disabled) { border-color: var(--accent); box-shadow: 0 0 24px rgba(91,140,255,0.3); color: #fff; transform: translateY(-2px); }
     .rev-nav-arrow:disabled { opacity: 0.35; cursor: not-allowed; }
 
     /* Review card */
-    .rev-card { flex: 1; min-width: 0; background: rgba(10,15,35,0.88); border: 1px solid rgba(100,120,255,0.25); border-radius: 22px; padding: 32px 36px; box-shadow: 0 10px 50px rgba(0,0,0,0.3); animation: revCardIn 0.35s ease; }
+    .rev-card { flex: 1; min-width: 0; height: min(66vh, 680px, calc(100% - 20px)); min-height: min(500px, calc(100% - 20px)); box-sizing: border-box; background: rgba(10,15,35,0.88); border: 1px solid rgba(100,120,255,0.25); border-radius: 20px; padding: 28px 30px; box-shadow: 0 14px 60px rgba(0,0,0,0.34); animation: revCardIn 0.35s ease; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(350px, 0.88fr); grid-template-areas: "badge badge" "question question" "options summary" "options explain" "options flag"; column-gap: 24px; align-content: center; }
     .rev-card.correct { border-color: rgba(52,211,153,0.4); }
     .rev-card.wrong { border-color: rgba(248,113,113,0.4); }
     .rev-card.fade-out { opacity: 0; transition: opacity 0.12s ease; }
     .rev-card.fade-in { animation: revContentIn 0.22s ease; }
 
-    .rev-badge { display: inline-block; font-size: 13px; font-weight: 700; color: var(--accent); background: rgba(91,140,255,0.12); border: 1px solid rgba(91,140,255,0.35); padding: 5px 14px; border-radius: 9px; margin-bottom: 16px; }
-    .rev-question { font-size: 23px; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 24px; }
+    .rev-badge { grid-area: badge; justify-self: start; display: inline-block; font-size: 12.5px; font-weight: 700; color: var(--accent); background: rgba(91,140,255,0.12); border: 1px solid rgba(91,140,255,0.35); padding: 5px 12px; border-radius: 8px; margin-bottom: 12px; }
+    .rev-question { grid-area: question; font-size: 24px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 18px; }
 
     /* Variantlar */
-    .rev-options { display: flex; flex-direction: column; gap: 11px; margin-bottom: 22px; }
-    .rev-opt { display: flex; align-items: center; gap: 14px; padding: 15px 18px; border-radius: 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s; }
-    .rev-opt-letter { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; background: rgba(91,140,255,0.15); color: #b9c8ff; border: 1px solid rgba(91,140,255,0.3); }
+    .rev-options { grid-area: options; display: flex; flex-direction: column; gap: 10px; margin: 0; }
+    .rev-opt { display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s; }
+    .rev-opt-letter { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; flex-shrink: 0; background: rgba(91,140,255,0.15); color: #b9c8ff; border: 1px solid rgba(91,140,255,0.3); }
     .rev-opt-text { flex: 1; font-size: 15.5px; color: #e8edf7; }
-    .rev-opt-status { display: flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; flex-shrink: 0; }
-    .rev-opt-status i { width: 18px; height: 18px; }
+    .rev-opt-status { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; flex-shrink: 0; }
+    .rev-opt-status i { width: 17px; height: 17px; }
     /* To'g'ri variant */
     .rev-opt.correct { background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.45); box-shadow: 0 0 18px rgba(52,211,153,0.08); }
     .rev-opt.correct .rev-opt-letter { background: rgba(52,211,153,0.2); color: var(--green); border-color: rgba(52,211,153,0.5); }
@@ -266,33 +254,40 @@
     .rev-opt.wrong .rev-opt-status { color: var(--red); }
 
     /* Summary row */
-    .rev-summary { display: flex; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; margin-bottom: 18px; }
-    .rev-sum-item { flex: 1; display: flex; align-items: center; gap: 12px; padding: 16px 18px; }
+    .rev-summary { grid-area: summary; display: grid; grid-template-columns: 1fr 1fr; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+    .rev-sum-item { min-width: 0; display: flex; align-items: center; gap: 9px; padding: 11px 12px; }
+    .rev-sum-item:nth-child(3) { grid-column: 1 / -1; border-top: 1px solid rgba(255,255,255,0.07); }
     .rev-sum-item + .rev-sum-item { border-left: 1px solid rgba(255,255,255,0.07); }
-    .rev-sum-ic { width: 30px; height: 30px; flex-shrink: 0; display: grid; place-items: center; }
-    .rev-sum-ic i { width: 22px; height: 22px; }
-    .rev-sum-label { font-size: 12px; color: var(--text-dim); margin-bottom: 2px; }
-    .rev-sum-value { font-size: 16px; font-weight: 700; }
-    .rev-sum-sub { font-size: 12px; margin-top: 1px; }
+    .rev-sum-item:nth-child(3) { border-left: none; }
+    .rev-sum-ic { width: 28px; height: 28px; flex-shrink: 0; display: grid; place-items: center; }
+    .rev-sum-ic i { width: 20px; height: 20px; }
+    .rev-sum-label { font-size: 11.5px; color: var(--text-dim); margin-bottom: 2px; }
+    .rev-sum-value { font-size: 15.5px; font-weight: 700; }
+    .rev-sum-sub { font-size: 11.5px; margin-top: 2px; }
 
     /* Tushuntirish */
-    .rev-explain { display: flex; gap: 14px; background: rgba(91,140,255,0.08); border: 1px solid rgba(91,140,255,0.3); border-radius: 14px; padding: 18px 20px; margin-bottom: 18px; }
-    .rev-explain-ic { width: 38px; height: 38px; border-radius: 11px; background: rgba(91,140,255,0.15); display: grid; place-items: center; flex-shrink: 0; }
-    .rev-explain-ic i { width: 20px; height: 20px; color: var(--accent); }
-    .rev-explain-title { font-size: 13.5px; font-weight: 700; color: var(--accent); margin-bottom: 5px; }
-    .rev-explain-text { font-size: 14px; color: #d4ddf0; line-height: 1.55; }
+    .rev-explain { grid-area: explain; display: flex; gap: 11px; background: rgba(91,140,255,0.08); border: 1px solid rgba(91,140,255,0.3); border-radius: 12px; padding: 12px 13px; margin-bottom: 12px; }
+    .rev-explain-ic { width: 34px; height: 34px; border-radius: 9px; background: rgba(91,140,255,0.15); display: grid; place-items: center; flex-shrink: 0; }
+    .rev-explain-ic i { width: 18px; height: 18px; color: var(--accent); }
+    .rev-explain-title { font-size: 12.5px; font-weight: 700; color: var(--accent); margin-bottom: 3px; }
+    .rev-explain-text { font-size: 13.5px; color: #d4ddf0; line-height: 1.45; }
 
     /* Shikoyat tugmasi (review ichida) */
-    .rev-flag-row { display: flex; justify-content: flex-end; }
-    .rev-flag-btn { display: inline-flex; align-items: center; gap: 7px; background: transparent; border: 1px solid rgba(248,113,113,0.3); color: #f87171; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+    .rev-flag-row { grid-area: flag; display: flex; justify-content: flex-end; }
+    .rev-flag-btn { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid rgba(248,113,113,0.3); color: #f87171; font-size: 12.5px; font-weight: 600; padding: 8px 13px; border-radius: 9px; cursor: pointer; transition: all 0.15s; }
     .rev-flag-btn:hover { background: rgba(248,113,113,0.1); border-color: #f87171; }
     .rev-flag-btn i { width: 15px; height: 15px; }
 
     /* Pastki navigator */
-    .rev-navigator-wrap { margin-top: 24px; background: rgba(10,15,35,0.5); border: 1px solid rgba(100,120,255,0.15); border-radius: 18px; padding: 18px 20px; animation: revFadeUp 0.4s ease; }
-    .rev-navigator { display: flex; flex-wrap: wrap; gap: 9px; justify-content: center; }
-    .rev-num { width: 46px; height: 46px; border-radius: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.16s; border: 1.5px solid transparent; position: relative; }
-    .rev-num i { width: 11px; height: 11px; margin-top: 1px; }
+    .rev-navigator-wrap { flex-shrink: 0; margin-top: 10px; background: rgba(10,15,35,0.5); border: 1px solid rgba(100,120,255,0.15); border-radius: 12px; padding: 8px 10px; animation: revFadeUp 0.4s ease; display: grid; justify-items: center; gap: 7px; }
+    .rev-page-nav { min-width: 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .rev-page-btn { flex-shrink: 0; height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 0 10px; border-radius: 8px; border: 1px solid rgba(91,140,255,0.28); background: rgba(91,140,255,0.08); color: #cbd5e1; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.16s; }
+    .rev-page-btn i { width: 14px; height: 14px; }
+    .rev-page-btn:hover:not(:disabled) { color: #fff; border-color: var(--accent); background: rgba(91,140,255,0.16); }
+    .rev-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .rev-navigator { min-width: 0; display: flex; flex-wrap: nowrap; gap: 6px; justify-content: center; }
+    .rev-num { width: 34px; height: 34px; flex-shrink: 0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.16s; border: 1.5px solid transparent; position: relative; }
+    .rev-num i { width: 9px; height: 9px; margin-top: 0; }
     .rev-num.correct { background: rgba(52,211,153,0.15); color: var(--green); border-color: rgba(52,211,153,0.4); }
     .rev-num.wrong { background: rgba(248,113,113,0.15); color: var(--red); border-color: rgba(248,113,113,0.4); }
     .rev-num.unans { background: rgba(255,255,255,0.04); color: var(--text-faint); border-color: rgba(255,255,255,0.1); }
@@ -300,14 +295,18 @@
     .rev-num.current { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,140,255,0.25), 0 0 18px rgba(91,140,255,0.4); transform: scale(1.06); }
     .rev-num.pulse { animation: revPulse 0.3s ease; }
 
-    .rev-legend { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); }
-    .rev-leg { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-dim); }
-    .rev-leg-dot { width: 18px; height: 18px; border-radius: 6px; display: grid; place-items: center; }
+    .rev-legend { display: flex; flex-wrap: nowrap; gap: 11px; justify-content: center; margin: 0; padding: 0; border: none; }
+    .rev-leg { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--text-dim); white-space: nowrap; }
+    .rev-leg-dot { width: 15px; height: 15px; border-radius: 5px; display: grid; place-items: center; }
     .rev-leg-dot i { width: 11px; height: 11px; }
     .rev-leg-dot.correct { background: rgba(52,211,153,0.2); color: var(--green); }
     .rev-leg-dot.wrong { background: rgba(248,113,113,0.2); color: var(--red); }
     .rev-leg-dot.unans { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); }
     .rev-leg-dot.current { border: 2px solid var(--accent); box-shadow: 0 0 10px rgba(91,140,255,0.4); }
+
+    @media (max-width: 1100px) and (min-width: 761px) {
+      .rev-page-nav, .rev-legend { justify-content: center; }
+    }
 
     @keyframes revFadeDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes revFadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -317,17 +316,24 @@
 
     /* Responsive — mobil */
     @media (max-width: 760px) {
+      body:has(#mistakesScreen.active) { height: auto; min-height: 100vh; overflow-y: auto; }
+      body:has(#mistakesScreen.active) .battle-wrap { height: auto; min-height: 100vh; padding: 18px 14px 30px; }
+      #mistakesScreen.active { height: auto; display: block; }
       .rev-main { flex-direction: column; gap: 14px; }
       .rev-nav-arrow { width: 100%; height: 54px; flex-direction: row; order: 3; }
-      .rev-card { order: 1; padding: 22px 18px; }
+      .rev-card { order: 1; height: auto; min-height: 0; padding: 22px 18px; display: block; }
       #revPrevBtn { order: 2; }
       #revNextBtn { order: 3; }
       .rev-question { font-size: 19px; }
-      .rev-summary { flex-direction: column; }
+      .rev-summary { display: flex; flex-direction: column; }
       .rev-sum-item + .rev-sum-item { border-left: none; border-top: 1px solid rgba(255,255,255,0.07); }
       .rev-header { flex-direction: column; align-items: flex-start; gap: 14px; }
-      .rev-navigator { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; }
+      .rev-navigator-wrap { display: block; margin-top: 14px; padding: 12px; }
+      .rev-page-nav { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px; }
+      .rev-page-btn { padding: 0 8px; }
+      .rev-navigator { min-width: 0; justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; padding: 3px 2px 6px; }
       .rev-num { flex-shrink: 0; }
+      .rev-legend { flex-wrap: wrap; justify-content: flex-start; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); }
     }
     /* SHIKOYAT TUGMASI */
     .mist-flag-row { margin-top: 10px; display: flex; justify-content: flex-end; }
@@ -938,7 +944,15 @@
       </div>
 
       <div class="rev-navigator-wrap">
-        <div class="rev-navigator" id="revNavigator"></div>
+        <div class="rev-page-nav">
+          <button class="rev-page-btn" id="revPagePrevBtn" type="button" onclick="revPageGo(-1)" aria-label="Oldingi 10 ta savol">
+            <i data-lucide="chevron-left"></i><span>Oldingi</span>
+          </button>
+          <div class="rev-navigator" id="revNavigator"></div>
+          <button class="rev-page-btn" id="revPageNextBtn" type="button" onclick="revPageGo(1)" aria-label="Keyingi 10 ta savol">
+            <span>Keyingi</span><i data-lucide="chevron-right"></i>
+          </button>
+        </div>
         <div class="rev-legend">
           <span class="rev-leg"><span class="rev-leg-dot correct"><i data-lucide="check"></i></span> To'g'ri javob</span>
           <span class="rev-leg"><span class="rev-leg-dot wrong"><i data-lucide="x"></i></span> Noto'g'ri javob</span>
@@ -1002,6 +1016,7 @@
     // Aks holda — professional empty state ko'rsatamiz va to'xtaymiz.
     var battleLengthKey = "standard"; // tanlangan format (lobby'dan)
     var battleMode = "ranked"; // tanlangan rejim (ranked yoki casual)
+    var battleSearchStartedAt = Date.now();
 
     // Format jadvali (chips uchun — haqiqiy savol soni/vaqt)
     var battleLengthsCfg = {
@@ -1032,6 +1047,144 @@
       var rEl = document.getElementById("mmRange");
       if (rEl) rEl.textContent = isCasualMode ? "—" : ((r - 100) + "–" + (r + 100));
     }
+
+    var BATTLE_RESULT_VIEW_KEY = "battleResultViewState";
+    var BATTLE_RESULT_VIEW_MAX_AGE = 24 * 60 * 60 * 1000;
+
+    function readBattleResultView() {
+      try {
+        var raw = sessionStorage.getItem(BATTLE_RESULT_VIEW_KEY);
+        if (!raw) return null;
+        var saved = JSON.parse(raw);
+        var isValid = saved && saved.roomId && saved.savedAt &&
+          String(saved.userId) === String(user.id) &&
+          (Date.now() - saved.savedAt) < BATTLE_RESULT_VIEW_MAX_AGE &&
+          (saved.screen === "result" || saved.screen === "review");
+        if (isValid) return saved;
+        clearBattleResultView();
+      } catch (error) {
+        console.warn("Battle natija oynasi holatini o'qib bo'lmadi:", error);
+        clearBattleResultView();
+      }
+      return null;
+    }
+
+    function persistBattleResultView(screen, reviewIndex) {
+      if (!currentRoom) return;
+      try {
+        sessionStorage.setItem(BATTLE_RESULT_VIEW_KEY, JSON.stringify({
+          userId: user.id,
+          roomId: currentRoom,
+          screen: screen,
+          reviewIndex: Number.isInteger(reviewIndex) ? reviewIndex : 0,
+          savedAt: Date.now(),
+        }));
+      } catch (error) {
+        console.warn("Battle natija oynasi holatini saqlab bo'lmadi:", error);
+      }
+    }
+
+    function clearBattleResultView() {
+      try {
+        sessionStorage.removeItem(BATTLE_RESULT_VIEW_KEY);
+      } catch (error) {
+        console.warn("Battle natija oynasi holatini tozalab bo'lmadi:", error);
+      }
+      window.__restoreFinishedBattle = null;
+    }
+
+    var BATTLE_SEARCH_STATE_KEY = "battleSearchState";
+    var BATTLE_SEARCH_STATE_MAX_AGE = 5 * 60 * 1000;
+
+    function readBattleSearchState() {
+      try {
+        var raw = sessionStorage.getItem(BATTLE_SEARCH_STATE_KEY);
+        if (!raw) return null;
+        var saved = JSON.parse(raw);
+        var isValid = saved && saved.savedAt &&
+          String(saved.userId) === String(user.id) &&
+          (Date.now() - saved.savedAt) < BATTLE_SEARCH_STATE_MAX_AGE;
+        if (isValid) return saved;
+        clearBattleSearchState();
+      } catch (error) {
+        console.warn("Battle qidiruv holatini o'qib bo'lmadi:", error);
+        clearBattleSearchState();
+      }
+      return null;
+    }
+
+    function persistBattleSearchState() {
+      try {
+        var savedSearch = {
+          userId: user.id,
+          mode: battleMode || "ranked",
+          lengthKey: battleLengthKey || "standard",
+          startedAt: battleSearchStartedAt,
+          savedAt: Date.now(),
+        };
+        sessionStorage.setItem(BATTLE_SEARCH_STATE_KEY, JSON.stringify(savedSearch));
+        window.__restoreMatchSearch = true;
+      } catch (error) {
+        console.warn("Battle qidiruv holatini saqlab bo'lmadi:", error);
+      }
+    }
+
+    function clearBattleSearchState() {
+      try {
+        sessionStorage.removeItem(BATTLE_SEARCH_STATE_KEY);
+      } catch (error) {
+        console.warn("Battle qidiruv holatini tozalab bo'lmadi:", error);
+      }
+      window.__restoreMatchSearch = false;
+    }
+
+    var BATTLE_FOUND_STATE_KEY = "battleFoundState";
+    var BATTLE_FOUND_STATE_MAX_AGE = 30 * 1000;
+
+    function readBattleFoundState() {
+      try {
+        var raw = sessionStorage.getItem(BATTLE_FOUND_STATE_KEY);
+        if (!raw) return null;
+        var saved = JSON.parse(raw);
+        var isValid = saved && saved.data && saved.data.roomId && saved.foundAt &&
+          String(saved.userId) === String(user.id) &&
+          (Date.now() - saved.foundAt) < BATTLE_FOUND_STATE_MAX_AGE;
+        if (isValid) return saved;
+        clearBattleFoundState();
+      } catch (error) {
+        console.warn("Topilgan raqib holatini o'qib bo'lmadi:", error);
+        clearBattleFoundState();
+      }
+      return null;
+    }
+
+    function persistBattleFoundState(data) {
+      try {
+        var savedFound = {
+          userId: user.id,
+          mode: battleMode,
+          lengthKey: battleLengthKey,
+          foundAt: Date.now(),
+          data: data,
+        };
+        sessionStorage.setItem(BATTLE_FOUND_STATE_KEY, JSON.stringify(savedFound));
+        window.__restoreFoundMatch = savedFound;
+      } catch (error) {
+        console.warn("Topilgan raqib holatini saqlab bo'lmadi:", error);
+      }
+    }
+
+    function clearBattleFoundState() {
+      try {
+        sessionStorage.removeItem(BATTLE_FOUND_STATE_KEY);
+      } catch (error) {
+        console.warn("Topilgan raqib holatini tozalab bo'lmadi:", error);
+      }
+      if (window.__foundReconnectTimeout) clearTimeout(window.__foundReconnectTimeout);
+      window.__foundReconnectTimeout = null;
+      window.__restoreFoundMatch = null;
+    }
+
     (function guardBattle() {
       var hasRoom = new URLSearchParams(window.location.search).get("room");
       var intentRaw = sessionStorage.getItem("battleIntent");
@@ -1047,6 +1200,42 @@
           }
         } catch (e) {}
       }
+      var savedResultView = !validIntent ? readBattleResultView() : null;
+      var canRestoreResult = savedResultView &&
+        (!hasRoom || String(savedResultView.roomId) === String(hasRoom));
+      if (canRestoreResult) {
+        window.__restoreFinishedBattle = savedResultView;
+        var resultWrap = document.querySelector(".battle-wrap");
+        if (resultWrap) resultWrap.style.display = "none";
+        return;
+      }
+      var savedFoundState = !hasRoom && !validIntent ? readBattleFoundState() : null;
+      if (savedFoundState) {
+        battleMode = savedFoundState.mode || "ranked";
+        battleLengthKey = savedFoundState.lengthKey || "standard";
+        window.__restoreFoundMatch = savedFoundState;
+        clearBattleSearchState();
+        clearBattleResultView();
+        return;
+      }
+      var savedSearchState = !hasRoom && !validIntent ? readBattleSearchState() : null;
+      if (savedSearchState) {
+        battleMode = savedSearchState.mode || "ranked";
+        battleLengthKey = savedSearchState.lengthKey || "standard";
+        battleSearchStartedAt = savedSearchState.startedAt || savedSearchState.savedAt;
+        window.__restoreMatchSearch = true;
+        clearBattleResultView();
+        return;
+      }
+      if (hasRoom) {
+        clearBattleSearchState();
+        clearBattleFoundState();
+      }
+      if (validIntent && !hasRoom) {
+        clearBattleFoundState();
+        persistBattleSearchState();
+      }
+      if (hasRoom || validIntent) clearBattleResultView();
       if (!hasRoom && !validIntent) {
         // Reconnect ehtimoli bor — darrov to'xtatmaymiz.
         // Serverdan "aktiv jangdamisiz?" javobini kutamiz (battle:reconnectCheck).
@@ -1070,7 +1259,7 @@
 
     const socket = io({ auth: { token: localStorage.getItem("token") } });
     socket.on("connect_error", function (err) {
-      if (["AUTH_REQUIRED", "ACCOUNT_NOT_FOUND", "ACCOUNT_BANNED"].indexOf(err && err.message) === -1) return;
+      if (["AUTH_REQUIRED", "ACCOUNT_NOT_FOUND", "ACCOUNT_BANNED", "SESSION_REVOKED"].indexOf(err && err.message) === -1) return;
       localStorage.removeItem("token"); localStorage.removeItem("user");
       window.location.href = "/?screen=login";
     });
@@ -1131,10 +1320,15 @@
 
     // Qidirish sekundomeri
     let mmTimerInterval = null;
-    function startMmTimer() {
-      let sec = 0;
+    function startMmTimer(initialElapsedMs) {
+      let sec = Math.max(0, Math.floor((initialElapsedMs || 0) / 1000));
       const el = document.getElementById("mmTimer");
       if (mmTimerInterval) clearInterval(mmTimerInterval);
+      if (el) {
+        const initialMinutes = String(Math.floor(sec / 60)).padStart(2, "0");
+        const initialSeconds = String(sec % 60).padStart(2, "0");
+        el.textContent = initialMinutes + ":" + initialSeconds;
+      }
       mmTimerInterval = setInterval(() => {
         sec++;
         const m = String(Math.floor(sec / 60)).padStart(2, "0");
@@ -1165,6 +1359,24 @@
     socket.on("connect", () => {
       socket.emit("registerUser", user.id);
 
+      // F5'dan keyin tugagan jang natijasini DB'dan tiklaymiz; yangi matchmaking boshlamaymiz.
+      if (window.__restoreFinishedBattle) {
+        loadResultFromServer(window.__restoreFinishedBattle.roomId);
+        return;
+      }
+
+      if (window.__restoreFoundMatch) {
+        var restoredFound = window.__restoreFoundMatch;
+        var restoredWrap = document.querySelector(".battle-wrap");
+        if (restoredWrap) restoredWrap.style.display = "";
+        handleMatchFound(restoredFound.data, restoredFound.foundAt);
+        socket.emit("battle:reconnectCheck", {
+          userId: user.id,
+          expectedRoom: restoredFound.data.roomId,
+        });
+        return;
+      }
+
       // RECONNECT: faqat refresh holatida tekshiramiz (lobby'dan yangi jang bo'lsa — yo'q).
       // __maybeReconnect = URL'da room yo'q VA battleIntent yo'q (ya'ni refresh).
       if (window.__maybeReconnect) {
@@ -1180,7 +1392,7 @@
       if (elRange) elRange.textContent = (myRating - 100) + "-" + (myRating + 100);
 
       // Sekundomerni boshlaymiz
-      startMmTimer();
+      startMmTimer(window.__restoreMatchSearch ? Date.now() - battleSearchStartedAt : 0);
 
       if (friendRoom) {
         // Do'st jangi — to'liq "topildi" ekranini ko'rsatamiz (1v1 kabi, lekin do'st matni)
@@ -1276,11 +1488,17 @@
     });
 
     socket.on("waiting", (data) => {
+      if (data && Number.isFinite(data.elapsedMs)) {
+        battleSearchStartedAt = Date.now() - data.elapsedMs;
+        startMmTimer(data.elapsedMs);
+      }
+      persistBattleSearchState();
       // Subtitle statik qoladi (title bilan takrorlanmasligi uchun)
       document.getElementById("searchText").textContent = "Mos raqib topilmoqda, iltimos kuting.";
     });
 
-    socket.on("matchFound", (data) => {
+    function handleMatchFound(data, restoredFoundAt) {
+      clearBattleSearchState();
       // Rematch: natija oynasidan yangi jangga o'tamiz (found ekran + countdown)
       if (data.redirect) {
         try {
@@ -1290,8 +1508,15 @@
         window.location.href = "/battle.html?room=" + encodeURIComponent(data.roomId);
         return;
       }
+      if (!restoredFoundAt) persistBattleFoundState(data);
       currentRoom = data.roomId;
       stopMmTimer();
+      fillBattleChips(
+        battleLengthKey,
+        user.cefr_level,
+        user.rating,
+        battleMode === "casual" ? "1v1 Casual" : "1v1 Ranked"
+      );
 
       const oppName = data.opponent.name || "Raqib";
       const oppPicture = data.opponent.profile_picture || null;
@@ -1337,7 +1562,7 @@
 
       // 6. Countdown 7..6..1 (battleStart kelguncha vizual, server bilan mos)
       countdownDone = false;
-      let count = 7;
+      let count = Math.max(1, Math.ceil(((restoredFoundAt || Date.now()) + 7000 - Date.now()) / 1000));
       var cdNum = document.getElementById("mmCountdown");
       var cdText = document.getElementById("mmCdText");
       cdNum.textContent = count;
@@ -1361,12 +1586,13 @@
           }
         }
       }, 1000);
-    });
+    }
 
     let myPic = null, oppPic = null, oppNameGlobal = "Raqib", oppIdGlobal = null, myNameGlobal = "", levelGlobal = "A1";
 
     // Server savol topa olmasa yoki boshqa xato — chiroyli xabar (qotib qolmasin)
     socket.on("battleError", (data) => {
+      clearBattleFoundState();
       stopMmTimer();
       if (timerInterval) clearInterval(timerInterval);
       var msg = (data && data.message) ? data.message : "Jangni boshlashda xatolik yuz berdi.";
@@ -1392,6 +1618,9 @@
     let countdownDone = false;
 
     function reallyStartBattle(data) {
+      clearBattleFoundState();
+      clearBattleSearchState();
+      clearBattleResultView();
       questions = data.questions;
       currentIndex = 0;
       // Rematch statusini tozalash (yangi jang)
@@ -1430,6 +1659,20 @@
 
     // ===== RECONNECT: aktiv jang yo'q =====
     socket.on("battle:noActive", () => {
+      if (window.__restoreFoundMatch) {
+        var foundRestore = window.__restoreFoundMatch;
+        if ((Date.now() - foundRestore.foundAt) < BATTLE_FOUND_STATE_MAX_AGE) {
+          window.__foundReconnectTimeout = setTimeout(function retryFoundBattleReconnect() {
+            socket.emit("battle:reconnectCheck", {
+              userId: user.id,
+              expectedRoom: foundRestore.data.roomId,
+            });
+          }, 500);
+          return;
+        }
+        clearBattleFoundState();
+        window.__maybeReconnect = true;
+      }
       // DO'ST JANGI: reconnect topilmadi, demak jang hali boshlanmagan — joinFriendBattle qilamiz
       if (window.__friendRoomPending) {
         var fr = window.__friendRoomPending;
@@ -1442,6 +1685,13 @@
       if (window.__maybeReconnect) {
         window.__maybeReconnect = false;
         if (window.__reconnectTimeout) clearTimeout(window.__reconnectTimeout);
+        var noBattleBox = document.getElementById("noBattleState");
+        if (noBattleBox) noBattleBox.style.display = "none";
+        var battleWrap = document.querySelector(".battle-wrap");
+        if (battleWrap) battleWrap.style.display = "";
+        showScreen("searchScreen");
+        battleSearchStartedAt = Date.now();
+        persistBattleSearchState();
         // Yangi jang qidirishni boshlaymiz
         socket.emit("findMatch", { userId: user.id, name: user.first_name, level: user.cefr_level, lengthKey: battleLengthKey, mode: battleMode });
       }
@@ -1449,6 +1699,7 @@
 
     // ===== RECONNECT: men tugatdim, raqib hali o'ynayapti ("Raqib kutilmoqda") =====
     socket.on("battle:waitingOpponent", (data) => {
+      clearBattleFoundState();
       window.__maybeReconnect = false; // reconnect bo'ldi — findMatch chaqirmaymiz
       window.__friendRoomPending = null; // do'st jangi reconnect bo'ldi
       if (window.__reconnectTimeout) clearTimeout(window.__reconnectTimeout); // fallback bekor
@@ -1534,6 +1785,7 @@
 
     // ===== RECONNECT: jang allaqachon tugagan — natijani DB'dan tiklaymiz =====
     socket.on("battle:alreadyFinished", (data) => {
+      clearBattleFoundState();
       if (window.__reconnectTimeout) clearTimeout(window.__reconnectTimeout);
       window.__maybeReconnect = false;
       // Natijani DB'dan olib, natija ekranini ko'rsatamiz
@@ -1557,9 +1809,14 @@
         var res = await fetch("/battle/result/" + encodeURIComponent(roomId), {
           headers: { "Authorization": "Bearer " + token },
         });
-        if (!res.ok) { window.location.href = "/dashboard.html"; return; }
+        if (!res.ok) {
+          clearBattleResultView();
+          window.location.href = "/dashboard.html";
+          return;
+        }
         var d = await res.json();
         var r = d.result;
+        currentRoom = roomId;
 
         // Natija ekranini to'ldiramiz (battleEnd bilan bir xil)
         window.battleAnswers = d.answers || [];
@@ -1603,15 +1860,24 @@
           ic.className = "result-ic draw"; ic.innerHTML = '<i data-lucide="handshake"></i>';
         }
 
-        showScreen("resultScreen");
+        var savedView = readBattleResultView();
+        if (savedView && String(savedView.roomId) === String(roomId) && savedView.screen === "review") {
+          showMistakes(savedView.reviewIndex);
+        } else {
+          persistBattleResultView("result", 0);
+          showScreen("resultScreen");
+        }
         if (window.lucide) lucide.createIcons();
       } catch (e) {
+        console.error("Battle natijasini tiklab bo'lmadi:", e);
+        clearBattleResultView();
         window.location.href = "/dashboard.html";
       }
     }
 
     // ===== RECONNECT: jangni o'sha nuqtadan tiklash =====
     socket.on("battle:resumeState", (data) => {
+      clearBattleFoundState();
       window.__maybeReconnect = false; // reconnect bo'ldi — findMatch chaqirmaymiz
       window.__friendRoomPending = null; // do'st jangi reconnect bo'ldi
       if (window.__reconnectTimeout) clearTimeout(window.__reconnectTimeout); // fallback bekor
@@ -1938,10 +2204,16 @@
       if (oppIdGlobal) document.getElementById("rematchBtn").style.display = "inline-flex";
       // Raqib ustidan shikoyat — faqat haqiqiy raqib bo'lsa (bot emas)
       if (oppIdGlobal) document.getElementById("reportOppBtn").style.display = "inline-flex";
+      persistBattleResultView("result", 0);
       showScreen("resultScreen");
     });
 
+    socket.on("matchFound", function onMatchFound(data) {
+      handleMatchFound(data, null);
+    });
+
    function playAgain() {
+      clearBattleResultView();
       // "Yana o'ynash" = xuddi shu format va rejimda YANGI raqib bilan jang
       // (Rematch'dan farqli — u xuddi shu raqib bilan edi)
 
@@ -1991,7 +2263,12 @@
       }
       lucide.createIcons();
     }
-    function goLobby() { window.location.href = "/lobby.html"; }
+    function goLobby() {
+      clearBattleFoundState();
+      clearBattleSearchState();
+      clearBattleResultView();
+      window.location.href = "/lobby.html";
+    }
 
     // Leave Battle — hozircha oddiy tasdiq (keyingi bosqichda chiroyli modal)
     // Leave Battle — chiroyli modal
@@ -2195,6 +2472,8 @@
 
     // ===== JAVOBLAR TAHLILI (bitta-savol ko'rinishi) =====
     var revIndex = 0;
+    var revNavPage = 0;
+    var REV_NAV_PAGE_SIZE = 10;
 
     // XSS xavfsiz: matnni escape qiladi (innerHTML uchun)
     function revEsc(s) {
@@ -2209,20 +2488,25 @@
       return a.is_correct ? "correct" : "wrong";
     }
 
-    function showMistakes() {
-      revIndex = 0;
+    function showMistakes(preferredIndex) {
       var answers = window.battleAnswers || [];
+      var requestedIndex = Number.isInteger(preferredIndex) ? preferredIndex : 0;
+      revIndex = answers.length ? Math.max(0, Math.min(requestedIndex, answers.length - 1)) : 0;
+      revNavPage = Math.floor(revIndex / REV_NAV_PAGE_SIZE);
       if (answers.length === 0) {
         document.getElementById("revCard").innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:50px 20px;"><div style="font-size:16px;font-weight:600;margin-bottom:6px;">Tahlil ma\'lumotlari topilmadi</div><div style="font-size:13px;">Bu jang uchun javoblar tahlili mavjud emas.</div></div>';
         document.getElementById("revNavigator").innerHTML = "";
         document.getElementById("revPrevBtn").style.display = "none";
         document.getElementById("revNextBtn").style.display = "none";
+        document.getElementById("revPagePrevBtn").style.display = "none";
+        document.getElementById("revPageNextBtn").style.display = "none";
       } else {
         document.getElementById("revPrevBtn").style.display = "";
         document.getElementById("revNextBtn").style.display = "";
         renderRevNavigator();
-        renderRevCard(0);
+        renderRevCard(revIndex);
       }
+      persistBattleResultView("review", revIndex);
       showScreen("mistakesScreen");
       if (window.lucide) lucide.createIcons();
     }
@@ -2310,13 +2594,34 @@
     function renderRevNavigator() {
       var answers = window.battleAnswers || [];
       var nav = document.getElementById("revNavigator");
+      var pageCount = Math.max(1, Math.ceil(answers.length / REV_NAV_PAGE_SIZE));
+      revNavPage = Math.max(0, Math.min(revNavPage, pageCount - 1));
+      var startIndex = revNavPage * REV_NAV_PAGE_SIZE;
+      var endIndex = Math.min(startIndex + REV_NAV_PAGE_SIZE, answers.length);
       var html = "";
-      answers.forEach(function (a, i) {
+      answers.slice(startIndex, endIndex).forEach(function (a, offset) {
+        var i = startIndex + offset;
         var st = revStatus(a);
         var icon = st === "correct" ? '<i data-lucide="check"></i>' : (st === "wrong" ? '<i data-lucide="x"></i>' : '');
         html += '<div class="rev-num ' + st + '" data-idx="' + i + '" onclick="revGoTo(' + i + ')">' + (i + 1) + icon + '</div>';
       });
       nav.innerHTML = html;
+
+      var prevPageBtn = document.getElementById("revPagePrevBtn");
+      var nextPageBtn = document.getElementById("revPageNextBtn");
+      var hasMultiplePages = pageCount > 1;
+      prevPageBtn.style.display = hasMultiplePages ? "" : "none";
+      nextPageBtn.style.display = hasMultiplePages ? "" : "none";
+      prevPageBtn.disabled = revNavPage === 0;
+      nextPageBtn.disabled = revNavPage === pageCount - 1;
+    }
+
+    function revPageGo(direction) {
+      var answers = window.battleAnswers || [];
+      var pageCount = Math.ceil(answers.length / REV_NAV_PAGE_SIZE);
+      var targetPage = Math.max(0, Math.min(revNavPage + direction, pageCount - 1));
+      if (targetPage === revNavPage) return;
+      revGoTo(targetPage * REV_NAV_PAGE_SIZE);
     }
 
     function updateRevNavigatorActive(index) {
@@ -2331,6 +2636,12 @@
       var answers = window.battleAnswers || [];
       if (index < 0 || index >= answers.length || index === revIndex) return;
       revIndex = index;
+      var targetNavPage = Math.floor(revIndex / REV_NAV_PAGE_SIZE);
+      if (targetNavPage !== revNavPage) {
+        revNavPage = targetNavPage;
+        renderRevNavigator();
+      }
+      persistBattleResultView("review", revIndex);
       var card = document.getElementById("revCard");
       card.classList.add("fade-out");
       // Bosilgan raqamga pulse
@@ -2358,7 +2669,10 @@
       else if (e.key === "ArrowRight") { e.preventDefault(); revNext(); }
     });
 
-    function backToResult() { showScreen("resultScreen"); }
+    function backToResult() {
+      persistBattleResultView("result", 0);
+      showScreen("resultScreen");
+    }
 
     // ===== RAQIB USTIDAN SHIKOYAT (jang natijasida) =====
     function reportOpponent() {

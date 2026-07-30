@@ -62,6 +62,20 @@ test("queue match preserves no-compatible-opponent result", () => {
   assert.deepEqual(harness.calls, [["compatible", candidate, player]]);
 });
 
+test("queue match skips searches waiting for socket reconnect", () => {
+  const player = { socketId: "me", userId: 1 };
+  const disconnected = { socketId: "offline", userId: 2, disconnected: true };
+  const opponent = { socketId: "opponent", userId: 3 };
+  const harness = createHarness([player, disconnected, opponent]);
+
+  assert.equal(harness.tryQueueMatch("me"), true);
+  assert.deepEqual(
+    harness.calls.filter((call) => call[0] === "compatible").map((call) => call[1]),
+    [opponent]
+  );
+  assert.equal(harness.tryQueueMatch("offline"), false);
+});
+
 test("queue match preserves ignored pair promise and synchronous true return", () => {
   const player = { socketId: "me", userId: 1 };
   const opponent = { socketId: "opponent", userId: 2 };
