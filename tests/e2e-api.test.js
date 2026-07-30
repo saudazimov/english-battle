@@ -7,7 +7,7 @@ const baseUrl = process.env.E2E_BASE_URL || "http://127.0.0.1:3000";
 const suffix = String(Date.now()).slice(-7);
 const password = "E2eTest123!";
 const changedPassword = "E2eChanged456!";
-const fixture = { userIds: [], classId: null, assignmentId: null };
+const fixture = { userIds: [], classId: null, assignmentId: null, questionId: null };
 
 async function api(path, options = {}) {
   const response = await fetch(baseUrl + path, options);
@@ -33,6 +33,9 @@ async function cleanup() {
     await client.query("DELETE FROM assignment_submissions WHERE student_id = ANY($1::int[])", [ids]);
     await client.query("DELETE FROM assignment_questions WHERE assignment_id IN (SELECT id FROM assignments WHERE teacher_id = ANY($1::int[]))", [ids]);
     await client.query("DELETE FROM assignments WHERE teacher_id = ANY($1::int[])", [ids]);
+    if (fixture.questionId) {
+      await client.query("DELETE FROM questions WHERE id = $1", [fixture.questionId]);
+    }
     await client.query("DELETE FROM class_students WHERE student_id = ANY($1::int[]) OR class_id IN (SELECT id FROM classes WHERE teacher_id = ANY($1::int[]))", [ids]);
     await client.query("DELETE FROM classes WHERE teacher_id = ANY($1::int[])", [ids]);
     await client.query("DELETE FROM request_rate_limits WHERE bucket='direct_message' AND key_value = ANY($1::text[])", [ids.map(String)]);
@@ -65,6 +68,20 @@ test("student and teacher complete the core platform flow", async (t) => {
   const student = inserted.rows.find((row) => row.role === "student");
   fixture.userIds.push(teacher.id, student.id);
   t.after(async () => { await cleanup(); await pool.end(); });
+
+  const question = await pool.query(
+    `INSERT INTO questions
+       (question_text, option_a, option_b, option_c, option_d, correct_option,
+        cefr_level, skill, difficulty, explanation, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+     RETURNING id`,
+    [
+      "E2E: Choose the correct form: I ___ ready.",
+      "am", "is", "are", "be", "A", "A1", "grammar", "easy",
+      "The subject 'I' uses 'am'.", "published",
+    ]
+  );
+  fixture.questionId = question.rows[0].id;
 
   const wrong = await api("/login", {
     method: "POST", headers: { "Content-Type": "application/json" },
