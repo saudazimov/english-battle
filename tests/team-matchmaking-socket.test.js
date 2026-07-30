@@ -130,6 +130,28 @@ test("team search preserves null-input defaults and duo fallback", async () => {
   ]);
 });
 
+test("refresh replaces an existing solo queue entry for the same user", async () => {
+  const staleEntry = {
+    id: "solo-old-socket",
+    type: "solo",
+    players: [{ socketId: "old-socket", userId: "5" }],
+  };
+  const otherEntry = {
+    id: "solo-other-socket",
+    type: "solo",
+    players: [{ socketId: "other-socket", userId: 9 }],
+  };
+  const harness = createHarness({
+    teamMatchPool: { duo: [staleEntry, otherEntry], squad: [] },
+  });
+
+  await harness.handlers.findTeamMatch({ teamMode: "duo", name: "Ali" });
+
+  assert.deepEqual(harness.teamMatchPool.duo, [otherEntry]);
+  assert.deepEqual(harness.calls[0], ["queueStatus", "duo"]);
+  assert.equal(harness.calls.filter((call) => call[0] === "addTeamEntry").length, 1);
+});
+
 test("team search preserves caught error logging and socket response", async () => {
   const harness = createHarness({ addError: new Error("pool unavailable") });
 

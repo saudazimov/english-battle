@@ -1,7 +1,9 @@
 function createFindTeamMatchHandler({
   socket,
   io,
+  teamMatchPool,
   addTeamEntry,
+  emitTeamQueueStatus,
   stripUnsafe,
   now,
   logger,
@@ -11,6 +13,19 @@ function createFindTeamMatchHandler({
     playerData.userId = socket.userId;
     try {
       const teamMode = playerData.teamMode === "squad" ? "squad" : "duo";
+      ["duo", "squad"].forEach(function (mode) {
+        const entries = teamMatchPool[mode];
+        const filtered = entries.filter(function (existing) {
+          if (existing.type !== "solo") return true;
+          return !existing.players.some(function (player) {
+            return String(player.userId) === String(socket.userId);
+          });
+        });
+        if (filtered.length !== entries.length) {
+          teamMatchPool[mode] = filtered;
+          emitTeamQueueStatus(mode);
+        }
+      });
       const entry = {
         id: "solo_" + socket.id + "_" + now(),
         type: "solo",
@@ -69,7 +84,9 @@ function registerTeamMatchmakingSocket({
   socket.on("findTeamMatch", createFindTeamMatchHandler({
     socket,
     io,
+    teamMatchPool,
     addTeamEntry,
+    emitTeamQueueStatus,
     stripUnsafe,
     now,
     logger,
