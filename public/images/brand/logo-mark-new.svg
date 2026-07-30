@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title id="title">IlmLiga</title>
+  <defs>
+    <linearGradient id="logoBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6a94ff"/>
+      <stop offset="1" stop-color="#3560e0"/>
+    </linearGradient>
+    <linearGradient id="logoWhite" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dbe4ff"/>
+    </linearGradient>
+  </defs>
+  <path d="M44 36 60 23 76 36" fill="none" stroke="url(#logoWhite)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="47" cy="49" r="6" fill="url(#logoWhite)"/>
+  <rect x="41" y="60" width="12" height="34" rx="5" fill="url(#logoBlue)"/>
+  <rect x="62" y="49" width="12" height="45" rx="5" fill="url(#logoBlue)"/>
+  <rect x="62" y="82" width="26" height="12" rx="5" fill="url(#logoBlue)"/>
+</svg>

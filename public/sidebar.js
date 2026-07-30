@@ -17,6 +17,16 @@ function renderSidebar(activePage) {
   // Brand markaziy config'dan (brand.js). Yuklanmagan bo'lsa — zaxira qiymat.
   const B = window.BRAND || { nameLine1: "ILM", nameLine2: "LIGA", sloganEn: "Learn. Compete. Rise." };
 
+  function sidebarBrandMarkup(subtitle) {
+    return '<div style="display:flex;align-items:center;gap:7px;">' +
+      '<img src="/images/brand/logo-mark-new.svg" alt="" style="width:42px;height:42px;display:block;object-fit:contain;" onerror="this.onerror=null;this.src=\'/images/brand/logo-icon.png\';">' +
+      '<div style="min-width:0;text-align:left;">' +
+        '<div aria-label="IlmLiga" style="font-size:24px;line-height:1;font-weight:800;letter-spacing:-0.6px;color:#f8fafc;white-space:nowrap;">Ilm<span style="color:#4f7cff;">Liga</span></div>' +
+        '<div style="font-size:11px;font-weight:500;color:var(--text-faint);letter-spacing:0.5px;margin-top:5px;">' + subtitle + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
   // School_admin uchun ALOHIDA menyu (o'ynamaydi — faqat boshqaruv)
   let _saUser = {};
   try { _saUser = JSON.parse(localStorage.getItem("user") || "{}"); } catch (e) {}
@@ -35,12 +45,9 @@ function renderSidebar(activePage) {
     saNavHtml += '<a class="nav-item" onclick="sidebarLogout()" style="cursor:pointer;">' +
       '<i data-lucide="log-out" class="ic"></i> Chiqish</a>';
 
-    const B2 = window.BRAND || { nameLine1: "ILM", nameLine2: "LIGA", sloganEn: "Learn. Compete. Rise." };
     const saSidebar =
       '<div class="logo-box"><div class="crest">' +
-        '<img src="/images/brand/logo.png" alt="IlmLiga" class="brand-logo-img" style="width:auto;max-width:100%;height:44px;display:block;margin:0;" onerror="this.style.display=\'none\';document.getElementById(\'crestFallback2\').style.display=\'block\';">' +
-        '<div id="crestFallback2" style="display:none;"><span class="e">' + B2.nameLine1 + '</span><br><span class="b">' + B2.nameLine2 + '</span></div>' +
-        '<div style="font-size:11px;font-weight:500;color:var(--text-faint);letter-spacing:0.5px;margin-top:4px;">Maktab paneli</div>' +
+        sidebarBrandMarkup('Maktab paneli') +
       '</div></div>' +
       '<nav class="nav">' + saNavHtml + '</nav>' +
       '<div class="sidebar-foot"><div class="mascot-box">' +
@@ -101,9 +108,7 @@ function renderSidebar(activePage) {
 
   const sidebarHtml =
     '<div class="logo-box"><div class="crest">' +
-      '<img src="/images/brand/logo.png" alt="IlmLiga" class="brand-logo-img" style="width:auto;max-width:100%;height:44px;display:block;margin:0;" onerror="this.style.display=\'none\';document.getElementById(\'crestFallback\').style.display=\'block\';">' +
-      '<div id="crestFallback" style="display:none;"><span class="e">' + B.nameLine1 + '</span><br><span class="b">' + B.nameLine2 + '</span></div>' +
-      '<div style="font-size:11px;font-weight:500;color:var(--text-faint);letter-spacing:0.5px;margin-top:4px;">' + (B.sloganEn || "") + '</div>' +
+      sidebarBrandMarkup(B.sloganEn || '') +
     '</div></div>' +
     '<nav class="nav">' + navHtml + '</nav>' +
     '<div class="sidebar-foot"><div class="mascot-box">' +

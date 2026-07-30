@@ -71,7 +71,7 @@
       "register.stepOtp": "Tasdiqlash",
       "register.stepRole": "Rol",
       "register.stepProfile": "Profil",
-      "register.roleTitle": "IlmLiga’dan qanday foydalanasiz?",
+      "register.roleTitle": "IlmLiga dan qanday foydalanasiz?",
       "register.roleSubtitle": "Sizga mos imkoniyatlarni tayyorlashimiz uchun hisob turini tanlang",
       "register.roleStudent": "O‘quvchi",
       "register.roleStudentText": "Ingliz tilini o‘rganaman, topshiriq bajaraman va reytingda qatnashaman",
@@ -233,10 +233,33 @@
     });
   }
 
+  function highlightBrandName(el) {
+    const brandName = "IlmLiga";
+    const value = el.textContent;
+    const brandIndex = value.indexOf(brandName);
+    if (brandIndex === -1) return;
+
+    const brand = document.createElement("span");
+    brand.className = "brand-name";
+    brand.append(document.createTextNode("Ilm"));
+
+    const accent = document.createElement("span");
+    accent.className = "brand-accent";
+    accent.textContent = "Liga";
+    brand.append(accent);
+
+    el.replaceChildren(
+      document.createTextNode(value.slice(0, brandIndex)),
+      brand,
+      document.createTextNode(value.slice(brandIndex + brandName.length))
+    );
+  }
+
   function applyTranslations(root) {
     const scope = root || document;
     document.documentElement.lang = language;
     scope.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    scope.querySelectorAll("[data-brand-highlight]").forEach(highlightBrandName);
     scope.querySelectorAll("[data-i18n-placeholder]").forEach((el) => { el.placeholder = t(el.dataset.i18nPlaceholder); });
     scope.querySelectorAll("[data-logo]").forEach((el) => { if (!el.innerHTML) el.innerHTML = logoSvg(); });
     applyIcons(scope);

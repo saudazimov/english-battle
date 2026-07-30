@@ -21,10 +21,11 @@
     '.tsb *{box-sizing:border-box;}' +
     '.tsb-logo{display:flex;align-items:center;gap:12px;padding:4px 8px 22px;}' +
     '.tsb-logo-mark{position:relative;width:42px;height:42px;border-radius:12px;flex:0 0 auto;background:linear-gradient(135deg,var(--tsb-accent),var(--tsb-primary));display:grid;place-items:center;box-shadow:0 6px 18px rgba(124,92,252,.32);}' +
-    '.tsb-logo-mark.has-img{background:transparent;box-shadow:none;}' +
+    '.tsb-logo-mark.has-img{background:#111a34;box-shadow:0 6px 18px rgba(47,107,255,.18);}' +
     '.tsb-logo-mark.has-img svg{display:none;}' +
     '.tsb-logo-mark svg{width:23px;height:23px;color:#fff;}' +
     '.tsb-logo-name{font-size:17px;font-weight:800;letter-spacing:-.3px;color:var(--tsb-text);}' +
+    '.tsb-logo-accent{color:var(--tsb-primary);}' +
     '.tsb-logo-sub{font-size:11.5px;color:var(--tsb-dim);font-weight:600;margin-top:1px;}' +
     '.tsb-nav{display:flex;flex-direction:column;gap:3px;flex:1;overflow-y:auto;}' +
     '.tsb-item{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:11px;color:var(--tsb-sub);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;text-decoration:none;}' +
@@ -109,8 +110,8 @@
     mount.innerHTML =
       '<aside class="tsb">' +
         '<div class="tsb-logo">' +
-          '<div class="tsb-logo-mark has-img">' + svgWrap('<path d="M12 2L3 7v6c0 5 3.5 8 9 9 5.5-1 9-4 9-9V7z"/>') + '<img src="/images/brand/logo-icon.png" alt="IlmLiga" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" onerror="this.parentNode.classList.remove(\'has-img\');this.remove();"></div>' +
-          '<div><div class="tsb-logo-name">IlmLiga</div><div class="tsb-logo-sub">Teacher Panel</div></div>' +
+          '<div class="tsb-logo-mark has-img">' + svgWrap('<path d="M12 2L3 7v6c0 5 3.5 8 9 9 5.5-1 9-4 9-9V7z"/>') + '<img src="/images/brand/logo-mark-new.svg" alt="IlmLiga" style="position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);object-fit:contain;" onerror="this.parentNode.classList.remove(\'has-img\');this.remove();"></div>' +
+          '<div><div class="tsb-logo-name">Ilm<span class="tsb-logo-accent">Liga</span></div><div class="tsb-logo-sub">Teacher Panel</div></div>' +
         '</div>' +
         '<nav class="tsb-nav">' + navHtml + '</nav>' +
         '<div class="tsb-promo" id="tsbPromo">' +
