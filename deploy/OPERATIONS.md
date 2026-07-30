@@ -129,12 +129,12 @@ Databasega yozuvchi trafikni tiklashdan oldin disk, connection limit va so'nggi 
 
 ```bash
 sudo -u postgres createdb -O eb_user english_battle_restore_test
-pg_restore -U eb_user -h localhost --no-owner --dbname english_battle_restore_test BACKUP_FILE.dump
-psql -U eb_user -h localhost -d english_battle_restore_test -c "SELECT COUNT(*) FROM schema_migrations;"
+npm run db:backup:verify -- --file BACKUP_FILE.dump
+npm run db:restore:drill -- --file BACKUP_FILE.dump --target-db english_battle_restore_test --confirm-target english_battle_restore_test
 sudo -u postgres dropdb english_battle_restore_test
 ```
 
-Restore test database nomini buyruqdan oldin yana tekshiring. Production databasega `pg_restore --clean` ishlatmang. Upload backupini ham alohida vaqtinchalik papkaga ochib, fayl soni va o'qilishini tekshiring.
+Runner faqat `_restore_test` nomli, production bazadan boshqa targetni qabul qiladi va `--confirm-target` aynan teng bo'lishini talab qiladi. U avval `PGDMP` header va `pg_restore --list` bilan arxivni, restore'dan keyin esa `schema_migrations` jadvalini tekshiradi; restore `--single-transaction` bilan bajariladi. Target database oldindan bo'sh holda yaratilishi kerak. Production databasega `pg_restore --clean` ishlatmang. Upload backupini ham alohida vaqtinchalik papkaga ochib, fayl soni va o'qilishini tekshiring.
 
 ### Secret sizishi gumoni
 

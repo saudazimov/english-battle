@@ -190,17 +190,17 @@ MUHIM: SSL yoqilgach, Socket.IO avtomatik `wss://` (secure WebSocket) ishlatadi 
 
 ```bash
 mkdir -p ~/backups
-printf 'localhost:5432:english_battle:eb_user:SIZNING_DB_PAROL\n' > ~/.pgpass
-chmod 600 ~/.pgpass
+npm run db:backup -- --output "$HOME/backups/eb_$(date +%Y-%m-%d_%H-%M-%S).dump"
+npm run db:backup:verify -- --file "$HOME/backups/TEKSHIRILADIGAN_BACKUP.dump"
 crontab -e
 ```
 
 Qo'shing (har kuni 03:00):
 ```
-0 3 * * * pg_dump -U eb_user -h localhost -Fc english_battle > ~/backups/eb_$(date +\%Y-\%m-\%d).dump 2>> ~/backups/backup.log && find ~/backups -name "eb_*.dump" -mtime +14 -delete
+0 3 * * * cd /var/www/englishbattle && npm run db:backup -- --output "$HOME/backups/eb_$(date +\%Y-\%m-\%d_\%H-\%M-\%S).dump" >> "$HOME/backups/backup.log" 2>&1
 ```
 
-(14 kundan eski backuplar avtomatik o'chadi.)
+Runner mavjud fayl ustiga yozmaydi, vaqtinchalik faylni muvaffaqiyatsizlikda tozalaydi va faqat `pg_restore --list` tekshiruvidan o'tgan PostgreSQL custom archive'ni yakuniy `.dump` faylga ko'chiradi. `DB_PASSWORD` argument yoki logga chiqarilmaydi. Backupni shifrlangan off-site storage'ga ko'chirish va 14 kunlik retention alohida operations job orqali bajarilishi shart; avtomatik o'chirishni faqat off-site nusxa tasdiqlangandan keyin yoqing.
 
 ---
 
@@ -214,7 +214,7 @@ git pull --ff-only origin main
 npm ci --omit=dev
 npm run config:check:production
 npm test
-pg_dump -U eb_user -h localhost -Fc english_battle > ~/backups/predeploy_$(date +%Y-%m-%d_%H-%M-%S).dump
+npm run db:backup -- --output "$HOME/backups/predeploy_$(date +%Y-%m-%d_%H-%M-%S).dump"
 node migrate.js status
 node migrate.js
 node migrate.js status

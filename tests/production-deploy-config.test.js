@@ -51,7 +51,7 @@ test("production preflight always enables strict validation", () => {
 });
 
 test("production deploy guide enforces preflight, health gates and rollback", () => {
-  const guide = read("deploy/DEPLOY.md");
+  const guide = read("deploy/deploy.md");
 
   assert.doesNotMatch(guide, /001\.\.010/);
   assert.doesNotMatch(guide, /pm2 reload english-battle/);

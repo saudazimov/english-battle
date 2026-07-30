@@ -47,6 +47,9 @@ test("production operations includes executable gates and deploy guide linkage",
   assert.match(operations, /npm run config:check:production/);
   assert.match(operations, /pm2 restart deploy\/ecosystem\.config\.js --update-env/);
   assert.match(operations, /english_battle_restore_test/);
+  assert.match(operations, /npm run db:backup:verify/);
+  assert.match(operations, /npm run db:restore:drill/);
+  assert.match(operations, /--confirm-target/);
   assert.match(operations, /Production databasega `pg_restore --clean` ishlatmang/);
   assert.match(operations, /monitoring provider va ikki on-call egasi tayinlangan/);
   assert.match(operations, /Joriy codebase.*tasdiqlay olmaydi/);
