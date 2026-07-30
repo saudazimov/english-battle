@@ -1,5 +1,6 @@
 const { Pool } = require("pg");
 require("dotenv").config();
+const { createDatabasePoolConfig } = require("./src/config/databasePoolConfig");
 
 // ============================================================================
 // PostgreSQL ulanishi — local development va production managed DB ikkalasiga mos.
@@ -15,33 +16,24 @@ require("dotenv").config();
 // Bu local dev'ni buzmaydi (local Postgres odatda SSL'siz).
 // ============================================================================
 
-const useSSL = String(process.env.DB_SSL || "").toLowerCase() === "true";
-
-const poolConfig = {
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-};
-
-if (useSSL) {
-  poolConfig.ssl = { rejectUnauthorized: false };
-}
-
+const poolConfig = createDatabasePoolConfig(process.env);
+const useSSL = Boolean(poolConfig.ssl);
 const pool = new Pool(poolConfig);
 
-// Ulanishni tekshirish (startup diagnostikasi — server'ni to'xtatmaydi)
-pool.connect((err, client, release) => {
-  if (err) {
-    console.error("Bazaga ulanishda xato:", err.message);
-  } else {
-    console.log(
-      "PostgreSQL bazasiga muvaffaqiyatli ulandik!" +
-      (useSSL ? " (SSL yoqilgan)" : " (SSL o'chiq — local)")
-    );
-    release();
-  }
-});
+// Development diagnostikasi saqlanadi. Production ulanishi HTTP listen'dan
+// oldingi bounded readiness preflight orqali tekshiriladi.
+if (process.env.NODE_ENV !== "production") {
+  pool.connect((err, client, release) => {
+    if (err) {
+      console.error("Bazaga ulanishda xato:", err.message);
+    } else {
+      console.log(
+        "PostgreSQL bazasiga muvaffaqiyatli ulandik!" +
+        (useSSL ? " (SSL yoqilgan)" : " (SSL o'chiq — local)")
+      );
+      release();
+    }
+  });
+}
 
 module.exports = pool;

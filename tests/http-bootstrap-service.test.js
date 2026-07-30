@@ -7,6 +7,7 @@ const {
   createHttpApplication,
   registerHttpErrorHandler,
   registerProcessErrorHandlers,
+  verifyProductionDatabase,
   startHttpServer,
 } = require("../src/services/httpBootstrapService");
 
@@ -373,7 +374,7 @@ test("HTTP startup preserves listen, recovery and shutdown signal order", async 
     },
   });
 
-  assert.equal(returned, gracefulShutdown);
+  assert.equal(typeof returned, "function");
   assert.deepEqual(order, [
     ["listen", 3450],
     ["graceful-factory", { server, pool, logger }],
@@ -396,6 +397,128 @@ test("HTTP startup preserves listen, recovery and shutdown signal order", async 
   handlers.SIGTERM();
   handlers.SIGINT();
   assert.deepEqual(gracefulSignals, ["SIGTERM", "SIGINT"]);
+});
+
+test("production database preflight is bounded and development skips it", async () => {
+  const queries = [];
+  await verifyProductionDatabase({
+    pool: { query: async (query) => queries.push(query) },
+    environment: { NODE_ENV: "development" },
+  });
+  assert.deepEqual(queries, []);
+
+  await verifyProductionDatabase({
+    pool: { query: async (query) => queries.push(query) },
+    environment: { NODE_ENV: "production", DB_STARTUP_TIMEOUT_MS: "4321" },
+  });
+  assert.deepEqual(queries, [{ text: "SELECT 1", query_timeout: 4321 }]);
+});
+
+test("production HTTP listen waits for database preflight", async () => {
+  const order = [];
+  let resolveQuery;
+  let listenCallback;
+  const pool = {
+    query(query) {
+      order.push(["query", query]);
+      return new Promise((resolve) => { resolveQuery = resolve; });
+    },
+    async end() { order.push(["pool.end"]); },
+  };
+  const server = {
+    listen(port, callback) {
+      order.push(["listen", port]);
+      listenCallback = callback;
+    },
+  };
+
+  startHttpServer({
+    server,
+    port: 3000,
+    pool,
+    recoverActiveBattles: async () => order.push(["recover"]),
+    environment: {
+      NODE_ENV: "production",
+      DB_STARTUP_TIMEOUT_MS: "4321",
+      ESKIZ_EMAIL: "sms@ilmliga.uz",
+      ESKIZ_PASSWORD: "password",
+    },
+    processRef: { on: () => {}, exit: (code) => order.push(["exit", code]) },
+    logger: { isStructuredLogger: true, log: () => {}, warn: () => {}, error: () => {} },
+    gracefulShutdownFactory: () => () => {},
+  });
+
+  assert.deepEqual(order, [["query", { text: "SELECT 1", query_timeout: 4321 }]]);
+  resolveQuery();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(order.at(-1), ["listen", 3000]);
+  await listenCallback();
+  assert.deepEqual(order.at(-1), ["recover"]);
+});
+
+test("production DB preflight failure closes pool and exits without listening", async () => {
+  const order = [];
+  const logCalls = [];
+  const connectionError = Object.assign(
+    new Error("postgres://db-user:raw-db-password@db-host/database"),
+    { code: "ECONNREFUSED" }
+  );
+
+  startHttpServer({
+    server: { listen: () => order.push(["listen"]) },
+    port: 3000,
+    pool: {
+      query: async () => { throw connectionError; },
+      end: async () => order.push(["pool.end"]),
+    },
+    recoverActiveBattles: async () => {},
+    environment: { NODE_ENV: "production" },
+    processRef: { on: () => {}, exit: (code) => order.push(["exit", code]) },
+    logger: {
+      isStructuredLogger: true,
+      log() {},
+      warn() {},
+      error: (...args) => logCalls.push(args),
+    },
+    gracefulShutdownFactory: () => () => {},
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.deepEqual(order, [["pool.end"], ["exit", 1]]);
+  assert.deepEqual(logCalls, [[
+    "Production startup DB preflight muvaffaqiyatsiz",
+    { errorName: "Error", errorCode: "ECONNREFUSED" },
+  ]]);
+  assert.doesNotMatch(JSON.stringify(logCalls), /raw-db-password|postgres:\/\//);
+});
+
+test("production shutdown cancels a pending database preflight", async () => {
+  const handlers = {};
+  const order = [];
+  let resolveQuery;
+  const gracefulShutdown = (...args) => order.push(["shutdown", ...args]);
+
+  startHttpServer({
+    server: { listen: () => order.push(["listen"]) },
+    port: 3000,
+    pool: {
+      query: () => new Promise((resolve) => { resolveQuery = resolve; }),
+      end: async () => {},
+    },
+    recoverActiveBattles: async () => {},
+    environment: { NODE_ENV: "production" },
+    processRef: {
+      on: (event, handler) => { handlers[event] = handler; },
+      exit: () => {},
+    },
+    logger: { isStructuredLogger: true, log() {}, warn() {}, error() {} },
+    gracefulShutdownFactory: () => gracefulShutdown,
+  });
+
+  handlers.SIGTERM();
+  resolveQuery();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(order, [["shutdown", "SIGTERM", 0]]);
 });
 
 test("HTTP application validates configuration before creating Express", () => {

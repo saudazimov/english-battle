@@ -1,5 +1,7 @@
 "use strict";
 
+const { collectDatabaseConfigurationErrors } = require("./databasePoolConfig");
+
 const REQUIRED_FIELDS = [
   "CLIENT_ORIGIN", "DB_USER", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME", "DB_SSL",
   "JWT_SECRET", "PARENT_CODE_PEPPER", "SCHOOL_INVITE_PEPPER",
@@ -93,6 +95,7 @@ function collectProductionEnvironmentErrors(environment = process.env) {
   if (eskizEmail && !/^\S+@\S+\.\S+$/.test(eskizEmail)) errors.push("ESKIZ_EMAIL haqiqiy email bo'lishi kerak");
   const totpSecret = valueOf(environment, "ADMIN_TOTP_SECRET");
   if (totpSecret && !/^[A-Z2-7]+=*$/i.test(totpSecret)) errors.push("ADMIN_TOTP_SECRET Base32 formatida bo'lishi kerak");
+  errors.push(...collectDatabaseConfigurationErrors(environment));
   validateAiConfiguration(environment, errors);
   return [...new Set(errors)];
 }

@@ -11,6 +11,7 @@ const { createHealthRoutes } = require("../routes/healthRoutes");
 const { createLocationRoutes } = require("../routes/locationRoutes");
 const { createGracefulShutdownService } = require("./gracefulShutdownService");
 const { validateProductionEnvironment } = require("../config/productionEnvironment");
+const { databaseStartupTimeout } = require("../config/databasePoolConfig");
 const { createRequestContextMiddleware } = require("../middleware/requestContext");
 const { productionLogger } = require("../utils/structuredLogger");
 
@@ -184,6 +185,37 @@ function registerProcessErrorHandlers({
   processRef.on("unhandledRejection", (error) => handleFatalError("unhandledRejection", error));
 }
 
+async function verifyProductionDatabase({ pool, environment = process.env }) {
+  if (environment.NODE_ENV !== "production") return;
+  await pool.query({
+    text: "SELECT 1",
+    query_timeout: databaseStartupTimeout(environment),
+  });
+}
+
+async function failProductionStartup({ error, pool, processRef, logger }) {
+  logger.error("Production startup DB preflight muvaffaqiyatsiz", {
+    errorName: error && error.name,
+    errorCode: error && error.code,
+  });
+  const forceExitTimer = setTimeout(() => {
+    logger.error("Production startup DB cleanup timeout; majburiy exit");
+    processRef.exit(1);
+  }, 5000);
+  forceExitTimer.unref();
+  try {
+    if (pool && typeof pool.end === "function") await pool.end();
+  } catch (poolError) {
+    logger.error("Production startupda PostgreSQL pool yopilmadi", {
+      errorName: poolError && poolError.name,
+      errorCode: poolError && poolError.code,
+    });
+  } finally {
+    clearTimeout(forceExitTimer);
+    processRef.exit(1);
+  }
+}
+
 function startHttpServer({
   server,
   port,
@@ -195,7 +227,8 @@ function startHttpServer({
   gracefulShutdownFactory = createGracefulShutdownService,
 }) {
   const appLogger = productionLogger(logger, environment);
-  server.listen(port, async () => {
+  let startupActive = true;
+  const listen = () => server.listen(port, async () => {
     appLogger.log("Server ishga tushdi: http://localhost:3000");
     if (!environment.ESKIZ_EMAIL || !environment.ESKIZ_PASSWORD) {
       appLogger.warn(
@@ -205,13 +238,25 @@ function startHttpServer({
 
     await recoverActiveBattles();
   });
+  if (environment.NODE_ENV !== "production") listen();
 
   const gracefulShutdown = gracefulShutdownFactory({ server, pool, logger: appLogger });
-  registerProcessErrorHandlers({ environment, processRef, logger: appLogger, gracefulShutdown });
-  processRef.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-  processRef.on("SIGINT", () => gracefulShutdown("SIGINT"));
+  const stopServer = (signal, exitCode = 0) => {
+    startupActive = false;
+    return gracefulShutdown(signal, exitCode);
+  };
+  registerProcessErrorHandlers({ environment, processRef, logger: appLogger, gracefulShutdown: stopServer });
+  processRef.on("SIGTERM", () => stopServer("SIGTERM"));
+  processRef.on("SIGINT", () => stopServer("SIGINT"));
+  if (environment.NODE_ENV === "production") {
+    verifyProductionDatabase({ pool, environment })
+      .then(() => { if (startupActive) listen(); })
+      .catch((error) => {
+        if (startupActive) return failProductionStartup({ error, pool, processRef, logger: appLogger });
+      });
+  }
 
-  return gracefulShutdown;
+  return stopServer;
 }
 
 module.exports = {
@@ -220,5 +265,6 @@ module.exports = {
   createHttpApplication,
   registerHttpErrorHandler,
   registerProcessErrorHandlers,
+  verifyProductionDatabase,
   startHttpServer,
 };
