@@ -159,7 +159,7 @@ async function persistAttempt({
   try {
     await client.query("BEGIN");
     const lockedSession = await client.query(
-      `SELECT status FROM exam_sessions
+      `SELECT status, expires_at FROM exam_sessions
        WHERE id=$1 AND user_id=$2
        FOR UPDATE`,
       [sessionId, userId]
@@ -169,6 +169,15 @@ async function persistAttempt({
       return outcome(400, {
         error: "Imtihon sessiyasi allaqachon yakunlangan",
       });
+    }
+    if (new Date(lockedSession.rows[0].expires_at) < new Date()) {
+      await client.query(
+        `UPDATE exam_sessions SET status='expired'
+         WHERE id=$1 AND user_id=$2 AND status='active'`,
+        [sessionId, userId]
+      );
+      await client.query("COMMIT");
+      return outcome(400, { error: "Imtihon vaqti tugagan" });
     }
 
     if (levelChanged) {
@@ -224,8 +233,9 @@ function createExamSubmitService({ pool, getNextLevel }) {
     }
     if (new Date(examSession.expires_at) < new Date()) {
       await pool.query(
-        "UPDATE exam_sessions SET status='expired' WHERE id=$1",
-        [sessionId]
+        `UPDATE exam_sessions SET status='expired'
+         WHERE id=$1 AND user_id=$2 AND status='active'`,
+        [sessionId, userId]
       );
       return outcome(400, { error: "Imtihon vaqti tugagan" });
     }
