@@ -11,6 +11,8 @@ const workflow = fs.readFileSync(
   "utf8"
 );
 const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, "package.json"), "utf8"));
+const packageLock = JSON.parse(fs.readFileSync(path.join(projectRoot, "package-lock.json"), "utf8"));
+const dependabot = fs.readFileSync(path.join(projectRoot, ".github/dependabot.yml"), "utf8");
 
 test("quality workflow has minimal permissions and bounded concurrency", () => {
   assert.match(workflow, /permissions:\s*\n\s+contents: read/);
@@ -24,8 +26,9 @@ test("quality workflow runs on main pushes and pull requests", () => {
   assert.match(workflow, /push:[\s\S]*branches:[\s\S]*- main/);
   assert.match(workflow, /pull_request:/);
   assert.match(workflow, /workflow_dispatch:/);
-  assert.match(workflow, /actions\/checkout@v4[\s\S]*persist-credentials: false/);
-  assert.match(workflow, /actions\/setup-node@v4[\s\S]*node-version: "20"[\s\S]*cache: npm/);
+  assert.match(workflow, /actions\/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4[\s\S]*persist-credentials: false/);
+  assert.match(workflow, /actions\/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4[\s\S]*node-version: "20"[\s\S]*cache: npm/);
+  assert.doesNotMatch(workflow, /uses:\s+actions\/[^\s@]+@v\d+/);
 });
 
 test("quality workflow uses only an isolated PostgreSQL test database", () => {
@@ -44,4 +47,12 @@ test("quality workflow gates dependencies, contracts and the full suite", () => 
   assert.equal(packageJson.scripts["security:audit"], "npm audit --omit=dev --audit-level=high");
   assert.match(packageJson.scripts["test:production-contract"], /production-environment\.test\.js/);
   assert.doesNotMatch(workflow, /\b(?:ssh|scp|rsync|pm2|git push)\b/);
+});
+
+test("supply-chain policy tracks npm and GitHub Actions updates", () => {
+  assert.match(dependabot, /package-ecosystem: "npm"/);
+  assert.match(dependabot, /package-ecosystem: "github-actions"/);
+  assert.equal((dependabot.match(/interval: "weekly"/g) || []).length, 2);
+  assert.equal((dependabot.match(/target-branch: "main"/g) || []).length, 2);
+  assert.equal(packageLock.packages["node_modules/body-parser"].version, "2.3.0");
 });
