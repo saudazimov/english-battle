@@ -10,6 +10,7 @@ const rootRoutes = require("../routes/rootRoutes");
 const { createHealthRoutes } = require("../routes/healthRoutes");
 const { createLocationRoutes } = require("../routes/locationRoutes");
 const { createGracefulShutdownService } = require("./gracefulShutdownService");
+const { validateProductionEnvironment } = require("../config/productionEnvironment");
 
 function createCorsOptions({ environment = process.env } = {}) {
   const allowedOrigins = (environment.CLIENT_ORIGIN || "")
@@ -61,8 +62,11 @@ function createHttpApplication({
   pool,
   environment = process.env,
   logger = console,
+  configurationValidator = validateProductionEnvironment,
   modules = {},
 }) {
+  configurationValidator(environment);
+
   const {
     expressModule = express,
     httpModule = http,
@@ -156,29 +160,6 @@ function startHttpServer({
 }) {
   server.listen(port, async () => {
     logger.log("Server ishga tushdi: http://localhost:3000");
-
-    if (
-      environment.NODE_ENV === "production" &&
-      (!environment.ESKIZ_EMAIL || !environment.ESKIZ_PASSWORD)
-    ) {
-      logger.error("‼️ XAVFSIZLIK: NODE_ENV=production, lekin ESKIZ_EMAIL/ESKIZ_PASSWORD yo'q!");
-      logger.error("   OTP kodlar SMS o'rniga konsolga chiqadi — bu xavfli. Server to'xtatildi.");
-      processRef.exit(1);
-    }
-    if (
-      environment.NODE_ENV === "production" &&
-      (!environment.PAYME_MERCHANT_ID || !environment.PAYME_KEY)
-    ) {
-      logger.error("XAVFSIZLIK: production rejimida PAYME_MERCHANT_ID va PAYME_KEY majburiy.");
-      processRef.exit(1);
-    }
-    if (
-      environment.NODE_ENV === "production" &&
-      (!environment.ADMIN_PASSWORD || !environment.ADMIN_TOTP_SECRET)
-    ) {
-      logger.error("XAVFSIZLIK: production rejimida ADMIN_PASSWORD va ADMIN_TOTP_SECRET majburiy.");
-      processRef.exit(1);
-    }
     if (!environment.ESKIZ_EMAIL || !environment.ESKIZ_PASSWORD) {
       logger.warn(
         "⚠️  DIQQAT: SMS kredensiali yo'q — DEV rejim (OTP konsolga chiqadi). Production'da .env to'ldiring."

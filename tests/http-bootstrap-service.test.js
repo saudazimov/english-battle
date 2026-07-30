@@ -316,57 +316,27 @@ test("HTTP startup preserves listen, recovery and shutdown signal order", async 
   assert.deepEqual(gracefulSignals, ["SIGTERM", "SIGINT"]);
 });
 
-test("HTTP startup preserves production credential requirements", async () => {
-  const cases = [
-    {
-      environment: {
-        NODE_ENV: "production",
-        PAYME_MERCHANT_ID: "merchant",
-        PAYME_KEY: "key",
-        ADMIN_PASSWORD: "password",
-        ADMIN_TOTP_SECRET: "secret",
-      },
-      message: "‼️ XAVFSIZLIK: NODE_ENV=production, lekin ESKIZ_EMAIL/ESKIZ_PASSWORD yo'q!",
-    },
-    {
-      environment: {
-        NODE_ENV: "production",
-        ESKIZ_EMAIL: "sms@example.com",
-        ESKIZ_PASSWORD: "password",
-        ADMIN_PASSWORD: "password",
-        ADMIN_TOTP_SECRET: "secret",
-      },
-      message: "XAVFSIZLIK: production rejimida PAYME_MERCHANT_ID va PAYME_KEY majburiy.",
-    },
-    {
-      environment: {
-        NODE_ENV: "production",
-        ESKIZ_EMAIL: "sms@example.com",
-        ESKIZ_PASSWORD: "password",
-        PAYME_MERCHANT_ID: "merchant",
-        PAYME_KEY: "key",
-      },
-      message: "XAVFSIZLIK: production rejimida ADMIN_PASSWORD va ADMIN_TOTP_SECRET majburiy.",
-    },
-  ];
+test("HTTP application validates configuration before creating Express", () => {
+  let expressCreated = false;
+  const expected = new Error("invalid production environment");
 
-  for (const testCase of cases) {
-    let listenCallback;
-    const exits = [];
-    const errors = [];
-    startHttpServer({
-      server: { listen(port, callback) { listenCallback = callback; } },
-      port: 3000,
+  assert.throws(
+    () => createHttpApplication({
+      projectRoot: "project-root",
       pool: {},
-      recoverActiveBattles: async () => {},
-      environment: testCase.environment,
-      processRef: { on() {}, exit: (code) => exits.push(code) },
-      logger: { log() {}, warn() {}, error: (...args) => errors.push(args) },
-      gracefulShutdownFactory: () => () => {},
-    });
-
-    await listenCallback();
-    assert.deepEqual(exits, [1]);
-    assert.equal(errors.some(([message]) => message === testCase.message), true);
-  }
+      environment: { NODE_ENV: "production" },
+      configurationValidator(environment) {
+        assert.equal(environment.NODE_ENV, "production");
+        throw expected;
+      },
+      modules: {
+        expressModule() {
+          expressCreated = true;
+          return {};
+        },
+      },
+    }),
+    (error) => error === expected
+  );
+  assert.equal(expressCreated, false);
 });
