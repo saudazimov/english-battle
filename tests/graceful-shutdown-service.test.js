@@ -68,6 +68,19 @@ test("graceful shutdown ignores a repeated signal", async () => {
   assert.match(harness.calls.at(-1)[1], /SIGINT qayta keldi/);
 });
 
+test("fatal shutdown preserves exit code 1 and escalates an active shutdown", async () => {
+  const directFatal = createHarness();
+  await directFatal.gracefulShutdown("FATAL:uncaughtException", 1);
+  await directFatal.finishClose();
+  assert.deepEqual(directFatal.calls.at(-1), ["exit", 1]);
+
+  const escalated = createHarness();
+  await escalated.gracefulShutdown("SIGTERM");
+  await escalated.gracefulShutdown("FATAL:unhandledRejection", 1);
+  await escalated.finishClose();
+  assert.deepEqual(escalated.calls.at(-1), ["exit", 1]);
+});
+
 test("graceful shutdown preserves close and pool error handling", async () => {
   const harness = createHarness({
     closeError: new Error("close failed"),

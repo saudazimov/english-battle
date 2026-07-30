@@ -56,6 +56,8 @@ Production trafik berilishidan oldin quyidagilar alert tizimiga ulangan bo'lishi
 
 Monitoring faqat PM2 local loglariga bog'lanmasligi kerak: VPS ishlamay qolsa alert tashqi tizimdan kelishi zarur.
 
+Productiondagi `uncaughtException` yoki `unhandledRejection` processni ishonchsiz holatda davom ettirmaydi: yangi ulanishlar to'xtatiladi, database pool yopiladi, process `exit 1` bilan tugaydi va PM2 uni qayta ishga tushiradi. Takroriy fatal event alohida ikkinchi shutdown boshlamaydi.
+
 ## 5. Alert va incident darajalari
 
 ### SEV-1 — kritik

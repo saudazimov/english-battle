@@ -31,7 +31,6 @@ const { registerSocketConnection } = require("./src/sockets/socketBootstrap");
 const {
   createHttpApplication,
   registerHttpErrorHandler,
-  registerProcessErrorHandlers,
   startHttpServer,
 } = require("./src/services/httpBootstrapService");
 const { createAuthFeatureRoutes } = require("./src/routes/authFeatureRoutes");
@@ -858,7 +857,6 @@ const tournamentMatchWatcher = createTournamentMatchWatcherService({
 setInterval(tournamentMatchWatcher, 30000);
 
 registerHttpErrorHandler({ app, MulterError: multer.MulterError, logger: console });
-registerProcessErrorHandlers({ processRef: process, logger: console });
 
 registerSocketConnection({
   io,

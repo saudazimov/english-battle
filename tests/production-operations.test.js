@@ -32,6 +32,7 @@ test("production operations defines alerts, incidents and privacy safeguards", (
   }
   assert.match(operations, /\/health.*\/ready.*har 60 soniyada/s);
   assert.match(operations, /backup 26 soatdan eski/);
+  assert.match(operations, /uncaughtException.*unhandledRejection.*exit 1.*PM2/s);
   assert.match(operations, /Acknowledgement: 10 daqiqa/);
   assert.match(operations, /postmortem/);
   assert.match(operations, /parol, OTP, JWT/);

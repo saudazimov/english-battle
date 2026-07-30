@@ -144,20 +144,44 @@ function registerProcessErrorHandlers({
   environment = process.env,
   processRef = process,
   logger = console,
+  gracefulShutdown,
 } = {}) {
   const appLogger = productionLogger(logger, environment);
-  processRef.on("uncaughtException", (err) => {
-    appLogger.error(
-      "‼️ USHLANMAGAN XATO (server ishlashda davom etadi):",
-      err && err.stack ? err.stack : err
-    );
-  });
-  processRef.on("unhandledRejection", (reason) => {
-    appLogger.error(
-      "‼️ RAD ETILGAN PROMISE (server ishlashda davom etadi):",
-      reason && reason.stack ? reason.stack : reason
-    );
-  });
+  let handlingFatalError = false;
+
+  function handleFatalError(event, error) {
+    if (environment.NODE_ENV !== "production") {
+      const label = event === "uncaughtException" ? "USHLANMAGAN XATO" : "RAD ETILGAN PROMISE";
+      appLogger.error(`‼️ ${label} (server ishlashda davom etadi):`, error && error.stack ? error.stack : error);
+      return;
+    }
+    if (handlingFatalError) {
+      appLogger.error("Takroriy fatal process xatosi; shutdown allaqachon boshlandi", { event, error });
+      return;
+    }
+    handlingFatalError = true;
+    appLogger.error("Fatal process xatosi; xavfsiz shutdown boshlandi", { event, error });
+
+    if (typeof gracefulShutdown !== "function") {
+      processRef.exit(1);
+      return;
+    }
+    try {
+      const shutdownResult = gracefulShutdown(`FATAL:${event}`, 1);
+      if (shutdownResult && typeof shutdownResult.catch === "function") {
+        shutdownResult.catch((shutdownError) => {
+          appLogger.error("Fatal shutdown bajarilmadi", { event, error: shutdownError });
+          processRef.exit(1);
+        });
+      }
+    } catch (shutdownError) {
+      appLogger.error("Fatal shutdown bajarilmadi", { event, error: shutdownError });
+      processRef.exit(1);
+    }
+  }
+
+  processRef.on("uncaughtException", (error) => handleFatalError("uncaughtException", error));
+  processRef.on("unhandledRejection", (error) => handleFatalError("unhandledRejection", error));
 }
 
 function startHttpServer({
@@ -183,6 +207,7 @@ function startHttpServer({
   });
 
   const gracefulShutdown = gracefulShutdownFactory({ server, pool, logger: appLogger });
+  registerProcessErrorHandlers({ environment, processRef, logger: appLogger, gracefulShutdown });
   processRef.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
   processRef.on("SIGINT", () => gracefulShutdown("SIGINT"));
 

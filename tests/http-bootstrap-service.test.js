@@ -258,6 +258,79 @@ test("process error handlers preserve events and logging", () => {
   ]);
 });
 
+test("production process errors trigger one fatal graceful shutdown", () => {
+  const handlers = {};
+  const shutdownCalls = [];
+  const exitCalls = [];
+  const logCalls = [];
+  const logger = {
+    isStructuredLogger: true,
+    error: (...args) => logCalls.push(args),
+  };
+
+  registerProcessErrorHandlers({
+    environment: { NODE_ENV: "production" },
+    processRef: {
+      on: (event, handler) => { handlers[event] = handler; },
+      exit: (code) => exitCalls.push(code),
+    },
+    logger,
+    gracefulShutdown: (...args) => shutdownCalls.push(args),
+  });
+
+  const firstError = new Error("first fatal");
+  const repeatedError = new Error("repeated fatal");
+  handlers.uncaughtException(firstError);
+  handlers.unhandledRejection(repeatedError);
+
+  assert.deepEqual(shutdownCalls, [["FATAL:uncaughtException", 1]]);
+  assert.deepEqual(exitCalls, []);
+  assert.deepEqual(logCalls, [
+    ["Fatal process xatosi; xavfsiz shutdown boshlandi", { event: "uncaughtException", error: firstError }],
+    ["Takroriy fatal process xatosi; shutdown allaqachon boshlandi", { event: "unhandledRejection", error: repeatedError }],
+  ]);
+});
+
+test("production process error exits 1 when graceful shutdown is unavailable", () => {
+  const handlers = {};
+  const exitCalls = [];
+  registerProcessErrorHandlers({
+    environment: { NODE_ENV: "production" },
+    processRef: {
+      on: (event, handler) => { handlers[event] = handler; },
+      exit: (code) => exitCalls.push(code),
+    },
+    logger: { isStructuredLogger: true, error() {} },
+  });
+
+  handlers.uncaughtException(new Error("fatal"));
+  assert.deepEqual(exitCalls, [1]);
+});
+
+test("production process error exits 1 when graceful shutdown rejects", async () => {
+  const handlers = {};
+  const exitCalls = [];
+  const logCalls = [];
+  registerProcessErrorHandlers({
+    environment: { NODE_ENV: "production" },
+    processRef: {
+      on: (event, handler) => { handlers[event] = handler; },
+      exit: (code) => exitCalls.push(code),
+    },
+    logger: {
+      isStructuredLogger: true,
+      error: (...args) => logCalls.push(args),
+    },
+    gracefulShutdown: () => Promise.reject(new Error("shutdown rejected")),
+  });
+
+  handlers.unhandledRejection(new Error("fatal"));
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.deepEqual(exitCalls, [1]);
+  assert.equal(logCalls.some(([message]) => message === "Fatal shutdown bajarilmadi"), true);
+});
+
 test("HTTP startup preserves listen, recovery and shutdown signal order", async () => {
   const order = [];
   const handlers = {};
@@ -304,6 +377,8 @@ test("HTTP startup preserves listen, recovery and shutdown signal order", async 
   assert.deepEqual(order, [
     ["listen", 3450],
     ["graceful-factory", { server, pool, logger }],
+    ["on", "uncaughtException"],
+    ["on", "unhandledRejection"],
     ["on", "SIGTERM"],
     ["on", "SIGINT"],
   ]);

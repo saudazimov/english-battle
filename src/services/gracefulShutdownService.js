@@ -7,8 +7,10 @@ function createGracefulShutdownService({
   exit = (code) => process.exit(code),
 }) {
   let shuttingDown = false;
+  let requestedExitCode = 0;
 
-  return async function gracefulShutdown(signal) {
+  return async function gracefulShutdown(signal, exitCode = 0) {
+    if (exitCode !== 0) requestedExitCode = 1;
     if (shuttingDown) {
       logger.log(`[Shutdown] ${signal} qayta keldi — allaqachon to'xtayapmiz, e'tiborsiz.`);
       return;
@@ -35,7 +37,7 @@ function createGracefulShutdownService({
 
       clearTimeoutFn(forceTimer);
       logger.log("[Shutdown] Tugadi. Xayr.");
-      exit(0);
+      exit(requestedExitCode);
     });
   };
 }

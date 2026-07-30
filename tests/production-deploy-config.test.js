@@ -25,6 +25,7 @@ test("production PM2 profile matches the single-instance runtime contract", () =
   assert.equal(app.name, "english-battle");
   assert.equal(app.instances, 1);
   assert.equal(app.exec_mode, "fork");
+  assert.equal(app.autorestart, true);
   assert.equal(app.wait_ready, false);
   assert.ok(app.kill_timeout > 10000);
   assert.equal(app.env.NODE_ENV, "production");
