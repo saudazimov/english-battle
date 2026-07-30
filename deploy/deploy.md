@@ -202,6 +202,15 @@ Qo'shing (har kuni 03:00):
 
 Runner mavjud fayl ustiga yozmaydi, vaqtinchalik faylni muvaffaqiyatsizlikda tozalaydi va faqat `pg_restore --list` tekshiruvidan o'tgan PostgreSQL custom archive'ni yakuniy `.dump` faylga ko'chiradi. `DB_PASSWORD` argument yoki logga chiqarilmaydi. Backupni shifrlangan off-site storage'ga ko'chirish va 14 kunlik retention alohida operations job orqali bajarilishi shart; avtomatik o'chirishni faqat off-site nusxa tasdiqlangandan keyin yoqing.
 
+Upload fayllari uchun alohida snapshot yarating va darhol tekshiring:
+
+```bash
+npm run uploads:backup -- --output "$HOME/backups/uploads_$(date +%Y-%m-%d_%H-%M-%S)"
+npm run uploads:backup:verify -- --snapshot "$HOME/backups/TEKSHIRILADIGAN_UPLOAD_SNAPSHOT"
+```
+
+Snapshot ikkala upload root, fayl hajmlari va SHA-256 checksumlardan iborat manifest saqlaydi. Snapshot katalogini database dump bilan birga shifrlangan off-site storage'ga ko'chiring.
+
 ---
 
 ## Yangilanish (keyingi deploylar)
@@ -215,6 +224,7 @@ npm ci --omit=dev
 npm run config:check:production
 npm test
 npm run db:backup -- --output "$HOME/backups/predeploy_$(date +%Y-%m-%d_%H-%M-%S).dump"
+npm run uploads:backup -- --output "$HOME/backups/uploads_predeploy_$(date +%Y-%m-%d_%H-%M-%S)"
 node migrate.js status
 node migrate.js
 node migrate.js status

@@ -134,7 +134,16 @@ npm run db:restore:drill -- --file BACKUP_FILE.dump --target-db english_battle_r
 sudo -u postgres dropdb english_battle_restore_test
 ```
 
-Runner faqat `_restore_test` nomli, production bazadan boshqa targetni qabul qiladi va `--confirm-target` aynan teng bo'lishini talab qiladi. U avval `PGDMP` header va `pg_restore --list` bilan arxivni, restore'dan keyin esa `schema_migrations` jadvalini tekshiradi; restore `--single-transaction` bilan bajariladi. Target database oldindan bo'sh holda yaratilishi kerak. Production databasega `pg_restore --clean` ishlatmang. Upload backupini ham alohida vaqtinchalik papkaga ochib, fayl soni va o'qilishini tekshiring.
+Runner faqat `_restore_test` nomli, production bazadan boshqa targetni qabul qiladi va `--confirm-target` aynan teng bo'lishini talab qiladi. U avval `PGDMP` header va `pg_restore --list` bilan arxivni, restore'dan keyin esa `schema_migrations` jadvalini tekshiradi; restore `--single-transaction` bilan bajariladi. Target database oldindan bo'sh holda yaratilishi kerak. Production databasega `pg_restore --clean` ishlatmang.
+
+Upload snapshotini ham alohida vaqtinchalik papkaga tiklab tekshiring:
+
+```bash
+npm run uploads:backup:verify -- --snapshot UPLOAD_SNAPSHOT_DIRECTORY
+npm run uploads:restore:drill -- --snapshot UPLOAD_SNAPSHOT_DIRECTORY --target /tmp/ilm-liga-uploads-restore-test --confirm-target /tmp/ilm-liga-uploads-restore-test
+```
+
+Runner `public/uploads/` va `uploads/resources/` uchun SHA-256 manifestni tekshiradi, symlink/path traversal'ni rad etadi va jonli upload papkalariga restore qilishga ruxsat bermaydi.
 
 ### Secret sizishi gumoni
 
