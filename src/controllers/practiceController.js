@@ -1,4 +1,5 @@
 const SESSION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const VALID_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
 function normalizeQuestionId(value) {
   if (typeof value === "number") {
@@ -15,16 +16,60 @@ function sessionHasExpired(session) {
   return Number.isNaN(expiresAt.getTime()) || expiresAt < new Date();
 }
 
+function resolvePracticeOptions(query, userLevel) {
+  const requestedLevel = query.level;
+  const level = requestedLevel === undefined
+    ? (VALID_LEVELS.includes(userLevel) ? userLevel : "A1")
+    : requestedLevel;
+  if (typeof level !== "string" || !VALID_LEVELS.includes(level)) return null;
+
+  if (query.count === undefined) return { level, count: 10 };
+  if (typeof query.count !== "string" || !/^[1-9]\d*$/.test(query.count)) {
+    return null;
+  }
+  const count = Number(query.count);
+  if (!Number.isSafeInteger(count) || count < 5 || count > 30) return null;
+  return { level, count };
+}
+
+async function replaceActivePracticeSession({
+  pool,
+  sessionId,
+  userId,
+  level,
+  questionIds,
+}) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT id FROM users WHERE id=$1 FOR UPDATE", [userId]);
+    await client.query(
+      `UPDATE practice_sessions SET status='expired'
+       WHERE user_id=$1 AND status='active'`,
+      [userId]
+    );
+    await client.query(
+      `INSERT INTO practice_sessions (id, user_id, level, question_ids, expires_at)
+       VALUES ($1, $2, $3, $4, NOW() + INTERVAL '60 minutes')`,
+      [sessionId, userId, level, questionIds]
+    );
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 function createPracticeStartHandler({ pool, crypto, logger }) {
   return async function startPractice(req, res) {
     try {
-      let level = (req.query.level || req.user.cefr_level || "A1").trim();
-      let count = parseInt(req.query.count) || 10;
-      if (count < 5) count = 5;
-      if (count > 30) count = 30;
-
-      const validLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
-      if (validLevels.indexOf(level) === -1) level = "A1";
+      const options = resolvePracticeOptions(req.query || {}, req.user.cefr_level);
+      if (!options) {
+        return res.status(400).json({ error: "Noto'g'ri practice parametrlari" });
+      }
+      const { level, count } = options;
       const result = await pool.query(
         `SELECT id, question_text, option_a, option_b, option_c, option_d, skill
          FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
@@ -44,11 +89,13 @@ function createPracticeStartHandler({ pool, crypto, logger }) {
 
       const sessionId = crypto.randomUUID();
       const questionIds = result.rows.map((question) => Number(question.id));
-      await pool.query(
-        `INSERT INTO practice_sessions (id, user_id, level, question_ids, expires_at)
-         VALUES ($1, $2, $3, $4, NOW() + INTERVAL '60 minutes')`,
-        [sessionId, req.user.id, level, questionIds]
-      );
+      await replaceActivePracticeSession({
+        pool,
+        sessionId,
+        userId: req.user.id,
+        level,
+        questionIds,
+      });
       res.json({
         session_id: sessionId,
         level,
