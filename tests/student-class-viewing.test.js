@@ -12,7 +12,7 @@ const {
   createStudentClassViewingRoutes,
 } = require("../src/routes/studentClassViewingRoutes");
 
-const listSql = `SELECT c.id, c.name, c.description, c.join_code, c.cefr_level, c.created_at, c.schedule, c.teacher_id,
+const listSql = `SELECT c.id, c.name, c.description, c.join_code, c.created_at, c.teacher_id,
               t.first_name AS teacher_first_name, t.last_name AS teacher_last_name,
               (SELECT COUNT(*) FROM class_students m WHERE m.class_id = c.id AND m.status = 'active') AS student_count
        FROM class_students cs
