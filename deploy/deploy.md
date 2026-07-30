@@ -2,6 +2,8 @@
 
 Ubuntu 22.04/24.04 VPS uchun. Same-origin monolit: frontend + API + Socket.IO bitta Node service'da. Redis YO'Q (single-instance).
 
+Production monitoring, SLO, backup/restore va incident talablari: [`deploy/OPERATIONS.md`](./OPERATIONS.md).
+
 ---
 
 ## 0. Talablar
