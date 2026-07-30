@@ -270,6 +270,8 @@
     function cacheKey() { return currentTab + "_" + currentPeriod + "_" + currentWithin; }
 
     function nameFieldOf(tab) { return tab === "schools" ? "school" : (tab === "districts" ? "district" : "region"); }
+    function compactRegionName(value) { return String(value || "—").replace(/\s+Region$/i, ""); }
+    function rankingName(value, field) { return field === "region" ? compactRegionName(value) : (value || "—"); }
 
     function switchTab(tab) {
       currentTab = tab;
@@ -329,9 +331,9 @@
       const showReg = (currentTab === "schools" && currentWithin === "country");
       podium.innerHTML = "";
       order.forEach(o => {
-        const name = o.item[nameField] || "—";
+        const name = rankingName(o.item[nameField], nameField);
         let sub;
-        if (currentTab === "schools") sub = showReg ? (o.item.district || "") : (o.item.region || "");
+        if (currentTab === "schools") sub = showReg ? (o.item.district || "") : compactRegionName(o.item.region);
         else sub = o.item.player_count + " o'yinchi";
         const crown = o.rank === 1 ? '<div class="podium-crown">👑</div>' : "";
         podium.innerHTML +=
@@ -367,14 +369,14 @@
       list.forEach((item) => {
         const rank = item.rank;
         let rcls = ""; if (rank === 1) rcls = "top1"; else if (rank === 2) rcls = "top2"; else if (rank === 3) rcls = "top3";
-        const name = item[nameField] || "—";
+        const name = rankingName(item[nameField], nameField);
         // Respublika miqyosida maktab nomi tagida TUMAN, qolganda VILOYAT
         let sub;
-        if (currentTab === "schools") sub = showReg ? (item.district || "—") : (item.region || "—");
-        else if (currentTab === "districts") sub = item.region || "—";
+        if (currentTab === "schools") sub = showReg ? (item.district || "—") : compactRegionName(item.region);
+        else if (currentTab === "districts") sub = compactRegionName(item.region);
         else sub = "Viloyat";
         const distCell = showDist ? ('<span class="lb-dist">' + (item.district || "—") + '</span>') : "";
-        const regCell = showReg ? ('<span class="lb-region">' + (item.region || "—") + '</span>') : "";
+        const regCell = showReg ? ('<span class="lb-region">' + compactRegionName(item.region) + '</span>') : "";
         lbList.innerHTML +=
           '<div class="lb-row' + ((showDist || showReg) ? " with-dist" : "") + (item.is_mine ? " me" : "") + '">' +
             '<div class="lb-rank ' + rcls + '">' + rank + '</div>' +
@@ -391,13 +393,13 @@
       const inList = myEntry && list.some(it => it.is_mine);
       if (myEntry && !inList) {
         const rank = myEntry.rank;
-        const name = myEntry[nameField] || "—";
+        const name = rankingName(myEntry[nameField], nameField);
         let sub;
-        if (currentTab === "schools") sub = showReg ? (myEntry.district || "—") : (myEntry.region || "—");
-        else if (currentTab === "districts") sub = myEntry.region || "—";
+        if (currentTab === "schools") sub = showReg ? (myEntry.district || "—") : compactRegionName(myEntry.region);
+        else if (currentTab === "districts") sub = compactRegionName(myEntry.region);
         else sub = "Viloyat";
         const distCell = showDist ? ('<span class="lb-dist">' + (myEntry.district || "—") + '</span>') : "";
-        const regCell = showReg ? ('<span class="lb-region">' + (myEntry.region || "—") + '</span>') : "";
+        const regCell = showReg ? ('<span class="lb-region">' + compactRegionName(myEntry.region) + '</span>') : "";
         lbList.innerHTML +=
           '<div class="lb-gap">Sizning o\'rningiz</div>' +
           '<div class="lb-pinned">' +
@@ -429,9 +431,9 @@
         return;
       }
       const item = list.find(it => it.is_mine) || myEntry;
-      document.getElementById("yrName").textContent = myField;
+      document.getElementById("yrName").textContent = rankingName(myField, nameField);
       if (item) {
-        const sub = currentTab === "schools" ? (item.region || "") : "";
+        const sub = currentTab === "schools" ? compactRegionName(item.region) : "";
         document.getElementById("yrSub").textContent = sub || (item.player_count + " o'yinchi");
         document.getElementById("yrRank").textContent = "#" + item.rank;
         document.getElementById("yrRP").textContent = item.school_rating;

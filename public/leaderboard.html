@@ -364,6 +364,7 @@
       KR: "Janubiy Koreya", JP: "Yaponiya", IN: "Hindiston", SA: "Saudiya Arabistoni", AE: "BAA",
     };
     function countryName(code) { return COUNTRY_NAMES[(code || "UZ").toUpperCase()] || (code || "—"); }
+    function compactRegionName(value) { return String(value || "—").replace(/\s+Region$/i, ""); }
     function flagHtml(code) {
       code = (code || "UZ").toLowerCase();
       if (code === "uz") return UZ_FLAG;
@@ -377,7 +378,7 @@
     }
     function locCellHtml(p) {
       if (currentScope === "global") return flagHtml(p.country) + countryName(p.country);
-      if (currentScope === "national") return esc(p.region || "—");
+      if (currentScope === "national") return esc(compactRegionName(p.region));
       if (currentScope === "region") return esc(p.district || "—");
       if (currentScope === "district") return esc(p.school || "—");
       if (currentScope === "school") return '<span style="color:var(--green);font-weight:700;">' + (p.win_rate || 0) + '%</span>';

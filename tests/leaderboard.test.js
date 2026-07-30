@@ -31,7 +31,7 @@ test("leaderboard preserves default all-time query and mapping", async () => {
     school: "S", village: "V", country: "UZ", wins: "3", total_battles: "4",
   }));
   const harness = createPool([
-    { rows: [{ region: "R", district: "D", school: "S" }] },
+    { rows: [{ country: "UZ", region: "R", district: "D", school: "S" }] },
     { rows: players },
   ]);
   const service = createLeaderboardService({ pool: harness.pool });
@@ -39,7 +39,7 @@ test("leaderboard preserves default all-time query and mapping", async () => {
   const result = await service.getLeaderboard(51, {});
 
   assert.deepEqual(harness.calls[0], [
-    "SELECT region, district, school FROM users WHERE id = $1", [51],
+    "SELECT country, region, district, school FROM users WHERE id = $1", [51],
   ]);
   assert.match(harness.calls[1][0], /LEFT JOIN battle_history/);
   assert.match(harness.calls[1][0], /ORDER BY u\.rating DESC, u\.xp DESC$/);
@@ -55,9 +55,23 @@ test("leaderboard preserves default all-time query and mapping", async () => {
   assert.equal(result.total_players, 51);
 });
 
+test("leaderboard national scope includes only the current user's country", async () => {
+  const harness = createPool([
+    { rows: [{ country: "UZ", region: "Toshkent", district: "Chilonzor", school: "1-maktab" }] },
+    { rows: [] },
+  ]);
+  const service = createLeaderboardService({ pool: harness.pool });
+
+  const result = await service.getLeaderboard(7, { scope: "national", period: "all" });
+
+  assert.match(harness.calls[1][0], /WHERE u\.country = \$1/);
+  assert.deepEqual(harness.calls[1][1], ["UZ"]);
+  assert.equal(result.scope, "national");
+});
+
 test("leaderboard preserves friends and period query behavior", async () => {
   const harness = createPool([
-    { rows: [{ region: "R", district: "D", school: "S" }] },
+    { rows: [{ country: "UZ", region: "R", district: "D", school: "S" }] },
     { rows: [{ fid: 9 }] },
     { rows: [{
       id: 7, first_name: "Ali", last_name: "V", cefr_level: "B2", rating: 1300,
@@ -89,7 +103,7 @@ test("leaderboard my-ranks preserves missing-user response", async () => {
 
 test("leaderboard my-ranks preserves query order, parameters, and response", async () => {
   const harness = createPool([
-    { rows: [{ region: "R", district: "D", school: "S", rating: 1200 }] },
+    { rows: [{ country: "UZ", region: "R", district: "D", school: "S", rating: 1200 }] },
     { rows: [{ fid: 9 }] },
     { rows: [{ rank: "2" }] },
     { rows: [{ rank: "10" }] },
@@ -109,8 +123,9 @@ test("leaderboard my-ranks preserves query order, parameters, and response", asy
   assert.equal(harness.calls.length, 12);
   assert.deepEqual(harness.calls[2][1], [1200, [9, 7]]);
   assert.deepEqual(harness.calls.slice(3, 8).map((call) => call[1]), [
-    [1200], [1200], [1200, "R"], [1200, "R", "D"], [1200, "R", "D", "S"],
+    [1200], [1200, "UZ"], [1200, "R"], [1200, "R", "D"], [1200, "R", "D", "S"],
   ]);
+  assert.match(harness.calls[4][0], /country = \$2/);
   assert.deepEqual(harness.calls.slice(8).map((call) => call[1]), [
     [], ["R"], ["R", "D"], ["R", "D", "S"],
   ]);

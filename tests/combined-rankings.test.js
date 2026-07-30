@@ -26,7 +26,7 @@ function createPool(results) {
 
 test("combined rankings preserve default season scoring and mapping", async () => {
   const harness = createPool([
-    { rows: [{ region: "R", district: "D", school: "S" }] },
+    { rows: [{ country: "UZ", region: "R", district: "D", school: "S" }] },
     { rows: [
       { region: "R", district: "D", school: "S", avg_rating: 1400, player_count: 10 },
       { region: "X", district: "Y", school: "Z", avg_rating: 1200, player_count: 5 },
@@ -45,12 +45,14 @@ test("combined rankings preserve default season scoring and mapping", async () =
   const result = await service.getRankings(7, {});
 
   assert.deepEqual(harness.calls[0], [
-    "SELECT region, district, school FROM users WHERE id = $1", [7],
+    "SELECT country, region, district, school FROM users WHERE id = $1", [7],
   ]);
   assert.match(harness.calls[1][0], /SELECT region, district, school, ROUND\(AVG\(rating\)\)/);
-  assert.deepEqual(harness.calls[1][1], []);
+  assert.match(harness.calls[1][0], /AND country = \$1/);
+  assert.deepEqual(harness.calls[1][1], ["UZ"]);
   assert.match(harness.calls[2][0], /season = \$1/);
-  assert.deepEqual(harness.calls[2][1], ["season-query"]);
+  assert.match(harness.calls[2][0], /point_user\.country = \$2/);
+  assert.deepEqual(harness.calls[2][1], ["season-query", "UZ"]);
   assert.equal(result.scope, "schools");
   assert.equal(result.period, "season");
   assert.equal(result.within, "country");
@@ -67,7 +69,7 @@ test("combined rankings preserve default season scoring and mapping", async () =
 
 test("combined rankings preserve district coercion and filters", async () => {
   const harness = createPool([
-    { rows: [{ region: "R", district: "D", school: "S" }] },
+    { rows: [{ country: "UZ", region: "R", district: "D", school: "S" }] },
     { rows: [{ region: "R", district: "D", avg_rating: 1000, player_count: 2 }] },
     { rows: [] },
   ]);
@@ -79,10 +81,10 @@ test("combined rankings preserve district coercion and filters", async () => {
 
   assert.equal(result.within, "region");
   assert.match(harness.calls[1][0], /SELECT region, district,/);
-  assert.match(harness.calls[1][0], /AND region = \$1/);
-  assert.deepEqual(harness.calls[1][1], ["R"]);
-  assert.match(harness.calls[2][0], /created_at >= date_trunc\('week', NOW\(\)\) AND region = \$1/);
-  assert.deepEqual(harness.calls[2][1], ["R"]);
+  assert.match(harness.calls[1][0], /AND country = \$1 AND region = \$2/);
+  assert.deepEqual(harness.calls[1][1], ["UZ", "R"]);
+  assert.match(harness.calls[2][0], /point_user\.country = \$1\).*region = \$2/);
+  assert.deepEqual(harness.calls[2][1], ["UZ", "R"]);
   assert.equal(result.rankings[0].effort_points, 0);
   assert.equal(result.rankings[0].active_students, 0);
   assert.equal(result.rankings[0].is_mine, true);
@@ -90,7 +92,7 @@ test("combined rankings preserve district coercion and filters", async () => {
 
 test("combined rankings preserve regions country-only behavior", async () => {
   const harness = createPool([
-    { rows: [{ region: "R", district: "D" }] },
+    { rows: [{ country: "UZ", region: "R", district: "D" }] },
     { rows: [] },
     { rows: [] },
   ]);
@@ -101,10 +103,11 @@ test("combined rankings preserve regions country-only behavior", async () => {
   });
 
   assert.equal(result.within, "country");
-  assert.deepEqual(harness.calls[1][1], []);
-  assert.deepEqual(harness.calls[2][1], []);
+  assert.deepEqual(harness.calls[1][1], ["UZ"]);
+  assert.deepEqual(harness.calls[2][1], ["UZ"]);
   assert.match(harness.calls[1][0], /SELECT region,/);
-  assert.match(harness.calls[2][0], /FROM school_battle_points  GROUP BY region$/);
+  assert.match(harness.calls[1][0], /AND country = \$1/);
+  assert.match(harness.calls[2][0], /point_user\.country = \$1/);
 });
 
 test("combined rankings preserves database error response", async () => {

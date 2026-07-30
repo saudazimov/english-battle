@@ -19,12 +19,13 @@ function createLeaderboardService({ pool }) {
     async getLeaderboard(userId, query) {
       const scope = ["global", "national", "region", "district", "school", "friends"].includes(query.scope) ? query.scope : "global";
       const period = ["all", "week", "month", "season"].includes(query.period) ? query.period : "all";
-      const userResult = await pool.query("SELECT region, district, school FROM users WHERE id = $1", [userId]);
+      const userResult = await pool.query("SELECT country, region, district, school FROM users WHERE id = $1", [userId]);
       const me = userResult.rows[0] || {};
 
       let where = "";
       const params = [];
-      if (scope === "region") { params.push(me.region); where = "WHERE u.region = $1"; }
+      if (scope === "national") { params.push(me.country); where = "WHERE u.country = $1"; }
+      else if (scope === "region") { params.push(me.region); where = "WHERE u.region = $1"; }
       else if (scope === "district") { params.push(me.region, me.district); where = "WHERE u.region = $1 AND u.district = $2"; }
       else if (scope === "school") { params.push(me.region, me.district, me.school); where = "WHERE u.region = $1 AND u.district = $2 AND u.school = $3"; }
       else if (scope === "friends") {
@@ -93,7 +94,7 @@ function createLeaderboardService({ pool }) {
     },
 
     async getMyRanks(userId) {
-      const userResult = await pool.query("SELECT region, district, school, rating FROM users WHERE id = $1", [userId]);
+      const userResult = await pool.query("SELECT country, region, district, school, rating FROM users WHERE id = $1", [userId]);
       const me = userResult.rows[0];
       if (!me) return {};
       const myRating = me.rating || 1000;
@@ -111,7 +112,7 @@ function createLeaderboardService({ pool }) {
       return {
         rating: myRating,
         global: await rankIn(pool, myRating, "", []),
-        national: await rankIn(pool, myRating, "", []),
+        national: me.country ? await rankIn(pool, myRating, "country = $2", [me.country]) : null,
         region: me.region ? await rankIn(pool, myRating, "region = $2", [me.region]) : null,
         district: (me.region && me.district) ? await rankIn(pool, myRating, "region = $2 AND district = $3", [me.region, me.district]) : null,
         school: (me.region && me.district && me.school) ? await rankIn(pool, myRating, "region = $2 AND district = $3 AND school = $4", [me.region, me.district, me.school]) : null,

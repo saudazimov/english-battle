@@ -7,7 +7,7 @@ function createCombinedRankingsService({ pool, currentSeason }) {
       if (scope === "regions") within = "country";
       if (scope === "districts" && within === "district") within = "region";
 
-      const userResult = await pool.query("SELECT region, district, school FROM users WHERE id = $1", [userId]);
+      const userResult = await pool.query("SELECT country, region, district, school FROM users WHERE id = $1", [userId]);
       const me = userResult.rows[0] || {};
       let groupCols, selectCols, fameWhere;
       if (scope === "regions") {
@@ -28,6 +28,9 @@ function createCombinedRankingsService({ pool, currentSeason }) {
 
       const fameParams = [];
       let geoSql = "";
+      if (me.country) {
+        fameParams.push(me.country); geoSql += ` AND country = $${fameParams.length}`;
+      }
       if (within !== "country" && me.region) {
         fameParams.push(me.region); geoSql += ` AND region = $${fameParams.length}`;
       }
@@ -44,6 +47,12 @@ function createCombinedRankingsService({ pool, currentSeason }) {
       if (period === "week") effortConditions.push("created_at >= date_trunc('week', NOW())");
       else if (period === "month") effortConditions.push("created_at >= date_trunc('month', NOW())");
       else if (period === "season") { effortConditions.push("season = $1"); effortParams.push(currentSeason()); }
+      if (me.country) {
+        effortParams.push(me.country);
+        effortConditions.push(
+          `EXISTS (SELECT 1 FROM users point_user WHERE point_user.id = school_battle_points.user_id AND point_user.country = $${effortParams.length})`
+        );
+      }
       if (within !== "country" && me.region) {
         effortParams.push(me.region); effortConditions.push(`region = $${effortParams.length}`);
       }
