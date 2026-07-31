@@ -109,7 +109,7 @@ function registerSocketConnection({
   io.on("connection", (socket) => {
     logger.log("Socket connected:", socket.id);
 
-    registrars.registerClassWatchSocket(socket);
+    registrars.registerClassWatchSocket(socket, pool, logger);
 
     const connectionLifecycleSocket = registrars.createConnectionLifecycleSocket({
       socket,
