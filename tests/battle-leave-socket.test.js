@@ -77,6 +77,58 @@ test("missing room, battle, and socket player preserve silent returns", () => {
   assert.deepEqual(harness.calls, []);
 });
 
+test("malformed payloads and unsafe room lookups return silently", () => {
+  const inheritedBattle = createBattle();
+  const battles = Object.create({ inherited: inheritedBattle });
+  const harness = createHarness({ battles });
+
+  harness.handler();
+  harness.handler(null);
+  harness.handler("room");
+  harness.handler([]);
+  harness.handler({ roomId: "" });
+  harness.handler({ roomId: "x".repeat(257) });
+  harness.handler({ roomId: "inherited" });
+  harness.handler({ roomId: "__proto__" });
+
+  assert.deepEqual(harness.calls, []);
+});
+
+test("inherited player membership is rejected and null-prototype maps remain valid", () => {
+  const inheritedPlayers = Object.create({
+    "socket-5": createBattle().players["socket-5"],
+  });
+  const battles = Object.create(null);
+  battles.inheritedPlayer = createBattle();
+  battles.inheritedPlayer.players = inheritedPlayers;
+
+  const ownPlayers = Object.create(null);
+  ownPlayers["socket-5"] = createBattle().players["socket-5"];
+  ownPlayers["socket-7"] = createBattle().players["socket-7"];
+  battles.valid = createBattle();
+  battles.valid.players = ownPlayers;
+  const userToRoom = Object.create(null);
+  userToRoom[5] = "valid";
+  const harness = createHarness({ battles, userToRoom });
+
+  harness.handler({ roomId: "inheritedPlayer" });
+  assert.deepEqual(harness.calls, []);
+
+  harness.handler({ roomId: "valid" });
+  assert.equal(ownPlayers["socket-5"].finished, true);
+  assert.equal(userToRoom[5], undefined);
+});
+
+test("malformed player state returns silently", () => {
+  const battle = createBattle();
+  battle.players["socket-5"] = null;
+  const harness = createHarness({ battles: { room: battle } });
+
+  harness.handler({ roomId: "room" });
+
+  assert.deepEqual(harness.calls, []);
+});
+
 test("team leave preserves forfeit, mapping cleanup, and event order", () => {
   const battle = createBattle({ isTeam: true });
   const userToRoom = { 5: "room" };
