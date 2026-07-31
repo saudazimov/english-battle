@@ -1,6 +1,17 @@
+const MAX_ROOM_ID_LENGTH = 256;
+
 function createJoinFriendBattleHandler({ socket, pendingBattles, startBattle }) {
-  return function joinFriendBattle({ roomId, userId }) {
-    userId = socket.userId;
+  return function joinFriendBattle(payload) {
+    const roomId = payload && typeof payload === "object"
+      ? payload.roomId
+      : null;
+    const userId = socket.userId;
+    if (
+      typeof roomId !== "string"
+      || roomId.length === 0
+      || roomId.length > MAX_ROOM_ID_LENGTH
+      || !Object.prototype.hasOwnProperty.call(pendingBattles, roomId)
+    ) return;
     const pending = pendingBattles[roomId];
     if (!pending) return;
 
