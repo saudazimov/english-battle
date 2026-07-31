@@ -112,6 +112,59 @@ test("missing battle, missing player, and finished player return silently", asyn
   assert.deepEqual(harness.calls, []);
 });
 
+test("malformed payloads and unsafe room lookups return silently", async () => {
+  const inheritedBattle = createBattle();
+  const battles = Object.create({ inherited: inheritedBattle });
+  const harness = createHarness({ battles });
+
+  await harness.handler();
+  await harness.handler(null);
+  await harness.handler("room");
+  await harness.handler([]);
+  await harness.handler({ roomId: "", questionId: 11, answer: "B" });
+  await harness.handler({ roomId: "x".repeat(257), questionId: 11, answer: "B" });
+  await harness.handler({ roomId: "inherited", questionId: 11, answer: "B" });
+  await harness.handler({ roomId: "__proto__", questionId: 11, answer: "B" });
+
+  assert.deepEqual(harness.calls, []);
+});
+
+test("inherited player membership is rejected and null-prototype maps remain valid", async () => {
+  const inheritedPlayers = Object.create({
+    "socket-5": createBattle().players["socket-5"],
+  });
+  const battles = Object.create(null);
+  battles.inheritedPlayer = createBattle({}, { players: inheritedPlayers });
+
+  const ownPlayers = Object.create(null);
+  ownPlayers["socket-5"] = createBattle().players["socket-5"];
+  ownPlayers["socket-7"] = createBattle().players["socket-7"];
+  battles.valid = createBattle({}, { players: ownPlayers });
+  const harness = createHarness({ battles });
+
+  await harness.handler({ roomId: "inheritedPlayer", questionId: 11, answer: "B" });
+  assert.deepEqual(harness.calls, []);
+
+  await harness.handler({ roomId: "valid", questionId: 11, answer: "B" });
+  assert.equal(ownPlayers["socket-5"].score, 1);
+  assert.equal(harness.calls.some(([type]) => type === "query"), true);
+});
+
+test("malformed battle questions return silently", async () => {
+  const battle = createBattle({}, { questions: null });
+  const harness = createHarness({
+    battles: {
+      room: battle,
+      missingPlayerState: createBattle({}, { players: { "socket-5": null } }),
+    },
+  });
+
+  await harness.handler({ roomId: "room", questionId: 11, answer: "B" });
+  await harness.handler({ roomId: "missingPlayerState", questionId: 11, answer: "B" });
+
+  assert.deepEqual(harness.calls, []);
+});
+
 test("duplicate answer preserves response and avoids persistence", async () => {
   const battle = createBattle({ answeredIds: { 11: true }, answeredCount: 1 });
   const harness = createHarness({ battles: { room: battle } });
