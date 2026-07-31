@@ -111,6 +111,9 @@ test("rematch socket preserves request/response registration order", () => {
 test("rematch request preserves invalid, self, and offline short circuits", async () => {
   const harness = createHarness({ userId: 5 });
 
+  await harness.handlers.requestRematch();
+  await harness.handlers.requestRematch(null);
+  await harness.handlers.requestRematch([]);
   await harness.handlers.requestRematch({ opponentId: null });
   await harness.handlers.requestRematch({ opponentId: "5" });
   await harness.handlers.requestRematch({ opponentId: "7" });
@@ -118,21 +121,41 @@ test("rematch request preserves invalid, self, and offline short circuits", asyn
   assert.deepEqual(harness.calls, [
     ["socket-emit", "rematchUnavailable", { message: "Rematch so'rovi noto'g'ri" }],
     ["socket-emit", "rematchUnavailable", { message: "Rematch so'rovi noto'g'ri" }],
+    ["socket-emit", "rematchUnavailable", { message: "Rematch so'rovi noto'g'ri" }],
+    ["socket-emit", "rematchUnavailable", { message: "Rematch so'rovi noto'g'ri" }],
+    ["socket-emit", "rematchUnavailable", { message: "Rematch so'rovi noto'g'ri" }],
     ["socket-emit", "rematchUnavailable", { message: "Raqib hozir mavjud emas" }],
   ]);
 });
 
+test("rematch request rejects inherited online users and malformed identifiers", async () => {
+  const onlineUsers = Object.create({ 7: "target-socket" });
+  const harness = createHarness({ onlineUsers });
+
+  await harness.handlers.requestRematch({ opponentId: 7 });
+  await harness.handlers.requestRematch({ opponentId: {} });
+  await harness.handlers.requestRematch({ opponentId: "7".repeat(257) });
+
+  assert.deepEqual(harness.calls, [
+    ["socket-emit", "rematchUnavailable", { message: "Raqib hozir mavjud emas" }],
+    ["socket-emit", "rematchUnavailable", { message: "Rematch so'rovi noto'g'ri" }],
+    ["socket-emit", "rematchUnavailable", { message: "Rematch so'rovi noto'g'ri" }],
+  ]);
+});
+
 test("rematch request preserves SQL, normalization, timer, map, and emit", async () => {
+  const onlineUsers = Object.create(null);
+  onlineUsers[7] = "target-socket";
   const harness = createHarness({
     userId: 5,
-    onlineUsers: { 7: "target-socket" },
+    onlineUsers,
     queryResponses: [{ rows: [{ first_name: "Ali", last_name: "Valiyev" }] }],
   });
 
   await harness.handlers.requestRematch({
     opponentId: 7,
     level: "invalid",
-    lengthKey: "invalid",
+    lengthKey: "toString",
   });
 
   const request = harness.pendingRematches.get("target-socket:socket-1");
@@ -208,6 +231,26 @@ test("rematch response preserves delete-before-invalid validation", async () => 
       { message: "Rematch so'rovi eskirgan yoki haqiqiy emas" },
     ],
   ]);
+});
+
+test("rematch response rejects malformed payloads and socket identifiers", async () => {
+  const harness = createHarness({ userId: 5 });
+
+  await harness.handlers.rematchResponse();
+  await harness.handlers.rematchResponse(null);
+  await harness.handlers.rematchResponse([]);
+  await harness.handlers.rematchResponse({ accepted: true, fromSocketId: "" });
+  await harness.handlers.rematchResponse({
+    accepted: true,
+    fromSocketId: "x".repeat(257),
+  });
+
+  assert.equal(harness.pendingRematches.size, 0);
+  assert.deepEqual(harness.calls, Array.from({ length: 5 }, () => [
+    "socket-emit",
+    "rematchUnavailable",
+    { message: "Rematch so'rovi eskirgan yoki haqiqiy emas" },
+  ]));
 });
 
 test("rematch response preserves requester identity validation", async () => {
