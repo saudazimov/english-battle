@@ -1,3 +1,29 @@
+const MAX_IDENTIFIER_LENGTH = 256;
+
+function hasOwn(record, key) {
+  return record !== null
+    && typeof record === "object"
+    && Object.prototype.hasOwnProperty.call(record, key);
+}
+
+function normalizeLookupKey(value) {
+  if (typeof value !== "string" && typeof value !== "number") return null;
+  if (typeof value === "number" && !Number.isFinite(value)) return null;
+  const key = String(value);
+  if (!key || key.length > MAX_IDENTIFIER_LENGTH) return null;
+  return key;
+}
+
+function emitInvalidRematchRequest(socket) {
+  socket.emit("rematchUnavailable", { message: "Rematch so'rovi noto'g'ri" });
+}
+
+function emitInvalidRematchResponse(socket) {
+  socket.emit("rematchUnavailable", {
+    message: "Rematch so'rovi eskirgan yoki haqiqiy emas",
+  });
+}
+
 function createRequestRematchHandler({
   socket,
   io,
@@ -10,15 +36,28 @@ function createRequestRematchHandler({
   now,
   logger,
 }) {
-  return async function requestRematch({ opponentId, level, lengthKey }) {
-    const myUserId = socket.userId;
-    if (!opponentId || String(opponentId) === String(myUserId)) {
-      socket.emit("rematchUnavailable", { message: "Rematch so'rovi noto'g'ri" });
+  return async function requestRematch(payload) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      emitInvalidRematchRequest(socket);
       return;
     }
 
-    const targetSocketId = onlineUsers[String(opponentId)];
-    if (!targetSocketId) {
+    const { opponentId, level, lengthKey } = payload;
+    const myUserId = socket.userId;
+    const opponentKey = normalizeLookupKey(opponentId);
+    if (!opponentKey || opponentKey === String(myUserId)) {
+      emitInvalidRematchRequest(socket);
+      return;
+    }
+
+    const targetSocketId = hasOwn(onlineUsers, opponentKey)
+      ? onlineUsers[opponentKey]
+      : null;
+    if (
+      typeof targetSocketId !== "string"
+      || !targetSocketId
+      || targetSocketId.length > MAX_IDENTIFIER_LENGTH
+    ) {
       socket.emit("rematchUnavailable", { message: "Raqib hozir mavjud emas" });
       return;
     }
@@ -52,7 +91,9 @@ function createRequestRematchHandler({
         toUserId: String(opponentId),
         fromName,
         level: ["A1", "A2", "B1", "B2", "C1"].includes(level) ? level : "A1",
-        lengthKey: battleLengths[lengthKey] ? lengthKey : "standard",
+        lengthKey: hasOwn(battleLengths, lengthKey) && battleLengths[lengthKey]
+          ? lengthKey
+          : "standard",
         expiresAt: now() + 60000,
       };
       const rematchKey = targetSocketId + ":" + socket.id;
@@ -187,7 +228,22 @@ function createRematchResponseHandler({
   getOpponentCardInfo,
   now,
 }) {
-  return async function rematchResponse({ accepted, fromSocketId }) {
+  return async function rematchResponse(payload) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      emitInvalidRematchResponse(socket);
+      return;
+    }
+
+    const { accepted, fromSocketId } = payload;
+    if (
+      typeof fromSocketId !== "string"
+      || !fromSocketId
+      || fromSocketId.length > MAX_IDENTIFIER_LENGTH
+    ) {
+      emitInvalidRematchResponse(socket);
+      return;
+    }
+
     const myUserId = socket.userId;
     const requestKey = socket.id + ":" + fromSocketId;
     const request = pendingRematches.get(requestKey);
