@@ -72,6 +72,40 @@ test("missing pending battle preserves silent return", () => {
   assert.deepEqual(harness.calls, []);
 });
 
+test("friend battle join rejects invalid and prototype room IDs", () => {
+  const inheritedBattles = Object.create({ inherited: createPendingBattle() });
+  const harness = createHarness({ pendingBattles: inheritedBattles });
+
+  for (const roomId of [
+    null,
+    17,
+    {},
+    "",
+    "__proto__",
+    "constructor",
+    "inherited",
+    "x".repeat(257),
+  ]) {
+    assert.doesNotThrow(() => harness.handler({ roomId, userId: 5 }));
+  }
+  for (const payload of [null, undefined, "room", 17]) {
+    assert.doesNotThrow(() => harness.handler(payload));
+  }
+
+  assert.deepEqual(harness.calls, []);
+});
+
+test("friend battle join supports own keys on null-prototype maps", () => {
+  const pendingBattles = Object.create(null);
+  pendingBattles.room = createPendingBattle();
+  const harness = createHarness({ pendingBattles });
+
+  harness.handler({ roomId: "room", userId: 99 });
+
+  assert.deepEqual(harness.calls, [["join", "room"]]);
+  assert.equal(pendingBattles.room.player1.ready, true);
+});
+
 test("join preserves token identity and rejects an unexpected player", () => {
   const pendingBattles = { room: createPendingBattle() };
   const harness = createHarness({ userId: 9, pendingBattles });
