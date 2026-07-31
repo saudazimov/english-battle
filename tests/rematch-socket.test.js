@@ -43,7 +43,9 @@ function createHarness({
       async query(sql, params) {
         calls.push(["query", sql.replace(/\s+/g, " ").trim(), params]);
         if (queryError) throw queryError;
-        return responses.shift() || { rows: [] };
+        const response = responses.shift();
+        if (response instanceof Error) throw response;
+        return response || { rows: [] };
       },
     },
     io: {
@@ -298,6 +300,63 @@ test("rematch response preserves decline name lookup and payload", async () => {
     ["requester-emit", "rematchDeclined", { byName: "Vali" }],
   ]);
   assert.deepEqual(harness.pendingBattles, {});
+});
+
+test("rematch response logs name lookup errors and preserves decline fallback", async () => {
+  const harness = createHarness({
+    queryResponses: [new Error("name lookup unavailable")],
+  });
+  harness.pendingRematches.set("socket-1:requester-socket", {
+    expiresAt: 60000,
+    toUserId: "5",
+    fromUserId: "7",
+    fromName: "Ali",
+    level: "A2",
+    lengthKey: "quick",
+  });
+
+  await harness.handlers.rematchResponse({
+    accepted: false,
+    fromSocketId: "requester-socket",
+  });
+
+  assert.deepEqual(harness.calls.slice(-2), [
+    ["error", "Rematch user nomini olish xatosi:", "name lookup unavailable"],
+    ["requester-emit", "rematchDeclined", { byName: "O'yinchi" }],
+  ]);
+});
+
+test("rematch response logs picture errors and preserves accepted fallback", async () => {
+  const harness = createHarness({
+    queryResponses: [
+      { rows: [{ first_name: "Vali", last_name: "Karimov" }] },
+      new Error("picture lookup unavailable"),
+    ],
+  });
+  harness.pendingRematches.set("socket-1:requester-socket", {
+    expiresAt: 60000,
+    toUserId: "5",
+    fromUserId: "7",
+    fromName: "Ali",
+    level: "A2",
+    lengthKey: "quick",
+  });
+
+  await harness.handlers.rematchResponse({
+    accepted: true,
+    fromSocketId: "requester-socket",
+  });
+
+  assert.equal(harness.calls.some((call) => (
+    call[0] === "error"
+    && call[1] === "Rematch profil rasmlarini olish xatosi:"
+    && call[2] === "picture lookup unavailable"
+  )), true);
+  const matchEvents = harness.calls.filter((call) => (
+    call[0] === "requester-emit" || call[0] === "socket-emit"
+  ));
+  assert.equal(matchEvents[0][2].opponent.profile_picture, null);
+  assert.equal(matchEvents[1][2].opponent.profile_picture, null);
 });
 
 test("rematch response preserves accepted battle state and both match payloads", async () => {

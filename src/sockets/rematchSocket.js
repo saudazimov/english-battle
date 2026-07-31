@@ -114,7 +114,7 @@ function createRequestRematchHandler({
   };
 }
 
-async function getRematchUserName({ pool, userId, stripUnsafe }) {
+async function getRematchUserName({ pool, userId, stripUnsafe, logger }) {
   let name = "O'yinchi";
   try {
     const result = await pool.query(
@@ -128,11 +128,13 @@ async function getRematchUserName({ pool, userId, stripUnsafe }) {
         60
       ) || name;
     }
-  } catch (error) {}
+  } catch (error) {
+    logger.error("Rematch user nomini olish xatosi:", error.message);
+  }
   return name;
 }
 
-async function getRematchPictures({ pool, fromUserId, myUserId }) {
+async function getRematchPictures({ pool, fromUserId, myUserId, logger }) {
   let fromPicture = null;
   let myPicture = null;
   try {
@@ -144,7 +146,9 @@ async function getRematchPictures({ pool, fromUserId, myUserId }) {
       if (String(row.id) === String(fromUserId)) fromPicture = row.profile_picture;
       if (String(row.id) === String(myUserId)) myPicture = row.profile_picture;
     });
-  } catch (error) {}
+  } catch (error) {
+    logger.error("Rematch profil rasmlarini olish xatosi:", error.message);
+  }
   return { fromPicture, myPicture };
 }
 
@@ -227,6 +231,7 @@ function createRematchResponseHandler({
   pendingBattles,
   getOpponentCardInfo,
   now,
+  logger,
 }) {
   return async function rematchResponse(payload) {
     if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
@@ -271,6 +276,7 @@ function createRematchResponseHandler({
       pool,
       userId: myUserId,
       stripUnsafe,
+      logger,
     });
 
     if (!accepted) {
@@ -288,6 +294,7 @@ function createRematchResponseHandler({
       pool,
       fromUserId,
       myUserId,
+      logger,
     });
 
     const fromCard = await getOpponentCardInfo(fromUserId);
@@ -351,6 +358,7 @@ function registerRematchSocket({
     pendingBattles,
     getOpponentCardInfo,
     now,
+    logger,
   }));
 }
 
