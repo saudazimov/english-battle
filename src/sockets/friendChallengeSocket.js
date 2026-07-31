@@ -1,4 +1,42 @@
-async function getChallengeSender({ pool, fromUserId }) {
+const MAX_IDENTIFIER_LENGTH = 256;
+const CHALLENGE_TTL_MS = 60000;
+const defaultPendingChallenges = new Map();
+const validLevels = new Set(["A1", "A2", "B1", "B2", "C1"]);
+
+function hasOwn(record, key) {
+  return record !== null
+    && typeof record === "object"
+    && Object.prototype.hasOwnProperty.call(record, key);
+}
+
+function normalizeIdentifier(value) {
+  if (typeof value !== "string" && typeof value !== "number") return null;
+  if (typeof value === "number" && !Number.isFinite(value)) return null;
+  const identifier = String(value);
+  if (!identifier || identifier.length > MAX_IDENTIFIER_LENGTH) return null;
+  return identifier;
+}
+
+function normalizeLevel(level) {
+  return validLevels.has(level) ? level : "A1";
+}
+
+function normalizeLengthKey(lengthKey) {
+  return typeof lengthKey === "string"
+    && lengthKey.length > 0
+    && lengthKey.length <= 64
+    ? lengthKey
+    : "standard";
+}
+
+function emitInvalidChallenge(socket) {
+  socket.emit("challengeResult", {
+    success: false,
+    message: "Chaqiruv haqiqiy emas",
+  });
+}
+
+async function getChallengeSender({ pool, fromUserId, logger }) {
   let fromPic = null;
   let dbName = null;
   try {
@@ -13,7 +51,9 @@ async function getChallengeSender({ pool, fromUserId }) {
         + (result.rows[0].last_name || "")
       ).trim();
     }
-  } catch (error) {}
+  } catch (error) {
+    logger.error("Chaqiruv yuboruvchisini olish xatosi:", error.message);
+  }
   return { fromPic, dbName };
 }
 
@@ -23,16 +63,25 @@ function createChallengeFriendHandler({
   pool,
   onlineUsers,
   stripUnsafe,
+  pendingChallenges,
+  setTimer,
+  now,
   logger,
 }) {
-  return async function challengeFriend({
-    fromUserId,
-    fromName,
-    toUserId,
-    level,
-    lengthKey,
-  }) {
-    fromUserId = socket.userId;
+  return async function challengeFriend(payload) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      emitInvalidChallenge(socket);
+      return;
+    }
+
+    const { fromName, toUserId, level, lengthKey } = payload;
+    const fromUserId = socket.userId;
+    const targetUserId = normalizeIdentifier(toUserId);
+    if (!targetUserId || targetUserId === String(fromUserId)) {
+      emitInvalidChallenge(socket);
+      return;
+    }
+
     logger.log(
       "Chaqiruv:",
       fromUserId,
@@ -41,9 +90,16 @@ function createChallengeFriendHandler({
       "| Onlayn:",
       Object.keys(onlineUsers)
     );
-    const targetSocketId = onlineUsers[String(toUserId)];
+    const targetSocketId = hasOwn(onlineUsers, targetUserId)
+      ? onlineUsers[targetUserId]
+      : null;
+    const targetSocket = typeof targetSocketId === "string"
+      && targetSocketId.length > 0
+      && targetSocketId.length <= MAX_IDENTIFIER_LENGTH
+      ? io.sockets.sockets.get(targetSocketId)
+      : null;
 
-    if (!targetSocketId) {
+    if (!targetSocket || String(targetSocket.userId) !== targetUserId) {
       socket.emit("challengeResult", {
         success: false,
         message: "Do'stingiz hozir onlayn emas",
@@ -54,14 +110,38 @@ function createChallengeFriendHandler({
     const { fromPic, dbName } = await getChallengeSender({
       pool,
       fromUserId,
+      logger,
     });
+    const nameCandidate = dbName
+      || (typeof fromName === "string" ? fromName : "");
+    const safeFromName = stripUnsafe(nameCandidate, 60) || "O'yinchi";
+    const selectedLevel = normalizeLevel(level);
+    const selectedLengthKey = normalizeLengthKey(lengthKey);
+    const challengeKey = targetSocketId + ":" + socket.id;
+    const request = {
+      fromSocketId: socket.id,
+      fromUserId,
+      toSocketId: targetSocketId,
+      toUserId: targetUserId,
+      fromName: safeFromName,
+      level: selectedLevel,
+      lengthKey: selectedLengthKey,
+      expiresAt: now() + CHALLENGE_TTL_MS,
+    };
+    pendingChallenges.set(challengeKey, request);
+    const cleanup = setTimer(() => {
+      if (pendingChallenges.get(challengeKey) === request) {
+        pendingChallenges.delete(challengeKey);
+      }
+    }, CHALLENGE_TTL_MS + 1000);
+    if (cleanup && typeof cleanup.unref === "function") cleanup.unref();
     io.to(targetSocketId).emit("challengeReceived", {
       fromUserId,
-      fromName: dbName || stripUnsafe(fromName, 60) || "O'yinchi",
+      fromName: safeFromName,
       fromSocketId: socket.id,
       fromPic,
-      level,
-      lengthKey: lengthKey || "standard",
+      level: selectedLevel,
+      lengthKey: selectedLengthKey,
     });
     socket.emit("challengeResult", {
       success: true,
@@ -70,17 +150,36 @@ function createChallengeFriendHandler({
   };
 }
 
-function createCancelChallengeHandler({ socket, io, onlineUsers }) {
-  return function cancelChallenge({ fromUserId, toUserId }) {
-    fromUserId = socket.userId;
-    const targetSocketId = onlineUsers[String(toUserId)];
-    if (targetSocketId) {
-      io.to(targetSocketId).emit("challengeCancelled", { fromUserId });
-    }
+function createCancelChallengeHandler({
+  socket,
+  io,
+  onlineUsers,
+  pendingChallenges,
+}) {
+  return function cancelChallenge(payload) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+
+    const targetUserId = normalizeIdentifier(payload.toUserId);
+    if (!targetUserId || !hasOwn(onlineUsers, targetUserId)) return;
+    const targetSocketId = onlineUsers[targetUserId];
+    if (typeof targetSocketId !== "string" || !targetSocketId) return;
+
+    const challengeKey = targetSocketId + ":" + socket.id;
+    const request = pendingChallenges.get(challengeKey);
+    if (
+      !request
+      || String(request.fromUserId) !== String(socket.userId)
+      || request.toUserId !== targetUserId
+    ) return;
+
+    pendingChallenges.delete(challengeKey);
+    io.to(targetSocketId).emit("challengeCancelled", {
+      fromUserId: socket.userId,
+    });
   };
 }
 
-async function getChallengePictures({ pool, fromUserId, myUserId }) {
+async function getChallengePictures({ pool, fromUserId, myUserId, logger }) {
   let fromPic = null;
   let myPic = null;
   try {
@@ -92,8 +191,29 @@ async function getChallengePictures({ pool, fromUserId, myUserId }) {
       if (String(row.id) === String(fromUserId)) fromPic = row.profile_picture;
       if (String(row.id) === String(myUserId)) myPic = row.profile_picture;
     });
-  } catch (error) {}
+  } catch (error) {
+    logger.error("Chaqiruv profil rasmlarini olish xatosi:", error.message);
+  }
   return { fromPic, myPic };
+}
+
+function consumePendingChallenge({
+  pendingChallenges,
+  socket,
+  fromSocketId,
+  now,
+}) {
+  const challengeKey = socket.id + ":" + fromSocketId;
+  const request = pendingChallenges.get(challengeKey);
+  pendingChallenges.delete(challengeKey);
+  if (
+    !request
+    || request.expiresAt < now()
+    || request.fromSocketId !== fromSocketId
+    || request.toSocketId !== socket.id
+    || request.toUserId !== String(socket.userId)
+  ) return null;
+  return request;
 }
 
 function emitChallengeMatchFound({
@@ -173,20 +293,43 @@ function createChallengeResponseHandler({
   stripUnsafe,
   getOpponentCardInfo,
   pendingBattles,
+  pendingChallenges,
+  now,
+  logger,
 }) {
-  return async function challengeResponse({
-    accepted,
-    fromSocketId,
-    fromUserId,
-    fromName,
-    myUserId,
-    myName,
-    level,
-    lengthKey,
-  }) {
-    myUserId = socket.userId;
-    fromName = stripUnsafe(fromName, 60) || "O'yinchi";
-    myName = stripUnsafe(myName, 60) || "O'yinchi";
+  return async function challengeResponse(payload) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      emitInvalidChallenge(socket);
+      return;
+    }
+
+    const fromSocketId = normalizeIdentifier(payload.fromSocketId);
+    if (!fromSocketId) {
+      emitInvalidChallenge(socket);
+      return;
+    }
+
+    const request = consumePendingChallenge({
+      pendingChallenges,
+      socket,
+      fromSocketId,
+      now,
+    });
+    if (!request) {
+      emitInvalidChallenge(socket);
+      return;
+    }
+
+    const { accepted } = payload;
+    const myUserId = socket.userId;
+    const fromUserId = request.fromUserId;
+    const fromName = request.fromName;
+    const myName = stripUnsafe(
+      typeof payload.myName === "string" ? payload.myName : "",
+      60
+    ) || "O'yinchi";
+    const level = request.level;
+    const lengthKey = request.lengthKey;
     const challengerSocket = io.sockets.sockets.get(fromSocketId);
     if (
       !challengerSocket
@@ -198,7 +341,6 @@ function createChallengeResponseHandler({
       });
       return;
     }
-    fromUserId = challengerSocket.userId;
 
     if (!accepted) {
       if (challengerSocket) {
@@ -216,6 +358,7 @@ function createChallengeResponseHandler({
       pool,
       fromUserId,
       myUserId,
+      logger,
     });
     const fromCard = await getOpponentCardInfo(fromUserId);
     const myCard = await getOpponentCardInfo(myUserId);
@@ -251,7 +394,10 @@ function registerFriendChallengeSocket({
   stripUnsafe,
   getOpponentCardInfo,
   pendingBattles,
+  pendingChallenges = defaultPendingChallenges,
   logger = console,
+  setTimer = setTimeout,
+  now = Date.now,
 }) {
   socket.on("challengeFriend", createChallengeFriendHandler({
     socket,
@@ -259,12 +405,16 @@ function registerFriendChallengeSocket({
     pool,
     onlineUsers,
     stripUnsafe,
+    pendingChallenges,
+    setTimer,
+    now,
     logger,
   }));
   socket.on("cancelChallenge", createCancelChallengeHandler({
     socket,
     io,
     onlineUsers,
+    pendingChallenges,
   }));
   socket.on("challengeResponse", createChallengeResponseHandler({
     socket,
@@ -273,6 +423,9 @@ function registerFriendChallengeSocket({
     stripUnsafe,
     getOpponentCardInfo,
     pendingBattles,
+    pendingChallenges,
+    now,
+    logger,
   }));
 }
 
