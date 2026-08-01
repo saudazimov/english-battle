@@ -1,3 +1,12 @@
+function normalizeUserId(value) {
+  if (typeof value !== "string" && typeof value !== "number") return null;
+  const candidate = String(value);
+  if (!/^[1-9]\d*$/.test(candidate)) return null;
+
+  const userId = Number(candidate);
+  return Number.isSafeInteger(userId) ? String(userId) : null;
+}
+
 function registerUserPresenceSocket({
   socket,
   pool,
@@ -6,16 +15,14 @@ function registerUserPresenceSocket({
   logger = console,
 }) {
   socket.on("registerUser", async () => {
-    const trustedUserId = socket.userId;
+    const normalizedUserId = normalizeUserId(socket.userId);
 
-    if (!trustedUserId) {
+    if (!normalizedUserId) {
       socket.emit("errorMessage", {
         message: "User ID is required.",
       });
       return;
     }
-
-    const normalizedUserId = String(trustedUserId);
 
     try {
       const banCheck = await pool.query(
@@ -29,6 +36,10 @@ function registerUserPresenceSocket({
       }
     } catch (error) {
       logger.error("ban check xato:", error.message);
+      socket.emit("errorMessage", {
+        message: "Unable to verify account status.",
+      });
+      return;
     }
 
     socket.userId = normalizedUserId;
