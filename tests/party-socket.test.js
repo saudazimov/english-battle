@@ -109,6 +109,47 @@ test("party socket preserves listener registration order", () => {
   ]);
 });
 
+test("party handlers reject malformed payloads without side effects", () => {
+  const harness = createHarness();
+
+  harness.handlers.createParty();
+  harness.handlers.inviteToParty(null);
+  harness.handlers.acceptPartyInvite([]);
+  harness.handlers.declinePartyInvite("room");
+  harness.handlers.startPartyQueue();
+  harness.handlers.joinPartyMatch(null);
+
+  assert.deepEqual(harness.calls, []);
+});
+
+test("party handlers reject inherited party and pending-match entries", () => {
+  const parties = Object.create({
+    inherited: party({ invited: { 7: true } }),
+  });
+  const pendingPartyMatches = Object.create({
+    inherited: { expected: ["7"], arrived: {}, timer: null },
+  });
+  const harness = createHarness({
+    userId: 7,
+    parties,
+    pendingPartyMatches,
+  });
+
+  harness.handlers.inviteToParty({ partyId: "inherited", toUserId: 8 });
+  harness.handlers.acceptPartyInvite({ partyId: "inherited", name: "Vali" });
+  harness.handlers.declinePartyInvite({ partyId: "inherited", name: "Vali" });
+  harness.handlers.startPartyQueue({ partyId: "inherited" });
+  harness.handlers.joinPartyMatch({ partyId: "inherited", name: "Vali" });
+
+  assert.deepEqual(harness.calls, [
+    ["socket-emit", "partyError", { message: "Party topilmadi" }],
+    ["socket-emit", "partyError", { message: "Party endi mavjud emas" }],
+    ["socket-emit", "partyError", { message: "Party topilmadi" }],
+    ["to", "socket-5"],
+    ["target-emit", "partyMatchExpired", {}],
+  ]);
+});
+
 test("create party preserves token identity, previous removal, state, and order", () => {
   const harness = createHarness({ userParty: { 5: "old-party" } });
 
@@ -151,10 +192,13 @@ test("create party preserves unauthenticated silent return", () => {
 });
 
 test("invite preserves sanitization, invitation state, and payloads", () => {
-  const parties = { room: party() };
+  const parties = Object.create(null);
+  parties.room = party();
+  const onlineUsers = Object.create(null);
+  onlineUsers[7] = "socket-7";
   const harness = createHarness({
     parties,
-    onlineUsers: { 7: "socket-7" },
+    onlineUsers,
   });
 
   harness.handlers.inviteToParty({
@@ -228,10 +272,35 @@ test("accept invite preserves token identity and previous party removal", () => 
   ]);
 });
 
-test("decline and leave preserve target and token-derived user", () => {
+test("accept invite rejects inherited invitation state", () => {
+  const invited = Object.create({ 7: true });
+  const parties = { room: party({ invited }) };
+  const harness = createHarness({ userId: 7, parties });
+
+  harness.handlers.acceptPartyInvite({ partyId: "room", name: "Vali" });
+
+  assert.equal(parties.room.members.length, 1);
+  assert.deepEqual(harness.calls, [
+    ["socket-emit", "partyError", { message: "Party taklifi topilmadi" }],
+  ]);
+});
+
+test("decline invite ignores users without an active invitation", () => {
   const harness = createHarness({
     userId: 7,
     parties: { room: party() },
+    onlineUsers: { 5: "leader-socket" },
+  });
+
+  harness.handlers.declinePartyInvite({ partyId: "room", name: "Vali" });
+
+  assert.deepEqual(harness.calls, []);
+});
+
+test("decline and leave preserve target and token-derived user", () => {
+  const harness = createHarness({
+    userId: 7,
+    parties: { room: party({ invited: { 7: true } }) },
     onlineUsers: { 5: "leader-socket" },
   });
 
@@ -240,6 +309,7 @@ test("decline and leave preserve target and token-derived user", () => {
 
   assert.deepEqual(harness.calls, [
     ["to", "leader-socket"],
+    ["strip", "Vali", 60],
     ["target-emit", "partyInviteDeclined", { byName: "Vali" }],
     ["remove", "7"],
     ["socket-emit", "partyLeft", {}],
