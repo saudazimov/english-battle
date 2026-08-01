@@ -95,6 +95,54 @@ test("friend battle join rejects invalid and prototype room IDs", () => {
   assert.deepEqual(harness.calls, []);
 });
 
+test("friend battle join rejects reserved own room keys", () => {
+  const pendingBattles = Object.create(null);
+  pendingBattles.__proto__ = createPendingBattle();
+  pendingBattles.constructor = createPendingBattle();
+  const harness = createHarness({ pendingBattles });
+
+  harness.handler({ roomId: "__proto__" });
+  harness.handler({ roomId: "constructor" });
+
+  assert.deepEqual(harness.calls, []);
+});
+
+test("friend battle join rejects malformed pending player state", () => {
+  for (const pending of [
+    null,
+    [],
+    {},
+    { player1: null, player2: {} },
+    { player1: { userId: 5 }, player2: { userId: 7 } },
+  ]) {
+    const harness = createHarness({ pendingBattles: { room: pending } });
+
+    assert.doesNotThrow(() => harness.handler({ roomId: "room" }));
+    assert.deepEqual(harness.calls, []);
+  }
+});
+
+test("friend battle join rejects invalid authenticated user IDs", () => {
+  for (const userId of [
+    null,
+    {},
+    "",
+    "__proto__",
+    "7.5",
+    "9007199254740992",
+    Number.POSITIVE_INFINITY,
+  ]) {
+    const pending = createPendingBattle();
+    const harness = createHarness({ userId, pendingBattles: { room: pending } });
+
+    harness.handler({ roomId: "room", userId: 5 });
+
+    assert.deepEqual(harness.calls, []);
+    assert.equal(pending.player1.ready, false);
+    assert.equal(pending.player2.ready, false);
+  }
+});
+
 test("friend battle join supports own keys on null-prototype maps", () => {
   const pendingBattles = Object.create(null);
   pendingBattles.room = createPendingBattle();
@@ -185,6 +233,41 @@ test("second ready player preserves delete-before-start and battle payloads", ()
     ],
   ]);
   assert.equal(pendingBattles.room, undefined);
+});
+
+test("inherited ready state cannot start a friend battle", () => {
+  const player1 = Object.create({ ready: true, socketId: "socket-forged" });
+  Object.assign(player1, {
+    userId: 5,
+    name: "Ali",
+    level: "A2",
+    lengthKey: "standard",
+  });
+  const pending = createPendingBattle({ player1 });
+  const harness = createHarness({
+    userId: 7,
+    pendingBattles: { room: pending },
+  });
+
+  harness.handler({ roomId: "room" });
+
+  assert.deepEqual(harness.calls, [["join", "room"]]);
+  assert.equal(harness.pendingBattles.room, pending);
+});
+
+test("ready players require valid socket IDs before battle start", () => {
+  const pending = createPendingBattle();
+  pending.player1.ready = true;
+  pending.player1.socketId = null;
+  const harness = createHarness({
+    userId: 7,
+    pendingBattles: { room: pending },
+  });
+
+  harness.handler({ roomId: "room" });
+
+  assert.deepEqual(harness.calls, [["join", "room"]]);
+  assert.equal(harness.pendingBattles.room, pending);
 });
 
 test("battle length preserves player-one fallback and standard default", () => {
