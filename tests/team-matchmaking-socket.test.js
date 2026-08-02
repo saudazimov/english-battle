@@ -209,6 +209,31 @@ test("team search bounds untrusted player fields", async () => {
   });
 });
 
+test("team search normalizes invalid length and preserves supported marathon", async () => {
+  const invalidHarness = createHarness();
+
+  await invalidHarness.handlers.findTeamMatch({
+    teamMode: "duo",
+    lengthKey: "custom",
+  });
+
+  const invalidEntry = invalidHarness.calls.find(
+    (call) => call[0] === "addTeamEntry"
+  )[2];
+  assert.equal(invalidEntry.players[0].lengthKey, "standard");
+
+  const marathonHarness = createHarness();
+  await marathonHarness.handlers.findTeamMatch({
+    teamMode: "squad",
+    lengthKey: "marathon",
+  });
+
+  const marathonEntry = marathonHarness.calls.find(
+    (call) => call[0] === "addTeamEntry"
+  )[2];
+  assert.equal(marathonEntry.players[0].lengthKey, "marathon");
+});
+
 test("refresh replaces an existing solo queue entry for the same user", async () => {
   const staleEntry = {
     id: "solo-old-socket",
