@@ -2,7 +2,13 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const registerTeamMatchmakingSocket = require("../src/sockets/teamMatchmakingSocket");
 
-function createHarness({ teamMatchPool, addError, userId = 5 } = {}) {
+function createHarness({
+  teamMatchPool,
+  addError,
+  queryError,
+  profile,
+  userId = 5,
+} = {}) {
   const calls = [];
   const listeners = [];
   const socket = {
@@ -22,6 +28,21 @@ function createHarness({ teamMatchPool, addError, userId = 5 } = {}) {
           emit(...args) {
             calls.push(["emit", ...args]);
           },
+        };
+      },
+    },
+    pool: {
+      async query() {
+        if (queryError) throw queryError;
+        return {
+          rows: profile === null ? [] : [profile || {
+            id: Number(userId),
+            first_name: null,
+            last_name: null,
+            cefr_level: null,
+            rating: null,
+            profile_picture: null,
+          }],
         };
       },
     },
@@ -66,24 +87,33 @@ test("team matchmaking preserves listener registration order", () => {
   ]);
 });
 
-test("team search preserves token identity, squad mode, and entry payload", async () => {
-  const harness = createHarness();
+test("team search uses authoritative profile while preserving client mode", async () => {
+  const harness = createHarness({
+    profile: {
+      id: 5,
+      first_name: "Database",
+      last_name: "User",
+      cefr_level: "C1",
+      rating: 1777,
+      profile_picture: "database.png",
+    },
+  });
   const playerData = {
     userId: 99,
     teamMode: "squad",
-    name: " Ali ",
+    name: "Spoofed Name",
     level: "B1",
     lengthKey: "quick",
     rating: 1450,
-    profile_picture: "ali.png",
+    profile_picture: "spoofed.png",
   };
 
   await harness.handlers.findTeamMatch(playerData);
 
-  assert.equal(playerData.userId, 5);
+  assert.equal(playerData.userId, 99);
   assert.deepEqual(harness.calls, [
+    ["strip", "Database User", 60],
     ["now"],
-    ["strip", " Ali ", 60],
     [
       "addTeamEntry",
       "squad",
@@ -94,11 +124,11 @@ test("team search preserves token identity, squad mode, and entry payload", asyn
         players: [{
           socketId: "socket-5",
           userId: 5,
-          name: "Ali",
-          level: "B1",
+          name: "Database User",
+          level: "C1",
           lengthKey: "quick",
-          rating: 1450,
-          profile_picture: "ali.png",
+          rating: 1777,
+          profile_picture: "database.png",
         }],
       },
     ],
@@ -197,7 +227,10 @@ test("refresh replaces an existing solo queue entry for the same user", async ()
   await harness.handlers.findTeamMatch({ teamMode: "duo", name: "Ali" });
 
   assert.deepEqual(harness.teamMatchPool.duo, [otherEntry]);
-  assert.deepEqual(harness.calls[0], ["queueStatus", "duo"]);
+  assert.deepEqual(
+    harness.calls.find((call) => call[0] === "queueStatus"),
+    ["queueStatus", "duo"]
+  );
   assert.equal(harness.calls.filter((call) => call[0] === "addTeamEntry").length, 1);
 });
 
@@ -216,7 +249,10 @@ test("team search removes malformed queue entries before adding", async () => {
   await harness.handlers.findTeamMatch({ name: "Ali" });
 
   assert.deepEqual(harness.teamMatchPool.duo, [keep]);
-  assert.deepEqual(harness.calls[0], ["queueStatus", "duo"]);
+  assert.deepEqual(
+    harness.calls.find((call) => call[0] === "queueStatus"),
+    ["queueStatus", "duo"]
+  );
   assert.equal(harness.calls.filter((call) => call[0] === "addTeamEntry").length, 1);
 });
 
@@ -249,6 +285,29 @@ test("team search validates both pools before mutating either one", async () => 
   assert.deepEqual(harness.teamMatchPool.duo, [staleEntry]);
   assert.equal(harness.calls.some((call) => call[0] === "queueStatus"), false);
   assert.equal(harness.calls.some((call) => call[0] === "addTeamEntry"), false);
+});
+
+test("team search fails closed before queue mutation when profile lookup fails", async () => {
+  const staleEntry = {
+    id: "solo-old-socket",
+    type: "solo",
+    players: [{ socketId: "old-socket", userId: 5 }],
+  };
+  const harness = createHarness({
+    teamMatchPool: { duo: [staleEntry], squad: [] },
+    queryError: new Error("database unavailable"),
+  });
+
+  await harness.handlers.findTeamMatch({ teamMode: "duo" });
+
+  assert.deepEqual(harness.teamMatchPool.duo, [staleEntry]);
+  assert.equal(harness.calls.some((call) => call[0] === "queueStatus"), false);
+  assert.equal(harness.calls.some((call) => call[0] === "addTeamEntry"), false);
+  assert.deepEqual(harness.calls.slice(-3), [
+    ["error", "Jamoa matchmaking xatosi:", "database unavailable"],
+    ["to", "socket-5"],
+    ["emit", "battleError", { message: "Jamoa qidirishda xato" }],
+  ]);
 });
 
 test("team search preserves caught error logging and socket response", async () => {
