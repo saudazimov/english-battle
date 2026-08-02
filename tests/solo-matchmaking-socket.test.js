@@ -2,7 +2,13 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const registerSoloMatchmakingSocket = require("../src/sockets/soloMatchmakingSocket");
 
-function createHarness({ immediateMatch = false, initialQueue = [], nowValue = 123456 } = {}) {
+function createHarness({
+  immediateMatch = false,
+  initialQueue = [],
+  nowValue = 123456,
+  profile,
+  queryError,
+} = {}) {
   const calls = [];
   const listeners = [];
   const timers = [];
@@ -22,6 +28,21 @@ function createHarness({ immediateMatch = false, initialQueue = [], nowValue = 1
   };
   registerSoloMatchmakingSocket({
     socket,
+    pool: {
+      async query() {
+        if (queryError) throw queryError;
+        return {
+          rows: profile === null ? [] : [profile || {
+            id: 5,
+            first_name: null,
+            last_name: null,
+            cefr_level: null,
+            rating: null,
+            profile_picture: null,
+          }],
+        };
+      },
+    },
     waitingQueue,
     removeFromQueue(socketId) {
       calls.push(["remove", socketId]);
@@ -58,6 +79,9 @@ function createHarness({ immediateMatch = false, initialQueue = [], nowValue = 1
       log(...args) {
         calls.push(["log", ...args]);
       },
+      error(...args) {
+        calls.push(["error", ...args]);
+      },
     },
   });
   return {
@@ -80,11 +104,21 @@ test("solo matchmaking preserves listener registration order", () => {
   ]);
 });
 
-test("immediate match preserves player normalization and short circuit", async () => {
-  const harness = createHarness({ immediateMatch: true });
+test("immediate match uses authoritative profile and preserves client options", async () => {
+  const harness = createHarness({
+    immediateMatch: true,
+    profile: {
+      id: 5,
+      first_name: "Database",
+      last_name: "User",
+      cefr_level: "C1",
+      rating: 1777,
+      profile_picture: "database.png",
+    },
+  });
 
   await harness.handlers.findMatch({
-    name: " Ali ",
+    name: "Spoofed Name",
     level: "B1",
     rating: 1450,
     mode: "casual",
@@ -93,8 +127,8 @@ test("immediate match preserves player normalization and short circuit", async (
 
   assert.deepEqual(harness.calls, [
     ["log", "Jang qidirilyapti:", "socket-5"],
+    ["strip", "Database User", 60],
     ["remove", "socket-5"],
-    ["strip", " Ali ", 60],
     ["now"],
     ["botName"],
     ["tryMatch", "socket-5"],
@@ -102,9 +136,9 @@ test("immediate match preserves player normalization and short circuit", async (
   assert.deepEqual(harness.waitingQueue, [{
     socketId: "socket-5",
     userId: 5,
-    name: "Ali",
-    level: "B1",
-    rating: 1450,
+    name: "Database User",
+    level: "C1",
+    rating: 1777,
     mode: "casual",
     lengthKey: "quick",
     joinedAt: 123456,
@@ -120,8 +154,8 @@ test("waiting search preserves defaults, emits, and timer schedule", async () =>
 
   assert.deepEqual(harness.calls, [
     ["log", "Jang qidirilyapti:", "socket-5"],
+    ["strip", "", 60],
     ["remove", "socket-5"],
-    ["strip", undefined, 60],
     ["now"],
     ["botName"],
     ["tryMatch", "socket-5"],
@@ -205,7 +239,16 @@ test("expansion timers preserve queue check, windows, and retry", async () => {
 });
 
 test("bot fallback preserves removal, payloads, and delayed start", async () => {
-  const harness = createHarness();
+  const harness = createHarness({
+    profile: {
+      id: 5,
+      first_name: "Ali",
+      last_name: null,
+      cefr_level: "A2",
+      rating: 1000,
+      profile_picture: null,
+    },
+  });
   await harness.handlers.findMatch({ name: "Ali", level: "A2" });
   const player = harness.waitingQueue[0];
   harness.calls.length = 0;
@@ -234,6 +277,27 @@ test("bot fallback preserves removal, payloads, and delayed start", async () => 
 
   harness.timers[3].callback();
   assert.deepEqual(harness.calls.at(-1), ["startBotBattle", roomId, player]);
+});
+
+test("profile lookup failure leaves the existing queue unchanged", async () => {
+  const existing = {
+    socketId: "socket-old",
+    userId: 5,
+    disconnected: false,
+  };
+  const harness = createHarness({
+    initialQueue: [existing],
+    queryError: new Error("database unavailable"),
+  });
+
+  await harness.handlers.findMatch({ mode: "ranked" });
+
+  assert.deepEqual(harness.waitingQueue, [existing]);
+  assert.deepEqual(harness.calls, [
+    ["log", "Jang qidirilyapti:", "socket-5"],
+    ["error", "Solo matchmaking profil xatosi:", "database unavailable"],
+    ["emit", "battleError", { message: "Raqib qidirishda xato" }],
+  ]);
 });
 
 test("bot fallback preserves silent return after an existing match", async () => {
