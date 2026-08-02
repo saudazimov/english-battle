@@ -31,7 +31,7 @@ function createSoloBattleSocket({
 }) {
   function registerMatchmakingSocket() {
     socketRegistrars.matchmaking({
-      socket, waitingQueue, removeFromQueue, tryQueueMatch,
+      socket, pool, waitingQueue, removeFromQueue, tryQueueMatch,
       stripUnsafe, getRandomBotName, startBotBattle, logger,
     });
   }
