@@ -180,6 +180,27 @@ test("waiting search preserves defaults, emits, and timer schedule", async () =>
   });
 });
 
+test("solo search normalizes invalid options and preserves supported marathon", async () => {
+  const invalidHarness = createHarness({ immediateMatch: true });
+
+  await invalidHarness.handlers.findMatch({
+    mode: "admin-mode",
+    lengthKey: "x".repeat(200),
+  });
+
+  assert.equal(invalidHarness.waitingQueue[0].mode, "ranked");
+  assert.equal(invalidHarness.waitingQueue[0].lengthKey, "standard");
+
+  const marathonHarness = createHarness({ immediateMatch: true });
+  await marathonHarness.handlers.findMatch({
+    mode: "casual",
+    lengthKey: "marathon",
+  });
+
+  assert.equal(marathonHarness.waitingQueue[0].mode, "casual");
+  assert.equal(marathonHarness.waitingQueue[0].lengthKey, "marathon");
+});
+
 test("refresh resumes the original queue time and remaining timers", async () => {
   const original = {
     socketId: "socket-old",

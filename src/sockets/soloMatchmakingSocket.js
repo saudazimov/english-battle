@@ -1,6 +1,18 @@
 const createMatchmakingPlayerProfileService = require(
   "../services/matchmakingPlayerProfileService"
 );
+const { BATTLE_LENGTHS } = require("../utils/battleLength");
+
+const SOLO_MODES = new Set(["ranked", "casual"]);
+
+function validMode(value) {
+  return typeof value === "string" && SOLO_MODES.has(value);
+}
+
+function validLengthKey(value) {
+  return typeof value === "string"
+    && Object.prototype.hasOwnProperty.call(BATTLE_LENGTHS, value);
+}
 
 function createFindMatchHandler({
   socket,
@@ -38,6 +50,10 @@ function createFindMatchHandler({
       ? existingSearch.joinedAt
       : currentTime;
     const elapsedMs = Math.max(0, currentTime - joinedAt);
+    const requestedMode = isResuming ? existingSearch.mode : playerData.mode;
+    const requestedLengthKey = isResuming
+      ? existingSearch.lengthKey
+      : playerData.lengthKey;
 
     const player = {
       socketId: socket.id,
@@ -45,8 +61,10 @@ function createFindMatchHandler({
       name: playerProfile.name,
       level: playerProfile.level,
       rating: playerProfile.rating,
-      mode: isResuming ? existingSearch.mode : (playerData.mode || "ranked"),
-      lengthKey: isResuming ? existingSearch.lengthKey : (playerData.lengthKey || "standard"),
+      mode: validMode(requestedMode) ? requestedMode : "ranked",
+      lengthKey: validLengthKey(requestedLengthKey)
+        ? requestedLengthKey
+        : "standard",
       joinedAt,
       botName: isResuming ? existingSearch.botName : getRandomBotName(),
     };
