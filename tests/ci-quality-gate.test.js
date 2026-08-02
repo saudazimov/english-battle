@@ -27,7 +27,7 @@ test("quality workflow runs on main pushes and pull requests", () => {
   assert.match(workflow, /pull_request:/);
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7\.0\.1[\s\S]*persist-credentials: false/);
-  assert.match(workflow, /actions\/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4[\s\S]*node-version: "20"[\s\S]*cache: npm/);
+  assert.match(workflow, /actions\/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7\.0\.0[\s\S]*node-version: "20"[\s\S]*cache: npm/);
   assert.doesNotMatch(workflow, /uses:\s+actions\/[^\s@]+@v\d+/);
 });
 
