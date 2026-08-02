@@ -1,6 +1,7 @@
 const createMatchmakingPlayerProfileService = require(
   "../services/matchmakingPlayerProfileService"
 );
+const { BATTLE_LENGTHS } = require("../utils/battleLength");
 
 function isRecord(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -23,12 +24,9 @@ function validQueueEntry(entry) {
     && entry.players.every(isRecord);
 }
 
-function boundedString(value, maxLength, fallback) {
+function validLengthKey(value) {
   return typeof value === "string"
-    && value.length > 0
-    && value.length <= maxLength
-    ? value
-    : fallback;
+    && Object.prototype.hasOwnProperty.call(BATTLE_LENGTHS, value);
 }
 
 function createFindTeamMatchHandler({
@@ -78,7 +76,9 @@ function createFindTeamMatchHandler({
           userId: playerProfile.userId,
           name: playerProfile.name,
           level: playerProfile.level,
-          lengthKey: boundedString(playerData.lengthKey, 32, "standard"),
+          lengthKey: validLengthKey(playerData.lengthKey)
+            ? playerData.lengthKey
+            : "standard",
           rating: playerProfile.rating,
           profile_picture: playerProfile.profile_picture,
         }],
