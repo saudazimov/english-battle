@@ -32,7 +32,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "flag-icons": "^7.5.0",
-    "helmet": "^8.2.0",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "lucide": "^0.468.0",
     "multer": "^2.2.0",
