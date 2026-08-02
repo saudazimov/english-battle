@@ -5,6 +5,8 @@ const { createExamSubmitService } = require("../src/services/examSubmitService")
 const { createExamSubmitController } = require("../src/controllers/examSubmitController");
 const examSubmitRoutes = require("../src/routes/examSubmitRoutes");
 
+const VALID_SESSION_ID = "11111111-1111-4111-8111-111111111111";
+
 function createResponse() {
   return {
     statusCode: 200,
@@ -24,7 +26,11 @@ function normalized(sql) {
   return sql.replace(/\s+/g, " ").trim();
 }
 
-function createSuccessfulHarness({ lockedStatus = "active", transactionError } = {}) {
+function createSuccessfulHarness({
+  lockedStatus = "active",
+  lockedExpiresAt = new Date(Date.now() + 60_000),
+  transactionError,
+} = {}) {
   const calls = [];
   const updatedUser = { id: 7, cefr_level: "A2", rating: 1200 };
   const poolResponses = [
@@ -50,7 +56,9 @@ function createSuccessfulHarness({ lockedStatus = "active", transactionError } =
     async query(sql, params) {
       calls.push(["client-query", normalized(sql), params]);
       clientQueryCount += 1;
-      if (clientQueryCount === 2) return { rows: [{ status: lockedStatus }] };
+      if (clientQueryCount === 2) {
+        return { rows: [{ status: lockedStatus, expires_at: lockedExpiresAt }] };
+      }
       if (transactionError && clientQueryCount === 3) throw transactionError;
       return { rows: [] };
     },
@@ -124,7 +132,7 @@ test("exam submit preserves grading, SQL, transaction, and success response", as
 
   const transactionQueries = calls.filter(([type]) => type === "client-query");
   assert.equal(transactionQueries[0][1], "BEGIN");
-  assert.match(transactionQueries[1][1], /^SELECT status FROM exam_sessions/);
+  assert.match(transactionQueries[1][1], /^SELECT status, expires_at FROM exam_sessions/);
   assert.deepEqual(transactionQueries[2], [
     "client-query",
     "UPDATE users SET cefr_level = $1 WHERE id = $2",
@@ -176,8 +184,8 @@ test("exam submit preserves expired-session update and invalid-answer short circ
     answers: [],
   }), outcome(400, { error: "Imtihon vaqti tugagan" }));
   assert.deepEqual(expiredCalls[1], [
-    "UPDATE exam_sessions SET status='expired' WHERE id=$1",
-    ["expired"],
+    "UPDATE exam_sessions SET status='expired' WHERE id=$1 AND user_id=$2 AND status='active'",
+    ["expired", 7],
   ]);
 
   let invalidCalls = 0;
@@ -202,6 +210,36 @@ test("exam submit preserves expired-session update and invalid-answer short circ
     answers: [{ question_id: 1, answer: "A" }],
   }), outcome(400, { error: "Imtihon savollari sessiyaga mos emas" }));
   assert.equal(invalidCalls, 1);
+});
+
+test("exam submit rejects malformed question IDs before grading", async () => {
+  const malformedIds = ["1abc", "01", "9007199254740993", 1.5, -1, null];
+
+  for (const malformedId of malformedIds) {
+    let queryCount = 0;
+    const service = createExamSubmitService({
+      pool: {
+        async query() {
+          queryCount += 1;
+          return {
+            rows: [{
+              expires_at: new Date(Date.now() + 60_000),
+              question_ids: [1],
+            }],
+          };
+        },
+        connect: assert.fail,
+      },
+      getNextLevel: assert.fail,
+    });
+
+    assert.deepEqual(await service.submitExam({
+      userId: 7,
+      sessionId: VALID_SESSION_ID,
+      answers: [{ question_id: malformedId, answer: "A" }],
+    }), outcome(400, { error: "Imtihon savollari sessiyaga mos emas" }));
+    assert.equal(queryCount, 1);
+  }
 });
 
 function outcome(statusCode, body) {
@@ -259,10 +297,67 @@ test("exam submit preserves locked-session rollback and release", async () => {
   const transactionQueries = calls.filter(([type]) => type === "client-query");
   assert.deepEqual(transactionQueries.map((query) => query[1]), [
     "BEGIN",
-    "SELECT status FROM exam_sessions WHERE id=$1 AND user_id=$2 FOR UPDATE",
+    "SELECT status, expires_at FROM exam_sessions WHERE id=$1 AND user_id=$2 FOR UPDATE",
     "ROLLBACK",
   ]);
   assert.equal(calls.filter(([type]) => type === "release").length, 1);
+});
+
+test("exam submit rejects a session that expires before the transaction lock", async () => {
+  const { service, calls } = createSuccessfulHarness({
+    lockedExpiresAt: new Date(Date.now() - 60_000),
+  });
+  const result = await service.submitExam({
+    userId: 7,
+    sessionId: "session-1",
+    answers: [
+      { question_id: 1, answer: "A" },
+      { question_id: 2, answer: "B" },
+    ],
+  });
+
+  assert.deepEqual(result, outcome(400, { error: "Imtihon vaqti tugagan" }));
+  const transactionQueries = calls.filter(([type]) => type === "client-query");
+  assert.deepEqual(transactionQueries, [
+    ["client-query", "BEGIN", undefined],
+    [
+      "client-query",
+      "SELECT status, expires_at FROM exam_sessions WHERE id=$1 AND user_id=$2 FOR UPDATE",
+      ["session-1", 7],
+    ],
+    [
+      "client-query",
+      "UPDATE exam_sessions SET status='expired' WHERE id=$1 AND user_id=$2 AND status='active'",
+      ["session-1", 7],
+    ],
+    ["client-query", "COMMIT", undefined],
+  ]);
+  assert.equal(calls.filter(([type]) => type === "release").length, 1);
+});
+
+test("exam submit never loads another user's session", async () => {
+  const queries = [];
+  const service = createExamSubmitService({
+    pool: {
+      async query(sql, params) {
+        queries.push([normalized(sql), params]);
+        return { rows: [] };
+      },
+      connect: assert.fail,
+    },
+    getNextLevel: assert.fail,
+  });
+
+  const result = await service.submitExam({
+    userId: 7,
+    sessionId: "other-user-session",
+    answers: [],
+  });
+
+  assert.deepEqual(result, outcome(400, { error: "Imtihon sessiyasi faol emas" }));
+  assert.equal(queries.length, 1);
+  assert.match(queries[0][0], /WHERE id=\$1 AND user_id=\$2 AND status='active'/);
+  assert.deepEqual(queries[0][1], ["other-user-session", 7]);
 });
 
 test("exam submit preserves transaction rollback and error propagation", async () => {
@@ -295,6 +390,18 @@ test("exam submit controller preserves validation and outer error response", asy
   assert.equal(invalidResponse.statusCode, 400);
   assert.deepEqual(invalidResponse.body, { error: "Javoblar yuborilmadi" });
 
+  for (const body of [
+    undefined,
+    { session_id: "session-1", answers: [] },
+    { session_id: VALID_SESSION_ID, answers: {} },
+    { session_id: VALID_SESSION_ID, answers: Array(101).fill({}) },
+  ]) {
+    const response = createResponse();
+    await invalidController.submitExam({ user: { id: 7 }, body }, response);
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(response.body, { error: "Javoblar yuborilmadi" });
+  }
+
   const errorController = createExamSubmitController({
     pool: {
       async query() { throw new Error("database unavailable"); },
@@ -309,7 +416,7 @@ test("exam submit controller preserves validation and outer error response", asy
   try {
     await errorController.submitExam({
       user: { id: 7 },
-      body: { session_id: "session-1", answers: [] },
+      body: { session_id: VALID_SESSION_ID, answers: [] },
     }, errorResponse);
   } finally {
     console.error = originalError;

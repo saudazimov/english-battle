@@ -141,6 +141,73 @@ test("active battle preserves timer scheduling before online cleanup", () => {
   ]);
 });
 
+test("disconnect ignores inherited room, battle, and online mappings", () => {
+  const inheritedRoomMap = Object.create({ 5: "room" });
+  const inheritedOnlineMap = Object.create({ 5: "socket-5" });
+  const inheritedRoomHarness = createHarness({
+    battles: { room: createBattle() },
+    userToRoom: inheritedRoomMap,
+    onlineUsers: inheritedOnlineMap,
+  });
+
+  inheritedRoomHarness.handler();
+
+  assert.deepEqual(inheritedRoomHarness.calls, [
+    ["log", "O'yinchi uzildi:", "socket-5"],
+    ["removeQueue", "socket-5"],
+  ]);
+  assert.equal(inheritedRoomHarness.timers.length, 0);
+
+  const inheritedBattleMap = Object.create({ room: createBattle() });
+  const inheritedBattleHarness = createHarness({
+    battles: inheritedBattleMap,
+    userToRoom: { 5: "room" },
+  });
+
+  inheritedBattleHarness.handler();
+
+  assert.deepEqual(inheritedBattleHarness.calls, [
+    ["log", "O'yinchi uzildi:", "socket-5"],
+    ["removeQueue", "socket-5"],
+  ]);
+  assert.equal(inheritedBattleHarness.timers.length, 0);
+});
+
+test("disconnect ignores malformed battle player state", () => {
+  const harness = createHarness({
+    battles: { room: { isTeam: false, players: null } },
+    userToRoom: { 5: "room" },
+  });
+
+  harness.handler();
+
+  assert.deepEqual(harness.calls, [
+    ["log", "O'yinchi uzildi:", "socket-5"],
+    ["removeQueue", "socket-5"],
+  ]);
+  assert.equal(harness.timers.length, 0);
+});
+
+test("disconnect rejects non-primitive room identifiers without coercion", () => {
+  const roomId = {
+    toString() {
+      throw new Error("room ID must not be coerced");
+    },
+  };
+  const harness = createHarness({
+    battles: {},
+    userToRoom: { 5: roomId },
+  });
+
+  harness.handler();
+
+  assert.deepEqual(harness.calls, [
+    ["log", "O'yinchi uzildi:", "socket-5"],
+    ["removeQueue", "socket-5"],
+  ]);
+  assert.equal(harness.timers.length, 0);
+});
+
 test("offline timer preserves signal for the unchanged socket", () => {
   const battle = createBattle();
   const harness = createHarness({
@@ -174,6 +241,22 @@ test("both timers preserve silent return after socket rebind", () => {
 
   assert.deepEqual(harness.calls, []);
   assert.equal(battle.players["socket-new"].finished, false);
+});
+
+test("both timers return silently when battle state becomes malformed", () => {
+  const battle = createBattle();
+  const harness = createHarness({
+    battles: { room: battle },
+    userToRoom: { 5: "room" },
+  });
+  harness.handler();
+  battle.players = null;
+  harness.calls.length = 0;
+
+  harness.timers[0].callback();
+  harness.timers[1].callback();
+
+  assert.deepEqual(harness.calls, []);
 });
 
 test("team forfeit preserves state, log, progress, and finish check", () => {
@@ -218,6 +301,28 @@ test("1v1 forfeit preserves opponent event and all-finished behavior", () => {
     ["to", "room"],
     ["emit", "opponentLeft", { message: "Raqib jangdan chiqib ketdi" }],
     ["finish", "room"],
+  ]);
+});
+
+test("1v1 forfeit tolerates malformed player entries without finishing", () => {
+  const battle = createBattle({ opponentFinished: true });
+  battle.players.broken = null;
+  const harness = createHarness({
+    battles: { room: battle },
+    userToRoom: { 5: "room" },
+  });
+  harness.handler();
+  harness.calls.length = 0;
+
+  harness.timers[1].callback();
+
+  assert.deepEqual(harness.calls, [
+    [
+      "log",
+      "1v1 jang: user 5 qaytmadi (30s) → finished, jang yakunlanadi",
+    ],
+    ["to", "room"],
+    ["emit", "opponentLeft", { message: "Raqib jangdan chiqib ketdi" }],
   ]);
 });
 

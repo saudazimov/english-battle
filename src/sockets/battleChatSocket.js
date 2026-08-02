@@ -1,3 +1,5 @@
+const MAX_ROOM_ID_LENGTH = 256;
+
 function registerBattleChatSocket({
   socket,
   io,
@@ -10,9 +12,25 @@ function registerBattleChatSocket({
   socket.chatLast = 0;
   socket.chatTimes = [];
 
-  socket.on("battleChatSend", ({ roomId, message }) => {
+  socket.on("battleChatSend", (payload) => {
+    const roomId = payload && typeof payload === "object"
+      ? payload.roomId
+      : null;
+    const message = payload && typeof payload === "object"
+      ? payload.message
+      : null;
+    if (
+      typeof roomId !== "string"
+      || roomId.length === 0
+      || roomId.length > MAX_ROOM_ID_LENGTH
+      || !Object.prototype.hasOwnProperty.call(battles, roomId)
+    ) return;
     const battle = battles[roomId];
-    if (!battle || !battle.players[socket.id]) return;
+    if (
+      !battle
+      || !battle.players
+      || !Object.prototype.hasOwnProperty.call(battle.players, socket.id)
+    ) return;
     if (!message || typeof message !== "string") return;
 
     let text = stripUnsafe(message, 120);

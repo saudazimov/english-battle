@@ -40,11 +40,14 @@ test("quality workflow uses only an isolated PostgreSQL test database", () => {
 });
 
 test("quality workflow gates dependencies, contracts and the full suite", () => {
+  assert.match(workflow, /run: npm run security:secrets/);
+  assert.ok(workflow.indexOf("npm run security:secrets") < workflow.indexOf("npm ci"));
   assert.match(workflow, /run: npm ci/);
   assert.match(workflow, /run: npm run security:audit/);
   assert.match(workflow, /run: npm run test:production-contract/);
   assert.match(workflow, /run: npm run test:full/);
   assert.equal(packageJson.scripts["security:audit"], "npm audit --omit=dev --audit-level=high");
+  assert.equal(packageJson.scripts["security:secrets"], "node scripts/scan-secrets.js");
   assert.match(packageJson.scripts["test:production-contract"], /production-environment\.test\.js/);
   assert.doesNotMatch(workflow, /\b(?:ssh|scp|rsync|pm2|git push)\b/);
 });

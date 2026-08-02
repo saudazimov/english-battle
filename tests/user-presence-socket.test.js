@@ -63,6 +63,26 @@ test("user presence socket preserves missing-user response and short circuit", a
   assert.deepEqual(harness.onlineUsers, {});
 });
 
+test("user presence socket rejects unsafe authenticated user IDs", async () => {
+  for (const userId of [
+    "__proto__",
+    "constructor",
+    "7.5",
+    "9007199254740992",
+    0,
+    -1,
+  ]) {
+    const harness = createHarness({ userId });
+
+    await harness.listeners[0].handler();
+
+    assert.deepEqual(harness.calls, [
+      ["emit", "errorMessage", { message: "User ID is required." }],
+    ]);
+    assert.deepEqual(harness.onlineUsers, {});
+  }
+});
+
 test("user presence socket preserves normalization, SQL, online map, and emits", async () => {
   const neverResolvingNotification = new Promise(() => {});
   const harness = createHarness({
@@ -105,7 +125,7 @@ test("user presence socket preserves banned-account disconnect", async () => {
   assert.deepEqual(harness.onlineUsers, {});
 });
 
-test("user presence socket preserves ban-query error logging and registration", async () => {
+test("user presence socket fails closed when the ban query fails", async () => {
   const databaseError = new Error("database unavailable");
   const harness = createHarness({ userId: "7", queryError: databaseError });
 
@@ -114,13 +134,11 @@ test("user presence socket preserves ban-query error logging and registration", 
   assert.deepEqual(harness.calls, [
     ["query", "SELECT is_banned FROM users WHERE id = $1", ["7"]],
     ["error", "ban check xato:", "database unavailable"],
-    ["log", "User online:", "7 (token)"],
-    ["notify", "7", true],
     [
       "emit",
-      "userRegistered",
-      { success: true, userId: "7", socketId: "socket-1" },
+      "errorMessage",
+      { message: "Unable to verify account status." },
     ],
   ]);
-  assert.deepEqual(harness.onlineUsers, { 7: "socket-1" });
+  assert.deepEqual(harness.onlineUsers, {});
 });

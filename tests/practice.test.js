@@ -7,6 +7,8 @@ const {
 } = require("../src/controllers/practiceController");
 const { createPracticeRoutes } = require("../src/routes/practiceRoutes");
 
+const VALID_SESSION_ID = "11111111-1111-4111-8111-111111111111";
+
 function normalizeSql(sql) {
   return sql.replace(/\s+/g, " ").trim();
 }
@@ -30,6 +32,7 @@ function createHarness({
   poolResults = [],
   clientResults = [],
   poolError,
+  connectError,
   clientErrorAt = -1,
   questError,
 } = {}) {
@@ -56,13 +59,14 @@ function createHarness({
       },
       async connect() {
         calls.push(["connect"]);
+        if (connectError) throw connectError;
         return client;
       },
     },
     crypto: {
       randomUUID() {
         calls.push(["uuid"]);
-        return "practice-session-1";
+        return VALID_SESSION_ID;
       },
     },
     async updateQuestProgress(userId, progress) {
@@ -82,18 +86,18 @@ function createHarness({
   };
 }
 
-test("practice start preserves level/count fallback, extra query, and session insert", async () => {
+test("practice start atomically replaces active sessions and preserves response", async () => {
   const primary = [{ id: "1", question_text: "One" }];
   const extra = [{ id: "2", question_text: "Two" }];
   const harness = createHarness({
-    poolResults: [{ rows: primary }, { rows: extra }, { rows: [] }],
+    poolResults: [{ rows: primary }, { rows: extra }],
   });
   const response = createResponse();
 
   await harness.controller.start(
     {
       user: { id: 7, cefr_level: "B1" },
-      query: { level: "invalid", count: "3" },
+      query: { level: "A1", count: "5" },
     },
     response
   );
@@ -101,14 +105,29 @@ test("practice start preserves level/count fallback, extra query, and session in
   assert.deepEqual(harness.calls[0][2], ["A1", 5]);
   assert.deepEqual(harness.calls[1][2], ["A1", 4]);
   assert.deepEqual(harness.calls[2], ["uuid"]);
-  assert.deepEqual(harness.calls[3][2], [
-    "practice-session-1",
+  assert.deepEqual(harness.calls.slice(3).map((call) => call[0]), [
+    "connect",
+    "clientQuery",
+    "clientQuery",
+    "clientQuery",
+    "clientQuery",
+    "clientQuery",
+    "release",
+  ]);
+  assert.equal(harness.calls[4][1], "BEGIN");
+  assert.deepEqual(harness.calls[5][2], [7]);
+  assert.match(harness.calls[5][1], /FROM users WHERE id=\$1 FOR UPDATE/);
+  assert.deepEqual(harness.calls[6][2], [7]);
+  assert.match(harness.calls[6][1], /WHERE user_id=\$1 AND status='active'/);
+  assert.deepEqual(harness.calls[7][2], [
+    VALID_SESSION_ID,
     7,
     "A1",
     [1, 2],
   ]);
+  assert.equal(harness.calls[8][1], "COMMIT");
   assert.deepEqual(response.body, {
-    session_id: "practice-session-1",
+    session_id: VALID_SESSION_ID,
     level: "A1",
     total: 2,
     questions: [...primary, ...extra],
@@ -126,23 +145,86 @@ test("practice start preserves no-question response before UUID and insert", asy
     response
   );
 
+  assert.deepEqual(harness.calls[0][2], ["A2", 10]);
+  assert.deepEqual(harness.calls[1][2], ["A2", 10]);
   assert.equal(harness.calls.some((call) => call[0] === "uuid"), false);
   assert.equal(response.statusCode, 404);
   assert.deepEqual(response.body, { error: "Hozircha savollar mavjud emas" });
 });
 
-test("practice answer connects before validation and always releases", async () => {
-  const harness = createHarness();
+test("practice start rejects malformed options before database access", async () => {
+  const queries = [
+    { level: "invalid", count: "10" },
+    { level: ["A1", "A2"], count: "10" },
+    { level: "A1", count: "10abc" },
+    { level: "A1", count: "4" },
+    { level: "A1", count: "31" },
+    { level: "A1", count: ["10", "20"] },
+  ];
+
+  for (const query of queries) {
+    const harness = createHarness();
+    const response = createResponse();
+    await harness.controller.start(
+      { user: { id: 7, cefr_level: "A1" }, query },
+      response
+    );
+
+    assert.deepEqual(harness.calls, []);
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(response.body, { error: "Noto'g'ri practice parametrlari" });
+  }
+});
+
+test("practice start rolls back atomic session replacement failures", async () => {
+  const questions = Array.from({ length: 5 }, (_, index) => ({ id: index + 1 }));
+  const harness = createHarness({
+    poolResults: [{ rows: questions }],
+    clientErrorAt: 2,
+  });
   const response = createResponse();
 
-  await harness.controller.answer(
-    { user: { id: 7 }, body: { session_id: "", question_id: 4, answer: "A" } },
+  await harness.controller.start(
+    { user: { id: 7, cefr_level: "A1" }, query: { count: "5" } },
     response
   );
 
-  assert.deepEqual(harness.calls, [["connect"], ["release"]]);
-  assert.equal(response.statusCode, 400);
-  assert.deepEqual(response.body, { error: "Noto'g'ri javob ma'lumoti" });
+  assert.equal(response.statusCode, 500);
+  assert.deepEqual(
+    harness.calls.filter((call) => call[0] === "clientQuery").map((call) => call[1]),
+    [
+      "BEGIN",
+      "SELECT id FROM users WHERE id=$1 FOR UPDATE",
+      "UPDATE practice_sessions SET status='expired' WHERE user_id=$1 AND status='active'",
+      "ROLLBACK",
+    ]
+  );
+  assert.equal(harness.calls.some((call) => call[0] === "release"), true);
+  assert.deepEqual(harness.calls.at(-1), [
+    "error",
+    "Practice start xatosi:",
+    "client failed",
+  ]);
+});
+
+test("practice answer rejects malformed payloads before connecting", async () => {
+  const bodies = [
+    undefined,
+    { session_id: "", question_id: 4, answer: "A" },
+    { session_id: "not-a-uuid", question_id: 4, answer: "A" },
+    { session_id: VALID_SESSION_ID, question_id: "4abc", answer: "A" },
+    { session_id: VALID_SESSION_ID, question_id: 4, answer: 1 },
+  ];
+
+  for (const body of bodies) {
+    const harness = createHarness();
+    const response = createResponse();
+    await harness.controller.answer({ user: { id: 7 }, body }, response);
+
+    assert.deepEqual(harness.calls, []);
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(response.body, { error: "Noto'g'ri javob ma'lumoti" });
+  }
 });
 
 test("practice answer preserves transaction, grading, and response", async () => {
@@ -169,7 +251,7 @@ test("practice answer preserves transaction, grading, and response", async () =>
   await harness.controller.answer(
     {
       user: { id: 7 },
-      body: { session_id: "session-1", question_id: "4", answer: "b" },
+      body: { session_id: VALID_SESSION_ID, question_id: "4", answer: "b" },
     },
     response
   );
@@ -184,9 +266,13 @@ test("practice answer preserves transaction, grading, and response", async () =>
     "release",
   ]);
   assert.equal(harness.calls[1][1], "BEGIN");
-  assert.deepEqual(harness.calls[2][2], ["session-1", 7]);
+  assert.deepEqual(harness.calls[2][2], [VALID_SESSION_ID, 7]);
   assert.deepEqual(harness.calls[3][2], [4]);
-  assert.deepEqual(harness.calls[4][2], [4, 1, "session-1"]);
+  assert.deepEqual(harness.calls[4][2], [4, 1, VALID_SESSION_ID, 7]);
+  assert.match(
+    harness.calls[4][1],
+    /WHERE id = \$3 AND user_id = \$4 AND status='active'/
+  );
   assert.equal(harness.calls[5][1], "COMMIT");
   assert.deepEqual(response.body, {
     is_correct: true,
@@ -218,7 +304,7 @@ test("practice answer preserves expired and duplicate responses", async () => {
   });
   const expiredResponse = createResponse();
   await expiredHarness.controller.answer(
-    { user: { id: 7 }, body: { session_id: "s", question_id: 4, answer: "A" } },
+    { user: { id: 7 }, body: { session_id: VALID_SESSION_ID, question_id: 4, answer: "A" } },
     expiredResponse
   );
   assert.equal(expiredResponse.statusCode, 400);
@@ -245,7 +331,7 @@ test("practice answer preserves expired and duplicate responses", async () => {
   });
   const duplicateResponse = createResponse();
   await duplicateHarness.controller.answer(
-    { user: { id: 7 }, body: { session_id: "s", question_id: 4, answer: "A" } },
+    { user: { id: 7 }, body: { session_id: VALID_SESSION_ID, question_id: 4, answer: "A" } },
     duplicateResponse
   );
   assert.equal(duplicateResponse.statusCode, 409);
@@ -264,6 +350,7 @@ test("practice finish preserves transaction, XP, quest progress, and response", 
         rows: [
           {
             status: "active",
+            expires_at: "2999-01-01T00:00:00.000Z",
             question_ids: [1, 2],
             answered_ids: [1, 2],
             correct_count: "2",
@@ -278,7 +365,7 @@ test("practice finish preserves transaction, XP, quest progress, and response", 
   const response = createResponse();
 
   await harness.controller.finish(
-    { user: { id: 7 }, body: { session_id: "session-1" } },
+    { user: { id: 7 }, body: { session_id: VALID_SESSION_ID } },
     response
   );
 
@@ -293,8 +380,9 @@ test("practice finish preserves transaction, XP, quest progress, and response", 
     "release",
   ]);
   assert.equal(harness.calls[1][1], "BEGIN");
-  assert.deepEqual(harness.calls[2][2], ["session-1", 7]);
-  assert.deepEqual(harness.calls[3][2], ["session-1"]);
+  assert.deepEqual(harness.calls[2][2], [VALID_SESSION_ID, 7]);
+  assert.deepEqual(harness.calls[3][2], [VALID_SESSION_ID, 7]);
+  assert.match(harness.calls[3][1], /WHERE id=\$1 AND user_id=\$2 AND status='active'/);
   assert.deepEqual(harness.calls[4][2], [4, 7]);
   assert.equal(harness.calls[5][1], "COMMIT");
   assert.deepEqual(harness.calls[6], [
@@ -318,6 +406,7 @@ test("practice finish preserves incomplete-session rollback", async () => {
         rows: [
           {
             status: "active",
+            expires_at: "2999-01-01T00:00:00.000Z",
             question_ids: [1, 2],
             answered_ids: [1],
             correct_count: 1,
@@ -330,7 +419,7 @@ test("practice finish preserves incomplete-session rollback", async () => {
   const response = createResponse();
 
   await harness.controller.finish(
-    { user: { id: 7 }, body: { session_id: "session-1" } },
+    { user: { id: 7 }, body: { session_id: VALID_SESSION_ID } },
     response
   );
 
@@ -338,6 +427,51 @@ test("practice finish preserves incomplete-session rollback", async () => {
   assert.deepEqual(response.body, { error: "Barcha savollarga javob bering" });
   assert.equal(harness.calls.at(-2)[1], "ROLLBACK");
   assert.equal(harness.calls.some((call) => call[0] === "quest"), false);
+});
+
+test("practice finish rejects expired sessions without awarding XP", async () => {
+  const harness = createHarness({
+    clientResults: [
+      { rows: [] },
+      {
+        rows: [{
+          status: "active",
+          expires_at: "2000-01-01T00:00:00.000Z",
+          question_ids: [1],
+          answered_ids: [1],
+          correct_count: 1,
+        }],
+      },
+      { rows: [] },
+      { rows: [] },
+    ],
+  });
+  const response = createResponse();
+
+  await harness.controller.finish(
+    { user: { id: 7 }, body: { session_id: VALID_SESSION_ID } },
+    response
+  );
+
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(response.body, {
+    error: "Practice sessiyasi muddati tugagan",
+  });
+  assert.deepEqual(harness.calls[3][2], [VALID_SESSION_ID, 7]);
+  assert.equal(harness.calls[4][1], "COMMIT");
+  assert.equal(harness.calls.some((call) => call[0] === "quest"), false);
+});
+
+test("practice finish rejects malformed session IDs before connecting", async () => {
+  for (const body of [undefined, {}, { session_id: "not-a-uuid" }]) {
+    const harness = createHarness();
+    const response = createResponse();
+    await harness.controller.finish({ user: { id: 7 }, body }, response);
+
+    assert.deepEqual(harness.calls, []);
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(response.body, { error: "Practice sessiyasi topilmadi" });
+  }
 });
 
 test("practice handlers preserve rollback, error logs, and 500 responses", async () => {
@@ -356,7 +490,7 @@ test("practice handlers preserve rollback, error logs, and 500 responses", async
   const answerHarness = createHarness({ clientErrorAt: 1 });
   const answerResponse = createResponse();
   await answerHarness.controller.answer(
-    { user: { id: 7 }, body: { session_id: "s", question_id: 4, answer: "A" } },
+    { user: { id: 7 }, body: { session_id: VALID_SESSION_ID, question_id: 4, answer: "A" } },
     answerResponse
   );
   assert.deepEqual(answerHarness.calls.at(-2), [
@@ -366,6 +500,18 @@ test("practice handlers preserve rollback, error logs, and 500 responses", async
   ]);
   assert.deepEqual(answerHarness.calls.at(-1), ["release"]);
 
+  const connectHarness = createHarness({ connectError: new Error("connect failed") });
+  const connectResponse = createResponse();
+  await connectHarness.controller.answer(
+    { user: { id: 7 }, body: { session_id: VALID_SESSION_ID, question_id: 4, answer: "A" } },
+    connectResponse
+  );
+  assert.equal(connectResponse.statusCode, 500);
+  assert.deepEqual(connectHarness.calls, [
+    ["connect"],
+    ["error", "Practice answer xatosi:", "connect failed"],
+  ]);
+
   const finishHarness = createHarness({
     clientResults: [
       { rows: [] },
@@ -373,6 +519,7 @@ test("practice handlers preserve rollback, error logs, and 500 responses", async
         rows: [
           {
             status: "active",
+            expires_at: "2999-01-01T00:00:00.000Z",
             question_ids: [1],
             answered_ids: [1],
             correct_count: 1,
@@ -388,7 +535,7 @@ test("practice handlers preserve rollback, error logs, and 500 responses", async
   });
   const finishResponse = createResponse();
   await finishHarness.controller.finish(
-    { user: { id: 7 }, body: { session_id: "s" } },
+    { user: { id: 7 }, body: { session_id: VALID_SESSION_ID } },
     finishResponse
   );
   assert.equal(finishHarness.calls.at(-4)[0], "quest");

@@ -1,3 +1,11 @@
+const MAX_ROOM_ID_LENGTH = 256;
+
+function hasOwn(record, key) {
+  return record !== null
+    && typeof record === "object"
+    && Object.prototype.hasOwnProperty.call(record, key);
+}
+
 async function persistBattleAnswer({
   pool,
   roomId,
@@ -74,16 +82,27 @@ function createSubmitAnswerHandler({
   now,
   logger,
 }) {
-  return async function submitAnswer({ roomId, questionId, answer }) {
+  return async function submitAnswer(payload) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+
+    const { roomId, questionId, answer } = payload;
+    if (
+      typeof roomId !== "string"
+      || roomId.length === 0
+      || roomId.length > MAX_ROOM_ID_LENGTH
+      || !hasOwn(battles, roomId)
+    ) return;
+
     const battle = battles[roomId];
-    if (!battle || !battle.players[socket.id]) return;
+    if (!battle || !hasOwn(battle.players, socket.id)) return;
 
     const player = battle.players[socket.id];
+    if (!player || typeof player !== "object" || Array.isArray(player)) return;
     if (player.finished) return;
 
     if (!player.answers) player.answers = [];
     if (!player.answeredIds) player.answeredIds = {};
-    if (player.answeredIds[questionId]) {
+    if (hasOwn(player.answeredIds, questionId) && player.answeredIds[questionId]) {
       socket.emit("answerResult", {
         already_answered: true,
         my_score: player.score,
@@ -92,6 +111,7 @@ function createSubmitAnswerHandler({
       return;
     }
 
+    if (!Array.isArray(battle.questions)) return;
     const question = battle.questions.find((item) => item.id === questionId);
     if (!question) return;
 

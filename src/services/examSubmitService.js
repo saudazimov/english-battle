@@ -2,20 +2,42 @@ function outcome(statusCode, body) {
   return { statusCode, body };
 }
 
+function normalizeQuestionId(value) {
+  if (typeof value === "number") {
+    return Number.isSafeInteger(value) && value > 0 ? value : null;
+  }
+  if (typeof value !== "string" || !/^[1-9]\d*$/.test(value)) return null;
+
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : null;
+}
+
 function validateSessionAnswers(examSession, answers) {
-  const questionIds = (examSession.question_ids || []).map(Number);
-  const submittedIds = answers.map((answer) => parseInt(answer.question_id, 10));
+  if (!Array.isArray(examSession.question_ids)) return null;
+
+  const questionIds = examSession.question_ids.map(normalizeQuestionId);
+  if (questionIds.some((questionId) => questionId === null)) return null;
+
+  const submittedIds = answers.map((answer) => (
+    answer && typeof answer === "object" && !Array.isArray(answer)
+      ? normalizeQuestionId(answer.question_id)
+      : null
+  ));
   const uniqueIds = new Set(submittedIds);
   const validAnswerSet = answers.every((answer) => (
     answer
-    && questionIds.includes(parseInt(answer.question_id, 10))
+    && typeof answer === "object"
+    && !Array.isArray(answer)
+    && questionIds.includes(normalizeQuestionId(answer.question_id))
     && (answer.answer == null
-      || ["A", "B", "C", "D"].includes(String(answer.answer).toUpperCase()))
+      || (typeof answer.answer === "string"
+        && ["A", "B", "C", "D"].includes(answer.answer.toUpperCase())))
   ));
 
   if (
     answers.length !== questionIds.length
     || uniqueIds.size !== questionIds.length
+    || submittedIds.some((questionId) => questionId === null)
     || !validAnswerSet
   ) {
     return null;
@@ -102,7 +124,7 @@ async function gradeAnswers(pool, questionIds, answers) {
   let totalCorrect = 0;
   const skillStats = {};
   for (const answer of answers) {
-    const question = questionMap.get(parseInt(answer.question_id, 10));
+    const question = questionMap.get(normalizeQuestionId(answer.question_id));
     const skill = question.skill || "other";
     if (!skillStats[skill]) skillStats[skill] = { correct: 0, total: 0 };
     skillStats[skill].total++;
@@ -159,7 +181,7 @@ async function persistAttempt({
   try {
     await client.query("BEGIN");
     const lockedSession = await client.query(
-      `SELECT status FROM exam_sessions
+      `SELECT status, expires_at FROM exam_sessions
        WHERE id=$1 AND user_id=$2
        FOR UPDATE`,
       [sessionId, userId]
@@ -169,6 +191,15 @@ async function persistAttempt({
       return outcome(400, {
         error: "Imtihon sessiyasi allaqachon yakunlangan",
       });
+    }
+    if (new Date(lockedSession.rows[0].expires_at) < new Date()) {
+      await client.query(
+        `UPDATE exam_sessions SET status='expired'
+         WHERE id=$1 AND user_id=$2 AND status='active'`,
+        [sessionId, userId]
+      );
+      await client.query("COMMIT");
+      return outcome(400, { error: "Imtihon vaqti tugagan" });
     }
 
     if (levelChanged) {
@@ -224,8 +255,9 @@ function createExamSubmitService({ pool, getNextLevel }) {
     }
     if (new Date(examSession.expires_at) < new Date()) {
       await pool.query(
-        "UPDATE exam_sessions SET status='expired' WHERE id=$1",
-        [sessionId]
+        `UPDATE exam_sessions SET status='expired'
+         WHERE id=$1 AND user_id=$2 AND status='active'`,
+        [sessionId, userId]
       );
       return outcome(400, { error: "Imtihon vaqti tugagan" });
     }

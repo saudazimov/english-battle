@@ -1,11 +1,20 @@
 const { createExamStartService } = require("../services/examStartService");
+const { resolveOwnedUserId } = require("../utils/ownedUserId");
 
 function createExamStartController({ pool, randomUUID }) {
   const service = createExamStartService({ pool, randomUUID });
 
   async function startExam(req, res) {
     try {
-      const outcome = await service.startExam(req.user.id);
+      const owner = resolveOwnedUserId(req.params.userId, req.user.id);
+      if (owner.status === "invalid") {
+        return res.status(400).json({ error: "Noto'g'ri ID" });
+      }
+      if (owner.status === "forbidden") {
+        return res.status(403).json({ error: "Ruxsat yo'q" });
+      }
+
+      const outcome = await service.startExam(owner.userId);
       if (outcome.status === "user-not-found") {
         return res.status(404).json({ error: "Foydalanuvchi topilmadi" });
       }

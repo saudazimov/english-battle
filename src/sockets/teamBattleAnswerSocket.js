@@ -1,3 +1,11 @@
+const MAX_ROOM_ID_LENGTH = 256;
+
+function hasOwn(record, key) {
+  return record !== null
+    && typeof record === "object"
+    && Object.prototype.hasOwnProperty.call(record, key);
+}
+
 function createSubmitTeamAnswerHandler({
   socket,
   io,
@@ -10,14 +18,26 @@ function createSubmitTeamAnswerHandler({
   now,
   logger,
 }) {
-  return async function submitTeamAnswer({ roomId, questionId, answer }) {
+  return async function submitTeamAnswer(payload) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+
+    const { roomId, questionId, answer } = payload;
+    if (
+      typeof roomId !== "string"
+      || roomId.length === 0
+      || roomId.length > MAX_ROOM_ID_LENGTH
+      || !hasOwn(battles, roomId)
+    ) return;
+
     const battle = battles[roomId];
     if (!battle || !battle.isTeam) return;
+    if (!hasOwn(battle.players, socket.id)) return;
     const player = battle.players[socket.id];
-    if (!player || player.finished) return;
+    if (!player || typeof player !== "object" || Array.isArray(player)) return;
+    if (player.finished) return;
 
     if (!player.answeredIds) player.answeredIds = {};
-    if (player.answeredIds[questionId]) {
+    if (hasOwn(player.answeredIds, questionId) && player.answeredIds[questionId]) {
       io.to(socket.id).emit("teamAnswerResult", {
         already_answered: true,
         answeredCount: player.answeredCount,
@@ -27,6 +47,7 @@ function createSubmitTeamAnswerHandler({
       return;
     }
 
+    if (!Array.isArray(battle.questions)) return;
     const question = battle.questions.find(function (item) {
       return item.id === questionId;
     });

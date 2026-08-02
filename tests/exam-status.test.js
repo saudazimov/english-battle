@@ -93,7 +93,7 @@ test("exam status preserves missing-user and highest-level early returns", async
   assert.equal(calls, 1);
 });
 
-test("exam status controller preserves authenticated ID and error logging", async () => {
+test("exam status controller enforces exact owner IDs and preserves error logging", async () => {
   const queriedIds = [];
   const controller = createExamStatusController({
     pool: {
@@ -106,11 +106,29 @@ test("exam status controller preserves authenticated ID and error logging", asyn
   });
   const missingResponse = createResponse();
   await controller.getStatus(
-    { user: { id: 5 }, params: { userId: "999" } },
+    { user: { id: 5 }, params: { userId: "5" } },
     missingResponse
   );
   assert.deepEqual(queriedIds, [5]);
   assert.equal(missingResponse.statusCode, 404);
+
+  for (const userId of ["invalid", "5abc", "0", "01", "9007199254740993"]) {
+    const invalidResponse = createResponse();
+    await controller.getStatus(
+      { user: { id: 5 }, params: { userId } },
+      invalidResponse
+    );
+    assert.equal(invalidResponse.statusCode, 400);
+    assert.deepEqual(invalidResponse.body, { error: "Noto'g'ri ID" });
+  }
+  const forbiddenResponse = createResponse();
+  await controller.getStatus(
+    { user: { id: 5 }, params: { userId: "6" } },
+    forbiddenResponse
+  );
+  assert.equal(forbiddenResponse.statusCode, 403);
+  assert.deepEqual(forbiddenResponse.body, { error: "Ruxsat yo'q" });
+  assert.deepEqual(queriedIds, [5]);
 
   const errorController = createExamStatusController({
     pool: { async query() { throw new Error("database unavailable"); } },
@@ -122,7 +140,7 @@ test("exam status controller preserves authenticated ID and error logging", asyn
   console.error = (...args) => logged.push(args);
   try {
     await errorController.getStatus(
-      { user: { id: 5 }, params: { userId: "999" } },
+      { user: { id: 5 }, params: { userId: "5" } },
       errorResponse
     );
   } finally {

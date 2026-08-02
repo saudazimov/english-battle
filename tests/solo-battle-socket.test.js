@@ -31,6 +31,7 @@ test("solo battle socket preserves phased order and dependencies", () => {
   assert.deepEqual(calls, [
     ["matchmaking", {
       socket: dependencies.socket,
+      pool: dependencies.pool,
       waitingQueue: dependencies.waitingQueue,
       removeFromQueue: dependencies.removeFromQueue,
       tryQueueMatch: dependencies.tryQueueMatch,
