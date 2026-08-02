@@ -1,13 +1,21 @@
 const { createExamSubmitService } = require("../services/examSubmitService");
 
+const SESSION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const MAX_EXAM_ANSWERS = 100;
+
 function createExamSubmitController({ pool, getNextLevel }) {
   const service = createExamSubmitService({ pool, getNextLevel });
 
   async function submitExam(req, res) {
     try {
       const userId = req.user.id;
-      const { answers, session_id: sessionId } = req.body;
-      if (!sessionId || !answers || !Array.isArray(answers)) {
+      const { answers, session_id: sessionId } = req.body || {};
+      if (
+        typeof sessionId !== "string"
+        || !SESSION_ID_PATTERN.test(sessionId)
+        || !Array.isArray(answers)
+        || answers.length > MAX_EXAM_ANSWERS
+      ) {
         return res.status(400).json({ error: "Javoblar yuborilmadi" });
       }
 

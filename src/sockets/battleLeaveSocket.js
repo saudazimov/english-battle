@@ -1,3 +1,11 @@
+const MAX_ROOM_ID_LENGTH = 256;
+
+function hasOwn(record, key) {
+  return record !== null
+    && typeof record === "object"
+    && Object.prototype.hasOwnProperty.call(record, key);
+}
+
 function createBattleLeaveHandler({
   socket,
   battles,
@@ -7,19 +15,31 @@ function createBattleLeaveHandler({
   finishBattle,
   logger,
 }) {
-  return function battleLeave({ roomId }) {
-    const battle = roomId ? battles[roomId] : null;
-    if (!battle) return;
+  return function battleLeave(payload) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return;
 
-    const leaverKey = battle.players[socket.id] ? socket.id : null;
-    if (!leaverKey) return;
+    const { roomId } = payload;
+    if (
+      typeof roomId !== "string"
+      || roomId.length === 0
+      || roomId.length > MAX_ROOM_ID_LENGTH
+      || !hasOwn(battles, roomId)
+    ) return;
 
-    const leaver = battle.players[leaverKey];
+    const battle = battles[roomId];
+    if (!battle || !hasOwn(battle.players, socket.id)) return;
+
+    const leaver = battle.players[socket.id];
+    if (!leaver || typeof leaver !== "object" || Array.isArray(leaver)) return;
     const leaverUserId = leaver.userId;
     leaver.finished = true;
     leaver.disconnected = true;
 
-    if (leaverUserId && userToRoom[leaverUserId] === roomId) {
+    if (
+      leaverUserId
+      && hasOwn(userToRoom, leaverUserId)
+      && userToRoom[leaverUserId] === roomId
+    ) {
       delete userToRoom[leaverUserId];
     }
 

@@ -1,9 +1,25 @@
+const createMatchmakingPlayerProfileService = require(
+  "../services/matchmakingPlayerProfileService"
+);
+const { BATTLE_LENGTHS } = require("../utils/battleLength");
+
+const SOLO_MODES = new Set(["ranked", "casual"]);
+
+function validMode(value) {
+  return typeof value === "string" && SOLO_MODES.has(value);
+}
+
+function validLengthKey(value) {
+  return typeof value === "string"
+    && Object.prototype.hasOwnProperty.call(BATTLE_LENGTHS, value);
+}
+
 function createFindMatchHandler({
   socket,
   waitingQueue,
   removeFromQueue,
   tryQueueMatch,
-  stripUnsafe,
+  loadPlayerProfile,
   getRandomBotName,
   startBotBattle,
   setTimer,
@@ -15,25 +31,40 @@ function createFindMatchHandler({
     const existingSearch = waitingQueue.find(
       (entry) => String(entry.userId) === String(socket.userId)
     );
+    const isResuming = Boolean(existingSearch && existingSearch.disconnected);
+    let playerProfile = existingSearch;
+    if (!isResuming) {
+      try {
+        playerProfile = await loadPlayerProfile(socket.userId);
+      } catch (error) {
+        logger.error("Solo matchmaking profil xatosi:", error.message);
+        socket.emit("battleError", { message: "Raqib qidirishda xato" });
+        return;
+      }
+    }
     if (existingSearch) removeFromQueue(existingSearch.socketId);
     else removeFromQueue(socket.id);
     playerData = playerData || {};
-    const safeName = stripUnsafe(playerData.name, 60);
     const currentTime = now();
-    const isResuming = Boolean(existingSearch && existingSearch.disconnected);
     const joinedAt = isResuming && Number.isFinite(existingSearch.joinedAt)
       ? existingSearch.joinedAt
       : currentTime;
     const elapsedMs = Math.max(0, currentTime - joinedAt);
+    const requestedMode = isResuming ? existingSearch.mode : playerData.mode;
+    const requestedLengthKey = isResuming
+      ? existingSearch.lengthKey
+      : playerData.lengthKey;
 
     const player = {
       socketId: socket.id,
-      userId: socket.userId,
-      name: isResuming ? existingSearch.name : (safeName || "O'yinchi"),
-      level: isResuming ? existingSearch.level : (playerData.level || "A1"),
-      rating: isResuming ? existingSearch.rating : (playerData.rating || 1000),
-      mode: isResuming ? existingSearch.mode : (playerData.mode || "ranked"),
-      lengthKey: isResuming ? existingSearch.lengthKey : (playerData.lengthKey || "standard"),
+      userId: playerProfile.userId,
+      name: playerProfile.name,
+      level: playerProfile.level,
+      rating: playerProfile.rating,
+      mode: validMode(requestedMode) ? requestedMode : "ranked",
+      lengthKey: validLengthKey(requestedLengthKey)
+        ? requestedLengthKey
+        : "standard",
       joinedAt,
       botName: isResuming ? existingSearch.botName : getRandomBotName(),
     };
@@ -94,6 +125,7 @@ function createCancelMatchHandler({ socket, removeFromQueue }) {
 
 function registerSoloMatchmakingSocket({
   socket,
+  pool,
   waitingQueue,
   removeFromQueue,
   tryQueueMatch,
@@ -104,12 +136,16 @@ function registerSoloMatchmakingSocket({
   now = Date.now,
   logger = console,
 }) {
+  const { loadPlayerProfile } = createMatchmakingPlayerProfileService({
+    pool,
+    stripUnsafe,
+  });
   socket.on("findMatch", createFindMatchHandler({
     socket,
     waitingQueue,
     removeFromQueue,
     tryQueueMatch,
-    stripUnsafe,
+    loadPlayerProfile,
     getRandomBotName,
     startBotBattle,
     setTimer,

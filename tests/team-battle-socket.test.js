@@ -23,6 +23,7 @@ test("team battle socket preserves registration order and dependencies", () => {
     ["matchmaking", {
       socket: dependencies.socket,
       io: dependencies.io,
+      pool: dependencies.pool,
       teamMatchPool: dependencies.teamMatchPool,
       addTeamEntry: dependencies.addTeamEntry,
       emitTeamQueueStatus: dependencies.emitTeamQueueStatus,

@@ -23,7 +23,7 @@ function registerTeamBattleSocket({
   socketRegistrars = defaultSocketRegistrars,
 }) {
   socketRegistrars.matchmaking({
-    socket, io, teamMatchPool, addTeamEntry,
+    socket, io, pool, teamMatchPool, addTeamEntry,
     emitTeamQueueStatus, stripUnsafe, logger,
   });
   socketRegistrars.answer({

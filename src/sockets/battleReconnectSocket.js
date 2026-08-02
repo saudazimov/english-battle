@@ -277,13 +277,13 @@ function createReconnectHandler({
     }
 
     rebindPlayerSocket(roomId, userId, socket.id);
-    socket.join(roomId);
     const player = battle.players[socket.id];
-    if (!player) {
+    if (!player || String(player.userId) !== String(userId)) {
       socket.emit("battle:noActive", {});
       return;
     }
 
+    socket.join(roomId);
     player.disconnected = false;
     socket.to(roomId).emit("playerOnline", { userId: String(userId) });
     if (battle.isTeam) {

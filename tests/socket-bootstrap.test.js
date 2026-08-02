@@ -198,8 +198,8 @@ test("socket connection preserves registrar order and dependencies", () => {
     },
   };
   const registrars = {
-    registerClassWatchSocket(receivedSocket) {
-      calls.push(["class-watch", receivedSocket]);
+    registerClassWatchSocket(receivedSocket, receivedPool, receivedLogger) {
+      calls.push(["class-watch", receivedSocket, receivedPool, receivedLogger]);
     },
     createConnectionLifecycleSocket(received) {
       calls.push(["connection-lifecycle", received]);
@@ -264,7 +264,12 @@ test("socket connection preserves registrar order and dependencies", () => {
     "solo-lifecycle",
     "disconnect",
   ]);
-  assert.equal(calls[0][1], socket);
+  assert.deepEqual(calls[0], [
+    "class-watch",
+    socket,
+    dependencies.pool,
+    dependencies.logger,
+  ]);
   assert.deepEqual(loggerCalls, [
     ["Socket connected:", socket.id],
     ["Yangi o'yinchi ulandi:", socket.id],

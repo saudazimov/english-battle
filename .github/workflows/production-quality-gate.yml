@@ -68,6 +68,9 @@ jobs:
           node-version: "20"
           cache: npm
 
+      - name: Block tracked secrets
+        run: npm run security:secrets
+
       - name: Install locked dependencies
         run: npm ci
 

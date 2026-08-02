@@ -1,13 +1,75 @@
+const SESSION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const VALID_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+function normalizeQuestionId(value) {
+  if (typeof value === "number") {
+    return Number.isSafeInteger(value) && value > 0 ? value : null;
+  }
+  if (typeof value !== "string" || !/^[1-9]\d*$/.test(value)) return null;
+
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : null;
+}
+
+function sessionHasExpired(session) {
+  const expiresAt = new Date(session.expires_at);
+  return Number.isNaN(expiresAt.getTime()) || expiresAt < new Date();
+}
+
+function resolvePracticeOptions(query, userLevel) {
+  const requestedLevel = query.level;
+  const level = requestedLevel === undefined
+    ? (VALID_LEVELS.includes(userLevel) ? userLevel : "A1")
+    : requestedLevel;
+  if (typeof level !== "string" || !VALID_LEVELS.includes(level)) return null;
+
+  if (query.count === undefined) return { level, count: 10 };
+  if (typeof query.count !== "string" || !/^[1-9]\d*$/.test(query.count)) {
+    return null;
+  }
+  const count = Number(query.count);
+  if (!Number.isSafeInteger(count) || count < 5 || count > 30) return null;
+  return { level, count };
+}
+
+async function replaceActivePracticeSession({
+  pool,
+  sessionId,
+  userId,
+  level,
+  questionIds,
+}) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT id FROM users WHERE id=$1 FOR UPDATE", [userId]);
+    await client.query(
+      `UPDATE practice_sessions SET status='expired'
+       WHERE user_id=$1 AND status='active'`,
+      [userId]
+    );
+    await client.query(
+      `INSERT INTO practice_sessions (id, user_id, level, question_ids, expires_at)
+       VALUES ($1, $2, $3, $4, NOW() + INTERVAL '60 minutes')`,
+      [sessionId, userId, level, questionIds]
+    );
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 function createPracticeStartHandler({ pool, crypto, logger }) {
   return async function startPractice(req, res) {
     try {
-      let level = (req.query.level || req.user.cefr_level || "A1").trim();
-      let count = parseInt(req.query.count) || 10;
-      if (count < 5) count = 5;
-      if (count > 30) count = 30;
-
-      const validLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
-      if (validLevels.indexOf(level) === -1) level = "A1";
+      const options = resolvePracticeOptions(req.query || {}, req.user.cefr_level);
+      if (!options) {
+        return res.status(400).json({ error: "Noto'g'ri practice parametrlari" });
+      }
+      const { level, count } = options;
       const result = await pool.query(
         `SELECT id, question_text, option_a, option_b, option_c, option_d, skill
          FROM questions WHERE cefr_level = $1 ORDER BY RANDOM() LIMIT $2`,
@@ -27,11 +89,13 @@ function createPracticeStartHandler({ pool, crypto, logger }) {
 
       const sessionId = crypto.randomUUID();
       const questionIds = result.rows.map((question) => Number(question.id));
-      await pool.query(
-        `INSERT INTO practice_sessions (id, user_id, level, question_ids, expires_at)
-         VALUES ($1, $2, $3, $4, NOW() + INTERVAL '60 minutes')`,
-        [sessionId, req.user.id, level, questionIds]
-      );
+      await replaceActivePracticeSession({
+        pool,
+        sessionId,
+        userId: req.user.id,
+        level,
+        questionIds,
+      });
       res.json({
         session_id: sessionId,
         level,
@@ -47,15 +111,22 @@ function createPracticeStartHandler({ pool, crypto, logger }) {
 
 function createPracticeAnswerHandler({ pool, logger }) {
   return async function answerPractice(req, res) {
-    const client = await pool.connect();
+    let client;
     try {
-      const sessionId = String(req.body.session_id || "");
-      const questionId = parseInt(req.body.question_id, 10);
-      const answer = String(req.body.answer || "").toUpperCase();
-      if (!sessionId || !questionId || !["A", "B", "C", "D"].includes(answer)) {
+      const body = req.body || {};
+      const sessionId = body.session_id;
+      const questionId = normalizeQuestionId(body.question_id);
+      const answer = typeof body.answer === "string" ? body.answer.toUpperCase() : "";
+      if (
+        typeof sessionId !== "string"
+        || !SESSION_ID_PATTERN.test(sessionId)
+        || questionId === null
+        || !["A", "B", "C", "D"].includes(answer)
+      ) {
         return res.status(400).json({ error: "Noto'g'ri javob ma'lumoti" });
       }
 
+      client = await pool.connect();
       await client.query("BEGIN");
       const sessionResult = await client.query(
         `SELECT * FROM practice_sessions
@@ -68,10 +139,11 @@ function createPracticeAnswerHandler({ pool, logger }) {
         await client.query("ROLLBACK");
         return res.status(400).json({ error: "Practice sessiyasi faol emas" });
       }
-      if (new Date(session.expires_at) < new Date()) {
+      if (sessionHasExpired(session)) {
         await client.query(
-          "UPDATE practice_sessions SET status='expired' WHERE id=$1",
-          [sessionId]
+          `UPDATE practice_sessions SET status='expired'
+           WHERE id=$1 AND user_id=$2 AND status='active'`,
+          [sessionId, req.user.id]
         );
         await client.query("COMMIT");
         return res
@@ -108,9 +180,9 @@ function createPracticeAnswerHandler({ pool, logger }) {
         `UPDATE practice_sessions
          SET answered_ids = array_append(answered_ids, $1::integer),
              correct_count = correct_count + $2
-         WHERE id = $3
+         WHERE id = $3 AND user_id = $4 AND status='active'
          RETURNING correct_count, cardinality(answered_ids) AS answered_count`,
-        [questionId, isCorrect ? 1 : 0, sessionId]
+        [questionId, isCorrect ? 1 : 0, sessionId, req.user.id]
       );
       await client.query("COMMIT");
       res.json({
@@ -122,25 +194,26 @@ function createPracticeAnswerHandler({ pool, logger }) {
         total: questionIds.length,
       });
     } catch (error) {
-      await client.query("ROLLBACK").catch(() => {});
+      if (client) await client.query("ROLLBACK").catch(() => {});
       logger.error("Practice answer xatosi:", error.message);
       res.status(500).json({ error: "Server xatosi" });
     } finally {
-      client.release();
+      if (client) client.release();
     }
   };
 }
 
 function createPracticeFinishHandler({ pool, updateQuestProgress, logger }) {
   return async function finishPractice(req, res) {
-    const client = await pool.connect();
+    let client;
     try {
       const userId = req.user.id;
-      const sessionId = String(req.body.session_id || "");
-      if (!sessionId) {
+      const sessionId = req.body && req.body.session_id;
+      if (typeof sessionId !== "string" || !SESSION_ID_PATTERN.test(sessionId)) {
         return res.status(400).json({ error: "Practice sessiyasi topilmadi" });
       }
 
+      client = await pool.connect();
       await client.query("BEGIN");
       const sessionResult = await client.query(
         `SELECT * FROM practice_sessions
@@ -153,6 +226,17 @@ function createPracticeFinishHandler({ pool, updateQuestProgress, logger }) {
         await client.query("ROLLBACK");
         return res.status(400).json({ error: "Practice sessiyasi faol emas" });
       }
+      if (sessionHasExpired(session)) {
+        await client.query(
+          `UPDATE practice_sessions SET status='expired'
+           WHERE id=$1 AND user_id=$2 AND status='active'`,
+          [sessionId, userId]
+        );
+        await client.query("COMMIT");
+        return res
+          .status(400)
+          .json({ error: "Practice sessiyasi muddati tugagan" });
+      }
       const total = (session.question_ids || []).length;
       const answered = (session.answered_ids || []).length;
       const correct = Number(session.correct_count) || 0;
@@ -163,8 +247,9 @@ function createPracticeFinishHandler({ pool, updateQuestProgress, logger }) {
 
       const xpEarned = correct * 2;
       await client.query(
-        "UPDATE practice_sessions SET status='finished', finished_at=NOW() WHERE id=$1",
-        [sessionId]
+        `UPDATE practice_sessions SET status='finished', finished_at=NOW()
+         WHERE id=$1 AND user_id=$2 AND status='active'`,
+        [sessionId, userId]
       );
       const updated = await client.query(
         "UPDATE users SET xp = xp + $1 WHERE id = $2 RETURNING id, xp, cefr_level, rating",
@@ -183,11 +268,11 @@ function createPracticeFinishHandler({ pool, updateQuestProgress, logger }) {
         updated_user: updated.rows[0],
       });
     } catch (error) {
-      await client.query("ROLLBACK").catch(() => {});
+      if (client) await client.query("ROLLBACK").catch(() => {});
       logger.error("Practice finish xatosi:", error.message);
       res.status(500).json({ error: "Server xatosi" });
     } finally {
-      client.release();
+      if (client) client.release();
     }
   };
 }

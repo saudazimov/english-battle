@@ -1,3 +1,42 @@
+function hasOwn(record, key) {
+  return record !== null
+    && typeof record === "object"
+    && Object.prototype.hasOwnProperty.call(record, key);
+}
+
+function getBattle(battles, roomId) {
+  if (typeof roomId !== "string" && typeof roomId !== "number") return null;
+  if (typeof roomId === "number" && !Number.isFinite(roomId)) return null;
+  const roomKey = String(roomId);
+  if (
+    !roomKey
+    || roomKey.length > 256
+    || ["__proto__", "prototype", "constructor"].includes(roomKey)
+    || !hasOwn(battles, roomKey)
+  ) return null;
+  const battle = battles[roomKey];
+  if (!battle || typeof battle !== "object" || Array.isArray(battle)) {
+    return null;
+  }
+  if (
+    !hasOwn(battle, "players")
+    || !battle.players
+    || typeof battle.players !== "object"
+    || Array.isArray(battle.players)
+  ) return null;
+  return battle;
+}
+
+function findPlayerKey(battle, userId) {
+  return Object.keys(battle.players).find(function (key) {
+    const player = battle.players[key];
+    return player
+      && typeof player === "object"
+      && !Array.isArray(player)
+      && String(player.userId) === String(userId);
+  });
+}
+
 function createOfflineSignalCallback({
   socket,
   battles,
@@ -7,12 +46,10 @@ function createOfflineSignalCallback({
   disconnectedSocketId,
 }) {
   return function signalOffline() {
-    const battle = battles[roomId];
+    const battle = getBattle(battles, roomId);
     if (!battle) return;
-    if (userToRoom[userId] !== roomId) return;
-    const currentKey = Object.keys(battle.players).find(function (key) {
-      return String(battle.players[key].userId) === String(userId);
-    });
+    if (!hasOwn(userToRoom, userId) || userToRoom[userId] !== roomId) return;
+    const currentKey = findPlayerKey(battle, userId);
     if (!currentKey || currentKey !== disconnectedSocketId) return;
     socket.to(roomId).emit("playerOffline", { userId: String(userId) });
   };
@@ -31,19 +68,17 @@ function createForfeitCallback({
   logger,
 }) {
   return function forfeitDisconnectedPlayer() {
-    const battle = battles[roomId];
+    const battle = getBattle(battles, roomId);
     if (!battle) return;
-    if (userToRoom[userId] !== roomId) return;
-    const currentKey = Object.keys(battle.players).find(function (key) {
-      return String(battle.players[key].userId) === String(userId);
-    });
+    if (!hasOwn(userToRoom, userId) || userToRoom[userId] !== roomId) return;
+    const currentKey = findPlayerKey(battle, userId);
     if (!currentKey || currentKey !== disconnectedSocketId) return;
 
     const player = battle.players[currentKey];
-    if (player && !player.finished) {
+    if (!hasOwn(player, "finished") || !player.finished) {
       player.finished = true;
       player.disconnected = true;
-      if (battle.isTeam) {
+      if (hasOwn(battle, "isTeam") && battle.isTeam) {
         logger.log(
           "Jamoa jang: user " + userId
           + " qaytmadi (30s) → finished, jang davom etadi"
@@ -59,7 +94,11 @@ function createForfeitCallback({
           message: "Raqib jangdan chiqib ketdi",
         });
         const allDone = Object.values(battle.players).every(function (item) {
-          return item.finished;
+          return item
+            && typeof item === "object"
+            && !Array.isArray(item)
+            && hasOwn(item, "finished")
+            && item.finished;
         });
         if (allDone) finishBattle(roomId);
       }
@@ -98,8 +137,10 @@ function createDisconnectHandler({
     }
 
     if (disconnectedUserId) {
-      const roomId = userToRoom[disconnectedUserId];
-      const battle = roomId ? battles[roomId] : null;
+      const roomId = hasOwn(userToRoom, disconnectedUserId)
+        ? userToRoom[disconnectedUserId]
+        : null;
+      const battle = roomId ? getBattle(battles, roomId) : null;
       if (battle) {
         setTimer(createOfflineSignalCallback({
           socket,
@@ -126,6 +167,7 @@ function createDisconnectHandler({
 
     if (
       socket.userId
+      && hasOwn(onlineUsers, socket.userId)
       && onlineUsers[socket.userId] === socket.id
     ) {
       delete onlineUsers[socket.userId];

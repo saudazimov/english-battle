@@ -8,10 +8,13 @@ function createHarness({
   queryResponses = [],
   queryError,
   challengerUserId = 7,
+  nowValue = 1000,
 } = {}) {
   const calls = [];
   const listeners = [];
   const pendingBattles = {};
+  const pendingChallenges = new Map();
+  const timers = [];
   const responses = queryResponses.slice();
   const challengerSocket = {
     id: "challenger-socket",
@@ -22,6 +25,10 @@ function createHarness({
     emit(...args) {
       calls.push(["challenger-emit", ...args]);
     },
+  };
+  const targetSocket = {
+    id: "target-socket",
+    userId: 8,
   };
   const socket = {
     id: "receiver-socket",
@@ -40,6 +47,7 @@ function createHarness({
     socket,
     onlineUsers,
     pendingBattles,
+    pendingChallenges,
     pool: {
       async query(sql, params) {
         calls.push(["query", sql, params]);
@@ -49,7 +57,10 @@ function createHarness({
     },
     io: {
       sockets: {
-        sockets: new Map([["challenger-socket", challengerSocket]]),
+        sockets: new Map([
+          ["challenger-socket", challengerSocket],
+          ["target-socket", targetSocket],
+        ]),
       },
       to(socketId) {
         calls.push(["to", socketId]);
@@ -74,18 +85,55 @@ function createHarness({
       log(...args) {
         calls.push(["log", ...args]);
       },
+      error(...args) {
+        calls.push(["error", ...args]);
+      },
+    },
+    setTimer(callback, delay) {
+      calls.push(["timer", delay]);
+      timers.push(callback);
+      return {
+        unref() {
+          calls.push(["unref"]);
+        },
+      };
+    },
+    now() {
+      calls.push(["now"]);
+      return nowValue;
     },
   });
   return {
     socket,
     challengerSocket,
     pendingBattles,
+    pendingChallenges,
+    timers,
     calls,
     listeners,
     handlers: Object.fromEntries(
       listeners.map(({ event, handler }) => [event, handler])
     ),
   };
+}
+
+function seedChallenge(harness, overrides = {}) {
+  const request = {
+    fromSocketId: "challenger-socket",
+    fromUserId: 7,
+    toSocketId: "receiver-socket",
+    toUserId: "5",
+    fromName: "Ali",
+    level: "A2",
+    lengthKey: "standard",
+    expiresAt: 60000,
+    ...overrides,
+  };
+  harness.pendingChallenges.set(
+    "receiver-socket:challenger-socket",
+    request
+  );
+  return request;
 }
 
 test("friend challenge socket preserves listener registration order", () => {
@@ -101,6 +149,8 @@ test("friend challenge socket preserves listener registration order", () => {
 test("challenge request preserves token identity and offline response", async () => {
   const harness = createHarness();
 
+  await harness.handlers.challengeFriend();
+  await harness.handlers.challengeFriend({ toUserId: 5 });
   await harness.handlers.challengeFriend({
     fromUserId: 99,
     fromName: "Fake",
@@ -109,6 +159,16 @@ test("challenge request preserves token identity and offline response", async ()
   });
 
   assert.deepEqual(harness.calls, [
+    [
+      "socket-emit",
+      "challengeResult",
+      { success: false, message: "Chaqiruv haqiqiy emas" },
+    ],
+    [
+      "socket-emit",
+      "challengeResult",
+      { success: false, message: "Chaqiruv haqiqiy emas" },
+    ],
     ["log", "Chaqiruv:", 5, "->", 8, "| Onlayn:", []],
     [
       "socket-emit",
@@ -119,8 +179,10 @@ test("challenge request preserves token identity and offline response", async ()
 });
 
 test("challenge request preserves SQL, DB identity, payload, and success", async () => {
+  const onlineUsers = Object.create(null);
+  onlineUsers[8] = "target-socket";
   const harness = createHarness({
-    onlineUsers: { 8: "target-socket" },
+    onlineUsers,
     queryResponses: [{
       rows: [{
         profile_picture: "ali.png",
@@ -145,6 +207,10 @@ test("challenge request preserves SQL, DB identity, payload, and success", async
       "SELECT profile_picture, first_name, last_name FROM users WHERE id = $1",
       [5],
     ],
+    ["strip", "Ali Valiyev", 60],
+    ["now"],
+    ["timer", 61000],
+    ["unref"],
     ["to", "target-socket"],
     [
       "target-emit",
@@ -167,9 +233,45 @@ test("challenge request preserves SQL, DB identity, payload, and success", async
       },
     ],
   ]);
+  assert.deepEqual(
+    harness.pendingChallenges.get("target-socket:receiver-socket"),
+    {
+      fromSocketId: "receiver-socket",
+      fromUserId: 5,
+      toSocketId: "target-socket",
+      toUserId: "8",
+      fromName: "Ali Valiyev",
+      level: "B1",
+      lengthKey: "standard",
+      expiresAt: 61000,
+    }
+  );
+  harness.timers[0]();
+  assert.equal(harness.pendingChallenges.size, 0);
 });
 
-test("challenge request preserves swallowed DB error and sanitized fallback", async () => {
+test("challenge request rejects inherited online-user targets", async () => {
+  const onlineUsers = Object.create({ 8: "target-socket" });
+  const harness = createHarness({ onlineUsers });
+
+  await harness.handlers.challengeFriend({
+    fromName: "Ali",
+    toUserId: 8,
+    level: "A1",
+  });
+
+  assert.deepEqual(harness.calls, [
+    ["log", "Chaqiruv:", 5, "->", 8, "| Onlayn:", []],
+    [
+      "socket-emit",
+      "challengeResult",
+      { success: false, message: "Do'stingiz hozir onlayn emas" },
+    ],
+  ]);
+  assert.equal(harness.pendingChallenges.size, 0);
+});
+
+test("challenge request logs DB error and preserves sanitized fallback", async () => {
   const harness = createHarness({
     onlineUsers: { 8: "target-socket" },
     queryError: new Error("database unavailable"),
@@ -183,8 +285,12 @@ test("challenge request preserves swallowed DB error and sanitized fallback", as
   });
 
   assert.deepEqual(harness.calls.slice(2), [
-    ["to", "target-socket"],
+    ["error", "Chaqiruv yuboruvchisini olish xatosi:", "database unavailable"],
     ["strip", " Ali ", 60],
+    ["now"],
+    ["timer", 61000],
+    ["unref"],
+    ["to", "target-socket"],
     [
       "target-emit",
       "challengeReceived",
@@ -210,6 +316,10 @@ test("challenge request preserves swallowed DB error and sanitized fallback", as
 
 test("cancel challenge preserves token identity and target emit", () => {
   const harness = createHarness({ onlineUsers: { 8: "target-socket" } });
+  harness.pendingChallenges.set("target-socket:receiver-socket", {
+    fromUserId: 5,
+    toUserId: "8",
+  });
 
   harness.handlers.cancelChallenge({ fromUserId: 99, toUserId: 8 });
 
@@ -217,10 +327,12 @@ test("cancel challenge preserves token identity and target emit", () => {
     ["to", "target-socket"],
     ["target-emit", "challengeCancelled", { fromUserId: 5 }],
   ]);
+  assert.equal(harness.pendingChallenges.size, 0);
 });
 
 test("challenge response preserves invalid challenger validation", async () => {
   const harness = createHarness({ challengerUserId: 99 });
+  seedChallenge(harness);
 
   await harness.handlers.challengeResponse({
     accepted: true,
@@ -231,7 +343,7 @@ test("challenge response preserves invalid challenger validation", async () => {
   });
 
   assert.deepEqual(harness.calls, [
-    ["strip", "Ali", 60],
+    ["now"],
     ["strip", "Vali", 60],
     [
       "socket-emit",
@@ -243,6 +355,7 @@ test("challenge response preserves invalid challenger validation", async () => {
 
 test("challenge response preserves decline behavior", async () => {
   const harness = createHarness();
+  seedChallenge(harness);
 
   await harness.handlers.challengeResponse({
     accepted: false,
@@ -254,9 +367,47 @@ test("challenge response preserves decline behavior", async () => {
   });
 
   assert.deepEqual(harness.calls, [
-    ["strip", "Ali", 60],
+    ["now"],
     ["strip", " Vali ", 60],
     ["challenger-emit", "challengeDeclined", { byName: "Vali" }],
+  ]);
+  assert.equal(harness.pendingChallenges.size, 0);
+});
+
+test("challenge response rejects malformed, forged, and expired requests", async () => {
+  const harness = createHarness({ nowValue: 5000 });
+
+  await harness.handlers.challengeResponse();
+  await harness.handlers.challengeResponse({
+    accepted: true,
+    fromSocketId: "challenger-socket",
+    myName: "Vali",
+  });
+  seedChallenge(harness, { expiresAt: 4000 });
+  await harness.handlers.challengeResponse({
+    accepted: true,
+    fromSocketId: "challenger-socket",
+    myName: "Vali",
+  });
+
+  assert.equal(harness.pendingChallenges.size, 0);
+  assert.deepEqual(harness.calls, [
+    [
+      "socket-emit",
+      "challengeResult",
+      { success: false, message: "Chaqiruv haqiqiy emas" },
+    ],
+    [
+      "socket-emit",
+      "challengeResult",
+      { success: false, message: "Chaqiruv haqiqiy emas" },
+    ],
+    ["now"],
+    [
+      "socket-emit",
+      "challengeResult",
+      { success: false, message: "Chaqiruv haqiqiy emas" },
+    ],
   ]);
 });
 
@@ -269,6 +420,7 @@ test("accepted challenge preserves query, cards, emits, and pending battle", asy
       ],
     }],
   });
+  seedChallenge(harness, { level: "B1", lengthKey: "standard" });
 
   await harness.handlers.challengeResponse({
     accepted: true,
@@ -283,7 +435,7 @@ test("accepted challenge preserves query, cards, emits, and pending battle", asy
 
   const roomId = "friend_battle_challenger-socket_receiver-socket";
   assert.deepEqual(harness.calls, [
-    ["strip", " Ali ", 60],
+    ["now"],
     ["strip", " Vali ", 60],
     ["challenger-join", roomId],
     ["socket-join", roomId],
@@ -346,4 +498,28 @@ test("accepted challenge preserves query, cards, emits, and pending battle", asy
       socketId: null,
     },
   });
+});
+
+test("accepted challenge logs picture errors and preserves null fallback", async () => {
+  const harness = createHarness({
+    queryError: new Error("pictures unavailable"),
+  });
+  seedChallenge(harness, { level: "B1", lengthKey: "standard" });
+
+  await harness.handlers.challengeResponse({
+    accepted: true,
+    fromSocketId: "challenger-socket",
+    myName: "Vali",
+  });
+
+  assert.equal(harness.calls.some((call) => (
+    call[0] === "error"
+    && call[1] === "Chaqiruv profil rasmlarini olish xatosi:"
+    && call[2] === "pictures unavailable"
+  )), true);
+  const matchEvents = harness.calls.filter((call) => (
+    call[0] === "challenger-emit" || call[0] === "socket-emit"
+  ));
+  assert.equal(matchEvents[0][2].opponent.profile_picture, null);
+  assert.equal(matchEvents[1][2].opponent.profile_picture, null);
 });

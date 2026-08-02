@@ -197,7 +197,7 @@ test("stale battle preserves cleanup and finish-session order", async () => {
   ]);
 });
 
-test("missing rebound player preserves rebind, join, then no-active", async () => {
+test("missing rebound player never joins the battle room", async () => {
   const battle = { questions: [question()], players: { old: player() } };
   const harness = createHarness({
     battles: { room: battle },
@@ -209,7 +209,27 @@ test("missing rebound player preserves rebind, join, then no-active", async () =
 
   assert.deepEqual(harness.calls, [
     ["rebind", "room", 5, "socket-new"],
-    ["join", "room"],
+    ["socket-emit", "battle:noActive", {}],
+  ]);
+});
+
+test("reconnect rejects a rebound socket mapped to another user", async () => {
+  const battle = {
+    questions: [question()],
+    players: {
+      "socket-new": player({ userId: 7 }),
+    },
+  };
+  const harness = createHarness({
+    battles: { room: battle },
+    userToRoom: { 5: "room" },
+    rebind: false,
+  });
+
+  await harness.handler({ userId: 5, expectedRoom: "room" });
+
+  assert.deepEqual(harness.calls, [
+    ["rebind", "room", 5, "socket-new"],
     ["socket-emit", "battle:noActive", {}],
   ]);
 });

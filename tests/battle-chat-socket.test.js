@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const registerBattleChatSocket = require("../src/sockets/battleChatSocket");
 
-function createHarness({ sender, queryResult, queryError } = {}) {
+function createHarness({ sender, battles: providedBattles, queryResult, queryError } = {}) {
   const listeners = [];
   const calls = [];
   const socket = {
@@ -14,9 +14,9 @@ function createHarness({ sender, queryResult, queryError } = {}) {
       calls.push(["socket-emit", ...args]);
     },
   };
-  const battles = sender === undefined
+  const battles = providedBattles || (sender === undefined
     ? {}
-    : { room1: { players: { "socket-1": sender } } };
+    : { room1: { players: { "socket-1": sender } } });
   registerBattleChatSocket({
     socket,
     battles,
@@ -72,6 +72,44 @@ test("battle chat socket preserves membership and message validation short circu
   member.listeners[0].handler({ roomId: "room1", message: "" });
   member.listeners[0].handler({ roomId: "room1", message: 42 });
   assert.deepEqual(member.calls, []);
+});
+
+test("battle chat rejects malformed payloads and prototype room lookups", () => {
+  const inheritedBattles = Object.create({
+    inherited: { players: { "socket-1": { userId: 7, name: "Ali" } } },
+  });
+  inheritedBattles.malformed = {};
+  const harness = createHarness({ battles: inheritedBattles });
+
+  for (const payload of [
+    null,
+    undefined,
+    "room1",
+    17,
+    {},
+    { roomId: "", message: "hello" },
+    { roomId: "__proto__", message: "hello" },
+    { roomId: "constructor", message: "hello" },
+    { roomId: "inherited", message: "hello" },
+    { roomId: "malformed", message: "hello" },
+    { roomId: "x".repeat(257), message: "hello" },
+  ]) {
+    assert.doesNotThrow(() => harness.listeners[0].handler(payload));
+  }
+
+  assert.deepEqual(harness.calls, []);
+});
+
+test("battle chat supports own rooms and players on null-prototype maps", () => {
+  const players = Object.create(null);
+  players["socket-1"] = { userId: null, name: "Ali" };
+  const battles = Object.create(null);
+  battles.room1 = { players };
+  const harness = createHarness({ battles });
+
+  harness.listeners[0].handler({ roomId: "room1", message: "hello" });
+
+  assert.equal(harness.calls.some(([type]) => type === "room-emit"), true);
 });
 
 test("battle chat socket preserves sanitization, room emit, and SQL write", () => {
