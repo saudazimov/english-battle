@@ -151,6 +151,39 @@ Databasega yozuvchi trafikni tiklashdan oldin disk, connection limit va so'nggi 
 
 ### Oylik restore drill
 
+Har oy kamida bitta yakunlangan off-site run encrypted remote'dan qayta yuklanib,
+database va uploadlar bitta integratsiyalangan drill orqali tekshiriladi. Aniq run ID'ni
+`.offsite-backup-last-success.json`dan oling; `latest` kabi noaniq qiymat qabul qilinmaydi.
+
+```bash
+RUN_ID=2026-08-04T03-00-00-000Z
+RESTORE_DB=english_battle_restore_test
+RESTORE_UPLOADS=/var/tmp/ilm-liga-uploads-restore-test
+sudo -u postgres createdb -O eb_user "$RESTORE_DB"
+npm run backup:offsite:restore-drill -- \
+  --run-id "$RUN_ID" \
+  --target-db "$RESTORE_DB" \
+  --confirm-target-db "$RESTORE_DB" \
+  --upload-target "$RESTORE_UPLOADS" \
+  --confirm-upload-target "$RESTORE_UPLOADS"
+```
+
+Runner remote turi `rclone crypt` ekanini va run `SUCCESS.json` bilan yakunlanganini
+tekshiradi. Yuklangan bundle `rclone check`, PostgreSQL `PGDMP`/`pg_restore --list` va
+upload SHA-256 manifestidan o'tmaguncha hech qanday restore boshlanmaydi. Database faqat
+`_restore_test` targetga `--single-transaction` bilan, uploadlar esa jonli kataloglardan
+tashqaridagi `restore-test` papkaga tiklanadi. Vaqtinchalik remote download muvaffaqiyat
+yoki xatodan keyin o'chiriladi; restore database va upload target operator tekshiruvi
+uchun saqlanadi.
+
+Natijadagi `durationMs` qiymatini drill jurnaliga yozing va RTO 4 soatdan oshmaganini
+tasdiqlang. `schema_migrations`, foydalanuvchi/jang/to'lov jadvallarining kutilgan countlari,
+tasodifiy upload fayllari va Payme reconciliation alohida tekshiriladi. Tekshiruvdan so'ng
+aniq restore database va upload targetni operator qo'lda o'chiradi; production targetga
+restore yoki `pg_restore --clean` qat'iyan bajarilmaydi.
+
+Individual component drilllari diagnostika uchun saqlanadi:
+
 ```bash
 sudo -u postgres createdb -O eb_user english_battle_restore_test
 npm run db:backup:verify -- --file BACKUP_FILE.dump

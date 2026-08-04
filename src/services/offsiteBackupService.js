@@ -112,8 +112,8 @@ async function writeJson(filePath, value, fsImpl = fs, options = {}) {
   });
 }
 
-async function acquireLock(localRoot, now, fsImpl = fs) {
-  const lockPath = path.join(localRoot, LOCK_FILE);
+async function acquireLock(localRoot, now, fsImpl = fs, lockFile = LOCK_FILE) {
+  const lockPath = path.join(localRoot, lockFile);
   let handle;
   try {
     handle = await fsImpl.open(lockPath, "wx", 0o600);
@@ -324,8 +324,14 @@ module.exports = {
   LAST_SUCCESS_FILE,
   LOCK_FILE,
   SUCCESS_FILE,
+  acquireLock,
+  assertCryptRemote,
+  completedRemoteRun,
   createRunId,
+  defaultCommandRunner,
   parseRunTimestamp,
+  releaseLock,
+  remoteChild,
   runOffsiteBackup,
   validateOffsiteBackupEnvironment,
 };

@@ -261,6 +261,17 @@ npm run uploads:backup -- --output /var/backups/ilm-liga/manual-uploads
 npm run uploads:backup:verify -- --snapshot /var/backups/ilm-liga/manual-uploads
 ```
 
+Encrypted remote'dagi yakunlangan bundle'ni database va uploadlar bilan birga tiklash
+uchun `deploy/OPERATIONS.md`dagi oylik integratsiyalangan drillni bajaring:
+
+```bash
+npm run backup:offsite:restore-drill -- --run-id RUN_ID \
+  --target-db english_battle_restore_test \
+  --confirm-target-db english_battle_restore_test \
+  --upload-target /var/tmp/ilm-liga-uploads-restore-test \
+  --confirm-upload-target /var/tmp/ilm-liga-uploads-restore-test
+```
+
 ---
 
 ## Yangilanish (keyingi deploylar)
