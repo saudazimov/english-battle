@@ -82,6 +82,7 @@ To'ldiring (production validator uchun MAJBURIY):
 - `NODE_ENV=production`
 - `TRUST_PROXY_HOPS=1`  (Nginx ortida)
 - `CLIENT_ORIGIN=https://englishbattle.uz,https://www.englishbattle.uz` (faqat haqiqiy HTTPS originlar)
+- `METRICS_TOKEN=` (private Prometheus collector uchun alohida, kamida 32 belgili secret)
 - `DB_HOST=localhost`, `DB_PORT=5432`, `DB_USER=eb_user`, `DB_PASSWORD=...`, `DB_NAME=english_battle`
 - `DB_SSL=false`  (local PostgreSQL)
 - `JWT_SECRET=` (kamida 32 belgi)
@@ -167,6 +168,11 @@ curl http://127.0.0.1:3000/ready    # {"status":"ready"} (DB ulangan bo'lsa)
 ```
 
 Ikkala endpoint ham `200` qaytarmaguncha Nginx orqali trafik bermang. `instances=1` va `fork` rejimida `pm2 restart` qisqa uzilish keltirishi mumkin; bu profil zero-downtime cluster emas.
+
+Private Socket.IO metrics collector va alert qoidalarini
+[`deploy/monitoring/README.md`](./monitoring/README.md) bo'yicha o'rnating. Prometheus
+hamda Alertmanager faqat loopback interfeysida tinglashi, token esa permissionli secret
+fayldan o'qilishi shart.
 
 ---
 

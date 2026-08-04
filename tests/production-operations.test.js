@@ -69,6 +69,38 @@ test("production operations defines Socket.IO metric semantics and privacy", () 
   assert.match(operations, /socket\/user ID, token, payload yoki error message saqlamaydi/);
 });
 
+test("production monitoring securely scrapes private Socket.IO metrics and defines alerts", () => {
+  const prometheus = read("deploy/monitoring/prometheus.yml");
+  const alerts = read("deploy/monitoring/ilm-liga-alerts.yml");
+  const monitoringGuide = read("deploy/monitoring/README.md");
+  const deployGuide = read("deploy/deploy.md");
+
+  assert.match(prometheus, /metrics_path: \/internal\/metrics/);
+  assert.match(prometheus, /authorization:[\s\S]*type: Bearer/);
+  assert.match(prometheus, /credentials_file: \/etc\/prometheus\/secrets\/ilm-liga-metrics-token/);
+  assert.match(prometheus, /127\.0\.0\.1:3000/);
+  assert.match(prometheus, /127\.0\.0\.1:9093/);
+  assert.doesNotMatch(prometheus, /credentials:\s*\S+/);
+
+  for (const alert of [
+    "IlmLigaMetricsTargetDown",
+    "IlmLigaSocketHandshakeSuccessLow",
+    "IlmLigaSocketAuthenticationRejectionsHigh",
+    "IlmLigaSocketErrorsHigh",
+  ]) {
+    assert.match(alerts, new RegExp(`alert: ${alert}`));
+  }
+  assert.match(alerts, /socket_auth_accepted_total[\s\S]*socket_auth_rejected_total[\s\S]*socket_handshake_errors_total/);
+  assert.match(alerts, /incident_severity: SEV-1/);
+  assert.match(alerts, /incident_severity: SEV-2/);
+
+  assert.match(monitoringGuide, /promtool check config/);
+  assert.match(monitoringGuide, /promtool check rules/);
+  assert.match(monitoringGuide, /127\.0\.0\.1:9090.*127\.0\.0\.1:9093/s);
+  assert.match(monitoringGuide, /alohida tashqi uptime provider majburiy/);
+  assert.match(deployGuide, /deploy\/monitoring\/README\.md/);
+});
+
 test("production operations includes executable gates and deploy guide linkage", () => {
   const operations = read("deploy/OPERATIONS.md");
   const deployGuide = read("deploy/deploy.md");
