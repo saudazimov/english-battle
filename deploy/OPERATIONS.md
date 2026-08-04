@@ -65,6 +65,14 @@ Socket.IO operational yozuvlari structured logda `message=socket_metric` va `com
 
 Counterlar process-local bo'lib, PM2 restartda noldan boshlanadi; tashqi monitoring delta hisoblashda resetni yangi baseline sifatida qabul qiladi. Handshake success SLI `socket_auth_accepted_total / (socket_auth_accepted_total + socket_auth_rejected_total + socket_handshake_errors_total)` asosida hisoblanadi. `socket_connections_active` gauge hisoblanadi va counter kabi jamlanmaydi. Ushbu metric contextlari socket/user ID, token, payload yoki error message saqlamaydi.
 
+Repositorydagi `deploy/monitoring/prometheus.yml` private `/internal/metrics` endpointni
+faqat `127.0.0.1:3000` orqali scrape qiladi va Bearer tokenni permissionli
+`/etc/prometheus/secrets/ilm-liga-metrics-token` faylidan oladi. Alert qoidalari
+`deploy/monitoring/ilm-liga-alerts.yml`da; o'rnatish va token rotation tartibi
+`deploy/monitoring/README.md`da. Prometheus va Alertmanager web portlari faqat loopback
+interfeysida qoladi. Notification receiver va tashqi uptime provider repositorydan
+tashqarida sozlanadi.
+
 Productiondagi `uncaughtException` yoki `unhandledRejection` processni ishonchsiz holatda davom ettirmaydi: yangi ulanishlar to'xtatiladi, database pool yopiladi, process `exit 1` bilan tugaydi va PM2 uni qayta ishga tushiradi. Takroriy fatal event alohida ikkinchi shutdown boshlamaydi.
 
 ## 5. Alert va incident darajalari
@@ -179,6 +187,7 @@ Quyidagilarning barchasi bajarilmaguncha bu operations bandi production-ready hi
 - off-site database va upload backup muvaffaqiyatli;
 - restore drill RTO ichida muvaffaqiyatli bajarilgan;
 - PM2 crash, DB down va disk alertlari test notification yuborgan;
+- private Prometheus target `up=1`, alert rulelar valid va Alertmanager receiver test notification yuborgan;
 - incident aloqa kanali va rollback vakolati tasdiqlangan.
 
 Joriy codebase monitoring provider, off-site backup yoki on-call kontakt yaratilganini tasdiqlay olmaydi. Ular production infratuzilmasida alohida tekshirilishi shart.

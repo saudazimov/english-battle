@@ -1,0 +1,58 @@
+groups:
+  - name: ilm-liga-socket-availability
+    interval: 30s
+    rules:
+      - alert: IlmLigaMetricsTargetDown
+        expr: up{job="ilm-liga-app"} == 0
+        for: 3m
+        labels:
+          severity: critical
+          incident_severity: SEV-1
+        annotations:
+          summary: IlmLiga metrics target is unavailable
+          description: Prometheus has not scraped the private IlmLiga metrics endpoint for 3 minutes.
+
+      - alert: IlmLigaSocketHandshakeSuccessLow
+        expr: |
+          (
+            sum(rate(socket_auth_accepted_total{job="ilm-liga-app"}[15m]))
+            /
+            clamp_min(
+              sum(rate(socket_auth_accepted_total{job="ilm-liga-app"}[15m]))
+              + sum(rate(socket_auth_rejected_total{job="ilm-liga-app"}[15m]))
+              + sum(rate(socket_handshake_errors_total{job="ilm-liga-app"}[15m])),
+              0.001
+            )
+          ) < 0.95
+          and
+          (
+            sum(increase(socket_auth_accepted_total{job="ilm-liga-app"}[15m]))
+            + sum(increase(socket_auth_rejected_total{job="ilm-liga-app"}[15m]))
+            + sum(increase(socket_handshake_errors_total{job="ilm-liga-app"}[15m]))
+          ) >= 20
+        labels:
+          severity: warning
+          incident_severity: SEV-2
+        annotations:
+          summary: IlmLiga Socket.IO handshake success is below 95 percent
+          description: At least 20 handshake attempts were observed and the 15-minute success ratio is below the closed-beta SLO.
+
+      - alert: IlmLigaSocketAuthenticationRejectionsHigh
+        expr: sum(increase(socket_auth_rejected_total{job="ilm-liga-app"}[5m])) >= 20
+        for: 2m
+        labels:
+          severity: warning
+          incident_severity: SEV-2
+        annotations:
+          summary: IlmLiga Socket.IO authentication rejections are elevated
+          description: At least 20 Socket.IO authentication attempts were rejected in 5 minutes for 2 consecutive minutes.
+
+      - alert: IlmLigaSocketErrorsHigh
+        expr: sum(increase(socket_errors_total{job="ilm-liga-app"}[5m])) >= 10
+        for: 5m
+        labels:
+          severity: warning
+          incident_severity: SEV-2
+        annotations:
+          summary: IlmLiga authenticated Socket.IO errors are elevated
+          description: At least 10 authenticated Socket.IO errors occurred in 5 minutes and remained elevated for 5 minutes.
