@@ -207,30 +207,59 @@ MUHIM: SSL yoqilgach, Socket.IO avtomatik `wss://` (secure WebSocket) ishlatadi 
 
 ---
 
-## 10. Database backup (kunlik)
+## 10. Shifrlangan off-site backup (kunlik)
+
+`rclone` o'rnating va provider remote ustida alohida `crypt` remote yarating. Ilova
+faqat `rclone listremotes --long` natijasida turi `crypt` bo'lgan remote'ni qabul qiladi.
+Provider va crypt credentiallari faqat VPSdagi cheklangan `rclone.conf`da saqlanadi;
+repository yoki `.env`ga yozilmaydi.
+
+`.env`da quyidagilarni to'ldiring:
+
+```dotenv
+OFFSITE_BACKUP_REMOTE=encrypted-backup:ilm-liga/production
+OFFSITE_BACKUP_LOCAL_DIR=/var/backups/ilm-liga/offsite
+OFFSITE_BACKUP_RETENTION_DAYS=14
+```
+
+Remote path faqat IlmLiga production backupiga ajratilgan bo'lishi shart. Provider
+bucket rootini bermang: retention faqat shu scoped path ichida ishlaydi.
 
 ```bash
-mkdir -p ~/backups
-npm run db:backup -- --output "$HOME/backups/eb_$(date +%Y-%m-%d_%H-%M-%S).dump"
-npm run db:backup:verify -- --file "$HOME/backups/TEKSHIRILADIGAN_BACKUP.dump"
+sudo install -d -o "$USER" -g "$USER" -m 0700 /var/backups/ilm-liga/offsite
+rclone listremotes --long
+npm run backup:offsite
+cat /var/backups/ilm-liga/offsite/.offsite-backup-last-success.json
 crontab -e
 ```
 
-Qo'shing (har kuni 03:00):
+Qo'shing (har kuni 03:00). OS `flock` va runnerning ichki lock fayli parallel runni
+ikki qatlamda rad etadi:
+
 ```
-0 3 * * * cd /var/www/englishbattle && npm run db:backup -- --output "$HOME/backups/eb_$(date +\%Y-\%m-\%d_\%H-\%M-\%S).dump" >> "$HOME/backups/backup.log" 2>&1
+0 3 * * * cd /var/www/englishbattle && /usr/bin/flock -n /var/lock/ilm-liga-offsite-backup.lock /usr/bin/npm run backup:offsite >> /var/log/ilm-liga-offsite-backup.log 2>&1
 ```
 
-Runner mavjud fayl ustiga yozmaydi, vaqtinchalik faylni muvaffaqiyatsizlikda tozalaydi va faqat `pg_restore --list` tekshiruvidan o'tgan PostgreSQL custom archive'ni yakuniy `.dump` faylga ko'chiradi. `DB_PASSWORD` argument yoki logga chiqarilmaydi. Backupni shifrlangan off-site storage'ga ko'chirish va 14 kunlik retention alohida operations job orqali bajarilishi shart; avtomatik o'chirishni faqat off-site nusxa tasdiqlangandan keyin yoqing.
+Runner mavjud database va upload backup service'larini qayta ishlatadi: PostgreSQL
+custom archive `pg_restore --list` bilan, ikkala upload root esa SHA-256 manifest bilan
+tekshiriladi. Bundle `rclone copy`dan keyin remote `rclone check`dan o'tadi, so'ng
+`SUCCESS.json` alohida yuborilib remote listingda tasdiqlanadi. Faqat shundan keyin 14 kunlik
+retention ishlaydi va `.offsite-backup-last-success.json` atomik yangilanadi.
 
-Upload fayllari uchun alohida snapshot yarating va darhol tekshiring:
+Retention faqat qat'iy timestamp nomli va `SUCCESS.json` markerli eski runlarni
+o'chiradi. Partial yoki noma'lum papkalarga tegmaydi. Job xato qilsa last-success
+yangilanmaydi va remote/local retention boshlanmaydi. Ichki lock crashdan keyin qolsa,
+avval boshqa backup process ishlamayotganini tekshiring; keyingina
+`.offsite-backup.lock`ni qo'lda olib tashlang.
+
+Individual backup va restore drill buyruqlari saqlanadi:
 
 ```bash
-npm run uploads:backup -- --output "$HOME/backups/uploads_$(date +%Y-%m-%d_%H-%M-%S)"
-npm run uploads:backup:verify -- --snapshot "$HOME/backups/TEKSHIRILADIGAN_UPLOAD_SNAPSHOT"
+npm run db:backup -- --output /var/backups/ilm-liga/manual.dump
+npm run db:backup:verify -- --file /var/backups/ilm-liga/manual.dump
+npm run uploads:backup -- --output /var/backups/ilm-liga/manual-uploads
+npm run uploads:backup:verify -- --snapshot /var/backups/ilm-liga/manual-uploads
 ```
-
-Snapshot ikkala upload root, fayl hajmlari va SHA-256 checksumlardan iborat manifest saqlaydi. Snapshot katalogini database dump bilan birga shifrlangan off-site storage'ga ko'chiring.
 
 ---
 

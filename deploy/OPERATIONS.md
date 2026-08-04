@@ -39,6 +39,13 @@ Hisoblash oynasi kalendar oyidir. Rejalashtirilgan deploy ham foydalanuvchiga ta
 - Restore drill har oy alohida database va alohida vaqtinchalik upload papkasida o'tkaziladi.
 - Restore'dan keyin Payme holatlari provider ma'lumotlari bilan reconciliation qilinadi; to'lov yozuvlari taxmin bilan tiklanmaydi.
 
+Kunlik job `npm run backup:offsite` orqali database dump va ikkala upload rootni bitta
+run bundle'ga yig'adi. Remote faqat `rclone crypt` turi bo'lishi mumkin. Remote upload
+`rclone check` va remote listingdagi `SUCCESS.json` bilan tasdiqlanmaguncha retention hamda
+`.offsite-backup-last-success.json` yangilanishi bajarilmaydi. Retention faqat qat'iy
+run ID va success markeriga ega, 14 kundan eski nusxalarni o'chiradi. OS `flock` va
+runner lock fayli parallel runlarni rad etadi.
+
 Restore bajarilgani sana, backup identifikatori, davomiylik, tekshirgan shaxs va natija bilan operations jurnalida qayd qilinadi.
 
 ## 4. Majburiy monitoring
@@ -190,4 +197,6 @@ Quyidagilarning barchasi bajarilmaguncha bu operations bandi production-ready hi
 - private Prometheus target `up=1`, alert rulelar valid va Alertmanager receiver test notification yuborgan;
 - incident aloqa kanali va rollback vakolati tasdiqlangan.
 
-Joriy codebase monitoring provider, off-site backup yoki on-call kontakt yaratilganini tasdiqlay olmaydi. Ular production infratuzilmasida alohida tekshirilishi shart.
+Joriy codebase monitoring provider, real off-site targetdagi birinchi muvaffaqiyatli
+run yoki on-call kontakt yaratilganini tasdiqlay olmaydi. Ular production
+infratuzilmasida alohida tekshirilishi shart.
