@@ -1,5 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const {
   createCorsOptions,
@@ -10,6 +12,9 @@ const {
   verifyProductionDatabase,
   startHttpServer,
 } = require("../src/services/httpBootstrapService");
+const {
+  createInternalMetricsRoutes,
+} = require("../src/routes/internalMetricsRoutes");
 
 function resolveOrigin(options, origin) {
   let result;
@@ -18,6 +23,18 @@ function resolveOrigin(options, origin) {
   });
   return result;
 }
+
+test("production Nginx blocks the private metrics path from public proxying", () => {
+  const nginxConfig = fs.readFileSync(
+    path.resolve(__dirname, "../deploy/nginx.conf"),
+    "utf8",
+  );
+
+  assert.match(
+    nginxConfig,
+    /location = \/internal\/metrics\s*\{\s*return 404;\s*\}/,
+  );
+});
 
 test("HTTP bootstrap preserves CORS and Helmet security configuration", () => {
   const developmentCors = createCorsOptions({
@@ -128,6 +145,7 @@ test("HTTP application preserves construction and middleware order", () => {
       rootRouterFactory: () => ({ type: "root" }),
       healthRouterFactory: (dependencies) => ({ type: "health", dependencies }),
       locationRouterFactory: () => ({ type: "locations" }),
+      internalMetricsRouterFactory: (dependencies) => ({ type: "metrics", dependencies }),
     },
   });
 
@@ -147,6 +165,7 @@ test("HTTP application preserves construction and middleware order", () => {
       "cors",
       "compression",
       "json",
+      "metrics",
       "/vendor/flag-icons",
       "/uploads/resources",
       "static",
@@ -156,12 +175,24 @@ test("HTTP application preserves construction and middleware order", () => {
     ]
   );
   assert.deepEqual(useCalls[4][0], { type: "json", options: { limit: "1mb" } });
-  assert.deepEqual(useCalls[5][1], {
+  assert.deepEqual(useCalls[5][0], {
+    type: "metrics",
+    dependencies: {
+      io,
+      environment: {
+        NODE_ENV: "development",
+        CLIENT_ORIGIN: "https://app.example.com",
+        TRUST_PROXY_HOPS: "2",
+        PORT: "4567",
+      },
+    },
+  });
+  assert.deepEqual(useCalls[6][1], {
     type: "static",
     directory: "project-root/node_modules/flag-icons",
   });
-  assert.deepEqual(useCalls[7][0], { type: "static", directory: "public" });
-  assert.deepEqual(useCalls[9][0], { type: "health", dependencies: { pool } });
+  assert.deepEqual(useCalls[8][0], { type: "static", directory: "public" });
+  assert.deepEqual(useCalls[10][0], { type: "health", dependencies: { pool } });
 
   const uploadResponse = {
     statusCode: null,
@@ -175,9 +206,77 @@ test("HTTP application preserves construction and middleware order", () => {
       return this;
     },
   };
-  useCalls[6][1]({}, uploadResponse);
+  useCalls[7][1]({}, uploadResponse);
   assert.equal(uploadResponse.statusCode, 404);
   assert.deepEqual(uploadResponse.body, { error: "Topilmadi" });
+});
+
+test("private metrics endpoint hides failures and exposes aggregate Prometheus metrics", () => {
+  let handler;
+  const router = createInternalMetricsRoutes({
+    environment: { METRICS_TOKEN: "metrics-token-unique-0123456789" },
+    expressModule: {
+      Router: () => ({
+        get(path, receivedHandler) {
+          assert.equal(path, "/internal/metrics");
+          handler = receivedHandler;
+        },
+      }),
+    },
+    observability: {
+      snapshot: () => ({
+        activeConnections: 3,
+        counters: { socket_auth_accepted_total: 7, socket_errors_total: 2 },
+      }),
+    },
+  });
+  assert.ok(router);
+
+  function run(authorization) {
+    const response = {
+      statusCode: 200,
+      headers: {},
+      body: null,
+      status(code) { this.statusCode = code; return this; },
+      json(body) { this.body = body; return this; },
+      set(name, value) { this.headers[name] = value; return this; },
+      send(body) { this.body = body; return this; },
+    };
+    handler({ headers: { authorization } }, response);
+    return response;
+  }
+
+  const rejected = run("Bearer wrong-token");
+  assert.equal(rejected.statusCode, 404);
+  assert.deepEqual(rejected.body, { error: "Topilmadi" });
+
+  const accepted = run("Bearer metrics-token-unique-0123456789");
+  assert.equal(accepted.statusCode, 200);
+  assert.equal(accepted.headers["Cache-Control"], "no-store");
+  assert.equal(accepted.headers["Content-Type"], "text/plain; version=0.0.4; charset=utf-8");
+  assert.match(accepted.body, /socket_auth_accepted_total 7/);
+  assert.match(accepted.body, /socket_connections_active 3/);
+  assert.match(accepted.body, /socket_auth_rejected_total 0/);
+  assert.match(accepted.body, /socket_errors_total 2/);
+});
+
+test("private metrics endpoint stays disabled without a configured token", () => {
+  let handler;
+  createInternalMetricsRoutes({
+    environment: {},
+    expressModule: { Router: () => ({ get: (_path, value) => { handler = value; } }) },
+    observability: { snapshot: () => { throw new Error("must not be read"); } },
+  });
+  const response = {
+    statusCode: null,
+    body: null,
+    status(code) { this.statusCode = code; return this; },
+    json(body) { this.body = body; return this; },
+  };
+
+  handler({ headers: { authorization: "Bearer anything" } }, response);
+  assert.equal(response.statusCode, 404);
+  assert.deepEqual(response.body, { error: "Topilmadi" });
 });
 
 test("HTTP error handler preserves Multer, file and server responses", () => {

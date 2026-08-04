@@ -28,6 +28,7 @@ function validProductionEnvironment(overrides = {}) {
     ESKIZ_PASSWORD: "eskiz-provider-password",
     PAYME_MERCHANT_ID: "merchant-id",
     PAYME_KEY: "payme-provider-key",
+    METRICS_TOKEN: "metrics-token-unique-0123456789-abcdef",
     AI_REPORTS_ENABLED: "false",
     ...overrides,
   };
@@ -55,6 +56,7 @@ test("missing and unsafe production values stop startup without exposing values"
     ADMIN_TOTP_SECRET: "not-base32-secret!",
     ESKIZ_EMAIL: "invalid-email",
     PAYME_KEY: "",
+    METRICS_TOKEN: "short",
   });
 
   assert.throws(
@@ -65,6 +67,7 @@ test("missing and unsafe production values stop startup without exposing values"
       assert.ok(error.issues.some((issue) => issue.startsWith("CLIENT_ORIGIN")));
       assert.ok(error.issues.some((issue) => issue.includes("alohida qiymat")));
       assert.ok(error.issues.some((issue) => issue.startsWith("ADMIN_TOTP_SECRET")));
+      assert.ok(error.issues.some((issue) => issue.startsWith("METRICS_TOKEN")));
       assert.doesNotMatch(error.message, /same-secret-value/);
       return true;
     }

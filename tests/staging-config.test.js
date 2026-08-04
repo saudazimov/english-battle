@@ -27,7 +27,7 @@ test("staging environment is isolated and contains no committed secrets", () => 
     "DB_USER", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME", "DB_SSL",
     "JWT_SECRET", "PARENT_CODE_PEPPER", "SCHOOL_INVITE_PEPPER",
     "ADMIN_PASSWORD", "ADMIN_TOTP_SECRET", "ESKIZ_EMAIL", "ESKIZ_PASSWORD",
-    "PAYME_MERCHANT_ID", "PAYME_KEY", "AI_REPORTS_ENABLED",
+    "PAYME_MERCHANT_ID", "PAYME_KEY", "METRICS_TOKEN", "AI_REPORTS_ENABLED",
   ];
 
   for (const key of requiredKeys) assert.ok(values.has(key), `Missing ${key}`);
@@ -41,7 +41,7 @@ test("staging environment is isolated and contains no committed secrets", () => 
   const secretKeys = [
     "DB_PASSWORD", "JWT_SECRET", "PARENT_CODE_PEPPER", "SCHOOL_INVITE_PEPPER",
     "ADMIN_PASSWORD", "ADMIN_TOTP_SECRET", "ESKIZ_EMAIL", "ESKIZ_PASSWORD",
-    "PAYME_MERCHANT_ID", "PAYME_KEY", "PAYME_TEST_KEY",
+    "PAYME_MERCHANT_ID", "PAYME_KEY", "PAYME_TEST_KEY", "METRICS_TOKEN",
     "ANTHROPIC_API_KEY", "OPENAI_API_KEY",
   ];
   for (const key of secretKeys) assert.equal(values.get(key), "", `${key} must be blank`);

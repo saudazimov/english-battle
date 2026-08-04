@@ -30,6 +30,7 @@ Majburiy tekshiruvlar:
 - `NODE_ENV=production` — production security guardlar stagingda ham ishlaydi.
 - `PORT=3100` — production portidan alohida.
 - `CLIENT_ORIGIN=https://staging.example.com` — faqat staging frontend domeni.
+- `METRICS_TOKEN` — faqat local/private collector ishlatadigan, kamida 32 belgili alohida secret.
 - `DB_NAME=english_battle_staging`, `DB_USER=eb_staging_user`.
 - `JWT_SECRET`, pepperlar va admin credentiallari productiondan butunlay boshqa.
 - Eskiz va Payme uchun faqat alohida test/staging account credentiallari.

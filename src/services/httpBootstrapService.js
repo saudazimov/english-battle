@@ -9,6 +9,7 @@ const { createSocketServer } = require("../sockets/socketBootstrap");
 const rootRoutes = require("../routes/rootRoutes");
 const { createHealthRoutes } = require("../routes/healthRoutes");
 const { createLocationRoutes } = require("../routes/locationRoutes");
+const { createInternalMetricsRoutes } = require("../routes/internalMetricsRoutes");
 const { createGracefulShutdownService } = require("./gracefulShutdownService");
 const { validateProductionEnvironment } = require("../config/productionEnvironment");
 const { databaseStartupTimeout } = require("../config/databasePoolConfig");
@@ -83,6 +84,7 @@ function createHttpApplication({
     rootRouterFactory = rootRoutes,
     healthRouterFactory = createHealthRoutes,
     locationRouterFactory = createLocationRoutes,
+    internalMetricsRouterFactory = createInternalMetricsRoutes,
   } = modules;
 
   const app = expressModule();
@@ -101,6 +103,7 @@ function createHttpApplication({
   app.use(corsMiddleware(corsOptions));
   app.use(compressionMiddleware());
   app.use(expressModule.json({ limit: "1mb" }));
+  app.use(internalMetricsRouterFactory({ io, environment }));
   app.use(
     "/vendor/flag-icons",
     expressModule.static(pathModule.join(projectRoot, "node_modules", "flag-icons"))
