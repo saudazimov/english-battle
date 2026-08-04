@@ -12,6 +12,7 @@
     "uploads:backup": "node scripts/upload-backup.js create",
     "uploads:backup:verify": "node scripts/upload-backup.js verify",
     "uploads:restore:drill": "node scripts/upload-backup.js restore-drill",
+    "backup:offsite": "node scripts/offsite-backup.js",
     "config:check:production": "node scripts/validate-production-env.js",
     "security:audit": "npm audit --omit=dev --audit-level=high",
     "security:secrets": "node scripts/scan-secrets.js",
