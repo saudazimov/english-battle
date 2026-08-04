@@ -40,6 +40,16 @@ test("production operations defines alerts, incidents and privacy safeguards", (
   assert.match(operations, /X-Request-ID.*incident correlation/);
 });
 
+test("production operations defines bounded local and external log retention", () => {
+  const operations = read("deploy/OPERATIONS.md");
+
+  assert.match(operations, /PM2 app va module loglari.*pm2-logrotate/);
+  assert.match(operations, /har kuni.*50M/);
+  assert.match(operations, /gzip.*14 ta aylantirilgan arxiv/);
+  assert.match(operations, /retain=14.*calendar-day kafolati emas/);
+  assert.match(operations, /tashqi markaziy log provider/);
+});
+
 test("production operations includes executable gates and deploy guide linkage", () => {
   const operations = read("deploy/OPERATIONS.md");
   const deployGuide = read("deploy/deploy.md");
