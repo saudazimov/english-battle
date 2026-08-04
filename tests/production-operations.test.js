@@ -23,6 +23,10 @@ test("production operations defines measurable reliability and recovery targets"
   assert.match(operations, /off-site backup/);
   assert.match(operations, /Restore drill har oy/);
   assert.match(operations, /npm run backup:offsite/);
+  assert.match(operations, /npm run backup:offsite:restore-drill/);
+  assert.match(operations, /--run-id/);
+  assert.match(operations, /durationMs.*RTO 4 soatdan oshmaganini/s);
+  assert.match(operations, /Vaqtinchalik remote download.*o'chiriladi/s);
   assert.match(operations, /rclone crypt/);
   assert.match(operations, /SUCCESS\.json/);
   assert.match(operations, /retention.*last-success.*bajarilmaydi/s);
