@@ -56,6 +56,15 @@ Production trafik berilishidan oldin quyidagilar alert tizimiga ulangan bo'lishi
 
 Monitoring faqat PM2 local loglariga bog'lanmasligi kerak: VPS ishlamay qolsa alert tashqi tizimdan kelishi zarur.
 
+Socket.IO operational yozuvlari structured logda `message=socket_metric` va `component=socket.io` bilan chiqadi. Monitoring collector quyidagi nomlarni counter yoki gauge sifatida ajratadi:
+
+- `socket_auth_accepted_total` va `socket_auth_rejected_total`: namespace authentication natijalari;
+- `socket_handshake_errors_total`: Engine.IO transport handshake xatolari;
+- `socket_connections_total`, `socket_disconnects_total` va `socket_connections_active`: ulanish lifecycle ko'rsatkichlari;
+- `socket_errors_total`: authenticated socket xatolari.
+
+Counterlar process-local bo'lib, PM2 restartda noldan boshlanadi; tashqi monitoring delta hisoblashda resetni yangi baseline sifatida qabul qiladi. Handshake success SLI `socket_auth_accepted_total / (socket_auth_accepted_total + socket_auth_rejected_total + socket_handshake_errors_total)` asosida hisoblanadi. `socket_connections_active` gauge hisoblanadi va counter kabi jamlanmaydi. Ushbu metric contextlari socket/user ID, token, payload yoki error message saqlamaydi.
+
 Productiondagi `uncaughtException` yoki `unhandledRejection` processni ishonchsiz holatda davom ettirmaydi: yangi ulanishlar to'xtatiladi, database pool yopiladi, process `exit 1` bilan tugaydi va PM2 uni qayta ishga tushiradi. Takroriy fatal event alohida ikkinchi shutdown boshlamaydi.
 
 ## 5. Alert va incident darajalari

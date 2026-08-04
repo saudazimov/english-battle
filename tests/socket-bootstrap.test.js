@@ -6,6 +6,10 @@ const {
   createSocketServer,
   registerSocketConnection,
 } = require("../src/sockets/socketBootstrap");
+const {
+  createSocketObservability,
+  getSocketObservability,
+} = require("../src/sockets/socketObservability");
 
 test("socket server preserves constructor options and authentication middleware", () => {
   const server = {};
@@ -39,6 +43,92 @@ test("socket server preserves constructor options and authentication middleware"
   assert.deepEqual(io.options, { cors: corsOptions });
   assert.equal(io.middleware.length, 1);
   assert.equal(typeof io.middleware[0], "function");
+});
+
+test("socket server records safe authentication and handshake metrics", async () => {
+  const metrics = [];
+  const engineHandlers = {};
+  class FakeServer {
+    constructor() {
+      this.middleware = [];
+      this.engine = {
+        on(event, handler) { engineHandlers[event] = handler; },
+      };
+    }
+    use(middleware) { this.middleware.push(middleware); }
+  }
+  const io = createSocketServer({
+    server: {},
+    corsOptions: {},
+    pool: {},
+    ServerClass: FakeServer,
+    verifyToken: () => null,
+    logger: { info: (...args) => metrics.push(args), error() {} },
+  });
+  let rejection;
+
+  await io.middleware[0]({ handshake: { auth: {}, query: {} } }, (error) => {
+    rejection = error;
+  });
+  engineHandlers.connection_error({
+    code: "TRANSPORT_ERROR",
+    message: "token=must-not-be-logged",
+  });
+
+  assert.equal(rejection.message, "AUTH_REQUIRED");
+  assert.deepEqual(getSocketObservability(io).snapshot(), {
+    activeConnections: 0,
+    counters: {
+      socket_auth_rejected_total: 1,
+      socket_handshake_errors_total: 1,
+    },
+  });
+  assert.doesNotMatch(JSON.stringify(metrics), /must-not-be-logged/);
+});
+
+test("socket observability records connection lifecycle without identifiers or payloads", () => {
+  const logLines = [];
+  const handlers = {};
+  const observability = createSocketObservability({
+    environment: { NODE_ENV: "production" },
+    logger: { info: (line) => logLines.push(line) },
+  });
+  const socket = {
+    id: "private-socket-id",
+    on(event, handler) { handlers[event] = handler; },
+  };
+
+  observability.authenticationAccepted();
+  observability.connectionOpened(socket);
+  handlers.error({ code: "SOCKET_ERROR", message: "password=must-not-be-logged" });
+  handlers.disconnect("transport close");
+  handlers.disconnect("transport close");
+
+  assert.deepEqual(observability.snapshot(), {
+    activeConnections: 0,
+    counters: {
+      socket_auth_accepted_total: 1,
+      socket_connections_total: 1,
+      socket_errors_total: 1,
+      socket_disconnects_total: 1,
+    },
+  });
+  const entries = logLines.map((line) => JSON.parse(line));
+  assert.ok(entries.every((entry) => entry.message === "socket_metric"));
+  const serialized = JSON.stringify(entries);
+  assert.doesNotMatch(serialized, /private-socket-id|must-not-be-logged/);
+  assert.match(serialized, /socket_connections_active/);
+  assert.match(serialized, /transport close/);
+});
+
+test("socket observability tolerates loggers without info or log methods", () => {
+  const observability = createSocketObservability({
+    environment: { NODE_ENV: "development" },
+    logger: { error() {} },
+  });
+
+  assert.doesNotThrow(() => observability.authenticationRejected("AUTH_REQUIRED"));
+  assert.equal(observability.snapshot().counters.socket_auth_rejected_total, 1);
 });
 
 test("socket authentication preserves SQL, identity mapping and success", async () => {
