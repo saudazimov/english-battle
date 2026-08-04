@@ -50,6 +50,25 @@ test("production operations defines bounded local and external log retention", (
   assert.match(operations, /tashqi markaziy log provider/);
 });
 
+test("production operations defines Socket.IO metric semantics and privacy", () => {
+  const operations = read("deploy/OPERATIONS.md");
+
+  for (const metric of [
+    "socket_auth_accepted_total",
+    "socket_auth_rejected_total",
+    "socket_handshake_errors_total",
+    "socket_connections_total",
+    "socket_disconnects_total",
+    "socket_connections_active",
+    "socket_errors_total",
+  ]) {
+    assert.match(operations, new RegExp(metric));
+  }
+  assert.match(operations, /Counterlar process-local.*PM2 restartda noldan boshlanadi/);
+  assert.match(operations, /Handshake success SLI.*accepted_total.*rejected_total.*handshake_errors_total/s);
+  assert.match(operations, /socket\/user ID, token, payload yoki error message saqlamaydi/);
+});
+
 test("production operations includes executable gates and deploy guide linkage", () => {
   const operations = read("deploy/OPERATIONS.md");
   const deployGuide = read("deploy/deploy.md");

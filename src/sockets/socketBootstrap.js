@@ -7,6 +7,11 @@ const { createFriendBattleSocket } = require("./friendBattleSocket");
 const { createSoloBattleSocket } = require("./soloBattleSocket");
 const registerTeamBattleSocket = require("./teamBattleSocket");
 const registerPartySocket = require("./partySocket");
+const {
+  bindSocketObservability,
+  createSocketObservability,
+  getSocketObservability,
+} = require("./socketObservability");
 
 const defaultRegistrars = {
   registerClassWatchSocket,
@@ -18,8 +23,12 @@ const defaultRegistrars = {
   registerPartySocket,
 };
 
-function createSocketAuthMiddleware({ pool, verifyToken, logger }) {
+function createSocketAuthMiddleware({ pool, verifyToken, logger, observability }) {
   return async function authenticateSocket(socket, next) {
+    const reject = (reason) => {
+      observability?.authenticationRejected?.(reason);
+      return next(new Error(reason));
+    };
     const token =
       (socket.handshake.auth && socket.handshake.auth.token) ||
       (socket.handshake.query && socket.handshake.query.token) ||
@@ -27,7 +36,7 @@ function createSocketAuthMiddleware({ pool, verifyToken, logger }) {
     const decoded = verifyToken(token);
 
     if (!decoded || decoded.id == null) {
-      return next(new Error("AUTH_REQUIRED"));
+      return reject("AUTH_REQUIRED");
     }
 
     try {
@@ -36,18 +45,19 @@ function createSocketAuthMiddleware({ pool, verifyToken, logger }) {
         [decoded.id]
       );
       const user = userResult.rows[0];
-      if (!user) return next(new Error("ACCOUNT_NOT_FOUND"));
-      if (user.is_banned) return next(new Error("ACCOUNT_BANNED"));
+      if (!user) return reject("ACCOUNT_NOT_FOUND");
+      if (user.is_banned) return reject("ACCOUNT_BANNED");
       if ((Number(decoded.ver) || 0) !== (Number(user.auth_version) || 0)) {
-        return next(new Error("SESSION_REVOKED"));
+        return reject("SESSION_REVOKED");
       }
 
       socket.authUserId = String(user.id);
       socket.userId = String(user.id);
+      observability?.authenticationAccepted?.();
       return next();
     } catch (err) {
       logger.error("Socket autentifikatsiya xatosi:", err.message);
-      return next(new Error("AUTH_SERVICE_ERROR"));
+      return reject("AUTH_SERVICE_ERROR");
     }
   };
 }
@@ -61,7 +71,10 @@ function createSocketServer({
   verifyToken = verifySocketToken,
 }) {
   const io = new ServerClass(server, { cors: corsOptions });
-  io.use(createSocketAuthMiddleware({ pool, verifyToken, logger }));
+  const observability = createSocketObservability({ logger });
+  bindSocketObservability(io, observability);
+  observability.observeServer(io);
+  io.use(createSocketAuthMiddleware({ pool, verifyToken, logger, observability }));
   return io;
 }
 
@@ -106,7 +119,9 @@ function registerSocketConnection({
   logger = console,
   registrars = defaultRegistrars,
 }) {
+  const observability = getSocketObservability(io);
   io.on("connection", (socket) => {
+    observability.connectionOpened(socket);
     logger.log("Socket connected:", socket.id);
 
     registrars.registerClassWatchSocket(socket, pool, logger);
