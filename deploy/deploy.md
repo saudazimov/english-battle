@@ -137,13 +137,28 @@ Migrationlar sonini hardcode qilmang: repositorydagi barcha `.sql` fayllar `done
 
 ```bash
 mkdir -p logs
+
+# PM2 app va module loglarini disk to'lib qolishidan himoyalang.
+pm2 install pm2-logrotate
+pm2 set pm2-logrotate:max_size 50M
+pm2 set pm2-logrotate:retain 14
+pm2 set pm2-logrotate:compress true
+pm2 set pm2-logrotate:dateFormat YYYY-MM-DD_HH-mm-ss
+pm2 set pm2-logrotate:workerInterval 30
+pm2 set pm2-logrotate:rotateInterval '0 0 * * *'
+pm2 set pm2-logrotate:rotateModule true
+pm2 set pm2-logrotate:TZ Etc/UTC
+
 pm2 start deploy/ecosystem.config.js
 pm2 startup              # chiqqan buyruqni copy-paste qilib bajaring (bootga ulaydi)
 pm2 save                 # joriy holatni saqlaydi
 
+pm2 conf                 # pm2-logrotate qiymatlarini tekshiring
 pm2 status               # ishlayaptimi
 pm2 logs english-battle  # loglar
 ```
+
+Bu local siyosat logni har kuni yoki fayl `50M` ga yetganda aylantiradi, eski loglarni gzip bilan siqadi va joriy fayldan tashqari 14 ta aylantirilgan arxivni saqlaydi. `retain=14` kun soni emas, arxivlar sonidir: bir kunda bir necha marta size rotation ishlasa, real vaqt oralig'i 14 kundan qisqa bo'lishi mumkin. Calendar-day bo'yicha qat'iy retention va qidiruv uchun loglarni tashqi markaziy log providerga yuboring.
 
 Tekshiring (localdan):
 ```bash

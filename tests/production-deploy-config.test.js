@@ -63,3 +63,16 @@ test("production deploy guide enforces preflight, health gates and rollback", ()
   assert.match(guide, /Migrationlar forward-only/);
   assert.match(guide, /uploads\/resources/);
 });
+
+test("production deploy guide configures bounded PM2 log rotation", () => {
+  const guide = read("deploy/deploy.md");
+
+  assert.match(guide, /pm2 install pm2-logrotate/);
+  assert.match(guide, /pm2 set pm2-logrotate:max_size 50M/);
+  assert.match(guide, /pm2 set pm2-logrotate:retain 14/);
+  assert.match(guide, /pm2 set pm2-logrotate:compress true/);
+  assert.match(guide, /pm2 set pm2-logrotate:rotateInterval '0 0 \* \* \*'/);
+  assert.match(guide, /pm2 set pm2-logrotate:rotateModule true/);
+  assert.match(guide, /pm2 set pm2-logrotate:TZ Etc\/UTC/);
+  assert.match(guide, /pm2 conf/);
+});

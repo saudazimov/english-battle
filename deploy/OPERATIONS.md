@@ -157,7 +157,7 @@ Runner `public/uploads/` va `uploads/resources/` uchun SHA-256 manifestni tekshi
 
 Quyidagilar hech qachon loglanmaydi: parol, OTP, JWT, `Authorization`/`Cookie` headerlari, to'liq telefon raqami, database paroli, pepper, admin TOTP secret va provider API keylari. Xatolar secret qiymatni emas, faqat env nomi yoki request ID'ni ko'rsatadi.
 
-Production loglari uchun rotation va retention belgilanadi; faqat operations roli kira oladi. Incident uchun kerakli audit loglar o'chirilishdan himoyalanadi.
+Production serverdagi PM2 app va module loglari `pm2-logrotate` orqali har kuni yoki fayl `50M` ga yetganda aylantiriladi, gzip bilan siqiladi va joriy fayldan tashqari 14 ta aylantirilgan arxiv saqlanadi. `retain=14` calendar-day kafolati emas, arxivlar sonidir; max-size rotation bir kunda bir necha marta ishlasa qamrab olingan vaqt qisqaradi. Calendar-day bo'yicha qat'iy retention, qidiruv va server yo'qolishiga chidamlilik tashqi markaziy log providerda sozlanadi. Loglarga faqat operations roli kira oladi. Incident uchun kerakli audit loglar o'chirilishdan himoyalanadi.
 
 Har HTTP response'dagi `X-Request-ID` incident correlation uchun ishlatiladi. Support xabarida request ID so'ralishi mumkin, lekin request ID autentifikatsiya yoki ruxsat sifatida qabul qilinmaydi.
 
