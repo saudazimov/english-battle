@@ -1,5 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const { authMiddleware } = require("../auth");
 const {
@@ -11,7 +13,7 @@ const {
 const userPublicProfileRoutes = require("../src/routes/userPublicProfileRoutes");
 
 const expectedSql = [
-  `SELECT id, first_name, last_name, username, cefr_level, rating, xp, coins,
+  `SELECT id, first_name, last_name, username, bio, cefr_level, rating, xp, coins,
               current_streak, longest_streak, win_streak, best_win_streak,
               region, district, village, school, profile_picture
        FROM users WHERE id = $1`,
@@ -21,7 +23,13 @@ const expectedSql = [
          COUNT(*) FILTER (WHERE outcome = 'lose') AS loses,
          COUNT(*) FILTER (WHERE outcome = 'draw') AS draws,
          COALESCE(SUM(my_score), 0) AS total_correct,
-         COALESCE(SUM(opponent_score), 0) AS opp_total
+         COALESCE(SUM(opponent_score), 0) AS opp_total,
+         (SELECT bh.mode
+          FROM battle_history bh
+          WHERE bh.user_id = $1 AND bh.mode IS NOT NULL
+          GROUP BY bh.mode
+          ORDER BY COUNT(*) DESC, MAX(bh.played_at) DESC, bh.mode ASC
+          LIMIT 1) AS favorite_mode
        FROM battle_history WHERE user_id = $1`,
   `SELECT requester_id, receiver_id, status FROM friendships
            WHERE (requester_id = $1 AND receiver_id = $2) OR (requester_id = $2 AND receiver_id = $1)
@@ -85,7 +93,7 @@ test("public profile preserves queries, mapping, and friend privacy", async () =
   const mutualRows = Array.from({ length: 10 }, (_, index) => ({ id: index + 1 }));
   const results = [
     { rows: profileRows() },
-    { rows: [{ total_battles: "4", wins: "3", loses: "1", draws: "0", total_correct: "27", opp_total: "18" }] },
+    { rows: [{ total_battles: "4", wins: "3", loses: "1", draws: "0", total_correct: "27", opp_total: "18", favorite_mode: "duo" }] },
     { rows: [{ requester_id: 9, receiver_id: 7, status: "accepted" }] },
     { rows: mutualRows },
   ];
@@ -110,6 +118,8 @@ test("public profile preserves queries, mapping, and friend privacy", async () =
     draws: 0,
     win_rate: 75,
     total_correct: 27,
+    favorite_mode: "duo",
+    favorite_mode_label: "Duo (2v2)",
   });
 });
 
@@ -130,6 +140,8 @@ test("public profile preserves self behavior and skips friendship queries", asyn
   assert.equal(calls, 2);
   assert.equal(profile.friendStatus, "self");
   assert.equal(profile.stats.win_rate, 0);
+  assert.equal(profile.stats.favorite_mode, null);
+  assert.equal(profile.stats.favorite_mode_label, "Hali o'yin yo'q");
   assert.equal(profile.user.school, "1-maktab");
   assert.deepEqual(profile.mutual_friends, []);
 });
@@ -190,4 +202,142 @@ test("public profile route preserves path, method, and auth order", () => {
   assert.equal(route.methods.get, true);
   assert.equal(route.stack.length, 2);
   assert.equal(route.stack[0].handle, authMiddleware);
+});
+
+test("favorite mode is rendered by every public profile surface", () => {
+  const publicRoot = path.join(__dirname, "..", "public");
+  const profile = fs.readFileSync(path.join(publicRoot, "profile.html"), "utf8");
+  const friends = fs.readFileSync(path.join(publicRoot, "friends.html"), "utf8");
+  const profileModal = fs.readFileSync(path.join(publicRoot, "profile-modal.js"), "utf8");
+
+  assert.match(profile, /id="abFavoriteMode"/);
+  assert.match(profile, /data\.stats\.favorite_mode_label/);
+  assert.match(friends, /fEsc\(favoriteMode\)/);
+  assert.match(profileModal, /fpEsc\(favoriteMode\)/);
+});
+
+test("profile achievement summary uses live profile statistics", () => {
+  const profile = fs.readFileSync(
+    path.join(__dirname, "..", "public", "profile.html"),
+    "utf8"
+  );
+
+  assert.match(profile, /id="asUnlocked">0 \/ 4/);
+  for (const id of ["asTotal", "asGold", "asSilver", "asBronze"]) {
+    assert.match(profile, new RegExp(`id="${id}"`));
+  }
+  assert.doesNotMatch(profile, /Achievements Summary<\/span><span class="soon-badge">Tez kunda/);
+  assert.match(profile, /function renderAchievementSummary\(profileUser, stats\)/);
+  assert.match(profile, /Number\(stats\.wins\)/);
+  assert.match(profile, /Number\(stats\.total_battles\)/);
+  assert.match(profile, /profileUser\.best_win_streak \|\| profileUser\.win_streak/);
+  assert.match(profile, /Number\(profileUser\.rating\)/);
+  assert.match(profile, /renderAchievementSummary\(data\.user \|\| \{\}, data\.stats \|\| \{\}\)/);
+});
+
+test("profile achievements unlock from live profile statistics", () => {
+  const profile = fs.readFileSync(
+    path.join(__dirname, "..", "public", "profile.html"),
+    "utf8"
+  );
+
+  assert.doesNotMatch(profile, /Achievements\s*<span class="soon-badge"[^>]*>Tez kunda/);
+  assert.doesNotMatch(profile, /Yutuqlar tizimi tez kunda/);
+  assert.match(profile, /id="achUnlocked"[^>]*>0 \/ 5/);
+  for (const id of ["achWins", "achStreak", "achCorrect", "achElite", "achLearner"]) {
+    assert.match(profile, new RegExp(`id="${id}"`));
+  }
+  assert.match(profile, /function renderAchievements\(profileUser, stats\)/);
+  assert.match(profile, /Number\(stats\.total_correct\)/);
+  assert.match(profile, /achievement\.value >= achievement\.target/);
+  assert.match(profile, /item\.classList\.toggle\("ach-locked", !isUnlocked\)/);
+  assert.match(profile, /renderAchievements\(data\.user \|\| \{\}, data\.stats \|\| \{\}\)/);
+});
+
+test("profile CEFR progress info uses the shared accessible dialog", () => {
+  const profile = fs.readFileSync(
+    path.join(__dirname, "..", "public", "profile.html"),
+    "utf8"
+  );
+
+  assert.match(profile, /id="cefrProgressInfoButton"[^>]+aria-controls="rankInfoModal"/);
+  assert.match(profile, /src="\/rank-info-dialog\.js"/);
+  assert.match(profile, /const nextCefrLevels = \{ A1: "A2"/);
+  assert.match(profile, /createRankInfoDialog\(\{/);
+  assert.match(profile, /triggerId: "cefrProgressInfoButton"/);
+  assert.match(profile, /detailType: "scopes"/);
+  assert.match(profile, /document\.getElementById\("pcCefr"\)/);
+  assert.match(profile, /value: "A1 → C2"/);
+});
+
+test("profile current rank info uses live setupRank details", () => {
+  const profile = fs.readFileSync(
+    path.join(__dirname, "..", "public", "profile.html"),
+    "utf8"
+  );
+  const dialog = fs.readFileSync(
+    path.join(__dirname, "..", "public", "rank-info-dialog.js"),
+    "utf8"
+  );
+
+  assert.match(profile, /id="profileRankInfoButton"[^>]+aria-controls="rankInfoModal"/);
+  assert.match(profile, /let currentRankDetails = null/);
+  assert.match(profile, /currentRankDetails = \{ rating: r, current: cur, next: next, progress: prog \}/);
+  assert.match(profile, /setupRank\(Number\(document\.getElementById\("rankRP"\)\.textContent\) \|\| 1000\)/);
+  assert.match(profile, /triggerId: "profileRankInfoButton"/);
+  assert.match(profile, /Math\.max\(0, next\.min - rating\)/);
+  assert.match(profile, /footerHref: "\/leaderboard\.html"/);
+  assert.match(dialog, /rank-info-head-ic"\)\.innerHTML/);
+});
+
+test("profile premium AI lock state is responsive and contained", () => {
+  const profile = fs.readFileSync(
+    path.join(__dirname, "..", "public", "profile.html"),
+    "utf8"
+  );
+
+  assert.match(profile, /\.ai-card \{ position:relative; flex:0 0 auto; min-height:min-content; padding:22px 24px; overflow:hidden; \}/);
+  assert.match(profile, /\.ai-card \.card-title \{[^}]*flex-wrap:wrap/);
+  assert.match(profile, /\.ai-premium-features \{[^}]*repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(profile, /@media \(max-width:700px\)/);
+  assert.match(profile, /class="ai-empty ai-premium-lock"/);
+  assert.match(profile, /Shaxsiy AI murabbiyingiz/);
+  assert.match(profile, /class="ai-premium-btn"/);
+  assert.match(profile, /window\.openPaymentModal\(\\'student_premium\\'\)/);
+  assert.doesNotMatch(profile, /class="btn nlp-btn" style="max-width:200px/);
+  assert.match(profile, /const normalizedUserRole = String\(user\.role \|\| "student"\)\.trim\(\)\.toLowerCase\(\)/);
+  assert.match(profile, /const isOwnStudentProfile = isOwnProfile && normalizedUserRole === "student"/);
+  assert.match(profile, /aiCard\.style\.display = "block"/);
+  assert.match(profile, /renderAILocked\(aiBody\)/);
+  assert.match(profile, /if \(isOwnStudentProfile\) loadAIReport\(\)/);
+  assert.ok(profile.indexOf('id="examCard"') < profile.indexOf('id="aiCard"'));
+  assert.ok(profile.indexOf('id="aiCard"') < profile.indexOf('class="card hist-card"'));
+  assert.equal((profile.match(/id="aiCard"/g) || []).length, 1);
+});
+
+test("premium payment modal keeps readable colors independent of page theme", () => {
+  const paymentModal = fs.readFileSync(
+    path.join(__dirname, "..", "public", "payment-modal.js"),
+    "utf8"
+  );
+
+  assert.match(paymentModal, /\.pm-overlay\{--pm-card:#111a2e/);
+  assert.match(paymentModal, /--pm-text:#f8fafc/);
+  assert.match(paymentModal, /--pm-dim:#c4cee0/);
+  assert.match(paymentModal, /color-scheme:dark/);
+  assert.match(paymentModal, /\.pm-modal\{[^}]*color:var\(--pm-text\)/);
+  assert.match(paymentModal, /\.pm-month\.active\{[^}]*background:#172b50/);
+  assert.doesNotMatch(paymentModal, /\[data-theme="dark"\]\{--pm-card/);
+});
+
+test("universal profile modal renders real mutual friends", () => {
+  const profileModal = fs.readFileSync(
+    path.join(__dirname, "..", "public", "profile-modal.js"),
+    "utf8"
+  );
+
+  assert.match(profileModal, /Array\.isArray\(data\.mutual_friends\)/);
+  assert.match(profileModal, /Number\(data\.mutual_count\)/);
+  assert.match(profileModal, /onclick="openProfileModal\('/);
+  assert.doesNotMatch(profileModal, /Umumiy do\\'stlar tez kunda/);
 });

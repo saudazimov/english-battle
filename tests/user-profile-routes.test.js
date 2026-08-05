@@ -20,6 +20,10 @@ test("user profile routes preserve phased mounts and dependencies", () => {
       calls.push(["public", dependencies]);
       return "public-profile-router";
     },
+    createProfileUpdate(dependencies) {
+      calls.push(["update", dependencies]);
+      return "profile-update-router";
+    },
     createProfilePicture(dependencies) {
       calls.push(["picture", dependencies]);
       return "profile-picture-router";
@@ -39,6 +43,8 @@ test("user profile routes preserve phased mounts and dependencies", () => {
   assert.deepEqual(calls, [
     ["public", { pool }],
     ["mount", "public-profile-router"],
+    ["update", { pool }],
+    ["mount", "profile-update-router"],
     ["picture", {
       upload,
       uploadedContentMatches,

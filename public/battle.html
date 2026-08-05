@@ -429,9 +429,9 @@
     .mm-pcard { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 16px; }
     .mm-pcard.me { background: rgba(10,20,45,0.7); border: 1px solid rgba(56,225,255,0.35); box-shadow: 0 0 24px rgba(56,225,255,0.1); justify-content: flex-start; text-align: left; }
     .mm-pcard.opp { background: rgba(25,15,50,0.65); border: 1px solid rgba(168,85,247,0.4); box-shadow: 0 0 24px rgba(168,85,247,0.12); justify-content: flex-end; text-align: right; }
-    .mm-pava { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
-    .mm-pava-img { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-size: 24px; font-weight: 800; color: #fff; border: 2px solid rgba(56,225,255,0.5); box-shadow: 0 0 20px rgba(56,225,255,0.3); }
-    .mm-pava-img img { width: 100%; height: 100%; object-fit: cover; }
+    .mm-pava { position: relative; width: 68px; aspect-ratio: 1; flex: 0 0 68px; }
+    .mm-pava-img { position: relative; width: 100%; height: 100%; box-sizing: border-box; border-radius: 50%; overflow: hidden; isolation: isolate; line-height: 1; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-size: 26px; font-weight: 800; color: #fff; border: 3px solid rgba(56,225,255,0.58); box-shadow: 0 0 0 4px rgba(56,225,255,0.08), 0 0 22px rgba(56,225,255,0.28); }
+    .mm-pava-img img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; display: block; border-radius: 50%; clip-path: circle(50% at 50% 50%); object-fit: cover; object-position: 50% 50%; transform: scale(1.06); transform-origin: 50% 50%; }
     .mm-pava.opp .mm-pava-img { background: rgba(40,25,70,0.8); border-color: rgba(168,85,247,0.6); box-shadow: 0 0 20px rgba(168,85,247,0.3); }
     .mm-pava.opp .mm-pava-img i { width: 28px; height: 28px; color: rgba(200,180,255,0.7); animation: scanPulse 2s ease-in-out infinite; }
     .mm-online { position: absolute; bottom: 1px; right: 1px; width: 14px; height: 14px; border-radius: 50%; background: var(--green); border: 2.5px solid #0a142d; z-index: 2; }
@@ -1271,7 +1271,7 @@
 
     function avatarHTML(firstName, picPath) {
       const letter = (firstName || "?").charAt(0).toUpperCase();
-      if (picPath) return '<img src="' + picPath + '" alt="' + letter + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
+      if (picPath) return '<img src="' + picPath + '" alt="' + letter + '" style="position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;display:block;object-fit:cover;object-position:50% 50%;border-radius:50%;clip-path:circle(50% at 50% 50%);transform:scale(1.06);transform-origin:50% 50%;">';
       return letter;
     }
 

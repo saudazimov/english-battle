@@ -155,7 +155,6 @@
     /* ===== O'NG PANEL ===== */
     .rb-card { padding: 20px; }
     .rb-head { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; margin-bottom: 16px; }
-    .rb-info { width: 16px; height: 16px; color: var(--text-dim); cursor: pointer; }
 
     /* Your Rankings */
     .yr-top { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
@@ -243,7 +242,7 @@
 
       <!-- Your Rankings -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Your Rankings</span><i data-lucide="info" class="rb-info"></i></div>
+        <div class="rb-head"><span>Your Rankings</span><button type="button" class="rb-info-btn" id="rankingInfoButton" aria-label="Ranking o‘rinlari haqida ma'lumot" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
         <div class="yr-top">
           <div class="yr-medal" id="yrMedal">🥈</div>
           <div>
@@ -289,6 +288,7 @@
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/sidebar.js"></script>
+  <script src="/rank-info-dialog.js"></script>
   <script src="/profile-modal.js"></script>
   <script>
     const userData = localStorage.getItem("user");
@@ -531,6 +531,30 @@
     updateLocHeader();
     loadLeaderboard();
     loadMyRanks();
+
+    createRankInfoDialog({
+      triggerId: "rankingInfoButton",
+      title: "Ranking qanday ishlaydi?",
+      subtitle: "O‘rningiz hudud va maktab bo‘yicha alohida hisoblanadi",
+      primaryLabel: "Joriy liga",
+      secondaryLabel: "Joriy rating",
+      detailType: "scopes",
+      footerHref: "/rankings.html",
+      footerLabel: "Maktablar reytingi",
+      getData: function () {
+        return {
+          primary: document.getElementById("yrLeague").textContent || "—",
+          secondary: (document.getElementById("yrPoints").textContent || "0") + " ball",
+          scopes: [
+            { icon: "globe", name: "Global", description: "Barcha o‘yinchilar orasida", value: document.getElementById("yrGlobal").textContent || "—" },
+            { icon: "flag", name: "National", description: "Davlatingiz ichida", value: document.getElementById("yrNational").textContent || "—" },
+            { icon: "map-pin", name: "Region", description: "Viloyatingiz ichida", value: document.getElementById("yrRegion").textContent || "—" },
+            { icon: "building", name: "District", description: "Tuman yoki shaharingizda", value: document.getElementById("yrDistrict").textContent || "—" },
+            { icon: "building-2", name: "School", description: "Maktabingiz ichida", value: document.getElementById("yrSchool").textContent || "—" },
+          ],
+        };
+      },
+    });
 
     lucide.createIcons();
   </script>

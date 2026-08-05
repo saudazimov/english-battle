@@ -130,7 +130,6 @@
     /* ===== O'NG PANEL ===== */
     .rb-card { padding: 20px; }
     .rb-head { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; margin-bottom: 16px; }
-    .rb-info { width: 16px; height: 16px; color: var(--text-dim); cursor: pointer; }
 
     /* Friends Summary */
     .fs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -535,7 +534,7 @@
 
       <!-- Friends Summary -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Friends Summary</span><i data-lucide="info" class="rb-info"></i></div>
+        <div class="rb-head"><span>Friends Summary</span><button type="button" class="rb-info-btn" id="friendsSummaryInfoButton" aria-label="Do‘stlar statistikasi haqida ma'lumot" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
         <div class="fs-grid">
           <div class="fs-box">
             <i data-lucide="users" style="color:var(--accent);"></i>
@@ -636,6 +635,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/sidebar.js"></script>
+  <script src="/rank-info-dialog.js"></script>
   <script>
     // ===== XSS himoya (Sprint 1): HTML escape yordamchisi =====
     function fEsc(s) {
@@ -839,6 +839,9 @@
 
     function renderFpAbout(data) {
       const u = data.user || {};
+      const favoriteMode = data.stats && data.stats.favorite_mode_label
+        ? data.stats.favorite_mode_label
+        : "Hali o'yin yo'q";
       // Joined sanasini formatlash
       let joined = "—";
       if (u.created_at) {
@@ -853,7 +856,7 @@
           '<div class="fp-ar"><i data-lucide="building-2"></i><span class="fp-ak">School</span><span class="fp-av">' + (u.school || "—") + '</span></div>' +
           '<div class="fp-ar"><i data-lucide="map-pin"></i><span class="fp-ak">Region</span><span class="fp-av">' + (u.region || "—") + (u.district ? ", " + u.district : "") + '</span></div>' +
           '<div class="fp-ar"><i data-lucide="calendar"></i><span class="fp-ak">Joined</span><span class="fp-av">' + joined + '</span></div>' +
-          '<div class="fp-ar"><i data-lucide="star"></i><span class="fp-ak">Favorite Mode</span><span class="fp-av soon-badge">Tez kunda</span></div>' +
+          '<div class="fp-ar"><i data-lucide="star"></i><span class="fp-ak">Favorite Mode</span><span class="fp-av soon-badge">' + fEsc(favoriteMode) + '</span></div>' +
         '</div>';
       lucide.createIcons();
     }
@@ -1420,6 +1423,28 @@
 
     loadRightbar();
     loadPendingCount();
+    createRankInfoDialog({
+      triggerId: "friendsSummaryInfoButton",
+      title: "Friends Summary",
+      subtitle: "Do‘stlaringiz bo‘yicha joriy statistika",
+      headerIcon: "users",
+      primaryLabel: "Jami do‘stlar",
+      secondaryLabel: "Hozir online",
+      detailType: "scopes",
+      hideFooter: true,
+      getData: function () {
+        return {
+          primary: document.getElementById("fsTotal").textContent || "0",
+          secondary: document.getElementById("fsOnline").textContent || "0",
+          scopes: [
+            { icon: "users", name: "Total Friends", description: "Qabul qilingan do‘stliklar", value: document.getElementById("fsTotal").textContent || "0" },
+            { icon: "circle", name: "Online Now", description: "Hozir faol do‘stlar", value: document.getElementById("fsOnline").textContent || "0" },
+            { icon: "user-plus", name: "Pending", description: "Kutilayotgan kiruvchi so‘rovlar", value: document.getElementById("fsRequests").textContent || "0" },
+            { icon: "trophy", name: "Wins vs Friends", description: "Do‘stlarga qarshi g‘alabalar", value: document.getElementById("fsWins").textContent || "0" },
+          ],
+        };
+      },
+    });
     // Do'stni o'chirish - tasdiqlash oynasi
     function removeFriend(friendId, friendName) {
       showOverlay(

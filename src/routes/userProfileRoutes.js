@@ -1,13 +1,16 @@
 const createUserPublicProfileRoutes = require("./userPublicProfileRoutes");
 const createProfilePictureRoutes = require("./profilePictureRoutes");
+const createUserProfileUpdateRoutes = require("./userProfileUpdateRoutes");
 
 const defaultFactories = {
   createPublicProfile: createUserPublicProfileRoutes,
+  createProfileUpdate: createUserProfileUpdateRoutes,
   createProfilePicture: createProfilePictureRoutes,
 };
 
 function registerPublicRoutes({ app, pool, factories = defaultFactories }) {
   app.use(factories.createPublicProfile({ pool }));
+  app.use(factories.createProfileUpdate({ pool }));
 }
 
 function registerPictureRoutes({
