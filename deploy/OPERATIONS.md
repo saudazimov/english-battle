@@ -124,7 +124,7 @@ Bitta foydalanuvchi yoki cheklangan no-critical funksiya muammosi. Bir ish kuni 
 ### Ilova ishlamayapti
 
 ```bash
-curl --fail https://englishbattle.uz/health
+curl --fail https://ilmliga.uz/health
 ssh PRODUCTION_HOST
 cd /var/www/englishbattle
 pm2 status

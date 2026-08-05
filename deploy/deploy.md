@@ -7,8 +7,9 @@ Production monitoring, SLO, backup/restore va incident talablari: [`deploy/OPERA
 ---
 
 ## 0. Talablar
-- Ubuntu VPS (2GB RAM tavsiya)
-- Domen (englishbattle.uz) → VPS IP'ga yo'naltirilgan (A record)
+- Ubuntu VPS (staging uchun kamida 2 vCPU / 4 GB RAM / 50 GB SSD;
+  closed-beta production uchun 4 vCPU / 8 GB RAM / 80 GB SSD tavsiya)
+- Domen (ilmliga.uz) → VPS IP'ga yo'naltirilgan (A record)
 - SSH kirish
 
 ---
@@ -81,7 +82,7 @@ nano .env
 To'ldiring (production validator uchun MAJBURIY):
 - `NODE_ENV=production`
 - `TRUST_PROXY_HOPS=1`  (Nginx ortida)
-- `CLIENT_ORIGIN=https://englishbattle.uz,https://www.englishbattle.uz` (faqat haqiqiy HTTPS originlar)
+- `CLIENT_ORIGIN=https://ilmliga.uz,https://www.ilmliga.uz` (faqat haqiqiy HTTPS originlar)
 - `METRICS_TOKEN=` (private Prometheus collector uchun alohida, kamida 32 belgili secret)
 - `DB_HOST=localhost`, `DB_PORT=5432`, `DB_USER=eb_user`, `DB_PASSWORD=...`, `DB_NAME=english_battle`
 - `DB_SSL=false`  (local PostgreSQL)
@@ -189,19 +190,19 @@ sudo nginx -t            # config to'g'ri ekanini tekshiring
 sudo systemctl reload nginx
 ```
 
-Tekshiring (brauzerdan): `http://englishbattle.uz` → sayt ochilishi kerak.
+Tekshiring (brauzerdan): `http://ilmliga.uz` → sayt ochilishi kerak.
 
 ---
 
 ## 9. SSL (HTTPS) — Let's Encrypt
 
 ```bash
-sudo certbot --nginx -d englishbattle.uz -d www.englishbattle.uz
+sudo certbot --nginx -d ilmliga.uz -d www.ilmliga.uz
 ```
 
 Certbot avtomatik: sertifikat oladi, Nginx config'ni HTTPS'ga yangilaydi, HTTP→HTTPS redirect qo'shadi. Avtomatik yangilanish cron o'rnatiladi.
 
-Tekshiring: `https://englishbattle.uz` → yashil qulf.
+Tekshiring: `https://ilmliga.uz` → yashil qulf.
 
 MUHIM: SSL yoqilgach, Socket.IO avtomatik `wss://` (secure WebSocket) ishlatadi — frontend `io()` same-origin bo'lgani uchun kod o'zgarmaydi.
 
