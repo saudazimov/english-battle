@@ -6,7 +6,6 @@ const {
 
 function createStudentWeeklyAiReportRoutes({
   pool,
-  premium,
   aiSnapshot,
   aiService,
 }) {
@@ -20,7 +19,6 @@ function createStudentWeeklyAiReportRoutes({
     "/ai/reports/student/weekly",
     authMiddleware,
     requireStudent,
-    premium.requirePremium("student"),
     controller.generate
   );
   return router;

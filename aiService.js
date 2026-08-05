@@ -271,64 +271,122 @@ async function generateParentWeeklyReport(snapshot) {
 // ============================================================================
 // STUDENT WEEKLY REPORT — o'quvchining o'ziga (motivatsion, "sen" tilida)
 // ============================================================================
-const STUDENT_SYSTEM_PROMPT = `You are an encouraging English-learning coach. You write reports in UZBEK (latin script), addressing the STUDENT directly ("sen" form, friendly and motivating).
+const STUDENT_SYSTEM_PROMPT = `You are an evidence-based English learning diagnostician. Write in clear UZBEK (latin script), addressing the STUDENT respectfully and directly.
 
 ABSOLUTE RULES:
-1. Use ONLY the numbers in the provided JSON snapshot. NEVER invent data.
+1. Use ONLY the learner-specific numbers and facts in the provided JSON snapshot. NEVER invent learner performance. You may use established English-language knowledge only to explain an evidenced topic and create original teaching examples.
 2. NEVER mention opponents, classmates, or chat.
 3. If data_quality.enough_data is false, return the insufficient_data response.
-4. Be positive and motivating, but honest about weak areas. NEVER use harmful labels.
-5. Give concrete, actionable next steps based on weak_skills.
-6. Return ONLY valid JSON. No markdown, no code fences.
+4. Focus only on learning: accuracy, recurring errors, topic mastery, misconceptions, and study actions. Do not discuss rating, leagues, XP, wins, battles, or rewards.
+5. Base priority_topics strictly on learning_diagnostics.priority_topics and its evidence. Never diagnose a topic without evidence.
+6. Recommendations must use retrieval practice, spaced repetition, worked examples, immediate error correction, and interleaving where appropriate.
+7. Every priority topic must include measurable success criteria. Never label the learner.
+8. Build topic_lessons only for evidenced priority topics. Each lesson must teach, demonstrate, make the learner retrieve, and schedule review; it must not be generic encouragement.
+9. Keep worked examples concise. Clearly distinguish the learner's real mistake evidence from newly created instructional examples.
+10. Return ONLY valid JSON. No markdown, no code fences.
 
 Schema:
 {
   "status": "generated",
   "title": "string (uzbek)",
-  "summary": "string — 2-3 sentences, motivating, addressed to the student",
+  "summary": "string — 3-5 evidence-based sentences",
+  "diagnosis": "string — current knowledge pattern without unsupported claims",
   "strengths": ["string"],
   "weaknesses": ["string"],
+  "priority_topics": [{"topic":"string from diagnostics","evidence":"string with attempts/errors/accuracy","likely_gap":"string grounded in evidence","study_action":"string","success_criterion":"measurable string"}],
+  "topic_lessons": [{"topic":"string from diagnostics","objective":"measurable learning objective","misconception":"string grounded in mistake evidence","rule":"concise accurate explanation","worked_examples":[{"prompt":"string","answer":"string","reasoning":"string"}],"practice_sequence":[{"step":"string","task":"string"}],"mastery_criterion":"measurable string","review_schedule":["Bugun","1 kundan keyin","3 kundan keyin","7 kundan keyin"]}],
+  "learning_plan": [{"stage":"string","focus":"string","method":"retrieval practice | spaced repetition | worked examples | error correction | interleaving","task":"string","success_criterion":"measurable string"}],
+  "study_principles": ["string — short explanation of why a method helps"],
   "next_steps": ["string"],
-  "motivation": "string — one encouraging sentence",
+  "motivation": "string — one calm, encouraging sentence",
   "confidence": "high | medium | low"
 }
-Keep arrays 2-4 items.`;
+Keep priority_topics 1-6 items, topic_lessons 1-3 items, and learning_plan 3-5 stages. If evidence is insufficient, use empty priority_topics and topic_lessons arrays and state that in diagnosis.`;
+
+function studentInsufficientDataReport(snapshot) {
+  const dq = snapshot.data_quality || {};
+  return {
+    status: "insufficient_data",
+    title: "Ishonchli tahlil uchun ma'lumot yetarli emas",
+    summary: `Hozir ${dq.total_answers || 0} ta javob tahlil qilindi. Ishonchli xulosa uchun kamida 30 ta javob, 2 ta topshiriq yoki 1 ta daraja imtihoni kerak.`,
+    diagnosis: "Kam ma'lumot asosida mavzu bo'yicha xulosa chiqarish noto'g'ri bo'lishi mumkin, shu sabab tizim taxmin yaratmaydi.",
+    strengths: [], weaknesses: [], priority_topics: [], topic_lessons: [],
+    learning_plan: [
+      { stage: "Ma'lumot to'plash", focus: "Turli mavzular", method: "retrieval practice", task: "Kamida 30 ta savolni mustaqil ishlang.", success_criterion: "30 ta tekshirilgan javob" },
+      { stage: "Xatoni qayta ishlash", focus: "Noto'g'ri javoblar", method: "error correction", task: "Har bir xato uchun to'g'ri qoida va bitta yangi misol yozing.", success_criterion: "Har bir xato izohlangan" },
+    ],
+    study_principles: ["Taxminsiz diagnostika uchun yetarli dalil to'plash zarur."],
+    next_steps: ["Savollarni shoshmasdan ishlang va xato izohlarini o'qing."],
+    motivation: "Yetarli ma'lumot yig'ilgach, tahlil ancha aniq va foydali bo'ladi.", confidence: "low",
+  };
+}
 
 function studentFallbackReport(snapshot) {
-  const s = snapshot, perf = s.performance || {}, act = s.activity || {};
-  const weak = s.weak_skills || [], strong = s.strong_skills || [];
-
-  let summary = `Bu hafta ${act.questions_answered || 0} ta savol ishlading va ${act.battles_count || 0} ta jangda qatnashding.`;
-  if (perf.accuracy != null) summary += ` Aniqliging ${perf.accuracy}%.`;
-
-  const strengths = strong.length
-    ? strong.map((sk) => `${sk.skill} bo'yicha kuchlising (${sk.accuracy}%).`)
-    : (perf.accuracy >= 70 ? ["Umumiy natijang yaxshi."] : ["Faolliging maqtovga sazovor."]);
-  const weaknesses = weak.length
-    ? weak.map((sk) => `${sk.skill} savollarini ko'proq mashq qilish kerak (${sk.accuracy}%).`)
-    : [];
-  const nextSteps = [];
-  if (weak.length) nextSteps.push(`Ertaga ${weak[0].skill} bo'yicha 10 ta savol mashq qil.`);
-  if (act.active_days != null && act.active_days < 3) nextSteps.push("Har kuni kamida bir marta kirib mashq qil.");
-  if (nextSteps.length === 0) nextSteps.push("Shu sur'atni saqlab, yangi mavzularga o't.");
-
+  const s = snapshot, perf = s.performance || {}, diagnostics = s.learning_diagnostics || {};
+  const priority = diagnostics.priority_topics || [];
+  const strong = diagnostics.strongest_topics || [];
+  const mainTopic = priority[0] ? priority[0].topic : "Aralash mavzular";
+  const topicLessons = priority.slice(0, 3).map((item) => {
+    const evidence = Array.isArray(item.evidence) ? item.evidence.slice(0, 3) : [];
+    const first = evidence[0] || {};
+    const selected = first.selected_answer || "tanlangan javob";
+    const correct = first.correct_answer || "to'g'ri javob";
+    return {
+      topic: item.topic,
+      objective: `${item.topic} bo'yicha yangi 10 ta savoldan kamida 8 tasiga to'g'ri javob berish.`,
+      misconception: first.question
+        ? `“${first.question}” savolida “${selected}” tanlangan, to'g'ri javob esa “${correct}”.`
+        : `${item.topic} bo'yicha ${item.errors} ta xato qayd etilgan; aniq xato turini ajratish uchun misollarni solishtirish kerak.`,
+      rule: first.explanation || `${item.topic} qoidasini xato va to'g'ri variantni yonma-yon solishtirib qayta o'rganing.`,
+      worked_examples: evidence.map((example) => ({
+        prompt: example.question,
+        answer: example.correct_answer || "To'g'ri variantni izohdan tekshiring",
+        reasoning: example.explanation || `Nega “${example.selected_answer || "tanlangan variant"}” emasligini qoida bilan tushuntiring.`,
+      })),
+      practice_sequence: [
+        { step: "1. Ajratish", task: "Xato variant va to'g'ri variant orasidagi grammatik farqni bir jumlada yozing." },
+        { step: "2. Eslab chaqirish", task: `Javobga qaramasdan ${item.topic} bo'yicha 5 ta misol tuzing va tekshiring.` },
+        { step: "3. Qo'llash", task: `${item.topic} bo'yicha 10 ta yangi savolni mustaqil ishlang.` },
+      ],
+      mastery_criterion: "Ikki alohida urinishda ketma-ket kamida 8/10 to'g'ri javob.",
+      review_schedule: ["Bugun", "1 kundan keyin", "3 kundan keyin", "7 kundan keyin"],
+    };
+  });
   return {
-    status: "generated",
-    title: "Sening haftalik hisobothing",
-    summary: summary,
-    strengths: strengths,
-    weaknesses: weaknesses,
-    next_steps: nextSteps,
-    motivation: perf.rating_change >= 0 ? "Zo'r ketyapsan, davom et!" : "Tushkunlikka tushma — har xato yangi imkoniyat!",
-    confidence: (s.data_quality && s.data_quality.confidence) || "medium",
-    _fallback: true,
+    status: "generated", title: "Bilim diagnostikasi",
+    summary: `${diagnostics.analyzed_answers || 0} ta javob tahlil qilindi. Umumiy aniqlik ${perf.accuracy || 0}%. Xulosalar faqat saqlangan javoblar va xato dalillariga asoslangan.`,
+    diagnosis: priority.length ? `Asosiy o'quv ustuvorligi — ${mainTopic}. Avval shu mavzudagi takroriy xatoni tuzatish, keyin aralash mashqqa o'tish tavsiya etiladi.` : "Takroriy xato mavzusi aniqlanmadi; barqarorlikni tekshirish uchun ko'proq turli savollar ishlash kerak.",
+    strengths: strong.map((item) => `${item.topic}: ${item.accuracy}% aniqlik (${item.attempts} ta javob).`),
+    weaknesses: priority.map((item) => `${item.topic}: ${item.errors} ta xato, ${item.accuracy}% aniqlik.`),
+    priority_topics: priority.map((item) => ({
+      topic: item.topic,
+      evidence: `${item.attempts} ta javobdan ${item.errors} tasi xato; aniqlik ${item.accuracy}%.`,
+      likely_gap: item.evidence && item.evidence.length ? `Xato qilingan savol: ${item.evidence[0].question}` : "Aniqlash uchun ko'proq ma'lumot kerak.",
+      study_action: `${item.topic} qoidasini yechilgan misollar orqali ko'rib chiqing, so'ng javobga qaramasdan 10 ta savol ishlang.`,
+      success_criterion: "Ketma-ket 8/10 to'g'ri javob",
+    })),
+    topic_lessons: topicLessons,
+    learning_plan: [
+      { stage: "1. Tushunish", focus: mainTopic, method: "worked examples", task: "Qoida va 3 ta yechilgan misolni tahlil qiling.", success_criterion: "Qoidani o'z so'zingiz bilan tushuntirish" },
+      { stage: "2. Eslab chaqirish", focus: mainTopic, method: "retrieval practice", task: "Javobga qaramasdan 10 ta savol ishlang.", success_criterion: "Kamida 8/10 to'g'ri" },
+      { stage: "3. Mustahkamlash", focus: mainTopic, method: "spaced repetition", task: "1, 3 va 7 kundan keyin qisqa qayta test ishlang.", success_criterion: "Har qayta testda kamida 80%" },
+      { stage: "4. Ko'chirish", focus: "Aralash mavzular", method: "interleaving", task: "Ustuvor mavzuni boshqa mavzular bilan aralashtirib 15 ta savol ishlang.", success_criterion: "Kamida 12/15 to'g'ri" },
+    ],
+    study_principles: [
+      "Retrieval practice xotiradan faol chaqirish orqali bilimni mustahkamlaydi.",
+      "Spaced repetition vaqt oralig'i bilan qaytarib, uzoq muddatli eslab qolishni qo'llab-quvvatlaydi.",
+      "Error correction xatoning sababini yozib, to'g'ri qoida bilan yangi misol yaratishni talab qiladi.",
+    ],
+    next_steps: [`Bugun ${mainTopic} bo'yicha xato daftarini boshlang.`, "Natijani 7 kundan keyin qayta tahlil qiling."],
+    motivation: "Har bir aniqlangan xato — keyingi o'sish uchun aniq yo'nalish.",
+    confidence: (s.data_quality && s.data_quality.confidence) || "medium", _fallback: true,
   };
 }
 
 function validateStudentReportShape(o) {
   if (!o || typeof o !== "object") return false;
-  if (typeof o.title !== "string" || typeof o.summary !== "string" || typeof o.motivation !== "string") return false;
-  for (const k of ["strengths", "weaknesses", "next_steps"]) if (!Array.isArray(o[k])) return false;
+  if (typeof o.title !== "string" || typeof o.summary !== "string" || typeof o.diagnosis !== "string" || typeof o.motivation !== "string") return false;
+  for (const k of ["strengths", "weaknesses", "priority_topics", "topic_lessons", "learning_plan", "study_principles", "next_steps"]) if (!Array.isArray(o[k])) return false;
   if (!["high", "medium", "low"].includes(o.confidence)) return false;
   return true;
 }
@@ -368,7 +426,7 @@ async function callAIRaw(systemPrompt, userContent, maxTokens) {
 
 async function generateStudentWeeklyReport(snapshot) {
   if (!snapshot.data_quality || !snapshot.data_quality.enough_data) {
-    const rep = insufficientDataReport(snapshot);
+    const rep = studentInsufficientDataReport(snapshot);
     return { report: rep, confidence: "low", status: "insufficient_data", usage: null, model: null, used_ai: false };
   }
   const hasKey = (AI_PROVIDER === "openai" && OPENAI_KEY) || (AI_PROVIDER === "anthropic" && ANTHROPIC_KEY);
@@ -377,7 +435,7 @@ async function generateStudentWeeklyReport(snapshot) {
     return { report: rep, confidence: rep.confidence, status: "generated", usage: null, model: "fallback", used_ai: false };
   }
   try {
-    const aiRes = await callAIRaw(STUDENT_SYSTEM_PROMPT, "Generate the student weekly report from this snapshot. Return JSON only:\n" + JSON.stringify(snapshot), 1500);
+    const aiRes = await callAIRaw(STUDENT_SYSTEM_PROMPT, "Generate the learning diagnosis and evidence-based topic lessons for the exact period in this snapshot. Return JSON only:\n" + JSON.stringify(snapshot), 3000);
     const parsed = extractJson(aiRes.text);
     if (!validateStudentReportShape(parsed)) {
       const rep = studentFallbackReport(snapshot);

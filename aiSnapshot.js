@@ -17,6 +17,72 @@ function skillConfidence(attempts) {
   return "low";
 }
 
+const TOPIC_PATTERNS = [
+  ["Articles (a/an/the)", /\b(article|indefinite article|definite article|a\/an\/the)\b/i],
+  ["Present Simple", /\b(present simple|do|does|don'?t|doesn'?t)\b/i],
+  ["Present Continuous", /\b(present continuous|am\s+\w+ing|is\s+\w+ing|are\s+\w+ing)\b/i],
+  ["Past Simple", /\b(past simple|did|didn'?t|yesterday|last (week|year|month))\b/i],
+  ["Present Perfect", /\b(present perfect|have been|has been|have\s+\w+ed|has\s+\w+ed)\b/i],
+  ["Future forms", /\b(will|going to|future)\b/i],
+  ["Modal verbs", /\b(modal verb|modality|can\/could|must\/should)\b/i],
+  ["Conditionals", /\b(if clause|conditional|unless)\b/i],
+  ["Prepositions", /\b(preposition|prepositional|in\/on\/at|since\/for)\b/i],
+  ["Comparatives and superlatives", /\b(comparative|superlative|more than|the most|than)\b/i],
+  ["Pronouns", /\b(pronoun|subject pronoun|object pronoun|possessive pronoun)\b/i],
+  ["Word order", /\b(word order|correct order|arrange)\b/i],
+  ["Subject–verb agreement", /\b(subject.?verb|singular|plural|agrees? with)\b/i],
+];
+
+function inferLearningTopic(answer) {
+  const source = [answer.question_text, answer.explanation].filter(Boolean).join(" ");
+  const matched = TOPIC_PATTERNS.find((entry) => entry[1].test(source));
+  if (matched) return matched[0];
+  const skill = String(answer.skill || "").trim();
+  if (!skill) return "General English";
+  return skill.replace(/[_-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function selectedAnswerText(answer, optionField) {
+  const option = String(answer[optionField] || "").toLowerCase();
+  return answer[`option_${option}`] || answer[optionField] || null;
+}
+
+function buildLearningDiagnostics(answers) {
+  const topics = new Map();
+  answers.forEach((answer) => {
+    const topic = inferLearningTopic(answer);
+    if (!topics.has(topic)) topics.set(topic, { topic, attempts: 0, correct: 0, errors: 0, timeouts: 0, evidence: [] });
+    const item = topics.get(topic);
+    item.attempts += 1;
+    if (answer.is_correct) item.correct += 1;
+    else {
+      item.errors += 1;
+      if (answer.timed_out) item.timeouts += 1;
+      if (item.evidence.length < 3 && answer.question_text) {
+        item.evidence.push({
+          question: answer.question_text,
+          selected_answer: selectedAnswerText(answer, "selected_option"),
+          correct_answer: selectedAnswerText(answer, "correct_option"),
+          explanation: answer.explanation || null,
+        });
+      }
+    }
+  });
+  const list = Array.from(topics.values()).map((item) => ({
+    ...item,
+    accuracy: Math.round((item.correct / Math.max(1, item.attempts)) * 100),
+    error_rate: Math.round((item.errors / Math.max(1, item.attempts)) * 100),
+    confidence: skillConfidence(item.attempts),
+  }));
+  const priority = list.filter((item) => item.errors > 0)
+    .sort((a, b) => b.errors - a.errors || b.error_rate - a.error_rate || b.attempts - a.attempts)
+    .slice(0, 6);
+  const strongest = list.filter((item) => item.attempts >= 3 && item.accuracy >= 75)
+    .sort((a, b) => b.accuracy - a.accuracy || b.attempts - a.attempts)
+    .slice(0, 5);
+  return { topics: list, priority_topics: priority, strongest_topics: strongest };
+}
+
 // Bitta o'quvchi uchun haftalik (yoki istalgan davr) snapshot
 async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
   // --- 1. O'quvchi asosiy ma'lumoti ---
@@ -40,9 +106,12 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
 
   // --- 2. Battle answers (davr ichida) — accuracy, correct/wrong/timeout, skill ---
   const baRes = await pool.query(
-    `SELECT skill, is_correct, timed_out
-     FROM battle_answers
-     WHERE user_id = $1 AND answered_at >= $2 AND answered_at <= $3`,
+    `SELECT ba.skill, ba.is_correct, ba.timed_out, ba.selected_option, ba.correct_option,
+            ba.answered_at, q.question_text, q.explanation,
+            q.option_a, q.option_b, q.option_c, q.option_d
+     FROM battle_answers ba
+     JOIN questions q ON q.id = ba.question_id
+     WHERE ba.user_id = $1 AND ba.answered_at >= $2 AND ba.answered_at <= $3`,
     [studentId, periodStart, periodEnd]
   );
   const battleAnswers = baRes.rows;
@@ -100,7 +169,10 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
   });
   // Assignment answers'dan ham skill (submission_answers + assignment_questions JOIN)
   const saRes = await pool.query(
-    `SELECT aq.skill, sa.is_correct
+    `SELECT aq.skill, sa.is_correct, false AS timed_out, sa.selected_option,
+            sa.correct_answer AS correct_option, sa.answered_at,
+            aq.question_text, aq.explanation,
+            aq.option_a, aq.option_b, aq.option_c, aq.option_d
      FROM submission_answers sa
      JOIN assignment_submissions s ON s.id = sa.submission_id AND s.student_id = $1 AND s.status = 'submitted'
      JOIN assignment_questions aq ON aq.id = sa.assignment_question_id
@@ -125,13 +197,15 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
     }));
   const weakSkills = skillList.filter((s) => s.accuracy < 60).sort((a, b) => a.accuracy - b.accuracy).slice(0, 5);
   const strongSkills = skillList.filter((s) => s.accuracy >= 75).sort((a, b) => b.accuracy - a.accuracy).slice(0, 5);
+  const allLearningAnswers = [...battleAnswers, ...saRes.rows];
+  const learningDiagnostics = buildLearningDiagnostics(allLearningAnswers);
 
   // --- 7. Hisoblangan ko'rsatkichlar ---
-  const correctCount = battleAnswers.filter((a) => a.is_correct).length;
-  const timeoutCount = battleAnswers.filter((a) => a.timed_out).length;
-  const wrongCount = battleAnswers.length - correctCount - timeoutCount;
+  const correctCount = allLearningAnswers.filter((a) => a.is_correct).length;
+  const timeoutCount = allLearningAnswers.filter((a) => a.timed_out).length;
+  const wrongCount = allLearningAnswers.length - correctCount - timeoutCount;
   const questionsAnswered = battleAnswers.length;
-  const accuracy = questionsAnswered > 0 ? Math.round((correctCount / questionsAnswered) * 100) : 0;
+  const accuracy = allLearningAnswers.length > 0 ? Math.round((correctCount / allLearningAnswers.length) * 100) : 0;
 
   const ratingChange = battles.reduce((s, b) => s + (b.rating_change || 0), 0);
   const xpGained = battles.reduce((s, b) => s + (b.xp_earned || 0), 0);
@@ -186,6 +260,15 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
     },
     weak_skills: weakSkills,
     strong_skills: strongSkills,
+    learning_diagnostics: {
+      ...learningDiagnostics,
+      analyzed_answers: totalAnswers,
+      sources: {
+        battle_answers: questionsAnswered,
+        assignment_answers: saRes.rows.length,
+      },
+      coverage_note: "Individual practice answers are not included because practice sessions currently store aggregate counts only.",
+    },
     assignments: {
       total: submissions.length + missingCount,
       submitted: submittedCount,
@@ -419,8 +502,19 @@ function currentWeekPeriod() {
   return { start: monday, end: sunday };
 }
 
+function recentPeriod(days) {
+  const safeDays = Math.max(1, Math.min(90, Number(days) || 7));
+  const end = new Date();
+  const start = new Date(end);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - safeDays + 1);
+  return { start, end };
+}
+
 module.exports = {
+  buildLearningDiagnostics,
   buildStudentWeeklySnapshot,
   buildTeacherClassSnapshot,
   currentWeekPeriod,
+  recentPeriod,
 };
