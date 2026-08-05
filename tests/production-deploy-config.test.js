@@ -76,3 +76,18 @@ test("production deploy guide configures bounded PM2 log rotation", () => {
   assert.match(guide, /pm2 set pm2-logrotate:TZ Etc\/UTC/);
   assert.match(guide, /pm2 conf/);
 });
+
+test("production deployment references the IlmLiga canonical domain", () => {
+  const deploymentFiles = [
+    ".env.example",
+    "deploy/deploy.md",
+    "deploy/nginx.conf",
+    "deploy/OPERATIONS.md",
+  ];
+
+  for (const relativePath of deploymentFiles) {
+    const contents = read(relativePath);
+    assert.match(contents, /ilmliga\.uz/, `${relativePath} must reference ilmliga.uz`);
+    assert.doesNotMatch(contents, /englishbattle\.uz/, `${relativePath} must not reference the retired domain`);
+  }
+});
