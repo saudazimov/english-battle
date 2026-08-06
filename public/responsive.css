@@ -44,6 +44,42 @@ body {
   -webkit-overflow-scrolling: touch; /* iOS silliq scroll */
 }
 
+/* Sayt palitrasiga mos universal scrollbar (Firefox + Chromium/WebKit) */
+html {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #526fa9 #080f20;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #526fa9 #080f20;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #080f20;
+}
+
+*::-webkit-scrollbar-thumb {
+  min-height: 42px;
+  border: 2px solid #080f20;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #526fa9, #7657c9);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #6f91da, #956de9);
+}
+
+*::-webkit-scrollbar-corner {
+  background: #080f20;
+}
+
 
 /* ============================================================================
    2. UNIVERSAL QUALITY FLOOR
@@ -254,4 +290,73 @@ img, svg, video, canvas {
 /* Mobilda to'liq kenglik majburlash */
 @media (max-width: 640px) {
   .full-mobile { width: 100% !important; display: block !important; }
+}
+
+
+/* ============================================================================
+   7. UNIVERSAL PROFILE PICTURE VIEWPORT
+   Telegram uslubi: barcha profil rasmlari markazdan kesiladi va dumaloq
+   konteynerni bo'shliqsiz to'ldiradi. Faqat avatar konteynerining bevosita
+   img farzandiga ta'sir qiladi; logo va kontent rasmlari o'zgarmaydi.
+   ============================================================================ */
+
+:is(
+  [class~="ava"],
+  [class$="-ava"],
+  [class*="-ava "],
+  [class$="-avatar"],
+  [class*="-avatar "],
+  [class$="-av"],
+  [class*="-av "],
+  [class$="-pic"],
+  [class*="-pic "],
+  [class~="avatar-big"]
+) {
+  position: relative;
+  overflow: hidden;
+  border-radius: 50% !important;
+  isolation: isolate;
+}
+
+:is(
+  [class~="ava"],
+  [class$="-ava"],
+  [class*="-ava "],
+  [class$="-avatar"],
+  [class*="-avatar "],
+  [class$="-av"],
+  [class*="-av "],
+  [class$="-pic"],
+  [class*="-pic "],
+  [class~="avatar-big"]
+) > img {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  display: block !important;
+  border-radius: 50% !important;
+  clip-path: circle(50% at 50% 50%);
+  object-fit: cover !important;
+  object-position: 50% 50% !important;
+  transform: scale(1.06);
+  transform-origin: 50% 50%;
+}
+
+img:is(
+  [class~="ava"],
+  [class$="-ava"],
+  [class*="-ava "],
+  [class$="-avatar"],
+  [class*="-avatar "],
+  [class$="-av"],
+  [class*="-av "],
+  [class$="-pic"]
+) {
+  border-radius: 50% !important;
+  clip-path: circle(50% at 50% 50%);
+  object-fit: cover !important;
+  object-position: 50% 50% !important;
 }

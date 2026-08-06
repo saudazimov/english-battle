@@ -97,9 +97,12 @@
     .card-title i { width: 20px; height: 20px; color: var(--accent); }
 
     /* ===== AI HAFTALIK HISOBOT ===== */
-    .ai-card .card-title { justify-content: space-between; }
-    .ai-card .ct-left { display:flex; align-items:center; gap:10px; }
-    .ai-pro-badge { font-size:10px; font-weight:800; letter-spacing:.5px; padding:3px 9px; border-radius:6px; background:linear-gradient(135deg,var(--accent-2),var(--accent)); color:#fff; }
+    .ai-card { position:relative; flex:0 0 auto; min-height:min-content; padding:22px 24px; overflow:hidden; }
+    .ai-card .card-title { justify-content:space-between; flex-wrap:wrap; gap:10px 14px; }
+    .ai-card .ct-left { min-width:0; flex:1 1 220px; display:flex; align-items:center; gap:10px; line-height:1.3; overflow-wrap:anywhere; }
+    .ai-card .ct-left i { flex:0 0 auto; }
+    .ai-pro-badge { flex:0 0 auto; font-size:10px; font-weight:800; letter-spacing:.5px; padding:4px 10px; border-radius:7px; background:linear-gradient(135deg,var(--accent-2),var(--accent)); color:#fff; box-shadow:0 5px 18px rgba(91,140,255,.22); }
+    #aiBody, .ai-summary-box, .ai-blk, .ai-motiv { min-width:0; overflow-wrap:anywhere; }
     .ai-empty { text-align:center; padding:34px 20px; }
     .ai-empty-ic { width:60px; height:60px; margin:0 auto 14px; border-radius:16px; background:rgba(91,140,255,0.1); border:1px solid rgba(91,140,255,0.25); display:flex; align-items:center; justify-content:center; color:var(--accent); }
     .ai-empty-ic i { width:28px; height:28px; }
@@ -127,6 +130,24 @@
     .ai-refresh:hover { border-color:var(--accent); }
     .ai-refresh:disabled { opacity:.6; cursor:not-allowed; }
     .ai-refresh i { width:13px; height:13px; }
+    .ai-premium-lock { position:relative; isolation:isolate; max-width:680px; margin:0 auto; padding:34px clamp(16px,4vw,36px); border:1px solid rgba(168,85,247,.24); border-radius:18px; background:linear-gradient(145deg,rgba(168,85,247,.1),rgba(91,140,255,.05) 55%,rgba(8,14,32,.16)); overflow:hidden; }
+    .ai-premium-lock::before { content:""; position:absolute; z-index:-1; width:220px; height:220px; top:-140px; right:-80px; border-radius:50%; background:rgba(168,85,247,.2); filter:blur(38px); pointer-events:none; }
+    .ai-premium-lock .ai-empty-ic { width:66px; height:66px; margin-bottom:12px; color:#c4b5fd; background:linear-gradient(145deg,rgba(168,85,247,.2),rgba(91,140,255,.14)); border-color:rgba(196,181,253,.34); box-shadow:0 12px 34px rgba(76,29,149,.24); }
+    .ai-premium-lock .ai-empty-ic i { width:30px; height:30px; }
+    .ai-premium-kicker { display:inline-flex; align-items:center; max-width:100%; margin-bottom:9px; padding:4px 9px; border-radius:999px; color:#c4b5fd; background:rgba(168,85,247,.12); border:1px solid rgba(168,85,247,.22); font-size:10px; font-weight:800; letter-spacing:.7px; overflow-wrap:anywhere; }
+    .ai-premium-lock h4 { max-width:100%; margin:0 0 8px; font-size:clamp(18px,3vw,22px); line-height:1.25; overflow-wrap:anywhere; }
+    .ai-premium-lock > p { max-width:520px; margin-bottom:20px; font-size:13px; }
+    .ai-premium-features { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; max-width:580px; margin:0 auto 22px; text-align:left; }
+    .ai-premium-feature { min-width:0; display:flex; align-items:flex-start; gap:8px; padding:10px; border:1px solid rgba(91,140,255,.17); border-radius:11px; background:rgba(7,12,28,.26); color:var(--text-dim); font-size:11px; line-height:1.4; overflow-wrap:anywhere; }
+    .ai-premium-feature i { width:16px; height:16px; flex:0 0 auto; margin-top:1px; color:var(--cyan); }
+    .ai-premium-btn { width:min(100%,260px); min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:11px 18px; border:0; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; box-shadow:0 12px 28px rgba(91,140,255,.24); font-family:inherit; font-size:13px; font-weight:700; line-height:1.2; cursor:pointer; white-space:normal; text-align:center; }
+    .ai-premium-btn:hover { filter:brightness(1.08); transform:translateY(-1px); }
+    .ai-premium-btn:focus-visible { outline:2px solid var(--cyan); outline-offset:3px; }
+    .ai-premium-btn i { width:17px; height:17px; flex:0 0 auto; }
+    @media (max-width:700px) {
+      .ai-premium-features { grid-template-columns:1fr; max-width:360px; }
+      .ai-premium-lock { padding:28px 14px; }
+    }
     .ai-loading { display:flex; flex-direction:column; gap:11px; padding:6px 0; }
     .ai-shimmer { height:15px; border-radius:8px; background:linear-gradient(90deg,rgba(255,255,255,.03),rgba(255,255,255,.07),rgba(255,255,255,.03)); background-size:200% 100%; animation:aiShim 1.4s infinite; }
     .ai-shimmer.lg { height:50px; }
@@ -149,7 +170,7 @@
     /* ===== ACHIEVEMENTS ===== */
     .ach-card { padding: 22px 24px; }
     .ach-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
-    .ach-item { text-align: center; }
+    .ach-item { text-align: center; min-width: 0; }
     .ach-ic {
       width: 72px; height: 72px; border-radius: 18px; margin: 0 auto 10px;
       display: grid; place-items: center;
@@ -160,6 +181,14 @@
     .ach-name { font-size: 12px; color: var(--text-dim); font-weight: 600; }
     .ach-locked .ach-ic { opacity: 0.4; }
     .ach-locked .ach-ic i { color: var(--text-faint); }
+    .ach-item:not(.ach-locked) .ach-ic {
+      background: linear-gradient(135deg, rgba(91,140,255,0.2), rgba(168,85,247,0.18));
+      border-color: rgba(91,140,255,0.55); box-shadow: 0 8px 24px rgba(91,140,255,0.16);
+    }
+    .ach-item:not(.ach-locked) .ach-ic i { color: var(--gold); }
+    .ach-item:not(.ach-locked) .ach-name { color: var(--text); }
+    .ach-progress { margin-top: 5px; color: var(--text-faint); font-size: 10px; font-weight: 600; }
+    .ach-item:not(.ach-locked) .ach-progress { color: var(--green); }
     .ach-note {
       margin-top: 18px; text-align: center; font-size: 13px; color: var(--text-faint);
       padding: 12px; background: rgba(168,85,247,0.05); border-radius: 10px;
@@ -403,7 +432,7 @@
         <div class="pc-info">
           <div class="pc-top">
             <div class="pc-name" id="pcName">O'yinchi</div>
-            <button class="btn btn-ghost pc-edit" onclick="alert('Profil tahrirlash - tez kunda!')"><i data-lucide="pencil" style="width:15px;height:15px;"></i> Edit Profile</button>
+            <button type="button" class="btn btn-ghost pc-edit" onclick="window.openProfileEditor()"><i data-lucide="pencil" style="width:15px;height:15px;"></i> Edit Profile</button>
           </div>
           <div class="pc-meta">
             <span class="pc-cefr">CEFR <b id="pcCefr">A1</b></span>
@@ -419,6 +448,7 @@
           </div>
         </div>
       </div>
+
       <!-- About Me -->
       <div class="card about-card">
         <div class="card-title"><i data-lucide="user-circle"></i> About Me</div>
@@ -426,42 +456,47 @@
           <div class="about-row"><span class="about-k">Region</span><span class="about-v" id="abRegion">—</span></div>
           <div class="about-row"><span class="about-k">School</span><span class="about-v" id="abSchool">—</span></div>
           <div class="about-row"><span class="about-k">Tuman</span><span class="about-v" id="abDistrict">—</span></div>
-          <div class="about-row"><span class="about-k">Favorite Mode</span><span class="about-v soon-badge">Tez kunda</span></div>
+          <div class="about-row"><span class="about-k">Favorite Mode</span><span class="about-v soon-badge" id="abFavoriteMode">Hali o'yin yo'q</span></div>
         </div>
         <div class="about-quote">
           <i data-lucide="quote" class="quote-ic"></i>
-          <span>Learning today, leading tomorrow. Let's battle and grow together!</span>
+          <span id="abBio">Learning today, leading tomorrow. Let's battle and grow together!</span>
         </div>
       </div>
       <!-- Achievements -->
       <div class="card ach-card">
         <div class="card-title">
           <i data-lucide="award"></i> Achievements
-          <span class="soon-badge" style="margin-left:auto;">Tez kunda</span>
+          <span class="soon-badge" id="achUnlocked" style="margin-left:auto;">0 / 5</span>
         </div>
         <div class="ach-grid">
-          <div class="ach-item ach-locked">
+          <div class="ach-item ach-locked" id="achWins">
             <div class="ach-ic"><i data-lucide="trophy"></i></div>
             <div class="ach-name">100 Wins</div>
+            <div class="ach-progress">0 / 100</div>
           </div>
-          <div class="ach-item ach-locked">
+          <div class="ach-item ach-locked" id="achStreak">
             <div class="ach-ic"><i data-lucide="flame"></i></div>
             <div class="ach-name">Win Streak Master</div>
+            <div class="ach-progress">0 / 10</div>
           </div>
-          <div class="ach-item ach-locked">
+          <div class="ach-item ach-locked" id="achCorrect">
             <div class="ach-ic"><i data-lucide="target"></i></div>
-            <div class="ach-name">Accuracy Expert</div>
+            <div class="ach-name">100 Correct Answers</div>
+            <div class="ach-progress">0 / 100</div>
           </div>
-          <div class="ach-item ach-locked">
+          <div class="ach-item ach-locked" id="achElite">
             <div class="ach-ic"><i data-lucide="star"></i></div>
             <div class="ach-name">Elite Player</div>
+            <div class="ach-progress">0 / 1600 RP</div>
           </div>
-          <div class="ach-item ach-locked">
+          <div class="ach-item ach-locked" id="achLearner">
             <div class="ach-ic"><i data-lucide="graduation-cap"></i></div>
             <div class="ach-name">Dedicated Learner</div>
+            <div class="ach-progress">0 / 50</div>
           </div>
         </div>
-        <div class="ach-note">Yutuqlar tizimi tez kunda qo'shiladi — janglar va o'rganish orqali yutuqlarni oching!</div>
+        <div class="ach-note" id="achNote">Janglar va to‘g‘ri javoblar orqali yutuqlarni oching.</div>
       </div>
       <!-- Battle Stats -->
       <div class="card bs-card">
@@ -565,7 +600,7 @@
 
       <!-- Current Rank -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Current Rank</span><i data-lucide="info" class="rb-info"></i></div>
+        <div class="rb-head"><span>Current Rank</span><button type="button" class="rb-info-btn" id="profileRankInfoButton" aria-label="Joriy rank haqida ma'lumot" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
         <div class="rank-display">
           <div class="rank-medal" id="rankMedal">🥈</div>
           <div>
@@ -579,18 +614,18 @@
 
       <!-- Achievements Summary -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Achievements Summary</span><span class="soon-badge">Tez kunda</span></div>
+        <div class="rb-head"><span>Achievements Summary</span><span class="soon-badge" id="asUnlocked">0 / 4</span></div>
         <div class="as-grid">
-          <div class="as-box"><i data-lucide="trophy" style="color:var(--gold);"></i><div class="as-val">—</div><div class="as-lbl">Total</div></div>
-          <div class="as-box"><i data-lucide="medal" style="color:var(--gold);"></i><div class="as-val">—</div><div class="as-lbl">Gold</div></div>
-          <div class="as-box"><i data-lucide="medal" style="color:#cbd5e1;"></i><div class="as-val">—</div><div class="as-lbl">Silver</div></div>
-          <div class="as-box"><i data-lucide="medal" style="color:#d97706;"></i><div class="as-val">—</div><div class="as-lbl">Bronze</div></div>
+          <div class="as-box"><i data-lucide="trophy" style="color:var(--gold);"></i><div class="as-val" id="asTotal">0</div><div class="as-lbl">Total</div></div>
+          <div class="as-box"><i data-lucide="medal" style="color:var(--gold);"></i><div class="as-val" id="asGold">0</div><div class="as-lbl">Gold</div></div>
+          <div class="as-box"><i data-lucide="medal" style="color:#cbd5e1;"></i><div class="as-val" id="asSilver">0</div><div class="as-lbl">Silver</div></div>
+          <div class="as-box"><i data-lucide="medal" style="color:#d97706;"></i><div class="as-val" id="asBronze">0</div><div class="as-lbl">Bronze</div></div>
         </div>
       </div>
 
       <!-- Next Level Progress -->
       <div class="card rb-card">
-        <div class="rb-head"><span id="nlpTitle">Keyingi daraja</span><i data-lucide="info" class="rb-info"></i></div>
+        <div class="rb-head"><span id="nlpTitle">Keyingi daraja</span><button type="button" class="rb-info-btn" id="cefrProgressInfoButton" aria-label="CEFR daraja progressi haqida ma'lumot" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
         <div class="nlp-pct" id="nlpPct">—</div>
         <div class="nlp-msg">Imtihon topshirib, keyingi darajaga o'ting!</div>
         <div class="rank-bar" style="margin-top:12px;"><div class="rank-bar-fill" id="nlpBar" style="width:0%; background:linear-gradient(90deg,var(--green),#10b981);"></div></div>
@@ -628,6 +663,8 @@
   <script src="/payment-modal.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/sidebar.js"></script>
+  <script src="/rank-info-dialog.js"></script>
+  <script src="/profile-edit.js"></script>
   <script>
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
@@ -636,6 +673,15 @@
     const urlParams = new URLSearchParams(window.location.search);
     const viewUserId = urlParams.get("id") || user.id; // id bo'lmasa - o'zim
     const isOwnProfile = String(viewUserId) === String(user.id);
+    const normalizedUserRole = String(user.role || "student").trim().toLowerCase();
+    const isOwnStudentProfile = isOwnProfile && normalizedUserRole === "student";
+    if (isOwnStudentProfile) {
+      const aiCard = document.getElementById("aiCard");
+      const aiBody = document.getElementById("aiBody");
+      aiCard.style.display = "block";
+      renderAILocked(aiBody);
+      if (window.lucide) window.lucide.createIcons();
+    }
     // Modal rejimi - sidebar va topbar yashirish
     const isModal = urlParams.get("modal") === "1";
     if (isModal) {
@@ -655,6 +701,7 @@
     renderSidebar("profile");
     // ===== PROFIL MA'LUMOTI =====
     const cefrLabels = { A1: "Beginner", A2: "Elementary", B1: "Intermediate", B2: "Upper-Intermediate", C1: "Advanced", C2: "Proficient" };
+    const nextCefrLevels = { A1: "A2", A2: "B1", B1: "B2", B2: "C1", C1: "C2", C2: null };
     function getLeagueInfo(rating) {
       if (rating >= 2000) return "👑 Grandmaster";
       if (rating >= 1800) return "🔱 Master";
@@ -689,6 +736,56 @@
       return icon + ' ' + leagueName(rating);
     }
 
+    function renderAchievementSummary(profileUser, stats) {
+      const achievementTracks = [
+        { value: Number(stats.wins) || 0, bronze: 1, silver: 25, gold: 100 },
+        { value: Number(stats.total_battles) || 0, bronze: 10, silver: 50, gold: 100 },
+        { value: Number(profileUser.best_win_streak || profileUser.win_streak) || 0, bronze: 3, silver: 5, gold: 10 },
+        { value: Number(profileUser.rating) || 0, bronze: 1000, silver: 1200, gold: 1600 },
+      ];
+      const summary = achievementTracks.reduce(function (result, track) {
+        if (track.value >= track.gold) result.gold += 1;
+        else if (track.value >= track.silver) result.silver += 1;
+        else if (track.value >= track.bronze) result.bronze += 1;
+        return result;
+      }, { gold: 0, silver: 0, bronze: 0 });
+      const total = summary.gold + summary.silver + summary.bronze;
+
+      document.getElementById("asUnlocked").textContent = total + " / " + achievementTracks.length;
+      document.getElementById("asTotal").textContent = total;
+      document.getElementById("asGold").textContent = summary.gold;
+      document.getElementById("asSilver").textContent = summary.silver;
+      document.getElementById("asBronze").textContent = summary.bronze;
+    }
+
+    function renderAchievements(profileUser, stats) {
+      const achievements = [
+        { id: "achWins", value: Number(stats.wins) || 0, target: 100, suffix: "" },
+        { id: "achStreak", value: Number(profileUser.best_win_streak || profileUser.win_streak) || 0, target: 10, suffix: "" },
+        { id: "achCorrect", value: Number(stats.total_correct) || 0, target: 100, suffix: "" },
+        { id: "achElite", value: Number(profileUser.rating) || 0, target: 1600, suffix: " RP" },
+        { id: "achLearner", value: Number(stats.total_battles) || 0, target: 50, suffix: "" },
+      ];
+      let unlocked = 0;
+
+      achievements.forEach(function (achievement) {
+        const item = document.getElementById(achievement.id);
+        if (!item) return;
+        const isUnlocked = achievement.value >= achievement.target;
+        if (isUnlocked) unlocked += 1;
+        item.classList.toggle("ach-locked", !isUnlocked);
+        item.setAttribute("aria-label", item.querySelector(".ach-name").textContent + ": " + (isUnlocked ? "Ochilgan" : "Yopiq"));
+        item.querySelector(".ach-progress").textContent = isUnlocked
+          ? "Ochilgan"
+          : Math.min(achievement.value, achievement.target) + " / " + achievement.target + achievement.suffix;
+      });
+
+      document.getElementById("achUnlocked").textContent = unlocked + " / " + achievements.length;
+      document.getElementById("achNote").textContent = unlocked === achievements.length
+        ? "Barcha yutuqlar ochildi — ajoyib natija!"
+        : "Yana " + (achievements.length - unlocked) + " ta yutuqni ochishingiz mumkin.";
+    }
+
     // Boshqa odamning profili bo'lsa - Edit tugmasini yashirish + sarlavhani o'zgartirish
     if (!isOwnProfile) {
       const editBtn = document.querySelector(".pc-edit");
@@ -709,11 +806,23 @@
 
     // Profil endpoint'dan to'liq ma'lumot (viewUserId - o'zim yoki boshqa odam)
     let profileData = null;
+    window.handleProfileEditSuccess = function (updatedUser) {
+      if (!updatedUser) return;
+      document.getElementById("pcName").textContent = updatedUser.first_name + " " + updatedUser.last_name;
+      document.getElementById("abBio").textContent = updatedUser.bio || "Learning today, leading tomorrow. Let's battle and grow together!";
+      profileData = profileData || {};
+      profileData.user = Object.assign({}, profileData.user || {}, updatedUser);
+      Object.assign(user, updatedUser);
+      localStorage.setItem("user", JSON.stringify(user));
+      renderTopbar();
+      if (window.lucide) window.lucide.createIcons();
+    };
     authFetch("/profile/" + viewUserId)
       .then(r => r.json())
       .then(data => {
         profileData = data;
         if (data.user) {
+          if (isOwnProfile) window.__profileEditData = data.user;
           // Profil kartasi (endpoint'dan - boshqa odam uchun ham to'g'ri)
           const u = data.user;
           if (u.profile_picture) {
@@ -747,6 +856,8 @@
           document.getElementById("abRegion").textContent = data.user.region || "—";
           document.getElementById("abSchool").textContent = data.user.school || "—";
           document.getElementById("abDistrict").textContent = data.user.district || "—";
+          document.getElementById("abBio").textContent = data.user.bio || "Learning today, leading tomorrow. Let's battle and grow together!";
+          document.getElementById("abFavoriteMode").textContent = data.stats.favorite_mode_label || "Hali o'yin yo'q";
           // Highest Rank (joriy liga)
             document.getElementById("bsRank").innerHTML = leagueFull(data.user.rating || 1000);
 
@@ -756,6 +867,8 @@
           setupNextLevel(data.user.cefr_level || "A1");
           lucide.createIcons();
         }
+        renderAchievements(data.user || {}, data.stats || {});
+        renderAchievementSummary(data.user || {}, data.stats || {});
       })
       .catch(() => {});
     // ===== CEFR PROGRESSION =====
@@ -828,6 +941,7 @@
     loadHistory();
     // ===== O'NG PANEL =====
    // Current Rank
+    let currentRankDetails = null;
     function setupRank(r) {
       const ic = (n, c) => '<i data-lucide="' + n + '" style="width:100%;height:100%;color:' + c + ';"></i>';
       const leagues = [
@@ -849,16 +963,18 @@
         const prog = Math.round(((r - cur.min) / (cur.max - cur.min + 1)) * 100);
         document.getElementById("rankBarFill").style.width = prog + "%";
         document.getElementById("rankNext").textContent = next.name;
+        currentRankDetails = { rating: r, current: cur, next: next, progress: prog };
       } else {
         document.getElementById("rankBarFill").style.width = "100%";
         document.getElementById("rankNext").textContent = "Eng yuqori!";
+        currentRankDetails = { rating: r, current: cur, next: null, progress: 100 };
       }
     }
+    setupRank(Number(document.getElementById("rankRP").textContent) || 1000);
 
     // Next Level (CEFR keyingi daraja)
     function setupNextLevel(current) {
-      const nextCefr = { A1: "A2", A2: "B1", B1: "B2", B2: "C1", C1: "C2", C2: null };
-      const nxt = nextCefr[current];
+      const nxt = nextCefrLevels[current];
       document.getElementById("nlpTitle").textContent = nxt ? (current + " → " + nxt + " Progress") : "Eng yuqori daraja";
       document.getElementById("nlpPct").textContent = nxt ? "Imtihon" : "C2 🎉";
       document.getElementById("nlpBar").style.width = nxt ? "30%" : "100%";
@@ -1025,7 +1141,7 @@
       });
     }
 
-    if (isOwnProfile && (!user.role || user.role === "student")) loadParentSection();
+    if (isOwnStudentProfile) loadParentSection();
 
     // ===== IMTIHON TARIXI (faqat o'z profilida) =====
     const EX_SKILL_LABEL = { grammar:"Grammatika", vocabulary:"Lug'at", reading:"O'qish", listening:"Tinglash", speaking:"Gapirish", writing:"Yozish", other:"Boshqa" };
@@ -1089,7 +1205,7 @@
     function escExam(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
     function toggleExam(id){ const el=document.getElementById("exItem"+id); if(el) el.classList.toggle("open"); }
 
-    if (isOwnProfile && (!user.role || user.role === "student")) loadExamHistory();
+    if (isOwnStudentProfile) loadExamHistory();
 
     // ===== AI HAFTALIK HISOBOT (student) =====
     const AI_CONF_LABEL = { high:"Yuqori ishonch", medium:"O'rta ishonch", low:"Past ishonch" };
@@ -1112,7 +1228,20 @@
     }
 
     function renderAILocked(body){
-      body.innerHTML = '<div class="ai-empty"><div class="ai-empty-ic" style="color:var(--accent-2)"><i data-lucide="lock"></i></div><h4>Premium funksiya</h4><p>Haftalik AI tahlil — kuchli va zaif tomonlaring, keyingi hafta uchun aniq mashq rejasi.</p><button class="btn nlp-btn" style="max-width:200px;margin:0 auto" onclick="window.openPaymentModal(\'student_premium\')"><i data-lucide="star" style="width:16px;height:16px"></i> Premium olish</button></div>';
+      body.innerHTML = [
+        '<div class="ai-empty ai-premium-lock">',
+          '<div class="ai-empty-ic"><i data-lucide="sparkles"></i></div>',
+          '<span class="ai-premium-kicker">PREMIUM FUNKSIYA</span>',
+          '<h4>Shaxsiy AI murabbiyingiz</h4>',
+          '<p>Haftalik natijalaringiz tahlili, kuchli va zaif tomonlaringiz hamda keyingi hafta uchun aniq mashq rejasi.</p>',
+          '<div class="ai-premium-features">',
+            '<div class="ai-premium-feature"><i data-lucide="chart-line"></i><span>Haftalik natijalar tahlili</span></div>',
+            '<div class="ai-premium-feature"><i data-lucide="target"></i><span>Kuchli va zaif tomonlar</span></div>',
+            '<div class="ai-premium-feature"><i data-lucide="calendar-check"></i><span>Shaxsiy mashq rejasi</span></div>',
+          '</div>',
+          '<button type="button" class="ai-premium-btn" onclick="window.openPaymentModal(\'student_premium\')"><i data-lucide="star"></i><span>Premium olish</span></button>',
+        '</div>',
+      ].join("");
     }
     function renderAIInsuf(body, rep){
       const steps = (rep.next_steps||[]).map(s=>`<li>${escExam(s)}</li>`).join("");
@@ -1143,7 +1272,62 @@
       await loadAIReport(true);
     }
 
-    if (isOwnProfile && (!user.role || user.role === "student")) loadAIReport();
+    if (isOwnStudentProfile) loadAIReport();
+
+    createRankInfoDialog({
+      triggerId: "profileRankInfoButton",
+      title: "Joriy rank",
+      subtitle: "Rating va keyingi liga bo‘yicha holat",
+      headerIcon: "shield",
+      primaryLabel: "Joriy liga",
+      secondaryLabel: "Rating",
+      detailType: "scopes",
+      footerHref: "/leaderboard.html",
+      footerLabel: "To‘liq rankingni ko‘rish",
+      getData: function () {
+        const details = currentRankDetails;
+        const rating = details ? Number(details.rating) : (Number(document.getElementById("rankRP").textContent) || 0);
+        const currentName = details ? details.current.name : document.getElementById("rankName").textContent;
+        const next = details ? details.next : null;
+        const remaining = next ? Math.max(0, next.min - rating) : 0;
+        return {
+          primary: currentName,
+          secondary: rating + " RP",
+          progress: details ? { label: next ? next.name : "Eng yuqori liga", percent: details.progress + "%" } : null,
+          scopes: [
+            { icon: "shield", name: "Joriy liga", description: "Hozirgi rating bosqichi", value: currentName },
+            { icon: "trophy", name: "Joriy rating", description: "Reytingli janglardagi RP", value: rating + " RP" },
+            { icon: "arrow-up-right", name: "Keyingi liga", description: next ? "Navbatdagi rating bosqichi" : "Eng yuqori bosqichga erishilgan", value: next ? next.name : "Grandmaster" },
+            { icon: "target", name: "Qolgan rating", description: next ? "Keyingi ligaga yetish uchun" : "Keyingi liga mavjud emas", value: next ? remaining + " RP" : "0 RP" },
+          ],
+        };
+      },
+    });
+
+    createRankInfoDialog({
+      triggerId: "cefrProgressInfoButton",
+      title: "CEFR daraja progressi",
+      subtitle: "Joriy darajadan keyingi bosqichga o‘tish yo‘li",
+      headerIcon: "graduation-cap",
+      primaryLabel: "Joriy daraja",
+      secondaryLabel: "Keyingi daraja",
+      detailType: "scopes",
+      hideFooter: true,
+      getData: function () {
+        const current = document.getElementById("pcCefr").textContent || "A1";
+        const next = nextCefrLevels[current];
+        return {
+          primary: current,
+          secondary: next || "C2 — yakunlangan",
+          scopes: [
+            { icon: "book-open", name: "Joriy bosqich", description: cefrLabels[current] || "CEFR darajasi", value: current },
+            { icon: "arrow-up-right", name: "Keyingi bosqich", description: next ? (cefrLabels[next] || "CEFR darajasi") : "Eng yuqori CEFR darajasi", value: next || "C2" },
+            { icon: "clipboard-check", name: "O‘tish usuli", description: next ? "Daraja imtihonini muvaffaqiyatli yakunlang" : "Barcha CEFR bosqichlari tugallangan", value: next ? "Ultimate Exam" : "Bajarildi" },
+            { icon: "route", name: "Darajalar yo‘li", description: "CEFR bosqichlari ketma-ketligi", value: "A1 → C2" },
+          ],
+        };
+      },
+    });
 
     // Lucide ikonalar
     lucide.createIcons();

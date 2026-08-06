@@ -365,7 +365,6 @@
       display: flex; justify-content: space-between; align-items: center;
       font-size: 16px; font-weight: 700; margin-bottom: 16px;
     }
-    .rb-info { width: 16px; height: 16px; color: var(--text-dim); cursor: pointer; }
     .rb-timer { font-size: 12px; color: var(--text-dim); font-weight: 500; display: flex; align-items: center; gap: 5px; }
     .rb-timer i { width: 13px; height: 13px; }
     .rb-empty { text-align: center; color: var(--text-faint); padding: 16px; font-size: 13px; }
@@ -806,7 +805,7 @@
 
       <!-- Current Rank -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Current Rank</span><i data-lucide="info" class="rb-info"></i></div>
+        <div class="rb-head"><span>Current Rank</span><button type="button" class="rb-info-btn" id="rankInfoButton" aria-label="Reyting tizimi haqida ma'lumot" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
         <div class="rank-display">
           <div class="rank-medal" id="rankMedal">💠</div>
           <div>
@@ -820,7 +819,7 @@
 
       <!-- Maktabim (School Battle) -->
       <div class="card rb-card" id="mySchoolCard">
-        <div class="rb-head"><span>Maktabim</span><a class="view-all" onclick="window.location.href='/school-battle.html'">Batafsil</a></div>
+        <div class="rb-head"><span>Maktabim</span><a class="view-all" href="/rankings.html">Batafsil</a></div>
         <div id="mySchoolBody"><div class="rb-empty">Yuklanmoqda...</div></div>
       </div>
 
@@ -873,6 +872,7 @@
   <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/sidebar.js"></script>
+  <script src="/rank-info-dialog.js"></script>
   <script src="/profile-modal.js"></script>
   
   <script>
@@ -1335,6 +1335,28 @@
       }
     }
     setupRank();
+
+    createRankInfoDialog({
+      triggerId: "rankInfoButton",
+      title: "Reyting tizimi",
+      subtitle: "Ligangiz va RP o‘sishi haqida",
+      primaryLabel: "Joriy liga",
+      secondaryLabel: "Joriy reyting",
+      detailType: "rating",
+      footerHref: "/leaderboard.html",
+      footerLabel: "To‘liq ranking",
+      getData: function () {
+        const nextRank = document.getElementById("rankNext").textContent || "—";
+        return {
+          primary: document.getElementById("rankName").textContent || "—",
+          secondary: (document.getElementById("rankRP").textContent || "0") + " RP",
+          progress: {
+            label: nextRank === "Eng yuqori!" ? "Maksimal liga" : nextRank,
+            percent: document.getElementById("rankBarFill").style.width || "0%",
+          },
+        };
+      },
+    });
 
     // Daily Quests
     async function loadQuests() {

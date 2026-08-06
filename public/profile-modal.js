@@ -87,6 +87,15 @@
     '.fp-cefr-top span{color:var(--text-dim);}' +
     '.fp-cefr-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:4px;}' +
     '.fp-cefr-msg{font-size:12px;color:var(--text-dim);text-align:center;margin-top:8px;}' +
+    '.fp-mutual-list{display:flex;flex-direction:column;gap:8px;margin-top:4px;}' +
+    '.fp-mutual-item{width:100%;display:flex;align-items:center;gap:10px;padding:7px 9px;border:0;border-radius:10px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background 0.15s;}' +
+    '.fp-mutual-item:hover,.fp-mutual-item:focus-visible{background:var(--panel);outline:none;}' +
+    '.fp-mutual-ava{width:34px;height:34px;border-radius:50%;flex-shrink:0;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--accent),var(--accent-2));}' +
+    '.fp-mutual-name{min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:600;}' +
+    '.fp-mutual-rp{font-size:12px;color:var(--text-dim);white-space:nowrap;}' +
+    '.fp-mutual-count{margin-left:auto;color:var(--text-dim);font-size:13px;}' +
+    '.fp-mutual-more{text-align:center;font-size:13px;color:var(--accent);padding:8px 0 0;}' +
+    '.fp-mutual-empty{color:var(--text-faint);font-size:13px;text-align:center;padding:16px;}' +
     '.fp-rank-medal i,.fp-rank-medal svg{width:48px !important;height:48px !important;vertical-align:middle !important;}';
 
   var styleEl = document.createElement("style");
@@ -395,6 +404,9 @@
 
   function renderFpAbout(data) {
     var u = data.user || {};
+    var favoriteMode = data.stats && data.stats.favorite_mode_label
+      ? data.stats.favorite_mode_label
+      : "Hali o'yin yo'q";
     var joined = "\u2014";
     if (u.created_at) {
       var d = new Date(u.created_at);
@@ -408,7 +420,7 @@
         '<div class="fp-ar"><i data-lucide="building-2"></i><span class="fp-ak">School</span><span class="fp-av">' + (u.school || "\u2014") + '</span></div>' +
         '<div class="fp-ar"><i data-lucide="map-pin"></i><span class="fp-ak">Region</span><span class="fp-av">' + (u.region || "\u2014") + (u.district ? ", " + u.district : "") + '</span></div>' +
         '<div class="fp-ar"><i data-lucide="calendar"></i><span class="fp-ak">Joined</span><span class="fp-av">' + joined + '</span></div>' +
-        '<div class="fp-ar"><i data-lucide="star"></i><span class="fp-ak">Favorite Mode</span><span class="fp-av soon-badge">Tez kunda</span></div>' +
+        '<div class="fp-ar"><i data-lucide="star"></i><span class="fp-ak">Favorite Mode</span><span class="fp-av soon-badge">' + fpEsc(favoriteMode) + '</span></div>' +
       '</div>';
     if (window.lucide) lucide.createIcons();
   }
@@ -519,10 +531,39 @@
       '<div class="fp-rank-bar"><div class="fp-cefr-fill" style="width:' + cProg + '%;"></div></div>' +
       '<div class="fp-cefr-msg">' + cProg + '% \u2014 Zo\'r ketyapsiz!</div>';
 
+    var mutualFriends = Array.isArray(data.mutual_friends) ? data.mutual_friends : [];
+    var mutualCount = Number(data.mutual_count) || 0;
+    var mutualHtml = '<div class="fp-block-title"><i data-lucide="users"></i> Mutual Friends';
+    if (mutualCount > 0) {
+      mutualHtml += '<span class="fp-mutual-count">' + mutualCount + '</span>';
+    }
+    mutualHtml += '</div>';
+
+    if (mutualFriends.length === 0) {
+      mutualHtml += '<div class="fp-mutual-empty">Umumiy do\'stlar yo\'q</div>';
+    } else {
+      mutualHtml += '<div class="fp-mutual-list">';
+      mutualFriends.forEach(function (friend) {
+        var friendId = Number.parseInt(friend.id, 10);
+        if (!Number.isSafeInteger(friendId) || friendId <= 0) return;
+        var friendName = ((friend.first_name || "") + " " + (friend.last_name || "")).trim() || "Foydalanuvchi";
+        var friendRating = Number(friend.rating);
+        if (!Number.isFinite(friendRating)) friendRating = 1000;
+        mutualHtml +=
+          '<button type="button" class="fp-mutual-item" onclick="openProfileModal(' + friendId + ')">' +
+            '<span class="fp-mutual-ava">' + avatarHTML(friend.first_name, friend.profile_picture) + '</span>' +
+            '<span class="fp-mutual-name">' + fpEsc(friendName) + '</span>' +
+            '<span class="fp-mutual-rp">' + friendRating + ' RP</span>' +
+          '</button>';
+      });
+      mutualHtml += '</div>';
+      if (mutualCount > mutualFriends.length) {
+        mutualHtml += '<div class="fp-mutual-more">+' + (mutualCount - mutualFriends.length) + ' ko\'proq</div>';
+      }
+    }
+
     document.getElementById("fpMutual").className = "fp-block";
-    document.getElementById("fpMutual").innerHTML =
-      '<div class="fp-block-title"><i data-lucide="users"></i> Mutual Friends <span class="soon-badge" style="margin-left:auto;">Tez kunda</span></div>' +
-      '<div style="color:var(--text-faint);font-size:13px;text-align:center;padding:16px;">Umumiy do\'stlar tez kunda shu yerda ko\'rinadi.</div>';
+    document.getElementById("fpMutual").innerHTML = mutualHtml;
 
     if (window.lucide) lucide.createIcons();
   }

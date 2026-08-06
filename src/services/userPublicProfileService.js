@@ -61,11 +61,23 @@ async function getMutualFriends(pool, viewerId, userId, friendStatus) {
   }
 }
 
+const FAVORITE_MODE_LABELS = Object.freeze({
+  ranked: "1v1 Ranked",
+  casual: "1v1 Casual",
+  duo: "Duo (2v2)",
+  squad: "Squad (4v4)",
+  school: "School Battle",
+});
+
+function getFavoriteModeLabel(mode) {
+  return FAVORITE_MODE_LABELS[mode] || "Hali o'yin yo'q";
+}
+
 function createUserPublicProfileService({ pool }) {
   return {
     async getProfile(userId, viewerId) {
       const userResult = await pool.query(
-        `SELECT id, first_name, last_name, username, cefr_level, rating, xp, coins,
+        `SELECT id, first_name, last_name, username, bio, cefr_level, rating, xp, coins,
               current_streak, longest_streak, win_streak, best_win_streak,
               region, district, village, school, profile_picture
        FROM users WHERE id = $1`,
@@ -82,7 +94,13 @@ function createUserPublicProfileService({ pool }) {
          COUNT(*) FILTER (WHERE outcome = 'lose') AS loses,
          COUNT(*) FILTER (WHERE outcome = 'draw') AS draws,
          COALESCE(SUM(my_score), 0) AS total_correct,
-         COALESCE(SUM(opponent_score), 0) AS opp_total
+         COALESCE(SUM(opponent_score), 0) AS opp_total,
+         (SELECT bh.mode
+          FROM battle_history bh
+          WHERE bh.user_id = $1 AND bh.mode IS NOT NULL
+          GROUP BY bh.mode
+          ORDER BY COUNT(*) DESC, MAX(bh.played_at) DESC, bh.mode ASC
+          LIMIT 1) AS favorite_mode
        FROM battle_history WHERE user_id = $1`,
         [userId]
       );
@@ -119,6 +137,8 @@ function createUserPublicProfileService({ pool }) {
           draws: parseInt(stats.draws),
           win_rate: winRate,
           total_correct: parseInt(stats.total_correct),
+          favorite_mode: stats.favorite_mode || null,
+          favorite_mode_label: getFavoriteModeLabel(stats.favorite_mode),
         },
       };
     },

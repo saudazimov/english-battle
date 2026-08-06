@@ -72,7 +72,7 @@ function renderSidebar(activePage) {
     { id: "tournaments", icon: "swords", label: "Turnirlar", href: "/student-tournaments.html", ready: true },
     { id: "friends", icon: "users", label: "Do'stlar", href: "/friends.html", ready: true },
     { id: "history", icon: "scroll-text", label: "Tarix", href: "/history.html", ready: true },
-    { id: "progress", icon: "trending-up", label: "Progress", href: "/progress.html", ready: false },
+    { id: "progress", icon: "trending-up", label: "Progress", href: "/progress.html", ready: true },
     { id: "profile", icon: "user", label: "Profile", href: "/profile.html", ready: true },
   ];
 
