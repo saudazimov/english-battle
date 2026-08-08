@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "migrate": "node migrate.js",
+    "demo:learning": "node scripts/seed-learning-diagnostics-demo.js",
+    "verify:learning": "node scripts/verify-learning-diagnostics-success.js",
     "db:backup": "node scripts/database-backup.js create",
     "db:backup:verify": "node scripts/database-backup.js verify",
     "db:restore:drill": "node scripts/database-backup.js restore-drill",

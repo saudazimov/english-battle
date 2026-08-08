@@ -8,8 +8,8 @@ function createTeacherWeeklyAiReportController({
     async generate(req, res) {
       try {
         const teacherId = req.user.id;
-        const classId = parseInt(req.params.classId, 10);
-        if (isNaN(classId)) {
+        const classId = Number(req.params.classId);
+        if (!Number.isSafeInteger(classId) || classId < 1) {
           return res.status(400).json({ error: "Noto'g'ri sinf ID" });
         }
 
@@ -73,7 +73,7 @@ function createTeacherWeeklyAiReportController({
                 result.usage.output,
               ]
             )
-            .catch(() => {});
+            .catch((usageError) => logger.error("Teacher AI usage log xatosi:", usageError.message));
         }
         res.json({
           report: result.report,

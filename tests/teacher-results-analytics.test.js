@@ -41,6 +41,13 @@ test("teacher results analytics preserves SQL order and response mapping", async
       { q_order: 1, question_text: "Question", skill: "grammar", difficulty: "easy", total: 4, correct: 3 },
       { q_order: 2, question_text: "Empty", skill: null, difficulty: null, total: 0, correct: 0 },
     ] },
+    { rows: [
+      { student_id: 1, first_name: "Ali", last_name: "Valiyev", taxonomy_id: 10, taxonomy_name: "Present Simple", taxonomy_level: "subskill", mastery_score: 30, confidence_score: 80, weighted_accuracy: 40, exposure_count: 10, correct_count: 4, incorrect_count: 6, repeated_misconception_count: 3, current_evidence_state: "CONFIRMED", current_priority: 90, retention_score: 20, dominant_error_classification: "rule_gap", next_review_date: "2020-01-01" },
+      { student_id: 1, first_name: "Ali", last_name: "Valiyev", taxonomy_id: 11, taxonomy_name: "Vocabulary", taxonomy_level: "topic", mastery_score: 90, confidence_score: 90, weighted_accuracy: 90, exposure_count: 10, correct_count: 9, incorrect_count: 1, repeated_misconception_count: 0, current_evidence_state: "MASTERED", current_priority: 5, retention_score: 90, dominant_error_classification: null, next_review_date: null },
+      { student_id: 2, first_name: "Vali", last_name: null, taxonomy_id: 10, taxonomy_name: "Present Simple", taxonomy_level: "subskill", mastery_score: 50, confidence_score: 70, weighted_accuracy: 45, exposure_count: 10, correct_count: 5, incorrect_count: 5, repeated_misconception_count: 2, current_evidence_state: "CONFIRMED", current_priority: 75, retention_score: 40, dominant_error_classification: "rule_gap", next_review_date: null },
+    ] },
+    { rows: [{ student_id: 1, active_lessons: 1, completed_lessons: 2, avg_progress: 60, retest_pending: 1 }] },
+    { rows: [{ student_id: 1, taxonomy_id: 10, taxonomy_name: "Present Simple", finding_type: "repeated_distractor", error_classification: "rule_gap", severity: "high", confidence: 0.91, occurrence_count: 4, evidence: { selected: "go" }, recommended_action: "targeted_lesson" }] },
   ];
   const service = createTeacherResultsAnalyticsService({
     pool: {
@@ -54,7 +61,7 @@ test("teacher results analytics preserves SQL order and response mapping", async
   const outcome = await service.getResults(7, 12);
 
   assert.equal(outcome.status, "found");
-  assert.deepEqual(queries.map((query) => query.params), [[7, 12], [7], [3], [7], [7], [7]]);
+  assert.deepEqual(queries.map((query) => query.params), [[7, 12], [7], [3], [7], [7], [7], [3], [3], [3]]);
   assert.match(queries[0].sql, /WHERE a\.id = \$1 AND a\.teacher_id = \$2$/);
   assert.match(queries[1].sql, /ORDER BY sub\.percent DESC$/);
   assert.match(queries[2].sql, /status = 'active'$/);
@@ -98,6 +105,26 @@ test("teacher results analytics preserves SQL order and response mapping", async
     correct_rate: 75,
   });
   assert.equal(outcome.result.questions[1].correct_rate, 0);
+  assert.deepEqual(outcome.result.teacher_analytics.overview, {
+    class_accuracy: 60,
+    class_mastery: 65,
+    students_with_evidence: 2,
+    students_needing_support: 2,
+    students_improving: 0,
+    students_regressed: 0,
+    overdue_reviews: 1,
+  });
+  assert.equal(outcome.result.teacher_analytics.heatmap.topics[0].name, "Present Simple");
+  assert.equal(outcome.result.teacher_analytics.students[0].lesson.progress, 60);
+  assert.equal(outcome.result.teacher_analytics.students[0].findings[0].confidence, 91);
+  assert.deepEqual(outcome.result.teacher_analytics.group_recommendations[0], {
+    taxonomy_id: 10,
+    topic: "Present Simple",
+    affected_students: 2,
+    total_students: 5,
+    repeated_misconceptions: 5,
+    recommendation: "Present Simple bo'yicha guruh darsi va keyingi qisqa retest tavsiya etiladi.",
+  });
 });
 
 test("teacher results analytics preserves not-found response and query count", async () => {

@@ -109,6 +109,182 @@ function mapDifficulty(row) {
   return { label: meta.label, count: row.question_count, color: meta.color };
 }
 
+const WEAK_STATES = new Set(["SUSPECTED", "LIKELY", "CONFIRMED", "REMEDIATING", "REGRESSED"]);
+
+function numberOrZero(value) {
+  return Number(value || 0);
+}
+
+function studentName(row) {
+  return `${row.first_name || ""} ${row.last_name || ""}`.trim() || "O'quvchi";
+}
+
+function buildClassLearningAnalytics(profileRows, lessonRows, findingRows, totalStudents) {
+  const students = new Map();
+  const topics = new Map();
+  let totalCorrect = 0;
+  let totalExposure = 0;
+
+  for (const row of profileRows) {
+    if (!students.has(row.student_id)) {
+      students.set(row.student_id, {
+        student_id: row.student_id,
+        name: studentName(row),
+        profiles: [],
+        findings: [],
+        lesson: null,
+      });
+    }
+    if (!row.taxonomy_id) continue;
+    const profile = {
+      taxonomy_id: row.taxonomy_id,
+      taxonomy_name: row.taxonomy_name,
+      taxonomy_level: row.taxonomy_level,
+      mastery: numberOrZero(row.mastery_score),
+      confidence: numberOrZero(row.confidence_score),
+      accuracy: numberOrZero(row.weighted_accuracy),
+      exposure_count: numberOrZero(row.exposure_count),
+      incorrect_count: numberOrZero(row.incorrect_count),
+      repeated_misconceptions: numberOrZero(row.repeated_misconception_count),
+      state: row.current_evidence_state || "OBSERVED",
+      priority: numberOrZero(row.current_priority),
+      retention: numberOrZero(row.retention_score),
+      dominant_error: row.dominant_error_classification || null,
+      next_review_date: row.next_review_date || null,
+    };
+    students.get(row.student_id).profiles.push(profile);
+    totalCorrect += numberOrZero(row.correct_count);
+    totalExposure += numberOrZero(row.exposure_count);
+    const topic = topics.get(String(row.taxonomy_id)) || {
+      taxonomy_id: row.taxonomy_id,
+      name: row.taxonomy_name,
+      level: row.taxonomy_level,
+      observed_students: 0,
+      weak_students: 0,
+      mastery_sum: 0,
+      repeated_misconceptions: 0,
+    };
+    topic.observed_students += 1;
+    topic.mastery_sum += profile.mastery;
+    topic.repeated_misconceptions += profile.repeated_misconceptions;
+    if (WEAK_STATES.has(profile.state)) topic.weak_students += 1;
+    topics.set(String(row.taxonomy_id), topic);
+  }
+
+  for (const row of lessonRows) {
+    const student = students.get(row.student_id);
+    if (student) student.lesson = {
+      active: numberOrZero(row.active_lessons),
+      completed: numberOrZero(row.completed_lessons),
+      progress: numberOrZero(row.avg_progress),
+      retest_pending: numberOrZero(row.retest_pending),
+    };
+  }
+  for (const row of findingRows) {
+    const student = students.get(row.student_id);
+    if (student) student.findings.push({
+      taxonomy_id: row.taxonomy_id,
+      taxonomy_name: row.taxonomy_name,
+      type: row.finding_type,
+      classification: row.error_classification,
+      severity: row.severity,
+      confidence: Math.round(numberOrZero(row.confidence) * 100),
+      occurrences: numberOrZero(row.occurrence_count),
+      evidence: row.evidence || {},
+      recommended_action: row.recommended_action,
+    });
+  }
+
+  const topicList = Array.from(topics.values()).map((topic) => ({
+    ...topic,
+    average_mastery: topic.observed_students
+      ? Math.round(topic.mastery_sum / topic.observed_students)
+      : 0,
+  })).sort((a, b) => b.weak_students - a.weak_students || a.average_mastery - b.average_mastery);
+  const studentList = Array.from(students.values()).map((student) => {
+    const weak = student.profiles.filter((profile) => WEAK_STATES.has(profile.state));
+    const strongest = student.profiles.slice().sort((a, b) => b.mastery - a.mastery)[0] || null;
+    return {
+      ...student,
+      needs_support: weak.length > 0,
+      improving: student.profiles.some((profile) => profile.state === "IMPROVING"),
+      regressed: student.profiles.some((profile) => profile.state === "REGRESSED"),
+      overdue_reviews: student.profiles.filter((profile) => profile.next_review_date
+        && new Date(profile.next_review_date) < new Date()).length,
+      highest_priority_weakness: weak.slice().sort((a, b) => b.priority - a.priority)[0] || null,
+      strongest_skill: strongest,
+    };
+  });
+  const heatmapTopics = topicList.slice(0, 8);
+  const groupRecommendations = topicList.filter((topic) => topic.weak_students >= 2).slice(0, 5).map((topic) => ({
+    taxonomy_id: topic.taxonomy_id,
+    topic: topic.name,
+    affected_students: topic.weak_students,
+    total_students: totalStudents,
+    repeated_misconceptions: topic.repeated_misconceptions,
+    recommendation: `${topic.name} bo'yicha guruh darsi va keyingi qisqa retest tavsiya etiladi.`,
+  }));
+
+  return {
+    overview: {
+      class_accuracy: totalExposure ? Math.round(totalCorrect / totalExposure * 100) : null,
+      class_mastery: topicList.length
+        ? Math.round(topicList.reduce((sum, topic) => sum + topic.average_mastery, 0) / topicList.length)
+        : null,
+      students_with_evidence: studentList.filter((student) => student.profiles.length).length,
+      students_needing_support: studentList.filter((student) => student.needs_support).length,
+      students_improving: studentList.filter((student) => student.improving).length,
+      students_regressed: studentList.filter((student) => student.regressed).length,
+      overdue_reviews: studentList.reduce((sum, student) => sum + student.overdue_reviews, 0),
+    },
+    weak_topics: topicList.filter((topic) => topic.weak_students > 0).slice(0, 8),
+    heatmap: { topics: heatmapTopics, students: studentList },
+    students: studentList,
+    group_recommendations: groupRecommendations,
+  };
+}
+
+async function loadClassLearningAnalytics(pool, classId, totalStudents) {
+  const [profiles, lessons, findings] = await Promise.all([
+    pool.query(
+      `SELECT cs.student_id,u.first_name,u.last_name,p.taxonomy_id,t.name AS taxonomy_name,
+              p.taxonomy_level,p.mastery_score,p.confidence_score,p.weighted_accuracy,
+              p.exposure_count,p.correct_count,p.incorrect_count,p.repeated_misconception_count,
+              p.current_evidence_state,p.current_priority,p.retention_score,
+              p.dominant_error_classification,p.next_review_date
+       FROM class_students cs JOIN users u ON u.id=cs.student_id
+       LEFT JOIN student_skill_profiles p ON p.student_id=cs.student_id
+       LEFT JOIN learning_taxonomy t ON t.id=p.taxonomy_id
+       WHERE cs.class_id=$1 AND cs.status='active'
+       ORDER BY u.first_name,u.last_name,p.current_priority DESC NULLS LAST`,
+      [classId]
+    ),
+    pool.query(
+      `SELECT cs.student_id,
+              COUNT(pl.id) FILTER (WHERE pl.status IN ('READY','ASSIGNED','STARTED'))::int AS active_lessons,
+              COUNT(pl.id) FILTER (WHERE pl.status='COMPLETED')::int AS completed_lessons,
+              COALESCE(AVG(pl.progress_percent),0)::float AS avg_progress,
+              COUNT(rp.id) FILTER (WHERE rp.status IN ('RETEST_PENDING','RETEST_FAILED'))::int AS retest_pending
+       FROM class_students cs
+       LEFT JOIN remediation_plans rp ON rp.student_id=cs.student_id
+       LEFT JOIN personalized_lessons pl ON pl.remediation_plan_id=rp.id
+       WHERE cs.class_id=$1 AND cs.status='active' GROUP BY cs.student_id`,
+      [classId]
+    ),
+    pool.query(
+      `SELECT f.student_id,f.taxonomy_id,t.name AS taxonomy_name,f.finding_type,
+              f.error_classification,f.severity,f.confidence,f.occurrence_count,
+              f.evidence,f.recommended_action
+       FROM learning_findings f
+       JOIN class_students cs ON cs.student_id=f.student_id AND cs.class_id=$1 AND cs.status='active'
+       JOIN learning_taxonomy t ON t.id=f.taxonomy_id
+       WHERE f.is_active=true ORDER BY f.severity DESC,f.confidence DESC`,
+      [classId]
+    ),
+  ]);
+  return buildClassLearningAnalytics(profiles.rows, lessons.rows, findings.rows, totalStudents);
+}
+
 async function loadAnswerAnalytics(pool, assignmentId) {
   const skillResult = await pool.query(
     `SELECT aq.skill,
@@ -201,6 +377,7 @@ function createTeacherResultsAnalyticsService({ pool }) {
     const distribution = buildDistribution(students);
     const classComparison = buildClassComparison(students);
     const answerAnalytics = await loadAnswerAnalytics(pool, assignmentId);
+    const teacherAnalytics = await loadClassLearningAnalytics(pool, assignment.class_id, totalStudents);
 
     return {
       status: "found",
@@ -217,6 +394,7 @@ function createTeacherResultsAnalyticsService({ pool }) {
         skills: answerAnalytics.skills,
         difficulty: answerAnalytics.difficulty,
         questions: answerAnalytics.questions,
+        teacher_analytics: teacherAnalytics,
       },
     };
   }

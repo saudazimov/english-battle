@@ -1,3 +1,5 @@
+const { createAnswerEventService } = require("./answerEventService");
+
 function outcome(statusCode, body) {
   return { statusCode, body };
 }
@@ -111,7 +113,8 @@ async function checkProgressionEligibility({ pool, userId, examSession, getNextL
 
 async function gradeAnswers(pool, questionIds, answers) {
   const questionResult = await pool.query(
-    "SELECT id, correct_option, skill FROM questions WHERE id = ANY($1::int[])",
+    `SELECT id, correct_option, skill, cefr_level
+     FROM questions WHERE id = ANY($1::int[])`,
     [questionIds]
   );
   const questionMap = new Map(
@@ -123,16 +126,27 @@ async function gradeAnswers(pool, questionIds, answers) {
 
   let totalCorrect = 0;
   const skillStats = {};
+  const answerEvents = [];
   for (const answer of answers) {
     const question = questionMap.get(normalizeQuestionId(answer.question_id));
     const skill = question.skill || "other";
     if (!skillStats[skill]) skillStats[skill] = { correct: 0, total: 0 };
     skillStats[skill].total++;
 
-    if (question.correct_option === String(answer.answer || "").toUpperCase()) {
+    const selectedOption = String(answer.answer || "").toUpperCase() || null;
+    const isCorrect = question.correct_option === selectedOption;
+    if (isCorrect) {
       totalCorrect++;
       skillStats[skill].correct++;
     }
+    answerEvents.push({
+      questionId: Number(question.id),
+      selectedOption,
+      correctOption: question.correct_option,
+      isCorrect,
+      detectedCefrLevel: question.cefr_level,
+      legacySkill: skill,
+    });
   }
 
   const total = questionIds.length;
@@ -160,6 +174,7 @@ async function gradeAnswers(pool, questionIds, answers) {
     passOverall,
     passSkill,
     skillResults,
+    answerEvents,
     passed: overallPercent >= passOverall && allSkillsPassed,
   };
 }
@@ -209,11 +224,12 @@ async function persistAttempt({
       );
       newLevel = nextLevel;
     }
-    await client.query(
+    const attemptResult = await client.query(
       `INSERT INTO exam_attempts
        (user_id, exam_type, from_level, to_level, total_questions, total_correct, overall_percent,
         pass_overall_required, pass_skill_required, skill_results, passed, level_changed)
-       VALUES ($1, 'ultimate', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+       VALUES ($1, 'ultimate', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING id`,
       [
         userId,
         currentLevel,
@@ -233,7 +249,12 @@ async function persistAttempt({
       [sessionId]
     );
     await client.query("COMMIT");
-    return { newLevel };
+    return {
+      newLevel,
+      attemptId: attemptResult.rows && attemptResult.rows[0]
+        ? attemptResult.rows[0].id
+        : null,
+    };
   } catch (transactionError) {
     await client.query("ROLLBACK");
     throw transactionError;
@@ -242,7 +263,8 @@ async function persistAttempt({
   }
 }
 
-function createExamSubmitService({ pool, getNextLevel }) {
+function createExamSubmitService({ pool, getNextLevel, answerEventService }) {
+  const diagnosticEvents = answerEventService || createAnswerEventService({ pool });
   async function submitExam({ userId, sessionId, answers }) {
     const sessionResult = await pool.query(
       `SELECT * FROM exam_sessions
@@ -286,6 +308,16 @@ function createExamSubmitService({ pool, getNextLevel }) {
       grading,
     });
     if (saved.statusCode) return saved;
+
+    if (saved.attemptId) {
+      await diagnosticEvents.recordManySafe(grading.answerEvents.map((event) => ({
+        ...event,
+        studentId: userId,
+        sourceMode: "level_exam",
+        sourceRecordId: String(saved.attemptId),
+        sourceQuestionId: event.questionId,
+      })));
+    }
 
     const updated = await pool.query(
       `SELECT id, first_name, last_name, username, phone, cefr_level, xp, rating, coins,

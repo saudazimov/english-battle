@@ -1,9 +1,17 @@
+const {
+  SCHEMA_VERSION,
+  sourceSnapshotHash,
+  createStudentReportCacheService,
+} = require("../services/studentReportCacheService");
+
 function createStudentWeeklyAiReportController({
   pool,
   aiSnapshot,
   aiService,
+  reportCacheService,
   logger = console,
 }) {
+  const reportCache = reportCacheService || createStudentReportCacheService(pool);
   function periodConfig(query) {
     const requested = query && query.period;
     const key = requested === "today" || requested === "30d" ? requested : "7d";
@@ -46,11 +54,7 @@ function createStudentWeeklyAiReportController({
     const student = snapshot.student || {};
     const analysis = publicAnalysis(snapshot);
     return {
-      student: {
-        id: student.id,
-        name: student.name,
-        cefr_level: student.cefr_level,
-      },
+      student: { cefr_level: student.cefr_level },
       period: snapshot.period || {},
       activity: analysis.activity,
       performance: analysis.performance,
@@ -58,71 +62,95 @@ function createStudentWeeklyAiReportController({
       assignments: snapshot.assignments || {},
       exams: snapshot.exams || {},
       data_quality: analysis.data_quality,
+      snapshot_meta: {
+        snapshot_version: "student_learning_snapshot_v2",
+        report_schema_version: SCHEMA_VERSION,
+      },
+    };
+  }
+
+  function cachedPayload(cached, snapshot, periodKey, deduplicated = false) {
+    const storedSnapshot = parseSnapshot(cached.input_snapshot);
+    const effectiveSnapshot = Object.keys(storedSnapshot).length ? storedSnapshot : snapshot;
+    return {
+      report: cached.ai_output,
+      analysis: publicAnalysis(effectiveSnapshot),
+      period: periodKey,
+      data_quality: effectiveSnapshot.data_quality || {},
+      cached: true,
+      generation_deduplicated: deduplicated,
+      confidence: cached.confidence,
+      status: cached.status,
+      created_at: cached.created_at,
     };
   }
 
   return {
     async generate(req, res) {
+      let jobId = null;
       try {
         const studentId = req.user.id;
         const config = periodConfig(req.query);
         const period = aiSnapshot.recentPeriod(config.days);
-
-        const cached = await pool.query(
-          `SELECT ai_output, input_snapshot, confidence, status, created_at FROM ai_reports
-           WHERE target_student_id=$1 AND report_type=$2 AND period_start=$3
-           ORDER BY created_at DESC LIMIT 1`,
-          [studentId, config.reportType, period.start]
-        );
-        if (cached.rows.length > 0 && req.query.refresh !== "1") {
-          const c = cached.rows[0];
-          const snapshot = parseSnapshot(c.input_snapshot);
-          return res.json({
-            report: c.ai_output,
-            analysis: publicAnalysis(snapshot),
-            period: config.key,
-            cached: true,
-            confidence: c.confidence,
-            status: c.status,
-            created_at: c.created_at,
-          });
-        }
-
         const rawSnapshot = await aiSnapshot.buildStudentWeeklySnapshot(
           studentId,
           period.start,
           period.end
         );
         const snapshot = learningOnlySnapshot(rawSnapshot);
-        const result = await aiService.generateStudentWeeklyReport(snapshot);
+        const snapshotHash = sourceSnapshotHash(snapshot);
+        const cacheKey = {
+          studentId,
+          reportType: config.reportType,
+          periodStart: period.start,
+          snapshotHash,
+        };
+        const cached = await reportCache.findCached(cacheKey);
+        if (cached && req.query.refresh !== "1") {
+          return res.json(cachedPayload(cached, snapshot, config.key));
+        }
 
-        const saved = await pool.query(
-          `INSERT INTO ai_reports (user_id, target_student_id, report_type, audience, period_start, period_end, input_snapshot, ai_output, confidence, status)
-           VALUES ($1,$1,$2,'student',$3,$4,$5,$6,$7,$8) RETURNING id, created_at`,
-          [
-            studentId,
-            config.reportType,
-            period.start,
-            period.end,
-            JSON.stringify(snapshot),
-            JSON.stringify(result.report),
-            result.confidence,
-            result.status,
-          ]
-        );
+        const lease = await reportCache.acquireGeneration({
+          ...cacheKey,
+          periodEnd: period.end,
+        });
+        jobId = lease.jobId || null;
+        if (!lease.acquired) {
+          const generated = await reportCache.waitForGeneratedReport(cacheKey);
+          if (generated) {
+            return res.json(cachedPayload(generated, snapshot, config.key, true));
+          }
+          return res.status(503).json({
+            error: "Hisobot yaratilmoqda. Bir necha soniyadan keyin qayta urinib ko'ring.",
+          });
+        }
+
+        const result = await aiService.generateStudentWeeklyReport(snapshot);
+        const saved = await reportCache.saveReport({
+          studentId,
+          reportType: config.reportType,
+          periodStart: period.start,
+          periodEnd: period.end,
+          snapshot,
+          snapshotHash,
+          result,
+          jobId,
+        });
         if (result.usage) {
-          pool
-            .query(
+          try {
+            await pool.query(
               `INSERT INTO ai_usage_logs (user_id, report_id, model, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)`,
               [
                 studentId,
-                saved.rows[0].id,
+                saved.id,
                 result.model,
                 result.usage.input,
                 result.usage.output,
               ]
-            )
-            .catch(() => {});
+            );
+          } catch (usageError) {
+            logger.error("Student AI usage log xatosi:", usageError.message);
+          }
         }
         res.json({
           report: result.report,
@@ -132,9 +160,16 @@ function createStudentWeeklyAiReportController({
           cached: false,
           confidence: result.confidence,
           status: result.status,
-          created_at: saved.rows[0].created_at,
+          created_at: saved.created_at,
         });
       } catch (error) {
+        if (jobId) {
+          try {
+            await reportCache.failGeneration(jobId, error);
+          } catch (jobError) {
+            logger.error("Student AI job status xatosi:", jobError.message);
+          }
+        }
         logger.error("Student AI report xatosi:", error.message);
         res.status(500).json({
           error: "Hozir hisobotni tayyorlab bo'lmadi. Keyinroq urinib ko'ring.",

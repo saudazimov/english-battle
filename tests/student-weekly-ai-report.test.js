@@ -7,12 +7,16 @@ const {
 } = require("../src/controllers/studentWeeklyAiReportController");
 const createStudentWeeklyAiReportRoutes = require("../src/routes/studentWeeklyAiReportRoutes");
 const { buildLearningDiagnostics } = require("../aiSnapshot");
-const { studentFallbackReport } = require("../aiService");
+const {
+  studentFallbackReport,
+  studentInsufficientDataReport,
+  validateStudentReportShape,
+} = require("../aiService");
+const {
+  SCHEMA_VERSION,
+  sourceSnapshotHash,
+} = require("../src/services/studentReportCacheService");
 
-const cacheSql =
-  "SELECT ai_output, input_snapshot, confidence, status, created_at FROM ai_reports WHERE target_student_id=$1 AND report_type=$2 AND period_start=$3 ORDER BY created_at DESC LIMIT 1";
-const saveSql =
-  "INSERT INTO ai_reports (user_id, target_student_id, report_type, audience, period_start, period_end, input_snapshot, ai_output, confidence, status) VALUES ($1,$1,$2,'student',$3,$4,$5,$6,$7,$8) RETURNING id, created_at";
 const usageSql =
   "INSERT INTO ai_usage_logs (user_id, report_id, model, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)";
 
@@ -38,6 +42,12 @@ function createResponse() {
 function harnessSnapshot() {
   const period = { start: "2026-07-20", end: "2026-07-26" };
   return {
+    student: {
+      id: 42,
+      name: "Ali Testov",
+      phone: "+998901234567",
+      cefr_level: "A2",
+    },
     period,
     activity: { questions_answered: 12, assignments_completed: 1, exams_taken: 0, active_days: 3 },
     performance: { accuracy: 75, correct_count: 9, wrong_count: 3, timeout_count: 0 },
@@ -51,6 +61,10 @@ function createHarness({
   queryErrorAt,
   snapshotError,
   serviceError,
+  cacheError,
+  acquireError,
+  saveError,
+  deduplicatedRow,
   usage = { input: 10, output: 20 },
 } = {}) {
   const calls = [];
@@ -58,12 +72,16 @@ function createHarness({
   const period = { start: "2026-07-20", end: "2026-07-26" };
   const snapshot = harnessSnapshot();
   const learningSnapshot = {
-    student: { id: undefined, name: undefined, cefr_level: undefined },
+    student: { cefr_level: "A2" },
     period: snapshot.period,
     activity: snapshot.activity,
     performance: snapshot.performance,
     learning_diagnostics: snapshot.learning_diagnostics,
     assignments: {}, exams: {}, data_quality: snapshot.data_quality,
+    snapshot_meta: {
+      snapshot_version: "student_learning_snapshot_v2",
+      report_schema_version: SCHEMA_VERSION,
+    },
   };
   const generated = {
     report: { title: "Weekly report" },
@@ -78,10 +96,6 @@ function createHarness({
         queryCount++;
         calls.push(["query", normalizeSql(sql), params]);
         if (queryCount === queryErrorAt) throw new Error("database failed");
-        if (queryCount === 1) return { rows: cachedRows };
-        if (normalizeSql(sql) === saveSql) {
-          return { rows: [{ id: 9, created_at: "2026-07-26T10:00:00Z" }] };
-        }
         return { rows: [] };
       },
     },
@@ -101,6 +115,30 @@ function createHarness({
         calls.push(["generate", value]);
         if (serviceError) throw serviceError;
         return generated;
+      },
+    },
+    reportCacheService: {
+      async findCached(key) {
+        calls.push(["cache", key]);
+        if (cacheError) throw cacheError;
+        return cachedRows[0] || null;
+      },
+      async acquireGeneration(value) {
+        calls.push(["acquire", value]);
+        if (acquireError) throw acquireError;
+        return deduplicatedRow ? { acquired: false } : { acquired: true, jobId: 7 };
+      },
+      async waitForGeneratedReport(key) {
+        calls.push(["wait", key]);
+        return deduplicatedRow || null;
+      },
+      async saveReport(value) {
+        calls.push(["save", value]);
+        if (saveError) throw saveError;
+        return { id: 9, created_at: "2026-07-26T10:00:00Z" };
+      },
+      async failGeneration(jobId, error) {
+        calls.push(["fail", jobId, error.message]);
       },
     },
     logger: {
@@ -131,7 +169,13 @@ test("student weekly AI report preserves cached short-circuit", async () => {
   assert.equal(result, response);
   assert.deepEqual(harness.calls, [
     ["period", 7],
-    ["query", cacheSql, [42, "student_learning_analysis_7d_v3", "2026-07-20"]],
+    ["snapshot", 42, "2026-07-20", "2026-07-26"],
+    ["cache", {
+      studentId: 42,
+      reportType: "student_learning_analysis_7d_v3",
+      periodStart: "2026-07-20",
+      snapshotHash: sourceSnapshotHash(harness.learningSnapshot),
+    }],
   ]);
   assert.equal(response.body.report, cached.ai_output);
   assert.equal(response.body.period, "7d");
@@ -150,23 +194,24 @@ test("student weekly AI report preserves refresh generation and persistence orde
 
   assert.deepEqual(harness.calls, [
     ["period", 7],
-    ["query", cacheSql, [42, "student_learning_analysis_7d_v3", "2026-07-20"]],
     ["snapshot", 42, "2026-07-20", "2026-07-26"],
+    ["cache", {
+      studentId: 42, reportType: "student_learning_analysis_7d_v3",
+      periodStart: "2026-07-20", snapshotHash: sourceSnapshotHash(harness.learningSnapshot),
+    }],
+    ["acquire", {
+      studentId: 42, reportType: "student_learning_analysis_7d_v3",
+      periodStart: "2026-07-20", periodEnd: "2026-07-26",
+      snapshotHash: sourceSnapshotHash(harness.learningSnapshot),
+    }],
     ["generate", harness.learningSnapshot],
-    [
-      "query",
-      saveSql,
-      [
-        42,
-        "student_learning_analysis_7d_v3",
-        "2026-07-20",
-        "2026-07-26",
-        JSON.stringify(harness.learningSnapshot),
-        JSON.stringify(harness.generated.report),
-        "high",
-        "completed",
-      ],
-    ],
+    ["save", {
+      studentId: 42, reportType: "student_learning_analysis_7d_v3",
+      periodStart: "2026-07-20", periodEnd: "2026-07-26",
+      snapshot: harness.learningSnapshot,
+      snapshotHash: sourceSnapshotHash(harness.learningSnapshot),
+      result: harness.generated, jobId: 7,
+    }],
     ["query", usageSql, [42, 9, "model-1", 10, 20]],
   ]);
   assert.equal(response.body.report, harness.generated.report);
@@ -185,7 +230,7 @@ test("student weekly AI report preserves no-usage path", async () => {
     response
   );
 
-  assert.equal(harness.calls.filter((call) => call[0] === "query").length, 2);
+  assert.equal(harness.calls.filter((call) => call[0] === "query").length, 0);
   assert.equal(harness.calls.some((call) => call[1] === usageSql), false);
 });
 
@@ -199,7 +244,7 @@ test("student learning analysis supports a separate rolling 30 day cache", async
   );
 
   assert.deepEqual(harness.calls[0], ["period", 30]);
-  assert.deepEqual(harness.calls[1], ["query", cacheSql, [42, "student_learning_analysis_30d_v3", "2026-07-20"]]);
+  assert.deepEqual(harness.calls[2][1].reportType, "student_learning_analysis_30d_v3");
   assert.equal(response.body.period, "30d");
 });
 
@@ -213,7 +258,7 @@ test("student learning analysis supports a separate today cache", async () => {
   );
 
   assert.deepEqual(harness.calls[0], ["period", 1]);
-  assert.deepEqual(harness.calls[1], ["query", cacheSql, [42, "student_learning_analysis_today_v3", "2026-07-20"]]);
+  assert.deepEqual(harness.calls[2][1].reportType, "student_learning_analysis_today_v3");
   assert.equal(response.body.period, "today");
 });
 
@@ -255,10 +300,14 @@ test("student fallback report turns real mistake evidence into topic lessons", (
   assert.equal(report.topic_lessons[0].worked_examples.length, 3);
   assert.equal(report.topic_lessons[0].practice_sequence.length, 3);
   assert.deepEqual(report.topic_lessons[0].review_schedule, ["Bugun", "1 kundan keyin", "3 kundan keyin", "7 kundan keyin"]);
+  assert.equal(validateStudentReportShape(report, {
+    learning_diagnostics: { priority_topics: diagnostics.priority_topics },
+    data_quality: { confidence: "medium" },
+  }), true);
 });
 
-test("student weekly AI report preserves rejected usage-log fallback", async () => {
-  const harness = createHarness({ queryErrorAt: 3 });
+test("student weekly AI report logs rejected usage-log without failing the report", async () => {
+  const harness = createHarness({ queryErrorAt: 1 });
   const response = createResponse();
 
   await harness.controller.generate(
@@ -269,15 +318,17 @@ test("student weekly AI report preserves rejected usage-log fallback", async () 
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.body.cached, false);
-  assert.equal(harness.calls.some((call) => call[0] === "error"), false);
+  assert.equal(response.statusCode, 200);
+  assert.ok(harness.calls.some((call) => call[0] === "error" && call[1] === "Student AI usage log xatosi:"));
 });
 
 test("student weekly AI report preserves awaited error response", async () => {
   const cases = [
-    { queryErrorAt: 1 },
+    { cacheError: new Error("cache failed") },
     { snapshotError: new Error("snapshot failed") },
     { serviceError: new Error("service failed") },
-    { queryErrorAt: 2 },
+    { acquireError: new Error("lease failed") },
+    { saveError: new Error("save failed") },
   ];
 
   for (const options of cases) {
@@ -289,13 +340,68 @@ test("student weekly AI report preserves awaited error response", async () => {
       response
     );
 
-    assert.equal(harness.calls.at(-1)[0], "error");
-    assert.equal(harness.calls.at(-1)[1], "Student AI report xatosi:");
+    const reportError = harness.calls.find((call) => call[0] === "error" && call[1] === "Student AI report xatosi:");
+    assert.ok(reportError);
     assert.equal(response.statusCode, 500);
     assert.deepEqual(response.body, {
       error: "Hozir hisobotni tayyorlab bo'lmadi. Keyinroq urinib ko'ring.",
     });
   }
+});
+
+test("snapshot hash is deterministic for equivalent object key order", () => {
+  assert.equal(
+    sourceSnapshotHash({ b: 2, a: { d: 4, c: 3 } }),
+    sourceSnapshotHash({ a: { c: 3, d: 4 }, b: 2 })
+  );
+  assert.equal(
+    sourceSnapshotHash({ period: { start: "2026-08-01T00:00:00Z", end: "2026-08-07T10:00:00Z" }, answers: 5 }),
+    sourceSnapshotHash({ period: { start: "2026-08-01T00:00:01Z", end: "2026-08-07T23:59:59Z" }, answers: 5 })
+  );
+});
+
+test("preliminary report exposes observations without claiming a full diagnosis", () => {
+  const report = studentInsufficientDataReport({
+    learning_diagnostics: {
+      priority_topics: [{ topic: "Present Simple", attempts: 3, errors: 2 }],
+    },
+    data_quality: { total_answers: 3, session_count: 1, covered_topic_count: 1 },
+  });
+  assert.equal(report.status, "preliminary");
+  assert.equal(report.confidence, "low");
+  assert.match(report.diagnosis, /to'liq hisobot chegarasiga yetmagan/);
+  assert.equal(report.priority_topics.length, 1);
+  assert.equal(report.topic_lessons.length, 0);
+});
+
+test("deep report validation rejects unsupported topic evidence", () => {
+  const snapshot = {
+    learning_diagnostics: {
+      priority_topics: [{ topic: "Present Simple", attempts: 8, errors: 4, accuracy: 50 }],
+    },
+    data_quality: { confidence: "medium" },
+  };
+  const report = studentFallbackReport({
+    ...snapshot,
+    performance: { accuracy: 50 },
+    learning_diagnostics: { ...snapshot.learning_diagnostics, analyzed_answers: 8 },
+  });
+  report.priority_topics[0].topic = "Unsupported invented topic";
+  assert.equal(validateStudentReportShape(report, snapshot), false);
+});
+
+test("concurrent generation response reuses the completed matching report", async () => {
+  const completed = {
+    ai_output: { title: "Shared" }, input_snapshot: harnessSnapshot(),
+    confidence: "medium", status: "generated", created_at: "2026-07-26T10:00:00Z",
+  };
+  const harness = createHarness({ deduplicatedRow: completed });
+  const response = createResponse();
+  await harness.controller.generate({ user: { id: 42 }, query: { refresh: "1" } }, response);
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.body.cached, true);
+  assert.equal(response.body.generation_deduplicated, true);
+  assert.equal(harness.calls.some((call) => call[0] === "generate"), false);
 });
 
 test("student weekly AI report temporarily allows authenticated non-premium students", () => {
@@ -305,8 +411,10 @@ test("student weekly AI report temporarily allows authenticated non-premium stud
     aiService: {},
   });
 
-  assert.equal(router.stack.length, 1);
-  const route = router.stack[0].route;
+  const layer = router.stack.find((item) => item.route
+    && item.route.path === "/ai/reports/student/weekly");
+  assert.ok(layer);
+  const route = layer.route;
   assert.equal(route.path, "/ai/reports/student/weekly");
   assert.equal(route.methods.post, true);
   assert.equal(route.stack.length, 3);

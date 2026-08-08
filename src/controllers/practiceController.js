@@ -1,5 +1,6 @@
 const SESSION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const VALID_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
+const { createAnswerEventService } = require("../services/answerEventService");
 
 function normalizeQuestionId(value) {
   if (typeof value === "number") {
@@ -109,7 +110,7 @@ function createPracticeStartHandler({ pool, crypto, logger }) {
   };
 }
 
-function createPracticeAnswerHandler({ pool, logger }) {
+function createPracticeAnswerHandler({ pool, answerEventService, logger }) {
   return async function answerPractice(req, res) {
     let client;
     try {
@@ -167,7 +168,8 @@ function createPracticeAnswerHandler({ pool, logger }) {
       }
 
       const questionResult = await client.query(
-        "SELECT correct_option, explanation FROM questions WHERE id = $1",
+        `SELECT correct_option, explanation, skill, cefr_level
+         FROM questions WHERE id = $1`,
         [questionId]
       );
       if (!questionResult.rows[0]) {
@@ -185,6 +187,19 @@ function createPracticeAnswerHandler({ pool, logger }) {
         [questionId, isCorrect ? 1 : 0, sessionId, req.user.id]
       );
       await client.query("COMMIT");
+      await answerEventService.recordOneSafe({
+        studentId: req.user.id,
+        questionId,
+        sourceMode: "practice",
+        sourceRecordId: sessionId,
+        sourceQuestionId: questionId,
+        selectedOption: answer,
+        correctOption: question.correct_option,
+        isCorrect,
+        responseTimeMs: body.response_time_ms,
+        detectedCefrLevel: question.cefr_level || session.level,
+        legacySkill: question.skill,
+      });
       res.json({
         is_correct: isCorrect,
         correct_option: question.correct_option,
@@ -278,7 +293,13 @@ function createPracticeFinishHandler({ pool, updateQuestProgress, logger }) {
 }
 
 function createPracticeController(dependencies) {
-  const shared = { ...dependencies, logger: dependencies.logger || console };
+  const logger = dependencies.logger || console;
+  const shared = {
+    ...dependencies,
+    logger,
+    answerEventService: dependencies.answerEventService
+      || createAnswerEventService({ pool: dependencies.pool, logger }),
+  };
   return {
     start: createPracticeStartHandler(shared),
     answer: createPracticeAnswerHandler(shared),

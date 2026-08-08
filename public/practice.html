@@ -304,6 +304,7 @@
     var correctCount = 0;
     var answered = false;
     var practiceSessionId = null;
+    var questionShownAt = null;
     var exitModalTrigger = null;
 
     function icons() { if (window.lucide) lucide.createIcons(); }
@@ -364,6 +365,7 @@
 
     function renderQuestion() {
       answered = false;
+      questionShownAt = Date.now();
       var q = questions[currentIndex];
 
       // Progress
@@ -409,7 +411,12 @@
         var response = await authFetch("/practice/answer", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id: practiceSessionId, question_id: q.id, answer: letter })
+          body: JSON.stringify({
+            session_id: practiceSessionId,
+            question_id: q.id,
+            answer: letter,
+            response_time_ms: questionShownAt ? Math.max(0, Date.now() - questionShownAt) : null
+          })
         });
         result = await response.json();
         if (!response.ok) throw new Error(result.error || "Javobni tekshirib bo'lmadi");

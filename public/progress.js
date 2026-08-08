@@ -19,6 +19,8 @@
   const statusLine = document.getElementById("pageStatus");
   const periodButtons = Array.from(document.querySelectorAll(".period-btn"));
   const periodCache = new Map();
+  const lessonDialog = document.getElementById("lessonDialog");
+  let activeLessonId = null;
 
   function numberOf(value) {
     const parsed = Number(value);
@@ -270,6 +272,145 @@
     });
   }
 
+  function remediationStatus(status) {
+    const labels = { ASSIGNED: "Boshlashga tayyor", STARTED: "Davom etmoqda", COMPLETED: "Dars tugallandi" };
+    return labels[status] || status || "Tayyor";
+  }
+
+  function renderStoredLessons(lessons) {
+    const container = document.getElementById("lessonLibrary");
+    document.getElementById("lessonCountBadge").textContent = lessons.length + " dars";
+    clearElement(container);
+    lessons.forEach(function (stored) {
+      const content = stored.lesson_content || {};
+      const card = document.createElement("article");
+      card.className = "lesson-card";
+      const head = document.createElement("div");
+      head.className = "lesson-head";
+      const titleWrap = document.createElement("div");
+      const title = document.createElement("h3");
+      title.className = "lesson-topic";
+      title.textContent = content.lesson_title || stored.target_skill_name || "Shaxsiy dars";
+      const objective = document.createElement("p");
+      objective.className = "lesson-objective";
+      objective.textContent = "Maqsad: " + (content.learning_objective || "Ko'nikmani mustahkamlash");
+      titleWrap.append(title, objective);
+      const badge = document.createElement("span");
+      badge.className = "badge-pill";
+      badge.textContent = remediationStatus(stored.status);
+      head.append(titleWrap, badge);
+      const summary = lessonTextBlock("Dalilga asoslangan yo'nalish", "scan-search",
+        content.diagnostic_summary && content.diagnostic_summary.student_message);
+      const rule = lessonTextBlock("Qisqa qoida", "book-open",
+        content.micro_explanation && content.micro_explanation.rule);
+      const grid = document.createElement("div");
+      grid.className = "lesson-grid";
+      grid.append(summary, rule);
+      const actions = document.createElement("div");
+      actions.className = "lesson-actions";
+      const progress = document.createElement("div");
+      progress.className = "lesson-progress";
+      const fill = document.createElement("span");
+      fill.style.width = Math.max(0, Math.min(100, numberOf(stored.progress_percent))) + "%";
+      progress.appendChild(fill);
+      const state = document.createElement("span");
+      state.className = "lesson-status";
+      state.textContent = numberOf(stored.answered_count) + "/" + numberOf(stored.exercise_count) + " mashq";
+      const button = document.createElement("button");
+      button.className = "btn primary";
+      button.type = "button";
+      button.textContent = stored.status === "ASSIGNED" ? "Darsni boshlash" : stored.status === "COMPLETED" ? "Ko'rib chiqish" : "Davom etish";
+      button.addEventListener("click", function () { openStoredLesson(stored.id, stored.status); });
+      actions.append(progress, state, button);
+      card.append(head, grid, actions);
+      container.appendChild(card);
+    });
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  async function loadStoredLessons() {
+    let data = await requestJson("/learning/remediation/lessons", { method: "GET" });
+    if (!Array.isArray(data.lessons) || !data.lessons.length) {
+      await requestJson("/learning/remediation/lessons/sync", { method: "POST" });
+      data = await requestJson("/learning/remediation/lessons", { method: "GET" });
+    }
+    if (Array.isArray(data.lessons) && data.lessons.length) renderStoredLessons(data.lessons);
+  }
+
+  function renderLessonExercises(lesson) {
+    const container = document.getElementById("lessonDialogExercises");
+    clearElement(container);
+    (lesson.exercises || []).forEach(function (exercise, index) {
+      const card = document.createElement("article");
+      card.className = "lesson-exercise";
+      const heading = document.createElement("h4");
+      heading.textContent = (index + 1) + ". " + exercise.prompt;
+      const options = document.createElement("div");
+      options.className = "lesson-options";
+      Object.keys(exercise.options || {}).forEach(function (code) {
+        const button = document.createElement("button");
+        button.className = "btn lesson-option";
+        button.type = "button";
+        button.textContent = code + ". " + exercise.options[code];
+        if (exercise.selected_option) {
+          button.disabled = true;
+          if (code === exercise.correct_option) button.classList.add("correct");
+          else if (code === exercise.selected_option) button.classList.add("wrong");
+        } else {
+          button.addEventListener("click", function () { answerStoredExercise(exercise.id, code); });
+        }
+        options.appendChild(button);
+      });
+      card.append(heading, options);
+      if (exercise.explanation) {
+        const feedback = document.createElement("p");
+        feedback.className = "lesson-feedback";
+        feedback.textContent = (exercise.is_correct ? "To'g'ri. " : "To'g'ri javob: " + exercise.correct_option + ". ") + exercise.explanation;
+        card.appendChild(feedback);
+      }
+      container.appendChild(card);
+    });
+  }
+
+  async function fetchLesson(lessonId) {
+    const data = await requestJson("/learning/remediation/lessons/" + lessonId, { method: "GET" });
+    const lesson = data.lesson;
+    const content = lesson.lesson_content || {};
+    document.getElementById("lessonDialogTitle").textContent = content.lesson_title || "Shaxsiy dars";
+    document.getElementById("lessonDialogObjective").textContent = content.learning_objective || "";
+    document.getElementById("lessonDialogRule").textContent = content.micro_explanation && content.micro_explanation.rule || "Qoida izohi mavjud emas.";
+    renderLessonExercises(lesson);
+    const complete = document.getElementById("lessonCompleteButton");
+    complete.disabled = lesson.status === "COMPLETED" || (lesson.exercises || []).some(function (item) { return !item.selected_option; });
+    complete.textContent = lesson.status === "COMPLETED" ? "Dars yakunlangan" : "Darsni yakunlash";
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  async function openStoredLesson(lessonId, status) {
+    activeLessonId = lessonId;
+    if (status === "ASSIGNED") await requestJson("/learning/remediation/lessons/" + lessonId + "/start", { method: "POST" });
+    await fetchLesson(lessonId);
+    lessonDialog.classList.add("open");
+  }
+
+  async function answerStoredExercise(exerciseId, selectedOption) {
+    await requestJson("/learning/remediation/lessons/" + activeLessonId + "/exercises/" + exerciseId + "/answer", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ selected_option: selectedOption }),
+    });
+    await fetchLesson(activeLessonId);
+    await loadStoredLessons();
+  }
+
+  document.getElementById("lessonDialogClose").addEventListener("click", function () { lessonDialog.classList.remove("open"); });
+  lessonDialog.addEventListener("click", function (event) { if (event.target === lessonDialog) lessonDialog.classList.remove("open"); });
+  document.getElementById("lessonCompleteButton").addEventListener("click", async function () {
+    if (!activeLessonId) return;
+    await requestJson("/learning/remediation/lessons/" + activeLessonId + "/complete", { method: "POST" });
+    await fetchLesson(activeLessonId);
+    await loadStoredLessons();
+    periodCache.clear();
+  });
+
   function renderLearningPlan(report) {
     const container = document.getElementById("learningPlan");
     const plan = Array.isArray(report.learning_plan) ? report.learning_plan : [];
@@ -358,6 +499,19 @@
     });
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
   function renderPremiumLock() {
     const body = document.getElementById("aiBody");
     body.innerHTML = '<div class="ai-empty"><div><div class="ai-empty-icon"><i data-lucide="crown"></i></div><h3>Chuqur bilim diagnostikasi — Premium</h3><p>7 va 30 kunlik xato mavzulari, pedagogik tahlil va ilmiy o‘quv rejasini oling.</p><button class="btn primary" id="progressPremiumButton" type="button"><i data-lucide="crown"></i> Premium olish</button></div></div>';
@@ -393,6 +547,7 @@
         periodCache.set(period, data);
       }
       renderDashboard(data);
+      try { await loadStoredLessons(); } catch (lessonError) { console.error("Personalized lessons:", lessonError); }
     } catch (error) {
       if (error.status === 402) {
         setStatus("", false);
@@ -406,5 +561,10 @@
   periodButtons.forEach(function (button) {
     button.addEventListener("click", function () { loadPeriod(button.dataset.period); });
   });
+  const learningUi = window.createProgressLearningUI({
+    requestJson,clearElement,makeIcon,renderEmpty,numberOf,
+    clearPeriodCache: function () { periodCache.clear(); },
+  });
+  learningUi.load();
   loadPeriod("7d");
 })();

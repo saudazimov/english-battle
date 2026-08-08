@@ -1,4 +1,11 @@
-function createAdminQuestionUpdateController({ pool, logAudit, logger = console }) {
+const { createQuestionAnalysisService } = require("../services/questionAnalysisService");
+
+function createAdminQuestionUpdateController({
+  pool,
+  logAudit,
+  logger = console,
+  questionAnalysisService = createQuestionAnalysisService({ pool, logger }),
+}) {
   return {
     async update(req, res) {
       try {
@@ -57,10 +64,70 @@ function createAdminQuestionUpdateController({ pool, logAudit, logger = console 
           entityId: id,
           details: (cefr_level || "A1") + " · " + (skill || "grammar"),
         });
+        await questionAnalysisService.enqueueSafe(id, "question_updated");
         res.json({ message: "Savol yangilandi!", id: id });
       } catch (error) {
         logger.error("Savol tahrirlash xatosi:", error.message);
         res.status(500).json({ error: "Server xatosi" });
+      }
+    },
+
+    async getAnalysis(req, res) {
+      try {
+        const questionId = Number(req.params.id);
+        if (!Number.isSafeInteger(questionId) || questionId < 1) {
+          return res.status(400).json({ error: "Savol ID noto'g'ri" });
+        }
+        const analysis = await questionAnalysisService.getAnalysis(questionId);
+        if (!analysis) return res.status(404).json({ error: "Tahlil topilmadi" });
+        return res.json({ analysis });
+      } catch (error) {
+        logger.error("Savol AI tahlilini olish xatosi:", error.message);
+        return res.status(500).json({ error: "Server xatosi" });
+      }
+    },
+
+    async reviewAnalysis(req, res) {
+      try {
+        const questionId = Number(req.params.id);
+        if (!Number.isSafeInteger(questionId) || questionId < 1) {
+          return res.status(400).json({ error: "Savol ID noto'g'ri" });
+        }
+        const analysis = await questionAnalysisService.review(
+          questionId,
+          req.body || {},
+          req.admin && req.admin.name
+        );
+        if (!analysis) return res.status(404).json({ error: "Tahlil topilmadi" });
+        await logAudit(req, "question_analysis_reviewed", {
+          entityType: "question",
+          entityId: questionId,
+          details: String((req.body && req.body.reason) || "Admin review").slice(0, 500),
+        });
+        return res.json({ message: "Savol tahlili yangilandi", analysis });
+      } catch (error) {
+        logger.error("Savol AI tahlilini ko'rib chiqish xatosi:", error.message);
+        return res.status(500).json({ error: "Server xatosi" });
+      }
+    },
+
+    async requeueAnalysis(req, res) {
+      try {
+        const questionId = Number(req.params.id);
+        if (!Number.isSafeInteger(questionId) || questionId < 1) {
+          return res.status(400).json({ error: "Savol ID noto'g'ri" });
+        }
+        const queued = await questionAnalysisService.enqueue(questionId, "admin_reanalysis");
+        if (!queued) return res.status(404).json({ error: "Savol topilmadi" });
+        setImmediate(() => questionAnalysisService.processBatchSafe(1));
+        await logAudit(req, "question_analysis_requeued", {
+          entityType: "question",
+          entityId: questionId,
+        });
+        return res.json({ message: "Savol qayta tahlil navbatiga qo'shildi" });
+      } catch (error) {
+        logger.error("Savol AI tahlilini navbatga qo'yish xatosi:", error.message);
+        return res.status(500).json({ error: "Server xatosi" });
       }
     },
   };

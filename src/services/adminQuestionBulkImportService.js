@@ -1,4 +1,10 @@
-function createAdminQuestionBulkImportService({ pool }) {
+const { createQuestionAnalysisService } = require("./questionAnalysisService");
+
+function createAdminQuestionBulkImportService({
+  pool,
+  questionAnalysisService,
+}) {
+  const analysisService = questionAnalysisService || createQuestionAnalysisService({ pool });
   async function importRows(rows) {
     if (!Array.isArray(rows) || rows.length === 0) return { status: "empty" };
     if (rows.length > 1000) return { status: "too-many" };
@@ -52,12 +58,13 @@ function createAdminQuestionBulkImportService({ pool }) {
       seenInBatch[normalized] = true;
 
       try {
-        await pool.query(
+        const insertedQuestion = await pool.query(
           `INSERT INTO questions
            (question_text, option_a, option_b, option_c, option_d, correct_option, cefr_level, skill, difficulty, explanation, status)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'easy',$9,$10)`,
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'easy',$9,$10) RETURNING id`,
           [questionText, optionA, optionB, optionC, optionD, correct, level, skill, explanation, status]
         );
+        await analysisService.enqueueSafe(insertedQuestion.rows[0].id, "bulk_import");
         inserted++;
       } catch (error) {
         skipped++;

@@ -70,6 +70,9 @@ function createHarness({ battles = {}, queryError, nowValue = 1000 } = {}) {
         calls.push(["error", ...args]);
       },
     },
+    answerEventService: {
+      async recordOneSafe() { return null; },
+    },
   });
   return {
     calls,

@@ -125,7 +125,7 @@ test("exam submit preserves grading, SQL, transaction, and success response", as
   assert.match(poolQueries[3][1], /^SELECT COUNT\(\*\) AS battles/);
   assert.equal(
     poolQueries[4][1],
-    "SELECT id, correct_option, skill FROM questions WHERE id = ANY($1::int[])"
+    "SELECT id, correct_option, skill, cefr_level FROM questions WHERE id = ANY($1::int[])"
   );
   assert.deepEqual(poolQueries[4][2], [[1, 2]]);
   assert.match(poolQueries[5][1], /^SELECT id, first_name, last_name/);

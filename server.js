@@ -26,6 +26,7 @@ const aiService = require("./aiService");
 const aiSnapshot = require("./aiSnapshot");
 const { createSmsService } = require("./src/services/smsService");
 const { createPersistentRateLimitService } = require("./src/services/persistentRateLimitService");
+const { startLearningWorkers } = require("./src/services/learningWorkerService");
 const { createExamAttemptGradingService } = require("./src/services/examAttemptGradingService");
 const { registerSocketConnection } = require("./src/sockets/socketBootstrap");
 const {
@@ -163,6 +164,7 @@ const { app, server, io, port: PORT } = createHttpApplication({
   environment: process.env,
   logger: console,
 });
+startLearningWorkers({ pool, logger: console });
 
 // ============ OTP (TELEFON TASDIQLASH) ============
 
@@ -188,6 +190,20 @@ var loginGate       = failGate("login",      { keyFn: _phoneIpKey, message: "Jud
 var usernameLookupLimiter = countLimiter("username_lookup", { keyFn: _ipOf, max: 60, windowMs: 60*1000, blockMs: 10*60*1000, message: "Username tekshiruvi juda ko'p." });
 var schoolCodeLookupLimiter = countLimiter("school_code_lookup", { keyFn: _ipOf, max: 15, windowMs: 15*60*1000, blockMs: 30*60*1000, message: "Taklif kodi urinishlari juda ko'p." });
 var directMessageLimiter = countLimiter("direct_message", { keyFn: (req) => req.user ? req.user.id : _ipOf(req), max: 30, windowMs: 60*1000, blockMs: 5*60*1000, message: "Xabarlar juda tez yuborilmoqda." });
+var aiGenerationLimiter = countLimiter("ai_generation", {
+  keyFn: _ipOf,
+  max: 30,
+  windowMs: 60 * 60 * 1000,
+  blockMs: 15 * 60 * 1000,
+  message: "AI hisobot so'rovlari juda ko'p.",
+});
+var remediationSyncLimiter = countLimiter("learning_remediation_sync", {
+  keyFn: _ipOf,
+  max: 20,
+  windowMs: 10 * 60 * 1000,
+  blockMs: 10 * 60 * 1000,
+  message: "Shaxsiy darslarni yangilash so'rovlari juda ko'p.",
+});
 
 // KOD YUBORISH VA TEKSHIRISH endpointlari
 const authFeatureRoutes = createAuthFeatureRoutes();
@@ -554,6 +570,9 @@ registerPremiumSubscriptionRoutes({ app, premium, logAudit });
 registerPaymentRoutes({ app });
 
 // ============ AI HISOBOTLAR: PARENT, STUDENT, TEACHER ============
+app.use("/ai/reports", aiGenerationLimiter);
+app.use("/learning/remediation/lessons/sync", remediationSyncLimiter);
+app.use("/learning/remediation/assessments/sync", remediationSyncLimiter);
 registerAiReportRoutes({ app, pool, premium, aiSnapshot, aiService });
 
 // ============ KUNDALIK ENGAGEMENT: STREAK VA QUESTLAR ============

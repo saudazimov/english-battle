@@ -105,16 +105,32 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
   }
 
   // --- 2. Battle answers (davr ichida) — accuracy, correct/wrong/timeout, skill ---
-  const baRes = await pool.query(
-    `SELECT ba.skill, ba.is_correct, ba.timed_out, ba.selected_option, ba.correct_option,
-            ba.answered_at, q.question_text, q.explanation,
-            q.option_a, q.option_b, q.option_c, q.option_d
-     FROM battle_answers ba
-     JOIN questions q ON q.id = ba.question_id
-     WHERE ba.user_id = $1 AND ba.answered_at >= $2 AND ba.answered_at <= $3`,
+  const answerEventResult = await pool.query(
+    `SELECT ae.source_mode, ae.source_record_id, ae.source_question_id,
+            ae.legacy_skill AS skill, ae.topic_id,
+            ae.question_diagnostic_eligible,
+            COALESCE(qa.analysis_confidence,
+              CASE WHEN ae.question_diagnostic_eligible THEN 0.70 ELSE 0 END) AS metadata_confidence,
+            ae.is_correct, ae.timed_out, ae.selected_option, ae.correct_option,
+            ae.answered_at,
+            COALESCE(q.question_text, aq.question_text, teq.question_text) AS question_text,
+            COALESCE(q.explanation, aq.explanation, teq.explanation) AS explanation,
+            COALESCE(q.option_a, aq.option_a, teq.option_a) AS option_a,
+            COALESCE(q.option_b, aq.option_b, teq.option_b) AS option_b,
+            COALESCE(q.option_c, aq.option_c, teq.option_c) AS option_c,
+            COALESCE(q.option_d, aq.option_d, teq.option_d) AS option_d
+     FROM student_answer_events ae
+     LEFT JOIN questions q ON q.id = ae.question_id
+     LEFT JOIN question_ai_analysis qa ON qa.question_id = ae.question_id
+     LEFT JOIN assignment_questions aq
+       ON ae.source_mode = 'teacher_assignment' AND aq.id = ae.source_question_id
+     LEFT JOIN teacher_exam_questions teq
+       ON ae.source_mode = 'class_exam' AND teq.id = ae.source_question_id
+     WHERE ae.student_id = $1 AND ae.answered_at >= $2 AND ae.answered_at <= $3`,
     [studentId, periodStart, periodEnd]
   );
-  const battleAnswers = baRes.rows;
+  const allLearningAnswers = answerEventResult.rows;
+  const battleAnswers = allLearningAnswers.filter((answer) => answer.source_mode === "battle");
 
   // --- 3. Battle history (davr ichida) — battles count, rating change, xp, active days ---
   const bhRes = await pool.query(
@@ -161,25 +177,7 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
   // --- 6. Skill bo'yicha aniqlik (battle + assignment birlashtirib) ---
   // Battle answers'dan skill statistikasi
   const skillMap = {}; // skill -> { correct, total }
-  battleAnswers.forEach((a) => {
-    const sk = a.skill || "other";
-    if (!skillMap[sk]) skillMap[sk] = { correct: 0, total: 0 };
-    skillMap[sk].total++;
-    if (a.is_correct) skillMap[sk].correct++;
-  });
-  // Assignment answers'dan ham skill (submission_answers + assignment_questions JOIN)
-  const saRes = await pool.query(
-    `SELECT aq.skill, sa.is_correct, false AS timed_out, sa.selected_option,
-            sa.correct_answer AS correct_option, sa.answered_at,
-            aq.question_text, aq.explanation,
-            aq.option_a, aq.option_b, aq.option_c, aq.option_d
-     FROM submission_answers sa
-     JOIN assignment_submissions s ON s.id = sa.submission_id AND s.student_id = $1 AND s.status = 'submitted'
-     JOIN assignment_questions aq ON aq.id = sa.assignment_question_id
-     WHERE s.submitted_at >= $2 AND s.submitted_at <= $3 AND aq.skill IS NOT NULL AND aq.skill <> ''`,
-    [studentId, periodStart, periodEnd]
-  );
-  saRes.rows.forEach((a) => {
+  allLearningAnswers.forEach((a) => {
     const sk = a.skill || "other";
     if (!skillMap[sk]) skillMap[sk] = { correct: 0, total: 0 };
     skillMap[sk].total++;
@@ -197,14 +195,64 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
     }));
   const weakSkills = skillList.filter((s) => s.accuracy < 60).sort((a, b) => a.accuracy - b.accuracy).slice(0, 5);
   const strongSkills = skillList.filter((s) => s.accuracy >= 75).sort((a, b) => b.accuracy - a.accuracy).slice(0, 5);
-  const allLearningAnswers = [...battleAnswers, ...saRes.rows];
   const learningDiagnostics = buildLearningDiagnostics(allLearningAnswers);
+  const profileResult = await pool.query(
+    `SELECT p.taxonomy_id, p.taxonomy_level, t.name, t.slug,
+            p.exposure_count AS attempts, p.correct_count AS correct,
+            p.incorrect_count AS errors, p.timeout_count AS timeouts,
+            p.weighted_accuracy AS accuracy, p.error_rate,
+            p.mastery_score, p.confidence_score, p.confidence_label AS confidence,
+            p.current_evidence_state AS evidence_state,
+            p.current_priority AS priority, p.repeated_misconception_count,
+            p.dominant_error_classification, p.active_finding_count, p.pattern_summary,
+            p.last_attempt
+     FROM student_skill_profiles p
+     JOIN learning_taxonomy t ON t.id=p.taxonomy_id
+     WHERE p.student_id=$1
+     ORDER BY p.current_priority DESC, p.taxonomy_level, t.name`,
+    [studentId]
+  );
+  const exactSkillProfiles = profileResult.rows.map((profile) => ({
+    ...profile,
+    accuracy: Math.round(Number(profile.accuracy || 0)),
+    error_rate: Math.round(Number(profile.error_rate || 0)),
+    mastery_score: Math.round(Number(profile.mastery_score || 0)),
+    confidence_score: Math.round(Number(profile.confidence_score || 0)),
+    priority: Math.round(Number(profile.priority || 0)),
+  }));
+  const findingResult = await pool.query(
+    `SELECT f.id,f.taxonomy_id,t.name AS skill_name,t.node_type AS taxonomy_level,
+            f.finding_code,f.finding_type,f.error_classification,f.severity,
+            f.confidence,f.evidence_state,f.occurrence_count,f.evidence,
+            f.recommended_action,f.first_detected_at,f.last_detected_at
+     FROM learning_findings f
+     JOIN learning_taxonomy t ON t.id=f.taxonomy_id
+     WHERE f.student_id=$1 AND f.is_active=true
+     ORDER BY CASE f.severity WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END DESC,
+              CASE t.node_type WHEN 'micro_skill' THEN 4 WHEN 'subskill' THEN 3 WHEN 'topic' THEN 2 ELSE 1 END DESC,
+              f.confidence DESC,f.occurrence_count DESC
+     LIMIT 20`,
+    [studentId]
+  );
+  const patternFindings = findingResult.rows.map((finding) => ({
+    ...finding,
+    confidence: Math.round(Number(finding.confidence || 0) * 100),
+  }));
+  const remediationTargets = [];
+  const remediationCodes = new Set();
+  for (const finding of patternFindings) {
+    if (!["CONFIRMED", "LIKELY", "REGRESSED"].includes(finding.evidence_state)) continue;
+    if (remediationCodes.has(finding.finding_code)) continue;
+    remediationCodes.add(finding.finding_code);
+    remediationTargets.push(finding);
+    if (remediationTargets.length === 3) break;
+  }
 
   // --- 7. Hisoblangan ko'rsatkichlar ---
   const correctCount = allLearningAnswers.filter((a) => a.is_correct).length;
   const timeoutCount = allLearningAnswers.filter((a) => a.timed_out).length;
   const wrongCount = allLearningAnswers.length - correctCount - timeoutCount;
-  const questionsAnswered = battleAnswers.length;
+  const questionsAnswered = allLearningAnswers.length;
   const accuracy = allLearningAnswers.length > 0 ? Math.round((correctCount / allLearningAnswers.length) * 100) : 0;
 
   const ratingChange = battles.reduce((s, b) => s + (b.rating_change || 0), 0);
@@ -214,6 +262,9 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
   const activeDaysSet = new Set();
   battles.forEach((b) => { if (b.played_at) activeDaysSet.add(new Date(b.played_at).toISOString().slice(0, 10)); });
   submissions.forEach((s) => { if (s.submitted_at) activeDaysSet.add(new Date(s.submitted_at).toISOString().slice(0, 10)); });
+  allLearningAnswers.forEach((answer) => {
+    if (answer.answered_at) activeDaysSet.add(new Date(answer.answered_at).toISOString().slice(0, 10));
+  });
 
   const submittedCount = submissions.filter((s) => s.status === "submitted").length;
   const lateCount = submissions.filter((s) => s.is_late).length;
@@ -224,14 +275,67 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
   const failedCount = exams.filter((e) => !e.passed).length;
 
   // --- 8. DATA QUALITY GATE (eng muhim — fake report'ning oldini oladi) ---
-  const totalAnswers = questionsAnswered + saRes.rows.length;
+  const totalAnswers = allLearningAnswers.length;
   const totalAssignments = submittedCount;
-  const totalExams = exams.length;
-  // Spetsifikatsiya qoidasi: 30 javob YOKI 2 assignment YOKI 1 exam
-  const enoughData = totalAnswers >= 30 || totalAssignments >= 2 || totalExams >= 1;
+  const classExamCount = new Set(
+    allLearningAnswers
+      .filter((answer) => answer.source_mode === "class_exam")
+      .map((answer) => answer.source_record_id)
+  ).size;
+  const totalExams = exams.length + classExamCount;
+  const gateResult = await pool.query(
+    `SELECT setting_value FROM system_learning_settings
+     WHERE setting_key='student_report_quality_gate_v1'`
+  );
+  const gate = gateResult.rows[0] && gateResult.rows[0].setting_value
+    ? gateResult.rows[0].setting_value
+    : {};
+  const thresholds = {
+    answer_threshold: Number(gate.answer_threshold || 30),
+    assignment_threshold: Number(gate.assignment_threshold || 2),
+    exam_threshold: Number(gate.exam_threshold || 1),
+    reliable_question_threshold: Number(gate.reliable_question_threshold || 10),
+    session_threshold: Number(gate.session_threshold || 2),
+    topic_threshold: Number(gate.topic_threshold || 2),
+    metadata_confidence_threshold: Number(gate.metadata_confidence_threshold || 0.55),
+  };
+  const reliableQuestionCount = new Set(
+    allLearningAnswers
+      .filter((answer) => answer.question_diagnostic_eligible)
+      .map((answer) => `${answer.source_mode}:${answer.source_question_id}`)
+  ).size;
+  const sessionCount = new Set(
+    allLearningAnswers.map((answer) => `${answer.source_mode}:${answer.source_record_id}`)
+  ).size;
+  const coveredTopicCount = new Set(
+    allLearningAnswers
+      .map((answer) => answer.topic_id || answer.skill)
+      .filter(Boolean)
+  ).size;
+  const metadataValues = allLearningAnswers
+    .filter((answer) => answer.question_diagnostic_eligible)
+    .map((answer) => Number(answer.metadata_confidence || 0));
+  const metadataConfidence = metadataValues.length
+    ? metadataValues.reduce((sum, value) => sum + value, 0) / metadataValues.length
+    : 0;
+  const primaryGateMet = totalAnswers >= thresholds.answer_threshold
+    || totalAssignments >= thresholds.assignment_threshold
+    || totalExams >= thresholds.exam_threshold;
+  const evidenceBreadthMet = reliableQuestionCount >= thresholds.reliable_question_threshold
+    && sessionCount >= thresholds.session_threshold
+    && coveredTopicCount >= thresholds.topic_threshold
+    && metadataConfidence >= thresholds.metadata_confidence_threshold;
+  // Assignment yoki imtihon yakunlanishi mavjud kuchli gate sifatida saqlanadi.
+  // Faqat answer-count yo'li esa diagnostik sifat va qamrovni ham talab qiladi.
+  const enoughData = primaryGateMet && (
+    evidenceBreadthMet
+    || totalAssignments >= thresholds.assignment_threshold
+    || totalExams >= thresholds.exam_threshold
+  );
   let dqConfidence = "low";
-  if (totalAnswers >= 80 || totalAssignments >= 5) dqConfidence = "high";
-  else if (totalAnswers >= 30 || totalAssignments >= 2) dqConfidence = "medium";
+  if (enoughData && (totalAnswers >= 80 || totalAssignments >= 5)
+      && metadataConfidence >= 0.75 && sessionCount >= 4) dqConfidence = "high";
+  else if (enoughData) dqConfidence = "medium";
 
   return {
     student: {
@@ -247,7 +351,7 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
       battles_count: battles.length,
       questions_answered: questionsAnswered,
       assignments_completed: submittedCount,
-      exams_taken: exams.length,
+      exams_taken: totalExams,
       active_days: activeDaysSet.size,
     },
     performance: {
@@ -262,12 +366,19 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
     strong_skills: strongSkills,
     learning_diagnostics: {
       ...learningDiagnostics,
+      skill_profiles: exactSkillProfiles,
+      priority_skill_profiles: exactSkillProfiles.filter((item) => item.errors > 0).slice(0, 6),
+      pattern_findings: patternFindings,
+      remediation_targets: remediationTargets,
       analyzed_answers: totalAnswers,
       sources: {
-        battle_answers: questionsAnswered,
-        assignment_answers: saRes.rows.length,
+        battle_answers: battleAnswers.length,
+        assignment_answers: allLearningAnswers.filter((answer) => answer.source_mode === "teacher_assignment").length,
+        practice_answers: allLearningAnswers.filter((answer) => answer.source_mode === "practice").length,
+        level_exam_answers: allLearningAnswers.filter((answer) => answer.source_mode === "level_exam").length,
+        class_exam_answers: allLearningAnswers.filter((answer) => answer.source_mode === "class_exam").length,
       },
-      coverage_note: "Individual practice answers are not included because practice sessions currently store aggregate counts only.",
+      coverage_note: "Battle, assignment, practice, level-exam and class-exam answers use the unified diagnostic event stream.",
     },
     assignments: {
       total: submissions.length + missingCount,
@@ -287,6 +398,14 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
       total_answers: totalAnswers,
       total_assignments: totalAssignments,
       total_exams: totalExams,
+      report_level: enoughData ? "full" : "preliminary",
+      primary_gate_met: primaryGateMet,
+      evidence_breadth_met: evidenceBreadthMet,
+      reliable_question_count: reliableQuestionCount,
+      session_count: sessionCount,
+      covered_topic_count: coveredTopicCount,
+      metadata_confidence: Math.round(metadataConfidence * 100) / 100,
+      thresholds,
       confidence: dqConfidence,
     },
   };
