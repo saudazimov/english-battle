@@ -112,9 +112,9 @@ async function savePlayerResult({
     const enemyLabel = (battle.teamMode === "squad" ? "Squad" : "Duo") + " jamoa";
     await pool.query(
       `INSERT INTO battle_history
-       (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level, mode, room_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-      [player.userId, enemyLabel, null, myTeamScore, enemyTeamScore, outcome, xpEarned, ratingDelta, battle.level || "A1", "school", roomId]
+       (user_id, opponent_name, opponent_id, my_score, opponent_score, outcome, xp_earned, rating_change, cefr_level, mode, total_questions, room_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+      [player.userId, enemyLabel, null, myTeamScore, enemyTeamScore, outcome, xpEarned, ratingDelta, battle.level || "A1", "school", battle.questions.length, roomId]
     );
     await updateQuestProgress(player.userId, {
       won: outcome === "win",
