@@ -135,8 +135,8 @@ test("preserves scoring, DB rewards, result payloads, and player order", async (
   ]);
   const histories = harness.calls.filter((call) => call[0] === "query" && call[1].startsWith("INSERT INTO battle_history"));
   assert.deepEqual(histories.map((call) => call[2]), [
-    [1, "Duo jamoa", null, 4, 2, "win", 8, 20, "B1", "school", "room_1"],
-    [2, "Duo jamoa", null, 2, 4, "lose", 2, -20, "B1", "school", "room_1"],
+    [1, "Duo jamoa", null, 4, 2, "win", 8, 20, "B1", "school", 3, "room_1"],
+    [2, "Duo jamoa", null, 2, 4, "lose", 2, -20, "B1", "school", 3, "room_1"],
   ]);
   assert.deepEqual(harness.calls.filter((call) => call[0] === "quest"), [
     ["quest", 1, { won: true, correctAnswers: 3, xpEarned: 8 }],
