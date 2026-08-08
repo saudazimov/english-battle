@@ -162,7 +162,7 @@ test("parent weekly AI report controller preserves validation and error response
   });
   const invalidResponse = createResponse();
   await invalidController.generate({
-    params: { studentId: "invalid" },
+    params: { studentId: "20abc" },
     user: { id: 10 },
     query: {},
   }, invalidResponse);

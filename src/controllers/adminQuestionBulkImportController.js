@@ -2,8 +2,8 @@ const {
   createAdminQuestionBulkImportService,
 } = require("../services/adminQuestionBulkImportService");
 
-function createAdminQuestionBulkImportController({ pool, logAudit }) {
-  const service = createAdminQuestionBulkImportService({ pool });
+function createAdminQuestionBulkImportController({ pool, logAudit, questionAnalysisService }) {
+  const service = createAdminQuestionBulkImportService({ pool, questionAnalysisService });
 
   async function importQuestions(req, res) {
     try {

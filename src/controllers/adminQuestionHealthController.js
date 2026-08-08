@@ -1,4 +1,10 @@
-function createAdminQuestionHealthController({ pool, logger = console }) {
+const { createQuestionQualityService } = require("../services/questionQualityService");
+
+function createAdminQuestionHealthController({
+  pool,
+  logger = console,
+  questionQualityService = createQuestionQualityService({ pool }),
+}) {
   return {
     async getHealth(req, res) {
       try {
@@ -60,6 +66,10 @@ function createAdminQuestionHealthController({ pool, logger = console }) {
 
         var score = total > 0 ? Math.round((valid / total) * 1000) / 10 : 0;
 
+        const qualityEngine = typeof questionQualityService.evaluateAndPersist === "function"
+          ? await questionQualityService.evaluateAndPersist()
+          : await questionQualityService.evaluate();
+
         res.json({
           totalQuestions: total,
           validQuestions: valid,
@@ -70,6 +80,7 @@ function createAdminQuestionHealthController({ pool, logger = console }) {
           needsReview: needsReview,
           published: published,
           draft: draft,
+          qualityEngine,
         });
       } catch (error) {
         logger.error("Health xatosi:", error.message);

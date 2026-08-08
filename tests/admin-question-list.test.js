@@ -55,7 +55,7 @@ test("admin question list preserves default pagination and queries", async () =>
   assert.deepEqual(harness.calls, [
     ["SELECT COUNT(*) AS total FROM questions", []],
     [
-      "SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, cefr_level, skill, difficulty, explanation, status, created_at, updated_at FROM questions ORDER BY id DESC LIMIT $1 OFFSET $2",
+      "SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, cefr_level, skill, difficulty, explanation, status, created_at, updated_at, analysis_status, diagnostic_eligible, analysis_version, (SELECT analysis_confidence FROM question_ai_analysis qa WHERE qa.question_id=questions.id) AS analysis_confidence FROM questions ORDER BY id DESC LIMIT $1 OFFSET $2",
       [25, 0],
     ],
   ]);

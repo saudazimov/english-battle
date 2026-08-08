@@ -116,7 +116,7 @@ test("teacher weekly AI report preserves ownership guard", async () => {
   const response = createResponse();
 
   const result = await harness.controller.generate(
-    { user: { id: 7 }, params: { classId: "12abc" }, query: {} },
+    { user: { id: 7 }, params: { classId: "12" }, query: {} },
     response
   );
 
@@ -124,6 +124,19 @@ test("teacher weekly AI report preserves ownership guard", async () => {
   assert.deepEqual(harness.calls, [["query", ownershipSql, [12, 7]]]);
   assert.equal(response.statusCode, 403);
   assert.deepEqual(response.body, { error: "Bu sinf sizga tegishli emas" });
+});
+
+test("teacher weekly AI report rejects partially numeric class IDs", async () => {
+  const harness = createHarness();
+  const response = createResponse();
+
+  await harness.controller.generate(
+    { user: { id: 7 }, params: { classId: "12abc" }, query: {} },
+    response
+  );
+
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(harness.calls, []);
 });
 
 test("teacher weekly AI report preserves cached short-circuit", async () => {
@@ -208,7 +221,9 @@ test("teacher weekly AI report preserves usage-log fallback", async () => {
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.body.cached, false);
-  assert.equal(harness.calls.some((call) => call[0] === "error"), false);
+  assert.equal(harness.calls.some((call) => call[0] === "error"
+    && call[1] === "Teacher AI usage log xatosi:"
+    && call[2] === "database failed"), true);
 });
 
 test("teacher weekly AI report preserves awaited error response", async () => {

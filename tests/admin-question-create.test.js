@@ -54,6 +54,12 @@ function createHarness({ queryError, auditError } = {}) {
         calls.push(["error", ...args]);
       },
     },
+    questionAnalysisService: {
+      async enqueueSafe(id, reason) {
+        calls.push(["analysis", id, reason]);
+        return true;
+      },
+    },
   });
   return { calls, controller };
 }
@@ -105,6 +111,7 @@ test("admin question create preserves defaults, SQL, audit, and response order",
       "question_created",
       { entityType: "question", entityId: 42, details: "A1 · grammar" },
     ],
+    ["analysis", 42, "question_created"],
   ]);
   assert.deepEqual(response.body, { message: "Savol qo'shildi!", id: 42 });
 });

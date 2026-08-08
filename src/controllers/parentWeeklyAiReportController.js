@@ -7,8 +7,8 @@ function createParentWeeklyAiReportController(dependencies) {
 
   async function generate(req, res) {
     try {
-      const studentId = parseInt(req.params.studentId, 10);
-      if (isNaN(studentId)) {
+      const studentId = Number(req.params.studentId);
+      if (!Number.isSafeInteger(studentId) || studentId < 1) {
         return res.status(400).json({ error: "Noto'g'ri ID" });
       }
 

@@ -9,6 +9,13 @@ const createAdminQuestionHealthRoutes = require("../src/routes/adminQuestionHeal
 
 const expectedSql =
   "SELECT id, question_text, option_a, option_b, option_c, option_d, correct_option, cefr_level, skill, status FROM questions";
+const emptyQualityEngine = {
+  minimum_attempts: 10,
+  evaluated_questions: 0,
+  sufficient_evidence: 0,
+  status_counts: {},
+  flagged_questions: [],
+};
 
 function normalizeSql(sql) {
   return sql.replace(/\s+/g, " ").trim();
@@ -43,6 +50,9 @@ function createHarness({ rows = [], queryError } = {}) {
       error(...args) {
         calls.push(["error", ...args]);
       },
+    },
+    questionQualityService: {
+      async evaluate() { return emptyQualityEngine; },
     },
   });
   return { calls, controller };
@@ -81,6 +91,7 @@ test("admin question health preserves SQL and empty-result response", async () =
     needsReview: 0,
     published: 0,
     draft: 0,
+    qualityEngine: emptyQualityEngine,
   });
 });
 
@@ -114,6 +125,7 @@ test("admin question health preserves validation, duplicate, and status calculat
     needsReview: 1,
     published: 2,
     draft: 1,
+    qualityEngine: emptyQualityEngine,
   });
 });
 
@@ -145,6 +157,27 @@ test("admin question health preserves error logging and response", async () => {
   ]);
   assert.equal(response.statusCode, 500);
   assert.deepEqual(response.body, { error: "Server xatosi" });
+});
+
+test("admin question health evaluates and persists quality metrics when supported", async () => {
+  let persisted = 0;
+  const controller = createAdminQuestionHealthController({
+    pool: { async query() { return { rows: [] }; } },
+    questionQualityService: {
+      async evaluate() { assert.fail("legacy evaluate must not be used"); },
+      async evaluateAndPersist() {
+        persisted += 1;
+        return emptyQualityEngine;
+      },
+    },
+  });
+  const response = createResponse();
+
+  await controller.getHealth({}, response);
+
+  assert.equal(persisted, 1);
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.body.qualityEngine, emptyQualityEngine);
 });
 
 test("admin question health route preserves path, method, and middleware order", () => {

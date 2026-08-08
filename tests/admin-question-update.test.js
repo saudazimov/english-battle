@@ -55,6 +55,16 @@ function createHarness({ found = true, queryError, auditError } = {}) {
         calls.push(["error", ...args]);
       },
     },
+    questionAnalysisService: {
+      async enqueueSafe(id, reason) {
+        calls.push(["analysis", id, reason]);
+        return true;
+      },
+      async getAnalysis() { return null; },
+      async review() { return null; },
+      async enqueue() { return false; },
+      async processBatchSafe() {},
+    },
   });
   return { calls, controller };
 }
@@ -100,6 +110,7 @@ test("admin question update preserves defaults, SQL, audit, and response order",
       "question_updated",
       { entityType: "question", entityId: "42", details: "A1 · grammar" },
     ],
+    ["analysis", "42", "question_updated"],
   ]);
   assert.deepEqual(response.body, { message: "Savol yangilandi!", id: "42" });
 });
@@ -177,10 +188,16 @@ test("admin question update preserves database and audit error handling", async 
 test("admin question update route preserves path, method, and middleware order", () => {
   const router = createAdminQuestionUpdateRoutes({ pool: {}, logAudit() {} });
 
-  assert.equal(router.stack.length, 1);
+  assert.equal(router.stack.length, 4);
   const route = router.stack[0].route;
   assert.equal(route.path, "/admin/questions/edit");
   assert.equal(route.methods.post, true);
   assert.equal(route.stack.length, 2);
   assert.equal(route.stack[0].handle, requireAdmin);
+  assert.deepEqual(router.stack.map((layer) => layer.route.path), [
+    "/admin/questions/edit",
+    "/admin/questions/:id/analysis",
+    "/admin/questions/:id/analysis/review",
+    "/admin/questions/:id/analysis/requeue",
+  ]);
 });

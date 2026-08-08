@@ -1,4 +1,11 @@
-function createAdminQuestionCreateController({ pool, logAudit, logger = console }) {
+const { createQuestionAnalysisService } = require("../services/questionAnalysisService");
+
+function createAdminQuestionCreateController({
+  pool,
+  logAudit,
+  logger = console,
+  questionAnalysisService = createQuestionAnalysisService({ pool, logger }),
+}) {
   return {
     async create(req, res) {
       try {
@@ -50,6 +57,8 @@ function createAdminQuestionCreateController({ pool, logAudit, logger = console 
           entityId: newId,
           details: (cefr_level || "A1") + " · " + (skill || "grammar"),
         });
+
+        await questionAnalysisService.enqueueSafe(newId, "question_created");
 
         res.json({ message: "Savol qo'shildi!", id: newId });
       } catch (error) {

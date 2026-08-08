@@ -46,9 +46,10 @@ test("bulk import preserves validation, duplicate checks, sequential inserts, an
         if (sql.startsWith("SELECT")) return { rows: [{ qt: "existing question" }] };
         insertNumber++;
         if (insertNumber === 2) throw new Error("insert failed");
-        return { rows: [] };
+        return { rows: [{ id: insertNumber }] };
       },
     },
+    questionAnalysisService: { async enqueueSafe() { return true; } },
   });
   const rows = [
     question("  New Question  ", { cefr_level: "b1", skill: "Vocabulary", status: "draft" }),
@@ -96,9 +97,10 @@ test("bulk import controller preserves audit order and response", async () => {
     pool: {
       async query(sql) {
         calls.push(sql.startsWith("SELECT") ? "select" : "insert");
-        return { rows: [] };
+        return { rows: sql.startsWith("SELECT") ? [] : [{ id: 7 }] };
       },
     },
+    questionAnalysisService: { async enqueueSafe() { return true; } },
     async logAudit(...args) {
       calls.push(["audit", ...args]);
     },
