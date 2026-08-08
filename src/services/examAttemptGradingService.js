@@ -1,4 +1,7 @@
-function createExamAttemptGradingService({ pool }) {
+const { createAnswerEventService } = require("./answerEventService");
+
+function createExamAttemptGradingService({ pool, answerEventService }) {
+  const diagnosticEvents = answerEventService || createAnswerEventService({ pool });
   return async function gradeAttempt(attemptId) {
     const attemptResult = await pool.query(
       "SELECT * FROM teacher_exam_attempts WHERE id = $1",
@@ -8,7 +11,8 @@ function createExamAttemptGradingService({ pool }) {
     const attempt = attemptResult.rows[0];
 
     const questionResult = await pool.query(
-      "SELECT id, correct_answer FROM teacher_exam_questions WHERE exam_id = $1",
+      `SELECT id, original_question_id, correct_answer, skill, cefr_level
+       FROM teacher_exam_questions WHERE exam_id = $1`,
       [attempt.exam_id]
     );
     const answers = attempt.answers || {};
@@ -44,6 +48,26 @@ function createExamAttemptGradingService({ pool }) {
        WHERE id = $7`,
       [correct, total, percent, wrong, unanswered, passed, attemptId]
     );
+
+    await diagnosticEvents.recordManySafe(questionResult.rows.map((question) => {
+      const selectedOption = (
+        answers[question.id] || answers[String(question.id)] || ""
+      ).toUpperCase() || null;
+      const correctOption = String(question.correct_answer || "").toUpperCase() || null;
+      return {
+        studentId: attempt.student_id,
+        questionId: question.original_question_id,
+        sourceMode: "class_exam",
+        sourceRecordId: String(attemptId),
+        sourceQuestionId: question.id,
+        selectedOption,
+        correctOption,
+        isCorrect: selectedOption !== null && selectedOption === correctOption,
+        attemptNumber: attempt.attempt_number || 1,
+        detectedCefrLevel: question.cefr_level,
+        legacySkill: question.skill,
+      };
+    }));
 
     return {
       success: true,

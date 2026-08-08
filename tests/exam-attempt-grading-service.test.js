@@ -17,6 +17,9 @@ function createHarness(results) {
         return next;
       },
     },
+    answerEventService: {
+      async recordManySafe() { return []; },
+    },
   });
   return { gradeAttempt, queries };
 }

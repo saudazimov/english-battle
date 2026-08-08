@@ -9,12 +9,22 @@ function createStudentExamAttemptAnswerController({ pool }) {
     try {
       const studentId = req.user.id;
       const attemptId = parseInt(req.params.attemptId, 10);
-      const { question_id: questionId, answer } = req.body;
+      const {
+        question_id: questionId,
+        answer,
+        response_time_ms: responseTimeMs,
+      } = req.body;
       if (isNaN(attemptId) || !questionId) {
         return res.status(400).json({ error: "Noto'g'ri so'rov" });
       }
 
-      const result = await service.saveAnswer({ attemptId, studentId, questionId, answer });
+      const result = await service.saveAnswer({
+        attemptId,
+        studentId,
+        questionId,
+        answer,
+        responseTimeMs,
+      });
       if (result === "attempt-not-found") {
         return res.status(404).json({ error: "Urinish topilmadi" });
       }
@@ -23,6 +33,9 @@ function createStudentExamAttemptAnswerController({ pool }) {
       }
       if (result === "expired") {
         return res.status(400).json({ error: "Vaqt tugagan", expired: true });
+      }
+      if (result === "question-not-found" || result === "invalid-answer") {
+        return res.status(400).json({ error: "Noto'g'ri javob ma'lumoti" });
       }
 
       return res.json({ success: true });

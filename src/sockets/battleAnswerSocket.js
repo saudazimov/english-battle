@@ -1,4 +1,5 @@
 const MAX_ROOM_ID_LENGTH = 256;
+const { createAnswerEventService } = require("../services/answerEventService");
 
 function hasOwn(record, key) {
   return record !== null
@@ -15,6 +16,8 @@ async function persistBattleAnswer({
   isCorrect,
   timedOut,
   battle,
+  responseTimeMs,
+  answerEventService,
   logger,
 }) {
   try {
@@ -37,6 +40,23 @@ async function persistBattleAnswer({
         battle.level || null,
       ]
     );
+    if (player.userId) {
+      await answerEventService.recordOneSafe({
+        studentId: player.userId,
+        questionId: question.id,
+        sourceMode: "battle",
+        sourceRecordId: roomId,
+        sourceQuestionId: question.id,
+        selectedOption: timedOut ? null : answer,
+        correctOption: question.correct_option,
+        isCorrect,
+        timedOut,
+        responseTimeMs,
+        detectedCefrLevel: battle.level,
+        legacySkill: question.skill,
+        eventMetadata: { mode: battle.mode || null, battle_type: battle.battleType || "1v1" },
+      });
+    }
   } catch (error) {
     logger.error("battle_answers yozish xato:", error.message);
   }
@@ -80,6 +100,7 @@ function createSubmitAnswerHandler({
   timePerQuestionMs,
   answerGraceMs,
   now,
+  answerEventService,
   logger,
 }) {
   return async function submitAnswer(payload) {
@@ -117,6 +138,12 @@ function createSubmitAnswerHandler({
 
     const answeredAt = now();
     const deadline = player.qDeadline || (answeredAt + timePerQuestionMs);
+    const responseTimeMs = player.answeredCount > 0
+      ? Math.max(0, Math.min(
+        timePerQuestionMs + answerGraceMs,
+        answeredAt - (deadline - timePerQuestionMs - answerGraceMs)
+      ))
+      : null;
     const noAnswer = answer === null || answer === undefined || answer === "";
     const timedOut = noAnswer || answeredAt > deadline;
     let isCorrect = false;
@@ -145,6 +172,8 @@ function createSubmitAnswerHandler({
       isCorrect,
       timedOut,
       battle,
+      responseTimeMs,
+      answerEventService,
       logger,
     });
 
@@ -183,7 +212,9 @@ function registerBattleAnswerSocket({
   answerGraceMs,
   now = Date.now,
   logger = console,
+  answerEventService,
 }) {
+  const diagnosticEvents = answerEventService || createAnswerEventService({ pool, logger });
   socket.on("submitAnswer", createSubmitAnswerHandler({
     socket,
     pool,
@@ -194,6 +225,7 @@ function registerBattleAnswerSocket({
     answerGraceMs,
     now,
     logger,
+    answerEventService: diagnosticEvents,
   }));
 }
 

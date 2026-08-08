@@ -1,4 +1,5 @@
 const { mapReviewQuestion } = require("./studentAssignmentReviewService");
+const { createAnswerEventService } = require("./answerEventService");
 
 function createAnswerMap(answers) {
   const valid = new Set(["A", "B", "C", "D"]);
@@ -35,7 +36,8 @@ function gradeQuestions(questions, answerMap) {
   return { correct, wrong, unanswered, rows };
 }
 
-function createStudentAssignmentSubmitService({ pool }) {
+function createStudentAssignmentSubmitService({ pool, answerEventService }) {
+  const diagnosticEvents = answerEventService || createAnswerEventService({ pool });
   async function submitAssignment({ assignmentId, studentId, answers }) {
     const assignmentResult = await pool.query(
       `SELECT a.id, a.due_at, a.question_count
@@ -58,11 +60,15 @@ function createStudentAssignmentSubmitService({ pool }) {
     }
 
     const questionResult = await pool.query(
-      "SELECT id, q_order, correct_answer FROM assignment_questions WHERE assignment_id=$1 ORDER BY q_order",
+      `SELECT id, q_order, correct_answer, original_question_id, cefr_level, skill
+       FROM assignment_questions WHERE assignment_id=$1 ORDER BY q_order`,
       [assignmentId]
     );
     const answerMap = createAnswerMap(answers);
     const grade = gradeQuestions(questionResult.rows, answerMap);
+    const questionMetadata = new Map(
+      questionResult.rows.map((question) => [Number(question.id), question])
+    );
     const total = questionResult.rows.length;
     const percent = total > 0 ? Math.round((grade.correct / total) * 100) : 0;
     const isLate = !!(assignment.due_at && new Date() > new Date(assignment.due_at));
@@ -97,6 +103,24 @@ function createStudentAssignmentSubmitService({ pool }) {
         [grade.correct, total, percent, grade.correct, grade.wrong, grade.unanswered, isLate, submission.id]
       );
       await client.query("COMMIT");
+
+      await diagnosticEvents.recordManySafe(grade.rows.map((row) => {
+        const metadata = questionMetadata.get(Number(row.aqId)) || {};
+        return {
+          studentId,
+          questionId: metadata.original_question_id,
+          sourceMode: "teacher_assignment",
+          sourceRecordId: String(submission.id),
+          sourceQuestionId: row.aqId,
+          selectedOption: row.sel,
+          correctOption: row.correct_answer,
+          isCorrect: row.isCorrect,
+          attemptNumber: submission.attempt_number || 1,
+          detectedCefrLevel: metadata.cefr_level,
+          legacySkill: metadata.skill,
+          answeredAt: updateResult.rows[0].submitted_at,
+        };
+      }));
 
       const reviewResult = await pool.query(
         `SELECT aq.q_order, aq.question_text, aq.option_a, aq.option_b, aq.option_c, aq.option_d, aq.explanation,

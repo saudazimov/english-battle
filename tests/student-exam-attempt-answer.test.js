@@ -27,7 +27,8 @@ function createResponse() {
 test("student exam answer preserves SQL order and answer normalization", async () => {
   const queries = [];
   const responses = [
-    { rows: [{ status: "in_progress", expires_at: null, answers: { 1: "a" } }] },
+    { rows: [{ exam_id: 7, status: "in_progress", expires_at: null, answers: { 1: "a" } }] },
+    { rows: [{ id: 2, original_question_id: 20, correct_answer: "b", skill: "grammar", cefr_level: "A2" }] },
     { rows: [] },
   ];
   const service = createStudentExamAttemptAnswerService({
@@ -36,6 +37,9 @@ test("student exam answer preserves SQL order and answer normalization", async (
         queries.push({ sql, params });
         return responses.shift();
       },
+    },
+    answerEventService: {
+      async recordOneSafe() { return null; },
     },
   });
 
@@ -49,6 +53,11 @@ test("student exam answer preserves SQL order and answer normalization", async (
     {
       sql: "SELECT * FROM teacher_exam_attempts WHERE id = $1 AND student_id = $2",
       params: [12, 5],
+    },
+    {
+      sql: `SELECT id, original_question_id, correct_answer, skill, cefr_level
+       FROM teacher_exam_questions WHERE id=$1 AND exam_id=$2`,
+      params: [2, 7],
     },
     {
       sql: "UPDATE teacher_exam_attempts SET answers = $1 WHERE id = $2",

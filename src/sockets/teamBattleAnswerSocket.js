@@ -1,4 +1,5 @@
 const MAX_ROOM_ID_LENGTH = 256;
+const { createAnswerEventService } = require("../services/answerEventService");
 
 function hasOwn(record, key) {
   return record !== null
@@ -16,6 +17,7 @@ function createSubmitTeamAnswerHandler({
   timePerQuestionMs,
   answerGraceMs,
   now,
+  answerEventService,
   logger,
 }) {
   return async function submitTeamAnswer(payload) {
@@ -55,6 +57,12 @@ function createSubmitTeamAnswerHandler({
 
     const answeredAt = now();
     const deadline = player.qDeadline || (answeredAt + timePerQuestionMs);
+    const responseTimeMs = player.answeredCount > 0
+      ? Math.max(0, Math.min(
+        timePerQuestionMs + answerGraceMs,
+        answeredAt - (deadline - timePerQuestionMs - answerGraceMs)
+      ))
+      : null;
     const noAnswer = answer === null || answer === undefined || answer === "";
     const timedOut = noAnswer || answeredAt > deadline;
 
@@ -96,6 +104,23 @@ function createSubmitTeamAnswerHandler({
           battle.level || null,
         ]
       );
+      if (player.userId) {
+        await answerEventService.recordOneSafe({
+          studentId: player.userId,
+          questionId: question.id,
+          sourceMode: "battle",
+          sourceRecordId: roomId,
+          sourceQuestionId: question.id,
+          selectedOption: timedOut ? null : answer,
+          correctOption: question.correct_option,
+          isCorrect,
+          timedOut,
+          responseTimeMs,
+          detectedCefrLevel: battle.level,
+          legacySkill: question.skill,
+          eventMetadata: { mode: battle.teamMode || null, battle_type: "team" },
+        });
+      }
     } catch (error) {
       logger.error("team battle_answers yozish xato:", error.message);
     }
@@ -124,7 +149,9 @@ function registerTeamBattleAnswerSocket({
   answerGraceMs,
   now = Date.now,
   logger = console,
+  answerEventService,
 }) {
+  const diagnosticEvents = answerEventService || createAnswerEventService({ pool, logger });
   socket.on("submitTeamAnswer", createSubmitTeamAnswerHandler({
     socket,
     io,
@@ -136,6 +163,7 @@ function registerTeamBattleAnswerSocket({
     answerGraceMs,
     now,
     logger,
+    answerEventService: diagnosticEvents,
   }));
 }
 

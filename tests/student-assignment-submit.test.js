@@ -110,6 +110,9 @@ test("student assignment submit preserves SQL, transaction, grading, and review"
         return client;
       },
     },
+    answerEventService: {
+      async recordManySafe() { return []; },
+    },
   });
 
   const outcome = await service.submitAssignment({
@@ -147,7 +150,8 @@ test("student assignment submit preserves SQL, transaction, grading, and review"
     params: [8, 5],
   });
   assert.deepEqual(poolQueries[2], {
-    sql: "SELECT id, q_order, correct_answer FROM assignment_questions WHERE assignment_id=$1 ORDER BY q_order",
+    sql: `SELECT id, q_order, correct_answer, original_question_id, cefr_level, skill
+       FROM assignment_questions WHERE assignment_id=$1 ORDER BY q_order`,
     params: [8],
   });
   assert.deepEqual(transactionQueries.map(({ sql }) => sql.trim().split("\n")[0]), [

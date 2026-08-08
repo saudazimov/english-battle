@@ -1,4 +1,14 @@
-function createTournamentMatchAnswerService({ expireTournamentMatch, notifyMatchPlayers }) {
+const { createAnswerEventService } = require("./answerEventService");
+
+function createTournamentMatchAnswerService({
+  pool,
+  expireTournamentMatch,
+  notifyMatchPlayers,
+  answerEventService,
+  logger = console,
+}) {
+  const diagnosticEvents = answerEventService
+    || (pool ? createAnswerEventService({ pool, logger }) : null);
   async function submitAnswer(client, matchId, userId, body) {
     const { questionId, answer } = body;
     const normalizedAnswer = String(answer || "").toLowerCase();
@@ -85,6 +95,23 @@ function createTournamentMatchAnswerService({ expireTournamentMatch, notifyMatch
       teamScores[row.school_key] = parseInt(row.total) || 0;
     });
     await client.query("COMMIT");
+
+    if (diagnosticEvents) {
+      await diagnosticEvents.recordOneSafe({
+        studentId: userId,
+        questionId: question.id,
+        sourceMode: "battle",
+        sourceRecordId: `tournament:${matchId}`,
+        sourceQuestionId: question.id,
+        selectedOption: normalizedAnswer,
+        correctOption: question.correct_option,
+        isCorrect,
+        responseTimeMs: body.response_time_ms,
+        detectedCefrLevel: question.cefr_level,
+        legacySkill: question.skill,
+        eventMetadata: { battle_type: "tournament", tournament_match_id: matchId },
+      });
+    }
 
     notifyMatchPlayers(matchId, "scoreUpdate", {
       matchId: parseInt(matchId),
