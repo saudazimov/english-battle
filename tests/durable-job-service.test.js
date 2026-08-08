@@ -137,10 +137,17 @@ test("durable jobs time out safely and rollback failed claims", async () => {
     executionTimeoutMs: 5,
   });
 
-  await assert.rejects(
-    timeoutService.execute(running, () => new Promise(() => {})),
-    (error) => error instanceof JobTimeoutError && error.code === "JOB_TIMEOUT"
-  );
+  // The service intentionally unrefs its timeout so an idle worker can exit.
+  // Keep this isolated test alive long enough to observe that timeout on CI.
+  const keepEventLoopAlive = setTimeout(() => {}, 100);
+  try {
+    await assert.rejects(
+      timeoutService.execute(running, () => new Promise(() => {})),
+      (error) => error instanceof JobTimeoutError && error.code === "JOB_TIMEOUT"
+    );
+  } finally {
+    clearTimeout(keepEventLoopAlive);
+  }
   const timeoutLog = timeoutPool.calls.find(([sql]) => sql.startsWith("INSERT INTO ai_generation_logs"));
   assert.equal(timeoutLog[1][1], "failed");
   assert.equal(timeoutLog[1][4], "JOB_TIMEOUT");
