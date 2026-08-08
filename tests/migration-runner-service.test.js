@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const test = require("node:test");
 
 const {
@@ -62,6 +63,59 @@ function successfulQueryHandler(appliedRows = []) {
     return { rows: [] };
   };
 }
+
+test("migration checksums are stable across LF and CRLF checkouts", async () => {
+  const lfSql = "CREATE TABLE test_table (id INTEGER);\nSELECT 1;\n";
+  const crlfSql = lfSql.replace(/\n/g, "\r\n");
+  const logger = createLogger();
+  const { pool, queries, state } = createPool(
+    successfulQueryHandler([
+      { version: "001_test.sql", checksum: checksumOf(lfSql) },
+    ])
+  );
+
+  assert.equal(checksumOf(crlfSql), checksumOf(lfSql));
+
+  const count = await runMigrations({
+    pool,
+    migrationsDir: "migrations",
+    nodeEnv: "production",
+    logger,
+    fsImpl: createFileSystem({ "001_test.sql": crlfSql }),
+  });
+
+  assert.equal(count, 0);
+  assert.equal(queries.some(({ text }) => text === "BEGIN"), false);
+  assert.equal(logger.entries.warn.length, 0);
+  assert.equal(state.released, true);
+  assert.equal(state.ended, true);
+});
+
+test("legacy raw CRLF checksums remain valid after canonicalization", async () => {
+  const lfSql = "CREATE TABLE test_table (id INTEGER);\nSELECT 1;\n";
+  const crlfSql = lfSql.replace(/\n/g, "\r\n");
+  const legacyChecksum = crypto.createHash("sha256").update(crlfSql).digest("hex");
+  const logger = createLogger();
+  const { pool, queries, state } = createPool(
+    successfulQueryHandler([
+      { version: "001_test.sql", checksum: legacyChecksum },
+    ])
+  );
+
+  const count = await runMigrations({
+    pool,
+    migrationsDir: "migrations",
+    nodeEnv: "production",
+    logger,
+    fsImpl: createFileSystem({ "001_test.sql": lfSql }),
+  });
+
+  assert.equal(count, 0);
+  assert.equal(queries.some(({ text }) => text === "BEGIN"), false);
+  assert.equal(logger.entries.warn.length, 0);
+  assert.equal(state.released, true);
+  assert.equal(state.ended, true);
+});
 
 test("production rejects an applied migration checksum mismatch", async () => {
   const sql = "SELECT 1;";
