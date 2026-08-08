@@ -5,6 +5,21 @@ const path = require("path");
 // Application-specific signed 32-bit key used only by this migration runner.
 const MIGRATION_ADVISORY_LOCK_KEY = 1229737287;
 
+// These two migrations were applied from earlier local drafts before their
+// committed versions were finalized. A legacy checksum is accepted only while
+// the current file still has the exact schema-equivalent content audited on
+// 2026-08-08. Any later edit remains a production-blocking mismatch.
+const AUDITED_LEGACY_CHECKSUM_TRANSITIONS = Object.freeze({
+  "030_student_ai_report_pipeline.sql": Object.freeze({
+    "24f3b8e838679d06c9435e03311905daf4e8830de0a02fe5888607d79a0de271":
+      "337428c0604bac0c4a2b1e9ce19938e30fcdd08e420f2e97a210872c1807a445",
+  }),
+  "031_personalized_remediation.sql": Object.freeze({
+    "eae9a4a74aaca3483c8e9474350e43e9a670c4dca84d7528e576acd72dc98f9f":
+      "6c48c192af085fabd8b0da191e1b30606d0aee054c94ba69dc44eef342e6c8c3",
+  }),
+});
+
 function checksumDigest(content) {
   return crypto.createHash("sha256").update(content).digest("hex");
 }
@@ -21,6 +36,13 @@ function compatibleChecksumsOf(content) {
   const normalizedContent = normalizedMigrationContent(content);
   const crlfContent = normalizedContent.replace(/\n/g, "\r\n");
   return [checksumDigest(normalizedContent), checksumDigest(crlfContent)];
+}
+
+function isAuditedLegacyChecksum({ file, appliedChecksum, currentChecksum }) {
+  return (
+    AUDITED_LEGACY_CHECKSUM_TRANSITIONS[file]?.[appliedChecksum] ===
+    currentChecksum
+  );
 }
 
 function readMigrationFiles(migrationsDir, fsImpl = fs) {
@@ -67,7 +89,12 @@ function verifyAppliedChecksum({
   nodeEnv,
   logger,
 }) {
-  if (compatibleChecksums.includes(appliedChecksum)) return;
+  if (
+    compatibleChecksums.includes(appliedChecksum) ||
+    isAuditedLegacyChecksum({ file, appliedChecksum, currentChecksum })
+  ) {
+    return;
+  }
 
   const message =
     `"${file}" allaqachon bajarilgan, lekin mazmuni o'zgargan.`;
