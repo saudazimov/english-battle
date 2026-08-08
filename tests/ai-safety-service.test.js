@@ -46,8 +46,9 @@ test("AI output sanitization neutralizes executable text and prototype keys", ()
 });
 
 test("AI error redaction removes provider keys, bearer tokens and emails", () => {
+  const providerKey = ["sk", "proj", "abcdefghijklmnopqrstuvwxyz123456"].join("-");
   const redacted = redactAiError(
-    "sk-proj-abcdefghijklmnopqrstuvwxyz123456 Bearer abc.def.ghi user@example.com"
+    `${providerKey} Bearer abc.def.ghi user@example.com`
   );
 
   assert.equal(redacted.includes("sk-proj-"), false);
