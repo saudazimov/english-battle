@@ -5,8 +5,22 @@ const path = require("path");
 // Application-specific signed 32-bit key used only by this migration runner.
 const MIGRATION_ADVISORY_LOCK_KEY = 1229737287;
 
-function checksumOf(content) {
+function checksumDigest(content) {
   return crypto.createHash("sha256").update(content).digest("hex");
+}
+
+function normalizedMigrationContent(content) {
+  return content.replace(/\r\n?/g, "\n");
+}
+
+function checksumOf(content) {
+  return checksumDigest(normalizedMigrationContent(content));
+}
+
+function compatibleChecksumsOf(content) {
+  const normalizedContent = normalizedMigrationContent(content);
+  const crlfContent = normalizedContent.replace(/\n/g, "\r\n");
+  return [checksumDigest(normalizedContent), checksumDigest(crlfContent)];
 }
 
 function readMigrationFiles(migrationsDir, fsImpl = fs) {
@@ -49,10 +63,11 @@ function verifyAppliedChecksum({
   file,
   appliedChecksum,
   currentChecksum,
+  compatibleChecksums = [currentChecksum],
   nodeEnv,
   logger,
 }) {
-  if (appliedChecksum === currentChecksum) return;
+  if (compatibleChecksums.includes(appliedChecksum)) return;
 
   const message =
     `"${file}" allaqachon bajarilgan, lekin mazmuni o'zgargan.`;
@@ -196,6 +211,7 @@ async function runMigrations({
           file,
           appliedChecksum: applied[file],
           currentChecksum: checksum,
+          compatibleChecksums: compatibleChecksumsOf(sql),
           nodeEnv,
           logger,
         });
