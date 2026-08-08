@@ -33,12 +33,18 @@ test("progress page includes the universal layout and AI experience", () => {
   assert.match(page, /id="lessonLibrary"/);
   assert.match(page, /id="lessonCountBadge"/);
   assert.match(page, /id="learningPlan"/);
+  assert.match(page, /id="learningOverview"/);
+  assert.match(page, /id="exactWeaknesses"/);
+  assert.match(page, /id="reviewDueList"/);
+  assert.match(page, /id="learningTimeline"/);
+  assert.match(page, /id="assessmentDialog"/);
   assert.match(page, /id="qualityConfidence"/);
   assert.match(page, /id="studyMethods"/);
   assert.match(page, /id="aiBody"/);
   assert.doesNotMatch(page, /id="refreshAiButton"/);
   assert.doesNotMatch(page, /Joriy rating|G‘alaba foizi|So‘nggi forma|Current Rank/);
   assert.match(page, /src="\/payment-modal\.js"/);
+  assert.match(page, /src="\/progress-learning\.js"/);
   assert.match(page, /src="\/progress\.js"/);
   assert.doesNotMatch(page, /tez kunda/i);
   assert.doesNotMatch(page, /\.topbar\{height:104px/);
@@ -67,6 +73,30 @@ test("progress dashboard uses the evidence-based today, 7 and 30 day analysis en
   assert.match(script, /textContent = String\(item\)/);
   assert.doesNotMatch(script, /rating_change|win_rate|battle\.outcome/);
   assert.doesNotMatch(script, /Math\.random/);
+});
+
+test("student progress connects real mastery, lesson, retest and review data", () => {
+  const pageScript = fs.readFileSync(path.join(publicRoot, "progress.js"), "utf8");
+  const script = fs.readFileSync(path.join(publicRoot, "progress-learning.js"), "utf8");
+
+  assert.match(pageScript, /window\.createProgressLearningUI/);
+  assert.match(pageScript, /learningUi\.load\(\)/);
+  assert.match(pageScript, /requestJson\("\/learning\/remediation\/lessons"/);
+  assert.match(pageScript, /requestJson\("\/learning\/remediation\/lessons\/sync"/);
+  assert.match(pageScript, /\/lessons\/" \+ lessonId \+ "\/start"/);
+  assert.match(pageScript, /\/exercises\/" \+ exerciseId \+ "\/answer"/);
+  assert.match(pageScript, /\/lessons\/" \+ activeLessonId \+ "\/complete"/);
+  assert.match(script, /requestJson\("\/learning\/progress\/overview"/);
+  assert.match(script, /requestJson\("\/learning\/remediation\/assessments\/due"/);
+  assert.match(script, /\/assessments\/" \+ assessmentId \+ "\/start"/);
+  assert.match(script, /\/questions\/" \+ questionId \+ "\/answer"/);
+  assert.match(script, /\/assessments\/" \+ activeAssessmentId \+ "\/complete"/);
+  assert.match(script, /renderLearningOverview/);
+  assert.match(script, /renderExactWeaknesses/);
+  assert.match(script, /renderLearningTimeline/);
+  assert.match(script, /renderDueAssessments/);
+  assert.match(script, /response_time_ms/);
+  assert.doesNotMatch(script, /innerHTML[^\n]+question\.prompt/);
 });
 
 test("shared responsive styles provide a visible branded scrollbar", () => {

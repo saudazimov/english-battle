@@ -410,6 +410,49 @@
     .um-chat-time { font-size: 10px; color: var(--text-faint); margin-top: 3px; text-align: right; }
     .modal-icon.warn { background: rgba(251,191,36,0.12); }
     .modal-icon.warn .ico-lg { color: var(--gold); }
+    .qa-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:16px; }
+    .qa-summary-item { padding:13px; border:1px solid var(--border); border-radius:12px; background:var(--panel-2); min-width:0; }
+    .qa-summary-item span { display:block; color:var(--text-dim); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+    .qa-summary-item strong { display:block; margin-top:6px; color:var(--text); font-size:14px; overflow-wrap:anywhere; }
+    .qa-summary-item.good strong,.qa-good { color:var(--green); }
+    .qa-summary-item.bad strong { color:var(--red); }
+    .qa-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; text-align:left; }
+    .qa-section { padding:16px; border:1px solid var(--border); border-radius:13px; background:rgba(12,18,36,.38); }
+    .qa-section.full { grid-column:1/-1; }
+    .qa-section h4 { margin:0 0 10px; font-size:14px; }
+    .qa-section p { margin:5px 0; color:var(--text-dim); font-size:13px; line-height:1.5; }
+    .qa-list { margin:0; padding-left:20px; color:var(--text-dim); font-size:13px; line-height:1.6; }
+    .qa-empty { color:var(--text-dim); font-size:13px; }
+    .qa-tags { display:flex; flex-wrap:wrap; gap:7px; }
+    .qa-tag { padding:6px 9px; border-radius:999px; background:rgba(91,140,255,.12); color:var(--accent); font-size:12px; font-weight:700; }
+    .qa-tags.danger .qa-tag { background:rgba(248,113,113,.12); color:var(--red); }
+    .qa-distractors { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+    .qa-distractor { display:flex; gap:10px; padding:12px; border:1px solid var(--border); border-radius:11px; }
+    .qa-option { flex:0 0 32px; width:32px; height:32px; display:grid; place-items:center; border-radius:9px; background:var(--panel-2); color:var(--accent); font-weight:800; }
+    .qa-distractor strong { font-size:13px; }
+    .qa-distractor span { color:var(--text-muted); font-size:11px; }
+    .qa-override-form { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; align-items:end; }
+    .qa-override-form label { display:grid; gap:6px; color:var(--text-dim); font-size:12px; font-weight:700; }
+    .qa-override-form label.wide { grid-column:1/-1; }
+    .qa-override-form select,.qa-override-form textarea { width:100%; padding:10px; border:1px solid var(--border); border-radius:9px; background:var(--panel-2); color:var(--text); font:inherit; }
+    .qa-save { justify-self:start; padding:10px 15px; border:0; border-radius:9px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:white; font-weight:700; cursor:pointer; }
+    .qa-history-title { margin-top:18px !important; }
+    .qa-history { display:grid; gap:8px; }
+    .qa-history div { display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); font-size:12px; }
+    .qa-history span { color:var(--text-dim); text-align:right; }
+    .qa-pending { display:grid; justify-items:center; gap:8px; padding:38px 20px; text-align:center; }
+    .qa-pending p { margin:0; color:var(--text-dim); font-size:13px; }
+    .qa-spinner { width:34px; height:34px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
+    .qquality { margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
+    .qquality-head { display:flex; justify-content:space-between; gap:10px; margin-bottom:9px; font-size:12px; font-weight:800; }
+    .qquality-list { display:grid; gap:7px; margin-top:10px; }
+    .qquality-item { width:100%; display:flex; align-items:center; gap:9px; padding:9px; border:1px solid var(--border); border-radius:10px; background:var(--panel-2); color:var(--text); text-align:left; cursor:pointer; }
+    .qquality-item:hover { border-color:var(--accent); }
+    .qquality-id { color:var(--accent); font-size:11px; font-weight:800; }
+    .qquality-text { min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; }
+    .qquality-status { font-size:10px; color:var(--red); font-weight:800; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @media(max-width:760px) { .qa-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .qa-grid,.qa-distractors { grid-template-columns:1fr; } .qa-override-form { grid-template-columns:1fr; } .qa-override-form label.wide { grid-column:auto; } }
     
     /* SCHOOLS */
     .schools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
@@ -1048,13 +1091,12 @@
       <div class="row" style="margin-bottom:16px;"><div><label>Variant C</label><input id="optC" placeholder="are"></div><div><label>Variant D</label><input id="optD" placeholder="be"></div></div>
       <div class="row" style="margin-bottom:16px;">
         <div><label>To'g'ri javob</label><select id="correct"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
-        <div><label>Daraja</label><select id="level"><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select></div>
-        <div><label>Ko'nikma</label><select id="skill"><option value="grammar">Grammar</option><option value="vocabulary">Vocabulary</option><option value="reading">Reading</option><option value="everyday">Everyday</option></select></div>
-      </div>
-      <div class="row" style="margin-bottom:16px;">
         <div><label>Status</label><select id="status"><option value="published">Chop etilgan</option><option value="draft">Qoralama</option><option value="needs_review">Tekshiruv kutmoqda</option></select></div>
-        <div><label>Tushuntirish (ixtiyoriy)</label><input id="explanation" placeholder="'She' uchun 'is'."></div>
       </div>
+      <input type="hidden" id="level" value="A1">
+      <input type="hidden" id="skill" value="grammar">
+      <div class="field"><label>Tushuntirish yoki ichki izoh (ixtiyoriy)</label><input id="explanation" placeholder="'She' uchun 'is'."></div>
+      <div style="font-size:12.5px;color:var(--text-dim);margin:-4px 0 16px;">CEFR daraja, ko'nikma, mavzu va noto'g'ri variant sabablari saqlangandan keyin avtomatik tahlil qilinadi.</div>
       <div class="modal-actions">
         <button class="modal-btn modal-btn-cancel" onclick="closeFormModal()">Bekor qilish</button>
         <button class="modal-btn" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;" id="formSubmitBtn" onclick="submitForm()">Saqlash</button>
@@ -1356,8 +1398,25 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="questionAnalysisModal">
+    <div class="modal-box wide" style="max-width:980px;">
+      <div class="modal-head-wide">
+        <div class="mh-ic"><i data-lucide="brain-circuit" class="ico"></i></div>
+        <div class="mh-title">Savol AI tahlili</div>
+        <div class="mh-close" onclick="closeQuestionAnalysis()"><i data-lucide="x" class="ico-sm"></i></div>
+      </div>
+      <div id="questionAnalysisBody" class="loading-row">Yuklanmoqda...</div>
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="modal-btn modal-btn-cancel" onclick="closeQuestionAnalysis()">Yopish</button>
+        <button class="modal-btn" id="analysisRequeueBtn" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);" onclick="requeueQuestionAnalysis()">Qayta tahlil</button>
+        <button class="modal-btn" id="analysisApproveBtn" style="background:linear-gradient(135deg,var(--green),#059669);color:#fff;" onclick="approveQuestionAnalysis()">Tasdiqlash</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-wrap" id="toastWrap"></div>
 
+  <script src="/admin-question-analysis.js"></script>
   <script>
 
     // ===== VILOYAT-TUMAN RO'YXATI (register.html bilan bir xil) =====
@@ -1493,6 +1552,11 @@
         icons(); return;
       }
       var stLabels = { published: "Chop etilgan", draft: "Qoralama", needs_review: "Tekshiruv" };
+      var analysisLabels = {
+        ANALYSIS_PENDING: "Navbatda", ANALYZING: "Tahlil qilinmoqda", READY: "Tayyor",
+        REVIEW_SUGGESTED: "Ko'rib chiqish", REVIEW_REQUIRED: "Tekshiruv shart",
+        ANALYSIS_FAILED: "Xato", DISABLED: "O'chirilgan"
+      };
       var rows = questions.map(function (q) {
         var lvl = q.cefr_level || "A1";
         var st = q.status || "published";
@@ -1502,13 +1566,15 @@
           '<td><span class="lvl-pill lvl-' + esc(lvl) + '">' + esc(lvl) + '</span></td>' +
           '<td class="qb-skill">' + esc(q.skill || "grammar") + '</td>' +
           '<td><span class="st-pill st-' + esc(st) + '"><span class="sdot"></span>' + (stLabels[st] || st) + '</span></td>' +
+          '<td><span class="st-pill"><span class="sdot"></span>' + esc(analysisLabels[q.analysis_status] || q.analysis_status || "Navbatda") + '</span></td>' +
           '<td class="qb-date">' + fmtDate(q.updated_at || q.created_at) + '</td>' +
           '<td><div class="qb-actions">' +
+            '<button class="icon-btn" title="AI tahlil" onclick="openQuestionAnalysis(' + q.id + ')"><i data-lucide="brain-circuit" class="ico-sm"></i></button>' +
             '<button class="icon-btn edit" onclick="openEditModal(' + q.id + ')"><i data-lucide="pencil" class="ico-sm"></i></button>' +
             '<button class="icon-btn danger" onclick="askDelete(' + q.id + ')"><i data-lucide="trash-2" class="ico-sm"></i></button>' +
           '</div></td></tr>';
       }).join("");
-      list.innerHTML = '<div class="qbank-wrap"><table class="qbank-table"><thead><tr><th>ID</th><th>Savol</th><th>Daraja</th><th>Ko\'nikma</th><th>Status</th><th>Yangilangan</th><th>Amal</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      list.innerHTML = '<div class="qbank-wrap"><table class="qbank-table"><thead><tr><th>ID</th><th>Savol</th><th>Daraja</th><th>Ko\'nikma</th><th>Status</th><th>AI tahlil</th><th>Yangilangan</th><th>Amal</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
       icons();
     }
 
@@ -1628,6 +1694,7 @@
         closeFormModal();
         toast(msg, "success");
         loadAll();
+        if (data.id) openQuestionAnalysis(data.id, { created: true });
       } catch (err) {
         if (err.message !== "auth") showMsg("formMsg", "Server xatosi", "error");
       } finally {
@@ -1725,8 +1792,33 @@
           hbRow("eye", "Tekshiruv kutmoqda", d.needsReview) +
           hbRow("check-circle", "Chop etilgan", d.published, "ok") +
           hbRow("file-edit", "Qoralama", d.draft) +
-        '</div>';
+        '</div>' + renderQualityEngine(d.qualityEngine);
       icons();
+    }
+    function renderQualityEngine(engine) {
+      if (!engine) return '';
+      var counts = engine.status_counts || {};
+      var flagged = engine.flagged_questions || [];
+      var labels = {
+        POSSIBLE_WRONG_KEY: "Kalit xavfi", POSSIBLY_AMBIGUOUS: "Noaniq",
+        LEVEL_MISMATCH: "Daraja mos emas", METADATA_MISMATCH: "Metadata mos emas",
+        REVIEW_SUGGESTED: "Tekshirish kerak"
+      };
+      var rows = flagged.slice(0, 5).map(function (q) {
+        var text = q.question_text || ("Savol #" + q.question_id);
+        return '<button class="qquality-item" onclick="openQuestionAnalysis(' + q.question_id + ')">' +
+          '<span class="qquality-id">Q-' + q.question_id + '</span><span class="qquality-text">' + esc(text) +
+          '</span><span class="qquality-status">' + esc(labels[q.status] || q.status) + '</span></button>';
+      }).join("");
+      return '<div class="qquality"><div class="qquality-head"><span>Real performance quality</span><span>' +
+        (engine.sufficient_evidence || 0) + ' dalilli</span></div>' +
+        '<div class="health-breakdown">' +
+          hbRow("alert-octagon", "Kalit xavfi", counts.POSSIBLE_WRONG_KEY || 0) +
+          hbRow("circle-help", "Noaniq savol", counts.POSSIBLY_AMBIGUOUS || 0) +
+          hbRow("signal", "Daraja mos emas", counts.LEVEL_MISMATCH || 0) +
+          hbRow("tags", "Metadata mos emas", counts.METADATA_MISMATCH || 0) +
+        '</div>' + (rows ? '<div class="qquality-list">' + rows + '</div>' :
+          '<div class="empty-sm">Real performance bo\'yicha jiddiy flag yo\'q.</div>') + '</div>';
     }
     function hbRow(ic, label, val, forceClass) {
       var cls = forceClass || (val > 0 ? (label.indexOf("Maydon") > -1 || label.indexOf("Noto") > -1 ? "bad" : "warn") : "");
