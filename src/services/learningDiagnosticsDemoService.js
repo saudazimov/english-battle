@@ -280,8 +280,8 @@ async function insertDemoUsersAndClass(client, passwordHash) {
   const studentIds = {};
   for (const student of DEMO_STUDENTS) studentIds[student.key] = await insertUser(client, student, passwordHash);
   const classResult = await client.query(
-    `INSERT INTO classes (teacher_id,name,description,join_code,cefr_level)
-     VALUES ($1,$2,$3,$4,'A1') RETURNING id`,
+    `INSERT INTO classes (teacher_id,name,description,join_code)
+     VALUES ($1,$2,$3,$4) RETURNING id`,
     [teacherId, "Diagnostics Demo Class", `${DEMO_MARKER} Shared Present Simple weakness`, DEMO_CLASS_CODE],
   );
   const classId = classResult.rows[0].id;
