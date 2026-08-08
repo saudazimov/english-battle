@@ -1,5 +1,7 @@
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
+const fs = require("node:fs");
+const path = require("node:path");
 const test = require("node:test");
 
 const {
@@ -25,6 +27,13 @@ function createFileSystem(files) {
     readdirSync: () => Object.keys(files),
     readFileSync: (filePath) => files[filePath.split(/[\\/]/).pop()],
   };
+}
+
+function readMigration(file) {
+  return fs.readFileSync(
+    path.join(__dirname, "..", "migrations", file),
+    "utf8"
+  );
 }
 
 function createPool(queryHandler) {
@@ -113,6 +122,74 @@ test("legacy raw CRLF checksums remain valid after canonicalization", async () =
   assert.equal(count, 0);
   assert.equal(queries.some(({ text }) => text === "BEGIN"), false);
   assert.equal(logger.entries.warn.length, 0);
+  assert.equal(state.released, true);
+  assert.equal(state.ended, true);
+});
+
+test("production accepts only the audited legacy migration transitions", async () => {
+  const files = {
+    "030_student_ai_report_pipeline.sql": readMigration(
+      "030_student_ai_report_pipeline.sql"
+    ),
+    "031_personalized_remediation.sql": readMigration(
+      "031_personalized_remediation.sql"
+    ),
+  };
+  const logger = createLogger();
+  const { pool, queries, state } = createPool(
+    successfulQueryHandler([
+      {
+        version: "030_student_ai_report_pipeline.sql",
+        checksum:
+          "24f3b8e838679d06c9435e03311905daf4e8830de0a02fe5888607d79a0de271",
+      },
+      {
+        version: "031_personalized_remediation.sql",
+        checksum:
+          "eae9a4a74aaca3483c8e9474350e43e9a670c4dca84d7528e576acd72dc98f9f",
+      },
+    ])
+  );
+
+  const count = await runMigrations({
+    pool,
+    migrationsDir: "migrations",
+    nodeEnv: "production",
+    logger,
+    fsImpl: createFileSystem(files),
+  });
+
+  assert.equal(count, 0);
+  assert.equal(queries.some(({ text }) => text === "BEGIN"), false);
+  assert.equal(logger.entries.warn.length, 0);
+  assert.equal(state.released, true);
+  assert.equal(state.ended, true);
+});
+
+test("production rejects a changed file even with an audited legacy checksum", async () => {
+  const file = "030_student_ai_report_pipeline.sql";
+  const logger = createLogger();
+  const { pool, state } = createPool(
+    successfulQueryHandler([
+      {
+        version: file,
+        checksum:
+          "24f3b8e838679d06c9435e03311905daf4e8830de0a02fe5888607d79a0de271",
+      },
+    ])
+  );
+
+  await assert.rejects(
+    runMigrations({
+      pool,
+      migrationsDir: "migrations",
+      nodeEnv: "production",
+      logger,
+      fsImpl: createFileSystem({ [file]: "SELECT 'changed';" }),
+    }),
+    (error) => error.code === "MIGRATION_CHECKSUM_MISMATCH"
+  );
+
   assert.equal(state.released, true);
   assert.equal(state.ended, true);
 });
