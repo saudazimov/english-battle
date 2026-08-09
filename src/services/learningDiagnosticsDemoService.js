@@ -248,6 +248,10 @@ async function cleanupDemoData(client) {
     [`${DEMO_USERNAME_PREFIX}%`],
   );
   await client.query("DELETE FROM users WHERE username LIKE $1", [`${DEMO_USERNAME_PREFIX}%`]);
+  await client.query(
+    "DELETE FROM battle_answers WHERE question_id IN (SELECT id FROM questions WHERE explanation LIKE $1)",
+    [`${DEMO_MARKER}%`],
+  );
   await client.query("DELETE FROM questions WHERE explanation LIKE $1", [`${DEMO_MARKER}%`]);
 }
 
@@ -882,6 +886,7 @@ module.exports = {
   TIMELINE_OFFSETS,
   assertDemoEnvironment,
   buildDemoSummary,
+  cleanupDemoData,
   removeLearningDiagnosticsDemo,
   seedLearningDiagnosticsDemo,
   validateDemoManifest,

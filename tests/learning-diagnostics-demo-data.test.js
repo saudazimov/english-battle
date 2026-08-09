@@ -9,6 +9,7 @@ const {
   TIMELINE_OFFSETS,
   assertDemoEnvironment,
   buildDemoSummary,
+  cleanupDemoData,
   validateDemoManifest,
 } = require("../src/services/learningDiagnosticsDemoService");
 
@@ -78,4 +79,20 @@ test("demo summary exposes only deterministic identifiers and required counts", 
   assert.equal(summary.questionCount, 24);
   assert.equal(summary.cases.length, 10);
   assert.deepEqual(summary.timelineOffsets, TIMELINE_OFFSETS);
+});
+
+test("demo cleanup removes dependent battle answers before demo questions", async () => {
+  const calls = [];
+  await cleanupDemoData({
+    async query(sql, params) {
+      calls.push({ sql, params });
+      return { rows: [] };
+    },
+  });
+
+  const battleAnswers = calls.findIndex(({ sql }) => sql.startsWith("DELETE FROM battle_answers"));
+  const questions = calls.findIndex(({ sql }) => sql.startsWith("DELETE FROM questions"));
+  assert.ok(battleAnswers >= 0);
+  assert.ok(questions > battleAnswers);
+  assert.deepEqual(calls[battleAnswers].params, [`${DEMO_MARKER}%`]);
 });
