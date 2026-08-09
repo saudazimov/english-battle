@@ -51,7 +51,17 @@ function harnessSnapshot() {
     period,
     activity: { questions_answered: 12, assignments_completed: 1, exams_taken: 0, active_days: 3 },
     performance: { accuracy: 75, correct_count: 9, wrong_count: 3, timeout_count: 0 },
-    learning_diagnostics: { analyzed_answers: 12, priority_topics: [] },
+    learning_diagnostics: {
+      analyzed_answers: 12,
+      topics: [],
+      priority_topics: [],
+      strongest_topics: [],
+      sources: { battle_answers: 12 },
+      coverage_note: "Period evidence only",
+      skill_profiles: [{ taxonomy_id: 99, errors: 40 }],
+      pattern_findings: [{ finding_code: "OLD_ERROR" }],
+      remediation_targets: [{ finding_code: "OLD_ERROR" }],
+    },
     data_quality: { enough_data: true, total_answers: 12, total_assignments: 1, total_exams: 0, confidence: "medium" },
   };
 }
@@ -76,10 +86,17 @@ function createHarness({
     period: snapshot.period,
     activity: snapshot.activity,
     performance: snapshot.performance,
-    learning_diagnostics: snapshot.learning_diagnostics,
+    learning_diagnostics: {
+      analyzed_answers: 12,
+      topics: [],
+      priority_topics: [],
+      strongest_topics: [],
+      sources: { battle_answers: 12 },
+      coverage_note: "Period evidence only",
+    },
     assignments: {}, exams: {}, data_quality: snapshot.data_quality,
     snapshot_meta: {
-      snapshot_version: "student_learning_snapshot_v2",
+      snapshot_version: "student_learning_snapshot_v3",
       report_schema_version: SCHEMA_VERSION,
     },
   };
@@ -172,7 +189,7 @@ test("student weekly AI report preserves cached short-circuit", async () => {
     ["snapshot", 42, "2026-07-20", "2026-07-26"],
     ["cache", {
       studentId: 42,
-      reportType: "student_learning_analysis_7d_v3",
+      reportType: "student_learning_analysis_7d_v4",
       periodStart: "2026-07-20",
       snapshotHash: sourceSnapshotHash(harness.learningSnapshot),
     }],
@@ -196,17 +213,17 @@ test("student weekly AI report preserves refresh generation and persistence orde
     ["period", 7],
     ["snapshot", 42, "2026-07-20", "2026-07-26"],
     ["cache", {
-      studentId: 42, reportType: "student_learning_analysis_7d_v3",
+      studentId: 42, reportType: "student_learning_analysis_7d_v4",
       periodStart: "2026-07-20", snapshotHash: sourceSnapshotHash(harness.learningSnapshot),
     }],
     ["acquire", {
-      studentId: 42, reportType: "student_learning_analysis_7d_v3",
+      studentId: 42, reportType: "student_learning_analysis_7d_v4",
       periodStart: "2026-07-20", periodEnd: "2026-07-26",
       snapshotHash: sourceSnapshotHash(harness.learningSnapshot),
     }],
     ["generate", harness.learningSnapshot],
     ["save", {
-      studentId: 42, reportType: "student_learning_analysis_7d_v3",
+      studentId: 42, reportType: "student_learning_analysis_7d_v4",
       periodStart: "2026-07-20", periodEnd: "2026-07-26",
       snapshot: harness.learningSnapshot,
       snapshotHash: sourceSnapshotHash(harness.learningSnapshot),
@@ -218,6 +235,9 @@ test("student weekly AI report preserves refresh generation and persistence orde
   assert.equal(response.body.period, "7d");
   assert.equal(response.body.data_quality.confidence, "medium");
   assert.equal(response.body.analysis.learning_diagnostics.analyzed_answers, 12);
+  assert.equal(response.body.analysis.learning_diagnostics.skill_profiles, undefined);
+  assert.equal(response.body.analysis.learning_diagnostics.pattern_findings, undefined);
+  assert.equal(response.body.analysis.learning_diagnostics.remediation_targets, undefined);
   assert.equal(response.body.cached, false);
 });
 
@@ -244,7 +264,7 @@ test("student learning analysis supports a separate rolling 30 day cache", async
   );
 
   assert.deepEqual(harness.calls[0], ["period", 30]);
-  assert.deepEqual(harness.calls[2][1].reportType, "student_learning_analysis_30d_v3");
+  assert.deepEqual(harness.calls[2][1].reportType, "student_learning_analysis_30d_v4");
   assert.equal(response.body.period, "30d");
 });
 
@@ -258,7 +278,7 @@ test("student learning analysis supports a separate today cache", async () => {
   );
 
   assert.deepEqual(harness.calls[0], ["period", 1]);
-  assert.deepEqual(harness.calls[2][1].reportType, "student_learning_analysis_today_v3");
+  assert.deepEqual(harness.calls[2][1].reportType, "student_learning_analysis_today_v4");
   assert.equal(response.body.period, "today");
 });
 

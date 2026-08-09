@@ -18,7 +18,7 @@ function createStudentWeeklyAiReportController({
     return {
       key,
       days: key === "today" ? 1 : key === "30d" ? 30 : 7,
-      reportType: `student_learning_analysis_${key}_v3`,
+      reportType: `student_learning_analysis_${key}_v4`,
     };
   }
 
@@ -26,6 +26,17 @@ function createStudentWeeklyAiReportController({
     if (!value) return {};
     if (typeof value === "object") return value;
     try { return JSON.parse(value); } catch (error) { return {}; }
+  }
+
+  function periodLearningDiagnostics(diagnostics = {}) {
+    return {
+      topics: diagnostics.topics || [],
+      priority_topics: diagnostics.priority_topics || [],
+      strongest_topics: diagnostics.strongest_topics || [],
+      analyzed_answers: diagnostics.analyzed_answers || 0,
+      sources: diagnostics.sources || {},
+      coverage_note: diagnostics.coverage_note || "",
+    };
   }
 
   function publicAnalysis(snapshot) {
@@ -45,7 +56,7 @@ function createStudentWeeklyAiReportController({
         wrong_count: performance.wrong_count || 0,
         timeout_count: performance.timeout_count || 0,
       },
-      learning_diagnostics: snapshot.learning_diagnostics || {},
+      learning_diagnostics: periodLearningDiagnostics(snapshot.learning_diagnostics),
       data_quality: snapshot.data_quality || {},
     };
   }
@@ -63,7 +74,7 @@ function createStudentWeeklyAiReportController({
       exams: snapshot.exams || {},
       data_quality: analysis.data_quality,
       snapshot_meta: {
-        snapshot_version: "student_learning_snapshot_v2",
+        snapshot_version: "student_learning_snapshot_v3",
         report_schema_version: SCHEMA_VERSION,
       },
     };
