@@ -47,6 +47,83 @@ function selectedAnswerText(answer, optionField) {
   return answer[`option_${option}`] || answer[optionField] || null;
 }
 
+function answerRule(answer) {
+  const levels = [
+    ["micro_skill", answer.micro_skill_id, answer.micro_skill_name, answer.micro_skill_slug],
+    ["subskill", answer.subskill_id, answer.subskill_name, answer.subskill_slug],
+    ["topic", answer.topic_id, answer.topic_name, answer.topic_slug],
+  ];
+  const matched = levels.find((entry) => entry[1] && entry[2]);
+  if (!matched) return null;
+  return { level: matched[0], taxonomy_id: matched[1], rule: matched[2], slug: matched[3] || null };
+}
+
+function buildMistakeCurriculum(answers) {
+  const topics = new Map();
+  let classifiedErrors = 0;
+  let unclassifiedErrors = 0;
+  answers.filter((answer) => answer.question_diagnostic_eligible === true).forEach((answer) => {
+    const rule = answerRule(answer);
+    if (!rule) {
+      if (!answer.is_correct) unclassifiedErrors += 1;
+      return;
+    }
+    const topic = answer.topic_name || inferLearningTopic(answer);
+    const topicKey = String(answer.topic_id || topic);
+    if (!topics.has(topicKey)) {
+      topics.set(topicKey, { topic_id: answer.topic_id || null, topic, attempts: 0, errors: 0, rules: new Map() });
+    }
+    const topicEntry = topics.get(topicKey);
+    topicEntry.attempts += 1;
+    if (!answer.is_correct) topicEntry.errors += 1;
+    const ruleKey = `${rule.level}:${rule.taxonomy_id}`;
+    if (!topicEntry.rules.has(ruleKey)) {
+      topicEntry.rules.set(ruleKey, {
+        ...rule, attempts: 0, correct: 0, errors: 0, evidence: [], answer_event_ids: [],
+      });
+    }
+    const ruleEntry = topicEntry.rules.get(ruleKey);
+    ruleEntry.attempts += 1;
+    if (answer.is_correct) ruleEntry.correct += 1;
+    else {
+      classifiedErrors += 1;
+      ruleEntry.errors += 1;
+      if (answer.answer_event_id && ruleEntry.answer_event_ids.length < 100) {
+        ruleEntry.answer_event_ids.push(Number(answer.answer_event_id));
+      }
+      if (ruleEntry.evidence.length < 100 && answer.question_text) {
+        ruleEntry.evidence.push({
+          answer_event_id: Number(answer.answer_event_id) || null,
+          source_mode: answer.source_mode || null,
+          source_question_id: answer.source_question_id || null,
+          question: answer.question_text,
+          selected_answer: selectedAnswerText(answer, "selected_option"),
+          correct_answer: selectedAnswerText(answer, "correct_option"),
+          explanation: answer.explanation || null,
+        });
+      }
+    }
+  });
+  const mistakeTopics = Array.from(topics.values()).map((topic) => {
+    const rules = Array.from(topic.rules.values()).filter((rule) => rule.errors > 0)
+      .map((rule) => ({
+        ...rule,
+        accuracy: Math.round((rule.correct / Math.max(1, rule.attempts)) * 100),
+      }))
+      .sort((a, b) => b.errors - a.errors || a.accuracy - b.accuracy);
+    return {
+      topic_id: topic.topic_id,
+      topic: topic.topic,
+      attempts: topic.attempts,
+      errors: topic.errors,
+      accuracy: Math.round(((topic.attempts - topic.errors) / Math.max(1, topic.attempts)) * 100),
+      rules,
+    };
+  }).filter((topic) => topic.errors > 0 && topic.rules.length > 0)
+    .sort((a, b) => b.errors - a.errors || a.accuracy - b.accuracy);
+  return { mistake_topics: mistakeTopics, classified_errors: classifiedErrors, unclassified_errors: unclassifiedErrors };
+}
+
 function buildLearningDiagnostics(answers) {
   const topics = new Map();
   answers.forEach((answer) => {
@@ -80,7 +157,12 @@ function buildLearningDiagnostics(answers) {
   const strongest = list.filter((item) => item.attempts >= 3 && item.accuracy >= 75)
     .sort((a, b) => b.accuracy - a.accuracy || b.attempts - a.attempts)
     .slice(0, 5);
-  return { topics: list, priority_topics: priority, strongest_topics: strongest };
+  return {
+    topics: list,
+    priority_topics: priority,
+    strongest_topics: strongest,
+    ...buildMistakeCurriculum(answers),
+  };
 }
 
 // Bitta o'quvchi uchun haftalik (yoki istalgan davr) snapshot
@@ -106,8 +188,11 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
 
   // --- 2. Battle answers (davr ichida) — accuracy, correct/wrong/timeout, skill ---
   const answerEventResult = await pool.query(
-    `SELECT ae.source_mode, ae.source_record_id, ae.source_question_id,
-            ae.legacy_skill AS skill, ae.topic_id,
+    `SELECT ae.id AS answer_event_id,ae.source_mode, ae.source_record_id, ae.source_question_id,
+            ae.legacy_skill AS skill, ae.topic_id, ae.subskill_id, ae.micro_skill_id,
+            topic_tax.name AS topic_name, topic_tax.slug AS topic_slug,
+            subskill_tax.name AS subskill_name, subskill_tax.slug AS subskill_slug,
+            micro_skill_tax.name AS micro_skill_name, micro_skill_tax.slug AS micro_skill_slug,
             ae.question_diagnostic_eligible,
             COALESCE(qa.analysis_confidence,
               CASE WHEN ae.question_diagnostic_eligible THEN 0.70 ELSE 0 END) AS metadata_confidence,
@@ -122,6 +207,9 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
      FROM student_answer_events ae
      LEFT JOIN questions q ON q.id = ae.question_id
      LEFT JOIN question_ai_analysis qa ON qa.question_id = ae.question_id
+     LEFT JOIN learning_taxonomy topic_tax ON topic_tax.id = ae.topic_id
+     LEFT JOIN learning_taxonomy subskill_tax ON subskill_tax.id = ae.subskill_id
+     LEFT JOIN learning_taxonomy micro_skill_tax ON micro_skill_tax.id = ae.micro_skill_id
      LEFT JOIN assignment_questions aq
        ON ae.source_mode = 'teacher_assignment' AND aq.id = ae.source_question_id
      LEFT JOIN teacher_exam_questions teq

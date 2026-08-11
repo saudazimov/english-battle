@@ -56,6 +56,9 @@ function harnessSnapshot() {
       topics: [],
       priority_topics: [],
       strongest_topics: [],
+      mistake_topics: [{ topic_id: 10, topic: "Present Simple", rules: [] }],
+      classified_errors: 3,
+      unclassified_errors: 0,
       sources: { battle_answers: 12 },
       coverage_note: "Period evidence only",
       skill_profiles: [{ taxonomy_id: 99, errors: 40 }],
@@ -91,12 +94,15 @@ function createHarness({
       topics: [],
       priority_topics: [],
       strongest_topics: [],
+      mistake_topics: [{ topic_id: 10, topic: "Present Simple", rules: [] }],
+      classified_errors: 3,
+      unclassified_errors: 0,
       sources: { battle_answers: 12 },
       coverage_note: "Period evidence only",
     },
     assignments: {}, exams: {}, data_quality: snapshot.data_quality,
     snapshot_meta: {
-      snapshot_version: "student_learning_snapshot_v3",
+      snapshot_version: "student_learning_snapshot_v4",
       report_schema_version: SCHEMA_VERSION,
     },
   };
@@ -189,7 +195,7 @@ test("student weekly AI report preserves cached short-circuit", async () => {
     ["snapshot", 42, "2026-07-20", "2026-07-26"],
     ["cache", {
       studentId: 42,
-      reportType: "student_learning_analysis_7d_v4",
+      reportType: "student_learning_analysis_7d_v5",
       periodStart: "2026-07-20",
       snapshotHash: sourceSnapshotHash(harness.learningSnapshot),
     }],
@@ -213,17 +219,17 @@ test("student weekly AI report preserves refresh generation and persistence orde
     ["period", 7],
     ["snapshot", 42, "2026-07-20", "2026-07-26"],
     ["cache", {
-      studentId: 42, reportType: "student_learning_analysis_7d_v4",
+      studentId: 42, reportType: "student_learning_analysis_7d_v5",
       periodStart: "2026-07-20", snapshotHash: sourceSnapshotHash(harness.learningSnapshot),
     }],
     ["acquire", {
-      studentId: 42, reportType: "student_learning_analysis_7d_v4",
+      studentId: 42, reportType: "student_learning_analysis_7d_v5",
       periodStart: "2026-07-20", periodEnd: "2026-07-26",
       snapshotHash: sourceSnapshotHash(harness.learningSnapshot),
     }],
     ["generate", harness.learningSnapshot],
     ["save", {
-      studentId: 42, reportType: "student_learning_analysis_7d_v4",
+      studentId: 42, reportType: "student_learning_analysis_7d_v5",
       periodStart: "2026-07-20", periodEnd: "2026-07-26",
       snapshot: harness.learningSnapshot,
       snapshotHash: sourceSnapshotHash(harness.learningSnapshot),
@@ -264,7 +270,7 @@ test("student learning analysis supports a separate rolling 30 day cache", async
   );
 
   assert.deepEqual(harness.calls[0], ["period", 30]);
-  assert.deepEqual(harness.calls[2][1].reportType, "student_learning_analysis_30d_v4");
+  assert.deepEqual(harness.calls[2][1].reportType, "student_learning_analysis_30d_v5");
   assert.equal(response.body.period, "30d");
 });
 
@@ -278,7 +284,7 @@ test("student learning analysis supports a separate today cache", async () => {
   );
 
   assert.deepEqual(harness.calls[0], ["period", 1]);
-  assert.deepEqual(harness.calls[2][1].reportType, "student_learning_analysis_today_v4");
+  assert.deepEqual(harness.calls[2][1].reportType, "student_learning_analysis_today_v5");
   assert.equal(response.body.period, "today");
 });
 
@@ -299,6 +305,33 @@ test("learning diagnostics rank recurring topics and retain mistake evidence", (
   assert.equal(diagnostics.priority_topics[0].accuracy, 0);
   assert.equal(diagnostics.priority_topics[0].evidence[0].selected_answer, "do");
   assert.equal(diagnostics.priority_topics[0].evidence[0].correct_answer, "does");
+});
+
+test("learning diagnostics group reliable mistakes by topic and exact rule", () => {
+  const base = {
+    source_mode: "battle", topic_id: 10, topic_name: "Present Simple",
+    subskill_id: 11, subskill_name: "Third-person singular",
+    micro_skill_id: 12, micro_skill_name: "Selecting -s, -es, or -ies",
+    micro_skill_slug: "selecting-s-es-ies", question_diagnostic_eligible: true,
+    option_a: "go", option_b: "goes", selected_option: "A", correct_option: "B",
+    timed_out: false,
+  };
+  const diagnostics = buildLearningDiagnostics([
+    { ...base, source_question_id: 101, question_text: "He ___ to school.", explanation: "Use -es.", is_correct: false },
+    { ...base, source_question_id: 102, question_text: "Ali ___ home.", explanation: "Use -s.", is_correct: true },
+    { ...base, source_question_id: 103, question_text: "She ___ English.", explanation: "Use -s.", is_correct: false },
+    { ...base, source_question_id: 104, question_text: "Ignored unreliable item.", is_correct: false, question_diagnostic_eligible: false },
+  ]);
+
+  assert.equal(diagnostics.mistake_topics.length, 1);
+  assert.equal(diagnostics.mistake_topics[0].topic, "Present Simple");
+  assert.equal(diagnostics.mistake_topics[0].rules[0].rule, "Selecting -s, -es, or -ies");
+  assert.equal(diagnostics.mistake_topics[0].rules[0].level, "micro_skill");
+  assert.equal(diagnostics.mistake_topics[0].rules[0].attempts, 3);
+  assert.equal(diagnostics.mistake_topics[0].rules[0].errors, 2);
+  assert.equal(diagnostics.mistake_topics[0].rules[0].evidence.length, 2);
+  assert.equal(diagnostics.classified_errors, 2);
+  assert.equal(diagnostics.unclassified_errors, 0);
 });
 
 test("student fallback report turns real mistake evidence into topic lessons", () => {
