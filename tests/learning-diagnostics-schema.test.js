@@ -10,6 +10,10 @@ const migrationPath = path.join(
   "034_learning_diagnostics_persistence.sql"
 );
 const sql = fs.readFileSync(migrationPath, "utf8");
+const retestSql = fs.readFileSync(
+  path.join(__dirname, "..", "migrations", "032_targeted_retests_and_reviews.sql"),
+  "utf8"
+);
 
 test("learning diagnostics migration creates only missing persistence entities", () => {
   const requiredTables = [
@@ -84,4 +88,11 @@ test("production query paths receive required composite indexes", () => {
   for (const index of indexes) {
     assert.match(sql, new RegExp(`CREATE (?:UNIQUE )?INDEX IF NOT EXISTS ${index}`));
   }
+});
+
+test("targeted retest persistence enforces concurrent recovery uniqueness", () => {
+  assert.match(retestSql, /UNIQUE \(remediation_plan_id, assessment_type, sequence_no\)/);
+  assert.match(retestSql, /UNIQUE \(targeted_retest_id, source_question_id\)/);
+  assert.match(retestSql, /UNIQUE \(targeted_retest_id, position\)/);
+  assert.match(retestSql, /targeted_retest_id BIGINT NOT NULL UNIQUE/);
 });
