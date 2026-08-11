@@ -56,3 +56,26 @@ groups:
         annotations:
           summary: IlmLiga authenticated Socket.IO errors are elevated
           description: At least 10 authenticated Socket.IO errors occurred in 5 minutes and remained elevated for 5 minutes.
+
+  - name: ilm-liga-learning-reliability
+    interval: 30s
+    rules:
+      - alert: IlmLigaRetestSchedulingFailures
+        expr: sum(increase(learning_retest_schedule_failures_total{job="ilm-liga-app"}[10m])) >= 1
+        for: 1m
+        labels:
+          severity: warning
+          incident_severity: SEV-2
+        annotations:
+          summary: IlmLiga learning retest scheduling failed
+          description: At least one completed lesson could not schedule its initial retest during the last 10 minutes. Inspect application logs and database health; learner recovery remains available through the next assessment sync.
+
+      - alert: IlmLigaRetestRecoveryBacklogHigh
+        expr: learning_retest_recovery_backlog{job="ilm-liga-app"} >= 25
+        for: 10m
+        labels:
+          severity: warning
+          incident_severity: SEV-2
+        annotations:
+          summary: IlmLiga learning retest recovery backlog remains high
+          description: At least 25 learning plans have remained without their required retest for 10 minutes. Inspect worker logs, batch duration, database health and recovery throughput.

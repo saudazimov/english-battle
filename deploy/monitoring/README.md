@@ -76,5 +76,13 @@ curl --fail http://127.0.0.1:9090/api/v1/rules
 
 Stagingda ilovani vaqtincha to'xtatib `IlmLigaMetricsTargetDown` alerti 3 daqiqada
 `firing` bo'lishini va haqiqiy notification on-call kanaliga yetib borishini sinang.
+`learning_retest_schedule_failures_total` counterini stagingdagi nazoratli failure
+orqali bittaga oshirib, `IlmLigaRetestSchedulingFailures` alerti 1 daqiqadan keyin
+`firing` bo'lishini va SEV-2 receiverga yetib borishini ham tekshiring. Testdan so'ng
+retest keyingi assessment sync orqali aynan bir marta tiklanganini tasdiqlang.
+`learning_retest_recovery_backlog`, `learning_retest_recoveries_total` va
+`learning_retest_recovery_batch_duration_seconds` orqali navbat, throughput va oxirgi
+batch vaqtini kuzating. Backlog 25 yoki undan yuqori holatda 10 daqiqa saqlansa
+`IlmLigaRetestRecoveryBacklogHigh` SEV-2 alerti firing bo'lishi kerak.
 Production gate faqat receiver va tashqi uptime alertlari ham amalda sinovdan o'tgach
 yopiladi.

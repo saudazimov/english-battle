@@ -95,10 +95,15 @@ test("production monitoring securely scrapes private Socket.IO metrics and defin
     "IlmLigaSocketHandshakeSuccessLow",
     "IlmLigaSocketAuthenticationRejectionsHigh",
     "IlmLigaSocketErrorsHigh",
+    "IlmLigaRetestSchedulingFailures",
+    "IlmLigaRetestRecoveryBacklogHigh",
   ]) {
     assert.match(alerts, new RegExp(`alert: ${alert}`));
   }
   assert.match(alerts, /socket_auth_accepted_total[\s\S]*socket_auth_rejected_total[\s\S]*socket_handshake_errors_total/);
+  assert.match(alerts, /increase\(learning_retest_schedule_failures_total\{job="ilm-liga-app"\}\[10m\]\)[\s\S]*>= 1/);
+  assert.match(alerts, /IlmLigaRetestSchedulingFailures[\s\S]*for: 1m[\s\S]*incident_severity: SEV-2/);
+  assert.match(alerts, /learning_retest_recovery_backlog\{job="ilm-liga-app"\} >= 25[\s\S]*for: 10m/);
   assert.match(alerts, /incident_severity: SEV-1/);
   assert.match(alerts, /incident_severity: SEV-2/);
 
@@ -106,6 +111,8 @@ test("production monitoring securely scrapes private Socket.IO metrics and defin
   assert.match(monitoringGuide, /promtool check rules/);
   assert.match(monitoringGuide, /127\.0\.0\.1:9090.*127\.0\.0\.1:9093/s);
   assert.match(monitoringGuide, /alohida tashqi uptime provider majburiy/);
+  assert.match(monitoringGuide, /learning_retest_schedule_failures_total[\s\S]*IlmLigaRetestSchedulingFailures/);
+  assert.match(monitoringGuide, /learning_retest_recoveries_total[\s\S]*learning_retest_recovery_batch_duration_seconds/);
   assert.match(deployGuide, /deploy\/monitoring\/README\.md/);
 });
 
