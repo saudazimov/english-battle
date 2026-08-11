@@ -61,6 +61,10 @@ function createHarness({ found = true, queryError, auditError } = {}) {
         return true;
       },
       async getAnalysis() { return null; },
+      async listReviewQueue(options) {
+        calls.push(["reviewQueue", options]);
+        return { items: [], total: 0, ...options };
+      },
       async review() { return null; },
       async enqueue() { return false; },
       async processBatchSafe() {},
@@ -188,7 +192,7 @@ test("admin question update preserves database and audit error handling", async 
 test("admin question update route preserves path, method, and middleware order", () => {
   const router = createAdminQuestionUpdateRoutes({ pool: {}, logAudit() {} });
 
-  assert.equal(router.stack.length, 4);
+  assert.equal(router.stack.length, 5);
   const route = router.stack[0].route;
   assert.equal(route.path, "/admin/questions/edit");
   assert.equal(route.methods.post, true);
@@ -196,8 +200,23 @@ test("admin question update route preserves path, method, and middleware order",
   assert.equal(route.stack[0].handle, requireAdmin);
   assert.deepEqual(router.stack.map((layer) => layer.route.path), [
     "/admin/questions/edit",
+    "/admin/questions/analysis/review-queue",
     "/admin/questions/:id/analysis",
     "/admin/questions/:id/analysis/review",
     "/admin/questions/:id/analysis/requeue",
   ]);
+  assert.equal(router.stack[1].route.methods.get, true);
+  assert.equal(router.stack[1].route.stack[0].handle, requireAdmin);
+});
+
+test("admin question analysis review queue forwards validated query and response", async () => {
+  const harness = createHarness();
+  const response = createResponse();
+  const query = { filter: "quarantined", limit: "20", offset: "0" };
+
+  await harness.controller.listAnalysisReviewQueue({ query }, response);
+
+  assert.deepEqual(harness.calls, [["reviewQueue", query]]);
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.body, { items: [], total: 0, ...query });
 });

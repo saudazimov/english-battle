@@ -434,7 +434,7 @@
     .qa-override-form { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; align-items:end; }
     .qa-override-form label { display:grid; gap:6px; color:var(--text-dim); font-size:12px; font-weight:700; }
     .qa-override-form label.wide { grid-column:1/-1; }
-    .qa-override-form select,.qa-override-form textarea { width:100%; padding:10px; border:1px solid var(--border); border-radius:9px; background:var(--panel-2); color:var(--text); font:inherit; }
+    .qa-override-form select,.qa-override-form input,.qa-override-form textarea { width:100%; padding:10px; border:1px solid var(--border); border-radius:9px; background:var(--panel-2); color:var(--text); font:inherit; }
     .qa-save { justify-self:start; padding:10px 15px; border:0; border-radius:9px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:white; font-weight:700; cursor:pointer; }
     .qa-history-title { margin-top:18px !important; }
     .qa-history { display:grid; gap:8px; }
@@ -451,6 +451,23 @@
     .qquality-id { color:var(--accent); font-size:11px; font-weight:800; }
     .qquality-text { min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; }
     .qquality-status { font-size:10px; color:var(--red); font-weight:800; }
+    .qa-queue-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+    .qa-queue-toolbar select { min-width:210px; padding:10px; border:1px solid var(--border); border-radius:9px; background:var(--panel-2); color:var(--text); }
+    .qa-queue-count { margin-left:auto; color:var(--text-dim); font-size:12px; font-weight:700; }
+    .qa-queue-list { display:grid; gap:9px; max-height:56vh; overflow-y:auto; text-align:left; }
+    .qa-queue-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; padding:14px; border:1px solid var(--border); border-radius:12px; background:var(--panel-2); }
+    .qa-queue-question { color:var(--text); font-size:13px; font-weight:700; line-height:1.45; }
+    .qa-queue-meta,.qa-queue-signature { margin-top:6px; color:var(--text-dim); font-size:11px; overflow-wrap:anywhere; }
+    .qa-queue-badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .qa-queue-badge { padding:4px 7px; border-radius:999px; background:rgba(91,140,255,.13); color:var(--accent); font-size:10px; font-weight:800; }
+    .qa-queue-badge.danger { background:rgba(248,113,113,.13); color:var(--red); }
+    .qa-queue-badge.warn { background:rgba(251,191,36,.13); color:var(--gold); }
+    .qa-queue-open { align-self:center; padding:9px 12px; border:1px solid var(--border-bright); border-radius:9px; background:var(--panel); color:var(--text); font-weight:700; cursor:pointer; }
+    .qa-queue-open:hover { border-color:var(--accent); color:var(--accent); }
+    .qa-queue-pagination { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px; }
+    .qa-queue-pagination button { padding:8px 12px; border:1px solid var(--border); border-radius:8px; background:var(--panel-2); color:var(--text); cursor:pointer; }
+    .qa-queue-pagination button:disabled { opacity:.4; cursor:not-allowed; }
+    .qa-queue-pagination span { min-width:120px; text-align:center; color:var(--text-dim); font-size:12px; }
     @keyframes spin { to { transform:rotate(360deg); } }
     @media(max-width:760px) { .qa-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .qa-grid,.qa-distractors { grid-template-columns:1fr; } .qa-override-form { grid-template-columns:1fr; } .qa-override-form label.wide { grid-column:auto; } }
     
@@ -727,7 +744,7 @@
             </div>
 
             <div class="card">
-              <div class="card-head"><span class="ch-ic"><i data-lucide="list" class="ico-sm"></i></span> Savollar banki <span class="cnt" id="qCount">—</span></div>
+              <div class="card-head"><span class="ch-ic"><i data-lucide="list" class="ico-sm"></i></span> Savollar banki <span class="cnt" id="qCount">—</span><button class="btn btn-sm" style="margin-left:auto;" onclick="openQuestionAnalysisReviewQueue()"><i data-lucide="shield-alert" class="ico-sm"></i> AI review navbati</button></div>
 
               <div class="toolbar">
                 <div class="tb-search"><i data-lucide="search" class="s-ic ico-sm"></i><input type="text" id="fSearch" placeholder="Savol yoki ID..." oninput="onFilterSearch(this.value)"></div>
@@ -1410,6 +1427,31 @@
         <button class="modal-btn modal-btn-cancel" onclick="closeQuestionAnalysis()">Yopish</button>
         <button class="modal-btn" id="analysisRequeueBtn" style="background:var(--panel-2);color:var(--text);border:1px solid var(--border);" onclick="requeueQuestionAnalysis()">Qayta tahlil</button>
         <button class="modal-btn" id="analysisApproveBtn" style="background:linear-gradient(135deg,var(--green),#059669);color:#fff;" onclick="approveQuestionAnalysis()">Tasdiqlash</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="questionAnalysisReviewQueueModal">
+    <div class="modal-box wide" style="max-width:1040px;">
+      <div class="modal-head-wide">
+        <div class="mh-ic"><i data-lucide="list-checks" class="ico"></i></div>
+        <div><div class="mh-title">Canonical qoida review navbati</div><div style="font-size:12px;color:var(--text-dim);">Xavfli, karantindagi va tasdiqlanmagan tahlillar</div></div>
+        <div class="mh-close" onclick="closeQuestionAnalysisReviewQueue()"><i data-lucide="x" class="ico-sm"></i></div>
+      </div>
+      <div class="qa-queue-toolbar">
+        <select id="qaReviewQueueFilter" onchange="changeQuestionAnalysisReviewQueueFilter(this.value)">
+          <option value="all">Barcha review talab qiladiganlar</option>
+          <option value="unreviewed">Canonical tasdiqlanmagan</option>
+          <option value="review_required">Xavfli / REVIEW_REQUIRED</option>
+          <option value="quarantined">Karantindagi qoidalar</option>
+        </select>
+        <span class="qa-queue-count" id="qaReviewQueueCount">—</span>
+      </div>
+      <div id="questionAnalysisReviewQueueBody" class="loading-row">Yuklanmoqda...</div>
+      <div class="qa-queue-pagination">
+        <button id="qaReviewQueuePrev" onclick="moveQuestionAnalysisReviewQueue(-1)">Oldingi</button>
+        <span id="qaReviewQueuePageInfo">—</span>
+        <button id="qaReviewQueueNext" onclick="moveQuestionAnalysisReviewQueue(1)">Keyingi</button>
       </div>
     </div>
   </div>

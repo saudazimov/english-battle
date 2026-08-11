@@ -87,6 +87,19 @@ function createAdminQuestionUpdateController({
       }
     },
 
+    async listAnalysisReviewQueue(req, res) {
+      try {
+        const queue = await questionAnalysisService.listReviewQueue(req.query || {});
+        return res.json(queue);
+      } catch (error) {
+        logger.error("Savol AI review navbatini olish xatosi:", error.message);
+        if (error && error.statusCode === 400) {
+          return res.status(400).json({ error: error.message });
+        }
+        return res.status(500).json({ error: "Server xatosi" });
+      }
+    },
+
     async reviewAnalysis(req, res) {
       try {
         const questionId = Number(req.params.id);
@@ -107,6 +120,9 @@ function createAdminQuestionUpdateController({
         return res.json({ message: "Savol tahlili yangilandi", analysis });
       } catch (error) {
         logger.error("Savol AI tahlilini ko'rib chiqish xatosi:", error.message);
+        if (error && error.statusCode === 400) {
+          return res.status(400).json({ error: error.message });
+        }
         return res.status(500).json({ error: "Server xatosi" });
       }
     },

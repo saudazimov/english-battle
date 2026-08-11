@@ -3,6 +3,10 @@
 
   var currentQuestionId = null;
   var requestVersion = 0;
+  var reviewQueueOffset = 0;
+  var reviewQueueLimit = 20;
+  var reviewQueueTotal = 0;
+  var reviewQueueFilter = "all";
   var STATUS_LABELS = {
     ANALYSIS_PENDING: "Navbatda",
     ANALYZING: "Tahlil qilinmoqda",
@@ -68,6 +72,10 @@
 
   function renderAnalysis(analysis) {
     var status = analysis.status || "ANALYSIS_PENDING";
+    var rawAnalysis = analysis.raw_analysis || {};
+    var signatureCandidate = rawAnalysis.rule_signature_candidate || "—";
+    var canonicalSignature = analysis.rule_signature || "—";
+    var signatureInput = analysis.rule_signature || rawAnalysis.rule_signature_candidate || "";
     var qualityWarnings = analysis.quality_warnings || [];
     var warningHtml = qualityWarnings.length
       ? '<div class="qa-tags danger">' + qualityWarnings.map(function warning(item) {
@@ -88,6 +96,9 @@
       summaryItem("AI ishonchi", percent(analysis.analysis_confidence)) +
       summaryItem("Sifat holati", STATUS_LABELS[status] || status) +
       summaryItem("Diagnostikaga yaroqli", analysis.diagnostic_eligible ? "Ha" : "Yo'q", analysis.diagnostic_eligible ? "good" : "bad") +
+      summaryItem("AI qoida nomzodi", signatureCandidate) +
+      summaryItem("Canonical qoida", canonicalSignature) +
+      summaryItem("Canonical tekshiruv", analysis.rule_signature_reviewed ? "Admin tasdiqlagan" : "Tasdiqlanmagan", analysis.rule_signature_reviewed ? "good" : "bad") +
       '</div><div class="qa-grid"><section class="qa-section"><h4>Daraja dalillari</h4>' +
       list(analysis.level_evidence, "Daraja dalili mavjud emas.") +
       '</section><section class="qa-section"><h4>Prerequisite ko\'nikmalar</h4>' +
@@ -105,7 +116,12 @@
       '<label>Status<select id="qaOverrideStatus">' + statuses + '</select></label>' +
       '<label>Diagnostika<select id="qaOverrideEligible"><option value="true"' + (analysis.diagnostic_eligible ? " selected" : "") +
       '>Yaroqli</option><option value="false"' + (!analysis.diagnostic_eligible ? " selected" : "") +
-      '>Yaroqsiz</option></select></label><label class="wide">Sabab<textarea id="qaOverrideReason" rows="2" placeholder="Pedagogik sababni yozing"></textarea></label>' +
+      '>Yaroqsiz</option></select></label>' +
+      '<label>Canonical amal<select id="qaOverrideSignatureAction"><option value="preserve">O\'zgartirmaslik</option>' +
+      '<option value="approve">Tasdiqlash / almashtirish</option><option value="clear">Bekor qilish</option></select></label>' +
+      '<label class="wide">Canonical qoida<input id="qaOverrideSignature" maxlength="160" value="' + safe(signatureInput) +
+      '" placeholder="grammar.present_continuous.affirmative.plural_are"></label>' +
+      '<label class="wide">Sabab<textarea id="qaOverrideReason" rows="2" placeholder="Pedagogik sababni yozing"></textarea></label>' +
       '<button class="qa-save" onclick="saveQuestionAnalysisOverride()">Override saqlash</button></div>' +
       '<h4 class="qa-history-title">Override tarixi</h4>' + renderOverrides(analysis.overrides) +
       "</section></div>";
@@ -161,6 +177,8 @@
       estimated_level: document.getElementById("qaOverrideLevel").value,
       status: document.getElementById("qaOverrideStatus").value,
       diagnostic_eligible: document.getElementById("qaOverrideEligible").value === "true",
+      rule_signature_action: document.getElementById("qaOverrideSignatureAction").value,
+      rule_signature: document.getElementById("qaOverrideSignature").value.trim(),
       reason: document.getElementById("qaOverrideReason").value.trim(),
     };
     if (!payload.reason) {
@@ -169,7 +187,8 @@
     }
     var response = await global.apiPost("/admin/questions/" + currentQuestionId + "/analysis/review", payload);
     if (!response.ok) {
-      global.toast("Override saqlanmadi", "error");
+      var errorBody = await response.json().catch(function invalidJson() { return {}; });
+      global.toast(errorBody.error || "Override saqlanmadi", "error");
       return;
     }
     global.toast("Admin override saqlandi", "success");
@@ -197,9 +216,84 @@
     loadAnalysis(currentQuestionId, requestVersion, 6);
   }
 
+  function renderReviewQueueItem(item) {
+    var badges = [];
+    if (item.rule_signature_quarantined) badges.push('<span class="qa-queue-badge danger">Karantin</span>');
+    if (item.status === "REVIEW_REQUIRED") badges.push('<span class="qa-queue-badge danger">REVIEW_REQUIRED</span>');
+    if (!item.rule_signature_reviewed) badges.push('<span class="qa-queue-badge warn">Tasdiqlanmagan</span>');
+    return '<div class="qa-queue-item"><div><div class="qa-queue-question">#' + Number(item.question_id) + " · " +
+      safe(item.question_text || "Savol matni mavjud emas") + '</div><div class="qa-queue-meta">' +
+      safe(item.estimated_level || item.cefr_level || "—") + " · " + safe(item.topic_name || item.skill || "—") +
+      " · " + safe(item.status || "—") + '</div><div class="qa-queue-signature"><strong>Nomzod:</strong> ' +
+      safe(item.rule_signature_candidate || "—") + '<br><strong>Canonical:</strong> ' +
+      safe(item.rule_signature || "—") + '</div><div class="qa-queue-badges">' + badges.join("") +
+      '</div></div><button class="qa-queue-open" onclick="openQuestionAnalysisFromReviewQueue(' +
+      Number(item.question_id) + ')">Tekshirish</button></div>';
+  }
+
+  async function loadQuestionAnalysisReviewQueue(offset) {
+    reviewQueueOffset = Math.max(Number(offset) || 0, 0);
+    var body = document.getElementById("questionAnalysisReviewQueueBody");
+    if (!body) return;
+    body.innerHTML = '<div class="loading-row">Yuklanmoqda...</div>';
+    try {
+      var url = "/admin/questions/analysis/review-queue?filter=" + encodeURIComponent(reviewQueueFilter) +
+        "&limit=" + reviewQueueLimit + "&offset=" + reviewQueueOffset;
+      var response = await global.apiGet(url);
+      var data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Review navbatini yuklab bo'lmadi");
+      reviewQueueTotal = Number(data.total) || 0;
+      var items = Array.isArray(data.items) ? data.items : [];
+      body.className = "qa-queue-list";
+      body.innerHTML = items.length ? items.map(renderReviewQueueItem).join("") :
+        '<div class="empty-state">Bu filter bo\'yicha review talab qiladigan savol yo\'q.</div>';
+      document.getElementById("qaReviewQueueCount").textContent = reviewQueueTotal + " ta savol";
+      var start = reviewQueueTotal ? reviewQueueOffset + 1 : 0;
+      var end = Math.min(reviewQueueOffset + items.length, reviewQueueTotal);
+      document.getElementById("qaReviewQueuePageInfo").textContent = start + "–" + end + " / " + reviewQueueTotal;
+      document.getElementById("qaReviewQueuePrev").disabled = reviewQueueOffset === 0;
+      document.getElementById("qaReviewQueueNext").disabled = reviewQueueOffset + reviewQueueLimit >= reviewQueueTotal;
+      if (global.icons) global.icons();
+    } catch (error) {
+      body.className = "";
+      body.innerHTML = '<div class="empty-state">' + safe(error.message) + "</div>";
+    }
+  }
+
+  function openQuestionAnalysisReviewQueue() {
+    document.getElementById("questionAnalysisReviewQueueModal").classList.add("show");
+    reviewQueueOffset = 0;
+    loadQuestionAnalysisReviewQueue(0);
+  }
+
+  function closeQuestionAnalysisReviewQueue() {
+    document.getElementById("questionAnalysisReviewQueueModal").classList.remove("show");
+  }
+
+  function changeQuestionAnalysisReviewQueueFilter(value) {
+    reviewQueueFilter = value || "all";
+    loadQuestionAnalysisReviewQueue(0);
+  }
+
+  function moveQuestionAnalysisReviewQueue(direction) {
+    var nextOffset = reviewQueueOffset + Number(direction) * reviewQueueLimit;
+    if (nextOffset < 0 || nextOffset >= reviewQueueTotal) return;
+    loadQuestionAnalysisReviewQueue(nextOffset);
+  }
+
+  function openQuestionAnalysisFromReviewQueue(questionId) {
+    closeQuestionAnalysisReviewQueue();
+    openQuestionAnalysis(Number(questionId));
+  }
+
   global.openQuestionAnalysis = openQuestionAnalysis;
   global.closeQuestionAnalysis = closeQuestionAnalysis;
   global.saveQuestionAnalysisOverride = saveQuestionAnalysisOverride;
   global.approveQuestionAnalysis = approveQuestionAnalysis;
   global.requeueQuestionAnalysis = requeueQuestionAnalysis;
+  global.openQuestionAnalysisReviewQueue = openQuestionAnalysisReviewQueue;
+  global.closeQuestionAnalysisReviewQueue = closeQuestionAnalysisReviewQueue;
+  global.changeQuestionAnalysisReviewQueueFilter = changeQuestionAnalysisReviewQueueFilter;
+  global.moveQuestionAnalysisReviewQueue = moveQuestionAnalysisReviewQueue;
+  global.openQuestionAnalysisFromReviewQueue = openQuestionAnalysisFromReviewQueue;
 }(window));
