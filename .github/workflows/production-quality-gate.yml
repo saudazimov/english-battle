@@ -85,5 +85,8 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Verify learning recovery transactions on PostgreSQL
+        run: npm run test:learning-db
+
       - name: Run full test suite
         run: npm run test:full

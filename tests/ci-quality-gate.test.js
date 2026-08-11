@@ -36,6 +36,7 @@ test("quality workflow uses only an isolated PostgreSQL test database", () => {
   assert.match(workflow, /POSTGRES_DB: english_battle_ci/);
   assert.match(workflow, /DB_NAME: english_battle_ci/);
   assert.match(workflow, /Apply migrations to isolated CI database[\s\S]*npm run migrate[\s\S]*NODE_ENV: production/);
+  assert.match(workflow, /Verify learning recovery transactions on PostgreSQL[\s\S]*npm run test:learning-db/);
   assert.doesNotMatch(workflow, /DATABASE_URL/);
 });
 
@@ -45,9 +46,13 @@ test("quality workflow gates dependencies, contracts and the full suite", () => 
   assert.match(workflow, /run: npm ci/);
   assert.match(workflow, /run: npm run security:audit/);
   assert.match(workflow, /run: npm run test:production-contract/);
+  assert.match(workflow, /run: npm run test:learning-db/);
   assert.match(workflow, /run: npm run test:full/);
+  assert.ok(workflow.indexOf("npm run migrate") < workflow.indexOf("npm run test:learning-db"));
+  assert.ok(workflow.indexOf("npm run test:learning-db") < workflow.indexOf("npm run test:full"));
   assert.equal(packageJson.scripts["security:audit"], "npm audit --omit=dev --audit-level=high");
   assert.equal(packageJson.scripts["security:secrets"], "node scripts/scan-secrets.js");
+  assert.equal(packageJson.scripts["test:learning-db"], "node scripts/run-learning-db-integration.js");
   assert.match(packageJson.scripts["test:production-contract"], /production-environment\.test\.js/);
   assert.doesNotMatch(workflow, /\b(?:ssh|scp|rsync|pm2|git push)\b/);
 });
