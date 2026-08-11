@@ -84,4 +84,25 @@ test("enabled AI provider requires its key and model", () => {
 
   assert.ok(errors.includes("OPENAI_API_KEY AI hisobotlari yoqilganda majburiy"));
   assert.ok(errors.includes("OPENAI_MODEL AI hisobotlari yoqilganda majburiy"));
+  assert.ok(errors.some((issue) => issue.startsWith("AI_MONTHLY_HARD_LIMIT_USD")));
+});
+
+test("enabled production AI requires explicit pricing and a persistent hard limit", () => {
+  const validAi = validProductionEnvironment({
+    AI_REPORTS_ENABLED: "true", AI_PROVIDER: "openai",
+    OPENAI_API_KEY: "project-secret", OPENAI_MODEL: "gpt-4o-mini",
+    AI_INPUT_COST_PER_MILLION: "0.15", AI_OUTPUT_COST_PER_MILLION: "0.60",
+    AI_MONTHLY_HARD_LIMIT_USD: "25", AI_BUDGET_RESERVATION_TTL_MINUTES: "15",
+  });
+  assert.deepEqual(collectProductionEnvironmentErrors(validAi), []);
+
+  const errors = collectProductionEnvironmentErrors({
+    ...validAi,
+    AI_INPUT_COST_PER_MILLION: "0",
+    AI_MONTHLY_HARD_LIMIT_USD: "invalid",
+    AI_BUDGET_RESERVATION_TTL_MINUTES: "0",
+  });
+  assert.ok(errors.some((issue) => issue.startsWith("AI_INPUT_COST_PER_MILLION")));
+  assert.ok(errors.some((issue) => issue.startsWith("AI_MONTHLY_HARD_LIMIT_USD")));
+  assert.ok(errors.some((issue) => issue.startsWith("AI_BUDGET_RESERVATION_TTL_MINUTES")));
 });

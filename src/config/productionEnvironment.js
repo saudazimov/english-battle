@@ -54,6 +54,16 @@ function validateAiConfiguration(environment, errors) {
       errors.push(`${prefix}_${suffix} AI hisobotlari yoqilganda majburiy`);
     }
   }
+  for (const key of ["AI_INPUT_COST_PER_MILLION", "AI_OUTPUT_COST_PER_MILLION", "AI_MONTHLY_HARD_LIMIT_USD"]) {
+    const value = Number(valueOf(environment, key));
+    if (!Number.isFinite(value) || value <= 0) {
+      errors.push(`${key} AI hisobotlari yoqilgan productionda musbat son bo'lishi kerak`);
+    }
+  }
+  const reservationTtl = Number(valueOf(environment, "AI_BUDGET_RESERVATION_TTL_MINUTES"));
+  if (!Number.isInteger(reservationTtl) || reservationTtl < 1 || reservationTtl > 1440) {
+    errors.push("AI_BUDGET_RESERVATION_TTL_MINUTES 1-1440 oralig'idagi butun son bo'lishi kerak");
+  }
 }
 
 function collectProductionEnvironmentErrors(environment = process.env) {
