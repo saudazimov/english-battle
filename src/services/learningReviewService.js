@@ -6,6 +6,7 @@ const {
   mergeConfig,
 } = require("./learningAnalyticsService");
 const { isApprovedExercise } = require("./personalizedLessonService");
+const { getApplicationObservability } = require("../utils/applicationObservability");
 
 const RETEST_SCHEMA_VERSION = "targeted_retest_v1";
 const REVIEW_SCHEMA_VERSION = "spaced_review_v1";
@@ -93,6 +94,18 @@ function reviewAdjustment({ passed, accuracy, averageResponseTimeMs, expectedRes
   return "MAINTAIN";
 }
 
+function pendingRetestRecovery(summary, config = DEFAULT_REVIEW_CONFIG, currentTime = new Date()) {
+  const successfulRetests = Number(summary && summary.successful_retests) || 0;
+  const activeRetests = Number(summary && summary.active_retests) || 0;
+  if (activeRetests > 0 || successfulRetests >= Number(config.required_successful_retests)) return null;
+  const maxSequence = Number(summary && summary.max_sequence) || 0;
+  const lastSuccess = summary && summary.last_success_at ? new Date(summary.last_success_at) : null;
+  const scheduledFor = successfulRetests > 0 && lastSuccess && Number.isFinite(lastSuccess.getTime())
+    ? new Date(lastSuccess.getTime() + 86400000)
+    : new Date(currentTime);
+  return { sequenceNo: Math.max(1,maxSequence + 1),scheduledFor };
+}
+
 function calculateAssessmentProfile(profile, assessment, config, analyticsConfig, now = new Date()) {
   const previousExposures = Number(profile.exposure_count || 0);
   const total = Number(assessment.total || config.question_count);
@@ -133,7 +146,14 @@ function calculateAssessmentProfile(profile, assessment, config, analyticsConfig
   };
 }
 
-function createLearningReviewService({ pool, createNotification, logger = console, now = () => new Date() }) {
+function createLearningReviewService({
+  pool,
+  createNotification,
+  logger = console,
+  now = () => new Date(),
+  monotonicNow = () => Date.now(),
+  observability = getApplicationObservability(),
+}) {
   let timer = null;
   let configCache = null;
   let configLoadedAt = 0;
@@ -289,23 +309,55 @@ function createLearningReviewService({ pool, createNotification, logger = consol
 
   async function listDue(studentId) {
     await syncStudentAssessments(studentId);
+    const requiredSuccessfulRetests = Number((await loadConfig()).review.required_successful_retests);
     const result = await pool.query(
       `SELECT r.id,r.remediation_plan_id,r.assessment_type,r.sequence_no,r.status,r.scheduled_for,
               r.question_count,r.required_correct,t.name AS target_skill_name,
               COALESCE(a.correct_count,0)::int AS correct_count,
+              (SELECT COUNT(*)::int FROM targeted_retests completed_retest
+               JOIN retest_attempts completed_attempt ON completed_attempt.targeted_retest_id=completed_retest.id
+               WHERE completed_retest.remediation_plan_id=r.remediation_plan_id
+                 AND completed_retest.assessment_type='RETEST' AND completed_attempt.passed
+                 AND completed_attempt.completed_at IS NOT NULL) AS successful_retests,
+              $2::int AS required_successful_retests,
               (SELECT COUNT(*)::int FROM retest_attempt_answers aa
                WHERE aa.retest_attempt_id=a.id) AS answered_count
        FROM targeted_retests r JOIN learning_taxonomy t ON t.id=r.taxonomy_id
        LEFT JOIN retest_attempts a ON a.targeted_retest_id=r.id
        WHERE r.student_id=$1 AND r.status IN ('READY','STARTED') AND r.scheduled_for<=NOW()
-       ORDER BY r.scheduled_for,r.id`, [studentId]
+       ORDER BY r.scheduled_for,r.id`, [studentId,requiredSuccessfulRetests]
+    );
+    return result.rows;
+  }
+
+  async function listUpcomingRetests(studentId) {
+    const requiredSuccessfulRetests = Number((await loadConfig()).review.required_successful_retests);
+    const result = await pool.query(
+      `SELECT DISTINCT ON (r.remediation_plan_id)
+              r.id,r.remediation_plan_id,r.assessment_type,r.sequence_no,r.status,r.scheduled_for,
+              r.question_count,r.required_correct,t.name AS target_skill_name,
+              (SELECT COUNT(*)::int FROM targeted_retests completed_retest
+               JOIN retest_attempts completed_attempt ON completed_attempt.targeted_retest_id=completed_retest.id
+               WHERE completed_retest.remediation_plan_id=r.remediation_plan_id
+                 AND completed_retest.assessment_type='RETEST' AND completed_attempt.passed
+                 AND completed_attempt.completed_at IS NOT NULL) AS successful_retests,
+              $2::int AS required_successful_retests
+       FROM targeted_retests r JOIN learning_taxonomy t ON t.id=r.taxonomy_id
+       WHERE r.student_id=$1 AND r.assessment_type='RETEST' AND r.status='READY'
+         AND r.scheduled_for>NOW()
+       ORDER BY r.remediation_plan_id,r.scheduled_for,r.id`, [studentId,requiredSuccessfulRetests]
     );
     return result.rows;
   }
 
   async function getAssessment(studentId, assessmentId) {
     const result = await pool.query(
-      `SELECT r.*,t.name AS target_skill_name,a.id AS attempt_id,a.correct_count,a.total_count,a.accuracy,a.passed
+      `SELECT r.*,t.name AS target_skill_name,a.id AS attempt_id,a.correct_count,a.total_count,a.accuracy,a.passed,
+              (SELECT COUNT(*)::int FROM targeted_retests completed_retest
+               JOIN retest_attempts completed_attempt ON completed_attempt.targeted_retest_id=completed_retest.id
+               WHERE completed_retest.remediation_plan_id=r.remediation_plan_id
+                 AND completed_retest.assessment_type='RETEST' AND completed_attempt.passed
+                 AND completed_attempt.completed_at IS NOT NULL) AS successful_retests
        FROM targeted_retests r JOIN learning_taxonomy t ON t.id=r.taxonomy_id
        LEFT JOIN retest_attempts a ON a.targeted_retest_id=r.id
        WHERE r.id=$1 AND r.student_id=$2 AND r.quality_status='APPROVED'`, [assessmentId,studentId]
@@ -321,7 +373,8 @@ function createLearningReviewService({ pool, createNotification, logger = consol
        LEFT JOIN retest_attempt_answers aa ON aa.retest_attempt_id=a.id AND aa.assessment_question_id=q.id
        WHERE q.targeted_retest_id=$1 ORDER BY q.position`, [assessmentId]
     );
-    return { ...result.rows[0], questions: questions.rows };
+    const requiredSuccessfulRetests = Number((await loadConfig()).review.required_successful_retests);
+    return { ...result.rows[0],required_successful_retests: requiredSuccessfulRetests,questions: questions.rows };
   }
 
   async function startAssessment(studentId, assessmentId) {
@@ -544,12 +597,9 @@ function createLearningReviewService({ pool, createNotification, logger = consol
     const plans = await pool.query(
       `SELECT id,status FROM remediation_plans WHERE student_id=$1 AND status='RETEST_PENDING'`, [studentId]
     );
+    const reviewConfig = (await loadConfig()).review;
     for (const plan of plans.rows) {
-      const count = await pool.query(
-        `SELECT COUNT(*)::int AS count FROM targeted_retests
-         WHERE remediation_plan_id=$1 AND assessment_type='RETEST'`, [plan.id]
-      );
-      if (!Number(count.rows[0].count)) await ensureInitialRetest(studentId,plan.id);
+      await recoverPendingRetest(studentId,plan.id,reviewConfig);
     }
     const schedules = await pool.query(
       `SELECT * FROM review_schedules WHERE student_id=$1 AND status='PENDING' AND scheduled_for<=NOW()
@@ -559,6 +609,69 @@ function createLearningReviewService({ pool, createNotification, logger = consol
       await ensureAssessment(studentId,schedule.remediation_plan_id,"REVIEW",schedule.sequence_no,schedule.scheduled_for);
     }
     return { retest_plans: plans.rows.length, due_reviews: schedules.rows.length };
+  }
+
+  async function recoverPendingRetest(studentId, planId, reviewConfig) {
+    const summary = await pool.query(
+      `SELECT COALESCE(MAX(r.sequence_no),0)::int AS max_sequence,
+              COUNT(*) FILTER (WHERE r.status IN ('READY','STARTED'))::int AS active_retests,
+              COUNT(*) FILTER (WHERE a.passed AND a.completed_at IS NOT NULL)::int AS successful_retests,
+              MAX(a.completed_at) FILTER (WHERE a.passed) AS last_success_at
+       FROM targeted_retests r LEFT JOIN retest_attempts a ON a.targeted_retest_id=r.id
+       WHERE r.remediation_plan_id=$1 AND r.assessment_type='RETEST'`, [planId]
+    );
+    const recovery = pendingRetestRecovery(summary.rows[0],reviewConfig,now());
+    if (!recovery) return false;
+    const assessment = await ensureAssessment(
+      studentId,planId,"RETEST",recovery.sequenceNo,recovery.scheduledFor
+    );
+    return Boolean(assessment);
+  }
+
+  async function processPendingRetestRecoveries(limit = 25) {
+    const startedAt = monotonicNow();
+    const boundedLimit = Math.max(1,Math.min(Number(limit) || 25,100));
+    try {
+      const reviewConfig = (await loadConfig()).review;
+      const plans = await pool.query(
+        `WITH recovery_candidates AS (
+           SELECT rp.id,rp.student_id,rp.updated_at FROM remediation_plans rp
+           WHERE rp.status='RETEST_PENDING'
+             AND NOT EXISTS (
+               SELECT 1 FROM targeted_retests active
+               WHERE active.remediation_plan_id=rp.id AND active.assessment_type='RETEST'
+                 AND active.status IN ('READY','STARTED')
+             )
+             AND (
+               SELECT COUNT(*) FROM targeted_retests completed
+               JOIN retest_attempts attempt ON attempt.targeted_retest_id=completed.id
+               WHERE completed.remediation_plan_id=rp.id AND completed.assessment_type='RETEST'
+                 AND attempt.passed AND attempt.completed_at IS NOT NULL
+             ) < $1
+         )
+         SELECT id,student_id,COUNT(*) OVER()::int AS recovery_backlog
+         FROM recovery_candidates ORDER BY updated_at,id LIMIT $2`,
+        [Number(reviewConfig.required_successful_retests),boundedLimit]
+      );
+      const backlog = Number(plans.rows[0] && plans.rows[0].recovery_backlog || 0);
+      let recovered = 0;
+      let failed = 0;
+      for (const plan of plans.rows) {
+        try {
+          if (await recoverPendingRetest(plan.student_id,plan.id,reviewConfig)) recovered++;
+        } catch (error) {
+          failed++;
+          observability.increment("learning_retest_schedule_failures_total");
+          logger.error("Background retest recovery xatosi:", error.message);
+        }
+      }
+      if (recovered) observability.increment("learning_retest_recoveries_total",recovered);
+      observability.setGauge("learning_retest_recovery_backlog",Math.max(0,backlog - recovered));
+      return { scanned: plans.rows.length,recovered,failed,backlog };
+    } finally {
+      const durationSeconds = Math.max(0,monotonicNow() - startedAt) / 1000;
+      observability.setGauge("learning_retest_recovery_batch_duration_seconds",durationSeconds);
+    }
   }
 
   async function getProgressOverview(studentId) {
@@ -675,12 +788,16 @@ function createLearningReviewService({ pool, createNotification, logger = consol
 
   async function processBatchSafe() {
     try {
+      const retestRecoveries = await processPendingRetestRecoveries();
       const reviews = await processDueReviews();
       const notifications = await notifyDueAssessments();
-      return { reviews,notifications };
+      return { retestRecoveries,reviews,notifications };
     } catch (error) {
       logger.error("Retest/review worker xatosi:", error.message);
-      return { reviews: 0,notifications: 0,error: error.message };
+      return {
+        retestRecoveries: { scanned: 0,recovered: 0,failed: 0,backlog: 0 },
+        reviews: 0,notifications: 0,error: error.message,
+      };
     }
   }
 
@@ -698,14 +815,16 @@ function createLearningReviewService({ pool, createNotification, logger = consol
   }
 
   return {
-    loadConfig,ensureInitialRetest,syncStudentAssessments,listDue,getAssessment,
+    loadConfig,ensureInitialRetest,syncStudentAssessments,listDue,listUpcomingRetests,getAssessment,
     startAssessment,answerQuestion,completeAssessment,processDueReviews,
-    notifyDueAssessments,processBatchSafe,startWorker,stopWorker,getProgressOverview,
+    notifyDueAssessments,processPendingRetestRecoveries,processBatchSafe,
+    startWorker,stopWorker,getProgressOverview,
   };
 }
 
 module.exports = {
   RETEST_SCHEMA_VERSION,REVIEW_SCHEMA_VERSION,DEFAULT_REVIEW_CONFIG,
-  assessmentQuality,makeAssessmentExercises,determineAssessmentOutcome,reviewAdjustment,calculateAssessmentProfile,
+  assessmentQuality,makeAssessmentExercises,determineAssessmentOutcome,reviewAdjustment,pendingRetestRecovery,
+  calculateAssessmentProfile,
   createLearningReviewService,
 };

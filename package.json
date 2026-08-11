@@ -21,6 +21,7 @@
     "security:secrets": "node scripts/scan-secrets.js",
     "test": "node --test tests/security-regression.test.js",
     "test:e2e": "node --test tests/e2e-api.test.js",
+    "test:learning-db": "node scripts/run-learning-db-integration.js",
     "test:production-contract": "node --test tests/production-environment.test.js tests/production-deploy-config.test.js tests/production-operations.test.js",
     "test:full": "node scripts/run-full-tests.js"
   },
