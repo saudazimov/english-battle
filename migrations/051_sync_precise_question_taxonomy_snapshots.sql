@@ -7,7 +7,16 @@ WITH desired AS (
          analysis.subskill_id,
          analysis.micro_skill_id
   FROM question_ai_analysis analysis
-  WHERE analysis.question_id=ANY(ARRAY[9,13,40,391,392]::int[])
+  JOIN questions question ON question.id=analysis.question_id
+  WHERE (question.question_text, question.option_a, question.option_b,
+         question.option_c, question.option_d, question.correct_option) IN (
+    ('We ___ happy today.', 'is', 'am', 'are', 'be', 'C'),
+    ('I ___ from Uzbekistan.', 'am', 'is', 'are', 'be', 'A'),
+    ('They ___ students.', 'is', 'am', 'are', 'be', 'C'),
+    ('Yesterday we ___ a new topic.', 'learned', 'learn', 'learns', 'learning', 'A'),
+    ('Choose the grammatically correct sentence.',
+     'They are ready.', 'They is ready.', 'They ready are.', 'They be ready.', 'A')
+  )
     AND analysis.main_skill_id IS NOT NULL
     AND analysis.topic_id IS NOT NULL
     AND analysis.subskill_id IS NOT NULL
@@ -108,7 +117,17 @@ SELECT changed.question_id,
 FROM changed;
 
 DELETE FROM question_taxonomy_tags tag
-WHERE tag.question_id=ANY(ARRAY[9,13,40,391,392]::int[])
+USING questions question
+WHERE tag.question_id=question.id
+  AND (question.question_text, question.option_a, question.option_b,
+       question.option_c, question.option_d, question.correct_option) IN (
+    ('We ___ happy today.', 'is', 'am', 'are', 'be', 'C'),
+    ('I ___ from Uzbekistan.', 'am', 'is', 'are', 'be', 'A'),
+    ('They ___ students.', 'is', 'am', 'are', 'be', 'C'),
+    ('Yesterday we ___ a new topic.', 'learned', 'learn', 'learns', 'learning', 'A'),
+    ('Choose the grammatically correct sentence.',
+     'They are ready.', 'They is ready.', 'They ready are.', 'They be ready.', 'A')
+  )
   AND tag.tag_role IN ('main_skill','topic','subskill','micro_skill');
 
 WITH desired AS (
@@ -118,7 +137,16 @@ WITH desired AS (
          analysis.subskill_id,
          analysis.micro_skill_id
   FROM question_ai_analysis analysis
-  WHERE analysis.question_id=ANY(ARRAY[9,13,40,391,392]::int[])
+  JOIN questions question ON question.id=analysis.question_id
+  WHERE (question.question_text, question.option_a, question.option_b,
+         question.option_c, question.option_d, question.correct_option) IN (
+    ('We ___ happy today.', 'is', 'am', 'are', 'be', 'C'),
+    ('I ___ from Uzbekistan.', 'am', 'is', 'are', 'be', 'A'),
+    ('They ___ students.', 'is', 'am', 'are', 'be', 'C'),
+    ('Yesterday we ___ a new topic.', 'learned', 'learn', 'learns', 'learning', 'A'),
+    ('Choose the grammatically correct sentence.',
+     'They are ready.', 'They is ready.', 'They ready are.', 'They be ready.', 'A')
+  )
 ), tags AS (
   SELECT question_id,main_skill_id AS taxonomy_id,'main_skill'::varchar AS tag_role FROM desired
   UNION ALL
@@ -142,8 +170,17 @@ SET main_skill_id=analysis.main_skill_id,
     micro_skill_id=analysis.micro_skill_id,
     updated_at=NOW()
 FROM question_ai_analysis analysis
+JOIN questions question ON question.id=analysis.question_id
 WHERE event.question_id=analysis.question_id
-  AND event.question_id=ANY(ARRAY[9,13,40,391,392]::int[])
+  AND (question.question_text, question.option_a, question.option_b,
+       question.option_c, question.option_d, question.correct_option) IN (
+    ('We ___ happy today.', 'is', 'am', 'are', 'be', 'C'),
+    ('I ___ from Uzbekistan.', 'am', 'is', 'are', 'be', 'A'),
+    ('They ___ students.', 'is', 'am', 'are', 'be', 'C'),
+    ('Yesterday we ___ a new topic.', 'learned', 'learn', 'learns', 'learning', 'A'),
+    ('Choose the grammatically correct sentence.',
+     'They are ready.', 'They is ready.', 'They ready are.', 'They be ready.', 'A')
+  )
   AND (
     event.main_skill_id IS DISTINCT FROM analysis.main_skill_id
     OR event.topic_id IS DISTINCT FROM analysis.topic_id
@@ -153,9 +190,23 @@ WHERE event.question_id=analysis.question_id
 
 DO $$
 DECLARE
+  expected_question_count INTEGER;
   synchronized_question_count INTEGER;
   mismatched_event_count INTEGER;
 BEGIN
+  SELECT COUNT(*)
+  INTO expected_question_count
+  FROM questions question
+  WHERE (question.question_text, question.option_a, question.option_b,
+         question.option_c, question.option_d, question.correct_option) IN (
+    ('We ___ happy today.', 'is', 'am', 'are', 'be', 'C'),
+    ('I ___ from Uzbekistan.', 'am', 'is', 'are', 'be', 'A'),
+    ('They ___ students.', 'is', 'am', 'are', 'be', 'C'),
+    ('Yesterday we ___ a new topic.', 'learned', 'learn', 'learns', 'learning', 'A'),
+    ('Choose the grammatically correct sentence.',
+     'They are ready.', 'They is ready.', 'They ready are.', 'They be ready.', 'A')
+  );
+
   WITH desired AS (
     SELECT analysis.question_id,
            analysis.main_skill_id,
@@ -163,7 +214,16 @@ BEGIN
            analysis.subskill_id,
            analysis.micro_skill_id
     FROM question_ai_analysis analysis
-    WHERE analysis.question_id=ANY(ARRAY[9,13,40,391,392]::int[])
+    JOIN questions question ON question.id=analysis.question_id
+    WHERE (question.question_text, question.option_a, question.option_b,
+           question.option_c, question.option_d, question.correct_option) IN (
+      ('We ___ happy today.', 'is', 'am', 'are', 'be', 'C'),
+      ('I ___ from Uzbekistan.', 'am', 'is', 'are', 'be', 'A'),
+      ('They ___ students.', 'is', 'am', 'are', 'be', 'C'),
+      ('Yesterday we ___ a new topic.', 'learned', 'learn', 'learns', 'learning', 'A'),
+      ('Choose the grammatically correct sentence.',
+       'They are ready.', 'They is ready.', 'They ready are.', 'They be ready.', 'A')
+    )
   )
   SELECT COUNT(*)
   INTO synchronized_question_count
@@ -192,7 +252,16 @@ BEGIN
   INTO mismatched_event_count
   FROM student_answer_events event
   JOIN question_ai_analysis analysis ON analysis.question_id=event.question_id
-  WHERE event.question_id=ANY(ARRAY[9,13,40,391,392]::int[])
+  JOIN questions question ON question.id=event.question_id
+  WHERE (question.question_text, question.option_a, question.option_b,
+         question.option_c, question.option_d, question.correct_option) IN (
+    ('We ___ happy today.', 'is', 'am', 'are', 'be', 'C'),
+    ('I ___ from Uzbekistan.', 'am', 'is', 'are', 'be', 'A'),
+    ('They ___ students.', 'is', 'am', 'are', 'be', 'C'),
+    ('Yesterday we ___ a new topic.', 'learned', 'learn', 'learns', 'learning', 'A'),
+    ('Choose the grammatically correct sentence.',
+     'They are ready.', 'They is ready.', 'They ready are.', 'They be ready.', 'A')
+  )
     AND (
       event.main_skill_id IS DISTINCT FROM analysis.main_skill_id
       OR event.topic_id IS DISTINCT FROM analysis.topic_id
@@ -200,9 +269,9 @@ BEGIN
       OR event.micro_skill_id IS DISTINCT FROM analysis.micro_skill_id
     );
 
-  IF synchronized_question_count <> 5 THEN
-    RAISE EXCEPTION 'Expected 5 synchronized question taxonomy tag sets, found %',
-      synchronized_question_count;
+  IF synchronized_question_count <> expected_question_count THEN
+    RAISE EXCEPTION 'Expected % synchronized question taxonomy tag sets, found %',
+      expected_question_count, synchronized_question_count;
   END IF;
 
   IF mismatched_event_count <> 0 THEN

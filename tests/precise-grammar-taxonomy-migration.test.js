@@ -26,15 +26,25 @@ test("precise grammar taxonomy migration seeds the approved hierarchy", () => {
   assert.doesNotMatch(migration, /ALTER TABLE|CREATE TABLE|DROP TABLE/i);
 });
 
-test("precise grammar taxonomy migration maps only the approved questions with audit", () => {
-  for (const questionId of [9, 13, 40, 391, 392]) {
-    assert.match(migration, new RegExp(`\\(${questionId},`));
+test("precise grammar taxonomy migration maps approved content fingerprints with audit", () => {
+  for (const questionText of [
+    "We ___ happy today.",
+    "I ___ from Uzbekistan.",
+    "They ___ students.",
+    "Yesterday we ___ a new topic.",
+    "Choose the grammatically correct sentence.",
+  ]) {
+    assert.match(migration, new RegExp(questionText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
 
+  assert.match(migration, /question\.option_a=desired\.option_a/i);
+  assert.match(migration, /question\.correct_option=desired\.correct_option/i);
+  assert.doesNotMatch(migration, /desired\(question_id/i);
   assert.match(migration, /INSERT INTO question_analysis_overrides/i);
   assert.match(migration, /'taxonomy_mapping'/i);
   assert.match(migration, /UPDATE question_ai_analysis/i);
-  assert.match(migration, /Expected 5 precise taxonomy mappings/i);
+  assert.match(migration, /mapped_count <> expected_count/i);
+  assert.match(migration, /Expected % precise taxonomy mappings/i);
   assert.match(migration, /^BEGIN;/i);
   assert.match(migration, /COMMIT;$/i);
 });

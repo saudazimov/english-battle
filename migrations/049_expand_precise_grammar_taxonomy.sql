@@ -34,20 +34,34 @@ WHERE NOT EXISTS (
   WHERE existing.parent_id=parent.id AND existing.slug=seeds.slug
 );
 
-WITH desired(question_id, topic_slug, subskill_slug, micro_skill_slug) AS (
+WITH desired(question_text, option_a, option_b, option_c, option_d, correct_option,
+             topic_slug, subskill_slug, micro_skill_slug) AS (
   VALUES
-    (9, 'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
-    (13, 'present-simple', 'forms-of-be', 'using-am-with-i'),
-    (40, 'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
-    (391, 'verb-forms-and-tenses', 'past-simple-affirmative', 'regular-verbs-add-ed'),
-    (392, 'present-simple', 'forms-of-be', 'affirmative-word-order-with-be')
+    ('We ___ happy today.', 'is', 'am', 'are', 'be', 'C',
+     'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
+    ('I ___ from Uzbekistan.', 'am', 'is', 'are', 'be', 'A',
+     'present-simple', 'forms-of-be', 'using-am-with-i'),
+    ('They ___ students.', 'is', 'am', 'are', 'be', 'C',
+     'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
+    ('Yesterday we ___ a new topic.', 'learned', 'learn', 'learns', 'learning', 'A',
+     'verb-forms-and-tenses', 'past-simple-affirmative', 'regular-verbs-add-ed'),
+    ('Choose the grammatically correct sentence.',
+     'They are ready.', 'They is ready.', 'They ready are.', 'They be ready.', 'A',
+     'present-simple', 'forms-of-be', 'affirmative-word-order-with-be')
 ), resolved AS (
-  SELECT desired.question_id,
+  SELECT question.id AS question_id,
          main.id AS main_skill_id,
          topic.id AS topic_id,
          subskill.id AS subskill_id,
          micro.id AS micro_skill_id
   FROM desired
+  JOIN questions question
+    ON question.question_text=desired.question_text
+   AND question.option_a=desired.option_a
+   AND question.option_b=desired.option_b
+   AND question.option_c=desired.option_c
+   AND question.option_d=desired.option_d
+   AND question.correct_option=desired.correct_option
   JOIN learning_taxonomy topic
     ON topic.slug=desired.topic_slug AND topic.node_type='topic'
   JOIN learning_taxonomy main
@@ -98,20 +112,34 @@ SELECT changed.question_id,
        'System taxonomy semantic audit'
 FROM changed;
 
-WITH desired(question_id, topic_slug, subskill_slug, micro_skill_slug) AS (
+WITH desired(question_text, option_a, option_b, option_c, option_d, correct_option,
+             topic_slug, subskill_slug, micro_skill_slug) AS (
   VALUES
-    (9, 'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
-    (13, 'present-simple', 'forms-of-be', 'using-am-with-i'),
-    (40, 'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
-    (391, 'verb-forms-and-tenses', 'past-simple-affirmative', 'regular-verbs-add-ed'),
-    (392, 'present-simple', 'forms-of-be', 'affirmative-word-order-with-be')
+    ('We ___ happy today.', 'is', 'am', 'are', 'be', 'C',
+     'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
+    ('I ___ from Uzbekistan.', 'am', 'is', 'are', 'be', 'A',
+     'present-simple', 'forms-of-be', 'using-am-with-i'),
+    ('They ___ students.', 'is', 'am', 'are', 'be', 'C',
+     'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
+    ('Yesterday we ___ a new topic.', 'learned', 'learn', 'learns', 'learning', 'A',
+     'verb-forms-and-tenses', 'past-simple-affirmative', 'regular-verbs-add-ed'),
+    ('Choose the grammatically correct sentence.',
+     'They are ready.', 'They is ready.', 'They ready are.', 'They be ready.', 'A',
+     'present-simple', 'forms-of-be', 'affirmative-word-order-with-be')
 ), resolved AS (
-  SELECT desired.question_id,
+  SELECT question.id AS question_id,
          main.id AS main_skill_id,
          topic.id AS topic_id,
          subskill.id AS subskill_id,
          micro.id AS micro_skill_id
   FROM desired
+  JOIN questions question
+    ON question.question_text=desired.question_text
+   AND question.option_a=desired.option_a
+   AND question.option_b=desired.option_b
+   AND question.option_c=desired.option_c
+   AND question.option_d=desired.option_d
+   AND question.correct_option=desired.correct_option
   JOIN learning_taxonomy topic
     ON topic.slug=desired.topic_slug AND topic.node_type='topic'
   JOIN learning_taxonomy main
@@ -142,19 +170,60 @@ WHERE analysis.question_id=resolved.question_id
 
 DO $$
 DECLARE
+  expected_count INTEGER;
   mapped_count INTEGER;
 BEGIN
-  WITH desired(question_id, topic_slug, subskill_slug, micro_skill_slug) AS (
+  WITH desired(question_text, option_a, option_b, option_c, option_d, correct_option,
+               topic_slug, subskill_slug, micro_skill_slug) AS (
     VALUES
-      (9, 'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
-      (13, 'present-simple', 'forms-of-be', 'using-am-with-i'),
-      (40, 'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
-      (391, 'verb-forms-and-tenses', 'past-simple-affirmative', 'regular-verbs-add-ed'),
-      (392, 'present-simple', 'forms-of-be', 'affirmative-word-order-with-be')
+      ('We ___ happy today.', 'is', 'am', 'are', 'be', 'C',
+       'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
+      ('I ___ from Uzbekistan.', 'am', 'is', 'are', 'be', 'A',
+       'present-simple', 'forms-of-be', 'using-am-with-i'),
+      ('They ___ students.', 'is', 'am', 'are', 'be', 'C',
+       'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
+      ('Yesterday we ___ a new topic.', 'learned', 'learn', 'learns', 'learning', 'A',
+       'verb-forms-and-tenses', 'past-simple-affirmative', 'regular-verbs-add-ed'),
+      ('Choose the grammatically correct sentence.',
+       'They are ready.', 'They is ready.', 'They ready are.', 'They be ready.', 'A',
+       'present-simple', 'forms-of-be', 'affirmative-word-order-with-be')
+  )
+  SELECT COUNT(*)
+  INTO expected_count
+  FROM desired
+  JOIN questions question
+    ON question.question_text=desired.question_text
+   AND question.option_a=desired.option_a
+   AND question.option_b=desired.option_b
+   AND question.option_c=desired.option_c
+   AND question.option_d=desired.option_d
+   AND question.correct_option=desired.correct_option;
+
+  WITH desired(question_text, option_a, option_b, option_c, option_d, correct_option,
+               topic_slug, subskill_slug, micro_skill_slug) AS (
+    VALUES
+      ('We ___ happy today.', 'is', 'am', 'are', 'be', 'C',
+       'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
+      ('I ___ from Uzbekistan.', 'am', 'is', 'are', 'be', 'A',
+       'present-simple', 'forms-of-be', 'using-am-with-i'),
+      ('They ___ students.', 'is', 'am', 'are', 'be', 'C',
+       'present-simple', 'forms-of-be', 'using-are-with-we-you-they'),
+      ('Yesterday we ___ a new topic.', 'learned', 'learn', 'learns', 'learning', 'A',
+       'verb-forms-and-tenses', 'past-simple-affirmative', 'regular-verbs-add-ed'),
+      ('Choose the grammatically correct sentence.',
+       'They are ready.', 'They is ready.', 'They ready are.', 'They be ready.', 'A',
+       'present-simple', 'forms-of-be', 'affirmative-word-order-with-be')
   )
   SELECT COUNT(*)
   INTO mapped_count
   FROM desired
+  JOIN questions question
+    ON question.question_text=desired.question_text
+   AND question.option_a=desired.option_a
+   AND question.option_b=desired.option_b
+   AND question.option_c=desired.option_c
+   AND question.option_d=desired.option_d
+   AND question.correct_option=desired.correct_option
   JOIN learning_taxonomy topic
     ON topic.slug=desired.topic_slug AND topic.node_type='topic'
   JOIN learning_taxonomy subskill
@@ -166,13 +235,14 @@ BEGIN
    AND micro.slug=desired.micro_skill_slug
    AND micro.node_type='micro_skill'
   JOIN question_ai_analysis analysis
-    ON analysis.question_id=desired.question_id
+    ON analysis.question_id=question.id
    AND analysis.topic_id=topic.id
    AND analysis.subskill_id=subskill.id
    AND analysis.micro_skill_id=micro.id;
 
-  IF mapped_count <> 5 THEN
-    RAISE EXCEPTION 'Expected 5 precise taxonomy mappings, found %', mapped_count;
+  IF mapped_count <> expected_count THEN
+    RAISE EXCEPTION 'Expected % precise taxonomy mappings, found %',
+      expected_count, mapped_count;
   END IF;
 END $$;
 
