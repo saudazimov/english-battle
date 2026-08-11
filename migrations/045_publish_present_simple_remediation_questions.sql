@@ -33,7 +33,9 @@ VALUES
   ('Madina ___ the dishes at home.','washes','wash','washing','washed','A',
    'Wash -sh bilan tugaydi. Uchinchi shaxs birlikda fe''lga -es qo''shiladi: washes.'),
   ('The shop ___ at nine in the morning.','opens','open','opening','opened','A',
-   'The shop uchinchi shaxs birlik. Present Simple tasdiq gapida open fe''liga -s qo''shiladi: opens.');
+   'The shop uchinchi shaxs birlik. Present Simple tasdiq gapida open fe''liga -s qo''shiladi: opens.'),
+  ('My brother ___ a dictionary to class every day.','carries','carry','carrying','carried','A',
+   'Carry fe''li undosh + y bilan tugaydi. Uchinchi shaxs birlikda y harfi ies ga o''zgaradi: carries.');
 
 UPDATE questions q
 SET option_a=c.option_a,option_b=c.option_b,option_c=c.option_c,option_d=c.option_d,

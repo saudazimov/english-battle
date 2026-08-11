@@ -21,11 +21,12 @@ const reviewedQuestions = [
   "He ___ TV after dinner.",
   "Madina ___ the dishes at home.",
   "The shop ___ at nine in the morning.",
+  "My brother ___ a dictionary to class every day.",
 ];
 
-test("reviewed Present Simple remediation content publishes nine unique questions", () => {
+test("reviewed Present Simple remediation content publishes ten unique questions", () => {
   for (const question of reviewedQuestions) assert.match(sql, new RegExp(question.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  assert.equal(reviewedQuestions.length, 9);
+  assert.equal(reviewedQuestions.length, 10);
   assert.doesNotMatch(sql, /She ___ to work every weekday\./);
   assert.doesNotMatch(sql, /He ___ to school every day\./);
   assert.match(sql, /status='published'/);
