@@ -158,3 +158,43 @@ test("AI provider does not retry an externally aborted request", async () => {
   );
   assert.equal(transportCalls, 0);
 });
+
+test("AI provider reserves and finalizes the persistent budget around a successful request", async () => {
+  const calls = [];
+  const budgetGuard = {
+    async reserve(details) { calls.push(["reserve", details]); return { id: 8 }; },
+    async finalize(reservation, details) { calls.push(["finalize", reservation, details]); },
+    async release(reservation) { calls.push(["release", reservation]); },
+  };
+  const service = createAiProviderService({
+    environment: {
+      AI_REPORTS_ENABLED: "true", AI_PROVIDER: "openai", OPENAI_API_KEY: "secret",
+      AI_INPUT_COST_PER_MILLION: "0.15", AI_OUTPUT_COST_PER_MILLION: "0.60",
+    },
+    transport: async () => openAiResponse(), budgetGuard, logger: { info() {}, error() {} },
+  });
+
+  const result = await service.generateText({ systemPrompt: "system", userContent: "user", maxTokens: 100 });
+
+  assert.equal(calls[0][0], "reserve");
+  assert.ok(calls[0][1].estimatedCostUsd > 0);
+  assert.deepEqual(calls[1], ["finalize", { id: 8 }, {
+    usage: { input: 12, output: 8 }, actualCostUsd: result.metadata.estimated_cost_usd,
+  }]);
+  assert.equal(calls.some((call) => call[0] === "release"), false);
+});
+
+test("AI provider releases a reservation and does not retry a hard budget rejection", async () => {
+  let transportCalls = 0;
+  const budgetError = new Error("limit");
+  budgetError.code = "AI_BUDGET_EXCEEDED";
+  budgetError.retryable = false;
+  const service = createAiProviderService({
+    environment: { AI_REPORTS_ENABLED: "true", AI_PROVIDER: "openai", OPENAI_API_KEY: "secret" },
+    transport: async () => { transportCalls += 1; return openAiResponse(); },
+    budgetGuard: { async reserve() { throw budgetError; }, async release() {} },
+  });
+
+  await assert.rejects(service.generateText({ systemPrompt: "s", userContent: "u" }), budgetError);
+  assert.equal(transportCalls, 0);
+});

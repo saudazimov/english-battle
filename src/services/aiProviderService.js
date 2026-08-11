@@ -151,6 +151,7 @@ function createAiProviderService({
   transport = defaultTransport,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   logger = console,
+  budgetGuard = null,
 } = {}) {
   const config = providerConfiguration(environment);
 
@@ -167,6 +168,12 @@ function createAiProviderService({
     if (!usage) return null;
     return Number((Number(usage.input || 0) * config.inputCostPerMillion / 1000000
       + Number(usage.output || 0) * config.outputCostPerMillion / 1000000).toFixed(8));
+  }
+
+  function estimatedRequestCost(systemPrompt, userContent, maxTokens) {
+    const inputBytes = Buffer.byteLength(`${systemPrompt || ""}${userContent || ""}`, "utf8");
+    const conservativeInputTokens = Math.ceil(inputBytes / 2) + 32;
+    return estimatedCost({ input: conservativeInputTokens, output: maxTokens });
   }
 
   async function requestModel({ model, systemPrompt, userContent, maxTokens, signal }) {
@@ -195,7 +202,17 @@ function createAiProviderService({
           code: "AI_ABORTED",
         });
         const startedAt = Date.now();
+        let reservation = null;
         try {
+          if (budgetGuard && typeof budgetGuard.reserve === "function") {
+            reservation = await budgetGuard.reserve({
+              provider: config.provider,
+              model,
+              estimatedCostUsd: estimatedRequestCost(systemPrompt, userContent, boundedTokens),
+              promptVersion,
+              schemaVersion,
+            });
+          }
           const result = await requestModel({ model, systemPrompt, userContent, maxTokens: boundedTokens, signal });
           const metadata = {
             prompt_version: promptVersion,
@@ -213,8 +230,21 @@ function createAiProviderService({
               console.error("[AI provider usage log xatosi]", loggingError.message);
             }
           }
+          if (budgetGuard && typeof budgetGuard.finalize === "function") {
+            try {
+              await budgetGuard.finalize(reservation, {
+                usage: result.usage,
+                actualCostUsd: metadata.estimated_cost_usd,
+              });
+            } catch (budgetError) {
+              logger.error("AI budget sarfini yakunlash xatosi:", budgetError.message);
+            }
+          }
           return { ...result, metadata };
         } catch (error) {
+          if (budgetGuard && typeof budgetGuard.release === "function") {
+            await budgetGuard.release(reservation);
+          }
           lastError = error;
           const retryable = error.retryable === true || ["AI_TIMEOUT", "ECONNRESET", "ETIMEDOUT"].includes(error.code);
           if (!retryable || attempt > config.retries || (signal && signal.aborted)) break;

@@ -8,6 +8,7 @@ function createAdminQuestionUpdateRoutes({ pool, logAudit }) {
   const router = express.Router();
   const controller = createAdminQuestionUpdateController({ pool, logAudit });
   router.post("/admin/questions/edit", requireAdmin, controller.update);
+  router.get("/admin/questions/analysis/review-queue", requireAdmin, controller.listAnalysisReviewQueue);
   router.get("/admin/questions/:id/analysis", requireAdmin, controller.getAnalysis);
   router.post("/admin/questions/:id/analysis/review", requireAdmin, controller.reviewAnalysis);
   router.post("/admin/questions/:id/analysis/requeue", requireAdmin, controller.requeueAnalysis);

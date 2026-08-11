@@ -18,7 +18,7 @@ function createStudentWeeklyAiReportController({
     return {
       key,
       days: key === "today" ? 1 : key === "30d" ? 30 : 7,
-      reportType: `student_learning_analysis_${key}_v4`,
+      reportType: `student_learning_analysis_${key}_v5`,
     };
   }
 
@@ -33,6 +33,9 @@ function createStudentWeeklyAiReportController({
       topics: diagnostics.topics || [],
       priority_topics: diagnostics.priority_topics || [],
       strongest_topics: diagnostics.strongest_topics || [],
+      mistake_topics: diagnostics.mistake_topics || [],
+      classified_errors: diagnostics.classified_errors || 0,
+      unclassified_errors: diagnostics.unclassified_errors || 0,
       analyzed_answers: diagnostics.analyzed_answers || 0,
       sources: diagnostics.sources || {},
       coverage_note: diagnostics.coverage_note || "",
@@ -74,7 +77,7 @@ function createStudentWeeklyAiReportController({
       exams: snapshot.exams || {},
       data_quality: analysis.data_quality,
       snapshot_meta: {
-        snapshot_version: "student_learning_snapshot_v3",
+        snapshot_version: "student_learning_snapshot_v4",
         report_schema_version: SCHEMA_VERSION,
       },
     };

@@ -1,13 +1,35 @@
+const { getApplicationObservability } = require("../utils/applicationObservability");
+
 function positiveInteger(value) {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-function createStudentRemediationController({ lessonService, reviewService, logger = console }) {
+function createStudentRemediationController({
+  lessonService,
+  reviewService,
+  logger = console,
+  observability = getApplicationObservability(),
+}) {
   return {
     async sync(req, res) {
       try {
-        const result = await lessonService.syncLessons(req.user.id);
+        const requestedTaxonomy = req.body && req.body.taxonomy_id;
+        const taxonomyId = requestedTaxonomy == null ? null : positiveInteger(requestedTaxonomy);
+        if (requestedTaxonomy != null && !taxonomyId) {
+          return res.status(400).json({ error: "Noto'g'ri qoida ID." });
+        }
+        const requestedAnswerEvent = req.body && req.body.answer_event_id;
+        if (requestedAnswerEvent == null) {
+          return res.status(400).json({
+            error: "Dars yaratish uchun aniq xato dalili talab qilinadi.",
+          });
+        }
+        const answerEventId = requestedAnswerEvent == null ? null : positiveInteger(requestedAnswerEvent);
+        if (!answerEventId) {
+          return res.status(400).json({ error: "Noto'g'ri xato dalili ID." });
+        }
+        const result = await lessonService.syncLessons(req.user.id, taxonomyId, answerEventId);
         res.json(result);
       } catch (error) {
         logger.error("Remediation sync xatosi:", error.message);
@@ -80,10 +102,20 @@ function createStudentRemediationController({ lessonService, reviewService, logg
             total: result.total,
           });
         }
+        if (result.mastery_not_met) {
+          return res.status(409).json({
+            error: `Darsni yakunlash uchun kamida ${result.required_correct}/${result.total} ta to'g'ri javob kerak. Xato javoblarni qayta ko'rib chiqing.`,
+            answered: result.answered,
+            total: result.total,
+            correct: result.correct,
+            required_correct: result.required_correct,
+          });
+        }
         if (reviewService && result.remediation_plan_id) {
           try {
             await reviewService.ensureInitialRetest(req.user.id, result.remediation_plan_id);
           } catch (scheduleError) {
+            observability.increment("learning_retest_schedule_failures_total");
             logger.error("Retest yaratish xatosi:", scheduleError.message);
           }
         }
@@ -105,7 +137,10 @@ function createStudentRemediationController({ lessonService, reviewService, logg
 
     async dueAssessments(req, res) {
       try {
-        res.json({ assessments: await reviewService.listDue(req.user.id) });
+        const assessments = await reviewService.listDue(req.user.id);
+        const upcomingRetests = typeof reviewService.listUpcomingRetests === "function"
+          ? await reviewService.listUpcomingRetests(req.user.id) : [];
+        res.json({ assessments,upcoming_retests: upcomingRetests });
       } catch (error) {
         logger.error("Assessment list xatosi:", error.message);
         res.status(500).json({ error: "Qayta tekshiruvlarni yuklab bo'lmadi." });

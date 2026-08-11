@@ -21,6 +21,9 @@
   const periodCache = new Map();
   const lessonDialog = document.getElementById("lessonDialog");
   let activeLessonId = null;
+  let currentPeriodData = null;
+  let storedLessons = [];
+  const lessonPreparationKeys = new Set();
 
   function numberOf(value) {
     const parsed = Number(value);
@@ -70,6 +73,201 @@
     empty.className = "empty-copy";
     empty.textContent = message;
     container.appendChild(empty);
+  }
+
+  function clearPeriodCache() {
+    periodCache.clear();
+  }
+
+  function appendFlowStat(container, value, label) {
+    const item = document.createElement("div");
+    item.className = "flow-stat";
+    const number = document.createElement("strong");
+    number.textContent = value;
+    const copy = document.createElement("span");
+    copy.textContent = label;
+    item.append(number, copy);
+    container.appendChild(item);
+  }
+
+  function compatibleMistakeTopics(diagnostics) {
+    if (Array.isArray(diagnostics.mistake_topics)) return diagnostics.mistake_topics;
+    return (Array.isArray(diagnostics.priority_topics) ? diagnostics.priority_topics : []).map(function (topic) {
+      return {
+        topic: topic.topic, attempts: topic.attempts, errors: topic.errors, accuracy: topic.accuracy,
+        rules: [{ rule: topic.topic, attempts: topic.attempts, errors: topic.errors,
+          accuracy: topic.accuracy, evidence: topic.evidence || [] }],
+      };
+    });
+  }
+
+  function lessonForEvidence(evidence) {
+    return storedLessons.find(function (lesson) {
+      return Number(lesson.source_answer_event_id) === Number(evidence && evidence.answer_event_id);
+    });
+  }
+
+  function lessonPreparationKey(rule,evidence) {
+    const taxonomyId = Number(rule && rule.taxonomy_id);
+    const answerEventId = Number(evidence && evidence.answer_event_id);
+    return taxonomyId > 0 && answerEventId > 0 ? taxonomyId + ":" + answerEventId : "";
+  }
+
+  function errorAction(rule, evidence) {
+    const button = document.createElement("button");
+    button.className = "btn primary rule-action";
+    button.type = "button";
+    const lesson = lessonForEvidence(evidence);
+    const preparationKey = lessonPreparationKey(rule,evidence);
+    if (!rule.taxonomy_id || !evidence || !evidence.answer_event_id) {
+      button.disabled = true;
+      button.textContent = "Xato aniqlanmoqda";
+    } else if (lessonPreparationKeys.has(preparationKey)) {
+      button.disabled = true;
+      button.setAttribute("aria-busy","true");
+      button.textContent = "Tayyorlanmoqda...";
+    } else if (lesson) {
+      button.textContent = lesson.status === "COMPLETED" ? "Darsni ko'rish" : "Darsni boshlash";
+      button.addEventListener("click", function () { openStoredLesson(lesson.id, lesson.status); });
+    } else {
+      button.textContent = "Xato uchun dars tayyorlash";
+      button.addEventListener("click", function () { prepareErrorLesson(rule, evidence, button); });
+    }
+    return button;
+  }
+
+  function renderRuleRow(rule) {
+    const row = document.createElement("article");
+    row.className = "rule-row";
+    const copy = document.createElement("div");
+    const name = document.createElement("h3");
+    name.className = "rule-name";
+    name.textContent = rule.rule || "Aniqlanmagan qoida";
+    const meta = document.createElement("div");
+    meta.className = "rule-meta";
+    meta.append(
+      document.createTextNode(numberOf(rule.errors) + " xato"),
+      document.createTextNode(numberOf(rule.attempts) + " urinish"),
+      document.createTextNode(numberOf(rule.accuracy) + "% aniqlik")
+    );
+    copy.append(name, meta);
+    const evidenceList = document.createElement("div");
+    evidenceList.className = "rule-error-list";
+    (Array.isArray(rule.evidence) ? rule.evidence : []).forEach(function (evidence, index) {
+      const item = document.createElement("div");
+      item.className = "rule-error-item";
+      const evidenceCopy = document.createElement("p");
+      evidenceCopy.className = "rule-evidence";
+      evidenceCopy.textContent = (index + 1) + ". " + (evidence.question || "Xato savol")
+        + " — siz: " + (evidence.selected_answer || "—") + "; to'g'ri: " + (evidence.correct_answer || "—");
+      item.append(evidenceCopy, errorAction(rule,evidence));
+      evidenceList.appendChild(item);
+    });
+    copy.appendChild(evidenceList);
+    row.appendChild(copy);
+    return row;
+  }
+
+  function renderRuleFlow(data) {
+    const analysis = data.analysis || {};
+    const diagnostics = analysis.learning_diagnostics || {};
+    const topics = compatibleMistakeTopics(diagnostics);
+    const summary = document.getElementById("flowSummaryStats");
+    clearElement(summary);
+    appendFlowStat(summary, numberOf(diagnostics.analyzed_answers), "Javob");
+    const classified = diagnostics.classified_errors == null
+      ? topics.reduce(function (total, topic) { return total + numberOf(topic.errors); }, 0)
+      : numberOf(diagnostics.classified_errors);
+    appendFlowStat(summary, classified, "Aniq xato");
+    appendFlowStat(summary, topics.length, "Mavzu");
+    const container = document.getElementById("ruleTopicList");
+    if (!topics.length) {
+      renderEmpty(container, "Tanlangan davrda darslik talab qiladigan aniq qoida xatosi topilmadi.");
+      return;
+    }
+    clearElement(container);
+    topics.forEach(function (topic) {
+      const card = document.createElement("article");
+      card.className = "card rule-topic";
+      const head = document.createElement("div");
+      head.className = "rule-topic-head";
+      const titleWrap = document.createElement("div");
+      const title = document.createElement("h2");
+      title.className = "rule-topic-title";
+      title.textContent = topic.topic || "Aniqlanmagan mavzu";
+      const meta = document.createElement("p");
+      meta.className = "rule-topic-meta";
+      meta.textContent = numberOf(topic.attempts) + " urinish · " + numberOf(topic.accuracy) + "% aniqlik";
+      titleWrap.append(title, meta);
+      const count = document.createElement("span");
+      count.className = "rule-count";
+      count.textContent = numberOf(topic.errors) + " xato";
+      head.append(titleWrap, count);
+      const rules = document.createElement("div");
+      rules.className = "rule-list";
+      (Array.isArray(topic.rules) ? topic.rules : []).forEach(function (rule) { rules.appendChild(renderRuleRow(rule)); });
+      card.append(head, rules);
+      container.appendChild(card);
+    });
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  async function waitForStoredLesson(evidence, attempts, intervalMs) {
+    const maximumAttempts = Number.isInteger(attempts) ? attempts : 6;
+    const delay = Number.isInteger(intervalMs) ? intervalMs : 1500;
+    for (let attempt = 0; attempt < maximumAttempts; attempt += 1) {
+      storedLessons = await loadStoredLessons(false);
+      const lesson = lessonForEvidence(evidence);
+      if (lesson) return lesson;
+      if (attempt < maximumAttempts - 1) {
+        await new Promise(function (resolve) { setTimeout(resolve, delay); });
+      }
+    }
+    return null;
+  }
+
+  async function prepareErrorLesson(rule, evidence, button) {
+    const key = lessonPreparationKey(rule,evidence);
+    if (!key || lessonPreparationKeys.has(key)) return;
+    lessonPreparationKeys.add(key);
+    button.disabled = true;
+    button.setAttribute("aria-busy","true");
+    button.textContent = "Tayyorlanmoqda...";
+    setStatus("Tanlangan xato uchun alohida dars tayyorlanmoqda...", false);
+    try {
+      const result = await requestJson("/learning/remediation/lessons/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taxonomy_id: rule.taxonomy_id, answer_event_id: evidence.answer_event_id }),
+      });
+      storedLessons = await loadStoredLessons(true);
+      let lesson = lessonForEvidence(evidence);
+      if (!lesson && numberOf(result.pending_count) > 0) {
+        setStatus("Dars boshqa so'rovda tayyorlanmoqda. Natija avtomatik tekshiriladi...", false);
+        lesson = await waitForStoredLesson(evidence);
+        if (lesson) renderStoredLessons(storedLessons);
+      }
+      if (lesson) setStatus("", false);
+      else if (numberOf(result.pending_count) > 0) {
+        setStatus("Dars hali tayyorlanmoqda. Birozdan keyin holatni qayta tekshiring.", false);
+      } else if (numberOf(result.review_required_count) > 0) {
+        setStatus("Dars xavfsizlik tekshiruvidan o'tmadi va ko'rib chiqishga yuborildi.", true);
+      } else if (numberOf(result.target_count) === 0) {
+        setStatus("Bu xato uchun ishonchli diagnostik dalil topilmadi.", true);
+      } else {
+        setStatus("Bu xato uchun darsni hozir tayyorlab bo'lmadi. Qayta urinib ko'ring.", true);
+      }
+    } catch (error) {
+      setStatus(error.message || "Darslikni tayyorlab bo‘lmadi.", true);
+    } finally {
+      lessonPreparationKeys.delete(key);
+      if (currentPeriodData) renderRuleFlow(currentPeriodData);
+      if (button.isConnected) {
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+        button.textContent = lessonForEvidence(evidence) ? "Darsni boshlash" : "Qayta urinish";
+      }
+    }
   }
 
   function renderMetrics(data) {
@@ -295,6 +493,14 @@
       objective.className = "lesson-objective";
       objective.textContent = "Maqsad: " + (content.learning_objective || "Ko'nikmani mustahkamlash");
       titleWrap.append(title, objective);
+      const sourceError = content.source_error || {};
+      if (sourceError.question) {
+        const exactError = document.createElement("p");
+        exactError.className = "lesson-objective";
+        exactError.textContent = "Xato: " + sourceError.question + " — sizning javobingiz: "
+          + (sourceError.selected_answer || "—") + "; to'g'ri javob: " + (sourceError.correct_answer || "—");
+        titleWrap.appendChild(exactError);
+      }
       const badge = document.createElement("span");
       badge.className = "badge-pill";
       badge.textContent = remediationStatus(stored.status);
@@ -328,13 +534,34 @@
     if (window.lucide) window.lucide.createIcons();
   }
 
-  async function loadStoredLessons() {
-    let data = await requestJson("/learning/remediation/lessons", { method: "GET" });
-    if (!Array.isArray(data.lessons) || !data.lessons.length) {
-      await requestJson("/learning/remediation/lessons/sync", { method: "POST" });
-      data = await requestJson("/learning/remediation/lessons", { method: "GET" });
+  async function loadStoredLessons(shouldRender) {
+    const data = await requestJson("/learning/remediation/lessons", { method: "GET" });
+    const lessons = Array.isArray(data.lessons) ? data.lessons : [];
+    if (shouldRender !== false) {
+      if (lessons.length) renderStoredLessons(lessons);
+      else renderEmpty(document.getElementById("lessonLibrary"), "Hozircha tayyor xato darslari yo'q.");
     }
-    if (Array.isArray(data.lessons) && data.lessons.length) renderStoredLessons(data.lessons);
+    return lessons;
+  }
+
+  function renderLessonExamples(content) {
+    const container = document.getElementById("lessonDialogExamples");
+    clearElement(container);
+    const micro = content.micro_explanation || {};
+    const examples = Array.isArray(micro.examples) && micro.examples.length
+      ? micro.examples : (Array.isArray(content.worked_examples) ? content.worked_examples : []);
+    examples.slice(0, 10).forEach(function (example, index) {
+      const card = document.createElement("article");
+      card.className = "lesson-example";
+      const sentence = document.createElement("strong");
+      sentence.textContent = (index + 1) + ". " + (example.sentence || example.prompt || "Misol");
+      const explanation = document.createElement("p");
+      explanation.textContent = example.rule_application || example.reasoning || example.explanation || "Qoida shu gapda qo‘llangan.";
+      card.append(sentence, explanation);
+      container.appendChild(card);
+    });
+    if (!container.childNodes.length) renderEmpty(container, "Bu eski dars formatida misollar saqlanmagan.");
+    document.getElementById("lessonExampleCount").textContent = Math.min(10, examples.length) + "/10";
   }
 
   function renderLessonExercises(lesson) {
@@ -353,16 +580,17 @@
         button.type = "button";
         button.textContent = code + ". " + exercise.options[code];
         if (exercise.selected_option) {
-          button.disabled = true;
+          button.disabled = lesson.status === "COMPLETED";
           if (code === exercise.correct_option) button.classList.add("correct");
           else if (code === exercise.selected_option) button.classList.add("wrong");
-        } else {
+        }
+        if (lesson.status !== "COMPLETED") {
           button.addEventListener("click", function () { answerStoredExercise(exercise.id, code); });
         }
         options.appendChild(button);
       });
       card.append(heading, options);
-      if (exercise.explanation) {
+      if (exercise.explanation && exercise.selected_option) {
         const feedback = document.createElement("p");
         feedback.className = "lesson-feedback";
         feedback.textContent = (exercise.is_correct ? "To'g'ri. " : "To'g'ri javob: " + exercise.correct_option + ". ") + exercise.explanation;
@@ -376,10 +604,22 @@
     const data = await requestJson("/learning/remediation/lessons/" + lessonId, { method: "GET" });
     const lesson = data.lesson;
     const content = lesson.lesson_content || {};
+    const sourceError = content.source_error || {};
     document.getElementById("lessonDialogTitle").textContent = content.lesson_title || "Shaxsiy dars";
     document.getElementById("lessonDialogObjective").textContent = content.learning_objective || "";
+    const sourceErrorBox = document.getElementById("lessonDialogSourceError");
+    const hasSourceError = Boolean(sourceError.question || sourceError.selected_answer || sourceError.correct_answer);
+    sourceErrorBox.hidden = !hasSourceError;
+    document.getElementById("lessonDialogQuestion").textContent = sourceError.question || "—";
+    document.getElementById("lessonDialogSelectedAnswer").textContent = sourceError.selected_answer || "—";
+    document.getElementById("lessonDialogCorrectAnswer").textContent = sourceError.correct_answer || "—";
     document.getElementById("lessonDialogRule").textContent = content.micro_explanation && content.micro_explanation.rule || "Qoida izohi mavjud emas.";
+    renderLessonExamples(content);
     renderLessonExercises(lesson);
+    const completionStatus = document.getElementById("lessonCompletionStatus");
+    completionStatus.textContent = "";
+    completionStatus.classList.remove("error","success");
+    document.getElementById("lessonTestCount").textContent = (lesson.exercises || []).length + "/10";
     const complete = document.getElementById("lessonCompleteButton");
     complete.disabled = lesson.status === "COMPLETED" || (lesson.exercises || []).some(function (item) { return !item.selected_option; });
     complete.textContent = lesson.status === "COMPLETED" ? "Dars yakunlangan" : "Darsni yakunlash";
@@ -398,17 +638,32 @@
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ selected_option: selectedOption }),
     });
     await fetchLesson(activeLessonId);
-    await loadStoredLessons();
+    storedLessons = await loadStoredLessons(true);
+    if (currentPeriodData) renderRuleFlow(currentPeriodData);
   }
 
   document.getElementById("lessonDialogClose").addEventListener("click", function () { lessonDialog.classList.remove("open"); });
   lessonDialog.addEventListener("click", function (event) { if (event.target === lessonDialog) lessonDialog.classList.remove("open"); });
   document.getElementById("lessonCompleteButton").addEventListener("click", async function () {
     if (!activeLessonId) return;
-    await requestJson("/learning/remediation/lessons/" + activeLessonId + "/complete", { method: "POST" });
-    await fetchLesson(activeLessonId);
-    await loadStoredLessons();
-    periodCache.clear();
+    const button = document.getElementById("lessonCompleteButton");
+    const completionStatus = document.getElementById("lessonCompletionStatus");
+    button.disabled = true;
+    completionStatus.textContent = "Natija tekshirilmoqda...";
+    completionStatus.classList.remove("error","success");
+    try {
+      await requestJson("/learning/remediation/lessons/" + activeLessonId + "/complete", { method: "POST" });
+      await fetchLesson(activeLessonId);
+      completionStatus.textContent = "Mezon bajarildi — dars muvaffaqiyatli yakunlandi.";
+      completionStatus.classList.add("success");
+      storedLessons = await loadStoredLessons(true);
+      if (currentPeriodData) renderRuleFlow(currentPeriodData);
+      periodCache.clear();
+    } catch (error) {
+      button.disabled = false;
+      completionStatus.textContent = error.message || "Natijani tekshirib bo'lmadi.";
+      completionStatus.classList.add("error");
+    }
   });
 
   function renderLearningPlan(report) {
@@ -546,12 +801,15 @@
         data = await requestJson("/ai/reports/student/weekly?period=" + period, { method: "POST" });
         periodCache.set(period, data);
       }
-      renderDashboard(data);
-      try { await loadStoredLessons(); } catch (lessonError) { console.error("Personalized lessons:", lessonError); }
+      currentPeriodData = data;
+      try { storedLessons = await loadStoredLessons(true); }
+      catch (lessonError) { storedLessons = []; console.error("Personalized lessons:", lessonError); }
+      renderRuleFlow(data);
+      setStatus("", false);
     } catch (error) {
       if (error.status === 402) {
         setStatus("", false);
-        renderPremiumLock();
+        renderEmpty(document.getElementById("ruleTopicList"), "Chuqur qoida diagnostikasi Premium tarifda mavjud.");
       } else setStatus(error.message || "Tahlilni yuklab bo‘lmadi.", true);
     } finally {
       periodButtons.forEach(function (button) { button.disabled = false; });
@@ -561,9 +819,9 @@
   periodButtons.forEach(function (button) {
     button.addEventListener("click", function () { loadPeriod(button.dataset.period); });
   });
+
   const learningUi = window.createProgressLearningUI({
-    requestJson,clearElement,makeIcon,renderEmpty,numberOf,
-    clearPeriodCache: function () { periodCache.clear(); },
+    requestJson, clearElement, makeIcon, renderEmpty, numberOf, clearPeriodCache,
   });
   learningUi.load();
   loadPeriod("7d");

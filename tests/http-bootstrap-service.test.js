@@ -15,6 +15,9 @@ const {
 const {
   createInternalMetricsRoutes,
 } = require("../src/routes/internalMetricsRoutes");
+const {
+  createApplicationObservability,
+} = require("../src/utils/applicationObservability");
 
 function resolveOrigin(options, origin) {
   let result;
@@ -229,6 +232,18 @@ test("private metrics endpoint hides failures and exposes aggregate Prometheus m
         counters: { socket_auth_accepted_total: 7, socket_errors_total: 2 },
       }),
     },
+    applicationObservability: {
+      snapshot: () => ({
+        counters: {
+          learning_retest_schedule_failures_total: 4,
+          learning_retest_recoveries_total: 9,
+        },
+        gauges: {
+          learning_retest_recovery_backlog: 3,
+          learning_retest_recovery_batch_duration_seconds: 0.25,
+        },
+      }),
+    },
   });
   assert.ok(router);
 
@@ -258,6 +273,23 @@ test("private metrics endpoint hides failures and exposes aggregate Prometheus m
   assert.match(accepted.body, /socket_connections_active 3/);
   assert.match(accepted.body, /socket_auth_rejected_total 0/);
   assert.match(accepted.body, /socket_errors_total 2/);
+  assert.match(accepted.body, /learning_retest_schedule_failures_total 4/);
+  assert.match(accepted.body, /learning_retest_recoveries_total 9/);
+  assert.match(accepted.body, /learning_retest_recovery_backlog 3/);
+  assert.match(accepted.body, /learning_retest_recovery_batch_duration_seconds 0\.25/);
+});
+
+test("application observability counts operational failures without storing details", () => {
+  const observability = createApplicationObservability();
+
+  assert.equal(observability.increment("learning_retest_schedule_failures_total"),1);
+  assert.equal(observability.increment("learning_retest_schedule_failures_total",2),3);
+  assert.equal(observability.setGauge("learning_retest_recovery_backlog",7),7);
+  assert.deepEqual(observability.snapshot(), {
+    counters: { learning_retest_schedule_failures_total: 3 },
+    gauges: { learning_retest_recovery_backlog: 7 },
+  });
+  assert.throws(() => observability.setGauge("invalid",-1),/finite non-negative/);
 });
 
 test("private metrics endpoint stays disabled without a configured token", () => {
@@ -266,6 +298,7 @@ test("private metrics endpoint stays disabled without a configured token", () =>
     environment: {},
     expressModule: { Router: () => ({ get: (_path, value) => { handler = value; } }) },
     observability: { snapshot: () => { throw new Error("must not be read"); } },
+    applicationObservability: { snapshot: () => { throw new Error("must not be read"); } },
   });
   const response = {
     statusCode: null,
