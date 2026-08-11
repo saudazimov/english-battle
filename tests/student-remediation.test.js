@@ -1,5 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const {
   LESSON_SCHEMA_VERSION,
@@ -135,6 +137,14 @@ test("AI lesson normalization cannot change target or official practice evidence
   assert.deepEqual(normalized.guided_practice, official.guided_practice);
   assert.equal(normalized.diagnostic_summary.teacher_message, official.diagnostic_summary.teacher_message);
   assert.equal(normalizeAiLesson({ ...candidate, target_skill_id: 999 }, target(), official), null);
+});
+
+test("per-error remediation migration preserves legacy plans and uniquely keys new answer errors", () => {
+  const sql = fs.readFileSync(path.join(__dirname,"../migrations/047_per_error_remediation_lessons.sql"),"utf8");
+  assert.match(sql,/ADD COLUMN IF NOT EXISTS source_answer_event_id BIGINT/);
+  assert.match(sql,/source_answer_event_id IS NULL AND status NOT IN \('STABLE','MASTERED'\)/);
+  assert.match(sql,/ON remediation_plans\(student_id,source_answer_event_id\)/);
+  assert.match(sql,/source_answer_event_id IS NOT NULL AND status NOT IN \('STABLE','MASTERED'\)/);
 });
 
 test("controller validates IDs and blocks incomplete lesson completion", async () => {
