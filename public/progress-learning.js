@@ -125,16 +125,24 @@
       });
     }
 
-    function renderDueAssessments(items) {
+    function retestProgressText(assessment) {
+      if (assessment.assessment_type !== "RETEST") return "";
+      const completed = Math.min(numberOf(assessment.successful_retests),numberOf(assessment.required_successful_retests));
+      return "Mustaqil retest: " + completed + "/" + numberOf(assessment.required_successful_retests);
+    }
+
+    function renderDueAssessments(items,upcomingItems) {
       const assessments = Array.isArray(items) ? items : [];
+      const upcoming = Array.isArray(upcomingItems) ? upcomingItems : [];
       const container = document.getElementById("reviewDueList");
       document.getElementById("reviewDueBadge").textContent = assessments.length + " ta";
-      if (!assessments.length) {
+      if (!assessments.length && !upcoming.length) {
         renderEmpty(container,"Bugun uchun majburiy retest yoki takrorlash yo‘q. Rejadagi mashqlarni davom ettiring.");
         return;
       }
       clearElement(container);
-      assessments.forEach(function (assessment) {
+      assessments.concat(upcoming).forEach(function (assessment,index) {
+        const isUpcoming = index >= assessments.length;
         const card = document.createElement("article");
         card.className = "review-item";
         const top = document.createElement("div");
@@ -144,21 +152,29 @@
         name.textContent = assessment.target_skill_name;
         const badge = document.createElement("span");
         badge.className = "evidence-badge";
-        badge.textContent = assessment.assessment_type === "RETEST" ? "Qayta tekshiruv" : assessment.sequence_no + "-takrorlash";
+        badge.textContent = isUpcoming ? "Keyingi retest" : assessment.assessment_type === "RETEST" ? "Qayta tekshiruv" : assessment.sequence_no + "-takrorlash";
         top.append(name,badge);
         const meta = document.createElement("div");
         meta.className = "review-meta";
         meta.append(document.createTextNode(assessment.question_count + " savol"),document.createTextNode("Mezon: " + assessment.required_correct + "/" + assessment.question_count));
+        const retestProgress = retestProgressText(assessment);
+        if (retestProgress) meta.appendChild(document.createTextNode(retestProgress));
+        if (isUpcoming) {
+          meta.appendChild(document.createTextNode("Ochilishi: " + new Date(assessment.scheduled_for).toLocaleString("uz-UZ", {
+            day: "numeric",month: "short",hour: "2-digit",minute: "2-digit",
+          })));
+        }
         const actions = document.createElement("div");
         actions.className = "review-actions";
         const progress = document.createElement("span");
         progress.className = "review-progress";
-        progress.textContent = numberOf(assessment.answered_count) + "/" + assessment.question_count + " javob";
+        progress.textContent = isUpcoming ? "Rejalashtirilgan" : numberOf(assessment.answered_count) + "/" + assessment.question_count + " javob";
         const button = document.createElement("button");
         button.className = "btn primary";
         button.type = "button";
-        button.textContent = assessment.status === "STARTED" ? "Davom etish" : "Boshlash";
-        button.addEventListener("click", function () { openAssessment(assessment.id); });
+        button.textContent = isUpcoming ? "Kutilmoqda" : assessment.status === "STARTED" ? "Davom etish" : "Boshlash";
+        button.disabled = isUpcoming;
+        if (!isUpcoming) button.addEventListener("click", function () { openAssessment(assessment.id); });
         actions.append(progress,button);
         card.append(top,meta,actions);
         container.appendChild(card);
@@ -176,7 +192,8 @@
       const answered = questions.filter(function (question) { return Boolean(question.selected_option); }).length;
       const completed = assessment.status === "COMPLETED";
       document.getElementById("assessmentDialogTitle").textContent = assessment.assessment_type === "RETEST" ? "Qayta tekshiruv" : "Interval takrorlash";
-      document.getElementById("assessmentDialogObjective").textContent = assessment.target_skill_name + " — " + assessment.required_correct + "/" + assessment.question_count + " mezon";
+      const retestProgress = retestProgressText(assessment);
+      document.getElementById("assessmentDialogObjective").textContent = assessment.target_skill_name + " — " + assessment.required_correct + "/" + assessment.question_count + " mezon" + (retestProgress ? " · " + retestProgress : "");
       document.getElementById("assessmentProgressFill").style.width = (questions.length ? answered / questions.length * 100 : 0) + "%";
       setAssessmentStatus(completed ? "Natija: " + numberOf(assessment.correct_count) + "/" + numberOf(assessment.total_count) + (assessment.passed ? " — mezon bajarildi." : " — mavzuni yana mustahkamlaymiz.") : answered + "/" + questions.length + " savolga javob berildi.",false);
       const container = document.getElementById("assessmentQuestions");
@@ -271,7 +288,7 @@
         renderLearningOverview(results[0]);
         renderExactWeaknesses(results[0].exact_weaknesses);
         renderLearningTimeline(results[0].timeline);
-        renderDueAssessments(results[1].assessments);
+        renderDueAssessments(results[1].assessments,results[1].upcoming_retests);
         if (window.lucide) window.lucide.createIcons();
       } catch (error) {
         console.error("Learning journey:",error);

@@ -1089,3 +1089,198 @@ test("controller validates IDs and blocks incomplete lesson completion", async (
     error: "Darsni yakunlashdan oldin barcha mashqlarga javob bering.", answered: 2, total: 5,
   });
 });
+
+test("lesson completion requires 80 percent mastery without advancing remediation", async () => {
+  assert.equal(lessonMasteryRequiredCorrect(10),8);
+  const queries = [];
+  const client = {
+    async query(sql) {
+      queries.push(sql);
+      if (String(sql).includes("SELECT l.remediation_plan_id")) {
+        return { rows: [{ remediation_plan_id: 91,taxonomy_id: 7,status: "STARTED",total: "10",answered: "10",correct: "7" }] };
+      }
+      return { rows: [] };
+    },
+    release() {},
+  };
+  const service = createPersonalizedLessonService({
+    pool: { async connect() { return client; } },
+    aiService: null,
+    logger: { error() {} },
+  });
+
+  const result = await service.completeLesson(4,12);
+
+  assert.deepEqual(result, {
+    mastery_not_met: true,answered: 10,total: 10,correct: 7,required_correct: 8,
+  });
+  assert.equal(queries.filter((sql) => sql === "ROLLBACK").length,1);
+  assert.equal(queries.some((sql) => String(sql).includes("status='COMPLETED'")),false);
+  assert.equal(queries.some((sql) => String(sql).includes("LESSON_COMPLETED")),false);
+  assert.equal(queries.some((sql) => String(sql).includes("RETEST_PENDING")),false);
+});
+
+test("successful lesson completion commits every state transition with valid SQL bindings", async () => {
+  const calls = [];
+  function assertBindings(sql,values = []) {
+    const placeholders = Array.from(String(sql).matchAll(/\$(\d+)/g),match => Number(match[1]));
+    const expected = placeholders.length ? Math.max(...placeholders) : 0;
+    assert.equal(values.length,expected,`SQL binding mismatch: ${String(sql).replace(/\s+/g," ").trim()}`);
+  }
+  const client = {
+    async query(sql,values = []) {
+      assertBindings(sql,values);
+      calls.push({ sql:String(sql),values });
+      if (String(sql).includes("SELECT l.remediation_plan_id")) {
+        return { rows: [{ remediation_plan_id: 91,taxonomy_id: 7,status: "STARTED",total: "10",answered: "10",correct: "8" }] };
+      }
+      return { rows: [] };
+    },
+    release() { calls.push({ sql: "RELEASE",values: [] }); },
+  };
+  const pool = {
+    async connect() { return client; },
+    async query(sql,values = []) {
+      assertBindings(sql,values);
+      if (String(sql).includes("SELECT l.*")) {
+        return { rows: [{ id: 12,remediation_plan_id: 91,status: "COMPLETED",progress_percent: 100 }] };
+      }
+      if (String(sql).includes("FROM personalized_lesson_exercises e")) return { rows: [] };
+      return { rows: [] };
+    },
+  };
+  const service = createPersonalizedLessonService({ pool,aiService: null,logger: { error() {} } });
+
+  const result = await service.completeLesson(4,12);
+
+  assert.equal(result.status,"COMPLETED");
+  assert.equal(result.progress_percent,100);
+  const transactionSql = calls.map(({ sql }) => sql);
+  assert.equal(transactionSql[0],"BEGIN");
+  assert.ok(transactionSql.some(sql => sql.includes("status='COMPLETED'")));
+  assert.ok(transactionSql.some(sql => sql.includes("status='RETEST_PENDING'")));
+  assert.ok(transactionSql.some(sql => sql.includes("current_evidence_state='REMEDIATING'")));
+  assert.ok(transactionSql.some(sql => sql.includes("'LESSON_COMPLETED'")));
+  const staleReport = calls.find(({ sql }) => sql.includes("UPDATE ai_reports"));
+  assert.deepEqual(staleReport.values,[4]);
+  assert.equal(transactionSql.at(-2),"COMMIT");
+  assert.equal(transactionSql.at(-1),"RELEASE");
+  assert.equal(transactionSql.includes("ROLLBACK"),false);
+});
+
+test("controller returns retry guidance and does not schedule a retest below mastery", async () => {
+  let retestCalls = 0;
+  const controller = createStudentRemediationController({
+    lessonService: {
+      async completeLesson() {
+        return { mastery_not_met: true,answered: 10,total: 10,correct: 7,required_correct: 8 };
+      },
+    },
+    reviewService: { async ensureInitialRetest() { retestCalls += 1; } },
+    logger: { error() {} },
+  });
+  const response = responseHarness();
+
+  await controller.complete({ user: { id: 4 },params: { lessonId: "12" } },response);
+
+  assert.equal(response.statusCode,409);
+  assert.deepEqual(response.body, {
+    error: "Darsni yakunlash uchun kamida 8/10 ta to'g'ri javob kerak. Xato javoblarni qayta ko'rib chiqing.",
+    answered: 10,total: 10,correct: 7,required_correct: 8,
+  });
+  assert.equal(retestCalls,0);
+});
+
+test("controller schedules the first independent retest after successful lesson completion", async () => {
+  const scheduled = [];
+  const lesson = { id: 12,status: "COMPLETED",remediation_plan_id: 91,progress_percent: 100 };
+  const controller = createStudentRemediationController({
+    lessonService: { async completeLesson() { return lesson; } },
+    reviewService: {
+      async ensureInitialRetest(studentId,planId) { scheduled.push([studentId,planId]); },
+    },
+    logger: { error() {} },
+  });
+  const response = responseHarness();
+
+  await controller.complete({ user: { id: 4 },params: { lessonId: "12" } },response);
+
+  assert.equal(response.statusCode,200);
+  assert.deepEqual(response.body,{ lesson });
+  assert.deepEqual(scheduled,[[4,91]]);
+});
+
+test("retest scheduling failure preserves the committed completed lesson response", async () => {
+  const errors = [];
+  const metrics = [];
+  const lesson = { id: 12,status: "COMPLETED",remediation_plan_id: 91,progress_percent: 100 };
+  const controller = createStudentRemediationController({
+    lessonService: { async completeLesson() { return lesson; } },
+    reviewService: {
+      async ensureInitialRetest() { throw new Error("temporary database disconnect"); },
+    },
+    logger: { error(...args) { errors.push(args); } },
+    observability: { increment(metric) { metrics.push(metric); } },
+  });
+  const response = responseHarness();
+
+  await controller.complete({ user: { id: 4 },params: { lessonId: "12" } },response);
+
+  assert.equal(response.statusCode,200);
+  assert.deepEqual(response.body,{ lesson });
+  assert.equal(errors.length,1);
+  assert.equal(errors[0][0],"Retest yaratish xatosi:");
+  assert.equal(errors[0][1],"temporary database disconnect");
+  assert.deepEqual(metrics,["learning_retest_schedule_failures_total"]);
+});
+
+test("controller requires one exact answer event during on-demand lesson sync", async () => {
+  const calls = [];
+  const controller = createStudentRemediationController({
+    lessonService: {
+      async syncLessons(studentId, taxonomyId, answerEventId) {
+        calls.push([studentId, taxonomyId, answerEventId]);
+        return { created_count: 1, target_count: 1 };
+      },
+    },
+    logger: { error() {} },
+  });
+
+  const targeted = responseHarness();
+  await controller.sync({ user: { id: 4 }, body: { taxonomy_id: "23", answer_event_id: "951" } }, targeted);
+  assert.equal(targeted.statusCode, 200);
+  assert.deepEqual(calls, [[4, 23, 951]]);
+
+  const invalid = responseHarness();
+  await controller.sync({ user: { id: 4 }, body: { taxonomy_id: "bad" } }, invalid);
+  assert.equal(invalid.statusCode, 400);
+  assert.equal(calls.length, 1);
+
+  const invalidEvent = responseHarness();
+  await controller.sync({ user: { id: 4 }, body: { taxonomy_id: "23", answer_event_id: "bad" } }, invalidEvent);
+  assert.equal(invalidEvent.statusCode, 400);
+  assert.equal(calls.length, 1);
+
+  const missingEvent = responseHarness();
+  await controller.sync({ user: { id: 4 }, body: { taxonomy_id: "23" } }, missingEvent);
+  assert.equal(missingEvent.statusCode, 400);
+  assert.deepEqual(missingEvent.body, {
+    error: "Dars yaratish uchun aniq xato dalili talab qilinadi.",
+  });
+  assert.equal(calls.length, 1);
+
+  const answerOnly = responseHarness();
+  await controller.sync({ user: { id: 4 }, body: { answer_event_id: "952" } }, answerOnly);
+  assert.equal(answerOnly.statusCode, 200);
+  assert.deepEqual(calls[1], [4, null, 952]);
+});
+
+test("progress lesson dialog renders the exact source error safely", () => {
+  const html = fs.readFileSync(path.join(__dirname,"../public/progress.html"),"utf8");
+  const script = fs.readFileSync(path.join(__dirname,"../public/progress.js"),"utf8");
+  assert.match(html,/id="lessonDialogSourceError"/);
+  assert.match(html,/id="lessonDialogSelectedAnswer"/);
+  assert.match(html,/id="lessonDialogCorrectAnswer"/);
+  assert.match(script,/const sourceError = content\.source_error \|\| \{\}/);
+  assert.match(script,/lessonDialogSelectedAnswer/);
+});
