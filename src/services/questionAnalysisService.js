@@ -1,5 +1,14 @@
 const defaultAiService = require("../../aiService");
 const { createDurableJobService } = require("./durableJobService");
+const {
+  isAllowedRuleSignature,
+  quarantinedRuleSignatures,
+} = require("../utils/ruleSignaturePolicy");
+
+const TARGET_ANALYSIS_SCHEMA_VERSION = defaultAiService.QUESTION_ANALYSIS_SCHEMA_VERSION;
+const TARGET_ANALYSIS_PROMPT_VERSION = defaultAiService.QUESTION_ANALYSIS_PROMPT_VERSION;
+const TARGET_RULE_SIGNATURE_VERSION = defaultAiService.RULE_SIGNATURE_VERSION;
+const RULE_SIGNATURE_BACKFILL_JOB_VERSION = "v6";
 
 const SERIOUS_WARNINGS = new Set([
   "MULTIPLE_CORRECT_ANSWERS",
@@ -14,6 +23,17 @@ const VALID_STATUSES = new Set([
   "ANALYSIS_PENDING", "ANALYZING", "READY", "REVIEW_SUGGESTED",
   "REVIEW_REQUIRED", "ANALYSIS_FAILED", "DISABLED",
 ]);
+const RULE_SIGNATURE_ACTIONS = new Set(["preserve", "approve", "clear"]);
+const REVIEW_QUEUE_FILTERS = new Set(["all", "unreviewed", "review_required", "quarantined"]);
+
+class QuestionAnalysisReviewValidationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "QuestionAnalysisReviewValidationError";
+    this.code = "INVALID_QUESTION_ANALYSIS_REVIEW";
+    this.statusCode = 400;
+  }
+}
 
 function text(value) {
   return String(value || "").trim();
@@ -129,6 +149,47 @@ function buildFallbackAnalysis(question, catalog) {
     quality_warnings: warnings,
     contains_above_level_language: false,
     analysis_confidence: confidence,
+    rule_signature: null,
+    rule_signature_version: null,
+    rule_signature_confidence: null,
+    rule_signature_reviewed: false,
+  };
+}
+
+function resolveRuleSignatureOverride(current, review = {}) {
+  const action = text(review.rule_signature_action || "preserve").toLowerCase();
+  if (!RULE_SIGNATURE_ACTIONS.has(action)) {
+    throw new QuestionAnalysisReviewValidationError("Canonical qoida amali noto'g'ri");
+  }
+  if (action === "approve") {
+    const signature = text(review.rule_signature);
+    if (!isAllowedRuleSignature(signature)) {
+      throw new QuestionAnalysisReviewValidationError("Canonical qoida formati noto'g'ri yoki bu qoida karantinda");
+    }
+    return {
+      action,
+      rule_signature: signature,
+      rule_signature_version: TARGET_RULE_SIGNATURE_VERSION,
+      rule_signature_confidence: 1,
+      rule_signature_reviewed: true,
+    };
+  }
+  if (action === "clear") {
+    return {
+      action,
+      rule_signature: null,
+      rule_signature_version: null,
+      rule_signature_confidence: null,
+      rule_signature_reviewed: false,
+    };
+  }
+  return {
+    action,
+    rule_signature: current.rule_signature || null,
+    rule_signature_version: current.rule_signature_version || null,
+    rule_signature_confidence: current.rule_signature_confidence == null
+      ? null : Number(current.rule_signature_confidence),
+    rule_signature_reviewed: current.rule_signature_reviewed === true,
   };
 }
 
@@ -206,6 +267,73 @@ function createQuestionAnalysisService({
     }
   }
 
+  async function backfillRuleSignatures({
+    afterId = 0,
+    limit = 10,
+    dryRun = true,
+    maxEstimatedCostUsd,
+    estimatedCostPerQuestionUsd,
+  } = {}) {
+    const safeAfterId = Math.max(0, Number.parseInt(afterId, 10) || 0);
+    const safeLimit = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 10));
+    const unitCost = Number(estimatedCostPerQuestionUsd);
+    const costLimit = Number(maxEstimatedCostUsd);
+    if (!Number.isFinite(unitCost) || unitCost <= 0) {
+      throw new Error("Backfill uchun bitta savolning taxminiy AI xarajati musbat bo'lishi kerak");
+    }
+    if (!Number.isFinite(costLimit) || costLimit <= 0) {
+      throw new Error("Backfill uchun taxminiy dollar limiti musbat bo'lishi kerak");
+    }
+    const affordableCount = Math.floor(costLimit / unitCost);
+    if (affordableCount < 1) {
+      throw new Error("Xarajat limiti hatto bitta savol tahlili uchun yetarli emas");
+    }
+    const batchSize = Math.min(safeLimit, affordableCount);
+    const candidates = await pool.query(
+      `SELECT q.id,a.analysis_version
+       FROM questions q
+       JOIN question_ai_analysis a ON a.question_id=q.id
+       WHERE q.id>$1 AND q.diagnostic_eligible=true AND a.diagnostic_eligible=true
+         AND (COALESCE(a.schema_version,'')<>$2 OR COALESCE(a.prompt_version,'')<>$3)
+         AND COALESCE(a.rule_signature_reviewed,false)=false
+       ORDER BY q.id ASC LIMIT $4`,
+      [safeAfterId, TARGET_ANALYSIS_SCHEMA_VERSION, TARGET_ANALYSIS_PROMPT_VERSION, batchSize + 1]
+    );
+    const selected = candidates.rows.slice(0, batchSize);
+    let queuedCount = 0;
+    if (!dryRun) {
+      for (const candidate of selected) {
+        const job = await jobs.enqueue({
+          entityType: "question",
+          entityId: candidate.id,
+          payload: {
+            question_id: Number(candidate.id),
+            reason: "rule_signature_backfill",
+            target_schema_version: TARGET_ANALYSIS_SCHEMA_VERSION,
+            target_prompt_version: TARGET_ANALYSIS_PROMPT_VERSION,
+            target_rule_signature_version: TARGET_RULE_SIGNATURE_VERSION,
+            estimated_cost_usd: unitCost,
+          },
+          idempotencyKey: `question-rule-signature-backfill-${RULE_SIGNATURE_BACKFILL_JOB_VERSION}:${candidate.id}:${TARGET_RULE_SIGNATURE_VERSION}`,
+        });
+        if (job) queuedCount += 1;
+      }
+    }
+    const estimatedBatchCostUsd = Number((selected.length * unitCost).toFixed(8));
+    return {
+      dry_run: Boolean(dryRun),
+      selected_count: selected.length,
+      queued_count: queuedCount,
+      duplicate_count: dryRun ? 0 : selected.length - queuedCount,
+      estimated_cost_per_question_usd: unitCost,
+      estimated_batch_cost_usd: estimatedBatchCostUsd,
+      max_estimated_cost_usd: costLimit,
+      next_after_id: selected.length ? Number(selected.at(-1).id) : safeAfterId,
+      has_more: candidates.rows.length > batchSize,
+      question_ids: selected.map((candidate) => Number(candidate.id)),
+    };
+  }
+
   async function claimNext() {
     return jobs.claimNext();
   }
@@ -230,10 +358,12 @@ function createQuestionAnalysisService({
           grammar_structure, required_vocabulary, prerequisite_skill_ids,
           correct_answer_explanation, quality_warnings, diagnostic_eligible,
           contains_above_level_language, analysis_confidence, provider, model,
-          raw_analysis, analyzed_at, updated_at
+          raw_analysis, rule_signature, rule_signature_version,
+          rule_signature_confidence, rule_signature_reviewed, analyzed_at, updated_at
         ) VALUES (
           $1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12,$13,$14,$15,$16,
-          $17::jsonb,$18::jsonb,$19,$20::jsonb,$21,$22,$23,$24,$25,$26::jsonb,NOW(),NOW()
+          $17::jsonb,$18::jsonb,$19,$20::jsonb,$21,$22,$23,$24,$25,$26::jsonb,
+          $27,$28,$29,$30,NOW(),NOW()
         ) ON CONFLICT (question_id) DO UPDATE SET
           schema_version=EXCLUDED.schema_version, prompt_version=EXCLUDED.prompt_version,
           analysis_version=EXCLUDED.analysis_version, status=EXCLUDED.status,
@@ -249,9 +379,16 @@ function createQuestionAnalysisService({
           contains_above_level_language=EXCLUDED.contains_above_level_language,
           analysis_confidence=EXCLUDED.analysis_confidence, provider=EXCLUDED.provider,
           model=EXCLUDED.model, raw_analysis=EXCLUDED.raw_analysis,
+          rule_signature=EXCLUDED.rule_signature,
+          rule_signature_version=EXCLUDED.rule_signature_version,
+          rule_signature_confidence=EXCLUDED.rule_signature_confidence,
+          rule_signature_reviewed=EXCLUDED.rule_signature_reviewed,
           last_error=NULL, analyzed_at=NOW(), updated_at=NOW()`,
         [
-          question.id, "question_analysis_v1", "question_analysis_prompt_v1", version, status,
+          question.id, analysis.schema_version || "question_analysis_v1",
+          analysis.prompt_version || (analysis.schema_version === "question_analysis_v2"
+            ? TARGET_ANALYSIS_PROMPT_VERSION : "question_analysis_prompt_v1"),
+          version, status,
           analysis.estimated_level, analysis.level_confidence, JSON.stringify(analysis.level_evidence || []),
           analysis.main_skill_id, analysis.topic_id, analysis.subskill_id, analysis.micro_skill_id,
           analysis.taxonomy_confidence, analysis.question_type, analysis.cognitive_task,
@@ -260,6 +397,9 @@ function createQuestionAnalysisService({
           JSON.stringify(analysis.quality_warnings || []), eligible,
           Boolean(analysis.contains_above_level_language), analysis.analysis_confidence,
           provider, model, JSON.stringify(analysis),
+          analysis.rule_signature || null, analysis.rule_signature_version || null,
+          analysis.rule_signature_confidence == null ? null : analysis.rule_signature_confidence,
+          Boolean(analysis.rule_signature_reviewed),
         ]
       );
       await client.query("DELETE FROM question_taxonomy_tags WHERE question_id=$1", [question.id]);
@@ -343,7 +483,7 @@ function createQuestionAnalysisService({
     }
   }
 
-  async function analyzeQuestion(questionId) {
+  async function analyzeQuestion(questionId, { requireAi = false } = {}) {
     await pool.query(
       `UPDATE question_ai_analysis SET status='ANALYZING', updated_at=NOW() WHERE question_id=$1`,
       [questionId]
@@ -360,8 +500,14 @@ function createQuestionAnalysisService({
     try {
       generated = await aiService.generateQuestionAnalysis(question, catalog);
     } catch (error) {
+      if (requireAi) throw error;
       logger.error("Question AI analysis fallback:", error.message);
       generated = { analysis: null, used_ai: false, provider: "fallback", model: "fallback" };
+    }
+    if (requireAi && (!generated.analysis || !generated.used_ai || generated.ruleSignatureReviewFailed)) {
+      const error = new Error("Rule signature backfill uchun to'liq AI tahlili mavjud emas");
+      error.code = "RULE_SIGNATURE_AI_REQUIRED";
+      throw error;
     }
     const analysis = generated.analysis || buildFallbackAnalysis(question, catalog);
     const source = generated.used_ai ? "ai" : "fallback";
@@ -383,7 +529,8 @@ function createQuestionAnalysisService({
   async function processNext() {
     const job = await claimNext();
     if (!job) return false;
-    await jobs.execute(job, () => analyzeQuestion(Number(job.entity_id)), {
+    const requireAi = job.payload && job.payload.reason === "rule_signature_backfill";
+    await jobs.execute(job, () => analyzeQuestion(Number(job.entity_id), { requireAi }), {
       metadata: { question_id: Number(job.entity_id) },
       onFailure: (error, failure) => markAnalysisFailure(job, error, failure),
     });
@@ -455,41 +602,130 @@ function createQuestionAnalysisService({
     return { ...analysis.rows[0], distractors: distractors.rows, overrides: overrides.rows };
   }
 
-  async function review(questionId, review, author) {
-    const current = await getAnalysis(questionId);
-    if (!current) return null;
-    const status = VALID_STATUSES.has(review.status) ? review.status : current.status;
-    const eligible = review.diagnostic_eligible == null
-      ? current.diagnostic_eligible : Boolean(review.diagnostic_eligible);
-    const level = VALID_LEVELS.has(review.estimated_level) ? review.estimated_level : current.estimated_level;
-    await pool.query(
-      `INSERT INTO question_analysis_overrides
-       (question_id, field_name, original_value, override_value, reason, override_author)
-       VALUES ($1,'admin_review',$2::jsonb,$3::jsonb,$4,$5)`,
-      [
-        questionId,
-        JSON.stringify({ status: current.status, estimated_level: current.estimated_level, diagnostic_eligible: current.diagnostic_eligible }),
-        JSON.stringify({ status, estimated_level: level, diagnostic_eligible: eligible }),
-        text(review.reason).slice(0, 1000) || null,
-        text(author).slice(0, 120) || "Admin",
-      ]
+  async function listReviewQueue({ filter = "all", limit = 25, offset = 0 } = {}) {
+    const normalizedFilter = text(filter).toLowerCase() || "all";
+    if (!REVIEW_QUEUE_FILTERS.has(normalizedFilter)) {
+      throw new QuestionAnalysisReviewValidationError("Review navbati filtri noto'g'ri");
+    }
+    const safeLimit = Math.min(Math.max(Number.parseInt(limit, 10) || 25, 1), 100);
+    const safeOffset = Math.max(Number.parseInt(offset, 10) || 0, 0);
+    const quarantined = quarantinedRuleSignatures();
+    const quarantineCondition = `(a.rule_signature=ANY($1::text[])
+      OR a.raw_analysis->>'rule_signature_candidate'=ANY($1::text[]))`;
+    const filterConditions = {
+      all: `(a.status='REVIEW_REQUIRED'
+        OR COALESCE(a.rule_signature_reviewed,false)=false
+        OR ${quarantineCondition})`,
+      unreviewed: "COALESCE(a.rule_signature_reviewed,false)=false",
+      review_required: "a.status='REVIEW_REQUIRED'",
+      quarantined: quarantineCondition,
+    };
+    const result = await pool.query(
+      `SELECT q.id AS question_id, q.question_text, q.correct_option, q.cefr_level, q.skill,
+              a.status, a.estimated_level, a.analysis_confidence, a.rule_signature,
+              a.rule_signature_version, a.rule_signature_confidence,
+              COALESCE(a.rule_signature_reviewed,false) AS rule_signature_reviewed,
+              a.raw_analysis->>'rule_signature_candidate' AS rule_signature_candidate,
+              ${quarantineCondition} AS rule_signature_quarantined,
+              t.name AS topic_name, a.updated_at, COUNT(*) OVER() AS total_count
+       FROM question_ai_analysis a
+       JOIN questions q ON q.id=a.question_id
+       LEFT JOIN learning_taxonomy t ON t.id=a.topic_id
+       WHERE ${filterConditions[normalizedFilter]}
+       ORDER BY ${quarantineCondition} DESC,
+                (a.status='REVIEW_REQUIRED') DESC,
+                COALESCE(a.rule_signature_reviewed,false) ASC,
+                a.updated_at DESC, q.id ASC
+       LIMIT $2 OFFSET $3`,
+      [quarantined, safeLimit, safeOffset]
     );
-    await pool.query(
-      `UPDATE question_ai_analysis SET status=$2, estimated_level=$3,
-       diagnostic_eligible=$4, updated_at=NOW() WHERE question_id=$1`,
-      [questionId, status, level, eligible]
-    );
-    await pool.query(
-      `UPDATE questions SET analysis_status=$2, cefr_level=$3,
-       diagnostic_eligible=$4 WHERE id=$1`,
-      [questionId, status, level, eligible]
-    );
+    const total = result.rows.length ? Number(result.rows[0].total_count) : 0;
+    const items = result.rows.map(({ total_count: ignoredTotal, ...item }) => item);
+    return { items, total, filter: normalizedFilter, limit: safeLimit, offset: safeOffset };
+  }
+
+  async function review(questionId, review = {}, author) {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const locked = await client.query(
+        `SELECT status, estimated_level, diagnostic_eligible, rule_signature,
+                rule_signature_version, rule_signature_confidence, rule_signature_reviewed
+         FROM question_ai_analysis WHERE question_id=$1 FOR UPDATE`,
+        [questionId]
+      );
+      if (!locked.rows.length) {
+        await client.query("ROLLBACK");
+        return null;
+      }
+      const current = locked.rows[0];
+      const status = VALID_STATUSES.has(review.status) ? review.status : current.status;
+      const eligible = review.diagnostic_eligible == null
+        ? current.diagnostic_eligible : Boolean(review.diagnostic_eligible);
+      const level = VALID_LEVELS.has(review.estimated_level) ? review.estimated_level : current.estimated_level;
+      const signature = resolveRuleSignatureOverride(current, review);
+      await client.query(
+        `INSERT INTO question_analysis_overrides
+         (question_id, field_name, original_value, override_value, reason, override_author)
+         VALUES ($1,'admin_review',$2::jsonb,$3::jsonb,$4,$5)`,
+        [
+          questionId,
+          JSON.stringify({
+            status: current.status,
+            estimated_level: current.estimated_level,
+            diagnostic_eligible: current.diagnostic_eligible,
+            rule_signature: current.rule_signature,
+            rule_signature_version: current.rule_signature_version,
+            rule_signature_confidence: current.rule_signature_confidence,
+            rule_signature_reviewed: current.rule_signature_reviewed,
+          }),
+          JSON.stringify({
+            status,
+            estimated_level: level,
+            diagnostic_eligible: eligible,
+            rule_signature_action: signature.action,
+            rule_signature: signature.rule_signature,
+            rule_signature_version: signature.rule_signature_version,
+            rule_signature_confidence: signature.rule_signature_confidence,
+            rule_signature_reviewed: signature.rule_signature_reviewed,
+          }),
+          text(review.reason).slice(0, 1000) || null,
+          text(author).slice(0, 120) || "Admin",
+        ]
+      );
+      await client.query(
+        `UPDATE question_ai_analysis SET status=$2, estimated_level=$3,
+         diagnostic_eligible=$4, rule_signature=$5, rule_signature_version=$6,
+         rule_signature_confidence=$7, rule_signature_reviewed=$8,
+         updated_at=NOW() WHERE question_id=$1`,
+        [
+          questionId, status, level, eligible, signature.rule_signature,
+          signature.rule_signature_version, signature.rule_signature_confidence,
+          signature.rule_signature_reviewed,
+        ]
+      );
+      await client.query(
+        `UPDATE questions SET analysis_status=$2, cefr_level=$3,
+         diagnostic_eligible=$4 WHERE id=$1`,
+        [questionId, status, level, eligible]
+      );
+      await client.query("COMMIT");
+    } catch (error) {
+      try {
+        await client.query("ROLLBACK");
+      } catch (rollbackError) {
+        logger.error("Savol analysis review rollback xatosi:", rollbackError.message);
+      }
+      throw error;
+    } finally {
+      client.release();
+    }
     return getAnalysis(questionId);
   }
 
   return {
-    enqueue, enqueueSafe, analyzeQuestion, processNext, processBatchSafe,
-    startWorker, stopWorker, getAnalysis, review, loadCatalog,
+    enqueue, enqueueSafe, backfillRuleSignatures, analyzeQuestion, processNext, processBatchSafe,
+    startWorker, stopWorker, getAnalysis, listReviewQueue, review, loadCatalog,
   };
 }
 
@@ -499,4 +735,6 @@ module.exports = {
   analysisStatus,
   detectTaxonomy,
   SERIOUS_WARNINGS,
+  resolveRuleSignatureOverride,
+  QuestionAnalysisReviewValidationError,
 };
