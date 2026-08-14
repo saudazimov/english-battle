@@ -148,6 +148,16 @@
     return button;
   }
 
+  function diagnosisForRule(rule) {
+    const errors = numberOf(rule && rule.errors);
+    const attempts = numberOf(rule && rule.attempts);
+    const state = String(rule && (rule.evidence_state || rule.diagnosis_state) || "").toUpperCase();
+    if (state === "REGRESSED") return { key: "regressed", label: progressT("progress.knowledgeDecay") };
+    if (state === "CONFIRMED" || errors >= 3) return { key: "confirmed", label: progressT("progress.confirmedGap") };
+    if (state === "LIKELY" || errors >= 2) return { key: "likely", label: progressT("progress.likelyGap") };
+    return { key: "possible", label: progressT("progress.possibleGap"), attempts: attempts };
+  }
+
   function renderRuleRow(rule) {
     const row = document.createElement("article");
     row.className = "rule-row";
@@ -162,7 +172,18 @@
       document.createTextNode(progressT("progress.attemptCount", { count: numberOf(rule.attempts) })),
       document.createTextNode(progressT("progress.accuracyPercent", { count: numberOf(rule.accuracy) }))
     );
-    copy.append(name, meta);
+    const diagnosis = diagnosisForRule(rule);
+    const diagnosisRow = document.createElement("div");
+    diagnosisRow.className = "rule-diagnosis";
+    const diagnosisBadge = document.createElement("span");
+    diagnosisBadge.className = "diagnosis-badge " + diagnosis.key;
+    diagnosisBadge.textContent = diagnosis.label;
+    const diagnosisText = document.createElement("span");
+    diagnosisText.textContent = progressT("progress.diagnosisEvidence", {
+      errors: numberOf(rule.errors), attempts: numberOf(rule.attempts), accuracy: numberOf(rule.accuracy),
+    });
+    diagnosisRow.append(diagnosisBadge, diagnosisText);
+    copy.append(name, meta, diagnosisRow);
     const evidenceList = document.createElement("div");
     evidenceList.className = "rule-error-list";
     (Array.isArray(rule.evidence) ? rule.evidence : []).forEach(function (evidence, index) {
@@ -593,6 +614,13 @@
     (lesson.exercises || []).forEach(function (exercise, index) {
       const card = document.createElement("article");
       card.className = "lesson-exercise";
+      const phase = document.createElement("span");
+      phase.className = "exercise-phase";
+      const phaseKeys = {
+        guided_practice: "guidedPractice", independent_practice: "independentPracticePhase",
+        error_correction: "errorCorrection", transfer_practice: "transferPractice", final_check: "finalCheck",
+      };
+      phase.textContent = progressT("progress." + (phaseKeys[exercise.section] || "focusedPractice"));
       const heading = document.createElement("h4");
       heading.textContent = (index + 1) + ". " + exercise.prompt;
       const options = document.createElement("div");
@@ -612,7 +640,7 @@
         }
         options.appendChild(button);
       });
-      card.append(heading, options);
+      card.append(phase, heading, options);
       if (exercise.explanation && exercise.selected_option) {
         const feedback = document.createElement("p");
         feedback.className = "lesson-feedback";
@@ -621,6 +649,42 @@
       }
       container.appendChild(card);
     });
+  }
+
+  function renderLessonPath(content, lesson) {
+    const container = document.getElementById("lessonDialogPath");
+    clearElement(container);
+    const examples = content.micro_explanation && Array.isArray(content.micro_explanation.examples)
+      ? content.micro_explanation.examples.length : 0;
+    const exercises = Array.isArray(lesson.exercises) ? lesson.exercises.length : 0;
+    const mastery = content.mastery_criteria || {};
+    const required = numberOf(mastery.required_correct) || 8;
+    const total = numberOf(mastery.total_questions) || exercises || 10;
+    [
+      ["diagnoseStep", "diagnoseStepText"], ["ruleStep", "ruleStepText"],
+      ["examplesStep", "examplesStepText", { count: examples }],
+      ["practiceStep", "practiceStepText", { count: exercises }],
+      ["masteryStep", "masteryStepText", { required: required, total: total }],
+    ].forEach(function (step, index) {
+      const card = document.createElement("article");
+      card.className = "lesson-path-step";
+      const number = document.createElement("span");
+      number.textContent = progressT("progress.lessonPathStep", { number: index + 1 });
+      const title = document.createElement("strong");
+      title.textContent = progressT("progress." + step[1], step[2] || {});
+      card.append(number, title);
+      container.appendChild(card);
+    });
+    const reviewPlan = Array.isArray(content.review_plan) ? content.review_plan : [];
+    const days = reviewPlan.map(function (item) { return numberOf(item.delay_days); }).filter(function (day) { return day > 0; });
+    const review = document.createElement("div");
+    review.className = "lesson-path-review";
+    const reviewTitle = document.createElement("strong");
+    reviewTitle.textContent = progressT("progress.spacedReviewPlan");
+    const reviewText = document.createElement("span");
+    reviewText.textContent = progressT("progress.reviewDays", { days: days.length ? days.join(", ") : "1, 3, 7, 21" });
+    review.append(reviewTitle, reviewText);
+    container.appendChild(review);
   }
 
   async function fetchLesson(lessonId) {
@@ -636,6 +700,10 @@
     document.getElementById("lessonDialogQuestion").textContent = sourceError.question || "—";
     document.getElementById("lessonDialogSelectedAnswer").textContent = sourceError.selected_answer || "—";
     document.getElementById("lessonDialogCorrectAnswer").textContent = sourceError.correct_answer || "—";
+    document.querySelector("#lessonDialogDiagnosis span").textContent = sourceError.explanation
+      || content.diagnostic_summary && content.diagnostic_summary.student_message
+      || progressT("progress.diagnosisFallback");
+    renderLessonPath(content, lesson);
     document.getElementById("lessonDialogRule").textContent = content.micro_explanation && content.micro_explanation.rule || progressT("progress.noRuleExplanation");
     renderLessonExamples(content);
     renderLessonExercises(lesson);
