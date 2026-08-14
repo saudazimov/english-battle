@@ -56,6 +56,22 @@ test("lesson completion shows mastery failures inline and keeps retry available"
   assert.match(source,/if \(lesson\.status !== "COMPLETED"\)/);
 });
 
+test("lesson UI explains the diagnosed mistake and presents the mastery learning path", () => {
+  assert.match(source,/function diagnosisForRule/);
+  assert.match(source,/progress\.knowledgeDecay/);
+  assert.match(source,/progress\.confirmedGap/);
+  assert.match(source,/progress\.likelyGap/);
+  assert.match(source,/progress\.possibleGap/);
+  assert.match(source,/function renderLessonPath/);
+  assert.match(source,/mastery_criteria/);
+  assert.match(source,/review_plan/);
+  assert.match(source,/sourceError\.explanation/);
+  assert.match(source,/guided_practice/);
+  assert.match(source,/error_correction/);
+  assert.match(source,/transfer_practice/);
+  assert.match(source,/final_check/);
+});
+
 test("retest cards show two-attempt progress and keep future retests locked", () => {
   assert.match(learningSource,/learningT\("progress\.independentRetest"/);
   assert.match(learningSource,/upcoming_retests/);

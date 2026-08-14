@@ -124,6 +124,43 @@ function buildMistakeCurriculum(answers) {
   return { mistake_topics: mistakeTopics, classified_errors: classifiedErrors, unclassified_errors: unclassifiedErrors };
 }
 
+function enrichMistakeTopics(mistakeTopics, skillProfiles = [], findings = []) {
+  const profilesByTaxonomy = new Map(skillProfiles.map((profile) => [Number(profile.taxonomy_id), profile]));
+  const findingsByTaxonomy = new Map();
+  findings.forEach((finding) => {
+    const taxonomyId = Number(finding.taxonomy_id);
+    const existing = findingsByTaxonomy.get(taxonomyId);
+    if (!existing || Number(finding.confidence || 0) > Number(existing.confidence || 0)) {
+      findingsByTaxonomy.set(taxonomyId, finding);
+    }
+  });
+  return (Array.isArray(mistakeTopics) ? mistakeTopics : []).map((topic) => ({
+    ...topic,
+    rules: (Array.isArray(topic.rules) ? topic.rules : []).map((rule) => {
+      const taxonomyId = Number(rule.taxonomy_id);
+      const profile = profilesByTaxonomy.get(taxonomyId) || {};
+      const finding = findingsByTaxonomy.get(taxonomyId) || {};
+      const repeated = Math.max(
+        Number(rule.errors || 0),
+        Number(profile.repeated_misconception_count || 0),
+        Number(finding.occurrence_count || 0)
+      );
+      const storedState = String(profile.evidence_state || finding.evidence_state || "").toUpperCase();
+      const evidenceState = storedState === "REGRESSED" ? "REGRESSED"
+        : storedState === "CONFIRMED" || repeated >= 3 ? "CONFIRMED"
+          : storedState === "LIKELY" || repeated >= 2 ? "LIKELY" : "OBSERVED";
+      return {
+        ...rule,
+        evidence_state: evidenceState,
+        confidence_score: Math.round(Number(profile.confidence_score || finding.confidence || 0)),
+        mastery_score: Math.round(Number(profile.mastery_score || 0)),
+        repeated_misconception_count: repeated,
+        error_classification: profile.dominant_error_classification || finding.error_classification || null,
+      };
+    }),
+  }));
+}
+
 function buildLearningDiagnostics(answers) {
   const topics = new Map();
   answers.forEach((answer) => {
@@ -326,6 +363,11 @@ async function buildStudentWeeklySnapshot(studentId, periodStart, periodEnd) {
     ...finding,
     confidence: Math.round(Number(finding.confidence || 0) * 100),
   }));
+  learningDiagnostics.mistake_topics = enrichMistakeTopics(
+    learningDiagnostics.mistake_topics,
+    exactSkillProfiles,
+    patternFindings
+  );
   const remediationTargets = [];
   const remediationCodes = new Set();
   for (const finding of patternFindings) {
@@ -720,6 +762,7 @@ function recentPeriod(days) {
 
 module.exports = {
   buildLearningDiagnostics,
+  enrichMistakeTopics,
   buildStudentWeeklySnapshot,
   buildTeacherClassSnapshot,
   currentWeekPeriod,
