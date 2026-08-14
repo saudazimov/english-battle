@@ -71,6 +71,14 @@
     .cc-head-txt { flex: 1; min-width: 0; }
     .cc-name { font-size: 16px; font-weight: 700; line-height: 1.3; margin-bottom: 3px; word-break: break-word; }
     .cc-teacher { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; }
+    .cc-teacher-avatar {
+      position: relative; width: 24px; height: 24px; border-radius: 50%; overflow: hidden;
+      flex: 0 0 auto; display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border: 1px solid rgba(120,150,255,0.35);
+    }
+    .cc-teacher-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+    .cc-teacher-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cc-teacher .verif { width: 14px; height: 14px; color: var(--accent); flex: 0 0 auto; }
     .cc-menu-wrap { position: relative; flex: 0 0 auto; }
     .cc-menu { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-faint); cursor: pointer; opacity: 0.55; transition: background 0.15s, opacity 0.15s; }
@@ -453,6 +461,7 @@
           var descHtml = c.description ? '<div class="cc-desc">' + esc(c.description) + '</div>' : '<div class="cc-desc empty">' + esc(classesT("studentClasses.noDescription")) + '</div>';
           var teacherName = ((c.teacher_first_name||"")+" "+(c.teacher_last_name||"")).trim();
           var teacher = teacherName ? esc(teacherName) : esc(classesT("studentClasses.teacherUnknown"));
+          var teacherAvatar = avatarHTML(c.teacher_first_name, c.teacher_profile_picture);
           var members = (typeof c.student_count === "number") ? c.student_count : (c.student_count != null ? parseInt(c.student_count,10) : null);
           var membersVal = (members != null && !isNaN(members)) ? members : "—";
           var archived = isArchived(c);
@@ -467,7 +476,11 @@
                 '<div class="cc-shield cc-c'+ci+'">' + initials + '</div>' +
                 '<div class="cc-head-txt">' +
                   '<div class="cc-name">' + esc(c.name) + '</div>' +
-                  '<div class="cc-teacher">' + esc(classesT("studentClasses.teacherLabel")) + ' ' + teacher + ' <i data-lucide="badge-check" class="verif"></i></div>' +
+                  '<div class="cc-teacher">' +
+                    '<span class="cc-teacher-avatar">' + teacherAvatar + '</span>' +
+                    '<span class="cc-teacher-name">' + esc(classesT("studentClasses.teacherLabel")) + ' ' + teacher + '</span>' +
+                    '<i data-lucide="badge-check" class="verif"></i>' +
+                  '</div>' +
                 '</div>' +
                 '<div class="cc-menu-wrap" id="menuWrap'+c.id+'">' +
                   '<div class="cc-menu" onclick="toggleCardMenu(event,'+c.id+')"><i data-lucide="more-horizontal"></i></div>' +
