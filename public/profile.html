@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Profile</title>
+  <title data-i18n="profile.metaTitle">English Battle — Profile</title>
   <link rel="stylesheet" href="/app.css">
   <style>
     /* Profilga xos uslublar (keyingi bosqichlarda to'ldiriladi) */
@@ -88,6 +88,86 @@
     .pc-stat-v { font-size: 20px; font-weight: 800; }
     .pc-green { color: var(--green); }
     .pc-gold { color: var(--gold); }
+
+    @media (max-width: 640px) {
+      .profile-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 20px;
+      }
+      .pc-info,
+      .pc-top,
+      .pc-meta,
+      .pc-stats {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+      }
+      .pc-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+      }
+      .pc-name {
+        font-size: 22px;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+      }
+      .pc-edit {
+        width: 100%;
+        min-width: 0;
+        justify-content: center;
+        white-space: normal;
+        text-align: center;
+      }
+      .pc-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 12px;
+      }
+      .pc-stat,
+      .pc-stat > div {
+        min-width: 0;
+      }
+      .pc-stat-l,
+      .pc-stat-v {
+        overflow-wrap: anywhere;
+      }
+      .lp-cols,
+      .lp-left,
+      .lp-right,
+      .subj-list,
+      .subj-row {
+        min-width: 0;
+        max-width: 100%;
+      }
+      .cefr-track {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px 8px;
+        padding: 0;
+      }
+      .cefr-track::before {
+        display: none;
+      }
+      .cefr-node,
+      .cefr-lvl,
+      .cefr-lbl {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+      }
+      .subj-name {
+        width: auto;
+        min-width: 0;
+        flex: 0 1 80px;
+        overflow-wrap: anywhere;
+      }
+      .subj-bar {
+        min-width: 20px;
+      }
+    }
 
     /* ===== UMUMIY KARTA SARLAVHASI ===== */
     .card-title {
@@ -417,9 +497,9 @@
 
       <!-- Sarlavha -->
       <div class="page-head">
-        <button class="profile-back-btn" id="profileBackBtn" onclick="profileGoBack()" style="display:none;"><i data-lucide="arrow-left"></i> Ortga</button>
+        <button class="profile-back-btn" id="profileBackBtn" onclick="profileGoBack()" style="display:none;"><i data-lucide="arrow-left"></i> <span data-i18n="profile.back">Ortga</span></button>
         <div class="crest-ic"><i data-lucide="user"></i></div>
-        <div><h1>Profile</h1><p>View your stats, achievements, and progress.</p></div>
+        <div><h1 data-i18n="profile.heading">Profile</h1><p data-i18n="profile.subtitle">View your stats, achievements, and progress.</p></div>
       </div>
 
       <!-- Profil kartasi -->
@@ -431,149 +511,149 @@
         <input type="file" id="picInput" accept="image/*" style="display:none;" onchange="uploadPicture(this)">
         <div class="pc-info">
           <div class="pc-top">
-            <div class="pc-name" id="pcName">O'yinchi</div>
-            <button type="button" class="btn btn-ghost pc-edit" onclick="window.openProfileEditor()"><i data-lucide="pencil" style="width:15px;height:15px;"></i> Edit Profile</button>
+            <div class="pc-name" id="pcName" data-i18n="profile.player">O'yinchi</div>
+            <button type="button" class="btn btn-ghost pc-edit" onclick="window.openProfileEditor()"><i data-lucide="pencil" style="width:15px;height:15px;"></i> <span data-i18n="profile.edit">Edit Profile</span></button>
           </div>
           <div class="pc-meta">
             <span class="pc-cefr">CEFR <b id="pcCefr">A1</b></span>
             <span id="pcCefrLabel">Beginner</span>
             <span class="pc-divider"></span>
-            <span>League <b class="pc-league" id="pcLeague">🥈 Silver</b></span>
+            <span><span data-i18n="profile.league">League</span> <b class="pc-league" id="pcLeague">🥈 Silver</b></span>
           </div>
           <div class="pc-stats">
-            <div class="pc-stat"><i data-lucide="trophy" style="color:var(--gold);"></i><div><div class="pc-stat-l">Rating</div><div class="pc-stat-v" id="pcRating">1000</div></div></div>
-            <div class="pc-stat"><i data-lucide="target" style="color:var(--green);"></i><div><div class="pc-stat-l">Win Rate</div><div class="pc-stat-v pc-green" id="pcWinRate">0%</div></div></div>
-            <div class="pc-stat"><i data-lucide="flame" style="color:var(--gold);"></i><div><div class="pc-stat-l">Win Streak</div><div class="pc-stat-v pc-gold" id="pcStreak">0</div></div></div>
-            <div class="pc-stat"><i data-lucide="building-2" style="color:var(--cyan);"></i><div><div class="pc-stat-l">School / Team</div><div class="pc-stat-v" id="pcSchool" style="font-size:15px;">—</div></div></div>
+            <div class="pc-stat"><i data-lucide="trophy" style="color:var(--gold);"></i><div><div class="pc-stat-l" data-i18n="profile.rating">Rating</div><div class="pc-stat-v" id="pcRating">1000</div></div></div>
+            <div class="pc-stat"><i data-lucide="target" style="color:var(--green);"></i><div><div class="pc-stat-l" data-i18n="profile.winRate">Win Rate</div><div class="pc-stat-v pc-green" id="pcWinRate">0%</div></div></div>
+            <div class="pc-stat"><i data-lucide="flame" style="color:var(--gold);"></i><div><div class="pc-stat-l" data-i18n="profile.winStreak">Win Streak</div><div class="pc-stat-v pc-gold" id="pcStreak">0</div></div></div>
+            <div class="pc-stat"><i data-lucide="building-2" style="color:var(--cyan);"></i><div><div class="pc-stat-l" data-i18n="profile.schoolTeam">School / Team</div><div class="pc-stat-v" id="pcSchool" style="font-size:15px;">—</div></div></div>
           </div>
         </div>
       </div>
 
       <!-- About Me -->
       <div class="card about-card">
-        <div class="card-title"><i data-lucide="user-circle"></i> About Me</div>
+        <div class="card-title"><i data-lucide="user-circle"></i> <span data-i18n="profile.aboutMe">About Me</span></div>
         <div class="about-rows">
-          <div class="about-row"><span class="about-k">Region</span><span class="about-v" id="abRegion">—</span></div>
-          <div class="about-row"><span class="about-k">School</span><span class="about-v" id="abSchool">—</span></div>
-          <div class="about-row"><span class="about-k">Tuman</span><span class="about-v" id="abDistrict">—</span></div>
-          <div class="about-row"><span class="about-k">Favorite Mode</span><span class="about-v soon-badge" id="abFavoriteMode">Hali o'yin yo'q</span></div>
+          <div class="about-row"><span class="about-k" data-i18n="profile.region">Region</span><span class="about-v" id="abRegion">—</span></div>
+          <div class="about-row"><span class="about-k" data-i18n="profile.school">School</span><span class="about-v" id="abSchool">—</span></div>
+          <div class="about-row"><span class="about-k" data-i18n="profile.district">Tuman</span><span class="about-v" id="abDistrict">—</span></div>
+          <div class="about-row"><span class="about-k" data-i18n="profile.favoriteMode">Favorite Mode</span><span class="about-v soon-badge" id="abFavoriteMode" data-i18n="profile.noGamesYet">Hali o'yin yo'q</span></div>
         </div>
         <div class="about-quote">
           <i data-lucide="quote" class="quote-ic"></i>
-          <span id="abBio">Learning today, leading tomorrow. Let's battle and grow together!</span>
+          <span id="abBio" data-i18n="profile.defaultBio">Learning today, leading tomorrow. Let's battle and grow together!</span>
         </div>
       </div>
       <!-- Achievements -->
       <div class="card ach-card">
         <div class="card-title">
-          <i data-lucide="award"></i> Achievements
+          <i data-lucide="award"></i> <span data-i18n="profile.achievements">Achievements</span>
           <span class="soon-badge" id="achUnlocked" style="margin-left:auto;">0 / 5</span>
         </div>
         <div class="ach-grid">
           <div class="ach-item ach-locked" id="achWins">
             <div class="ach-ic"><i data-lucide="trophy"></i></div>
-            <div class="ach-name">100 Wins</div>
+            <div class="ach-name" data-i18n="profile.achievement100Wins">100 Wins</div>
             <div class="ach-progress">0 / 100</div>
           </div>
           <div class="ach-item ach-locked" id="achStreak">
             <div class="ach-ic"><i data-lucide="flame"></i></div>
-            <div class="ach-name">Win Streak Master</div>
+            <div class="ach-name" data-i18n="profile.achievementStreakMaster">Win Streak Master</div>
             <div class="ach-progress">0 / 10</div>
           </div>
           <div class="ach-item ach-locked" id="achCorrect">
             <div class="ach-ic"><i data-lucide="target"></i></div>
-            <div class="ach-name">100 Correct Answers</div>
+            <div class="ach-name" data-i18n="profile.achievement100Correct">100 Correct Answers</div>
             <div class="ach-progress">0 / 100</div>
           </div>
           <div class="ach-item ach-locked" id="achElite">
             <div class="ach-ic"><i data-lucide="star"></i></div>
-            <div class="ach-name">Elite Player</div>
+            <div class="ach-name" data-i18n="profile.achievementElite">Elite Player</div>
             <div class="ach-progress">0 / 1600 RP</div>
           </div>
           <div class="ach-item ach-locked" id="achLearner">
             <div class="ach-ic"><i data-lucide="graduation-cap"></i></div>
-            <div class="ach-name">Dedicated Learner</div>
+            <div class="ach-name" data-i18n="profile.achievementLearner">Dedicated Learner</div>
             <div class="ach-progress">0 / 50</div>
           </div>
         </div>
-        <div class="ach-note" id="achNote">Janglar va to‘g‘ri javoblar orqali yutuqlarni oching.</div>
+        <div class="ach-note" id="achNote" data-i18n="profile.achievementNote">Janglar va to‘g‘ri javoblar orqali yutuqlarni oching.</div>
       </div>
       <!-- Battle Stats -->
       <div class="card bs-card">
-        <div class="card-title"><i data-lucide="swords"></i> Battle Stats</div>
+        <div class="card-title"><i data-lucide="swords"></i> <span data-i18n="profile.battleStats">Battle Stats</span></div>
         <div class="bs-grid">
           <div class="bs-item">
-            <div class="bs-label">Total Battles</div>
+            <div class="bs-label" data-i18n="profile.totalBattles">Total Battles</div>
             <div class="bs-val" id="bsTotal">0</div>
           </div>
           <div class="bs-item">
-            <div class="bs-label">Wins</div>
+            <div class="bs-label" data-i18n="profile.wins">Wins</div>
             <div class="bs-val bs-green" id="bsWins">0</div>
             <div class="bs-sub" id="bsWinsPct">0%</div>
           </div>
           <div class="bs-item">
-            <div class="bs-label">Losses</div>
+            <div class="bs-label" data-i18n="profile.losses">Losses</div>
             <div class="bs-val bs-red" id="bsLosses">0</div>
             <div class="bs-sub" id="bsLossesPct">0%</div>
           </div>
           <div class="bs-item">
-            <div class="bs-label">Draws</div>
+            <div class="bs-label" data-i18n="profile.draws">Draws</div>
             <div class="bs-val" id="bsDraws">0</div>
           </div>
           <div class="bs-item">
-            <div class="bs-label">Highest Rank</div>
+            <div class="bs-label" data-i18n="profile.highestRank">Highest Rank</div>
             <div class="bs-val bs-cyan" id="bsRank" style="font-size:20px;">—</div>
           </div>
         </div>
       </div>
       <!-- Learning Progress -->
       <div class="card lp-card">
-        <div class="card-title"><i data-lucide="book-open"></i> Learning Progress</div>
+        <div class="card-title"><i data-lucide="book-open"></i> <span data-i18n="profile.learningProgress">Learning Progress</span></div>
         <div class="lp-cols">
           <!-- CEFR Progression -->
           <div class="lp-left">
-            <div class="lp-sub-title">CEFR Progression</div>
+            <div class="lp-sub-title" data-i18n="profile.cefrProgression">CEFR Progression</div>
             <div class="cefr-track" id="cefrTrack"></div>
           </div>
           <!-- Subject Progress -->
           <div class="lp-right">
-            <div class="lp-sub-title">Subject Progress <span class="soon-badge">Tez kunda</span></div>
+            <div class="lp-sub-title"><span data-i18n="profile.subjectProgress">Subject Progress</span> <span class="soon-badge" data-i18n="profile.comingSoon">Tez kunda</span></div>
             <div class="subj-list">
-              <div class="subj-row"><i data-lucide="book-open" class="subj-ic"></i><span class="subj-name">Grammar</span><div class="subj-bar"><div class="subj-fill" style="width:0%; background:var(--accent);"></div></div><span class="subj-pct">—</span></div>
-              <div class="subj-row"><i data-lucide="book" class="subj-ic"></i><span class="subj-name">Vocabulary</span><div class="subj-bar"><div class="subj-fill" style="width:0%; background:var(--green);"></div></div><span class="subj-pct">—</span></div>
-              <div class="subj-row"><i data-lucide="glasses" class="subj-ic"></i><span class="subj-name">Reading</span><div class="subj-bar"><div class="subj-fill" style="width:0%; background:var(--cyan);"></div></div><span class="subj-pct">—</span></div>
-              <div class="subj-row"><i data-lucide="headphones" class="subj-ic"></i><span class="subj-name">Listening</span><div class="subj-bar"><div class="subj-fill" style="width:0%; background:var(--gold);"></div></div><span class="subj-pct">—</span></div>
+              <div class="subj-row"><i data-lucide="book-open" class="subj-ic"></i><span class="subj-name" data-i18n="profile.grammar">Grammar</span><div class="subj-bar"><div class="subj-fill" style="width:0%; background:var(--accent);"></div></div><span class="subj-pct">—</span></div>
+              <div class="subj-row"><i data-lucide="book" class="subj-ic"></i><span class="subj-name" data-i18n="profile.vocabulary">Vocabulary</span><div class="subj-bar"><div class="subj-fill" style="width:0%; background:var(--green);"></div></div><span class="subj-pct">—</span></div>
+              <div class="subj-row"><i data-lucide="glasses" class="subj-ic"></i><span class="subj-name" data-i18n="profile.reading">Reading</span><div class="subj-bar"><div class="subj-fill" style="width:0%; background:var(--cyan);"></div></div><span class="subj-pct">—</span></div>
+              <div class="subj-row"><i data-lucide="headphones" class="subj-ic"></i><span class="subj-name" data-i18n="profile.listening">Listening</span><div class="subj-bar"><div class="subj-fill" style="width:0%; background:var(--gold);"></div></div><span class="subj-pct">—</span></div>
             </div>
           </div>
         </div>
       </div>
       <!-- Ota-ona ulanishi (faqat o'z profilida ko'rinadi) -->
       <div class="card parent-card" id="parentCard" style="display:none;">
-        <div class="card-title"><i data-lucide="users"></i> Ota-ona ulanishi</div>
-        <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:16px">Quyidagi kodni ota-onangizga bering. Ular "Ota-ona" sifatida ro'yxatdan o'tib, shu kod orqali o'qish jarayoningizni kuzatadi. Kodni istalgan vaqt yangilashingiz mumkin.</p>
+        <div class="card-title"><i data-lucide="users"></i> <span data-i18n="profile.parentConnection">Ota-ona ulanishi</span></div>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:16px" data-i18n="profile.parentConnectionText">Quyidagi kodni ota-onangizga bering. Ular "Ota-ona" sifatida ro'yxatdan o'tib, shu kod orqali o'qish jarayoningizni kuzatadi. Kodni istalgan vaqt yangilashingiz mumkin.</p>
         <div class="pa-code-box">
           <span class="pa-code" id="paCode">••••••••</span>
-          <button class="pa-copy" id="paCopyBtn" onclick="copyParentCode()"><i data-lucide="copy"></i> Nusxalash</button>
+          <button class="pa-copy" id="paCopyBtn" onclick="copyParentCode()"><i data-lucide="copy"></i> <span data-i18n="profile.copy">Nusxalash</span></button>
         </div>
         <div class="pa-meta">
           <span id="paExpiry">—</span>
-          <button class="pa-regen" onclick="regenParentCode()">Kodni yangilash</button>
+          <button class="pa-regen" onclick="regenParentCode()" data-i18n="profile.regenerateCode">Kodni yangilash</button>
         </div>
         <div class="pa-divider"></div>
-        <div class="pa-sub">Ulangan ota-onalar</div>
-        <div id="paParents"><div class="pa-empty">Yuklanmoqda...</div></div>
+        <div class="pa-sub" data-i18n="profile.connectedParents">Ulangan ota-onalar</div>
+        <div id="paParents"><div class="pa-empty" data-i18n="profile.loading">Yuklanmoqda...</div></div>
       </div>
 
       <!-- Imtihon tarixi (faqat o'z profilida) -->
       <div class="card exam-card" id="examCard" style="display:none;">
-        <div class="card-title"><i data-lucide="graduation-cap"></i> Imtihon tarixi</div>
-        <div id="examList"><div class="ex-empty">Yuklanmoqda...</div></div>
+        <div class="card-title"><i data-lucide="graduation-cap"></i> <span data-i18n="profile.examHistory">Imtihon tarixi</span></div>
+        <div id="examList"><div class="ex-empty" data-i18n="profile.loading">Yuklanmoqda...</div></div>
       </div>
 
       <!-- AI haftalik hisobot (faqat o'z profilida, student) -->
       <div class="card ai-card" id="aiCard" style="display:none;">
         <div class="card-title">
-          <span class="ct-left"><i data-lucide="sparkles"></i> AI haftalik hisobot</span>
+          <span class="ct-left"><i data-lucide="sparkles"></i> <span data-i18n="profile.aiWeeklyReport">AI haftalik hisobot</span></span>
           <span class="ai-pro-badge">PREMIUM</span>
         </div>
         <div id="aiBody"></div>
@@ -582,16 +662,16 @@
       <!-- Recent Battle History -->
       <div class="card hist-card">
         <div class="card-title">
-          <i data-lucide="swords"></i> Recent Battle History
-          <a class="view-all-link" onclick="window.location.href='/history.html'">View All <i data-lucide="chevron-right" style="width:15px;height:15px;"></i></a>
+          <i data-lucide="swords"></i> <span data-i18n="profile.recentHistory">Recent Battle History</span>
+          <a class="view-all-link" onclick="window.location.href='/history.html'"><span data-i18n="profile.viewAll">View All</span> <i data-lucide="chevron-right" style="width:15px;height:15px;"></i></a>
         </div>
         <div class="hist-cols">
-          <span>Opponent</span>
-          <span>Result</span>
-          <span>Score</span>
-          <span>Rating</span>
+          <span data-i18n="profile.opponent">Opponent</span>
+          <span data-i18n="profile.result">Result</span>
+          <span data-i18n="profile.score">Score</span>
+          <span data-i18n="profile.rating">Rating</span>
         </div>
-        <div id="histList"><div class="hist-empty">Yuklanmoqda...</div></div>
+        <div id="histList"><div class="hist-empty" data-i18n="profile.loading">Yuklanmoqda...</div></div>
       </div>
     </main>
 
@@ -600,7 +680,7 @@
 
       <!-- Current Rank -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Current Rank</span><button type="button" class="rb-info-btn" id="profileRankInfoButton" aria-label="Joriy rank haqida ma'lumot" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
+        <div class="rb-head"><span data-i18n="profile.currentRank">Current Rank</span><button type="button" class="rb-info-btn" id="profileRankInfoButton" aria-label="Joriy rank haqida ma'lumot" data-i18n-aria-label="profile.currentRankInfoAria" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
         <div class="rank-display">
           <div class="rank-medal" id="rankMedal">🥈</div>
           <div>
@@ -609,36 +689,36 @@
           </div>
         </div>
         <div class="rank-bar"><div class="rank-bar-fill" id="rankBarFill" style="width:40%;"></div></div>
-        <div class="rank-next">Next Rank: <span id="rankNext">Gold</span></div>
+        <div class="rank-next"><span data-i18n="profile.nextRank">Next Rank:</span> <span id="rankNext">Gold</span></div>
       </div>
 
       <!-- Achievements Summary -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Achievements Summary</span><span class="soon-badge" id="asUnlocked">0 / 4</span></div>
+        <div class="rb-head"><span data-i18n="profile.achievementsSummary">Achievements Summary</span><span class="soon-badge" id="asUnlocked">0 / 4</span></div>
         <div class="as-grid">
-          <div class="as-box"><i data-lucide="trophy" style="color:var(--gold);"></i><div class="as-val" id="asTotal">0</div><div class="as-lbl">Total</div></div>
-          <div class="as-box"><i data-lucide="medal" style="color:var(--gold);"></i><div class="as-val" id="asGold">0</div><div class="as-lbl">Gold</div></div>
-          <div class="as-box"><i data-lucide="medal" style="color:#cbd5e1;"></i><div class="as-val" id="asSilver">0</div><div class="as-lbl">Silver</div></div>
-          <div class="as-box"><i data-lucide="medal" style="color:#d97706;"></i><div class="as-val" id="asBronze">0</div><div class="as-lbl">Bronze</div></div>
+          <div class="as-box"><i data-lucide="trophy" style="color:var(--gold);"></i><div class="as-val" id="asTotal">0</div><div class="as-lbl" data-i18n="profile.total">Total</div></div>
+          <div class="as-box"><i data-lucide="medal" style="color:var(--gold);"></i><div class="as-val" id="asGold">0</div><div class="as-lbl" data-i18n="profile.gold">Gold</div></div>
+          <div class="as-box"><i data-lucide="medal" style="color:#cbd5e1;"></i><div class="as-val" id="asSilver">0</div><div class="as-lbl" data-i18n="profile.silver">Silver</div></div>
+          <div class="as-box"><i data-lucide="medal" style="color:#d97706;"></i><div class="as-val" id="asBronze">0</div><div class="as-lbl" data-i18n="profile.bronze">Bronze</div></div>
         </div>
       </div>
 
       <!-- Next Level Progress -->
       <div class="card rb-card">
-        <div class="rb-head"><span id="nlpTitle">Keyingi daraja</span><button type="button" class="rb-info-btn" id="cefrProgressInfoButton" aria-label="CEFR daraja progressi haqida ma'lumot" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
+        <div class="rb-head"><span id="nlpTitle" data-i18n="profile.nextLevel">Keyingi daraja</span><button type="button" class="rb-info-btn" id="cefrProgressInfoButton" aria-label="CEFR daraja progressi haqida ma'lumot" data-i18n-aria-label="profile.cefrInfoAria" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
         <div class="nlp-pct" id="nlpPct">—</div>
-        <div class="nlp-msg">Imtihon topshirib, keyingi darajaga o'ting!</div>
+        <div class="nlp-msg" data-i18n="profile.nextLevelText">Imtihon topshirib, keyingi darajaga o'ting!</div>
         <div class="rank-bar" style="margin-top:12px;"><div class="rank-bar-fill" id="nlpBar" style="width:0%; background:linear-gradient(90deg,var(--green),#10b981);"></div></div>
         <button class="btn nlp-btn" onclick="window.location.href='/exam.html'"><i data-lucide="book-open" style="width:16px;height:16px;"></i> Ultimate Exam</button>
       </div>
 
       <!-- Personal Records -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Personal Records</span></div>
+        <div class="rb-head"><span data-i18n="profile.personalRecords">Personal Records</span></div>
         <div class="pr-list">
-          <div class="pr-row"><i data-lucide="flame" style="color:var(--gold);"></i><span class="pr-name">Best Win Streak</span><span class="pr-val" id="prStreak">0</span></div>
-          <div class="pr-row"><i data-lucide="target" style="color:var(--green);"></i><span class="pr-name">Total Battles</span><span class="pr-val" id="prBattles">0</span></div>
-          <div class="pr-row"><i data-lucide="trophy" style="color:var(--cyan);"></i><span class="pr-name">Total Wins</span><span class="pr-val" id="prWins">0</span></div>
+          <div class="pr-row"><i data-lucide="flame" style="color:var(--gold);"></i><span class="pr-name" data-i18n="profile.bestWinStreak">Best Win Streak</span><span class="pr-val" id="prStreak">0</span></div>
+          <div class="pr-row"><i data-lucide="target" style="color:var(--green);"></i><span class="pr-name" data-i18n="profile.totalBattles">Total Battles</span><span class="pr-val" id="prBattles">0</span></div>
+          <div class="pr-row"><i data-lucide="trophy" style="color:var(--cyan);"></i><span class="pr-name" data-i18n="profile.totalWins">Total Wins</span><span class="pr-val" id="prWins">0</span></div>
         </div>
       </div>
 
@@ -650,11 +730,11 @@
   <div class="pa-modal-ov" id="paModal">
     <div class="pa-modal">
       <div class="pa-modal-ic" id="paModalIc"><i data-lucide="alert-triangle"></i></div>
-      <div class="pa-modal-title" id="paModalTitle">Tasdiqlash</div>
+      <div class="pa-modal-title" id="paModalTitle" data-i18n="profile.confirmation">Tasdiqlash</div>
       <div class="pa-modal-text" id="paModalText"></div>
       <div class="pa-modal-foot">
-        <button class="pa-mc-cancel" onclick="paModalClose()">Bekor qilish</button>
-        <button class="pa-mc-confirm" id="paModalConfirm">Tasdiqlash</button>
+        <button class="pa-mc-cancel" onclick="paModalClose()" data-i18n="common.cancel">Bekor qilish</button>
+        <button class="pa-mc-confirm" id="paModalConfirm" data-i18n="profile.confirm">Tasdiqlash</button>
       </div>
     </div>
   </div>
@@ -662,6 +742,7 @@
   <script src="/api.js"></script>
   <script src="/payment-modal.js"></script>
   <script src="/vendor/lucide.min.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/rank-info-dialog.js"></script>
   <script src="/profile-edit.js"></script>
@@ -669,12 +750,21 @@
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
     const user = JSON.parse(userData);
+    function profileT(key, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+    }
+    function profileLocale() {
+      const language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return { uz:"uz-UZ", en:"en-US", ru:"ru-RU" }[language] || "uz-UZ";
+    }
+    window.profileT = profileT;
     // URL'da ?id=X bo'lsa - boshqa odamning profili
     const urlParams = new URLSearchParams(window.location.search);
     const viewUserId = urlParams.get("id") || user.id; // id bo'lmasa - o'zim
     const isOwnProfile = String(viewUserId) === String(user.id);
     const normalizedUserRole = String(user.role || "student").trim().toLowerCase();
     const isOwnStudentProfile = isOwnProfile && normalizedUserRole === "student";
+    let aiRenderState = null;
     if (isOwnStudentProfile) {
       const aiCard = document.getElementById("aiCard");
       const aiBody = document.getElementById("aiBody");
@@ -700,7 +790,7 @@
     // Sidebar (profile aktiv)
     renderSidebar("profile");
     // ===== PROFIL MA'LUMOTI =====
-    const cefrLabels = { A1: "Beginner", A2: "Elementary", B1: "Intermediate", B2: "Upper-Intermediate", C1: "Advanced", C2: "Proficient" };
+    function cefrLabel(level) { return profileT("profile.cefr." + String(level || "A1").toLowerCase()); }
     const nextCefrLevels = { A1: "A2", A2: "B1", B1: "B2", B2: "C1", C1: "C2", C2: null };
     function getLeagueInfo(rating) {
       if (rating >= 2000) return "👑 Grandmaster";
@@ -774,16 +864,16 @@
         const isUnlocked = achievement.value >= achievement.target;
         if (isUnlocked) unlocked += 1;
         item.classList.toggle("ach-locked", !isUnlocked);
-        item.setAttribute("aria-label", item.querySelector(".ach-name").textContent + ": " + (isUnlocked ? "Ochilgan" : "Yopiq"));
+        item.setAttribute("aria-label", item.querySelector(".ach-name").textContent + ": " + profileT(isUnlocked ? "profile.unlocked" : "profile.locked"));
         item.querySelector(".ach-progress").textContent = isUnlocked
-          ? "Ochilgan"
+          ? profileT("profile.unlocked")
           : Math.min(achievement.value, achievement.target) + " / " + achievement.target + achievement.suffix;
       });
 
       document.getElementById("achUnlocked").textContent = unlocked + " / " + achievements.length;
       document.getElementById("achNote").textContent = unlocked === achievements.length
-        ? "Barcha yutuqlar ochildi — ajoyib natija!"
-        : "Yana " + (achievements.length - unlocked) + " ta yutuqni ochishingiz mumkin.";
+        ? profileT("profile.allAchievementsUnlocked")
+        : profileT("profile.achievementsRemaining", { count: achievements.length - unlocked });
     }
 
     // Boshqa odamning profili bo'lsa - Edit tugmasini yashirish + sarlavhani o'zgartirish
@@ -791,7 +881,7 @@
       const editBtn = document.querySelector(".pc-edit");
       if (editBtn) editBtn.style.display = "none";
       const pageDesc = document.querySelector(".page-head p");
-      if (pageDesc) pageDesc.textContent = "Foydalanuvchi profili";
+      if (pageDesc) pageDesc.textContent = profileT("profile.publicProfile");
       // Ortga tugmasini ko'rsatamiz (faqat boshqa odam profilida)
       const backBtn = document.getElementById("profileBackBtn");
       if (backBtn) backBtn.style.display = "inline-flex";
@@ -809,7 +899,7 @@
     window.handleProfileEditSuccess = function (updatedUser) {
       if (!updatedUser) return;
       document.getElementById("pcName").textContent = updatedUser.first_name + " " + updatedUser.last_name;
-      document.getElementById("abBio").textContent = updatedUser.bio || "Learning today, leading tomorrow. Let's battle and grow together!";
+      document.getElementById("abBio").textContent = updatedUser.bio || profileT("profile.defaultBio");
       profileData = profileData || {};
       profileData.user = Object.assign({}, profileData.user || {}, updatedUser);
       Object.assign(user, updatedUser);
@@ -832,7 +922,7 @@
           }
           document.getElementById("pcName").textContent = u.first_name + " " + u.last_name;
           document.getElementById("pcCefr").textContent = u.cefr_level || "A1";
-          document.getElementById("pcCefrLabel").textContent = cefrLabels[u.cefr_level] || "Beginner";
+          document.getElementById("pcCefrLabel").textContent = cefrLabel(u.cefr_level || "A1");
           document.getElementById("pcLeague").innerHTML = leagueFull(u.rating || 1000);
           document.getElementById("pcRating").textContent = u.rating || 1000;
         }
@@ -856,8 +946,8 @@
           document.getElementById("abRegion").textContent = data.user.region || "—";
           document.getElementById("abSchool").textContent = data.user.school || "—";
           document.getElementById("abDistrict").textContent = data.user.district || "—";
-          document.getElementById("abBio").textContent = data.user.bio || "Learning today, leading tomorrow. Let's battle and grow together!";
-          document.getElementById("abFavoriteMode").textContent = data.stats.favorite_mode_label || "Hali o'yin yo'q";
+          document.getElementById("abBio").textContent = data.user.bio || profileT("profile.defaultBio");
+          document.getElementById("abFavoriteMode").textContent = data.stats.favorite_mode_label || profileT("profile.noGamesYet");
           // Highest Rank (joriy liga)
             document.getElementById("bsRank").innerHTML = leagueFull(data.user.rating || 1000);
 
@@ -874,12 +964,12 @@
     // ===== CEFR PROGRESSION =====
     function renderCefrTrackFor(current) {
       const levels = [
-        { lvl: "A1", lbl: "Beginner" },
-        { lvl: "A2", lbl: "Elementary" },
-        { lvl: "B1", lbl: "Intermediate" },
-        { lvl: "B2", lbl: "Upper-Int" },
-        { lvl: "C1", lbl: "Advanced" },
-        { lvl: "C2", lbl: "Proficient" },
+        { lvl: "A1", lbl: cefrLabel("A1") },
+        { lvl: "A2", lbl: cefrLabel("A2") },
+        { lvl: "B1", lbl: cefrLabel("B1") },
+        { lvl: "B2", lbl: cefrLabel("B2") },
+        { lvl: "C1", lbl: cefrLabel("C1") },
+        { lvl: "C2", lbl: cefrLabel("C2") },
       ];
       const curIdx = levels.findIndex(l => l.lvl === current);
 
@@ -898,44 +988,51 @@
     }
 
     // ===== BATTLE HISTORY =====
+    let historyBattles = null;
+    function renderHistory(battles) {
+      const list = document.getElementById("histList");
+      if (!list) return;
+      if (battles.length === 0) {
+        list.innerHTML = '<div class="hist-empty">' + profileT("profile.noBattlesYet") + '</div>';
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      list.innerHTML = "";
+      battles.slice(0, 5).forEach(b => {
+        const isWin = b.outcome === "win";
+        const isDraw = b.outcome === "draw";
+        const oppName = b.opponent_name || profileT("profile.opponent");
+        const rc = b.rating_change >= 0 ? "+" + b.rating_change : b.rating_change;
+        const rcColor = b.rating_change >= 0 ? "var(--green)" : "var(--red)";
+
+        const row = document.createElement("div");
+        row.className = "hist-row";
+        row.innerHTML =
+          '<div class="hist-opp">' +
+            '<div class="hist-ava">' + oppName.charAt(0).toUpperCase() + '</div>' +
+            '<div><div class="hist-name">' + oppName + '</div><div class="hist-sub">' + (b.cefr_level || "A1") + '</div></div>' +
+          '</div>' +
+          '<div class="hist-result ' + (isWin ? "h-win" : (isDraw ? "" : "h-lose")) + '">' +
+            (isWin ? '<i data-lucide="trophy"></i> ' + profileT("profile.victory") : (isDraw ? profileT("profile.draw") : '<i data-lucide="x"></i> ' + profileT("profile.defeat"))) +
+          '</div>' +
+          '<div>' + b.my_score + ' - ' + b.opponent_score + '</div>' +
+          '<div style="color:' + rcColor + '; font-weight:700;">' + rc + '</div>';
+        list.appendChild(row);
+      });
+      if (window.lucide) lucide.createIcons();
+    }
+
     async function loadHistory() {
       const list = document.getElementById("histList");
       try {
         const res = await authFetch("/history/" + viewUserId);
         const data = await res.json();
         const battles = data.battles || data.history || [];
-
-        if (battles.length === 0) {
-          list.innerHTML = '<div class="hist-empty">Hali jang qilmadingiz.</div>';
-          lucide.createIcons();
-          return;
-        }
-
-        list.innerHTML = "";
-        battles.slice(0, 5).forEach(b => {
-          const isWin = b.outcome === "win";
-          const isDraw = b.outcome === "draw";
-          const oppName = b.opponent_name || "Raqib";
-          const rc = b.rating_change >= 0 ? "+" + b.rating_change : b.rating_change;
-          const rcColor = b.rating_change >= 0 ? "var(--green)" : "var(--red)";
-
-          const row = document.createElement("div");
-          row.className = "hist-row";
-          row.innerHTML =
-            '<div class="hist-opp">' +
-              '<div class="hist-ava">' + oppName.charAt(0).toUpperCase() + '</div>' +
-              '<div><div class="hist-name">' + oppName + '</div><div class="hist-sub">' + (b.cefr_level || "A1") + '</div></div>' +
-            '</div>' +
-            '<div class="hist-result ' + (isWin ? "h-win" : (isDraw ? "" : "h-lose")) + '">' +
-              (isWin ? '<i data-lucide="trophy"></i> Victory' : (isDraw ? "Draw" : '<i data-lucide="x"></i> Defeat')) +
-            '</div>' +
-            '<div>' + b.my_score + ' - ' + b.opponent_score + '</div>' +
-            '<div style="color:' + rcColor + '; font-weight:700;">' + rc + '</div>';
-          list.appendChild(row);
-        });
-        lucide.createIcons();
+        historyBattles = battles;
+        renderHistory(historyBattles);
       } catch (err) {
-        list.innerHTML = '<div class="hist-empty">Yuklab bo\'lmadi</div>';
+        list.innerHTML = '<div class="hist-empty">' + profileT("profile.loadFailed") + '</div>';
       }
     }
     loadHistory();
@@ -966,7 +1063,7 @@
         currentRankDetails = { rating: r, current: cur, next: next, progress: prog };
       } else {
         document.getElementById("rankBarFill").style.width = "100%";
-        document.getElementById("rankNext").textContent = "Eng yuqori!";
+        document.getElementById("rankNext").textContent = profileT("profile.highest");
         currentRankDetails = { rating: r, current: cur, next: null, progress: 100 };
       }
     }
@@ -975,8 +1072,8 @@
     // Next Level (CEFR keyingi daraja)
     function setupNextLevel(current) {
       const nxt = nextCefrLevels[current];
-      document.getElementById("nlpTitle").textContent = nxt ? (current + " → " + nxt + " Progress") : "Eng yuqori daraja";
-      document.getElementById("nlpPct").textContent = nxt ? "Imtihon" : "C2 🎉";
+      document.getElementById("nlpTitle").textContent = nxt ? profileT("profile.levelProgress", { current, next: nxt }) : profileT("profile.highestLevel");
+      document.getElementById("nlpPct").textContent = nxt ? profileT("profile.exam") : "C2 🎉";
       document.getElementById("nlpBar").style.width = nxt ? "30%" : "100%";
     }
 
@@ -1017,10 +1114,10 @@
           localStorage.setItem("user", JSON.stringify(user));
           location.reload();
         } else {
-          alert(data.error || "Rasm yuklab bo'lmadi");
+          alert(data.error || profileT("profile.pictureUploadFailed"));
         }
       } catch (err) {
-        alert("Xato yuz berdi");
+        alert(profileT("profile.genericError"));
       }
     }
 
@@ -1033,8 +1130,10 @@
 
     // ===== OTA-ONA ULANISHI (faqat o'z profilida) =====
     let _parentCodeVal = "";
-    const PA_REL = { mother:"Onasi", father:"Otasi", guardian:"Vasiy", other:"Boshqa" };
-    function paFmtDate(iso){ if(!iso) return "—"; const d=new Date(iso); return d.toLocaleDateString("uz-UZ",{day:"numeric",month:"long",year:"numeric"}); }
+    let _parentCodeExpiry = null;
+    let parentRecords = null;
+    const PA_REL = { mother:"profile.relationshipMother", father:"profile.relationshipFather", guardian:"profile.relationshipGuardian", other:"profile.relationshipOther" };
+    function paFmtDate(iso){ if(!iso) return "—"; const d=new Date(iso); return d.toLocaleDateString(profileLocale(),{day:"numeric",month:"long",year:"numeric"}); }
     function paEsc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
     async function loadParentSection(){
@@ -1045,39 +1144,47 @@
         if (res.ok){
           const d = await res.json();
           _parentCodeVal = d.code || "";
+          _parentCodeExpiry = d.expires_at || null;
           document.getElementById("paCode").textContent = d.code || "—";
-          document.getElementById("paExpiry").textContent = d.expires_at ? ("Amal qiladi: " + paFmtDate(d.expires_at) + "gacha") : "";
+          document.getElementById("paExpiry").textContent = _parentCodeExpiry ? profileT("profile.validUntil", { date: paFmtDate(_parentCodeExpiry) }) : "";
         }
       } catch(e){}
       loadParentList();
       if (window.lucide) lucide.createIcons();
     }
 
+    function renderParentList(list){
+      const wrap = document.getElementById("paParents");
+      if (!wrap) return;
+      if (list.length === 0){ wrap.innerHTML = '<div class="pa-empty">' + profileT("profile.noParentConnected") + '</div>'; return; }
+      wrap.innerHTML = list.map(p => {
+        const initial = (String(p.name||"?").trim()[0] || "?").toUpperCase();
+        return '<div class="pa-parent">' +
+          '<div class="pa-av">'+paEsc(initial)+'</div>' +
+          '<div class="pa-pmain"><div class="pa-pname">'+paEsc(p.name)+'</div>' +
+          '<div class="pa-psub">'+paEsc(profileT(PA_REL[p.relationship]||"profile.relationshipGuardian"))+(p.phone_masked?(' · '+paEsc(p.phone_masked)):'')+'</div></div>' +
+          '<button class="pa-revoke" onclick="revokeParent('+p.parent_id+', this)">'+profileT("profile.disconnect")+'</button>' +
+        '</div>';
+      }).join("");
+    }
+
     async function loadParentList(){
       const wrap = document.getElementById("paParents");
       try {
         const res = await authFetch("/student/parents");
-        if (!res.ok){ wrap.innerHTML = '<div class="pa-empty">Ro\'yxatni yuklab bo\'lmadi.</div>'; return; }
+        if (!res.ok){ wrap.innerHTML = '<div class="pa-empty">' + profileT("profile.listLoadFailed") + '</div>'; return; }
         const d = await res.json();
         const list = d.parents || [];
-        if (list.length === 0){ wrap.innerHTML = '<div class="pa-empty">Hali ota-ona ulanmagan.</div>'; return; }
-        wrap.innerHTML = list.map(p => {
-          const initial = (String(p.name||"?").trim()[0] || "?").toUpperCase();
-          return '<div class="pa-parent">' +
-            '<div class="pa-av">'+paEsc(initial)+'</div>' +
-            '<div class="pa-pmain"><div class="pa-pname">'+paEsc(p.name)+'</div>' +
-            '<div class="pa-psub">'+paEsc(PA_REL[p.relationship]||"Vasiy")+(p.phone_masked?(' · '+paEsc(p.phone_masked)):'')+'</div></div>' +
-            '<button class="pa-revoke" onclick="revokeParent('+p.parent_id+', this)">Uzish</button>' +
-          '</div>';
-        }).join("");
-      } catch(e){ wrap.innerHTML = '<div class="pa-empty">Server bilan aloqa yo\'q.</div>'; }
+        parentRecords = list;
+        renderParentList(parentRecords);
+      } catch(e){ wrap.innerHTML = '<div class="pa-empty">' + profileT("profile.serverUnavailable") + '</div>'; }
     }
 
     function copyParentCode(){
       if (!_parentCodeVal) return;
       navigator.clipboard.writeText(_parentCodeVal).then(()=>{
         const b=document.getElementById("paCopyBtn"); const old=b.innerHTML;
-        b.innerHTML='<i data-lucide="check"></i> Nusxalandi'; if(window.lucide)lucide.createIcons();
+        b.innerHTML='<i data-lucide="check"></i> ' + profileT("profile.copied"); if(window.lucide)lucide.createIcons();
         setTimeout(()=>{ b.innerHTML=old; if(window.lucide)lucide.createIcons(); },1500);
       }).catch(()=>{});
     }
@@ -1086,13 +1193,13 @@
     let _paOnConfirm = null;
     function paConfirm(opts){
       _paOnConfirm = opts.onConfirm || null;
-      document.getElementById("paModalTitle").textContent = opts.title || "Tasdiqlash";
+      document.getElementById("paModalTitle").textContent = opts.title || profileT("profile.confirmation");
       document.getElementById("paModalText").textContent = opts.text || "";
       const ic = document.getElementById("paModalIc");
       const cb = document.getElementById("paModalConfirm");
       ic.className = "pa-modal-ic" + (opts.danger ? " danger" : "");
       cb.className = "pa-mc-confirm" + (opts.danger ? " danger" : "");
-      cb.textContent = opts.confirmText || "Tasdiqlash";
+      cb.textContent = opts.confirmText || profileT("profile.confirm");
       cb.disabled = false;
       document.getElementById("paModal").classList.add("show");
       if (window.lucide) lucide.createIcons();
@@ -1108,35 +1215,36 @@
 
     function regenParentCode(){
       paConfirm({
-        title: "Kodni yangilash",
-        text: "Yangi kod yaratsangiz, eski kod ishlamaydi. Davom etasizmi?",
-        confirmText: "Yangilash",
+        title: profileT("profile.regenerateCode"),
+        text: profileT("profile.regenerateCodeConfirm"),
+        confirmText: profileT("profile.regenerate"),
         onConfirm: async () => {
           try {
             const res = await authFetch("/student/parent-code/regenerate", { method:"POST" });
             const d = await res.json();
-            if (!res.ok){ alert(d.error||"Xatolik"); return; }
+            if (!res.ok){ alert(d.error||profileT("profile.error")); return; }
             _parentCodeVal = d.code || "";
+            _parentCodeExpiry = d.expires_at || null;
             document.getElementById("paCode").textContent = d.code || "—";
-            document.getElementById("paExpiry").textContent = d.expires_at ? ("Amal qiladi: " + paFmtDate(d.expires_at) + "gacha") : "";
-          } catch(e){ alert("Server bilan aloqa yo'q"); }
+            document.getElementById("paExpiry").textContent = _parentCodeExpiry ? profileT("profile.validUntil", { date: paFmtDate(_parentCodeExpiry) }) : "";
+          } catch(e){ alert(profileT("profile.serverUnavailable")); }
         }
       });
     }
 
     function revokeParent(parentId){
       paConfirm({
-        title: "Ota-onani uzish",
-        text: "Bu ota-onaning kirishini bekor qilmoqchimisiz? Keyin yangi kod orqali qayta ulashlari mumkin.",
-        confirmText: "Uzish",
+        title: profileT("profile.disconnectParent"),
+        text: profileT("profile.disconnectParentConfirm"),
+        confirmText: profileT("profile.disconnect"),
         danger: true,
         onConfirm: async () => {
           try {
             const res = await authFetch("/student/parents/"+encodeURIComponent(parentId), { method:"DELETE" });
             const d = await res.json();
-            if (!res.ok){ alert(d.error||"Xatolik"); return; }
+            if (!res.ok){ alert(d.error||profileT("profile.error")); return; }
             loadParentList();
-          } catch(e){ alert("Server bilan aloqa yo'q"); }
+          } catch(e){ alert(profileT("profile.serverUnavailable")); }
         }
       });
     }
@@ -1144,8 +1252,9 @@
     if (isOwnStudentProfile) loadParentSection();
 
     // ===== IMTIHON TARIXI (faqat o'z profilida) =====
-    const EX_SKILL_LABEL = { grammar:"Grammatika", vocabulary:"Lug'at", reading:"O'qish", listening:"Tinglash", speaking:"Gapirish", writing:"Yozish", other:"Boshqa" };
-    function exFmtDate(iso){ if(!iso) return "—"; const d=new Date(iso); return d.toLocaleDateString("uz-UZ",{day:"numeric",month:"long",year:"numeric"}); }
+    const EX_SKILL_LABEL = { grammar:"profile.grammar", vocabulary:"profile.vocabulary", reading:"profile.reading", listening:"profile.listening", speaking:"profile.speaking", writing:"profile.writing", other:"profile.other" };
+    let examAttempts = null;
+    function exFmtDate(iso){ if(!iso) return "—"; const d=new Date(iso); return d.toLocaleDateString(profileLocale(),{day:"numeric",month:"long",year:"numeric"}); }
 
     async function loadExamHistory(){
       const card = document.getElementById("examCard");
@@ -1153,16 +1262,17 @@
       const wrap = document.getElementById("examList");
       try {
         const res = await authFetch("/exam/history/" + viewUserId);
-        if (!res.ok){ wrap.innerHTML = '<div class="ex-empty">Tarixni yuklab bo\'lmadi.</div>'; if(window.lucide)lucide.createIcons(); return; }
+        if (!res.ok){ wrap.innerHTML = '<div class="ex-empty">' + profileT("profile.historyLoadFailed") + '</div>'; if(window.lucide)lucide.createIcons(); return; }
         const d = await res.json();
         const list = d.attempts || [];
+        examAttempts = list;
         if (list.length === 0){
-          wrap.innerHTML = '<div class="ex-empty">Hali imtihon topshirilmagan. Ultimate Exam orqali keyingi darajaga o\'ting!</div>';
+          wrap.innerHTML = '<div class="ex-empty">' + profileT("profile.noExamYet") + '</div>';
           if(window.lucide)lucide.createIcons(); return;
         }
         wrap.innerHTML = list.map(exItem).join("");
         if (window.lucide) lucide.createIcons();
-      } catch(e){ wrap.innerHTML = '<div class="ex-empty">Server bilan aloqa yo\'q.</div>'; }
+      } catch(e){ wrap.innerHTML = '<div class="ex-empty">' + profileT("profile.serverUnavailable") + '</div>'; }
     }
 
     function exItem(a){
@@ -1174,17 +1284,17 @@
         const ok = pct >= passReq;
         const col = ok ? "var(--green)" : "var(--red)";
         skillHtml += '<div class="ex-skill-row">' +
-          '<span class="ex-skill-name">'+ (EX_SKILL_LABEL[k] || k) +'</span>' +
+          '<span class="ex-skill-name">'+ (EX_SKILL_LABEL[k] ? profileT(EX_SKILL_LABEL[k]) : k) +'</span>' +
           '<div class="ex-skill-bar"><span style="width:'+pct+'%;background:'+col+'"></span></div>' +
           '<span class="ex-skill-pct '+(ok?"ok":"no")+'">'+pct+'%</span>' +
         '</div>';
       }
-      if (!skillHtml) skillHtml = '<div class="ex-empty">Skill tafsiloti yo\'q.</div>';
+      if (!skillHtml) skillHtml = '<div class="ex-empty">' + profileT("profile.noSkillDetails") + '</div>';
 
       const toLevel = a.to_level || a.from_level;
       const note = a.passed
-        ? (a.level_changed ? ('Tabriklaymiz! Daraja '+a.from_level+' dan '+toLevel+' ga oshirildi.') : 'Imtihondan o\'tdingiz.')
-        : ('O\'tish uchun umumiy '+(a.pass_overall_required||75)+'% va har bo\'limda '+passReq+'% kerak edi.');
+        ? (a.level_changed ? profileT("profile.levelRaised", { from:a.from_level, to:toLevel }) : profileT("profile.examPassed"))
+        : profileT("profile.examRequirement", { overall:a.pass_overall_required||75, section:passReq });
 
       return '<div class="ex-item '+(a.passed?"passed":"failed")+'" id="exItem'+a.id+'">' +
         '<div class="ex-head" onclick="toggleExam('+a.id+')">' +
@@ -1192,12 +1302,12 @@
             '<span class="ex-arrow"><i data-lucide="arrow-right"></i></span>' +
             '<span class="ex-lv to">'+escExam(toLevel)+'</span></div>' +
           '<div class="ex-mid"><div class="ex-pct">'+a.overall_percent+'%</div><div class="ex-date">'+exFmtDate(a.taken_at)+'</div></div>' +
-          '<span class="ex-badge '+(a.passed?"passed":"failed")+'">'+(a.passed?"O\'tdi":"Yiqildi")+'</span>' +
+          '<span class="ex-badge '+(a.passed?"passed":"failed")+'">'+profileT(a.passed?"profile.passed":"profile.failed")+'</span>' +
           '<span class="ex-chevron"><i data-lucide="chevron-down"></i></span>' +
         '</div>' +
         '<div class="ex-body">' +
           skillHtml +
-          '<div class="ex-note">'+note+' · '+a.total_correct+'/'+a.total_questions+' to\'g\'ri</div>' +
+          '<div class="ex-note">'+note+' · '+profileT("profile.correctTotal", { correct:a.total_correct, total:a.total_questions })+'</div>' +
         '</div>' +
       '</div>';
     }
@@ -1208,7 +1318,7 @@
     if (isOwnStudentProfile) loadExamHistory();
 
     // ===== AI HAFTALIK HISOBOT (student) =====
-    const AI_CONF_LABEL = { high:"Yuqori ishonch", medium:"O'rta ishonch", low:"Past ishonch" };
+    function aiConfidenceLabel(level) { return profileT("profile.aiConfidence." + String(level || "medium")); }
 
     async function loadAIReport(force){
       const card = document.getElementById("aiCard");
@@ -1223,52 +1333,65 @@
         if (!res.ok) { renderAIError(body, data.error); if(window.lucide)lucide.createIcons(); return; }
         if (data.report && data.report.status === "insufficient_data") { renderAIInsuf(body, data.report); if(window.lucide)lucide.createIcons(); return; }
         renderAIReport(body, data);
-      } catch(e) { renderAIError(body, "Server bilan aloqa yo'q"); }
+      } catch(e) { renderAIError(body, profileT("profile.serverUnavailable")); }
       if (window.lucide) lucide.createIcons();
     }
 
     function renderAILocked(body){
+      aiRenderState = { type: "locked" };
       body.innerHTML = [
         '<div class="ai-empty ai-premium-lock">',
           '<div class="ai-empty-ic"><i data-lucide="sparkles"></i></div>',
-          '<span class="ai-premium-kicker">PREMIUM FUNKSIYA</span>',
-          '<h4>Shaxsiy AI murabbiyingiz</h4>',
-          '<p>Haftalik natijalaringiz tahlili, kuchli va zaif tomonlaringiz hamda keyingi hafta uchun aniq mashq rejasi.</p>',
+          '<span class="ai-premium-kicker">'+escExam(profileT("profile.premiumFeature"))+'</span>',
+          '<h4>'+escExam(profileT("profile.personalAiCoach"))+'</h4>',
+          '<p>'+escExam(profileT("profile.personalAiCoachText"))+'</p>',
           '<div class="ai-premium-features">',
-            '<div class="ai-premium-feature"><i data-lucide="chart-line"></i><span>Haftalik natijalar tahlili</span></div>',
-            '<div class="ai-premium-feature"><i data-lucide="target"></i><span>Kuchli va zaif tomonlar</span></div>',
-            '<div class="ai-premium-feature"><i data-lucide="calendar-check"></i><span>Shaxsiy mashq rejasi</span></div>',
+            '<div class="ai-premium-feature"><i data-lucide="chart-line"></i><span>'+escExam(profileT("profile.weeklyAnalysis"))+'</span></div>',
+            '<div class="ai-premium-feature"><i data-lucide="target"></i><span>'+escExam(profileT("profile.strengthsWeaknesses"))+'</span></div>',
+            '<div class="ai-premium-feature"><i data-lucide="calendar-check"></i><span>'+escExam(profileT("profile.personalPracticePlan"))+'</span></div>',
           '</div>',
-          '<button type="button" class="ai-premium-btn" onclick="window.openPaymentModal(\'student_premium\')"><i data-lucide="star"></i><span>Premium olish</span></button>',
+          '<button type="button" class="ai-premium-btn" onclick="window.openPaymentModal(\'student_premium\')"><i data-lucide="star"></i><span>'+escExam(profileT("profile.getPremium"))+'</span></button>',
         '</div>',
       ].join("");
     }
     function renderAIInsuf(body, rep){
+      aiRenderState = { type: "insufficient", report: rep };
       const steps = (rep.next_steps||[]).map(s=>`<li>${escExam(s)}</li>`).join("");
-      body.innerHTML = '<div class="ai-empty"><div class="ai-empty-ic"><i data-lucide="info"></i></div><h4>'+escExam(rep.title||"Hali yetarli ma\'lumot yo\'q")+'</h4><p>'+escExam(rep.message||"")+'</p>'+(steps?'<ul>'+steps+'</ul>':"")+'</div>';
+      body.innerHTML = '<div class="ai-empty"><div class="ai-empty-ic"><i data-lucide="info"></i></div><h4>'+escExam(rep.title||profileT("profile.insufficientData"))+'</h4><p>'+escExam(rep.message||"")+'</p>'+(steps?'<ul>'+steps+'</ul>':"")+'</div>';
     }
     function renderAIError(body, msg){
-      body.innerHTML = '<div class="ai-empty"><div class="ai-empty-ic" style="color:#fca5a5;background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)"><i data-lucide="alert-circle"></i></div><h4>Hisobot tayyorlanmadi</h4><p>'+escExam(msg||"Keyinroq urinib ko\'ring.")+'</p><button class="ai-refresh" onclick="loadAIReport()"><i data-lucide="refresh-cw"></i> Qayta urinish</button></div>';
+      aiRenderState = { type: "error", message: msg };
+      body.innerHTML = '<div class="ai-empty"><div class="ai-empty-ic" style="color:#fca5a5;background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)"><i data-lucide="alert-circle"></i></div><h4>'+escExam(profileT("profile.reportFailed"))+'</h4><p>'+escExam(msg||profileT("profile.tryLater"))+'</p><button class="ai-refresh" onclick="loadAIReport()"><i data-lucide="refresh-cw"></i> '+escExam(profileT("profile.retry"))+'</button></div>';
     }
     function aiBlk(cls, icon, title, items){
       if (!items || !items.length) return "";
       return '<div class="ai-blk '+cls+'"><div class="ai-blk-h"><i data-lucide="'+icon+'"></i>'+title+'</div><ul class="ai-ul">'+items.map(t=>`<li>${escExam(t)}</li>`).join("")+'</ul></div>';
     }
     function renderAIReport(body, data){
+      aiRenderState = { type: "report", data: data };
       const r = data.report || {};
       const conf = r.confidence || data.confidence || "medium";
       let h = "";
       if (r.summary) h += '<div class="ai-summary-box">'+escExam(r.summary)+'</div>';
-      h += aiBlk("s","check-circle","Kuchli tomonlaring", r.strengths);
-      h += aiBlk("w","alert-triangle","Yaxshilash kerak", r.weaknesses);
-      h += aiBlk("n","target","Keyingi qadamlar", r.next_steps);
+      h += aiBlk("s","check-circle",profileT("profile.yourStrengths"), r.strengths);
+      h += aiBlk("w","alert-triangle",profileT("profile.needsImprovement"), r.weaknesses);
+      h += aiBlk("n","target",profileT("profile.nextSteps"), r.next_steps);
       if (r.motivation) h += '<div class="ai-motiv"><i data-lucide="flame"></i><span>'+escExam(r.motivation)+'</span></div>';
-      h += '<div class="ai-foot"><span class="ai-conf '+conf+'"><i data-lucide="shield-check" style="width:12px;height:12px"></i>'+(AI_CONF_LABEL[conf]||conf)+'</span><button class="ai-refresh" id="aiRefreshBtn" onclick="refreshAIReport()"><i data-lucide="refresh-cw"></i> Yangilash</button></div>';
-      body.innerHTML = h || '<div class="ai-empty"><p>Hisobot bo\'sh.</p></div>';
+      h += '<div class="ai-foot"><span class="ai-conf '+conf+'"><i data-lucide="shield-check" style="width:12px;height:12px"></i>'+aiConfidenceLabel(conf)+'</span><button class="ai-refresh" id="aiRefreshBtn" onclick="refreshAIReport()"><i data-lucide="refresh-cw"></i> '+escExam(profileT("profile.refresh"))+'</button></div>';
+      body.innerHTML = h || '<div class="ai-empty"><p>'+escExam(profileT("profile.emptyReport"))+'</p></div>';
+    }
+    function rerenderAIForLanguage(){
+      const body = document.getElementById("aiBody");
+      const state = aiRenderState;
+      if (!body || !state) return;
+      if (state.type === "locked") renderAILocked(body);
+      else if (state.type === "insufficient") renderAIInsuf(body, state.report || {});
+      else if (state.type === "error") renderAIError(body, state.message);
+      else if (state.type === "report") renderAIReport(body, state.data || {});
     }
     async function refreshAIReport(){
       const btn = document.getElementById("aiRefreshBtn");
-      if (btn){ btn.disabled = true; btn.innerHTML = "Yangilanmoqda..."; }
+      if (btn){ btn.disabled = true; btn.innerHTML = profileT("profile.refreshing"); }
       await loadAIReport(true);
     }
 
@@ -1276,14 +1399,14 @@
 
     createRankInfoDialog({
       triggerId: "profileRankInfoButton",
-      title: "Joriy rank",
-      subtitle: "Rating va keyingi liga bo‘yicha holat",
+      title: function () { return profileT("profile.currentRank"); },
+      subtitle: function () { return profileT("profile.rankDialogSubtitle"); },
       headerIcon: "shield",
-      primaryLabel: "Joriy liga",
-      secondaryLabel: "Rating",
+      primaryLabel: function () { return profileT("profile.currentLeague"); },
+      secondaryLabel: function () { return profileT("profile.rating"); },
       detailType: "scopes",
       footerHref: "/leaderboard.html",
-      footerLabel: "To‘liq rankingni ko‘rish",
+      footerLabel: function () { return profileT("profile.viewFullRanking"); },
       getData: function () {
         const details = currentRankDetails;
         const rating = details ? Number(details.rating) : (Number(document.getElementById("rankRP").textContent) || 0);
@@ -1293,12 +1416,12 @@
         return {
           primary: currentName,
           secondary: rating + " RP",
-          progress: details ? { label: next ? next.name : "Eng yuqori liga", percent: details.progress + "%" } : null,
+          progress: details ? { label: next ? next.name : profileT("profile.highestLeague"), percent: details.progress + "%" } : null,
           scopes: [
-            { icon: "shield", name: "Joriy liga", description: "Hozirgi rating bosqichi", value: currentName },
-            { icon: "trophy", name: "Joriy rating", description: "Reytingli janglardagi RP", value: rating + " RP" },
-            { icon: "arrow-up-right", name: "Keyingi liga", description: next ? "Navbatdagi rating bosqichi" : "Eng yuqori bosqichga erishilgan", value: next ? next.name : "Grandmaster" },
-            { icon: "target", name: "Qolgan rating", description: next ? "Keyingi ligaga yetish uchun" : "Keyingi liga mavjud emas", value: next ? remaining + " RP" : "0 RP" },
+            { icon: "shield", name: profileT("profile.currentLeague"), description: profileT("profile.currentRatingStage"), value: currentName },
+            { icon: "trophy", name: profileT("profile.currentRating"), description: profileT("profile.rankedBattleRp"), value: rating + " RP" },
+            { icon: "arrow-up-right", name: profileT("profile.nextLeague"), description: profileT(next ? "profile.nextRatingStage" : "profile.highestStageReached"), value: next ? next.name : "Grandmaster" },
+            { icon: "target", name: profileT("profile.remainingRating"), description: profileT(next ? "profile.toReachNextLeague" : "profile.noNextLeague"), value: next ? remaining + " RP" : "0 RP" },
           ],
         };
       },
@@ -1306,11 +1429,11 @@
 
     createRankInfoDialog({
       triggerId: "cefrProgressInfoButton",
-      title: "CEFR daraja progressi",
-      subtitle: "Joriy darajadan keyingi bosqichga o‘tish yo‘li",
+      title: function () { return profileT("profile.cefrProgressTitle"); },
+      subtitle: function () { return profileT("profile.cefrProgressSubtitle"); },
       headerIcon: "graduation-cap",
-      primaryLabel: "Joriy daraja",
-      secondaryLabel: "Keyingi daraja",
+      primaryLabel: function () { return profileT("profile.currentLevel"); },
+      secondaryLabel: function () { return profileT("profile.nextLevel"); },
       detailType: "scopes",
       hideFooter: true,
       getData: function () {
@@ -1318,15 +1441,51 @@
         const next = nextCefrLevels[current];
         return {
           primary: current,
-          secondary: next || "C2 — yakunlangan",
+          secondary: next || profileT("profile.c2Completed"),
           scopes: [
-            { icon: "book-open", name: "Joriy bosqich", description: cefrLabels[current] || "CEFR darajasi", value: current },
-            { icon: "arrow-up-right", name: "Keyingi bosqich", description: next ? (cefrLabels[next] || "CEFR darajasi") : "Eng yuqori CEFR darajasi", value: next || "C2" },
-            { icon: "clipboard-check", name: "O‘tish usuli", description: next ? "Daraja imtihonini muvaffaqiyatli yakunlang" : "Barcha CEFR bosqichlari tugallangan", value: next ? "Ultimate Exam" : "Bajarildi" },
-            { icon: "route", name: "Darajalar yo‘li", description: "CEFR bosqichlari ketma-ketligi", value: "A1 → C2" },
+            { icon: "book-open", name: profileT("profile.currentStage"), description: cefrLabel(current), value: current },
+            { icon: "arrow-up-right", name: profileT("profile.nextStage"), description: next ? cefrLabel(next) : profileT("profile.highestCefr"), value: next || "C2" },
+            { icon: "clipboard-check", name: profileT("profile.transitionMethod"), description: profileT(next ? "profile.passLevelExam" : "profile.allCefrCompleted"), value: next ? "Ultimate Exam" : profileT("profile.completed") },
+            { icon: "route", name: profileT("profile.levelPath"), description: profileT("profile.cefrSequence"), value: "A1 → C2" },
           ],
         };
       },
+    });
+
+    window.addEventListener("ilmliga:languagechange", function () {
+      if (!isOwnProfile) {
+        const pageDesc = document.querySelector(".page-head p");
+        if (pageDesc) pageDesc.textContent = profileT("profile.publicProfile");
+      }
+
+      if (profileData && profileData.user) {
+        const profileUser = profileData.user;
+        const stats = profileData.stats || {};
+        const profileName = [profileUser.first_name, profileUser.last_name].filter(Boolean).join(" ").trim();
+        document.getElementById("pcName").textContent = profileName || profileT("profile.player");
+        document.getElementById("pcCefrLabel").textContent = cefrLabel(profileUser.cefr_level || "A1");
+        document.getElementById("abBio").textContent = profileUser.bio || profileT("profile.defaultBio");
+        document.getElementById("abFavoriteMode").textContent = stats.favorite_mode_label || profileT("profile.noGamesYet");
+        renderCefrTrackFor(profileUser.cefr_level || "A1");
+        setupRank(profileUser.rating || 1000);
+        setupNextLevel(profileUser.cefr_level || "A1");
+        renderAchievements(profileUser, stats);
+        renderAchievementSummary(profileUser, stats);
+      }
+
+      if (historyBattles) renderHistory(historyBattles);
+      if (_parentCodeExpiry) {
+        document.getElementById("paExpiry").textContent = profileT("profile.validUntil", { date: paFmtDate(_parentCodeExpiry) });
+      }
+      if (parentRecords) renderParentList(parentRecords);
+      if (examAttempts) {
+        const examList = document.getElementById("examList");
+        examList.innerHTML = examAttempts.length
+          ? examAttempts.map(exItem).join("")
+          : '<div class="ex-empty">' + profileT("profile.noExamYet") + '</div>';
+      }
+      rerenderAIForLanguage();
+      if (window.lucide) window.lucide.createIcons();
     });
 
     // Lucide ikonalar

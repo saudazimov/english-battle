@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Turnir jangi</title>
+  <title data-tb-i18n="metaTitle">English Battle — Turnir jangi</title>
   <link rel="stylesheet" href="/app.css">
   <style>
     body { display: block; }
@@ -104,16 +104,22 @@
 </head>
 <body>
   <div class="tb-wrap">
-    <a href="/school-tournaments.html" class="tb-back"><i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Turnirlar</a>
+    <a href="/school-tournaments.html" class="tb-back"><i data-lucide="arrow-left" style="width:16px;height:16px;"></i> <span data-tb-i18n="tournaments">Turnirlar</span></a>
     <div id="tbContent">
-      <div class="tb-loading">Yuklanmoqda...</div>
+      <div class="tb-loading" data-tb-i18n="loading">Yuklanmoqda...</div>
     </div>
   </div>
 
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/i18n.js"></script>
+  <script src="/tournament-battle-i18n.js"></script>
   <script>
+    function tbT(key, params) {
+      return window.TournamentBattleI18n ? window.TournamentBattleI18n.t(key, params) : key;
+    }
+
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
     const user = JSON.parse(userData);
@@ -121,7 +127,7 @@
     // Match ID ni URL dan olamiz: tournament-battle.html?match=1
     const params = new URLSearchParams(window.location.search);
     const matchId = params.get("match");
-    if (!matchId) document.getElementById("tbContent").innerHTML = '<div class="tb-error">Match ID topilmadi</div>';
+    if (!matchId) document.getElementById("tbContent").innerHTML = '<div class="tb-error">' + tbT("matchIdMissing") + '</div>';
 
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     function schoolLabel(school, schoolKey) {
@@ -180,11 +186,11 @@
       try {
         var r = await authFetch("/tournament/match/" + matchId + "/checkin-state");
         if (r.status === 403) {
-          document.getElementById("tbContent").innerHTML = '<div class="tb-error">Siz bu matchning ishtirokchisi emassiz</div>';
+          document.getElementById("tbContent").innerHTML = '<div class="tb-error">' + tbT("notParticipant") + '</div>';
           return;
         }
         if (!r.ok) {
-          document.getElementById("tbContent").innerHTML = '<div class="tb-error">Match topilmadi yoki yuklab bo\'lmadi</div>';
+          document.getElementById("tbContent").innerHTML = '<div class="tb-error">' + tbT("matchLoadFailed") + '</div>';
           return;
         }
         state = await r.json();
@@ -196,7 +202,7 @@
           render();
         }
       } catch (e) {
-        document.getElementById("tbContent").innerHTML = '<div class="tb-error">Xatolik yuz berdi</div>';
+        document.getElementById("tbContent").innerHTML = '<div class="tb-error">' + tbT("unexpectedError") + '</div>';
       }
     }
 
@@ -220,7 +226,7 @@
           render(); // hali live emas
         }
       } catch (e) {
-        document.getElementById("tbContent").innerHTML = '<div class="tb-error">Jang yuklanmadi</div>';
+        document.getElementById("tbContent").innerHTML = '<div class="tb-error">' + tbT("battleLoadFailed") + '</div>';
       }
     }
 
@@ -259,16 +265,16 @@
       // Scoreboard
       html += '<div class="tb-scoreboard">' +
         '<div class="tb-sb-team' + (m.school_a_key === mySchoolKey ? " mine" : "") + '"><div class="tb-sb-name">' + esc(schoolLabel(m.school_a, m.school_a_key)) + '</div><div class="tb-sb-score">' + scoreA + '</div></div>' +
-        '<div><div class="tb-sb-timer"><div class="tb-sb-timer-time" id="battleTimer">--:--</div><div class="tb-sb-timer-label">qolgan vaqt</div></div></div>' +
+        '<div><div class="tb-sb-timer"><div class="tb-sb-timer-time" id="battleTimer">--:--</div><div class="tb-sb-timer-label">' + tbT("timeRemaining") + '</div></div></div>' +
         '<div class="tb-sb-team' + (m.school_b_key === mySchoolKey ? " mine" : "") + '"><div class="tb-sb-name">' + esc(schoolLabel(m.school_b, m.school_b_key)) + '</div><div class="tb-sb-score">' + scoreB + '</div></div>' +
       '</div>';
 
       // Progress
-      html += '<div class="tb-progress">Savol ' + (qIndex + 1) + ' / ' + total + '</div>';
+      html += '<div class="tb-progress">' + tbT("questionProgress", { current: qIndex + 1, total: total }) + '</div>';
 
       // Savol
       html += '<div class="tb-qcard">' +
-        '<div class="tb-qnum">Savol ' + (qIndex + 1) + '</div>' +
+        '<div class="tb-qnum">' + tbT("questionNumber", { current: qIndex + 1 }) + '</div>' +
         '<div class="tb-qtext">' + esc(q.question_text) + '</div>' +
         '<div class="tb-options" id="optionsBox">';
       ['a', 'b', 'c', 'd'].forEach(function (letter) {
@@ -370,9 +376,9 @@
         '<div class="tb-vs-title">' + esc(schoolLabel(m.school_a, m.school_a_key)) + ' vs ' + esc(schoolLabel(m.school_b, m.school_b_key)) + '</div></div>';
       html += '<div class="tb-finished-box">' +
         '<div class="tb-finished-ic wait"><i data-lucide="hourglass"></i></div>' +
-        '<div class="tb-finished-title">Siz tugatdingiz!</div>' +
+        '<div class="tb-finished-title">' + tbT("youFinished") + '</div>' +
         '<div class="tb-final-score">' + esc(schoolLabel(m.school_a, m.school_a_key)) + ' ' + (battle.team_scores[m.school_a_key] || 0) + ' — ' + (battle.team_scores[m.school_b_key] || 0) + ' ' + esc(schoolLabel(m.school_b, m.school_b_key)) + '</div>' +
-        '<div class="tb-finished-sub">Boshqa o\'yinchilar tugatishini kuting. Natija avtomatik chiqadi.</div>' +
+        '<div class="tb-finished-sub">' + tbT("waitForPlayers") + '</div>' +
       '</div>';
       document.getElementById("tbContent").innerHTML = html;
       lucide.createIcons();
@@ -389,7 +395,7 @@
 
       var icCls = isDraw ? "wait" : (iWon ? "win" : "lose");
       var icName = isDraw ? "minus" : (iWon ? "trophy" : "x");
-      var title = isDraw ? "Durang!" : (iWon ? "G'alaba! 🎉" : "Mag'lubiyat");
+      var title = isDraw ? tbT("draw") : (iWon ? tbT("victory") : tbT("defeat"));
 
       var html = '<div class="tb-head"><div class="tb-tournament">' + esc(m.tournament_name) + '</div>' +
         '<div class="tb-vs-title">' + esc(schoolLabel(m.school_a, m.school_a_key)) + ' vs ' + esc(schoolLabel(m.school_b, m.school_b_key)) + '</div></div>';
@@ -397,8 +403,8 @@
         '<div class="tb-finished-ic ' + icCls + '"><i data-lucide="' + icName + '"></i></div>' +
         '<div class="tb-finished-title">' + title + '</div>' +
         '<div class="tb-final-score">' + esc(schoolLabel(m.school_a, m.school_a_key)) + ' ' + scoreA + ' — ' + scoreB + ' ' + esc(schoolLabel(m.school_b, m.school_b_key)) + '</div>' +
-        (winner ? '<div class="tb-finished-sub">G\'olib: <b>' + esc(schoolLabel(winner, m.winner_school_key)) + '</b></div>' : '<div class="tb-finished-sub">Natija teng yakunlandi</div>') +
-        '<div style="margin-top:24px;"><a href="/school-tournaments.html" class="tb-ready-btn" style="text-decoration:none;display:inline-block;background:var(--panel-2);color:var(--text);">Turnirlarga qaytish</a></div>' +
+        (winner ? '<div class="tb-finished-sub">' + tbT("winnerLabel") + ': <b>' + esc(schoolLabel(winner, m.winner_school_key)) + '</b></div>' : '<div class="tb-finished-sub">' + tbT("drawResult") + '</div>') +
+        '<div style="margin-top:24px;"><a href="/school-tournaments.html" class="tb-ready-btn" style="text-decoration:none;display:inline-block;background:var(--panel-2);color:var(--text);">' + tbT("backToTournaments") + '</a></div>' +
       '</div>';
       document.getElementById("tbContent").innerHTML = html;
       lucide.createIcons();
@@ -430,10 +436,10 @@
 
       // Status banner
       var statusMap = {
-        checkin: { cls: "checkin", icon: "clock", text: "Check-in ochiq — jangga tayyorlaning" },
-        live: { cls: "live", icon: "swords", text: "Jang boshlandi!" },
-        done: { cls: "done", icon: "flag", text: "Match yakunlandi" },
-        pending: { cls: "checkin", icon: "clock", text: "Match hali boshlanmagan" },
+        checkin: { cls: "checkin", icon: "clock", text: tbT("checkinOpen") },
+        live: { cls: "live", icon: "swords", text: tbT("battleStarted") },
+        done: { cls: "done", icon: "flag", text: tbT("matchFinished") },
+        pending: { cls: "checkin", icon: "clock", text: tbT("matchPending") },
       };
       var stt = statusMap[m.status] || statusMap.pending;
 
@@ -446,7 +452,7 @@
 
       // Countdown (faqat checkin holatida, scheduled_at gacha)
       if (m.status === "checkin" && m.scheduled_at) {
-        html += '<div class="tb-countdown"><div class="tb-countdown-label">Jang boshlanishigacha</div><div class="tb-countdown-time" id="cdTime">--:--</div></div>';
+        html += '<div class="tb-countdown"><div class="tb-countdown-label">' + tbT("untilBattleStarts") + '</div><div class="tb-countdown-time" id="cdTime">--:--</div></div>';
       }
 
       // Ikki jamoa
@@ -459,11 +465,11 @@
       // Tayyorman tugma (faqat checkin va men hali tayyor bo'lmagan bo'lsam)
       if (m.status === "checkin") {
         if (state.my_checked_in) {
-          html += '<div class="tb-action"><button class="tb-ready-btn done"><i data-lucide="check" style="width:18px;height:18px;vertical-align:-3px;"></i> Siz tayyorsiz</button>' +
-            '<div class="tb-ready-hint">Boshqa o\'yinchilar tayyor bo\'lishini kuting. Jang belgilangan vaqtda avtomatik boshlanadi.</div></div>';
+          html += '<div class="tb-action"><button class="tb-ready-btn done"><i data-lucide="check" style="width:18px;height:18px;vertical-align:-3px;"></i> ' + tbT("youAreReady") + '</button>' +
+            '<div class="tb-ready-hint">' + tbT("readyWaitHint") + '</div></div>';
         } else {
-          html += '<div class="tb-action"><button class="tb-ready-btn" onclick="doCheckin()"><i data-lucide="swords" style="width:18px;height:18px;vertical-align:-3px;"></i> Tayyorman!</button>' +
-            '<div class="tb-ready-hint">"Tayyorman" bosib, jangga qatnashishingizni tasdiqlang.</div></div>';
+          html += '<div class="tb-action"><button class="tb-ready-btn" onclick="doCheckin()"><i data-lucide="swords" style="width:18px;height:18px;vertical-align:-3px;"></i> ' + tbT("readyButton") + '</button>' +
+            '<div class="tb-ready-hint">' + tbT("readyConfirmHint") + '</div></div>';
         }
       }
 
@@ -486,14 +492,14 @@
           '<div class="tb-team-ic"><i data-lucide="building-2"></i></div>' +
           '<div class="tb-team-name">' + esc(schoolLabel(school, schoolKey)) + '</div>' +
         '</div>' +
-        '<div class="tb-team-ready" style="margin-bottom:10px;"><b>' + readyCount + '</b> / ' + members.length + ' tayyor</div>';
+        '<div class="tb-team-ready" style="margin-bottom:10px;">' + tbT("readyCount", { ready: '<b>' + readyCount + '</b>', total: members.length }) + '</div>';
 
       members.forEach(function (p) {
         html += '<div class="tb-member">' +
           '<div class="tb-member-ava">' + avatarHtml(p.name, p.profile_picture) + '</div>' +
-          '<div style="flex:1;min-width:0;"><div class="tb-member-name' + (p.is_me ? " me" : "") + '">' + esc(p.name) + (p.is_me ? " (siz)" : "") + '</div>' +
-          '<div class="tb-member-role">' + (p.role === "reserve" ? "Zaxira" : "Asosiy") + '</div></div>' +
-          '<span class="tb-member-status ' + (p.checked_in ? "ready" : "waiting") + '">' + (p.checked_in ? "✓ Tayyor" : "Kutilmoqda") + '</span>' +
+          '<div style="flex:1;min-width:0;"><div class="tb-member-name' + (p.is_me ? " me" : "") + '">' + esc(p.name) + (p.is_me ? " (" + tbT("you") + ")" : "") + '</div>' +
+          '<div class="tb-member-role">' + (p.role === "reserve" ? tbT("reserve") : tbT("starter")) + '</div></div>' +
+          '<span class="tb-member-status ' + (p.checked_in ? "ready" : "waiting") + '">' + (p.checked_in ? "✓ " + tbT("ready") : tbT("waiting")) + '</span>' +
         '</div>';
       });
 
@@ -528,14 +534,26 @@
         if (d.success) {
           loadState();
         } else {
-          alert(d.error || "Check-in xatosi");
+          alert(d.error || tbT("checkinError"));
         }
       } catch (e) {
-        alert("Server xatosi");
+        alert(tbT("serverError"));
       }
     }
 
     if (matchId) loadState();
+    window.addEventListener("ilmliga:languagechange", function () {
+      if (battle) {
+        if (battle.status === "done") renderResult();
+        else if (battle.my_finished) renderWaiting();
+        else renderBattle();
+      } else if (state) {
+        render();
+      } else if (!matchId) {
+        document.getElementById("tbContent").innerHTML = '<div class="tb-error">' + tbT("matchIdMissing") + '</div>';
+      }
+      window.TournamentBattleI18n.apply();
+    });
     lucide.createIcons();
   </script>
 </body>

@@ -13,6 +13,49 @@
   if (window.__teacherSidebarLoaded) return;
   window.__teacherSidebarLoaded = true;
 
+  var teacherActiveKey = null;
+
+  function waitForTeacherI18n(callback) {
+    if (window.IlmLigaI18n || window.__ilmLigaI18nLoadFailed) return false;
+    if (!window.__ilmLigaI18nPromise) {
+      window.__ilmLigaI18nPromise = new Promise(function (resolve) {
+        var script = document.createElement("script");
+        script.src = "/i18n.js";
+        script.onload = resolve;
+        script.onerror = function () {
+          window.__ilmLigaI18nLoadFailed = true;
+          resolve();
+        };
+        document.head.appendChild(script);
+      });
+    }
+    window.__ilmLigaI18nPromise.then(callback);
+    return true;
+  }
+
+  function waitForTeacherLanguageSwitcher(callback) {
+    if (window.IlmLigaLanguageSwitcher || window.__ilmLigaLanguageSwitcherLoadFailed) return false;
+    if (!window.__ilmLigaLanguageSwitcherPromise) {
+      window.__ilmLigaLanguageSwitcherPromise = new Promise(function (resolve) {
+        var script = document.createElement("script");
+        script.src = "/language-switcher.js?v=13";
+        script.onload = resolve;
+        script.onerror = function () {
+          window.__ilmLigaLanguageSwitcherLoadFailed = true;
+          resolve();
+        };
+        document.head.appendChild(script);
+      });
+    }
+    window.__ilmLigaLanguageSwitcherPromise.then(callback);
+    return true;
+  }
+
+  function teacherT(key, fallback, params) {
+    if (window.IlmLigaI18n) return window.IlmLigaI18n.t(key, params);
+    return fallback;
+  }
+
   // Sidebar o'z tema o'zgaruvchilarini aniqlaydi (har sahifada to'g'ri ishlaydi)
   var css =
     ':root{--tsb-bg:#ffffff;--tsb-border:#e8edf5;--tsb-text:#1a2233;--tsb-sub:#5d6b85;--tsb-dim:#8b97ad;--tsb-hover:#eef2f9;--tsb-accent:#7c5cfc;--tsb-primary:#2f6bff;--tsb-accent-soft:#efe9ff;--tsb-primary-soft:#e8efff;--tsb-green:#16b06a;--tsb-green-soft:#e0f5ec;--tsb-red:#ef4655;}' +
@@ -48,6 +91,7 @@
     '.tsb-promo-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;padding:4px 11px;border-radius:999px;background:var(--tsb-green);color:#fff;margin-bottom:8px;}' +
     '.tsb-promo-exp{font-size:11px;color:var(--tsb-sub);margin-bottom:10px;}' +
     '.tsb-promo-btn{width:100%;padding:9px;border:none;border-radius:9px;cursor:pointer;background:linear-gradient(135deg,var(--tsb-accent),var(--tsb-primary));color:#fff;font-size:12.5px;font-weight:700;font-family:inherit;}' +
+    '.tsb-language{margin-top:14px;}' +
     '.tsb-foot{margin-top:14px;padding-top:14px;border-top:1px solid var(--tsb-border);display:flex;align-items:center;gap:9px;color:var(--tsb-dim);font-size:13px;font-weight:600;cursor:pointer;padding-left:8px;}' +
     '.tsb-foot svg{width:18px;height:18px;}' +
     '.tsb-foot + .tsb-foot{margin-top:8px;padding-top:0;border-top:0;}' +
@@ -82,7 +126,20 @@
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
   }
 
+  function teacherLanguageSelected(language) {
+    var current = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+    return current === language ? " selected" : "";
+  }
+
+  function teacherLocale() {
+    var language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+    return { uz: "uz-UZ", en: "en-US", ru: "ru-RU" }[language] || "uz-UZ";
+  }
+
   window.renderTeacherSidebar = function (activeKey) {
+    teacherActiveKey = activeKey;
+    if (waitForTeacherI18n(function () { window.renderTeacherSidebar(activeKey); })) return;
+    if (waitForTeacherLanguageSwitcher(function () { window.renderTeacherSidebar(activeKey); })) return;
     var mount = document.getElementById("teacherSidebar");
     if (!mount) return;
 
@@ -97,9 +154,9 @@
     var navHtml = ITEMS.map(function (it) {
       var isActive = it.key === activeKey ? " active" : "";
       var extra = "";
-      if (it.tag) extra = '<span class="tsb-tag">' + it.tag + '</span>';
+      if (it.tag) extra = '<span class="tsb-tag">' + teacherT("teacher.new", it.tag) + '</span>';
       if (it.badge) extra = '<span class="tsb-badge">' + it.badge + '</span>';
-      var inner = svgWrap(it.svg) + it.label + extra;
+      var inner = svgWrap(it.svg) + teacherT("teacher.nav." + (it.key === "ai" ? "aiReports" : it.key), it.label) + extra;
       if (it.href) {
         return '<a class="tsb-item' + isActive + '" href="' + it.href + '">' + inner + '</a>';
       }
@@ -111,24 +168,40 @@
       '<aside class="tsb">' +
         '<div class="tsb-logo">' +
           '<div class="tsb-logo-mark has-img">' + svgWrap('<path d="M12 2L3 7v6c0 5 3.5 8 9 9 5.5-1 9-4 9-9V7z"/>') + '<img src="/images/brand/logo-mark-new.svg" alt="IlmLiga" style="position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);object-fit:contain;" onerror="this.parentNode.classList.remove(\'has-img\');this.remove();"></div>' +
-          '<div><div class="tsb-logo-name">Ilm<span class="tsb-logo-accent">Liga</span></div><div class="tsb-logo-sub">Teacher Panel</div></div>' +
+          '<div><div class="tsb-logo-name">Ilm<span class="tsb-logo-accent">Liga</span></div><div class="tsb-logo-sub">' + teacherT("teacher.panel", "O‘qituvchi paneli") + '</div></div>' +
         '</div>' +
         '<nav class="tsb-nav">' + navHtml + '</nav>' +
         '<div class="tsb-promo" id="tsbPromo">' +
           '<div class="tsb-promo-ic"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg></div>' +
-          '<h4>Premium Teacher</h4>' +
-          '<p>Ko\'proq imkoniyatlar bilan o\'qitishni yengillashtiring.</p>' +
-          '<button class="tsb-promo-btn" onclick="window.openPaymentModal && window.openPaymentModal(\'teacher_pro\')">Premium ga o\'tish</button>' +
+          '<h4>' + teacherT("teacher.premiumTitle", "Premium Teacher") + '</h4>' +
+          '<p>' + teacherT("teacher.premiumDescription", "Ko‘proq imkoniyatlar bilan o‘qitishni yengillashtiring.") + '</p>' +
+          '<button class="tsb-promo-btn" onclick="window.openPaymentModal && window.openPaymentModal(\'teacher_pro\')">' + teacherT("teacher.upgrade", "Premiumga o‘tish") + '</button>' +
         '</div>' +
-        '<div class="tsb-foot" onclick="window.__tsbSoon(\'Yordam markazi\')">' +
+        '<div class="tsb-language" title="' + teacherT("topbar.language", "Til") + '">' +
+          '<select id="tsbLanguage" aria-label="' + teacherT("topbar.language", "Til") + '" onchange="window.changeTeacherLanguage(this.value)">' +
+            '<option value="uz"' + teacherLanguageSelected("uz") + '>UZ</option>' +
+            '<option value="en"' + teacherLanguageSelected("en") + '>EN</option>' +
+            '<option value="ru"' + teacherLanguageSelected("ru") + '>RU</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="tsb-foot" onclick="window.__tsbSoon(\'' + teacherT("teacher.helpCenter", "Yordam markazi") + '\')">' +
           svgWrap('<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>') +
-          'Yordam markazi' +
+          teacherT("teacher.helpCenter", "Yordam markazi") +
         '</div>' +
         '<div class="tsb-foot tsb-logout" onclick="window.__teacherLogout()">' +
           svgWrap('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>') +
-          'Tizimdan chiqish' +
+          teacherT("teacher.logout", "Tizimdan chiqish") +
         '</div>' +
       '</aside>';
+
+    if (window.IlmLigaLanguageSwitcher) {
+      window.IlmLigaLanguageSwitcher.mount({
+        selectId: "tsbLanguage",
+        ariaLabel: teacherT("topbar.language", "Til"),
+        placement: "top",
+        onChange: window.changeTeacherLanguage
+      });
+    }
 
     // Premium card real holatga ulaymiz (agar authFetch bor bo'lsa)
     loadSidebarSubscription();
@@ -137,7 +210,7 @@
   // comingSoon — agar sahifada o'zining comingSoon'i bo'lsa uni ishlatadi, bo'lmasa alert
   window.__tsbSoon = function (name) {
     if (typeof window.comingSoon === "function") { window.comingSoon(name); return; }
-    alert((name ? name + ": " : "") + "tez orada tayyor bo'ladi");
+    alert((name ? name + ": " : "") + teacherT("teacher.comingSoon", "tez orada tayyor bo‘ladi"));
   };
 
   window.__teacherLogout = async function () {
@@ -163,24 +236,27 @@
         var expText = "";
         if (d.expires_at) {
           var exp = new Date(d.expires_at);
-          expText = exp.toLocaleDateString("uz-UZ") + " gacha (" + d.days_left + " kun)";
+          expText = teacherT("teacher.subscriptionUntil", "{date} gacha ({days} kun)", {
+            date: exp.toLocaleDateString(teacherLocale()),
+            days: d.days_left
+          });
         }
         card.innerHTML =
           '<div class="tsb-promo-badge"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg> Teacher Pro</div>' +
-          '<h4>Faol obuna</h4>' +
+          '<h4>' + teacherT("teacher.activeSubscription", "Faol obuna") + '</h4>' +
           '<div class="tsb-promo-exp">' + esc(expText) + '</div>' +
-          '<p style="margin-bottom:0">Barcha imkoniyatlar ochiq. Rahmat!</p>';
+          '<p style="margin-bottom:0">' + teacherT("teacher.allFeatures", "Barcha imkoniyatlar ochiq. Rahmat!") + '</p>';
       } else {
         card.className = "tsb-promo";
         card.innerHTML =
           '<div class="tsb-promo-ic"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg></div>' +
-          '<h4>Premium Teacher</h4>' +
+          '<h4>' + teacherT("teacher.premiumTitle", "Premium Teacher") + '</h4>' +
           '<ul class="tsb-promo-limits">' +
-            '<li>' + dotSvg() + 'Bepul: 1 sinf</li>' +
-            '<li>' + dotSvg() + 'Bepul: 15 o\'quvchi</li>' +
-            '<li>' + dotSvg() + 'Bepul: 3 topshiriq/oy</li>' +
+            '<li>' + dotSvg() + teacherT("teacher.freeClass", "Bepul: 1 sinf") + '</li>' +
+            '<li>' + dotSvg() + teacherT("teacher.freeStudents", "Bepul: 15 o‘quvchi") + '</li>' +
+            '<li>' + dotSvg() + teacherT("teacher.freeAssignments", "Bepul: oyiga 3 topshiriq") + '</li>' +
           '</ul>' +
-          '<button class="tsb-promo-btn" onclick="window.openPaymentModal && window.openPaymentModal(\'teacher_pro\')">Teacher Pro olish</button>';
+          '<button class="tsb-promo-btn" onclick="window.openPaymentModal && window.openPaymentModal(\'teacher_pro\')">' + teacherT("teacher.getPro", "Teacher Pro olish") + '</button>';
       }
     } catch (e) { /* card default qoladi */ }
   }
@@ -193,4 +269,12 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
+
+  window.changeTeacherLanguage = function (language) {
+    if (window.IlmLigaI18n) window.IlmLigaI18n.setLanguage(language);
+  };
+
+  window.addEventListener("ilmliga:languagechange", function () {
+    if (teacherActiveKey != null) window.renderTeacherSidebar(teacherActiveKey);
+  });
 })();

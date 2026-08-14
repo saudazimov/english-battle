@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Maktablar reytingi</title>
+  <title data-i18n="rankings.metaTitle">Maktablar reytingi — IlmLiga</title>
+  <meta name="description" content="IlmLiga maktab, tuman va viloyatlar reytingini ko‘ring." data-i18n-content="rankings.metaDescription">
   <link rel="stylesheet" href="/app.css">
   <style>
     .app { grid-template-columns: 230px 1fr 340px; max-width: 1680px; }
@@ -123,6 +124,91 @@
       background: rgba(91,140,255,0.12) !important;
     }
 
+    @media (max-width: 640px) {
+      .filter-card,
+      .lb-card {
+        padding: 16px;
+      }
+      .ftab,
+      .ttab,
+      .wtab {
+        min-width: 0;
+        justify-content: center;
+        text-align: center;
+        white-space: normal;
+      }
+      .ftab {
+        flex: 1 1 calc(50% - 6px);
+      }
+      .ttab,
+      .wtab {
+        flex: 1 1 calc(50% - 8px);
+      }
+      .time-note {
+        width: 100%;
+        margin-left: 0;
+      }
+      .podium {
+        gap: 12px;
+      }
+      .podium-place,
+      .podium-place.first {
+        max-width: 100%;
+      }
+      .lb-cols {
+        display: none;
+      }
+      .lb-row,
+      .lb-row.with-dist {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        gap: 10px 12px;
+        padding: 14px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      .lb-rank {
+        grid-column: 1;
+        grid-row: 1;
+        align-self: center;
+      }
+      .lb-ent {
+        grid-column: 2;
+        min-width: 0;
+      }
+      .lb-ent > div:last-child,
+      .lb-name,
+      .lb-name-sub {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .lb-dist,
+      .lb-region,
+      .lb-players,
+      .lb-avg,
+      .lb-rating {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-width: 0;
+        padding-top: 8px;
+        border-top: 1px solid rgba(120,150,255,0.12);
+        text-align: right !important;
+      }
+      .lb-dist::before,
+      .lb-region::before,
+      .lb-players::before,
+      .lb-avg::before,
+      .lb-rating::before {
+        content: attr(data-label);
+        color: var(--text-dim);
+        font-size: 12px;
+        font-weight: 500;
+        text-align: left;
+      }
+    }
+
     
   </style>
   <link rel="stylesheet" href="responsive.css">
@@ -136,41 +222,41 @@
 
       <div class="page-head">
         <div class="crest-ic"><i data-lucide="building-2"></i></div>
-        <div><h1>Maktablar Reytingi</h1><p>Kuch (rating) + Mehnat (jang ochkosi) — birlashgan mavsumiy reyting.</p></div>
+        <div><h1 data-i18n="rankings.heading">Maktablar reytingi</h1><p data-i18n="rankings.subtitle">Kuch (rating) + Mehnat (jang ochkosi) — birlashgan mavsumiy reyting.</p></div>
       </div>
 
       <div class="card filter-card">
         <div class="filter-tabs">
-          <div class="ftab active" data-tab="schools" onclick="switchTab('schools')"><i data-lucide="building-2"></i> Maktablar</div>
-          <div class="ftab" data-tab="districts" onclick="switchTab('districts')"><i data-lucide="map"></i> Tumanlar</div>
-          <div class="ftab" data-tab="regions" onclick="switchTab('regions')"><i data-lucide="map-pin"></i> Viloyatlar</div>
+          <div class="ftab active" data-tab="schools" onclick="switchTab('schools')"><i data-lucide="building-2"></i> <span data-i18n="rankings.schools">Maktablar</span></div>
+          <div class="ftab" data-tab="districts" onclick="switchTab('districts')"><i data-lucide="map"></i> <span data-i18n="rankings.districts">Tumanlar</span></div>
+          <div class="ftab" data-tab="regions" onclick="switchTab('regions')"><i data-lucide="map-pin"></i> <span data-i18n="rankings.regions">Viloyatlar</span></div>
         </div>
         <div class="filter-time">
-          <div class="ttab" data-period="all" onclick="switchPeriod('all')"><i data-lucide="calendar"></i> Barcha vaqt</div>
-          <div class="ttab" data-period="week" onclick="switchPeriod('week')"><i data-lucide="sparkles"></i> Haftalik</div>
-          <div class="ttab" data-period="month" onclick="switchPeriod('month')"><i data-lucide="calendar-days"></i> Oylik</div>
-          <div class="ttab active" data-period="season" onclick="switchPeriod('season')"><i data-lucide="trophy"></i> Mavsum</div>
+          <div class="ttab" data-period="all" onclick="switchPeriod('all')"><i data-lucide="calendar"></i> <span data-i18n="rankings.allTime">Barcha vaqt</span></div>
+          <div class="ttab" data-period="week" onclick="switchPeriod('week')"><i data-lucide="sparkles"></i> <span data-i18n="rankings.weekly">Haftalik</span></div>
+          <div class="ttab" data-period="month" onclick="switchPeriod('month')"><i data-lucide="calendar-days"></i> <span data-i18n="rankings.monthly">Oylik</span></div>
+          <div class="ttab active" data-period="season" onclick="switchPeriod('season')"><i data-lucide="trophy"></i> <span data-i18n="rankings.season">Mavsum</span></div>
           <span class="time-note">Mavsum: shu mavsum mehnati + kuch</span>
         </div>
         <div class="filter-within" id="withinBar">
-          <span class="within-label">Miqyos</span>
+          <span class="within-label" data-i18n="rankings.scope">Miqyos</span>
         </div>
       </div>
 
-      <div class="podium" id="podium"><div class="podium-empty">Yuklanmoqda...</div></div>
+      <div class="podium" id="podium"><div class="podium-empty" data-i18n="rankings.loading">Yuklanmoqda...</div></div>
 
       <div class="card lb-card">
         <div class="lb-cols" id="lbCols">
-          <span>O'rin</span><span id="colName">Maktab</span><span id="colDist" style="display:none;">Tuman</span><span id="colReg" style="display:none;">Viloyat</span><span>O'yinchi</span><span>Mehnat</span><span>Reyting</span>
+          <span data-i18n="rankings.rank">O‘rin</span><span id="colName">Maktab</span><span id="colDist" style="display:none;" data-i18n="rankings.district">Tuman</span><span id="colReg" style="display:none;" data-i18n="rankings.region">Viloyat</span><span data-i18n="rankings.players">O‘yinchilar</span><span data-i18n="rankings.effort">Mehnat</span><span data-i18n="rankings.rating">Reyting</span>
         </div>
-        <div id="lbList"><div class="lb-empty">Yuklanmoqda...</div></div>
-        <div class="lb-foot">School Rating (Kuch + Mehnat) bo'yicha tartiblangan</div>
+        <div id="lbList"><div class="lb-empty" data-i18n="rankings.loading">Yuklanmoqda...</div></div>
+        <div class="lb-foot" data-i18n="rankings.sortNote">School Rating (Kuch + Mehnat) bo‘yicha tartiblangan</div>
       </div>
     </main>
 
     <aside class="rightbar">
       <div class="card rb-card">
-        <div class="rb-head"><span id="yrTitle">Sizning maktabingiz</span><i data-lucide="info" class="rb-info"></i></div>
+        <div class="rb-head"><span id="yrTitle" data-i18n="rankings.yourSchool">Sizning maktabingiz</span><i data-lucide="info" class="rb-info"></i></div>
         <div class="yr-top">
           <div class="yr-icon" id="yrIcon"></div>
           <div>
@@ -179,31 +265,31 @@
           </div>
         </div>
         <div class="yr-rows">
-          <div class="yr-row"><span>Reytingdagi o'rni</span><span class="yr-rank accent" id="yrRank">—</span></div>
-          <div class="yr-row"><span>School Rating</span><span class="yr-rank" id="yrRP">—</span></div>
-          <div class="yr-row"><span>Mavsum mehnati</span><span class="yr-rank" id="yrEffort">—</span></div>
-          <div class="yr-row"><span>O'yinchilar</span><span class="yr-rank" id="yrPlayers">—</span></div>
+          <div class="yr-row"><span data-i18n="rankings.rankingPosition">Reytingdagi o‘rni</span><span class="yr-rank accent" id="yrRank">—</span></div>
+          <div class="yr-row"><span data-i18n="rankings.schoolRating">School Rating</span><span class="yr-rank" id="yrRP">—</span></div>
+          <div class="yr-row"><span data-i18n="rankings.seasonEffort">Mavsum mehnati</span><span class="yr-rank" id="yrEffort">—</span></div>
+          <div class="yr-row"><span data-i18n="rankings.players">O‘yinchilar</span><span class="yr-rank" id="yrPlayers">—</span></div>
         </div>
       </div>
 
       <div class="card rb-card">
-        <div class="rb-head"><span>O'yinchilar reytingi</span></div>
-        <div class="note-txt" style="margin-bottom:14px;">Alohida o'yinchilar reytingini ko'rmoqchimisiz?</div>
+        <div class="rb-head"><span data-i18n="rankings.playerRanking">O‘yinchilar reytingi</span></div>
+        <div class="note-txt" style="margin-bottom:14px;" data-i18n="rankings.playerRankingPrompt">Alohida o‘yinchilar reytingini ko‘rmoqchimisiz?</div>
         <button class="btn btn-ghost lb-back-btn" onclick="window.location.href='/leaderboard.html'">
-          <i data-lucide="trophy" style="width:16px;height:16px;"></i> O'yinchilar reytingi
+          <i data-lucide="trophy" style="width:16px;height:16px;"></i> <span data-i18n="rankings.playerRanking">O‘yinchilar reytingi</span>
         </button>
       </div>
 
       <div class="card rb-card">
-        <div class="rb-head"><span>Statistika</span></div>
-        <div class="stat-row"><i data-lucide="building-2"></i><span class="stat-k">Jami maktablar</span><span class="stat-v" id="statSchools">—</span></div>
-        <div class="stat-row"><i data-lucide="map"></i><span class="stat-k">Jami tumanlar</span><span class="stat-v" id="statDistricts">—</span></div>
-        <div class="stat-row"><i data-lucide="map-pin"></i><span class="stat-k">Jami viloyatlar</span><span class="stat-v" id="statRegions">—</span></div>
+        <div class="rb-head"><span data-i18n="rankings.statistics">Statistika</span></div>
+        <div class="stat-row"><i data-lucide="building-2"></i><span class="stat-k" data-i18n="rankings.totalSchools">Jami maktablar</span><span class="stat-v" id="statSchools">—</span></div>
+        <div class="stat-row"><i data-lucide="map"></i><span class="stat-k" data-i18n="rankings.totalDistricts">Jami tumanlar</span><span class="stat-v" id="statDistricts">—</span></div>
+        <div class="stat-row"><i data-lucide="map-pin"></i><span class="stat-k" data-i18n="rankings.totalRegions">Jami viloyatlar</span><span class="stat-v" id="statRegions">—</span></div>
       </div>
 
       <div class="card rb-card">
-        <div class="rb-head"><span>Maktab mukofoti</span><span class="soon-badge">Tez kunda</span></div>
-        <div class="note-txt">Eng yuqori maktablar mavsum oxirida maxsus mukofot va nishonlar oladi.</div>
+        <div class="rb-head"><span data-i18n="rankings.schoolReward">Maktab mukofoti</span><span class="soon-badge" data-i18n="rankings.comingSoon">Tez kunda</span></div>
+        <div class="note-txt" data-i18n="rankings.rewardNote">Eng yuqori maktablar mavsum oxirida maxsus mukofot va nishonlar oladi.</div>
       </div>
     </aside>
   </div>
@@ -211,8 +297,21 @@
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script>
+    function rankingsT(key, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+    }
+
+    function rankingAttr(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
     const user = JSON.parse(userData);
@@ -228,9 +327,9 @@
 
     // Har tab uchun ruxsat etilgan miqyoslar (within)
     const withinOpts = {
-      schools:   [{ k: "district", t: "Tuman", i: "map" }, { k: "region", t: "Viloyat", i: "map-pin" }, { k: "country", t: "Respublika", i: "flag" }],
-      districts: [{ k: "region", t: "Viloyat", i: "map-pin" }, { k: "country", t: "Respublika", i: "flag" }],
-      regions:   [{ k: "country", t: "Respublika", i: "flag" }],
+      schools:   [{ k: "district", t: "rankings.district", i: "map" }, { k: "region", t: "rankings.region", i: "map-pin" }, { k: "country", t: "rankings.country", i: "flag" }],
+      districts: [{ k: "region", t: "rankings.region", i: "map-pin" }, { k: "country", t: "rankings.country", i: "flag" }],
+      regions:   [{ k: "country", t: "rankings.country", i: "flag" }],
     };
     const withinDefault = { schools: "region", districts: "region", regions: "country" };
 
@@ -239,10 +338,10 @@
       const opts = withinOpts[currentTab] || [];
       // Joriy within shu tab uchun ruxsat etilmaган bo'lsa — default'ga qaytar
       if (!opts.some(o => o.k === currentWithin)) currentWithin = withinDefault[currentTab];
-      let html = '<span class="within-label">Miqyos</span>';
+      let html = '<span class="within-label">' + rankingsT("rankings.scope") + '</span>';
       opts.forEach(o => {
         html += '<div class="wtab' + (o.k === currentWithin ? " active" : "") + '" data-within="' + o.k +
-          '" onclick="switchWithin(\'' + o.k + '\')"><i data-lucide="' + o.i + '"></i> ' + o.t + '</div>';
+          '" onclick="switchWithin(\'' + o.k + '\')"><i data-lucide="' + o.i + '"></i> ' + rankingsT(o.t) + '</div>';
       });
       bar.innerHTML = html;
       lucide.createIcons();
@@ -259,26 +358,41 @@
       districts: '<i data-lucide="map" class="ent-ic ent-district"></i>',
       regions: '<i data-lucide="map-pin" class="ent-ic ent-region"></i>',
     };
-    const colNames = { schools: "Maktab", districts: "Tuman", regions: "Viloyat" };
-    const titles = { schools: "Sizning maktabingiz", districts: "Sizning tumaningiz", regions: "Sizning viloyatingiz" };
-    const periodNotes = {
-      all: "Barcha vaqt: kuch + jami mehnat",
-      week: "Haftalik: shu hafta mehnati + kuch",
-      month: "Oylik: shu oy mehnati + kuch",
-      season: "Mavsum: shu mavsum mehnati + kuch",
+    const colNameKeys = { schools: "rankings.school", districts: "rankings.district", regions: "rankings.region" };
+    const titleKeys = { schools: "rankings.yourSchool", districts: "rankings.yourDistrict", regions: "rankings.yourRegion" };
+    const periodNoteKeys = {
+      all: "rankings.periodAllNote",
+      week: "rankings.periodWeekNote",
+      month: "rankings.periodMonthNote",
+      season: "rankings.periodSeasonNote",
     };
     function cacheKey() { return currentTab + "_" + currentPeriod + "_" + currentWithin; }
 
     function nameFieldOf(tab) { return tab === "schools" ? "school" : (tab === "districts" ? "district" : "region"); }
     function compactRegionName(value) { return String(value || "—").replace(/\s+Region$/i, ""); }
     function rankingName(value, field) { return field === "region" ? compactRegionName(value) : (value || "—"); }
+    function rankingPlayers(count) {
+      const language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      const category = new Intl.PluralRules(language === "ru" ? "ru-RU" : (language === "en" ? "en-GB" : "uz-UZ")).select(Number(count) || 0);
+      const key = category === "one" ? "rankings.playerCountOne" : (category === "few" ? "rankings.playerCountFew" : "rankings.playerCountMany");
+      return rankingsT(key, { count: count });
+    }
+
+    function updateTabLabels() {
+      document.getElementById("colName").textContent = rankingsT(colNameKeys[currentTab]);
+      document.getElementById("yrTitle").textContent = rankingsT(titleKeys[currentTab]);
+      document.getElementById("yrIcon").innerHTML = icons[currentTab];
+    }
+
+    function updatePeriodNote() {
+      var note = document.querySelector(".time-note");
+      if (note) note.textContent = rankingsT(periodNoteKeys[currentPeriod] || periodNoteKeys.season);
+    }
 
     function switchTab(tab) {
       currentTab = tab;
       document.querySelectorAll(".ftab").forEach(t => t.classList.toggle("active", t.getAttribute("data-tab") === tab));
-      document.getElementById("colName").textContent = colNames[tab];
-      document.getElementById("yrTitle").textContent = titles[tab];
-      document.getElementById("yrIcon").innerHTML = icons[tab];
+      updateTabLabels();
       renderWithinBar();
       loadAndRender();
     }
@@ -286,22 +400,21 @@
     function switchPeriod(period) {
       currentPeriod = period;
       document.querySelectorAll(".ttab").forEach(t => t.classList.toggle("active", t.getAttribute("data-period") === period));
-      var note = document.querySelector(".time-note");
-      if (note) note.textContent = periodNotes[period] || "";
+      updatePeriodNote();
       loadAndRender();
     }
 
     async function loadAndRender() {
       if (cache[cacheKey()]) { render(); return; }
-      document.getElementById("lbList").innerHTML = '<div class="lb-empty">Yuklanmoqda...</div>';
-      document.getElementById("podium").innerHTML = '<div class="podium-empty">Yuklanmoqda...</div>';
+      document.getElementById("lbList").innerHTML = '<div class="lb-empty">' + rankingsT("rankings.loading") + '</div>';
+      document.getElementById("podium").innerHTML = '<div class="podium-empty">' + rankingsT("rankings.loading") + '</div>';
       try {
         const res = await authFetch("/rankings/combined?scope=" + currentTab + "&period=" + currentPeriod + "&within=" + currentWithin);
         const data = await res.json();
         cache[cacheKey()] = { rankings: data.rankings || [], my_entry: data.my_entry || null, total: data.total || 0 };
         render();
       } catch (err) {
-        document.getElementById("lbList").innerHTML = '<div class="lb-empty">Yuklab bo\'lmadi</div>';
+        document.getElementById("lbList").innerHTML = '<div class="lb-empty">' + rankingsT("rankings.loadError") + '</div>';
       }
     }
 
@@ -319,7 +432,7 @@
     function renderPodium(list, nameField, icon) {
       const podium = document.getElementById("podium");
       if (list.length < 3) {
-        podium.innerHTML = '<div class="podium-empty">Top 3 uchun kamida 3 ta kerak</div>';
+        podium.innerHTML = '<div class="podium-empty">' + rankingsT("rankings.topThreeRequired") + '</div>';
         return;
       }
       const top3 = list.slice(0, 3);
@@ -334,7 +447,7 @@
         const name = rankingName(o.item[nameField], nameField);
         let sub;
         if (currentTab === "schools") sub = showReg ? (o.item.district || "") : compactRegionName(o.item.region);
-        else sub = o.item.player_count + " o'yinchi";
+        else sub = rankingPlayers(o.item.player_count);
         const crown = o.rank === 1 ? '<div class="podium-crown">👑</div>' : "";
         podium.innerHTML +=
           '<div class="podium-place ' + o.cls + '">' + crown +
@@ -343,7 +456,7 @@
             '<div class="podium-name">' + name + '</div>' +
             '<div class="podium-sub">' + sub + '</div>' +
             '<div class="podium-rating"><i data-lucide="trophy"></i> ' + o.item.school_rating + '</div>' +
-            '<div class="podium-rating-sub">Mehnat ' + o.item.effort_points + ' · Kuch ' + o.item.avg_rating + '</div>' +
+            '<div class="podium-rating-sub">' + rankingsT("rankings.scoreDetails", { effort: o.item.effort_points, strength: o.item.avg_rating }) + '</div>' +
           '</div>';
       });
       lucide.createIcons();
@@ -362,7 +475,7 @@
       if (colReg) colReg.style.display = showReg ? "" : "none";
 
       if (list.length === 0) {
-        lbList.innerHTML = '<div class="lb-empty">Hozircha ma\'lumot yo\'q</div>';
+        lbList.innerHTML = '<div class="lb-empty">' + rankingsT("rankings.noData") + '</div>';
         return;
       }
       lbList.innerHTML = "";
@@ -374,18 +487,18 @@
         let sub;
         if (currentTab === "schools") sub = showReg ? (item.district || "—") : compactRegionName(item.region);
         else if (currentTab === "districts") sub = compactRegionName(item.region);
-        else sub = "Viloyat";
-        const distCell = showDist ? ('<span class="lb-dist">' + (item.district || "—") + '</span>') : "";
-        const regCell = showReg ? ('<span class="lb-region">' + compactRegionName(item.region) + '</span>') : "";
+        else sub = rankingsT("rankings.region");
+        const distCell = showDist ? ('<span class="lb-dist" data-label="' + rankingAttr(rankingsT("rankings.district")) + '">' + (item.district || "—") + '</span>') : "";
+        const regCell = showReg ? ('<span class="lb-region" data-label="' + rankingAttr(rankingsT("rankings.region")) + '">' + compactRegionName(item.region) + '</span>') : "";
         lbList.innerHTML +=
           '<div class="lb-row' + ((showDist || showReg) ? " with-dist" : "") + (item.is_mine ? " me" : "") + '">' +
             '<div class="lb-rank ' + rcls + '">' + rank + '</div>' +
             '<div class="lb-ent"><div class="lb-ava">' + icon + '</div>' +
               '<div><div class="lb-name">' + name + '</div><div class="lb-name-sub">' + sub + '</div></div></div>' +
             distCell + regCell +
-            '<span class="lb-players">' + item.player_count + '</span>' +
-            '<span class="lb-avg">' + item.effort_points + '</span>' +
-            '<div class="lb-rating"><i data-lucide="trophy"></i> ' + item.school_rating + '</div>' +
+            '<span class="lb-players" data-label="' + rankingAttr(rankingsT("rankings.players")) + '">' + item.player_count + '</span>' +
+            '<span class="lb-avg" data-label="' + rankingAttr(rankingsT("rankings.effort")) + '">' + item.effort_points + '</span>' +
+            '<div class="lb-rating" data-label="' + rankingAttr(rankingsT("rankings.rating")) + '"><i data-lucide="trophy"></i> ' + item.school_rating + '</div>' +
           '</div>';
       });
 
@@ -397,20 +510,20 @@
         let sub;
         if (currentTab === "schools") sub = showReg ? (myEntry.district || "—") : compactRegionName(myEntry.region);
         else if (currentTab === "districts") sub = compactRegionName(myEntry.region);
-        else sub = "Viloyat";
-        const distCell = showDist ? ('<span class="lb-dist">' + (myEntry.district || "—") + '</span>') : "";
-        const regCell = showReg ? ('<span class="lb-region">' + compactRegionName(myEntry.region) + '</span>') : "";
+        else sub = rankingsT("rankings.region");
+        const distCell = showDist ? ('<span class="lb-dist" data-label="' + rankingAttr(rankingsT("rankings.district")) + '">' + (myEntry.district || "—") + '</span>') : "";
+        const regCell = showReg ? ('<span class="lb-region" data-label="' + rankingAttr(rankingsT("rankings.region")) + '">' + compactRegionName(myEntry.region) + '</span>') : "";
         lbList.innerHTML +=
-          '<div class="lb-gap">Sizning o\'rningiz</div>' +
+          '<div class="lb-gap">' + rankingsT("rankings.yourPosition") + '</div>' +
           '<div class="lb-pinned">' +
             '<div class="lb-row me' + ((showDist || showReg) ? " with-dist" : "") + '">' +
               '<div class="lb-rank">' + rank + '</div>' +
               '<div class="lb-ent"><div class="lb-ava">' + icon + '</div>' +
                 '<div><div class="lb-name">' + name + '</div><div class="lb-name-sub">' + sub + '</div></div></div>' +
               distCell + regCell +
-              '<span class="lb-players">' + myEntry.player_count + '</span>' +
-              '<span class="lb-avg">' + myEntry.effort_points + '</span>' +
-              '<div class="lb-rating"><i data-lucide="trophy"></i> ' + myEntry.school_rating + '</div>' +
+              '<span class="lb-players" data-label="' + rankingAttr(rankingsT("rankings.players")) + '">' + myEntry.player_count + '</span>' +
+              '<span class="lb-avg" data-label="' + rankingAttr(rankingsT("rankings.effort")) + '">' + myEntry.effort_points + '</span>' +
+              '<div class="lb-rating" data-label="' + rankingAttr(rankingsT("rankings.rating")) + '"><i data-lucide="trophy"></i> ' + myEntry.school_rating + '</div>' +
             '</div>' +
           '</div>';
       }
@@ -423,7 +536,7 @@
       const setEffort = function (v) { var e = document.getElementById("yrEffort"); if (e) e.textContent = v; };
       if (!myField) {
         document.getElementById("yrName").textContent = "—";
-        document.getElementById("yrSub").textContent = "Ma'lumot yo'q";
+        document.getElementById("yrSub").textContent = rankingsT("rankings.noData");
         document.getElementById("yrRank").textContent = "—";
         document.getElementById("yrRP").textContent = "—";
         setEffort("—");
@@ -434,13 +547,13 @@
       document.getElementById("yrName").textContent = rankingName(myField, nameField);
       if (item) {
         const sub = currentTab === "schools" ? compactRegionName(item.region) : "";
-        document.getElementById("yrSub").textContent = sub || (item.player_count + " o'yinchi");
+        document.getElementById("yrSub").textContent = sub || rankingPlayers(item.player_count);
         document.getElementById("yrRank").textContent = "#" + item.rank;
         document.getElementById("yrRP").textContent = item.school_rating;
         setEffort(item.effort_points);
         document.getElementById("yrPlayers").textContent = item.player_count;
       } else {
-        document.getElementById("yrSub").textContent = "Reytingda yo'q";
+        document.getElementById("yrSub").textContent = rankingsT("rankings.notRanked");
         document.getElementById("yrRank").textContent = "—";
         document.getElementById("yrRP").textContent = "—";
         setEffort("—");
@@ -470,8 +583,18 @@
         updateStats();
       } catch (err) {}
     }
+    updateTabLabels();
+    updatePeriodNote();
     renderWithinBar();
     preloadAll();
+
+    window.addEventListener("ilmliga:languagechange", function () {
+      updateTabLabels();
+      updatePeriodNote();
+      renderWithinBar();
+      if (cache[cacheKey()]) render();
+      lucide.createIcons();
+    });
 
     lucide.createIcons();
   </script>

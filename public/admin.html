@@ -39,6 +39,8 @@
     .login-card h1 { font-size: 23px; font-weight: 800; margin-bottom: 5px; letter-spacing: -0.3px; }
     .login-card .sub { font-size: 13.5px; color: var(--text-dim); margin-bottom: 28px; }
     .login-card label { display: block; text-align: left; font-size: 13px; color: var(--text-dim); margin-bottom: 8px; font-weight: 500; }
+    .admin-language-switch { width: auto; min-width: 76px; padding: 8px 30px 8px 11px; background-color: var(--panel); border-color: var(--border-bright); font-weight: 700; }
+    .login-card .admin-language-switch { display: block; margin: 0 0 14px auto; }
 
     input, select, textarea { width: 100%; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); color: var(--text); font-size: 14px; font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,140,255,0.12); }
@@ -668,10 +670,14 @@
   <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
-
   <!-- LOGIN -->
   <div class="login-wrap" id="loginScreen">
     <div class="login-card">
+      <select class="admin-language-switch" aria-label="Til" onchange="window.AdminI18n.setLanguage(this.value)">
+        <option value="uz">UZ</option>
+        <option value="en">EN</option>
+        <option value="ru">RU</option>
+      </select>
       <div class="login-logo"><i data-lucide="shield-check" class="ico"></i></div>
       <h1>English Battle</h1>
       <div class="sub">Admin Panel — boshqaruv markazi</div>
@@ -711,6 +717,11 @@
       <div class="topbar">
         <div class="topsearch"><i data-lucide="search" class="s-ic ico-sm"></i><input type="text" id="topSearch" placeholder="Tezkor qidiruv..." oninput="onTopSearch(this.value)"><span class="s-kbd">⌘ K</span></div>
         <div class="top-right">
+          <select class="admin-language-switch" aria-label="Til" onchange="window.AdminI18n.setLanguage(this.value)">
+            <option value="uz">UZ</option>
+            <option value="en">EN</option>
+            <option value="ru">RU</option>
+          </select>
           <div class="prod-badge"><span class="pulse"></span> <span>Production</span></div>
           <div class="top-profile"><div class="ava">A</div><div><div class="nm">Admin</div><div class="rl">Super Admin</div></div></div>
         </div>
@@ -1458,6 +1469,8 @@
 
   <div class="toast-wrap" id="toastWrap"></div>
 
+  <script src="/i18n.js"></script>
+  <script src="/admin-i18n.js"></script>
   <script src="/admin-question-analysis.js"></script>
   <script>
 

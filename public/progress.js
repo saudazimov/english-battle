@@ -25,6 +25,18 @@
   let storedLessons = [];
   const lessonPreparationKeys = new Set();
 
+  function progressT(key, params) {
+    return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+  }
+
+  function progressLocale() {
+    const language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+    return { uz: "uz-UZ", en: "en-US", ru: "ru-RU" }[language] || "uz-UZ";
+  }
+
+  window.progressT = progressT;
+  window.progressLocale = progressLocale;
+
   function numberOf(value) {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
@@ -50,7 +62,7 @@
     let data = {};
     try { data = await response.json(); } catch (error) {}
     if (!response.ok) {
-      const requestError = new Error(data.error || "Tahlilni olib bo‘lmadi");
+      const requestError = new Error(data.error || progressT("progress.errorLoadAnalysis"));
       requestError.status = response.status;
       throw requestError;
     }
@@ -121,16 +133,16 @@
     const preparationKey = lessonPreparationKey(rule,evidence);
     if (!rule.taxonomy_id || !evidence || !evidence.answer_event_id) {
       button.disabled = true;
-      button.textContent = "Xato aniqlanmoqda";
+      button.textContent = progressT("progress.detectingError");
     } else if (lessonPreparationKeys.has(preparationKey)) {
       button.disabled = true;
       button.setAttribute("aria-busy","true");
-      button.textContent = "Tayyorlanmoqda...";
+      button.textContent = progressT("progress.preparing");
     } else if (lesson) {
-      button.textContent = lesson.status === "COMPLETED" ? "Darsni ko'rish" : "Darsni boshlash";
+      button.textContent = lesson.status === "COMPLETED" ? progressT("progress.viewLesson") : progressT("progress.startLesson");
       button.addEventListener("click", function () { openStoredLesson(lesson.id, lesson.status); });
     } else {
-      button.textContent = "Xato uchun dars tayyorlash";
+      button.textContent = progressT("progress.prepareErrorLesson");
       button.addEventListener("click", function () { prepareErrorLesson(rule, evidence, button); });
     }
     return button;
@@ -142,13 +154,13 @@
     const copy = document.createElement("div");
     const name = document.createElement("h3");
     name.className = "rule-name";
-    name.textContent = rule.rule || "Aniqlanmagan qoida";
+    name.textContent = rule.rule || progressT("progress.unknownRule");
     const meta = document.createElement("div");
     meta.className = "rule-meta";
     meta.append(
-      document.createTextNode(numberOf(rule.errors) + " xato"),
-      document.createTextNode(numberOf(rule.attempts) + " urinish"),
-      document.createTextNode(numberOf(rule.accuracy) + "% aniqlik")
+      document.createTextNode(progressT("progress.errorCount", { count: numberOf(rule.errors) })),
+      document.createTextNode(progressT("progress.attemptCount", { count: numberOf(rule.attempts) })),
+      document.createTextNode(progressT("progress.accuracyPercent", { count: numberOf(rule.accuracy) }))
     );
     copy.append(name, meta);
     const evidenceList = document.createElement("div");
@@ -158,8 +170,12 @@
       item.className = "rule-error-item";
       const evidenceCopy = document.createElement("p");
       evidenceCopy.className = "rule-evidence";
-      evidenceCopy.textContent = (index + 1) + ". " + (evidence.question || "Xato savol")
-        + " — siz: " + (evidence.selected_answer || "—") + "; to'g'ri: " + (evidence.correct_answer || "—");
+      evidenceCopy.textContent = progressT("progress.evidenceLine", {
+        index: index + 1,
+        question: evidence.question || progressT("progress.wrongQuestionFallback"),
+        selected: evidence.selected_answer || "—",
+        correct: evidence.correct_answer || "—",
+      });
       item.append(evidenceCopy, errorAction(rule,evidence));
       evidenceList.appendChild(item);
     });
@@ -174,15 +190,15 @@
     const topics = compatibleMistakeTopics(diagnostics);
     const summary = document.getElementById("flowSummaryStats");
     clearElement(summary);
-    appendFlowStat(summary, numberOf(diagnostics.analyzed_answers), "Javob");
+    appendFlowStat(summary, numberOf(diagnostics.analyzed_answers), progressT("progress.answer"));
     const classified = diagnostics.classified_errors == null
       ? topics.reduce(function (total, topic) { return total + numberOf(topic.errors); }, 0)
       : numberOf(diagnostics.classified_errors);
-    appendFlowStat(summary, classified, "Aniq xato");
-    appendFlowStat(summary, topics.length, "Mavzu");
+    appendFlowStat(summary, classified, progressT("progress.exactError"));
+    appendFlowStat(summary, topics.length, progressT("progress.topic"));
     const container = document.getElementById("ruleTopicList");
     if (!topics.length) {
-      renderEmpty(container, "Tanlangan davrda darslik talab qiladigan aniq qoida xatosi topilmadi.");
+      renderEmpty(container, progressT("progress.noRuleErrors"));
       return;
     }
     clearElement(container);
@@ -194,14 +210,14 @@
       const titleWrap = document.createElement("div");
       const title = document.createElement("h2");
       title.className = "rule-topic-title";
-      title.textContent = topic.topic || "Aniqlanmagan mavzu";
+      title.textContent = topic.topic || progressT("progress.unknownTopic");
       const meta = document.createElement("p");
       meta.className = "rule-topic-meta";
-      meta.textContent = numberOf(topic.attempts) + " urinish · " + numberOf(topic.accuracy) + "% aniqlik";
+      meta.textContent = progressT("progress.topicMeta", { attempts: numberOf(topic.attempts), accuracy: numberOf(topic.accuracy) });
       titleWrap.append(title, meta);
       const count = document.createElement("span");
       count.className = "rule-count";
-      count.textContent = numberOf(topic.errors) + " xato";
+      count.textContent = progressT("progress.errorCount", { count: numberOf(topic.errors) });
       head.append(titleWrap, count);
       const rules = document.createElement("div");
       rules.className = "rule-list";
@@ -232,8 +248,8 @@
     lessonPreparationKeys.add(key);
     button.disabled = true;
     button.setAttribute("aria-busy","true");
-    button.textContent = "Tayyorlanmoqda...";
-    setStatus("Tanlangan xato uchun alohida dars tayyorlanmoqda...", false);
+    button.textContent = progressT("progress.preparing");
+    setStatus(progressT("progress.preparingSelectedLesson"), false);
     try {
       const result = await requestJson("/learning/remediation/lessons/sync", {
         method: "POST",
@@ -243,29 +259,29 @@
       storedLessons = await loadStoredLessons(true);
       let lesson = lessonForEvidence(evidence);
       if (!lesson && numberOf(result.pending_count) > 0) {
-        setStatus("Dars boshqa so'rovda tayyorlanmoqda. Natija avtomatik tekshiriladi...", false);
+        setStatus(progressT("progress.lessonPendingOtherRequest"), false);
         lesson = await waitForStoredLesson(evidence);
         if (lesson) renderStoredLessons(storedLessons);
       }
       if (lesson) setStatus("", false);
       else if (numberOf(result.pending_count) > 0) {
-        setStatus("Dars hali tayyorlanmoqda. Birozdan keyin holatni qayta tekshiring.", false);
+        setStatus(progressT("progress.lessonStillPreparing"), false);
       } else if (numberOf(result.review_required_count) > 0) {
-        setStatus("Dars xavfsizlik tekshiruvidan o'tmadi va ko'rib chiqishga yuborildi.", true);
+        setStatus(progressT("progress.lessonReviewRequired"), true);
       } else if (numberOf(result.target_count) === 0) {
-        setStatus("Bu xato uchun ishonchli diagnostik dalil topilmadi.", true);
+        setStatus(progressT("progress.noDiagnosticEvidence"), true);
       } else {
-        setStatus("Bu xato uchun darsni hozir tayyorlab bo'lmadi. Qayta urinib ko'ring.", true);
+        setStatus(progressT("progress.lessonPrepareFailedRetry"), true);
       }
     } catch (error) {
-      setStatus(error.message || "Darslikni tayyorlab bo‘lmadi.", true);
+      setStatus(error.message || progressT("progress.lessonPrepareFailed"), true);
     } finally {
       lessonPreparationKeys.delete(key);
       if (currentPeriodData) renderRuleFlow(currentPeriodData);
       if (button.isConnected) {
         button.disabled = false;
         button.removeAttribute("aria-busy");
-        button.textContent = lessonForEvidence(evidence) ? "Darsni boshlash" : "Qayta urinish";
+        button.textContent = lessonForEvidence(evidence) ? progressT("progress.startLesson") : progressT("progress.retry");
       }
     }
   }
@@ -277,14 +293,18 @@
     const priority = Array.isArray(diagnostics.priority_topics) ? diagnostics.priority_topics : [];
     const errors = numberOf(performance.wrong_count) + numberOf(performance.timeout_count);
     document.getElementById("metricAccuracy").textContent = numberOf(performance.accuracy) + "%";
-    document.getElementById("metricAccuracyFoot").textContent = numberOf(performance.correct_count) + " ta to‘g‘ri javob";
+    document.getElementById("metricAccuracyFoot").textContent = progressT("progress.correctAnswersCount", { count: numberOf(performance.correct_count) });
     document.getElementById("metricAnswers").textContent = numberOf(diagnostics.analyzed_answers);
-    const periodLabels = { today: "Bugungi natijalar", "7d": "So‘nggi 7 kun", "30d": "So‘nggi 30 kun" };
+    const periodLabels = {
+      today: progressT("progress.periodResultsToday"),
+      "7d": progressT("progress.periodResults7d"),
+      "30d": progressT("progress.periodResults30d"),
+    };
     document.getElementById("metricAnswersFoot").textContent = periodLabels[data.period] || periodLabels["7d"];
     document.getElementById("metricErrors").textContent = errors;
-    document.getElementById("metricErrorsFoot").textContent = numberOf(performance.timeout_count) + " ta javobsiz qolgan";
+    document.getElementById("metricErrorsFoot").textContent = progressT("progress.unansweredCount", { count: numberOf(performance.timeout_count) });
     document.getElementById("metricTopics").textContent = priority.length;
-    document.getElementById("metricTopicsFoot").textContent = priority.length ? priority[0].topic : "Takroriy xato aniqlanmadi";
+    document.getElementById("metricTopicsFoot").textContent = priority.length ? priority[0].topic : progressT("progress.noRepeatedError");
   }
 
   function appendInsight(container, title, items, kind, iconName) {
@@ -294,7 +314,7 @@
     heading.append(makeIcon(iconName), document.createTextNode(title));
     const list = document.createElement("ul");
     list.className = "insight-list";
-    const safeItems = Array.isArray(items) && items.length ? items : [kind === "good" ? "Yetarli dalil hali to‘planmagan." : "Takroriy zaiflik aniqlanmadi."];
+    const safeItems = Array.isArray(items) && items.length ? items : [kind === "good" ? progressT("progress.notEnoughEvidenceYet") : progressT("progress.noRepeatedWeakness")];
     safeItems.slice(0, 5).forEach(function (item) {
       const row = document.createElement("li");
       row.textContent = String(item);
@@ -312,32 +332,32 @@
     diagnosis.className = "diagnosis-box";
     const label = document.createElement("span");
     label.className = "diagnosis-label";
-    label.append(makeIcon("microscope"), document.createTextNode("Dalillarga asoslangan xulosa"));
+    label.append(makeIcon("microscope"), document.createTextNode(progressT("progress.evidenceBasedConclusion")));
     const title = document.createElement("h3");
-    title.textContent = report.title || "Bilim diagnostikasi";
+    title.textContent = report.title || progressT("progress.heading");
     const summary = document.createElement("p");
-    summary.textContent = report.summary || "Tahlil tayyorlanmoqda.";
+    summary.textContent = report.summary || progressT("progress.analysisPreparing");
     const detail = document.createElement("p");
-    detail.textContent = report.diagnosis || "Mavzu diagnostikasi uchun ko‘proq javob kerak.";
+    detail.textContent = report.diagnosis || progressT("progress.moreAnswersForDiagnosis");
     diagnosis.append(label, title, summary, detail);
     const columns = document.createElement("div");
     columns.className = "insight-columns";
-    appendInsight(columns, "Mustahkam bilimlar", report.strengths, "good", "badge-check");
-    appendInsight(columns, "Diqqat talab qiladigan bilimlar", report.weaknesses, "focus", "focus");
+    appendInsight(columns, progressT("progress.strongKnowledge"), report.strengths, "good", "badge-check");
+    appendInsight(columns, progressT("progress.needsAttention"), report.weaknesses, "focus", "focus");
     const motivation = document.createElement("div");
     motivation.className = "ai-motivation";
-    motivation.textContent = report.motivation || "Har bir aniqlangan xato — o‘sish uchun aniq yo‘nalish.";
+    motivation.textContent = report.motivation || progressT("progress.motivationFallback");
     body.append(diagnosis, columns, motivation);
-    document.getElementById("aiConfidence").textContent = (data.confidence || report.confidence || "low") + " confidence";
+    document.getElementById("aiConfidence").textContent = progressT("progress.confidence", { level: data.confidence || report.confidence || "low" });
   }
 
   function renderTopics(data) {
     const diagnostics = (data.analysis && data.analysis.learning_diagnostics) || {};
     const topics = Array.isArray(diagnostics.priority_topics) ? diagnostics.priority_topics : [];
     const container = document.getElementById("topicGrid");
-    document.getElementById("topicCountBadge").textContent = topics.length + " mavzu";
+    document.getElementById("topicCountBadge").textContent = progressT("progress.topicCount", { count: topics.length });
     if (!topics.length) {
-      renderEmpty(container, "Tanlangan davrda takroriy xato mavzusi aniqlanmadi yoki dalil yetarli emas.");
+      renderEmpty(container, progressT("progress.noRepeatedTopic"));
       return;
     }
     clearElement(container);
@@ -351,11 +371,11 @@
       name.textContent = topic.topic;
       const risk = document.createElement("span");
       risk.className = "topic-risk";
-      risk.textContent = numberOf(topic.errors) + " xato";
+      risk.textContent = progressT("progress.errorCount", { count: numberOf(topic.errors) });
       top.append(name, risk);
       const stats = document.createElement("div");
       stats.className = "topic-stats";
-      stats.textContent = numberOf(topic.attempts) + " urinish · " + numberOf(topic.accuracy) + "% aniqlik · " + (topic.confidence || "low") + " ishonch";
+      stats.textContent = progressT("progress.topicStats", { attempts: numberOf(topic.attempts), accuracy: numberOf(topic.accuracy), confidence: topic.confidence || "low" });
       const bar = document.createElement("div");
       bar.className = "topic-bar";
       const fill = document.createElement("div");
@@ -367,7 +387,7 @@
       (topic.evidence || []).slice(0, 2).forEach(function (evidence) {
         const row = document.createElement("div");
         row.className = "evidence";
-        row.textContent = evidence.question + (evidence.correct_answer ? " · To‘g‘ri javob: " + evidence.correct_answer : "");
+        row.textContent = evidence.question + (evidence.correct_answer ? progressT("progress.correctAnswerSuffix", { answer: evidence.correct_answer }) : "");
         evidenceList.appendChild(row);
       });
       card.append(top, stats, bar, evidenceList);
@@ -381,7 +401,7 @@
     const heading = document.createElement("h4");
     heading.append(makeIcon(iconName), document.createTextNode(title));
     const copy = document.createElement("p");
-    copy.textContent = text || "Aniq izoh uchun ko‘proq xato dalili kerak.";
+    copy.textContent = text || progressT("progress.moreEvidenceForExplanation");
     block.append(heading, copy);
     return block;
   }
@@ -402,7 +422,7 @@
     if (!list.childNodes.length) {
       const row = document.createElement("div");
       row.className = className === "worked-list" ? "worked-example" : "practice-item";
-      row.textContent = "Ushbu qism uchun ko‘proq javob dalili kerak.";
+      row.textContent = progressT("progress.moreEvidenceForSection");
       list.appendChild(row);
     }
     block.append(heading, list);
@@ -412,9 +432,9 @@
   function renderLessonLibrary(report) {
     const container = document.getElementById("lessonLibrary");
     const lessons = Array.isArray(report.topic_lessons) ? report.topic_lessons : [];
-    document.getElementById("lessonCountBadge").textContent = lessons.length + " dars";
+    document.getElementById("lessonCountBadge").textContent = progressT("progress.lessonCount", { count: lessons.length });
     if (!lessons.length) {
-      renderEmpty(container, "Shaxsiy darslik yaratish uchun takroriy xato mavzusi va yetarli dalil kerak.");
+      renderEmpty(container, progressT("progress.needEvidenceForLesson"));
       return;
     }
     clearElement(container);
@@ -426,29 +446,29 @@
       const heading = document.createElement("div");
       const topic = document.createElement("h3");
       topic.className = "lesson-topic";
-      topic.textContent = lesson.topic || "Shaxsiy mavzu";
+      topic.textContent = lesson.topic || progressT("progress.personalTopic");
       const objective = document.createElement("p");
       objective.className = "lesson-objective";
-      objective.textContent = "Maqsad: " + (lesson.objective || "Mavzuni tushunib, barqaror qo‘llash.");
+      objective.textContent = progressT("progress.objective", { text: lesson.objective || progressT("progress.objectiveFallback") });
       heading.append(topic, objective);
       const badge = document.createElement("span");
       badge.className = "badge-pill";
-      badge.textContent = "Dars " + (lessonIndex + 1);
+      badge.textContent = progressT("progress.lessonNumber", { number: lessonIndex + 1 });
       head.append(heading, badge);
       const grid = document.createElement("div");
       grid.className = "lesson-grid";
       grid.append(
-        lessonTextBlock("Xato modeli", "scan-search", lesson.misconception),
-        lessonTextBlock("Asosiy qoida", "book-open", lesson.rule),
-        lessonListBlock("Yechilgan misollar", "list-checks", lesson.worked_examples, "worked-list", function (row, item) {
+        lessonTextBlock(progressT("progress.errorPattern"), "scan-search", lesson.misconception),
+        lessonTextBlock(progressT("progress.coreRule"), "book-open", lesson.rule),
+        lessonListBlock(progressT("progress.workedExamples"), "list-checks", lesson.worked_examples, "worked-list", function (row, item) {
           const strong = document.createElement("strong");
-          strong.textContent = item.prompt || "Misol";
-          row.append(strong, document.createTextNode(" — " + (item.answer || "Javob") + ". " + (item.reasoning || "")));
+          strong.textContent = item.prompt || progressT("progress.example");
+          row.append(strong, document.createTextNode(" — " + (item.answer || progressT("progress.answer")) + ". " + (item.reasoning || "")));
         }),
-        lessonListBlock("Faol mashq", "brain-circuit", lesson.practice_sequence, "practice-sequence", function (row, item, index) {
+        lessonListBlock(progressT("progress.activePractice"), "brain-circuit", lesson.practice_sequence, "practice-sequence", function (row, item, index) {
           const strong = document.createElement("strong");
-          strong.textContent = item.step || (index + 1) + "-qadam";
-          row.append(strong, document.createTextNode(" — " + (item.task || "Mustaqil mashq bajaring.")));
+          strong.textContent = item.step || progressT("progress.stepNumber", { number: index + 1 });
+          row.append(strong, document.createTextNode(" — " + (item.task || progressT("progress.independentPractice"))));
         })
       );
       const footer = document.createElement("div");
@@ -463,7 +483,7 @@
       });
       const mastery = document.createElement("div");
       mastery.className = "mastery";
-      mastery.textContent = "O‘zlashtirish mezoni: " + (lesson.mastery_criterion || "Ikki urinishda kamida 80% aniqlik");
+      mastery.textContent = progressT("progress.masteryCriterion", { text: lesson.mastery_criterion || progressT("progress.masteryFallback") });
       footer.append(chips, mastery);
       card.append(head, grid, footer);
       container.appendChild(card);
@@ -471,13 +491,13 @@
   }
 
   function remediationStatus(status) {
-    const labels = { ASSIGNED: "Boshlashga tayyor", STARTED: "Davom etmoqda", COMPLETED: "Dars tugallandi" };
-    return labels[status] || status || "Tayyor";
+    const labels = { ASSIGNED: progressT("progress.readyToStart"), STARTED: progressT("progress.inProgress"), COMPLETED: progressT("progress.lessonCompleted") };
+    return labels[status] || status || progressT("progress.ready");
   }
 
   function renderStoredLessons(lessons) {
     const container = document.getElementById("lessonLibrary");
-    document.getElementById("lessonCountBadge").textContent = lessons.length + " dars";
+    document.getElementById("lessonCountBadge").textContent = progressT("progress.lessonCount", { count: lessons.length });
     clearElement(container);
     lessons.forEach(function (stored) {
       const content = stored.lesson_content || {};
@@ -488,26 +508,29 @@
       const titleWrap = document.createElement("div");
       const title = document.createElement("h3");
       title.className = "lesson-topic";
-      title.textContent = content.lesson_title || stored.target_skill_name || "Shaxsiy dars";
+      title.textContent = content.lesson_title || stored.target_skill_name || progressT("progress.personalLesson");
       const objective = document.createElement("p");
       objective.className = "lesson-objective";
-      objective.textContent = "Maqsad: " + (content.learning_objective || "Ko'nikmani mustahkamlash");
+      objective.textContent = progressT("progress.objective", { text: content.learning_objective || progressT("progress.reinforceSkill") });
       titleWrap.append(title, objective);
       const sourceError = content.source_error || {};
       if (sourceError.question) {
         const exactError = document.createElement("p");
         exactError.className = "lesson-objective";
-        exactError.textContent = "Xato: " + sourceError.question + " — sizning javobingiz: "
-          + (sourceError.selected_answer || "—") + "; to'g'ri javob: " + (sourceError.correct_answer || "—");
+        exactError.textContent = progressT("progress.exactErrorLine", {
+          question: sourceError.question,
+          selected: sourceError.selected_answer || "—",
+          correct: sourceError.correct_answer || "—",
+        });
         titleWrap.appendChild(exactError);
       }
       const badge = document.createElement("span");
       badge.className = "badge-pill";
       badge.textContent = remediationStatus(stored.status);
       head.append(titleWrap, badge);
-      const summary = lessonTextBlock("Dalilga asoslangan yo'nalish", "scan-search",
+      const summary = lessonTextBlock(progressT("progress.evidenceBasedDirection"), "scan-search",
         content.diagnostic_summary && content.diagnostic_summary.student_message);
-      const rule = lessonTextBlock("Qisqa qoida", "book-open",
+      const rule = lessonTextBlock(progressT("progress.shortRule"), "book-open",
         content.micro_explanation && content.micro_explanation.rule);
       const grid = document.createElement("div");
       grid.className = "lesson-grid";
@@ -521,11 +544,11 @@
       progress.appendChild(fill);
       const state = document.createElement("span");
       state.className = "lesson-status";
-      state.textContent = numberOf(stored.answered_count) + "/" + numberOf(stored.exercise_count) + " mashq";
+      state.textContent = progressT("progress.exerciseProgress", { answered: numberOf(stored.answered_count), total: numberOf(stored.exercise_count) });
       const button = document.createElement("button");
       button.className = "btn primary";
       button.type = "button";
-      button.textContent = stored.status === "ASSIGNED" ? "Darsni boshlash" : stored.status === "COMPLETED" ? "Ko'rib chiqish" : "Davom etish";
+      button.textContent = stored.status === "ASSIGNED" ? progressT("progress.startLesson") : stored.status === "COMPLETED" ? progressT("progress.review") : progressT("progress.continue");
       button.addEventListener("click", function () { openStoredLesson(stored.id, stored.status); });
       actions.append(progress, state, button);
       card.append(head, grid, actions);
@@ -539,7 +562,7 @@
     const lessons = Array.isArray(data.lessons) ? data.lessons : [];
     if (shouldRender !== false) {
       if (lessons.length) renderStoredLessons(lessons);
-      else renderEmpty(document.getElementById("lessonLibrary"), "Hozircha tayyor xato darslari yo'q.");
+      else renderEmpty(document.getElementById("lessonLibrary"), progressT("progress.noLessonsYet"));
     }
     return lessons;
   }
@@ -554,13 +577,13 @@
       const card = document.createElement("article");
       card.className = "lesson-example";
       const sentence = document.createElement("strong");
-      sentence.textContent = (index + 1) + ". " + (example.sentence || example.prompt || "Misol");
+      sentence.textContent = (index + 1) + ". " + (example.sentence || example.prompt || progressT("progress.example"));
       const explanation = document.createElement("p");
-      explanation.textContent = example.rule_application || example.reasoning || example.explanation || "Qoida shu gapda qo‘llangan.";
+      explanation.textContent = example.rule_application || example.reasoning || example.explanation || progressT("progress.ruleAppliedHere");
       card.append(sentence, explanation);
       container.appendChild(card);
     });
-    if (!container.childNodes.length) renderEmpty(container, "Bu eski dars formatida misollar saqlanmagan.");
+    if (!container.childNodes.length) renderEmpty(container, progressT("progress.noLegacyExamples"));
     document.getElementById("lessonExampleCount").textContent = Math.min(10, examples.length) + "/10";
   }
 
@@ -593,7 +616,7 @@
       if (exercise.explanation && exercise.selected_option) {
         const feedback = document.createElement("p");
         feedback.className = "lesson-feedback";
-        feedback.textContent = (exercise.is_correct ? "To'g'ri. " : "To'g'ri javob: " + exercise.correct_option + ". ") + exercise.explanation;
+        feedback.textContent = (exercise.is_correct ? progressT("progress.correctFeedback") : progressT("progress.correctOptionFeedback", { option: exercise.correct_option })) + exercise.explanation;
         card.appendChild(feedback);
       }
       container.appendChild(card);
@@ -605,7 +628,7 @@
     const lesson = data.lesson;
     const content = lesson.lesson_content || {};
     const sourceError = content.source_error || {};
-    document.getElementById("lessonDialogTitle").textContent = content.lesson_title || "Shaxsiy dars";
+    document.getElementById("lessonDialogTitle").textContent = content.lesson_title || progressT("progress.personalLesson");
     document.getElementById("lessonDialogObjective").textContent = content.learning_objective || "";
     const sourceErrorBox = document.getElementById("lessonDialogSourceError");
     const hasSourceError = Boolean(sourceError.question || sourceError.selected_answer || sourceError.correct_answer);
@@ -613,7 +636,7 @@
     document.getElementById("lessonDialogQuestion").textContent = sourceError.question || "—";
     document.getElementById("lessonDialogSelectedAnswer").textContent = sourceError.selected_answer || "—";
     document.getElementById("lessonDialogCorrectAnswer").textContent = sourceError.correct_answer || "—";
-    document.getElementById("lessonDialogRule").textContent = content.micro_explanation && content.micro_explanation.rule || "Qoida izohi mavjud emas.";
+    document.getElementById("lessonDialogRule").textContent = content.micro_explanation && content.micro_explanation.rule || progressT("progress.noRuleExplanation");
     renderLessonExamples(content);
     renderLessonExercises(lesson);
     const completionStatus = document.getElementById("lessonCompletionStatus");
@@ -622,7 +645,7 @@
     document.getElementById("lessonTestCount").textContent = (lesson.exercises || []).length + "/10";
     const complete = document.getElementById("lessonCompleteButton");
     complete.disabled = lesson.status === "COMPLETED" || (lesson.exercises || []).some(function (item) { return !item.selected_option; });
-    complete.textContent = lesson.status === "COMPLETED" ? "Dars yakunlangan" : "Darsni yakunlash";
+    complete.textContent = lesson.status === "COMPLETED" ? progressT("progress.lessonCompleted") : progressT("progress.completeLesson");
     if (window.lucide) window.lucide.createIcons();
   }
 
@@ -649,19 +672,19 @@
     const button = document.getElementById("lessonCompleteButton");
     const completionStatus = document.getElementById("lessonCompletionStatus");
     button.disabled = true;
-    completionStatus.textContent = "Natija tekshirilmoqda...";
+    completionStatus.textContent = progressT("progress.checkingResult");
     completionStatus.classList.remove("error","success");
     try {
       await requestJson("/learning/remediation/lessons/" + activeLessonId + "/complete", { method: "POST" });
       await fetchLesson(activeLessonId);
-      completionStatus.textContent = "Mezon bajarildi — dars muvaffaqiyatli yakunlandi.";
+      completionStatus.textContent = progressT("progress.lessonCompletedSuccess");
       completionStatus.classList.add("success");
       storedLessons = await loadStoredLessons(true);
       if (currentPeriodData) renderRuleFlow(currentPeriodData);
       periodCache.clear();
     } catch (error) {
       button.disabled = false;
-      completionStatus.textContent = error.message || "Natijani tekshirib bo'lmadi.";
+      completionStatus.textContent = error.message || progressT("progress.checkResultFailed");
       completionStatus.classList.add("error");
     }
   });
@@ -670,7 +693,7 @@
     const container = document.getElementById("learningPlan");
     const plan = Array.isArray(report.learning_plan) ? report.learning_plan : [];
     if (!plan.length) {
-      renderEmpty(container, "O‘quv reja uchun yetarli dalil mavjud emas.");
+      renderEmpty(container, progressT("progress.noPlanEvidence"));
       return;
     }
     clearElement(container);
@@ -685,17 +708,17 @@
       head.className = "plan-head";
       const title = document.createElement("div");
       title.className = "plan-title";
-      title.textContent = (item.stage || "Bosqich") + " · " + (item.focus || "Mavzu");
+      title.textContent = (item.stage || progressT("progress.stage")) + " · " + (item.focus || progressT("progress.topic"));
       const method = document.createElement("span");
       method.className = "method-tag";
-      method.textContent = item.method || "amaliy mashq";
+      method.textContent = item.method || progressT("progress.practicalExercise");
       head.append(title, method);
       const task = document.createElement("div");
       task.className = "plan-task";
-      task.textContent = item.task || "Mavzuni qayta mashq qiling.";
+      task.textContent = item.task || progressT("progress.practiceTopicAgain");
       const success = document.createElement("div");
       success.className = "success";
-      success.textContent = "Natija mezoni: " + (item.success_criterion || "Barqaror to‘g‘ri javoblar");
+      success.textContent = progressT("progress.successCriterion", { text: item.success_criterion || progressT("progress.stableCorrectAnswers") });
       content.append(head, task, success);
       step.append(number, content);
       container.appendChild(step);
@@ -714,9 +737,9 @@
     document.getElementById("qualityDays").textContent = numberOf(activity.active_days);
     document.getElementById("qualityAssignments").textContent = numberOf(activity.assignments_completed);
     document.getElementById("qualityExams").textContent = numberOf(activity.exams_taken);
-    document.getElementById("qualityNote").textContent = quality.enough_data ? "Xulosa chiqarish uchun dalil yetarli. Ishonch darajasi: " + confidence + "." : "Aniq xulosa uchun kamida 30 ta javob, 2 ta topshiriq yoki 1 ta imtihon kerak.";
+    document.getElementById("qualityNote").textContent = quality.enough_data ? progressT("progress.enoughEvidence", { confidence }) : progressT("progress.evidenceRequirement");
     const period = analysis.period || {};
-    const format = function (value) { return value ? new Date(value).toLocaleDateString("uz-UZ", { day: "numeric", month: "short" }) : "—"; };
+    const format = function (value) { return value ? new Date(value).toLocaleDateString(progressLocale(), { day: "numeric", month: "short" }) : "—"; };
     document.getElementById("periodDates").textContent = format(period.start) + " — " + format(period.end);
     renderMethods(data.report || {});
     renderNextSteps(data.report || {});
@@ -726,7 +749,7 @@
     const container = document.getElementById("studyMethods");
     const methods = Array.isArray(report.study_principles) ? report.study_principles : [];
     if (!methods.length) {
-      renderEmpty(container, "Metodlar tahlil bilan birga paydo bo‘ladi.");
+      renderEmpty(container, progressT("progress.methodsAppearWithAnalysis"));
       return;
     }
     clearElement(container);
@@ -742,7 +765,7 @@
     const container = document.getElementById("nextSteps");
     const steps = Array.isArray(report.next_steps) ? report.next_steps : [];
     if (!steps.length) {
-      renderEmpty(container, "Keyingi qadamlar uchun ko‘proq ma’lumot kerak.");
+      renderEmpty(container, progressT("progress.moreDataForNextSteps"));
       return;
     }
     clearElement(container);
@@ -769,11 +792,14 @@
 
   function renderPremiumLock() {
     const body = document.getElementById("aiBody");
-    body.innerHTML = '<div class="ai-empty"><div><div class="ai-empty-icon"><i data-lucide="crown"></i></div><h3>Chuqur bilim diagnostikasi — Premium</h3><p>7 va 30 kunlik xato mavzulari, pedagogik tahlil va ilmiy o‘quv rejasini oling.</p><button class="btn primary" id="progressPremiumButton" type="button"><i data-lucide="crown"></i> Premium olish</button></div></div>';
+    body.innerHTML = '<div class="ai-empty"><div><div class="ai-empty-icon"><i data-lucide="crown"></i></div><h3>'
+      + progressT("progress.premiumTitle") + '</h3><p>' + progressT("progress.premiumText")
+      + '</p><button class="btn primary" id="progressPremiumButton" type="button"><i data-lucide="crown"></i> '
+      + progressT("progress.getPremium") + '</button></div></div>';
     document.getElementById("progressPremiumButton").addEventListener("click", function () { window.openPaymentModal("student_premium"); });
-    renderEmpty(document.getElementById("topicGrid"), "Premium tahlil faollashtirilgach mavzu diagnostikasi ko‘rinadi.");
-    renderEmpty(document.getElementById("lessonLibrary"), "Premium tahlil faollashtirilgach xatolardan shaxsiy darslik yaratiladi.");
-    renderEmpty(document.getElementById("learningPlan"), "Premium tahlil faollashtirilgach shaxsiy reja yaratiladi.");
+    renderEmpty(document.getElementById("topicGrid"), progressT("progress.premiumTopicsLocked"));
+    renderEmpty(document.getElementById("lessonLibrary"), progressT("progress.premiumLessonsLocked"));
+    renderEmpty(document.getElementById("learningPlan"), progressT("progress.premiumPlanLocked"));
     if (window.lucide) window.lucide.createIcons();
   }
 
@@ -793,8 +819,12 @@
       button.classList.toggle("active", button.dataset.period === period);
       button.disabled = true;
     });
-    const loadingLabels = { today: "Bugungi", "7d": "7 kunlik", "30d": "30 kunlik" };
-    setStatus((loadingLabels[period] || loadingLabels["7d"]) + " bilim tahlili yuklanmoqda...", false);
+    const loadingLabels = {
+      today: progressT("progress.loadingToday"),
+      "7d": progressT("progress.loading7d"),
+      "30d": progressT("progress.loading30d"),
+    };
+    setStatus(progressT("progress.loadingPeriod", { period: loadingLabels[period] || loadingLabels["7d"] }), false);
     try {
       let data = periodCache.get(period);
       if (!data) {
@@ -809,8 +839,8 @@
     } catch (error) {
       if (error.status === 402) {
         setStatus("", false);
-        renderEmpty(document.getElementById("ruleTopicList"), "Chuqur qoida diagnostikasi Premium tarifda mavjud.");
-      } else setStatus(error.message || "Tahlilni yuklab bo‘lmadi.", true);
+        renderEmpty(document.getElementById("ruleTopicList"), progressT("progress.deepDiagnosisPremium"));
+      } else setStatus(error.message || progressT("progress.errorLoadAnalysis"), true);
     } finally {
       periodButtons.forEach(function (button) { button.disabled = false; });
     }
@@ -822,6 +852,11 @@
 
   const learningUi = window.createProgressLearningUI({
     requestJson, clearElement, makeIcon, renderEmpty, numberOf, clearPeriodCache,
+  });
+  window.addEventListener("ilmliga:languagechange", function () {
+    if (currentPeriodData) renderRuleFlow(currentPeriodData);
+    if (storedLessons.length) renderStoredLessons(storedLessons);
+    if (learningUi.rerender) learningUi.rerender();
   });
   learningUi.load();
   loadPeriod("7d");

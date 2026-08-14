@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Friends</title>
+  <title data-i18n="friends.metaTitle">IlmLiga — Do‘stlar</title>
   <link rel="stylesheet" href="/app.css">
   <style>
     .app { grid-template-columns: 230px 1fr 340px; max-width: 1680px; }
@@ -454,6 +454,117 @@
     .length-start { flex: 2; display: flex; align-items: center; justify-content: center; gap: 9px; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(95deg, var(--accent), var(--accent-2)); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 22px rgba(91,140,255,0.3); transition: opacity 0.15s; }
     .length-start:hover { opacity: 0.93; }
     .length-start i { width: 18px; height: 18px; }
+
+    @media (max-width: 640px) {
+      .fr-toolbar {
+        padding: 10px;
+      }
+      .fr-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: 5px;
+      }
+      .fr-tab {
+        min-width: 0;
+        justify-content: center;
+        padding: 10px 8px;
+        text-align: center;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+      .fl-card {
+        padding: 16px;
+      }
+      .fl-cols {
+        display: none;
+      }
+      .fl-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .fl-friend {
+        grid-column: 1 / -1;
+        min-width: 0;
+      }
+      .fl-name {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .fl-row > :nth-child(2) {
+        grid-column: 1;
+      }
+      .fl-row > :nth-child(3) {
+        grid-column: 2;
+        justify-self: end;
+        text-align: right;
+      }
+      .fl-row > :nth-child(4) {
+        grid-column: 1 / -1;
+      }
+      .fl-actions {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 44px 44px;
+        width: 100%;
+      }
+      .fl-challenge {
+        min-width: 0;
+        min-height: 44px;
+        justify-content: center;
+        padding: 10px 12px;
+      }
+      .fl-profile,
+      .fl-remove {
+        width: 44px;
+        height: 44px;
+      }
+      .req-row,
+      .srch-row {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .req-info,
+      .srch-info,
+      .req-name,
+      .srch-name,
+      .req-sub,
+      .srch-sub {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .req-actions,
+      .req-row > .req-btn,
+      .srch-row > button {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+      .req-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .req-btn,
+      .srch-add,
+      .srch-profile,
+      .srch-pending {
+        min-width: 0;
+        min-height: 44px;
+        justify-content: center;
+      }
+      .search-form {
+        flex-direction: column;
+      }
+      .search-go {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   </style>
   <link rel="stylesheet" href="responsive.css">
 
@@ -469,61 +580,61 @@
       <!-- Sarlavha -->
       <div class="page-head">
         <div class="crest-ic"><i data-lucide="users"></i></div>
-        <div><h1>Friends</h1><p>Connect, challenge, and track your friends.</p></div>
+        <div><h1 data-i18n="friends.heading">Do‘stlar</h1><p data-i18n="friends.subtitle">Do‘stlaringiz bilan bog‘laning, jangga chaqiring va natijalarini kuzating.</p></div>
       </div>
 
       <!-- Filtrlar + Search + Add -->
       <div class="card fr-toolbar">
         <div class="fr-tabs">
-          <div class="fr-tab active" data-tab="all" onclick="switchTab('all', this)"><i data-lucide="users"></i> All Friends</div>
-          <div class="fr-tab" data-tab="requests" onclick="switchTab('requests', this)"><i data-lucide="user-plus"></i> So'rovlar <span class="fr-tab-badge" id="reqBadge" style="display:none;">0</span></div>
-          <div class="fr-tab" data-tab="suggested" onclick="switchTab('suggested', this)"><i data-lucide="sparkles"></i> Tavsiya</div>
-          <div class="fr-tab" data-tab="search" onclick="switchTab('search', this)"><i data-lucide="search"></i> Qidirish</div>
+          <div class="fr-tab active" data-tab="all" onclick="switchTab('all', this)"><i data-lucide="users"></i> <span data-i18n="friends.allFriends">Barcha do‘stlar</span></div>
+          <div class="fr-tab" data-tab="requests" onclick="switchTab('requests', this)"><i data-lucide="user-plus"></i> <span data-i18n="friends.requests">So‘rovlar</span> <span class="fr-tab-badge" id="reqBadge" style="display:none;">0</span></div>
+          <div class="fr-tab" data-tab="suggested" onclick="switchTab('suggested', this)"><i data-lucide="sparkles"></i> <span data-i18n="friends.suggested">Tavsiyalar</span></div>
+          <div class="fr-tab" data-tab="search" onclick="switchTab('search', this)"><i data-lucide="search"></i> <span data-i18n="friends.search">Qidirish</span></div>
         </div>
       </div>
       <!-- ALL FRIENDS PANEL -->
       <div id="allPanel">
         <div class="card fl-card">
-          <div class="card-title"><i data-lucide="users"></i> Do'stlar ro'yxati <span id="flCount" style="color:var(--text-dim);font-weight:500;"></span></div>
+          <div class="card-title"><i data-lucide="users"></i> <span data-i18n="friends.listTitle">Do‘stlar ro‘yxati</span> <span id="flCount" style="color:var(--text-dim);font-weight:500;"></span></div>
           <div class="fl-cols">
-            <span>Friend</span>
-            <span>Level</span>
-            <span>League</span>
-            <span>Status</span>
-            <span>Actions</span>
+            <span data-i18n="friends.friend">Do‘st</span>
+            <span data-i18n="friends.level">Daraja</span>
+            <span data-i18n="friends.league">Liga</span>
+            <span data-i18n="friends.status">Holat</span>
+            <span data-i18n="friends.actions">Amallar</span>
           </div>
-          <div id="friendsList"><div class="fl-empty">Yuklanmoqda...</div></div>
+          <div id="friendsList"><div class="fl-empty" data-i18n="friends.loading">Yuklanmoqda...</div></div>
         </div>
       </div>
 
       <!-- REQUESTS PANEL -->
       <div id="requestsPanel" style="display:none;">
         <div class="card fl-card">
-          <div class="card-title"><i data-lucide="user-plus"></i> Do'st so'rovlari</div>
-          <div id="requestsList"><div class="fl-empty">Yuklanmoqda...</div></div>
+          <div class="card-title"><i data-lucide="user-plus"></i> <span data-i18n="friends.requestTitle">Do‘stlik so‘rovlari</span></div>
+          <div id="requestsList"><div class="fl-empty" data-i18n="friends.loading">Yuklanmoqda...</div></div>
         </div>
       </div>
 
       <!-- SUGGESTED PANEL -->
       <div id="suggestedPanel" style="display:none;">
         <div class="card fl-card">
-          <div class="card-title"><i data-lucide="sparkles"></i> Tavsiya etilgan do'stlar</div>
-          <div class="search-hint">Maktab, tuman, viloyat va darajangizga mos o'quvchilar.</div>
-          <div id="suggestedList"><div class="fl-empty">Yuklanmoqda...</div></div>
+          <div class="card-title"><i data-lucide="sparkles"></i> <span data-i18n="friends.suggestedTitle">Tavsiya etilgan do‘stlar</span></div>
+          <div class="search-hint" data-i18n="friends.suggestedHint">Maktab, tuman, viloyat va darajangizga mos o‘quvchilar.</div>
+          <div id="suggestedList"><div class="fl-empty" data-i18n="friends.loading">Yuklanmoqda...</div></div>
         </div>
       </div>
 
       <!-- SEARCH PANEL -->
       <div id="searchPanel" style="display:none;">
         <div class="card fl-card">
-          <div class="card-title"><i data-lucide="search"></i> Do'st qidirish</div>
-          <div class="search-hint">Ism, familiya yoki telefon raqamini yozib, "Qidirish" tugmasini bosing.</div>
+          <div class="card-title"><i data-lucide="search"></i> <span data-i18n="friends.searchTitle">Do‘st qidirish</span></div>
+          <div class="search-hint" data-i18n="friends.searchHint">Ism, familiya yoki telefon raqamini yozib, “Qidirish” tugmasini bosing.</div>
           <div class="search-form">
             <div class="fr-search">
               <i data-lucide="search"></i>
-              <input type="text" id="searchInput" placeholder="Ism, familiya yoki telefon..." onkeypress="if(event.key==='Enter')doSearch()">
+              <input type="text" id="searchInput" placeholder="Ism, familiya yoki telefon..." data-i18n-placeholder="friends.searchPlaceholder" onkeypress="if(event.key==='Enter')doSearch()">
             </div>
-            <button class="btn search-go" onclick="doSearch()"><i data-lucide="search" style="width:16px;height:16px;"></i> Qidirish</button>
+            <button class="btn search-go" onclick="doSearch()"><i data-lucide="search" style="width:16px;height:16px;"></i> <span data-i18n="friends.search">Qidirish</span></button>
           </div>
           <div id="searchResults"></div>
         </div>
@@ -534,41 +645,41 @@
 
       <!-- Friends Summary -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Friends Summary</span><button type="button" class="rb-info-btn" id="friendsSummaryInfoButton" aria-label="Do‘stlar statistikasi haqida ma'lumot" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
+        <div class="rb-head"><span data-i18n="friends.summary">Do‘stlar statistikasi</span><button type="button" class="rb-info-btn" id="friendsSummaryInfoButton" aria-label="Do‘stlar statistikasi haqida ma’lumot" data-i18n-aria-label="friends.summaryInfoAria" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
         <div class="fs-grid">
           <div class="fs-box">
             <i data-lucide="users" style="color:var(--accent);"></i>
             <div class="fs-val" id="fsTotal">0</div>
-            <div class="fs-lbl">Total Friends</div>
+            <div class="fs-lbl" data-i18n="friends.totalFriends">Jami do‘stlar</div>
           </div>
           <div class="fs-box">
             <i data-lucide="circle" style="color:var(--green);fill:var(--green);"></i>
             <div class="fs-val" id="fsOnline">0</div>
-            <div class="fs-lbl">Online Now</div>
+            <div class="fs-lbl" data-i18n="friends.onlineNow">Hozir onlayn</div>
           </div>
           <div class="fs-box">
             <i data-lucide="user-plus" style="color:var(--gold);"></i>
             <div class="fs-val" id="fsRequests">0</div>
-            <div class="fs-lbl">Pending</div>
+            <div class="fs-lbl" data-i18n="friends.pending">Kutilmoqda</div>
           </div>
           <div class="fs-box">
             <i data-lucide="trophy" style="color:var(--cyan);"></i>
             <div class="fs-val" id="fsWins">0</div>
-            <div class="fs-lbl">Wins vs Friends</div>
+            <div class="fs-lbl" data-i18n="friends.winsVsFriends">Do‘stlarga qarshi g‘alabalar</div>
           </div>
         </div>
       </div>
 
       <!-- Top Friends Leaderboard -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Top Friends</span></div>
-        <div id="topFriends"><div class="fl-empty" style="padding:16px;">Yuklanmoqda...</div></div>
+        <div class="rb-head"><span data-i18n="friends.topFriends">Top do‘stlar</span></div>
+        <div id="topFriends"><div class="fl-empty" style="padding:16px;" data-i18n="friends.loading">Yuklanmoqda...</div></div>
       </div>
 
       <!-- Recent Activity -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Recent Activity</span><i data-lucide="activity" class="rb-info"></i></div>
-        <div id="activityList"><div class="ra-note">Yuklanmoqda...</div></div>
+        <div class="rb-head"><span data-i18n="friends.recentActivity">So‘nggi faollik</span><i data-lucide="activity" class="rb-info"></i></div>
+        <div id="activityList"><div class="ra-note" data-i18n="friends.loading">Yuklanmoqda...</div></div>
       </div>
 
     </aside>
@@ -585,27 +696,27 @@
   <div id="fpModal" class="fp-overlay">
     <div class="fp-modal">
       <div class="fp-header">
-        <div class="fp-header-title"><i data-lucide="users"></i> Friend Profile</div>
-        <button class="fp-close" onclick="closeProfileModal()">✕</button>
+        <div class="fp-header-title"><i data-lucide="users"></i> <span data-i18n="friends.profileTitle">Do‘st profili</span></div>
+        <button class="fp-close" onclick="closeProfileModal()" data-i18n-aria-label="common.close">✕</button>
       </div>
       <div class="fp-body">
         <!-- Chap (asosiy) -->
         <div class="fp-main">
-          <div id="fpCard" class="fp-skel">Profil kartasi</div>
+          <div id="fpCard" class="fp-skel" data-i18n="friends.profileCard">Profil kartasi</div>
           <div class="fp-row2">
-            <div id="fpAbout" class="fp-skel">About</div>
-            <div id="fpAch" class="fp-skel">Achievements</div>
+            <div id="fpAbout" class="fp-skel" data-i18n="friends.about">Haqida</div>
+            <div id="fpAch" class="fp-skel" data-i18n="friends.achievements">Yutuqlar</div>
           </div>
           <div class="fp-row2">
-            <div id="fpStats" class="fp-skel">Battle Stats</div>
-            <div id="fpHistory" class="fp-skel">Battle History</div>
+            <div id="fpStats" class="fp-skel" data-i18n="friends.battleStats">Jang statistikasi</div>
+            <div id="fpHistory" class="fp-skel" data-i18n="friends.battleHistory">Janglar tarixi</div>
           </div>
         </div>
         <!-- O'ng panel -->
         <div class="fp-side">
-          <div id="fpRank" class="fp-skel">Current Rank</div>
-          <div id="fpCefr" class="fp-skel">CEFR Progression</div>
-          <div id="fpMutual" class="fp-skel">Mutual Friends</div>
+          <div id="fpRank" class="fp-skel" data-i18n="friends.currentRank">Joriy liga</div>
+          <div id="fpCefr" class="fp-skel" data-i18n="friends.cefrProgression">CEFR rivoji</div>
+          <div id="fpMutual" class="fp-skel" data-i18n="friends.mutualFriends">Umumiy do‘stlar</div>
         </div>
       </div>
     </div>
@@ -618,15 +729,15 @@
     <div class="length-modal">
       <div class="length-head">
         <div>
-          <div class="length-title">Battle formatini tanlang</div>
-          <div class="length-sub" id="lengthSubName">Savollar soni, vaqt va mukofotni tanlang</div>
+          <div class="length-title" data-i18n="friends.chooseBattleFormat">Jang formatini tanlang</div>
+          <div class="length-sub" id="lengthSubName" data-i18n="friends.chooseBattleFormatHint">Savollar soni, vaqt va mukofotni tanlang</div>
         </div>
         <i data-lucide="x" class="length-close" onclick="closeLengthModal()"></i>
       </div>
       <div class="length-grid" id="lengthGrid"></div>
       <div class="length-foot">
-        <button class="length-cancel" onclick="closeLengthModal()">Bekor qilish</button>
-        <button class="length-start" onclick="sendChallenge()"><i data-lucide="swords"></i> Chaqirish</button>
+        <button class="length-cancel" onclick="closeLengthModal()" data-i18n="common.cancel">Bekor qilish</button>
+        <button class="length-start" onclick="sendChallenge()"><i data-lucide="swords"></i> <span data-i18n="friends.challenge">Chaqirish</span></button>
       </div>
     </div>
   </div>
@@ -634,6 +745,7 @@
   <script src="/api.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/vendor/lucide.min.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/rank-info-dialog.js"></script>
   <script>
@@ -651,6 +763,15 @@
     renderTopbar();
 
     renderSidebar("friends");
+
+    function friendsT(key, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+    }
+
+    function friendsLocale() {
+      const language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return language === "ru" ? "ru-RU" : (language === "en" ? "en-GB" : "uz-UZ");
+    }
 
     // ===== SOCKET.IO (real-time) =====
     const socket = io({ auth: { token: localStorage.getItem("token") } });
@@ -685,10 +806,10 @@
     // Do'st chaqirish
     // ===== BATTLE FORMAT (do'st chaqirish) =====
     const battleLengths = {
-      quick:    { label: "Quick",    uzLabel: "Tezkor",       questions: 10, totalSeconds: 150, xp: 4 },
-      standard: { label: "Standard", uzLabel: "Standart",     questions: 20, totalSeconds: 300, xp: 8, recommended: true },
-      extended: { label: "Extended", uzLabel: "Uzaytirilgan", questions: 30, totalSeconds: 450, xp: 12 },
-      marathon: { label: "Marathon", uzLabel: "Marafon",      questions: 40, totalSeconds: 600, xp: 16 },
+      quick:    { labelKey: "friends.formatQuick",    questions: 10, totalSeconds: 150, xp: 4 },
+      standard: { labelKey: "friends.formatStandard", questions: 20, totalSeconds: 300, xp: 8, recommended: true },
+      extended: { labelKey: "friends.formatExtended", questions: 30, totalSeconds: 450, xp: 12 },
+      marathon: { labelKey: "friends.formatMarathon", questions: 40, totalSeconds: 600, xp: 16 },
     };
     let selectedLength = "standard";
     let challengeTarget = null; // { id, name }
@@ -711,10 +832,10 @@
         const active = key === selectedLength ? " active" : "";
         return '<div class="length-card' + active + '" data-key="' + key + '" onclick="selectLength(\'' + key + '\')">' +
             '<div class="lf-check"><i data-lucide="check"></i></div>' +
-            '<div class="lf-name">' + L.label + '</div>' +
-            '<div class="lf-uz">' + L.uzLabel + '</div>' +
+            '<div class="lf-name">' + friendsT(L.labelKey) + '</div>' +
+            '<div class="lf-uz">' + friendsT("friends.formatQuestions", { count: L.questions }) + '</div>' +
             '<div class="lf-rows">' +
-              '<div class="lf-row"><i data-lucide="list-checks"></i> ' + L.questions + ' savol</div>' +
+              '<div class="lf-row"><i data-lucide="list-checks"></i> ' + friendsT("friends.formatQuestions", { count: L.questions }) + '</div>' +
               '<div class="lf-row"><i data-lucide="clock"></i> ' + fmtTime(L.totalSeconds) + '</div>' +
               '<div class="lf-row lf-xp"><i data-lucide="zap"></i> +' + L.xp + ' XP</div>' +
             '</div>' +
@@ -722,7 +843,7 @@
       }).join("");
       // Sarlavhada do'st ismini ko'rsatamiz
       var sub = document.getElementById("lengthSubName");
-      if (sub && challengeTarget) sub.textContent = challengeTarget.name + " ni jangga chaqirasiz";
+      if (sub && challengeTarget) sub.textContent = friendsT("friends.challengeTarget", { name: challengeTarget.name });
       document.getElementById("lengthModal").classList.add("show");
       if (window.lucide) lucide.createIcons();
     }
@@ -746,8 +867,8 @@
         lengthKey: selectedLength,
       });
       showOverlay(
-        "⏳ " + fEsc(challengeTarget.name) + " ga chaqiruv yuborildi, javob kutilmoqda...",
-        '<button class="ov-btn ov-reject" onclick="cancelChallenge()">Chaqiruvni bekor qilish</button>'
+        "⏳ " + friendsT("friends.challengeSent", { name: fEsc(challengeTarget.name) }),
+        '<button class="ov-btn ov-reject" onclick="cancelChallenge()">' + friendsT("friends.cancelChallenge") + '</button>'
       );
     }
 
@@ -778,16 +899,18 @@
 
     function fpLeague(rating) {
       const ic = (name, color) => '<i data-lucide="' + name + '" style="width:16px;height:16px;color:' + color + ';vertical-align:-3px;"></i>';
-      if (rating >= 2000) return { name: "Grandmaster", medal: "👑", icon: ic("crown", "#fbbf24") };
-      if (rating >= 1800) return { name: "Master", medal: "🔱", icon: ic("crown", "#a855f7") };
-      if (rating >= 1600) return { name: "Diamond", medal: "💠", icon: ic("gem", "#38e1ff") };
-      if (rating >= 1400) return { name: "Platinum", medal: "💎", icon: ic("gem", "#5b8cff") };
-      if (rating >= 1200) return { name: "Gold", medal: "🥇", icon: ic("medal", "#fbbf24") };
-      if (rating >= 1000) return { name: "Silver", medal: "🥈", icon: ic("shield", "#cbd5e1") };
-      return { name: "Bronze", medal: "🥉", icon: ic("shield", "#cd7f32") };
+      if (rating >= 2000) return { name: friendsT("friends.leagueGrandmaster"), medal: "👑", icon: ic("crown", "#fbbf24") };
+      if (rating >= 1800) return { name: friendsT("friends.leagueMaster"), medal: "🔱", icon: ic("crown", "#a855f7") };
+      if (rating >= 1600) return { name: friendsT("friends.leagueDiamond"), medal: "💠", icon: ic("gem", "#38e1ff") };
+      if (rating >= 1400) return { name: friendsT("friends.leaguePlatinum"), medal: "💎", icon: ic("gem", "#5b8cff") };
+      if (rating >= 1200) return { name: friendsT("friends.leagueGold"), medal: "🥇", icon: ic("medal", "#fbbf24") };
+      if (rating >= 1000) return { name: friendsT("friends.leagueSilver"), medal: "🥈", icon: ic("shield", "#cbd5e1") };
+      return { name: friendsT("friends.leagueBronze"), medal: "🥉", icon: ic("shield", "#cd7f32") };
     }
 
-    const fpCefrLabels = { A1: "Beginner", A2: "Elementary", B1: "Intermediate", B2: "Upper-Intermediate", C1: "Advanced", C2: "Proficient" };
+    function fpCefrLabel(level) {
+      return friendsT("friends.cefr" + (level || "A1"));
+    }
 
     async function loadProfileModal(userId) {
       try {
@@ -801,7 +924,7 @@
         renderFpSide(data);
         lucide.createIcons();
       } catch (err) {
-        document.getElementById("fpCard").innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-faint);">Yuklab bo\'lmadi</div>';
+        document.getElementById("fpCard").innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-faint);">' + friendsT("friends.loadError") + '</div>';
       }
     }
 
@@ -819,20 +942,20 @@
           '<div class="fpc-name">' + fEsc(name) + (username ? ' <span style="font-size:14px;color:var(--text-faint);font-weight:600">' + fEsc(username) + '</span>' : '') + '</div>' +
           '<div class="fpc-meta">' +
             '<span class="fpc-cefr">CEFR <b>' + (u.cefr_level || "A1") + '</b></span> ' +
-            '<span>' + (fpCefrLabels[u.cefr_level] || "Beginner") + '</span>' +
+            '<span>' + fpCefrLabel(u.cefr_level) + '</span>' +
             '<span class="fpc-divider"></span>' +
-            '<span>League <b style="color:var(--cyan);">' + lg.icon + ' ' + lg.name + '</b></span>' +
+            '<span>' + friendsT("friends.league") + ' <b style="color:var(--cyan);">' + lg.icon + ' ' + lg.name + '</b></span>' +
           '</div>' +
           '<div class="fpc-stats">' +
-            '<div class="fpc-stat"><i data-lucide="trophy" style="color:var(--gold);"></i><div><div class="fpc-sl">Rating</div><div class="fpc-sv">' + (u.rating || 1000) + '</div></div></div>' +
-            '<div class="fpc-stat"><i data-lucide="target" style="color:var(--green);"></i><div><div class="fpc-sl">Win Rate</div><div class="fpc-sv" style="color:var(--green);">' + (s.win_rate || 0) + '%</div></div></div>' +
-            '<div class="fpc-stat"><i data-lucide="flame" style="color:var(--gold);"></i><div><div class="fpc-sl">Win Streak</div><div class="fpc-sv" style="color:var(--gold);">' + (u.current_streak || 0) + '</div></div></div>' +
-            '<div class="fpc-stat"><i data-lucide="swords" style="color:var(--accent-2);"></i><div><div class="fpc-sl">Total Battles</div><div class="fpc-sv">' + (s.total_battles || 0) + '</div></div></div>' +
+            '<div class="fpc-stat"><i data-lucide="trophy" style="color:var(--gold);"></i><div><div class="fpc-sl">' + friendsT("friends.rating") + '</div><div class="fpc-sv">' + (u.rating || 1000) + '</div></div></div>' +
+            '<div class="fpc-stat"><i data-lucide="target" style="color:var(--green);"></i><div><div class="fpc-sl">' + friendsT("friends.winRate") + '</div><div class="fpc-sv" style="color:var(--green);">' + (s.win_rate || 0) + '%</div></div></div>' +
+            '<div class="fpc-stat"><i data-lucide="flame" style="color:var(--gold);"></i><div><div class="fpc-sl">' + friendsT("friends.winStreak") + '</div><div class="fpc-sv" style="color:var(--gold);">' + (u.current_streak || 0) + '</div></div></div>' +
+            '<div class="fpc-stat"><i data-lucide="swords" style="color:var(--accent-2);"></i><div><div class="fpc-sl">' + friendsT("friends.totalBattles") + '</div><div class="fpc-sv">' + (s.total_battles || 0) + '</div></div></div>' +
           '</div>' +
         '</div>' +
         '<div class="fpc-actions">' +
-          '<button class="fpc-btn fpc-challenge" onclick="closeProfileModal(); challengeFriend(' + (u.id || 0) + ', \'' + name.replace(/'/g, "\\'") + '\')"><i data-lucide="swords"></i> Challenge</button>' +
-          '<button class="fpc-btn fpc-full" onclick="window.location.href=\'/profile.html?id=' + (u.id || 0) + '\'"><i data-lucide="external-link"></i> To\'liq profil</button>' +
+          '<button class="fpc-btn fpc-challenge" onclick="closeProfileModal(); challengeFriend(' + (u.id || 0) + ', \'' + name.replace(/'/g, "\\'") + '\')"><i data-lucide="swords"></i> ' + friendsT("friends.challenge") + '</button>' +
+          '<button class="fpc-btn fpc-full" onclick="window.location.href=\'/profile.html?id=' + (u.id || 0) + '\'"><i data-lucide="external-link"></i> ' + friendsT("friends.fullProfile") + '</button>' +
         '</div>';
       lucide.createIcons();
     }
@@ -841,22 +964,21 @@
       const u = data.user || {};
       const favoriteMode = data.stats && data.stats.favorite_mode_label
         ? data.stats.favorite_mode_label
-        : "Hali o'yin yo'q";
+        : friendsT("friends.noGamesYet");
       // Joined sanasini formatlash
       let joined = "—";
       if (u.created_at) {
         const d = new Date(u.created_at);
-        const oylar = ["Yan","Fev","Mar","Apr","May","Iyun","Iyul","Avg","Sen","Okt","Noy","Dek"];
-        joined = oylar[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear();
+        joined = d.toLocaleDateString(friendsLocale(), { year: "numeric", month: "short", day: "numeric" });
       }
       document.getElementById("fpAbout").className = "fp-block";
       document.getElementById("fpAbout").innerHTML =
-        '<div class="fp-block-title"><i data-lucide="user-circle"></i> About</div>' +
+        '<div class="fp-block-title"><i data-lucide="user-circle"></i> ' + friendsT("friends.about") + '</div>' +
         '<div class="fp-about-rows">' +
-          '<div class="fp-ar"><i data-lucide="building-2"></i><span class="fp-ak">School</span><span class="fp-av">' + (u.school || "—") + '</span></div>' +
-          '<div class="fp-ar"><i data-lucide="map-pin"></i><span class="fp-ak">Region</span><span class="fp-av">' + (u.region || "—") + (u.district ? ", " + u.district : "") + '</span></div>' +
-          '<div class="fp-ar"><i data-lucide="calendar"></i><span class="fp-ak">Joined</span><span class="fp-av">' + joined + '</span></div>' +
-          '<div class="fp-ar"><i data-lucide="star"></i><span class="fp-ak">Favorite Mode</span><span class="fp-av soon-badge">' + fEsc(favoriteMode) + '</span></div>' +
+          '<div class="fp-ar"><i data-lucide="building-2"></i><span class="fp-ak">' + friendsT("friends.school") + '</span><span class="fp-av">' + fEsc(u.school || "—") + '</span></div>' +
+          '<div class="fp-ar"><i data-lucide="map-pin"></i><span class="fp-ak">' + friendsT("friends.region") + '</span><span class="fp-av">' + fEsc((u.region || "—") + (u.district ? ", " + u.district : "")) + '</span></div>' +
+          '<div class="fp-ar"><i data-lucide="calendar"></i><span class="fp-ak">' + friendsT("friends.joined") + '</span><span class="fp-av">' + joined + '</span></div>' +
+          '<div class="fp-ar"><i data-lucide="star"></i><span class="fp-ak">' + friendsT("friends.favoriteMode") + '</span><span class="fp-av soon-badge">' + fEsc(favoriteMode) + '</span></div>' +
         '</div>';
       lucide.createIcons();
     }
@@ -864,13 +986,13 @@
     function renderFpAch() {
       document.getElementById("fpAch").className = "fp-block";
       document.getElementById("fpAch").innerHTML =
-        '<div class="fp-block-title"><i data-lucide="award"></i> Achievements <span class="soon-badge" style="margin-left:auto;">Tez kunda</span></div>' +
+        '<div class="fp-block-title"><i data-lucide="award"></i> ' + friendsT("friends.achievements") + ' <span class="soon-badge" style="margin-left:auto;">' + friendsT("friends.comingSoon") + '</span></div>' +
         '<div class="fp-ach-grid">' +
-          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="swords"></i></div><div class="fp-ach-n">Warrior</div></div>' +
-          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="flame"></i></div><div class="fp-ach-n">Streak Master</div></div>' +
-          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="trophy"></i></div><div class="fp-ach-n">Top Performer</div></div>' +
-          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="book-open"></i></div><div class="fp-ach-n">Word Master</div></div>' +
-          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="users"></i></div><div class="fp-ach-n">Social Player</div></div>' +
+          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="swords"></i></div><div class="fp-ach-n">' + friendsT("friends.achievementWarrior") + '</div></div>' +
+          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="flame"></i></div><div class="fp-ach-n">' + friendsT("friends.achievementStreak") + '</div></div>' +
+          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="trophy"></i></div><div class="fp-ach-n">' + friendsT("friends.achievementTop") + '</div></div>' +
+          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="book-open"></i></div><div class="fp-ach-n">' + friendsT("friends.achievementWord") + '</div></div>' +
+          '<div class="fp-ach-item"><div class="fp-ach-ic"><i data-lucide="users"></i></div><div class="fp-ach-n">' + friendsT("friends.achievementSocial") + '</div></div>' +
         '</div>';
       lucide.createIcons();
     }
@@ -881,14 +1003,14 @@
       const lg = fpLeague(u.rating || 1000);
       document.getElementById("fpStats").className = "fp-block";
       document.getElementById("fpStats").innerHTML =
-        '<div class="fp-block-title"><i data-lucide="bar-chart-3"></i> Battle Stats</div>' +
+        '<div class="fp-block-title"><i data-lucide="bar-chart-3"></i> ' + friendsT("friends.battleStats") + '</div>' +
         '<div class="fp-bs-rows">' +
-          '<div class="fp-bs-row"><span class="fp-bs-k">Wins</span><span class="fp-bs-v" style="color:var(--green);">' + (s.wins || 0) + '</span></div>' +
-          '<div class="fp-bs-row"><span class="fp-bs-k">Losses</span><span class="fp-bs-v" style="color:var(--red);">' + (s.loses || 0) + '</span></div>' +
+          '<div class="fp-bs-row"><span class="fp-bs-k">' + friendsT("friends.wins") + '</span><span class="fp-bs-v" style="color:var(--green);">' + (s.wins || 0) + '</span></div>' +
+          '<div class="fp-bs-row"><span class="fp-bs-k">' + friendsT("friends.losses") + '</span><span class="fp-bs-v" style="color:var(--red);">' + (s.loses || 0) + '</span></div>' +
           '<div class="fp-bs-divider"></div>' +
-          '<div class="fp-bs-row"><span class="fp-bs-k">Highest Rank</span><span class="fp-bs-v" style="color:var(--cyan);font-size:15px;">' + lg.icon + ' ' + lg.name + '</span></div>' +
-          '<div class="fp-bs-row"><span class="fp-bs-k">Longest Win Streak</span><span class="fp-bs-v">' + (u.longest_streak || 0) + '</span></div>' +
-          '<div class="fp-bs-row"><span class="fp-bs-k">Win Rate</span><span class="fp-bs-v">' + (s.win_rate || 0) + '%</span></div>' +
+          '<div class="fp-bs-row"><span class="fp-bs-k">' + friendsT("friends.highestRank") + '</span><span class="fp-bs-v" style="color:var(--cyan);font-size:15px;">' + lg.icon + ' ' + lg.name + '</span></div>' +
+          '<div class="fp-bs-row"><span class="fp-bs-k">' + friendsT("friends.longestWinStreak") + '</span><span class="fp-bs-v">' + (u.longest_streak || 0) + '</span></div>' +
+          '<div class="fp-bs-row"><span class="fp-bs-k">' + friendsT("friends.winRate") + '</span><span class="fp-bs-v">' + (s.win_rate || 0) + '%</span></div>' +
         '</div>';
       lucide.createIcons();
     }
@@ -896,25 +1018,25 @@
     async function renderFpHistory(userId) {
       document.getElementById("fpHistory").className = "fp-block";
       document.getElementById("fpHistory").innerHTML =
-        '<div class="fp-block-title"><i data-lucide="swords"></i> Recent Battle History</div>' +
-        '<div id="fpHistList"><div style="text-align:center;color:var(--text-faint);padding:20px;font-size:13px;">Yuklanmoqda...</div></div>';
+        '<div class="fp-block-title"><i data-lucide="swords"></i> ' + friendsT("friends.recentBattleHistory") + '</div>' +
+        '<div id="fpHistList"><div style="text-align:center;color:var(--text-faint);padding:20px;font-size:13px;">' + friendsT("friends.loading") + '</div></div>';
       try {
         const res = await authFetch("/history/" + userId);
         const data = await res.json();
         const battles = data.battles || data.history || [];
         const list = document.getElementById("fpHistList");
         if (battles.length === 0) {
-          list.innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:20px;font-size:13px;">Hali jang qilmagan.</div>';
+          list.innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:20px;font-size:13px;">' + friendsT("friends.noBattlesYet") + '</div>';
           return;
         }
         list.innerHTML =
-          '<div class="fp-hist-head"><span>Opponent</span><span>Result</span><span>Score</span></div>';
+          '<div class="fp-hist-head"><span>' + friendsT("friends.opponent") + '</span><span>' + friendsT("friends.result") + '</span><span>' + friendsT("friends.score") + '</span></div>';
         battles.slice(0, 5).forEach(b => {
           const isWin = b.outcome === "win";
           const isDraw = b.outcome === "draw";
-          const oppName = b.opponent_name || "Raqib";
+          const oppName = b.opponent_name || friendsT("friends.opponent");
           const resCls = isWin ? "var(--green)" : (isDraw ? "var(--text-dim)" : "var(--red)");
-          const resTxt = isWin ? "Win" : (isDraw ? "Draw" : "Loss");
+          const resTxt = isWin ? friendsT("friends.win") : (isDraw ? friendsT("friends.draw") : friendsT("friends.loss"));
           list.innerHTML +=
             '<div class="fp-hist-row">' +
               '<div class="fp-hist-opp"><div class="fp-hist-ava">' + oppName.charAt(0).toUpperCase() + '</div><span>' + oppName + '</span></div>' +
@@ -923,7 +1045,7 @@
             '</div>';
         });
       } catch (err) {
-        document.getElementById("fpHistList").innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:20px;font-size:13px;">Yuklab bo\'lmadi</div>';
+        document.getElementById("fpHistList").innerHTML = '<div style="text-align:center;color:var(--text-faint);padding:20px;font-size:13px;">' + friendsT("friends.loadError") + '</div>';
       }
     }
 
@@ -940,23 +1062,23 @@
 
       // Current Rank (keyingi liga uchun progress)
       const leagues = [
-        { name: "Bronze", min: 0, max: 999 }, { name: "Silver", min: 1000, max: 1199 },
-        { name: "Gold", min: 1200, max: 1399 }, { name: "Platinum", min: 1400, max: 1599 },
-        { name: "Diamond", min: 1600, max: 1799 }, { name: "Master", min: 1800, max: 1999 },
-        { name: "Grandmaster", min: 2000, max: 99999 },
+        { key: "leagueBronze", min: 0, max: 999 }, { key: "leagueSilver", min: 1000, max: 1199 },
+        { key: "leagueGold", min: 1200, max: 1399 }, { key: "leaguePlatinum", min: 1400, max: 1599 },
+        { key: "leagueDiamond", min: 1600, max: 1799 }, { key: "leagueMaster", min: 1800, max: 1999 },
+        { key: "leagueGrandmaster", min: 2000, max: 99999 },
       ];
       let idx = 0;
       leagues.forEach((l, i) => { if (rating >= l.min && rating <= l.max) idx = i; });
       const curL = leagues[idx], nextL = leagues[idx + 1];
-      let prog = 100, rpText = "Eng yuqori daraja!", nextText = "Maksimal";
+      let prog = 100, rpText = friendsT("friends.highestLevel"), nextText = friendsT("friends.maximum");
       if (nextL) {
         prog = Math.round(((rating - curL.min) / (curL.max - curL.min + 1)) * 100);
         rpText = (rating - curL.min) + " / " + (curL.max - curL.min + 1) + " RP";
-        nextText = "Next: " + nextL.name;
+        nextText = friendsT("friends.nextLeague", { league: friendsT("friends." + nextL.key) });
       }
       document.getElementById("fpRank").className = "fp-block";
       document.getElementById("fpRank").innerHTML =
-        '<div class="fp-block-title"><i data-lucide="shield"></i> Current Rank</div>' +
+        '<div class="fp-block-title"><i data-lucide="shield"></i> ' + friendsT("friends.currentRank") + '</div>' +
         '<div class="fp-rank-medal">' + lg.icon + '</div>' +
         '<div class="fp-rank-name">' + lg.name + '</div>' +
         '<div class="fp-rank-bar"><div class="fp-rank-fill" style="width:' + prog + '%;"></div></div>' +
@@ -971,19 +1093,19 @@
       const nextCefr = cIdx < 5 ? cefrOrder[cIdx + 1] : "C2";
       document.getElementById("fpCefr").className = "fp-block";
       document.getElementById("fpCefr").innerHTML =
-        '<div class="fp-block-title"><i data-lucide="book-open"></i> CEFR Progression</div>' +
+        '<div class="fp-block-title"><i data-lucide="book-open"></i> ' + friendsT("friends.cefrProgression") + '</div>' +
         '<div class="fp-cefr-top"><b>' + cur + '</b><span>' + nextCefr + '</span></div>' +
         '<div class="fp-rank-bar"><div class="fp-cefr-fill" style="width:' + cProg + '%;"></div></div>' +
-        '<div class="fp-cefr-msg">' + cProg + '% — Zo\'r ketyapsiz!</div>';
+        '<div class="fp-cefr-msg">' + friendsT("friends.cefrProgressMessage", { percent: cProg }) + '</div>';
 
       // Mutual Friends — umumiy do'stlar
       const mutual = data.mutual_friends || [];
       const mutualCount = data.mutual_count || 0;
-      let mutualHtml = '<div class="fp-block-title"><i data-lucide="users"></i> Umumiy do\'stlar';
+      let mutualHtml = '<div class="fp-block-title"><i data-lucide="users"></i> ' + friendsT("friends.mutualFriends");
       if (mutualCount > 0) mutualHtml += ' <span style="margin-left:auto;color:var(--text-dim);font-size:13px;">' + mutualCount + '</span>';
       mutualHtml += '</div>';
       if (mutual.length === 0) {
-        mutualHtml += '<div class="fp-mutual-empty">Umumiy do\'stlar yo\'q</div>';
+        mutualHtml += '<div class="fp-mutual-empty">' + friendsT("friends.noMutualFriends") + '</div>';
       } else {
         mutualHtml += '<div class="fp-mutual-list">';
         mutual.forEach(m => {
@@ -997,7 +1119,7 @@
         });
         mutualHtml += '</div>';
         if (mutualCount > mutual.length) {
-          mutualHtml += '<div class="fp-mutual-more">+' + (mutualCount - mutual.length) + ' ko\'proq</div>';
+          mutualHtml += '<div class="fp-mutual-more">' + friendsT("friends.moreFriends", { count: mutualCount - mutual.length }) + '</div>';
         }
       }
       document.getElementById("fpMutual").className = "fp-block";
@@ -1012,7 +1134,7 @@
 
     socket.on("challengeResult", (data) => {
       if (!data.success) {
-        showOverlay("❌ " + data.message, '<button class="ov-btn ov-reject" onclick="hideOverlay()">Yopish</button>');
+        showOverlay("❌ " + data.message, '<button class="ov-btn ov-reject" onclick="hideOverlay()">' + friendsT("common.close") + '</button>');
       }
     });
 
@@ -1020,9 +1142,9 @@
     socket.on("challengeReceived", (data) => {
       incomingChallenge = data;
       showOverlay(
-        "⚔️ <b>" + fEsc(data.fromName) + "</b> sizni jangga chaqiryapti!",
-        '<button class="ov-btn ov-accept" onclick="acceptChallenge()">✓ Qabul</button>' +
-        '<button class="ov-btn ov-reject" style="margin-left:8px;" onclick="declineChallenge()">✕ Rad</button>'
+        "⚔️ " + friendsT("friends.challengeReceived", { name: "<b>" + fEsc(data.fromName) + "</b>" }),
+        '<button class="ov-btn ov-accept" onclick="acceptChallenge()">✓ ' + friendsT("friends.accept") + '</button>' +
+        '<button class="ov-btn ov-reject" style="margin-left:8px;" onclick="declineChallenge()">✕ ' + friendsT("friends.reject") + '</button>'
       );
     });
 
@@ -1046,7 +1168,7 @@
         level: incomingChallenge.level,
         lengthKey: incomingChallenge.lengthKey || "standard",
       });
-      showOverlay("⚔️ Jang boshlanmoqda...");
+      showOverlay("⚔️ " + friendsT("friends.battleStarting"));
     }
 
     function declineChallenge() {
@@ -1061,8 +1183,8 @@
     }
 
     socket.on("challengeDeclined", (data) => {
-      showOverlay("😔 " + data.byName + " chaqiruvni rad etdi",
-        '<button class="ov-btn ov-reject" onclick="hideOverlay()">Yopish</button>');
+      showOverlay("😔 " + friendsT("friends.challengeDeclined", { name: data.byName }),
+        '<button class="ov-btn ov-reject" onclick="hideOverlay()">' + friendsT("common.close") + '</button>');
     });
 
     socket.on("matchFound", (data) => {
@@ -1077,7 +1199,7 @@
       // Yuqoridagi qo'ng'iroq panelini ham yangilaymiz (sidebar.js dan)
       if (typeof loadNotifs === "function") loadNotifs();
       if (typeof showNotifToast === "function") {
-        showNotifToast((data && data.fromName ? data.fromName : "Kimdir") + " sizga do'st so'rovi yubordi");
+        showNotifToast(friendsT("friends.newRequestToast", { name: data && data.fromName ? data.fromName : friendsT("friends.someone") }));
       }
     });
     
@@ -1087,12 +1209,12 @@
       if (btn) {
         if (data.action === "accept") {
           btn.disabled = true;
-          btn.innerHTML = '<i data-lucide="check"></i> Do\'st bo\'ldingiz';
+          btn.innerHTML = '<i data-lucide="check"></i> ' + friendsT("friends.nowFriends");
           btn.style.background = "linear-gradient(135deg, #22c55e, #16a34a)";
         } else {
           // Rad etildi - qaytadan qo'shish mumkin
           btn.disabled = false;
-          btn.innerHTML = '<i data-lucide="user-plus"></i> Qo\'shish';
+          btn.innerHTML = '<i data-lucide="user-plus"></i> ' + friendsT("friends.add");
         }
         lucide.createIcons();
       }
@@ -1123,13 +1245,13 @@
     // ===== DO'STLAR RO'YXATI =====
     function leagueOf(rating) {
       const ic = (name, color) => '<i data-lucide="' + name + '" style="width:15px;height:15px;color:' + color + ';vertical-align:-3px;"></i>';
-      if (rating >= 2000) return { name: "Grandmaster", medal: "👑", icon: ic("crown", "#fbbf24") };
-      if (rating >= 1800) return { name: "Master", medal: "🔱", icon: ic("crown", "#a855f7") };
-      if (rating >= 1600) return { name: "Diamond", medal: "💠", icon: ic("gem", "#38e1ff") };
-      if (rating >= 1400) return { name: "Platinum", medal: "💎", icon: ic("gem", "#5b8cff") };
-      if (rating >= 1200) return { name: "Gold", medal: "🥇", icon: ic("medal", "#fbbf24") };
-      if (rating >= 1000) return { name: "Silver", medal: "🥈", icon: ic("shield", "#cbd5e1") };
-      return { name: "Bronze", medal: "🥉", icon: ic("shield", "#cd7f32") };
+      if (rating >= 2000) return { name: friendsT("friends.leagueGrandmaster"), medal: "👑", icon: ic("crown", "#fbbf24") };
+      if (rating >= 1800) return { name: friendsT("friends.leagueMaster"), medal: "🔱", icon: ic("crown", "#a855f7") };
+      if (rating >= 1600) return { name: friendsT("friends.leagueDiamond"), medal: "💠", icon: ic("gem", "#38e1ff") };
+      if (rating >= 1400) return { name: friendsT("friends.leaguePlatinum"), medal: "💎", icon: ic("gem", "#5b8cff") };
+      if (rating >= 1200) return { name: friendsT("friends.leagueGold"), medal: "🥇", icon: ic("medal", "#fbbf24") };
+      if (rating >= 1000) return { name: friendsT("friends.leagueSilver"), medal: "🥈", icon: ic("shield", "#cbd5e1") };
+      return { name: friendsT("friends.leagueBronze"), medal: "🥉", icon: ic("shield", "#cd7f32") };
     }
 
     async function loadFriends() {
@@ -1141,7 +1263,7 @@
         document.getElementById("flCount").textContent = "(" + friends.length + ")";
 
         if (friends.length === 0) {
-          list.innerHTML = '<div class="fl-empty">Hali do\'stlaringiz yo\'q. Qidirib qo\'shing!</div>';
+          list.innerHTML = '<div class="fl-empty">' + friendsT("friends.noFriends") + '</div>';
           return;
         }
         list.innerHTML = "";
@@ -1150,8 +1272,8 @@
           const lg = leagueOf(f.rating);
           // Status - hozircha hammasi "online" deb ko'rsatamiz (real-time status keyin)
           const statusHtml = f.isOnline
-            ? '<div class="fl-status st-online"><span class="fl-dot"></span> Online</div>'
-            : '<div class="fl-status st-offline"><span class="fl-dot fl-dot-off"></span> Offline</div>';
+            ? '<div class="fl-status st-online"><span class="fl-dot"></span> ' + friendsT("friends.online") + '</div>'
+            : '<div class="fl-status st-offline"><span class="fl-dot fl-dot-off"></span> ' + friendsT("friends.offline") + '</div>';
 
           const row = document.createElement("div");
           row.className = "fl-row";
@@ -1161,15 +1283,15 @@
             '<div class="fl-league"><div class="fl-league-name">' + lg.icon + ' ' + lg.name + '</div><div class="fl-league-rp">' + f.rating + ' RP</div></div>' +
             statusHtml +
             '<div class="fl-actions">' +
-              '<button class="fl-challenge" onclick="challengeFriend(' + f.id + ', \'' + name.replace(/'/g, "\\'") + '\')"><i data-lucide="swords"></i> Challenge</button>' +
-              '<button class="fl-profile" onclick="viewProfile(' + f.id + ')" title="Profilni ko\'rish"><i data-lucide="user"></i></button>' +
-              '<button class="fl-remove" onclick="removeFriend(' + f.id + ', \'' + name.replace(/'/g, "\\'") + '\')" title="Do\'stlikdan chiqarish"><i data-lucide="user-minus"></i></button>' +
+              '<button class="fl-challenge" onclick="challengeFriend(' + f.id + ', \'' + name.replace(/'/g, "\\'") + '\')"><i data-lucide="swords"></i> ' + friendsT("friends.challenge") + '</button>' +
+              '<button class="fl-profile" onclick="viewProfile(' + f.id + ')" title="' + friendsT("friends.viewProfile") + '"><i data-lucide="user"></i></button>' +
+              '<button class="fl-remove" onclick="removeFriend(' + f.id + ', \'' + name.replace(/'/g, "\\'") + '\')" title="' + friendsT("friends.removeFriend") + '"><i data-lucide="user-minus"></i></button>' +
             '</div>';
           list.appendChild(row);
         });
         lucide.createIcons();
       } catch (err) {
-        list.innerHTML = '<div class="fl-empty">Yuklab bo\'lmadi</div>';
+        list.innerHTML = '<div class="fl-empty">' + friendsT("friends.loadError") + '</div>';
       }
     }
     loadFriends();
@@ -1184,7 +1306,7 @@
         updateReqBadge(requests.length);
 
         if (requests.length === 0) {
-          list.innerHTML = '<div class="fl-empty">Yangi so\'rovlar yo\'q</div>';
+          list.innerHTML = '<div class="fl-empty">' + friendsT("friends.noRequests") + '</div>';
           return;
         }
         list.innerHTML = "";
@@ -1196,14 +1318,14 @@
             '<div class="req-ava">' + avatarHTML(r.first_name, r.profile_picture) + '</div>' +
             '<div class="req-info"><div class="req-name">' + fEsc(name) + '</div><div class="req-sub">' + (r.cefr_level || "A1") + ' · ' + r.rating + ' RP</div></div>' +
             '<div class="req-actions">' +
-              '<button class="req-btn req-accept" onclick="respond(' + r.friendship_id + ',\'accept\',this)"><i data-lucide="check"></i> Qabul</button>' +
-              '<button class="req-btn req-decline" onclick="respond(' + r.friendship_id + ',\'reject\',this)"><i data-lucide="x"></i> Rad</button>' +
+              '<button class="req-btn req-accept" onclick="respond(' + r.friendship_id + ',\'accept\',this)"><i data-lucide="check"></i> ' + friendsT("friends.accept") + '</button>' +
+              '<button class="req-btn req-decline" onclick="respond(' + r.friendship_id + ',\'reject\',this)"><i data-lucide="x"></i> ' + friendsT("friends.reject") + '</button>' +
             '</div>';
           list.appendChild(row);
         });
         lucide.createIcons();
       } catch (err) {
-        list.innerHTML = '<div class="fl-empty">Yuklab bo\'lmadi</div>';
+        list.innerHTML = '<div class="fl-empty">' + friendsT("friends.loadError") + '</div>';
       }
     }
 
@@ -1221,7 +1343,7 @@
         });
         btn.closest(".req-row").remove();
         loadRequests();
-      } catch (err) { alert("Xato"); }
+      } catch (err) { alert(friendsT("friends.error")); }
     }
 
     // ===== QIDIRISH =====
@@ -1231,13 +1353,13 @@
       // Qidiruv tab'iga o'tish
       switchTab("search");
       if (!q.trim()) { results.innerHTML = ""; return; }
-      results.innerHTML = '<div class="fl-empty">Qidirilyapti...</div>';
+      results.innerHTML = '<div class="fl-empty">' + friendsT("friends.searching") + '</div>';
       try {
         const res = await authFetch("/friends/search?q=" + encodeURIComponent(q) + "&userId=" + user.id);
         const data = await res.json();
         const found = data.results || [];
         if (found.length === 0) {
-          results.innerHTML = '<div class="fl-empty">Hech kim topilmadi</div>';
+          results.innerHTML = '<div class="fl-empty">' + friendsT("friends.noSearchResults") + '</div>';
           return;
         }
         results.innerHTML = "";
@@ -1250,11 +1372,11 @@
           // friendStatus'ga qarab tugma
           let actionBtn = "";
           if (u.friendStatus === "friend") {
-            actionBtn = '<button class="srch-profile" onclick="viewProfile(' + u.id + ')"><i data-lucide="user"></i> Profil</button>';
+            actionBtn = '<button class="srch-profile" onclick="viewProfile(' + u.id + ')"><i data-lucide="user"></i> ' + friendsT("friends.profile") + '</button>';
           } else if (u.friendStatus === "pending") {
-            actionBtn = '<button class="srch-pending" disabled><i data-lucide="clock"></i> Kutilmoqda</button>';
+            actionBtn = '<button class="srch-pending" disabled><i data-lucide="clock"></i> ' + friendsT("friends.pending") + '</button>';
           } else {
-            actionBtn = '<button class="srch-add" id="addBtn-' + u.id + '" onclick="sendRequest(' + u.id + ',this)"><i data-lucide="user-plus"></i> Qo\'shish</button>';
+            actionBtn = '<button class="srch-add" id="addBtn-' + u.id + '" onclick="sendRequest(' + u.id + ',this)"><i data-lucide="user-plus"></i> ' + friendsT("friends.add") + '</button>';
           }
 
           row.innerHTML =
@@ -1265,11 +1387,21 @@
         });
         lucide.createIcons();
       } catch (err) {
-        results.innerHTML = '<div class="fl-empty">Xato yuz berdi</div>';
+        results.innerHTML = '<div class="fl-empty">' + friendsT("friends.errorOccurred") + '</div>';
       }
     }
 
     // ===== TAVSIYA ETILGAN DO'STLAR =====
+    function suggestionReason(reason) {
+      if (reason === "Maktabdosh") return friendsT("friends.reasonSchoolmate");
+      if (reason === "Bir tumandan") return friendsT("friends.reasonDistrict");
+      if (reason === "Bir viloyatdan") return friendsT("friends.reasonRegion");
+      if (/^[A-C][1-2] daraja$/.test(reason || "")) {
+        return friendsT("friends.reasonLevel", { level: String(reason).split(" ")[0] });
+      }
+      return friendsT("friends.reasonSuggested");
+    }
+
     async function loadSuggested() {
       const list = document.getElementById("suggestedList");
       try {
@@ -1277,7 +1409,7 @@
         const data = await res.json();
         const suggested = data.suggested || [];
         if (suggested.length === 0) {
-          list.innerHTML = '<div class="fl-empty">Hozircha tavsiya yo\'q. Keyinroq qarang!</div>';
+          list.innerHTML = '<div class="fl-empty">' + friendsT("friends.noSuggestions") + '</div>';
           return;
         }
         list.innerHTML = "";
@@ -1287,14 +1419,14 @@
           row.className = "srch-row";
           row.innerHTML =
             '<div class="srch-ava">' + avatarHTML(u.first_name, u.profile_picture) + '</div>' +
-            '<div class="srch-info"><div class="srch-name">' + name + '</div>' +
-            '<div class="srch-sub"><span class="sug-reason">' + u.reason + '</span> · ' + (u.cefr_level || "A1") + ' · ' + u.rating + ' RP</div></div>' +
-            '<button class="srch-add" id="addBtn-' + u.id + '" onclick="sendRequest(' + u.id + ',this)"><i data-lucide="user-plus"></i> Qo\'shish</button>';
+            '<div class="srch-info"><div class="srch-name">' + fEsc(name) + '</div>' +
+            '<div class="srch-sub"><span class="sug-reason">' + fEsc(suggestionReason(u.reason)) + '</span> · ' + (u.cefr_level || "A1") + ' · ' + u.rating + ' RP</div></div>' +
+            '<button class="srch-add" id="addBtn-' + u.id + '" onclick="sendRequest(' + u.id + ',this)"><i data-lucide="user-plus"></i> ' + friendsT("friends.add") + '</button>';
           list.appendChild(row);
         });
         lucide.createIcons();
       } catch (err) {
-        list.innerHTML = '<div class="fl-empty">Yuklab bo\'lmadi</div>';
+        list.innerHTML = '<div class="fl-empty">' + friendsT("friends.loadError") + '</div>';
       }
     }
 
@@ -1306,9 +1438,9 @@
         });
         const data = await res.json();
         btn.disabled = true;
-        btn.innerHTML = res.ok ? '<i data-lucide="check"></i> Yuborildi' : data.error;
+        btn.innerHTML = res.ok ? '<i data-lucide="check"></i> ' + friendsT("friends.sent") : fEsc(data.error || friendsT("friends.error"));
         lucide.createIcons();
-      } catch (err) { alert("Xato"); }
+      } catch (err) { alert(friendsT("friends.error")); }
     }
 
     // Boshlanishida so'rovlar badge'ini yuklash
@@ -1343,7 +1475,7 @@
           const rank = i + 1;
           let rankCls = "";
           if (rank === 1) rankCls = "r1"; else if (rank === 2) rankCls = "r2"; else if (rank === 3) rankCls = "r3";
-          const name = f.isMe ? (f.first_name + " (Siz)") : (f.first_name + " " + f.last_name);
+          const name = f.isMe ? (f.first_name + " " + friendsT("friends.youLabel")) : (f.first_name + " " + f.last_name);
           const row = document.createElement("div");
           row.className = "tf-row";
           row.innerHTML =
@@ -1355,17 +1487,17 @@
         });
         lucide.createIcons();
       } catch (err) {
-        document.getElementById("topFriends").innerHTML = '<div class="fl-empty" style="padding:16px;">Yuklab bo\'lmadi</div>';
+        document.getElementById("topFriends").innerHTML = '<div class="fl-empty" style="padding:16px;">' + friendsT("friends.loadError") + '</div>';
       }
     }
 
     // ===== RECENT ACTIVITY =====
     function timeAgo(dateStr) {
       const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-      if (diff < 60) return "hozir";
-      if (diff < 3600) return Math.floor(diff / 60) + " daqiqa oldin";
-      if (diff < 86400) return Math.floor(diff / 3600) + " soat oldin";
-      return Math.floor(diff / 86400) + " kun oldin";
+      if (diff < 60) return friendsT("friends.timeNow");
+      if (diff < 3600) return friendsT("friends.timeMinutes", { count: Math.floor(diff / 60) });
+      if (diff < 86400) return friendsT("friends.timeHours", { count: Math.floor(diff / 3600) });
+      return friendsT("friends.timeDays", { count: Math.floor(diff / 86400) });
     }
 
     async function loadActivity() {
@@ -1377,8 +1509,8 @@
         if (acts.length === 0) {
           box.innerHTML =
             '<div class="ra-empty">' +
-              '<div class="ra-empty-txt">Hali do\'stlar faoliyati yo\'q. Do\'stlaringizni jangga chaqiring — ularning g\'alabalari shu yerda ko\'rinadi!</div>' +
-              '<button class="ra-empty-btn" onclick="switchTab(\'all\')"><i data-lucide="swords"></i> Do\'stni chaqirish</button>' +
+              '<div class="ra-empty-txt">' + friendsT("friends.noActivity") + '</div>' +
+              '<button class="ra-empty-btn" onclick="switchTab(\'all\')"><i data-lucide="swords"></i> ' + friendsT("friends.challengeFriend") + '</button>' +
             '</div>';
           lucide.createIcons();
           return;
@@ -1390,7 +1522,7 @@
           const iconName = isWin ? "trophy" : (isDraw ? "handshake" : "swords");
           const icon = '<i data-lucide="' + iconName + '"></i>';
           const iconCls = isWin ? "win" : (isDraw ? "online" : "lose");
-          const resWord = isWin ? "g'alaba qozondi" : (isDraw ? "durang o'ynadi" : "mag'lub bo'ldi");
+          const resWord = isWin ? friendsT("friends.activityWon") : (isDraw ? friendsT("friends.activityDrew") : friendsT("friends.activityLost"));
           const rc = a.ratingChange >= 0 ? "+" + a.ratingChange : a.ratingChange;
           const item = document.createElement("div");
           item.className = "ra-item";
@@ -1398,15 +1530,15 @@
             '<div class="ra-avatar"><div class="ra-pic">' + avatarHTML(a.friendFirst, a.friendPic) + '</div><div class="ra-emoji ' + iconCls + '">' + icon + '</div></div>' +
             '<div class="ra-body">' +
               '<div class="ra-title"><b>' + fEsc(a.friendName) + '</b> ' + resWord + '</div>' +
-              '<div class="ra-desc">' + a.myScore + ' : ' + a.oppScore + ' · ' + rc + ' RP · ' + fEsc(a.opponentName || "raqib") + 'ga qarshi</div>' +
+              '<div class="ra-desc">' + friendsT("friends.activityAgainst", { score: a.myScore + " : " + a.oppScore, rating: rc, opponent: fEsc(a.opponentName || friendsT("friends.opponent")) }) + '</div>' +
               '<div class="ra-time">' + timeAgo(a.time) + '</div>' +
-              '<button class="ra-btn" onclick="challengeFriend(' + a.friendId + ', \'' + a.friendName.replace(/'/g, "\\'") + '\')"><i data-lucide="swords"></i> Chaqirish</button>' +
+              '<button class="ra-btn" onclick="challengeFriend(' + a.friendId + ', \'' + a.friendName.replace(/'/g, "\\'") + '\')"><i data-lucide="swords"></i> ' + friendsT("friends.challenge") + '</button>' +
             '</div>';
           box.appendChild(item);
         });
         lucide.createIcons();
       } catch (err) {
-        box.innerHTML = '<div class="ra-note">Yuklab bo\'lmadi</div>';
+        box.innerHTML = '<div class="ra-note">' + friendsT("friends.loadError") + '</div>';
       }
     }
     loadActivity();
@@ -1425,11 +1557,11 @@
     loadPendingCount();
     createRankInfoDialog({
       triggerId: "friendsSummaryInfoButton",
-      title: "Friends Summary",
-      subtitle: "Do‘stlaringiz bo‘yicha joriy statistika",
+      get title() { return friendsT("friends.summary"); },
+      get subtitle() { return friendsT("friends.summarySubtitle"); },
       headerIcon: "users",
-      primaryLabel: "Jami do‘stlar",
-      secondaryLabel: "Hozir online",
+      get primaryLabel() { return friendsT("friends.totalFriends"); },
+      get secondaryLabel() { return friendsT("friends.onlineNow"); },
       detailType: "scopes",
       hideFooter: true,
       getData: function () {
@@ -1437,10 +1569,10 @@
           primary: document.getElementById("fsTotal").textContent || "0",
           secondary: document.getElementById("fsOnline").textContent || "0",
           scopes: [
-            { icon: "users", name: "Total Friends", description: "Qabul qilingan do‘stliklar", value: document.getElementById("fsTotal").textContent || "0" },
-            { icon: "circle", name: "Online Now", description: "Hozir faol do‘stlar", value: document.getElementById("fsOnline").textContent || "0" },
-            { icon: "user-plus", name: "Pending", description: "Kutilayotgan kiruvchi so‘rovlar", value: document.getElementById("fsRequests").textContent || "0" },
-            { icon: "trophy", name: "Wins vs Friends", description: "Do‘stlarga qarshi g‘alabalar", value: document.getElementById("fsWins").textContent || "0" },
+            { icon: "users", name: friendsT("friends.totalFriends"), description: friendsT("friends.totalFriendsDescription"), value: document.getElementById("fsTotal").textContent || "0" },
+            { icon: "circle", name: friendsT("friends.onlineNow"), description: friendsT("friends.onlineNowDescription"), value: document.getElementById("fsOnline").textContent || "0" },
+            { icon: "user-plus", name: friendsT("friends.pending"), description: friendsT("friends.pendingDescription"), value: document.getElementById("fsRequests").textContent || "0" },
+            { icon: "trophy", name: friendsT("friends.winsVsFriends"), description: friendsT("friends.winsVsFriendsDescription"), value: document.getElementById("fsWins").textContent || "0" },
           ],
         };
       },
@@ -1448,9 +1580,9 @@
     // Do'stni o'chirish - tasdiqlash oynasi
     function removeFriend(friendId, friendName) {
       showOverlay(
-        "🗑️ <b>" + friendName + "</b> ni do'stlikdan chiqarmoqchimisiz?",
-        '<button class="ov-btn ov-reject" onclick="confirmRemove(' + friendId + ')">Ha, chiqarish</button>' +
-        '<button class="ov-btn ov-accept" style="margin-left:8px;" onclick="hideOverlay()">Bekor qilish</button>'
+        "🗑️ " + friendsT("friends.removeConfirm", { name: "<b>" + fEsc(friendName) + "</b>" }),
+        '<button class="ov-btn ov-reject" onclick="confirmRemove(' + friendId + ')">' + friendsT("friends.confirmRemove") + '</button>' +
+        '<button class="ov-btn ov-accept" style="margin-left:8px;" onclick="hideOverlay()">' + friendsT("common.cancel") + '</button>'
       );
     }
 
@@ -1465,12 +1597,22 @@
           loadFriends();
           loadRightbar();
         } else {
-          showOverlay("❌ O'chirib bo'lmadi", '<button class="ov-btn ov-reject" onclick="hideOverlay()">Yopish</button>');
+          showOverlay("❌ " + friendsT("friends.removeError"), '<button class="ov-btn ov-reject" onclick="hideOverlay()">' + friendsT("common.close") + '</button>');
         }
       } catch (err) {
-        showOverlay("❌ Xato yuz berdi", '<button class="ov-btn ov-reject" onclick="hideOverlay()">Yopish</button>');
+        showOverlay("❌ " + friendsT("friends.errorOccurred"), '<button class="ov-btn ov-reject" onclick="hideOverlay()">' + friendsT("common.close") + '</button>');
       }
     }
+    window.addEventListener("ilmliga:languagechange", function () {
+      if (document.getElementById("lengthModal").classList.contains("show")) openLengthModal();
+      if (document.getElementById("fpModal").classList.contains("open") && fpUserId) loadProfileModal(fpUserId);
+      if (currentTab === "all") loadFriends();
+      if (currentTab === "requests") loadRequests();
+      if (currentTab === "suggested") loadSuggested();
+      if (currentTab === "search" && document.getElementById("searchInput").value.trim()) doSearch();
+      loadRightbar();
+      loadActivity();
+    });
     lucide.createIcons();
   </script>
 </body>

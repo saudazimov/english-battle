@@ -2,6 +2,11 @@
   if (window.__profileEditorLoaded) return;
   window.__profileEditorLoaded = true;
 
+  function editorT(key, params) {
+    if (typeof window.profileT === "function") return window.profileT(key, params);
+    return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+  }
+
   const style = document.createElement("style");
   style.textContent = `
     .pe-overlay{display:none;position:fixed;inset:0;z-index:6100;padding:20px;background:rgba(3,6,15,.84);backdrop-filter:blur(7px);align-items:center;justify-content:center;color:#f8fafc}
@@ -38,32 +43,33 @@
   overlay.setAttribute("aria-hidden", "true");
   overlay.innerHTML = `
     <section class="pe-dialog" role="dialog" aria-modal="true" aria-labelledby="peTitle">
-      <button type="button" class="pe-close" aria-label="Yopish">&times;</button>
-      <h2 class="pe-title" id="peTitle">Profilni tahrirlash</h2>
-      <p class="pe-subtitle">Ism va familiyangiz reyting, janglar va sinflarda ko‘rinadi.</p>
+      <button type="button" class="pe-close" aria-label="Yopish" data-i18n-aria-label="profile.closeEditor">&times;</button>
+      <h2 class="pe-title" id="peTitle" data-i18n="profile.editTitle">Profilni tahrirlash</h2>
+      <p class="pe-subtitle" data-i18n="profile.editSubtitle">Ism va familiyangiz reyting, janglar va sinflarda ko‘rinadi.</p>
       <form class="pe-form" novalidate>
         <div class="pe-field">
-          <label for="peFirstName">Ism</label>
+          <label for="peFirstName" data-i18n="profile.firstName">Ism</label>
           <input id="peFirstName" name="first_name" type="text" minlength="2" maxlength="100" autocomplete="given-name" required>
         </div>
         <div class="pe-field">
-          <label for="peLastName">Familiya</label>
+          <label for="peLastName" data-i18n="profile.lastName">Familiya</label>
           <input id="peLastName" name="last_name" type="text" minlength="2" maxlength="100" autocomplete="family-name" required>
-          <span class="pe-help">2–100 belgi. Harflar, bo‘sh joy, apostrof va chiziq ishlatish mumkin.</span>
+          <span class="pe-help" data-i18n="profile.nameHelp">2–100 belgi. Harflar, bo‘sh joy, apostrof va chiziq ishlatish mumkin.</span>
         </div>
         <div class="pe-field">
-          <label for="peBio">Bio / Tavsif</label>
-          <textarea id="peBio" name="bio" maxlength="500" placeholder="O‘zingiz haqingizda qisqacha yozing..."></textarea>
-          <div class="pe-field-meta"><span>Profilingizda hammaga ko‘rinadi</span><span class="pe-bio-count">0 / 500</span></div>
+          <label for="peBio" data-i18n="profile.bio">Bio / Tavsif</label>
+          <textarea id="peBio" name="bio" maxlength="500" placeholder="O‘zingiz haqingizda qisqacha yozing..." data-i18n-placeholder="profile.bioPlaceholder"></textarea>
+          <div class="pe-field-meta"><span data-i18n="profile.bioPublic">Profilingizda hammaga ko‘rinadi</span><span class="pe-bio-count">0 / 500</span></div>
         </div>
         <div class="pe-error" role="alert"></div>
         <div class="pe-actions">
-          <button type="button" class="pe-btn pe-cancel">Bekor qilish</button>
-          <button type="submit" class="pe-btn pe-save">Saqlash</button>
+          <button type="button" class="pe-btn pe-cancel" data-i18n="common.cancel">Bekor qilish</button>
+          <button type="submit" class="pe-btn pe-save" data-i18n="profile.save">Saqlash</button>
         </div>
       </form>
     </section>`;
   document.body.appendChild(overlay);
+  if (window.IlmLigaI18n) window.IlmLigaI18n.apply(overlay);
 
   const dialog = overlay.querySelector(".pe-dialog");
   const form = overlay.querySelector(".pe-form");
@@ -77,7 +83,7 @@
   let opener = null;
 
   function showError(message) {
-    errorBox.textContent = message || "Ma’lumotni saqlab bo‘lmadi";
+    errorBox.textContent = message || editorT("profile.saveFailed");
     errorBox.classList.add("show");
   }
 
@@ -103,7 +109,7 @@
     errorBox.textContent = "";
     errorBox.classList.remove("show");
     saveButton.disabled = false;
-    saveButton.textContent = "Saqlash";
+    saveButton.textContent = editorT("profile.save");
     previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     overlay.classList.add("open");
@@ -130,7 +136,7 @@
     if (!form.reportValidity()) return;
 
     saveButton.disabled = true;
-    saveButton.textContent = "Saqlanmoqda...";
+    saveButton.textContent = editorT("profile.saving");
     try {
       const response = await authFetch("/profile", {
         method: "PUT",
@@ -152,10 +158,15 @@
       }
       closeEditor();
     } catch (error) {
-      showError("Server bilan aloqa yo‘q. Qayta urinib ko‘ring.");
+      showError(editorT("profile.saveServerError"));
     } finally {
       saveButton.disabled = false;
-      saveButton.textContent = "Saqlash";
+      saveButton.textContent = editorT("profile.save");
     }
+  });
+
+  window.addEventListener("ilmliga:languagechange", function () {
+    if (window.IlmLigaI18n) window.IlmLigaI18n.apply(overlay);
+    saveButton.textContent = editorT(saveButton.disabled ? "profile.saving" : "profile.save");
   });
 })();

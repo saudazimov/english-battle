@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Imtihon</title>
+  <title data-i18n="examRoom.metaTitle">Daraja imtihoni — IlmLiga</title>
+  <meta name="description" content="IlmLiga daraja imtihonini topshiring va natijangizni ko‘ring." data-i18n-content="examRoom.metaDescription">
   <link rel="stylesheet" href="/app.css">
   <style>
     body { display: flex; align-items: flex-start; justify-content: center; padding: 30px 20px; }
@@ -92,19 +93,19 @@
       <div class="card intro-card">
         <div class="intro-top">
           <div class="intro-ic"><i data-lucide="graduation-cap"></i></div>
-          <h1 id="examTitle">Daraja imtihoni</h1>
-          <p id="examSubtitle">A1 → A2 ko'tarilish imtihoni</p>
+          <h1 id="examTitle" data-i18n="examRoom.levelExam">Daraja imtihoni</h1>
+          <p id="examSubtitle" data-i18n="examRoom.defaultTransition">Keyingi darajaga ko‘tarilish imtihoni</p>
         </div>
         <div class="intro-body">
-          <div class="rules-title">Qoidalar</div>
-          <div class="rule-row"><i data-lucide="list-checks"></i> 20 ta savol (aralash mavzular)</div>
-          <div class="rule-row"><i data-lucide="clock"></i> Har savolga 30 soniya</div>
-          <div class="rule-row"><i data-lucide="target"></i> O'tish uchun: umumiy 75%+</div>
-          <div class="rule-row"><i data-lucide="layers"></i> Har mavzu bo'yicha kamida 60%</div>
-          <div class="rule-row"><i data-lucide="user"></i> Raqib yo'q — yolg'iz topshirasiz</div>
+          <div class="rules-title" data-i18n="examRoom.rules">Qoidalar</div>
+          <div class="rule-row"><i data-lucide="list-checks"></i> <span data-i18n="examRoom.ruleQuestions">20 ta savol (aralash mavzular)</span></div>
+          <div class="rule-row"><i data-lucide="clock"></i> <span data-i18n="examRoom.ruleTime">Har savolga 30 soniya</span></div>
+          <div class="rule-row"><i data-lucide="target"></i> <span data-i18n="examRoom.ruleOverall">O‘tish uchun: umumiy 75%+</span></div>
+          <div class="rule-row"><i data-lucide="layers"></i> <span data-i18n="examRoom.ruleTopic">Har mavzu bo‘yicha kamida 60%</span></div>
+          <div class="rule-row"><i data-lucide="user"></i> <span data-i18n="examRoom.ruleSolo">Raqib yo‘q — yolg‘iz topshirasiz</span></div>
           <div id="introButtons" class="intro-actions">
-            <button class="btn btn-primary" onclick="startExam()"><i data-lucide="play" style="width:18px;height:18px;"></i> Imtihonni boshlash</button>
-            <button class="btn btn-ghost" onclick="goExam()">Bekor qilish</button>
+            <button class="btn btn-primary" onclick="startExam()"><i data-lucide="play" style="width:18px;height:18px;"></i> <span data-i18n="examRoom.start">Imtihonni boshlash</span></button>
+            <button class="btn btn-ghost" onclick="goExam()" data-i18n="examRoom.cancel">Bekor qilish</button>
           </div>
           <div id="notEligible" class="not-eligible" style="display:none;"></div>
         </div>
@@ -123,7 +124,7 @@
         <div class="q-text" id="qText">...</div>
         <div id="options"></div>
         <div class="q-nav">
-          <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()">Keyingi <i data-lucide="arrow-right" style="width:16px;height:16px;"></i></button>
+          <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()"><span data-i18n="examRoom.next">Keyingi</span> <i data-lucide="arrow-right" style="width:16px;height:16px;"></i></button>
         </div>
       </div>
     </div>
@@ -132,16 +133,16 @@
     <div class="screen" id="resultScreen">
       <div class="card result-card">
         <div class="result-ic" id="resultIc"><i data-lucide="trophy"></i></div>
-        <h1 id="resultTitle">Tabriklaymiz!</h1>
+        <h1 id="resultTitle" data-i18n="examRoom.congratulations">Tabriklaymiz!</h1>
         <p class="result-sub" id="resultSubtitle"></p>
         <div class="result-score-big" id="overallScore">0%</div>
         <div class="skill-bd">
-          <div class="skill-bd-title">Mavzular bo'yicha natija</div>
+          <div class="skill-bd-title" data-i18n="examRoom.topicResults">Mavzular bo‘yicha natija</div>
           <div id="skillBreakdown"></div>
         </div>
         <div class="result-actions">
-          <button class="btn btn-primary" onclick="goExam()"><i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Imtihon markazi</button>
-          <button class="btn btn-ghost" id="retryBtn" onclick="location.reload()" style="display:none;"><i data-lucide="rotate-ccw" style="width:16px;height:16px;"></i> Qayta urinish</button>
+          <button class="btn btn-primary" onclick="goExam()"><i data-lucide="arrow-left" style="width:16px;height:16px;"></i> <span data-i18n="examRoom.examCenter">Imtihon markazi</span></button>
+          <button class="btn btn-ghost" id="retryBtn" onclick="location.reload()" style="display:none;"><i data-lucide="rotate-ccw" style="width:16px;height:16px;"></i> <span data-i18n="examRoom.retry">Qayta urinish</span></button>
         </div>
       </div>
     </div>
@@ -150,7 +151,12 @@
 
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
+  <script src="/i18n.js"></script>
   <script>
+    function roomT(key, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+    }
+
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
     const user = JSON.parse(userData);
@@ -160,6 +166,8 @@
     let userAnswers = {};
     let timerInterval = null;
     let examSessionId = null;
+    let latestStatus = null;
+    let latestResult = null;
 
     function showScreen(id) {
       document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
@@ -167,34 +175,64 @@
       lucide.createIcons();
     }
 
+    function localizedSkill(skill) {
+      const normalized = String(skill || "").trim().toLowerCase();
+      const keys = {
+        grammar: "examRoom.skillGrammar",
+        vocabulary: "examRoom.skillVocabulary",
+        reading: "examRoom.skillReading",
+        listening: "examRoom.skillListening",
+        writing: "examRoom.skillWriting",
+      };
+      return keys[normalized] ? roomT(keys[normalized]) : (skill || roomT("examRoom.questionFallback"));
+    }
+
+    function localizedStartError(error) {
+      const keys = {
+        "Noto'g'ri ID": "examRoom.invalidId",
+        "Ruxsat yo'q": "examRoom.forbidden",
+        "Foydalanuvchi topilmadi": "examRoom.userNotFound",
+        "Imtihon uchun yetarli savol yo'q (kamida 10 ta kerak)": "examRoom.insufficientQuestions",
+        "Server xatosi": "examRoom.serverError",
+      };
+      return keys[error] ? roomT(keys[error]) : (error || roomT("examRoom.genericError"));
+    }
+
+    function renderStatus(data) {
+      document.getElementById("examTitle").textContent = roomT("examRoom.levelExam");
+      document.getElementById("examSubtitle").textContent = data.next_level
+        ? roomT("examRoom.transition", { current: data.current_level, next: data.next_level })
+        : roomT("examRoom.defaultTransition");
+
+      const buttons = document.getElementById("introButtons");
+      const notEl = document.getElementById("notEligible");
+      buttons.style.display = data.eligible ? "flex" : "none";
+      notEl.style.display = data.eligible ? "none" : "block";
+      if (data.eligible) return;
+
+      if (!data.next_level) {
+        notEl.innerHTML = '<div class="ne-box"><div class="ne-title"><i data-lucide="info"></i> ' + roomT("examRoom.highestLevel") + '</div></div>' +
+          '<button class="btn btn-ghost" style="margin-top:16px;" onclick="goExam()">' + roomT("examRoom.examCenter") + '</button>';
+      } else {
+        const p = data.progress;
+        const bOk = p.battles >= p.battles_required;
+        const aOk = p.accuracy >= p.accuracy_required;
+        notEl.innerHTML =
+          '<div class="ne-box"><div class="ne-title"><i data-lucide="lock"></i> ' + roomT("examRoom.locked") + '</div>' +
+            '<div class="ne-req ' + (bOk ? "ne-ok" : "ne-no") + '"><i data-lucide="' + (bOk ? "check-circle" : "circle") + '"></i> ' + roomT("examRoom.battlesRequirement", { current: p.battles, required: p.battles_required }) + '</div>' +
+            '<div class="ne-req ' + (aOk ? "ne-ok" : "ne-no") + '"><i data-lucide="' + (aOk ? "check-circle" : "circle") + '"></i> ' + roomT("examRoom.accuracyRequirement", { current: p.accuracy, required: p.accuracy_required }) + '</div>' +
+          '</div>' +
+          '<button class="btn btn-ghost" style="margin-top:16px;" onclick="goExam()">' + roomT("examRoom.examCenter") + '</button>';
+      }
+      lucide.createIcons();
+    }
+
     async function checkStatus() {
       try {
         const res = await authFetch("/exam/status/" + user.id);
         const data = await res.json();
-        document.getElementById("examTitle").textContent = "Daraja imtihoni";
-        if (data.next_level) {
-          document.getElementById("examSubtitle").textContent = data.current_level + " → " + data.next_level + " ko'tarilish imtihoni";
-        }
-        if (!data.eligible) {
-          document.getElementById("introButtons").style.display = "none";
-          const notEl = document.getElementById("notEligible");
-          notEl.style.display = "block";
-          if (!data.next_level) {
-            notEl.innerHTML = '<div class="ne-box"><div class="ne-title"><i data-lucide="info"></i> ' + (data.reason || "Imtihon mavjud emas") + '</div></div>' +
-              '<button class="btn btn-ghost" style="margin-top:16px;" onclick="goExam()">Imtihon markazi</button>';
-          } else {
-            const p = data.progress;
-            const bOk = p.battles >= p.battles_required;
-            const aOk = p.accuracy >= p.accuracy_required;
-            notEl.innerHTML =
-              '<div class="ne-box"><div class="ne-title"><i data-lucide="lock"></i> Imtihon hali ochilmagan</div>' +
-                '<div class="ne-req ' + (bOk ? "ne-ok" : "ne-no") + '"><i data-lucide="' + (bOk ? "check-circle" : "circle") + '"></i> Janglar: ' + p.battles + ' / ' + p.battles_required + '</div>' +
-                '<div class="ne-req ' + (aOk ? "ne-ok" : "ne-no") + '"><i data-lucide="' + (aOk ? "check-circle" : "circle") + '"></i> Aniqlik: ' + p.accuracy + '% (kerak: ' + p.accuracy_required + '%)</div>' +
-              '</div>' +
-              '<button class="btn btn-ghost" style="margin-top:16px;" onclick="goExam()">Imtihon markazi</button>';
-          }
-          lucide.createIcons();
-        }
+        latestStatus = data;
+        renderStatus(data);
       } catch (err) { console.error("Status xatosi"); }
     }
 
@@ -202,14 +240,14 @@
       try {
         const res = await authFetch("/exam/start/" + user.id);
         const data = await res.json();
-        if (!res.ok) { alert(data.error || "Xato"); return; }
+        if (!res.ok) { alert(localizedStartError(data.error)); return; }
         questions = data.questions;
         examSessionId = data.session_id || null;
         currentIndex = 0;
         userAnswers = {};
         showScreen("examScreen");
         showQuestion();
-      } catch (err) { alert("Server xatosi"); }
+      } catch (err) { alert(roomT("examRoom.serverError")); }
     }
 
     function escapeHtml(s) {
@@ -218,9 +256,7 @@
 
     function showQuestion() {
       const q = questions[currentIndex];
-      document.getElementById("progressText").textContent = "Savol " + (currentIndex + 1) + " / " + questions.length;
       document.getElementById("progressFill").style.width = ((currentIndex + 1) / questions.length * 100) + "%";
-      document.getElementById("qSkillText").textContent = q.skill || "savol";
       document.getElementById("qText").textContent = q.question_text;
 
       const optionsDiv = document.getElementById("options");
@@ -233,13 +269,22 @@
         optionsDiv.appendChild(btn);
       });
 
-      document.getElementById("nextBtn").innerHTML =
-        (currentIndex === questions.length - 1)
-          ? 'Yakunlash <i data-lucide="check" style="width:16px;height:16px;"></i>'
-          : 'Keyingi <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>';
-
+      renderQuestionLabels();
       lucide.createIcons();
       startTimer();
+    }
+
+    function renderQuestionLabels() {
+      const q = questions[currentIndex];
+      if (!q) return;
+      document.getElementById("progressText").textContent = roomT("examRoom.questionProgress", {
+        current: currentIndex + 1,
+        total: questions.length,
+      });
+      document.getElementById("qSkillText").textContent = localizedSkill(q.skill);
+      document.getElementById("nextBtn").innerHTML = currentIndex === questions.length - 1
+        ? roomT("examRoom.finish") + ' <i data-lucide="check" style="width:16px;height:16px;"></i>'
+        : roomT("examRoom.next") + ' <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>';
     }
 
     function selectAnswer(qId, letter, btn) {
@@ -283,10 +328,11 @@
         });
         const data = await res.json();
         showResult(data);
-      } catch (err) { alert("Server xatosi"); }
+      } catch (err) { alert(roomT("examRoom.serverError")); }
     }
 
     function showResult(data) {
+      latestResult = data;
       if (data.updated_user) localStorage.setItem("user", JSON.stringify(data.updated_user));
 
       const ic = document.getElementById("resultIc");
@@ -297,15 +343,15 @@
       if (data.passed) {
         ic.className = "result-ic pass";
         ic.innerHTML = '<i data-lucide="party-popper"></i>';
-        title.textContent = "Tabriklaymiz!";
-        subtitle.innerHTML = "Siz <b>" + data.new_level + "</b> darajasiga ko'tarildingiz!";
+        title.textContent = roomT("examRoom.congratulations");
+        subtitle.innerHTML = roomT("examRoom.promoted", { level: "<b>" + escapeHtml(data.new_level) + "</b>" });
         scoreBig.className = "result-score-big pass";
         document.getElementById("retryBtn").style.display = "none";
       } else {
         ic.className = "result-ic fail";
         ic.innerHTML = '<i data-lucide="book-open"></i>';
-        title.textContent = "Yana harakat qiling";
-        subtitle.textContent = "Imtihondan o'ta olmadingiz. Quyidagi mavzularni mustahkamlang:";
+        title.textContent = roomT("examRoom.tryAgain");
+        subtitle.textContent = roomT("examRoom.failedSubtitle");
         scoreBig.className = "result-score-big fail";
         document.getElementById("retryBtn").style.display = "inline-flex";
       }
@@ -319,7 +365,7 @@
         const passed = s.percent >= data.pass_skill_required;
         breakdown.innerHTML +=
           '<div class="skill-row">' +
-            '<span class="skill-name"><i data-lucide="' + (passed ? "check-circle" : "x-circle") + '"></i> ' + skill + '</span>' +
+            '<span class="skill-name"><i data-lucide="' + (passed ? "check-circle" : "x-circle") + '"></i> ' + escapeHtml(localizedSkill(skill)) + '</span>' +
             '<span class="skill-val ' + (passed ? "pass" : "fail") + '">' + s.correct + '/' + s.total + ' (' + s.percent + '%)</span>' +
           '</div>';
       }
@@ -328,6 +374,13 @@
     }
 
     function goExam() { window.location.href = "/exam.html"; }
+
+    window.addEventListener("ilmliga:languagechange", function () {
+      if (latestStatus) renderStatus(latestStatus);
+      if (questions.length) renderQuestionLabels();
+      if (latestResult) showResult(latestResult);
+      lucide.createIcons();
+    });
 
     checkStatus();
     lucide.createIcons();

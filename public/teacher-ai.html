@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Hisobotlar — English Battle</title>
+  <title data-i18n="teacherAi.metaTitle">AI hisobotlar — IlmLiga</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
@@ -219,20 +219,20 @@
     <div class="main">
       <header class="topbar">
         <div class="tb-head">
-          <h1><span class="tb-head-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg></span> AI hisobotlar</h1>
-          <p>Sun'iy intellekt yordamida sinflar, o'quvchilar va topshiriqlar tahlili</p>
+          <h1><span class="tb-head-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg></span> <span data-i18n="teacherAi.heading">AI hisobotlar</span></h1>
+          <p data-i18n="teacherAi.subtitle">Sun'iy intellekt yordamida sinflar, o'quvchilar va topshiriqlar tahlili</p>
         </div>
-        <div class="tb-year" onclick="comingSoon('O\'quv yili')">
+        <div class="tb-year" onclick="comingSoon(teacherAiT('schoolYearLabel'))">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          2024–2025 O'quv yili
+          <span data-i18n="teacherAi.schoolYear">2024–2025 O'quv yili</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <button class="theme-toggle" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
-        <button class="tb-icon-btn" onclick="comingSoon('Bildirishnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
+        <button class="theme-toggle" onclick="toggleTheme()" data-i18n-aria-label="teacherAi.themeAria"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
+        <button class="tb-icon-btn" onclick="comingSoon(teacherAiT('notifications'))" data-i18n-aria-label="teacherAi.notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
         <div class="tb-user" onclick="window.location.href='/profile.html'">
           <div class="tb-user-info">
-            <div class="tb-user-name" id="userName">O'qituvchi</div>
-            <div class="tb-user-role">Teacher</div>
+            <div class="tb-user-name" id="userName" data-i18n="teacherAi.teacher">O'qituvchi</div>
+            <div class="tb-user-role" data-i18n="teacherAi.teacherRole">Teacher</div>
           </div>
           <div class="tb-avatar" id="userAvatar">T</div>
         </div>
@@ -243,48 +243,48 @@
           <!-- 5 statistika -->
           <div class="stats-row">
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></div><span class="stat-label">Yaratilgan hisobotlar</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></div><span class="stat-label" data-i18n="teacherAi.generatedReports">Yaratilgan hisobotlar</span></div>
               <div class="stat-val" id="stTotal">0</div>
-              <div class="stat-sub">jami hisobotlar</div>
+              <div class="stat-sub" data-i18n="teacherAi.totalReports">jami hisobotlar</div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span class="stat-label">O'rtacha aniqlik darajasi</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span class="stat-label" data-i18n="teacherAi.averageAccuracy">O'rtacha aniqlik darajasi</span></div>
               <div class="stat-val" id="stAccuracy">—</div>
-              <div class="stat-sub">ishonch darajasi</div>
+              <div class="stat-sub" data-i18n="teacherAi.confidenceLevel">ishonch darajasi</div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div><span class="stat-label">Tahlil qilingan o'quvchilar</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div><span class="stat-label" data-i18n="teacherAi.analyzedStudents">Tahlil qilingan o'quvchilar</span></div>
               <div class="stat-val" id="stStudents">0</div>
-              <div class="stat-sub">o'quvchi qamrab olindi</div>
+              <div class="stat-sub" data-i18n="teacherAi.studentsCovered">o'quvchi qamrab olindi</div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><span class="stat-label">Eng faol sinf tahlili</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><span class="stat-label" data-i18n="teacherAi.mostActiveClass">Eng faol sinf tahlili</span></div>
               <div class="stat-val" id="stTopClass" style="font-size:19px">—</div>
               <div class="stat-sub" id="stTopClassSub">hisobot yaratilgan</div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="stat-label">Saqlangan vaqt</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="stat-label" data-i18n="teacherAi.timeSaved">Saqlangan vaqt</span></div>
               <div class="stat-val" id="stTime" style="font-size:22px">—</div>
-              <div class="stat-sub">o'qituvchi vaqti tejaldi</div>
+              <div class="stat-sub" data-i18n="teacherAi.teacherTimeSaved">o'qituvchi vaqti tejaldi</div>
             </div>
           </div>
 
           <!-- Tab'lar + filtrlar + ro'yxat -->
           <div class="panel">
             <div class="tabs-bar">
-              <button class="tab active" id="tabAll" onclick="switchTab('all')">Barcha hisobotlar</button>
-              <button class="tab" id="tabClass" onclick="switchTab('class')">Sinf hisobotlari</button>
-              <button class="tab" id="tabStudent" onclick="switchTab('student')">O'quvchi hisobotlari</button>
-              <button class="tab" id="tabAssignment" onclick="switchTab('assignment')">Topshiriq hisobotlari</button>
+              <button class="tab active" id="tabAll" onclick="switchTab('all')" data-i18n="teacherAi.allReports">Barcha hisobotlar</button>
+              <button class="tab" id="tabClass" onclick="switchTab('class')" data-i18n="teacherAi.classReports">Sinf hisobotlari</button>
+              <button class="tab" id="tabStudent" onclick="switchTab('student')" data-i18n="teacherAi.studentReports">O'quvchi hisobotlari</button>
+              <button class="tab" id="tabAssignment" onclick="switchTab('assignment')" data-i18n="teacherAi.assignmentReports">Topshiriq hisobotlari</button>
             </div>
             <div class="filters">
               <div class="search-box">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input id="searchInput" type="text" placeholder="Hisobot nomi bo'yicha qidiring..." oninput="onSearch(this.value)" />
+                <input id="searchInput" type="text" data-i18n-placeholder="teacherAi.searchPlaceholder" placeholder="Hisobot nomi bo'yicha qidiring..." oninput="onSearch(this.value)" />
               </div>
-              <select class="filter-sel" id="filterStatus" onchange="applyFilters()"><option value="">Barcha holat</option><option value="generated">Tayyor</option><option value="insufficient_data">Ma'lumot yetarli emas</option><option value="fallback">Oddiy</option></select>
-              <select class="filter-sel" id="filterConf" onchange="applyFilters()"><option value="">Barcha aniqlik</option><option value="high">Yuqori</option><option value="medium">O'rta</option><option value="low">Past</option></select>
-              <select class="filter-sel" id="filterSort" onchange="applyFilters()"><option value="new">Saralash: Yangi</option><option value="old">Saralash: Eski</option><option value="accuracy">Saralash: Aniqlik</option></select>
+              <select class="filter-sel" id="filterStatus" onchange="applyFilters()"><option value="" data-i18n="teacherAi.allStatuses">Barcha holat</option><option value="generated" data-i18n="teacherAi.ready">Tayyor</option><option value="insufficient_data" data-i18n="teacherAi.insufficientData">Ma'lumot yetarli emas</option><option value="fallback" data-i18n="teacherAi.basic">Oddiy</option></select>
+              <select class="filter-sel" id="filterConf" onchange="applyFilters()"><option value="" data-i18n="teacherAi.allConfidence">Barcha aniqlik</option><option value="high" data-i18n="teacherAi.high">Yuqori</option><option value="medium" data-i18n="teacherAi.medium">O'rta</option><option value="low" data-i18n="teacherAi.low">Past</option></select>
+              <select class="filter-sel" id="filterSort" onchange="applyFilters()"><option value="new" data-i18n="teacherAi.sortNewest">Saralash: Yangi</option><option value="old" data-i18n="teacherAi.sortOldest">Saralash: Eski</option><option value="accuracy" data-i18n="teacherAi.sortAccuracy">Saralash: Aniqlik</option></select>
             </div>
             <div id="reportArea">
               <div class="skeleton-bar"></div><div class="skeleton-bar"></div><div class="skeleton-bar"></div>
@@ -292,7 +292,7 @@
             <div class="pager" id="pager" style="display:none">
               <div class="pager-info" id="pagerInfo"></div>
               <div class="pager-nav" id="pagerNav"></div>
-              <div class="pager-size">Har sahifada: <select id="pageSize" onchange="changePageSize(this.value)"><option>10</option><option>20</option><option>50</option></select></div>
+              <div class="pager-size"><span data-i18n="teacherAi.perPage">Har sahifada:</span> <select id="pageSize" onchange="changePageSize(this.value)"><option>10</option><option>20</option><option>50</option></select></div>
             </div>
           </div>
         </div>
@@ -300,35 +300,35 @@
         <!-- O'ng panel -->
         <div class="col-side">
           <div class="side-card">
-            <div class="side-head"><h3>Hisobot yaratish</h3><p>Yangi AI hisobot yarating</p></div>
+            <div class="side-head"><h3 data-i18n="teacherAi.createReport">Hisobot yaratish</h3><p data-i18n="teacherAi.createReportSubtitle">Yangi AI hisobot yarating</p></div>
             <div class="gen-opt" onclick="openGenModal()">
               <div class="gen-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
-              <div class="gen-info"><div class="gen-name">Sinf bo'yicha tahlil</div><div class="gen-desc">Butun sinf natijalarini tahlil qiling</div></div>
+              <div class="gen-info"><div class="gen-name" data-i18n="teacherAi.classAnalysis">Sinf bo'yicha tahlil</div><div class="gen-desc" data-i18n="teacherAi.classAnalysisDesc">Butun sinf natijalarini tahlil qiling</div></div>
               <span class="gen-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
             </div>
-            <div class="gen-opt" onclick="showToast('O\'quvchi bo\'yicha AI tahlil tez orada qo\'shiladi')">
+            <div class="gen-opt" onclick="showToast(teacherAiT('studentAnalysisSoon'))">
               <div class="gen-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-              <div class="gen-info"><div class="gen-name">O'quvchi bo'yicha tahlil</div><div class="gen-desc">Individual o'quvchi tahlili</div></div>
+              <div class="gen-info"><div class="gen-name" data-i18n="teacherAi.studentAnalysis">O'quvchi bo'yicha tahlil</div><div class="gen-desc" data-i18n="teacherAi.studentAnalysisDesc">Individual o'quvchi tahlili</div></div>
               <span class="gen-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
             </div>
-            <div class="gen-opt" onclick="showToast('Topshiriq bo\'yicha AI tahlil tez orada qo\'shiladi')">
+            <div class="gen-opt" onclick="showToast(teacherAiT('assignmentAnalysisSoon'))">
               <div class="gen-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-              <div class="gen-info"><div class="gen-name">Topshiriq bo'yicha tahlil</div><div class="gen-desc">Topshiriq natijalarini tahlil qiling</div></div>
+              <div class="gen-info"><div class="gen-name" data-i18n="teacherAi.assignmentAnalysis">Topshiriq bo'yicha tahlil</div><div class="gen-desc" data-i18n="teacherAi.assignmentAnalysisDesc">Topshiriq natijalarini tahlil qiling</div></div>
               <span class="gen-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
             </div>
-            <button class="btn-gen" onclick="openGenModal()">Yangi hisobot yaratish</button>
+            <button class="btn-gen" onclick="openGenModal()" data-i18n="teacherAi.createNewReport">Yangi hisobot yaratish</button>
           </div>
 
           <div class="side-card">
-            <div class="side-head"><h3>AI tavsiyalar</h3><p>Tavsiyalar sinfingiz uchun</p></div>
+            <div class="side-head"><h3 data-i18n="teacherAi.aiRecommendations">AI tavsiyalar</h3><p data-i18n="teacherAi.recommendationsForClass">Tavsiyalar sinfingiz uchun</p></div>
             <div id="tipsArea">
-              <div class="tip-item"><div class="tip-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg></div><div class="tip-body"><div class="tip-txt">Hisobot yarating — AI sinflaringiz uchun aniq tavsiyalar beradi (zaif ko'nikmalar, e'tibor kerak o'quvchilar).</div></div></div>
+              <div class="tip-item"><div class="tip-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg></div><div class="tip-body"><div class="tip-txt" data-i18n="teacherAi.tipText">Hisobot yarating — AI sinflaringiz uchun aniq tavsiyalar beradi (zaif ko'nikmalar, e'tibor kerak o'quvchilar).</div></div></div>
             </div>
           </div>
 
           <div class="side-card">
-            <div class="side-head"><h3>Hisobotlar statistikasi</h3><p>So'nggi 30 kunlik faoliyat</p></div>
-            <div id="chartArea"><div class="chart-empty">Hisobotlar yaratilgach,<br>bu yerda faoliyat ko'rsatiladi.</div></div>
+            <div class="side-head"><h3 data-i18n="teacherAi.reportStatistics">Hisobotlar statistikasi</h3><p data-i18n="teacherAi.lastThirtyDays">So'nggi 30 kunlik faoliyat</p></div>
+            <div id="chartArea"><div class="chart-empty" data-i18n="teacherAi.chartEmpty">Hisobotlar yaratilgach, bu yerda faoliyat ko'rsatiladi.</div></div>
           </div>
         </div>
       </div>
@@ -340,24 +340,24 @@
     <div class="ai-modal">
       <div class="ai-modal-head">
         <div>
-          <div class="ai-modal-title">Sinf bo'yicha AI hisobot</div>
-          <div class="ai-modal-sub">Sinf tanlang — AI o'quvchilar faoliyatini tahlil qiladi</div>
+          <div class="ai-modal-title" data-i18n="teacherAi.classReportTitle">Sinf bo'yicha AI hisobot</div>
+          <div class="ai-modal-sub" data-i18n="teacherAi.classReportSubtitle">Sinf tanlang — AI o'quvchilar faoliyatini tahlil qiladi</div>
         </div>
         <button class="ai-modal-close" onclick="closeGenModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="ai-modal-body">
         <div class="ai-field">
-          <label>Sinf *</label>
-          <select id="genClass"><option value="">Sinf tanlang...</option></select>
+          <label data-i18n="teacherAi.classRequired">Sinf *</label>
+          <select id="genClass"><option value="" data-i18n="teacherAi.selectClass">Sinf tanlang...</option></select>
         </div>
         <div class="ai-note">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <span>Hisobot joriy hafta ma'lumotlari asosida tayyorlanadi. Bir sinf uchun hafta davomida bitta hisobot saqlanadi.</span>
+          <span data-i18n="teacherAi.weeklyNote">Hisobot joriy hafta ma'lumotlari asosida tayyorlanadi. Bir sinf uchun hafta davomida bitta hisobot saqlanadi.</span>
         </div>
         <div class="ai-modal-err" id="genErr"></div>
       </div>
       <div class="ai-modal-foot">
-        <button class="ai-btn cancel" onclick="closeGenModal()">Bekor qilish</button>
+        <button class="ai-btn cancel" onclick="closeGenModal()" data-i18n="teacherAi.cancel">Bekor qilish</button>
         <button class="ai-btn confirm" id="genSubmitBtn" onclick="generateReport()">Hisobot yaratish</button>
       </div>
     </div>
@@ -374,10 +374,10 @@
         <button class="ai-modal-close" onclick="closeViewModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="ai-modal-body" id="viewBody">
-        <div class="state-msg">Yuklanmoqda...</div>
+        <div class="state-msg" data-i18n="teacherAi.loading">Yuklanmoqda...</div>
       </div>
       <div class="ai-modal-foot">
-        <button class="ai-btn cancel" onclick="closeViewModal()">Yopish</button>
+        <button class="ai-btn cancel" onclick="closeViewModal()" data-i18n="teacherAi.close">Yopish</button>
       </div>
     </div>
   </div>
@@ -385,10 +385,14 @@
   <div class="toast" id="toast"></div>
 
   <script src="/api.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/payment-modal.js"></script>
   <script src="/premium-modal.js"></script>
   <script src="/teacher-sidebar.js"></script>
   <script>
+    function teacherAiT(key, params) { return window.IlmLigaI18n ? window.IlmLigaI18n.t("teacherAi." + key, params) : key; }
+    function teacherAiLocale() { var lang=window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz"; return {uz:"uz-UZ",en:"en-US",ru:"ru-RU"}[lang]||"uz-UZ"; }
+    function teacherAiApiError(data, fallbackKey) { var lang=window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz"; return lang==="uz"&&data&&data.error?data.error:teacherAiT(fallbackKey); }
     // ===== TEMA =====
     (function initTheme() {
       var saved = localStorage.getItem("eb_theme") || "light";
@@ -410,10 +414,10 @@
         : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>';
     }
 
-    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada tayyor bo'ladi"); }
+    function comingSoon(name) { showToast(teacherAiT("comingSoon", {name:name||""})); }
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     function showToast(text) { var t = document.getElementById("toast"); t.textContent = text; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2600); }
-    function fmtDate(iso) { if (!iso) return "—"; var d = new Date(iso); return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); }
+    function fmtDate(iso) { if (!iso) return "—"; var d = new Date(iso); return d.toLocaleDateString(teacherAiLocale(), { day: "2-digit", month: "short", year: "numeric" }); }
 
     // ===== AUTH =====
     var userData = localStorage.getItem("user");
@@ -426,18 +430,21 @@
     renderTeacherSidebar("ai");
 
     var fn = user.first_name || "", ln = user.last_name || "";
-    document.getElementById("userName").textContent = (fn + " " + ln).trim() || "O'qituvchi";
+    document.getElementById("userName").textContent = (fn + " " + ln).trim() || teacherAiT("teacher");
+    if ((fn + " " + ln).trim()) document.getElementById("userName").removeAttribute("data-i18n");
     document.getElementById("userAvatar").textContent = (fn || "T").charAt(0).toUpperCase();
 
     var currentTab = "all";
-    var allReports = [], filtered = [], page = 1, pageSize = 10;
+    var allReports = [], filtered = [], page = 1, pageSize = 10, currentStats = {}, reportsState = "loading";
+    var currentViewOutput = null, currentViewConfidence = null, currentViewCreatedAt = null, currentViewState = "idle", currentViewTitleText = "", currentViewTitleKey = "aiReport", currentViewSubtitleText = "";
 
     // Report type -> ko'rinish
     var TYPE_META = {
-      class: { icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>', cls: "class", label: "Sinf hisoboti", tag: "Umumiy tahlil", desc: "Sinf bo'yicha umumiy natijalar, kuchli va zaif tomonlar, tavsiyalar" },
-      student: { icon: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>', cls: "student", label: "O'quvchi hisoboti", tag: "Individual tahlil", desc: "O'quvchining kuchli va zaif ko'nikmalari, rivojlanish yo'nalishlari" },
-      assignment: { icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', cls: "assignment", label: "Topshiriq hisoboti", tag: "Test tahlili", desc: "Topshiriq natijalari, statistikalar va AI tavsiyalari" },
+      class: { icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>', cls: "class", labelKey: "classReport", tagKey: "generalAnalysis", descKey: "classReportDesc" },
+      student: { icon: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>', cls: "student", labelKey: "studentReport", tagKey: "individualAnalysis", descKey: "studentReportDesc" },
+      assignment: { icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', cls: "assignment", labelKey: "assignmentReport", tagKey: "testAnalysis", descKey: "assignmentReportDesc" },
     };
+    function localizedTypeMeta(category) { var meta=TYPE_META[category]; return {icon:meta.icon,cls:meta.cls,label:teacherAiT(meta.labelKey),tag:teacherAiT(meta.tagKey),desc:teacherAiT(meta.descKey)}; }
     function reportCategory(rt) {
       if (!rt) return "class";
       if (rt.indexOf("student") !== -1) return "student";
@@ -450,22 +457,23 @@
       var area = document.getElementById("reportArea");
       try {
         var res = await authFetch("/teacher/ai-reports");
-        if (!res.ok) { showEmpty(); return; }
+        if (!res.ok) { reportsState="error"; showEmpty(); return; }
         var data = await res.json();
         allReports = data.reports || [];
         filtered = allReports.slice();
-        renderStats(data.stats || {});
+        reportsState="loaded"; currentStats=data.stats||{};
+        renderStats(currentStats);
         if (!allReports.length) { showEmpty(); return; }
         renderList();
-      } catch (e) { showEmpty(); }
+      } catch (e) { reportsState="error"; showEmpty(); }
     }
 
     function showEmpty() {
       document.getElementById("reportArea").innerHTML =
         '<div class="empty-state"><div class="empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg></div>' +
-        '<div class="empty-title">Hali AI hisobot yo\'q</div>' +
-        '<div class="empty-text">O\'ng tomondan sinf, o\'quvchi yoki topshiriq bo\'yicha AI tahlil yarating. Hisobot zaif va kuchli tomonlarni aniqlab, aniq tavsiyalar beradi.</div>' +
-        '<button class="btn-gen" style="max-width:240px;margin:0 auto" onclick="openGenModal()">Birinchi hisobotni yarating</button></div>';
+        '<div class="empty-title">'+esc(teacherAiT("emptyTitle"))+'</div>' +
+        '<div class="empty-text">'+esc(teacherAiT("emptyText"))+'</div>' +
+        '<button class="btn-gen" style="max-width:240px;margin:0 auto" onclick="openGenModal()">'+esc(teacherAiT("createFirst"))+'</button></div>';
       document.getElementById("pager").style.display = "none";
     }
 
@@ -474,8 +482,8 @@
       document.getElementById("stAccuracy").textContent = s.avg_accuracy != null ? s.avg_accuracy + "%" : "—";
       document.getElementById("stStudents").textContent = s.students_analyzed != null ? s.students_analyzed : "0";
       document.getElementById("stTopClass").textContent = s.top_class || "—";
-      document.getElementById("stTopClassSub").textContent = s.top_class_count != null ? s.top_class_count + " ta hisobot" : "hisobot yaratilgan";
-      document.getElementById("stTime").innerHTML = s.time_saved != null ? s.time_saved + ' <span style="font-size:13px;color:var(--text-sub)">soat</span>' : "—";
+      document.getElementById("stTopClassSub").textContent = s.top_class_count != null ? teacherAiT("reportCount", {count:s.top_class_count}) : teacherAiT("reportCreated");
+      document.getElementById("stTime").innerHTML = s.time_saved != null ? esc(s.time_saved)+' <span style="font-size:13px;color:var(--text-sub)">'+esc(teacherAiT("hours"))+'</span>' : "—";
     }
 
     function switchTab(tab) {
@@ -491,7 +499,7 @@
     function renderList() {
       var area = document.getElementById("reportArea");
       if (!filtered.length) {
-        area.innerHTML = '<div class="state-msg">Bu bo\'limda hisobot topilmadi.</div>';
+        area.innerHTML = '<div class="state-msg">'+esc(teacherAiT("noSectionReports"))+'</div>';
         document.getElementById("pager").style.display = "none";
         return;
       }
@@ -500,11 +508,11 @@
 
       area.innerHTML = '<div class="rep-list">' + pageItems.map(function (r) {
         var cat = reportCategory(r.report_type);
-        var meta = TYPE_META[cat];
+        var meta = localizedTypeMeta(cat);
         var conf = (r.confidence || "medium").toLowerCase();
-        var confText = conf === "high" ? "Yuqori aniqlik" : conf === "low" ? "Past aniqlik" : "O'rta aniqlik";
+        var confText = teacherAiT(conf === "high" ? "highAccuracy" : conf === "low" ? "lowAccuracy" : "mediumAccuracy");
         var confPct = r.accuracy_pct != null ? r.accuracy_pct : (conf === "high" ? 93 : conf === "low" ? 78 : 88);
-        var title = r.title || (r.target_name ? r.target_name + " tahlili" : meta.label);
+        var title = r.title || (r.target_name ? teacherAiT("targetAnalysis", {name:r.target_name}) : meta.label);
 
         var chips = "";
         if (r.class_name) chips += '<span class="chip class">' + esc(r.class_name) + '</span>';
@@ -518,7 +526,7 @@
             '<div class="rep-chips">' + chips + '</div></div>' +
           '<div class="rep-date"><div class="rep-date-main">' + fmtDate(r.created_at) + '</div>' + (r.period_start ? '<div class="rep-date-sub">' + fmtDate(r.period_start) + ' - ' + fmtDate(r.period_end) + '</div>' : '') + '</div>' +
           '<div class="rep-conf"><span class="conf-badge ' + conf + '">' + confText + '</span><div class="conf-pct">' + confPct + '%</div></div>' +
-          '<div class="rep-actions"><button class="rep-view" onclick="openViewModal(' + r.id + ')">Ko\'rish</button><button class="act-ic" onclick="showToast(\'Qo\\\'shimcha amallar tez orada\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>' +
+          '<div class="rep-actions"><button class="rep-view" onclick="openViewModal(' + r.id + ')">'+esc(teacherAiT("view"))+'</button><button class="act-ic" onclick="showToast(teacherAiT(\'moreActionsSoon\'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>' +
         '</div>';
       }).join("") + '</div>';
 
@@ -531,7 +539,7 @@
       if (totalPages <= 1) { pager.style.display = "none"; return; }
       pager.style.display = "flex";
       var start = (page - 1) * pageSize + 1, end = Math.min(page * pageSize, filtered.length);
-      document.getElementById("pagerInfo").textContent = "Jami " + filtered.length + " ta hisobot";
+      document.getElementById("pagerInfo").textContent = teacherAiT("totalReportCount", {count:filtered.length});
       var html = '<button class="pg-btn" onclick="goPage(' + (page - 1) + ')"' + (page === 1 ? ' disabled' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>';
       for (var p = 1; p <= totalPages; p++) {
         if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) html += '<button class="pg-btn' + (p === page ? ' active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
@@ -556,7 +564,7 @@
       var list = allReports.filter(function (r) {
         var cat = reportCategory(r.report_type);
         if (currentTab !== "all" && cat !== currentTab) return false;
-        var title = r.title || (r.target_name ? r.target_name + " tahlili" : "");
+        var title = r.title || (r.target_name ? teacherAiT("targetAnalysis", {name:r.target_name}) : "");
         if (q && title.toLowerCase().indexOf(q) === -1 && (r.class_name || "").toLowerCase().indexOf(q) === -1) return false;
         if (fStatus && r.status !== fStatus) return false;
         if (fConf && (r.confidence || "medium") !== fConf) return false;
@@ -580,18 +588,20 @@
         var res = await authFetch("/teacher/classes");
         var data = await res.json();
         genClasses = data.classes || [];
-        var sel = document.getElementById("genClass");
-        sel.innerHTML = '<option value="">Sinf tanlang...</option>' + genClasses.map(function (c) {
-          return '<option value="' + c.id + '">' + esc(c.name) + '</option>';
-        }).join("");
+        renderGenClassOptions();
       } catch (e) { /* modal ochilganda qayta urinadi */ }
+    }
+    function renderGenClassOptions() {
+      var sel=document.getElementById("genClass"), value=sel.value;
+      sel.innerHTML='<option value="">'+esc(teacherAiT("selectClass"))+'</option>'+genClasses.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+'</option>';}).join("");
+      sel.value=value;
     }
     function openGenModal() {
       if (!genClasses.length) loadGenClasses();
       document.getElementById("genClass").value = "";
       document.getElementById("genErr").style.display = "none";
       document.getElementById("genSubmitBtn").disabled = false;
-      document.getElementById("genSubmitBtn").textContent = "Hisobot yaratish";
+      document.getElementById("genSubmitBtn").textContent = teacherAiT("generateReport");
       document.getElementById("genModal").classList.add("show");
     }
     function closeGenModal() { document.getElementById("genModal").classList.remove("show"); }
@@ -601,35 +611,35 @@
       var classId = document.getElementById("genClass").value;
       var errEl = document.getElementById("genErr");
       var btn = document.getElementById("genSubmitBtn");
-      if (!classId) { errEl.textContent = "Sinf tanlang"; errEl.style.display = "block"; return; }
+      if (!classId) { errEl.textContent = teacherAiT("selectClassError"); errEl.style.display = "block"; return; }
 
-      btn.disabled = true; btn.textContent = "AI tahlil qilmoqda...";
+      btn.disabled = true; btn.textContent = teacherAiT("analyzing");
       errEl.style.display = "none";
       try {
         var res = await authFetch("/ai/reports/teacher/classes/" + classId + "/weekly", { method: "POST" });
         var data = await res.json();
         if (!res.ok) {
           // Pro kerak (402)
-          if (window.handleProLimit && window.handleProLimit(res, data)) { closeGenModal(); btn.disabled = false; btn.textContent = "Hisobot yaratish"; return; }
+          if (window.handleProLimit && window.handleProLimit(res, data)) { closeGenModal(); btn.disabled = false; btn.textContent = teacherAiT("generateReport"); return; }
           if (res.status === 402 || res.status === 403) {
-            errEl.textContent = data.error || "Bu funksiya Premium Teacher uchun";
+            errEl.textContent = teacherAiApiError(data, "premiumRequired");
             errEl.style.display = "block";
-            btn.disabled = false; btn.textContent = "Hisobot yaratish";
+            btn.disabled = false; btn.textContent = teacherAiT("generateReport");
             if (window.openPremiumModal) { closeGenModal(); window.openPremiumModal("teacher"); }
             return;
           }
-          errEl.textContent = data.error || "Hisobot yaratishda xatolik"; errEl.style.display = "block";
-          btn.disabled = false; btn.textContent = "Hisobot yaratish"; return;
+          errEl.textContent = teacherAiApiError(data, "generateFailed"); errEl.style.display = "block";
+          btn.disabled = false; btn.textContent = teacherAiT("generateReport"); return;
         }
         closeGenModal();
-        btn.disabled = false; btn.textContent = "Hisobot yaratish";
-        showToast(data.cached ? "Bu hafta uchun hisobot allaqachon mavjud" : "AI hisobot tayyor!");
+        btn.disabled = false; btn.textContent = teacherAiT("generateReport");
+        showToast(data.cached ? teacherAiT("weeklyExists") : teacherAiT("reportReady"));
         loadReports();
         // Yaratilgan hisobotni darhol ko'rsatamiz
-        if (data.report) { setTimeout(function () { showReportContent("Sinf hisoboti", data.report, data.confidence, data.created_at); }, 400); }
+        if (data.report) { setTimeout(function () { showReportContent("classReport", data.report, data.confidence, data.created_at); }, 400); }
       } catch (e) {
-        errEl.textContent = "Server bilan aloqa yo'q"; errEl.style.display = "block";
-        btn.disabled = false; btn.textContent = "Hisobot yaratish";
+        errEl.textContent = teacherAiT("serverUnavailable"); errEl.style.display = "block";
+        btn.disabled = false; btn.textContent = teacherAiT("generateReport");
       }
     }
 
@@ -637,9 +647,9 @@
     function openViewModal(id) {
       var rep = allReports.filter(function (r) { return r.id === id; })[0];
       document.getElementById("viewModal").classList.add("show");
-      document.getElementById("viewBody").innerHTML = '<div class="state-msg">Yuklanmoqda...</div>';
-      document.getElementById("viewTitle").textContent = rep ? (rep.title || "AI hisobot") : "AI hisobot";
-      document.getElementById("viewSub").textContent = rep && rep.class_name ? rep.class_name : (rep && rep.created_at ? fmtDate(rep.created_at) : "—");
+      currentViewState="loading"; currentViewTitleText=rep&&rep.title?rep.title:""; currentViewTitleKey="aiReport";
+      currentViewSubtitleText=rep&&rep.class_name?rep.class_name:""; currentViewCreatedAt=rep&&rep.created_at?rep.created_at:null;
+      renderViewHeader(); renderCurrentViewBody();
       // ai_output ni olish uchun: ro'yxatда bo'lsa ishlatamiz, aks holda endpoint qayta chaqiramiz
       fetchReportContent(id, rep);
     }
@@ -655,37 +665,48 @@
         }
       } catch (e) { /* fallback pastda */ }
       // Endpoint yo'q bo'lsa — ma'lumot yetarli emasligini ko'rsatamiz
-      document.getElementById("viewBody").innerHTML = '<div class="state-msg">Hisobot mazmunini yuklab bo\'lmadi. Iltimos, sahifani yangilang.</div>';
+      currentViewState="error"; renderCurrentViewBody();
     }
-    function showReportContent(title, report, confidence, createdAt) {
+    function showReportContent(titleKey, report, confidence, createdAt) {
       document.getElementById("viewModal").classList.add("show");
-      document.getElementById("viewTitle").textContent = title || "AI hisobot";
-      document.getElementById("viewSub").textContent = createdAt ? fmtDate(createdAt) : "—";
+      currentViewTitleText=""; currentViewTitleKey=titleKey||"aiReport"; currentViewSubtitleText=""; currentViewCreatedAt=createdAt||null;
+      renderViewHeader();
       renderReportBody(report, confidence, createdAt);
+    }
+    function renderViewHeader() {
+      document.getElementById("viewTitle").textContent=currentViewTitleText||teacherAiT(currentViewTitleKey||"aiReport");
+      document.getElementById("viewSub").textContent=currentViewSubtitleText||(currentViewCreatedAt?fmtDate(currentViewCreatedAt):"—");
+    }
+    function renderCurrentViewBody() {
+      var body=document.getElementById("viewBody");
+      if(currentViewState==="loading") body.innerHTML='<div class="state-msg">'+esc(teacherAiT("loading"))+'</div>';
+      else if(currentViewState==="error") body.innerHTML='<div class="state-msg">'+esc(teacherAiT("contentLoadFailed"))+'</div>';
+      else if(currentViewState==="loaded") renderReportBody(currentViewOutput,currentViewConfidence,currentViewCreatedAt);
     }
     function renderReportBody(out, confidence, createdAt) {
       var body = document.getElementById("viewBody");
       if (typeof out === "string") { try { out = JSON.parse(out); } catch (e) { /* string qoladi */ } }
+      currentViewOutput=out; currentViewConfidence=confidence; currentViewCreatedAt=createdAt||currentViewCreatedAt; currentViewState="loaded";
       if (!out || typeof out !== "object") {
-        body.innerHTML = '<div class="state-msg">Bu hisobot uchun mazmun mavjud emas.</div>';
+        body.innerHTML = '<div class="state-msg">'+esc(teacherAiT("noContent"))+'</div>';
         return;
       }
       var html = "";
-      var confMap = { high: "Yuqori aniqlik", medium: "O'rta aniqlik", low: "Past aniqlik" };
-      if (confidence) html += '<div style="margin-bottom:16px"><span class="conf-badge ' + (confidence || "medium") + '">' + (confMap[confidence] || "O'rta aniqlik") + '</span></div>';
+      var confMap = { high: teacherAiT("highAccuracy"), medium: teacherAiT("mediumAccuracy"), low: teacherAiT("lowAccuracy") };
+      if (confidence) html += '<div style="margin-bottom:16px"><span class="conf-badge ' + (confidence || "medium") + '">' + esc(confMap[confidence] || teacherAiT("mediumAccuracy")) + '</span></div>';
 
       // Sinf hisoboti maydonlari
-      if (out.class_summary) html += section("Umumiy holat", "summary", out.class_summary);
-      if (out.summary) html += section("Umumiy holat", "summary", out.summary);
-      if (out.key_findings && out.key_findings.length) html += listSection("Asosiy kuzatuvlar", "", out.key_findings);
-      if (out.strengths && out.strengths.length) html += listSection("Kuchli tomonlar", "rec", out.strengths);
-      if (out.students_need_attention && out.students_need_attention.length) html += listSection("E'tibor talab qiladigan o'quvchilar", "warn", out.students_need_attention);
-      if (out.weaknesses && out.weaknesses.length) html += listSection("Zaif tomonlar", "warn", out.weaknesses);
-      if (out.teaching_recommendations && out.teaching_recommendations.length) html += listSection("O'qitish tavsiyalari", "rec", out.teaching_recommendations);
-      if (out.recommendations && out.recommendations.length) html += listSection("Tavsiyalar", "rec", out.recommendations);
-      if (out.next_steps && out.next_steps.length) html += listSection("Keyingi qadamlar", "", out.next_steps);
+      if (out.class_summary) html += section(teacherAiT("overview"), "summary", out.class_summary);
+      if (out.summary) html += section(teacherAiT("overview"), "summary", out.summary);
+      if (out.key_findings && out.key_findings.length) html += listSection(teacherAiT("keyFindings"), "", out.key_findings);
+      if (out.strengths && out.strengths.length) html += listSection(teacherAiT("strengths"), "rec", out.strengths);
+      if (out.students_need_attention && out.students_need_attention.length) html += listSection(teacherAiT("studentsNeedAttention"), "warn", out.students_need_attention);
+      if (out.weaknesses && out.weaknesses.length) html += listSection(teacherAiT("weaknesses"), "warn", out.weaknesses);
+      if (out.teaching_recommendations && out.teaching_recommendations.length) html += listSection(teacherAiT("teachingRecommendations"), "rec", out.teaching_recommendations);
+      if (out.recommendations && out.recommendations.length) html += listSection(teacherAiT("recommendations"), "rec", out.recommendations);
+      if (out.next_steps && out.next_steps.length) html += listSection(teacherAiT("nextSteps"), "", out.next_steps);
 
-      if (!html) html = '<div class="state-msg">Bu hisobot uchun mazmun mavjud emas.</div>';
+      if (!html) html = '<div class="state-msg">'+esc(teacherAiT("noContent"))+'</div>';
       body.innerHTML = html;
     }
     function section(title, type, text) {
@@ -708,6 +729,16 @@
     // ===== ISHGA TUSHIRISH =====
     loadReports();
     loadGenClasses();
+    window.addEventListener("ilmliga:languagechange", function () {
+      if(reportsState!=="loading") {
+        renderStats(currentStats);
+        if(allReports.length) renderList(); else showEmpty();
+      }
+      renderGenClassOptions();
+      var generateButton=document.getElementById("genSubmitBtn");
+      if(!generateButton.disabled) generateButton.textContent=teacherAiT("generateReport");
+      if(document.getElementById("viewModal").classList.contains("show")) { renderViewHeader(); renderCurrentViewBody(); }
+    });
   </script>
 </body>
 </html>

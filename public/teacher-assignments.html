@@ -214,20 +214,20 @@
     <div class="main">
       <header class="topbar">
         <div class="tb-head">
-          <h1>Topshiriqlar</h1>
-          <p>Topshiriqlar yarating, sinflarga belgilang va bajarilishini kuzatib boring.</p>
+          <h1 data-i18n="teacher.assignments.heading">Topshiriqlar</h1>
+          <p data-i18n="teacher.assignments.subtitle">Topshiriqlar yarating, sinflarga belgilang va bajarilishini kuzatib boring.</p>
         </div>
         <div class="tb-year" onclick="comingSoon('O\'quv yili')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          2024–2025 O'quv yili
+          2024–2025 <span data-i18n="teacher.dashboard.academicYear">O'quv yili</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <button class="theme-toggle" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
-        <button class="tb-icon-btn" onclick="comingSoon('Bildirishnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
+        <button class="theme-toggle" onclick="toggleTheme()" data-i18n-title="teacher.dashboard.changeTheme" data-i18n-aria-label="teacher.dashboard.changeTheme"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/></svg></button>
+        <button class="tb-icon-btn" onclick="comingSoonKey('topbar.notifications')" data-i18n-title="topbar.notifications" data-i18n-aria-label="topbar.notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
         <div class="tb-user" onclick="window.location.href='/profile.html'">
           <div class="tb-user-info">
             <div class="tb-user-name" id="userName">O'qituvchi</div>
-            <div class="tb-user-role">Teacher</div>
+            <div class="tb-user-role" data-i18n="teacher.dashboard.role">Teacher</div>
           </div>
           <div class="tb-avatar" id="userAvatar">T</div>
         </div>
@@ -236,30 +236,30 @@
       <div class="content">
         <div class="col-main">
           <div class="create-row">
-            <button class="btn-create" onclick="openAsgModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Yangi topshiriq yaratish</button>
+            <button class="btn-create" onclick="openAsgModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span data-i18n="teacher.assignments.newAssignment">Yangi topshiriq yaratish</span></button>
           </div>
 
           <!-- Statistika -->
           <div class="stats-row">
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><span class="stat-label">Jami topshiriqlar</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><span class="stat-label" data-i18n="teacher.assignments.totalAssignments">Jami topshiriqlar</span></div>
               <div class="stat-val" id="statTotal">—</div>
-              <div class="stat-delta up"><span>barcha sinflar</span></div>
+              <div class="stat-delta up"><span data-i18n="teacher.assignments.allClasses">barcha sinflar</span></div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><span class="stat-label">Faol topshiriqlar</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><span class="stat-label" data-i18n="teacher.assignments.activeAssignments">Faol topshiriqlar</span></div>
               <div class="stat-val" id="statActive">—</div>
-              <div class="stat-delta up"><span>hozir faol</span></div>
+              <div class="stat-delta up"><span data-i18n="teacher.assignments.activeNow">hozir faol</span></div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="stat-label">Muddati yaqin</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="stat-label" data-i18n="teacher.assignments.dueSoon">Muddati yaqin</span></div>
               <div class="stat-val" id="statSoon">—</div>
-              <div class="stat-delta up"><span>3 kun ichida</span></div>
+              <div class="stat-delta up"><span data-i18n="teacher.assignments.withinThreeDays">3 kun ichida</span></div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span class="stat-label">O'rtacha bajarilish</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span class="stat-label" data-i18n="teacher.assignments.averageCompletion">O'rtacha bajarilish</span></div>
               <div class="stat-val" id="statAvg">—</div>
-              <div class="stat-delta up"><span>barcha topshiriqlar</span></div>
+              <div class="stat-delta up"><span data-i18n="teacher.assignments.allAssignments">barcha topshiriqlar</span></div>
             </div>
           </div>
 
@@ -268,18 +268,18 @@
             <div class="filters">
               <div class="search-box">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input id="searchInput" type="text" placeholder="Topshiriq nomi bo'yicha qidiring..." oninput="onSearch(this.value)" />
+                <input id="searchInput" type="text" placeholder="Topshiriq nomi bo'yicha qidiring..." data-i18n-placeholder="teacher.assignments.searchPlaceholder" oninput="onSearch(this.value)" />
               </div>
-              <select class="filter-sel" id="filterClass" onchange="applyFilters()"><option value="">Barcha sinflar</option></select>
-              <select class="filter-sel" id="filterStatus" onchange="applyFilters()"><option value="">Barcha statuslar</option><option value="active">Faol</option><option value="draft">Draft</option><option value="expired">Muddati o'tgan</option><option value="completed">Yakunlangan</option></select>
-              <select class="filter-sel" id="filterLevel" onchange="applyFilters()"><option value="">Barcha darajalar</option><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select>
-              <select class="filter-sel" id="filterSort" onchange="applyFilters()"><option value="new">Saralash: Yangi</option><option value="old">Saralash: Eski</option><option value="due">Saralash: Muddat</option><option value="completion">Saralash: Bajarilish</option></select>
+              <select class="filter-sel" id="filterClass" onchange="applyFilters()"><option value="" data-i18n="teacher.assignments.allClasses">Barcha sinflar</option></select>
+              <select class="filter-sel" id="filterStatus" onchange="applyFilters()"><option value="" data-i18n="teacher.assignments.allStatuses">Barcha statuslar</option><option value="active" data-i18n="teacher.classDetail.active">Faol</option><option value="draft" data-i18n="teacher.assignments.draft">Draft</option><option value="expired" data-i18n="teacher.assignments.expired">Muddati o'tgan</option><option value="completed" data-i18n="teacher.assignments.completed">Yakunlangan</option></select>
+              <select class="filter-sel" id="filterLevel" onchange="applyFilters()"><option value="" data-i18n="teacher.assignments.allLevels">Barcha darajalar</option><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select>
+              <select class="filter-sel" id="filterSort" onchange="applyFilters()"><option value="new" data-i18n="teacher.assignments.sortNew">Saralash: Yangi</option><option value="old" data-i18n="teacher.assignments.sortOld">Saralash: Eski</option><option value="due" data-i18n="teacher.assignments.sortDue">Saralash: Muddat</option><option value="completion" data-i18n="teacher.assignments.sortCompletion">Saralash: Bajarilish</option></select>
             </div>
             <div class="table-wrap">
               <table class="asg-table">
                 <thead>
                   <tr>
-                    <th>Topshiriq nomi</th><th>Sinf</th><th>Daraja / Ko'nikma</th><th>Savollar</th><th>Muddat</th><th>Bajarilish</th><th>Status</th><th>Amallar</th>
+                    <th data-i18n="teacher.assignments.assignmentName">Topshiriq nomi</th><th data-i18n="teacher.assignments.class">Sinf</th><th data-i18n="teacher.assignments.levelSkill">Daraja / Ko'nikma</th><th data-i18n="teacher.assignments.questions">Savollar</th><th data-i18n="teacher.assignments.due">Muddat</th><th data-i18n="teacher.assignments.completion">Bajarilish</th><th data-i18n="teacher.assignments.status">Status</th><th data-i18n="teacher.assignments.actions">Amallar</th>
                   </tr>
                 </thead>
                 <tbody id="asgBody">
@@ -292,7 +292,7 @@
             <div class="pager" id="pager" style="display:none">
               <div class="pager-info" id="pagerInfo"></div>
               <div class="pager-nav" id="pagerNav"></div>
-              <div class="pager-size">Har sahifada: <select id="pageSize" onchange="changePageSize(this.value)"><option>5</option><option>10</option><option>20</option></select></div>
+              <div class="pager-size"><span data-i18n="teacher.assignments.perPage">Har sahifada:</span> <select id="pageSize" onchange="changePageSize(this.value)"><option>5</option><option>10</option><option>20</option></select></div>
             </div>
           </div>
         </div>
@@ -300,31 +300,31 @@
         <!-- O'ng panel -->
         <div class="col-side">
           <div class="side-card">
-            <div class="side-head"><h3>Muddati yaqin topshiriqlar</h3></div>
-            <div id="dueList"><div class="state-msg" style="padding:20px">Yuklanmoqda...</div></div>
+            <div class="side-head"><h3 data-i18n="teacher.assignments.dueSoonTitle">Muddati yaqin topshiriqlar</h3></div>
+            <div id="dueList"><div class="state-msg" style="padding:20px" data-i18n="teacher.assignments.loading">Yuklanmoqda...</div></div>
           </div>
 
           <div class="side-card">
-            <div class="side-head"><h3>Sinflar kesimida bajarilish</h3><span style="font-size:12px;color:var(--text-dim);font-weight:600">Umumiy</span></div>
-            <div id="classComp"><div class="state-msg" style="padding:20px">Yuklanmoqda...</div></div>
-            <span class="side-link" onclick="window.location.href='/teacher-results.html'">Batafsil natijalar →</span>
+            <div class="side-head"><h3 data-i18n="teacher.assignments.classCompletion">Sinflar kesimida bajarilish</h3><span style="font-size:12px;color:var(--text-dim);font-weight:600" data-i18n="teacher.assignments.overall">Umumiy</span></div>
+            <div id="classComp"><div class="state-msg" style="padding:20px" data-i18n="teacher.assignments.loading">Yuklanmoqda...</div></div>
+            <span class="side-link" onclick="window.location.href='/teacher-results.html'" data-i18n="teacher.assignments.detailedResults">Batafsil natijalar →</span>
           </div>
 
           <div class="side-card">
-            <div class="side-head"><h3>Tezkor yaratish shablonlari</h3></div>
+            <div class="side-head"><h3 data-i18n="teacher.assignments.templates">Tezkor yaratish shablonlari</h3></div>
             <div class="tmpl-item" onclick="openTemplate('reading')">
               <div class="tmpl-ic" style="background:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
-              <div><div class="tmpl-name">Reading Test shabloni</div><div class="tmpl-sub">Reading ko'nikmasi bo'yicha</div></div>
+              <div><div class="tmpl-name" data-i18n="teacher.assignments.readingTemplate">Reading Test shabloni</div><div class="tmpl-sub" data-i18n="teacher.assignments.readingTemplateDesc">Reading ko'nikmasi bo'yicha</div></div>
             </div>
             <div class="tmpl-item" onclick="openTemplate('grammar')">
               <div class="tmpl-ic" style="background:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></div>
-              <div><div class="tmpl-name">Grammar Practice shabloni</div><div class="tmpl-sub">Grammar ko'nikmasi bo'yicha</div></div>
+              <div><div class="tmpl-name" data-i18n="teacher.assignments.grammarTemplate">Grammar Practice shabloni</div><div class="tmpl-sub" data-i18n="teacher.assignments.grammarTemplateDesc">Grammar ko'nikmasi bo'yicha</div></div>
             </div>
             <div class="tmpl-item" onclick="openTemplate('vocabulary')">
               <div class="tmpl-ic" style="background:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg></div>
-              <div><div class="tmpl-name">Vocabulary Quiz shabloni</div><div class="tmpl-sub">Vocabulary ko'nikmasi bo'yicha</div></div>
+              <div><div class="tmpl-name" data-i18n="teacher.assignments.vocabularyTemplate">Vocabulary Quiz shabloni</div><div class="tmpl-sub" data-i18n="teacher.assignments.vocabularyTemplateDesc">Vocabulary ko'nikmasi bo'yicha</div></div>
             </div>
-            <span class="side-link" onclick="openAsgModal()">Yangi topshiriq yaratish →</span>
+            <span class="side-link" onclick="openAsgModal()" data-i18n="teacher.assignments.newAssignmentLink">Yangi topshiriq yaratish →</span>
           </div>
         </div>
       </div>
@@ -336,45 +336,45 @@
     <div class="asg-modal">
       <div class="asg-modal-head">
         <div>
-          <div class="asg-modal-title" id="asgModalTitle">Yangi topshiriq yaratish</div>
-          <div class="asg-modal-sub">O'quvchilarga savollar tayinlang — tizim avtomatik tanlaydi</div>
+          <div class="asg-modal-title" id="asgModalTitle" data-i18n="teacher.assignments.newAssignment">Yangi topshiriq yaratish</div>
+          <div class="asg-modal-sub" data-i18n="teacher.assignments.modalSubtitle">O'quvchilarga savollar tayinlang — tizim avtomatik tanlaydi</div>
         </div>
         <button class="asg-modal-close" onclick="closeAsgModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="asg-modal-body">
         <div class="asg-field">
-          <label>Sinf *</label>
-          <select id="asgClass"><option value="">Sinf tanlang...</option></select>
+          <label><span data-i18n="teacher.assignments.class">Sinf</span> *</label>
+          <select id="asgClass"><option value="" data-i18n="teacher.assignments.selectClass">Sinf tanlang...</option></select>
         </div>
         <div class="asg-field">
-          <label>Topshiriq nomi *</label>
-          <input id="asgTitle" type="text" placeholder="Masalan: Present Simple mashqi" maxlength="150" />
+          <label data-i18n="teacher.assignments.assignmentNameRequired">Topshiriq nomi *</label>
+          <input id="asgTitle" type="text" placeholder="Masalan: Present Simple mashqi" data-i18n-placeholder="teacher.assignments.titlePlaceholder" maxlength="150" />
         </div>
         <div class="asg-field">
-          <label>Tavsif (ixtiyoriy)</label>
-          <textarea id="asgDesc" rows="2" placeholder="Topshiriq haqida qisqacha"></textarea>
+          <label data-i18n="teacher.assignments.descriptionOptional">Tavsif (ixtiyoriy)</label>
+          <textarea id="asgDesc" rows="2" placeholder="Topshiriq haqida qisqacha" data-i18n-placeholder="teacher.assignments.descriptionPlaceholder"></textarea>
         </div>
         <div class="asg-row3">
           <div class="asg-field">
-            <label>CEFR daraja *</label>
+            <label data-i18n="teacher.assignments.cefrLevel">CEFR daraja *</label>
             <select id="asgLevel"><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select>
           </div>
           <div class="asg-field">
-            <label>Ko'nikma *</label>
-            <select id="asgSkill"><option value="mixed">Aralash</option><option value="grammar">Grammar</option><option value="vocabulary">Vocabulary</option><option value="reading">Reading</option><option value="listening">Listening</option></select>
+            <label data-i18n="teacher.assignments.skill">Ko'nikma *</label>
+            <select id="asgSkill"><option value="mixed" data-i18n="teacher.classDetail.skillMixed">Aralash</option><option value="grammar" data-i18n="teacher.classDetail.skillGrammar">Grammatika</option><option value="vocabulary" data-i18n="teacher.classDetail.skillVocabulary">Lug'at</option><option value="reading" data-i18n="teacher.classDetail.skillReading">O'qish</option><option value="listening" data-i18n="teacher.classDetail.skillListening">Tinglash</option></select>
           </div>
           <div class="asg-field">
-            <label>Savollar soni *</label>
+            <label data-i18n="teacher.assignments.questionCount">Savollar soni *</label>
             <input id="asgCount" type="number" min="1" max="50" value="10" />
           </div>
         </div>
         <div class="asg-row3">
           <div class="asg-field">
-            <label>Muddat (ixtiyoriy)</label>
+            <label data-i18n="teacher.assignments.dueOptional">Muddat (ixtiyoriy)</label>
             <input id="asgDue" type="datetime-local" />
           </div>
           <div class="asg-field">
-            <label>Urinishlar soni</label>
+            <label data-i18n="teacher.assignments.attempts">Urinishlar soni</label>
             <select id="asgAttempts"><option value="1">1 marta</option><option value="2">2 marta</option><option value="3">3 marta</option></select>
           </div>
           <div></div>
@@ -382,8 +382,8 @@
         <div class="asg-modal-err" id="asgErr"></div>
       </div>
       <div class="asg-modal-foot">
-        <button class="asg-btn cancel" onclick="closeAsgModal()">Bekor qilish</button>
-        <button class="asg-btn confirm" id="asgSubmitBtn" onclick="submitAssignment()">Yaratish</button>
+        <button class="asg-btn cancel" onclick="closeAsgModal()" data-i18n="teacher.assignments.cancel">Bekor qilish</button>
+        <button class="asg-btn confirm" id="asgSubmitBtn" onclick="submitAssignment()" data-i18n="teacher.assignments.create">Yaratish</button>
       </div>
     </div>
   </div>
@@ -393,6 +393,7 @@
   <script src="/api.js"></script>
   <script src="/payment-modal.js"></script>
   <script src="/premium-modal.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/teacher-sidebar.js"></script>
   <script>
     // ===== TEMA =====
@@ -416,10 +417,35 @@
         : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>';
     }
 
-    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada tayyor bo'ladi"); }
+    function assignmentsT(key, fallback, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : fallback;
+    }
+    function assignmentsLocale() {
+      var language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return language === "ru" ? "ru-RU" : language === "en" ? "en-GB" : "uz-UZ";
+    }
+    function assignmentSkillLabel(skill) {
+      var labels = {
+        mixed: ["teacher.classDetail.skillMixed", "Aralash"],
+        grammar: ["teacher.classDetail.skillGrammar", "Grammatika"],
+        vocabulary: ["teacher.classDetail.skillVocabulary", "Lug'at"],
+        reading: ["teacher.classDetail.skillReading", "O'qish"],
+        listening: ["teacher.classDetail.skillListening", "Tinglash"],
+      };
+      var item = labels[String(skill || "mixed").toLowerCase()] || labels.mixed;
+      return assignmentsT(item[0], item[1]);
+    }
+    function comingSoon(name) { showToast(assignmentsT("nav.comingSoonMessage", "{name}: tez orada tayyor bo'ladi", { name: name || "" })); }
+    function comingSoonKey(key) { comingSoon(assignmentsT(key, key)); }
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     function showToast(text) { var t = document.getElementById("toast"); t.textContent = text; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2600); }
-    function fmtDate(iso) { if (!iso) return "—"; var d = new Date(iso); return d.toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit", year: "numeric" }); }
+    function fmtDate(iso) { if (!iso) return "—"; var d = new Date(iso); return d.toLocaleDateString(assignmentsLocale(), { day: "2-digit", month: "2-digit", year: "numeric" }); }
+    function updateAssignmentControls() {
+      var options = document.querySelectorAll("#asgAttempts option");
+      Array.prototype.forEach.call(options, function (option) {
+        option.textContent = assignmentsT("teacher.classDetail.attemptUnit", "{count} marta", { count: option.value });
+      });
+    }
     function daysLeft(iso) {
       if (!iso) return null;
       var diff = Math.ceil((new Date(iso) - new Date()) / 86400000);
@@ -435,9 +461,10 @@
       if (R[user.role]) window.location.href = R[user.role];
     }
     renderTeacherSidebar("assignments");
+    document.title = assignmentsT("teacher.assignments.pageTitle", "Topshiriqlar — IlmLiga");
 
     var fn = user.first_name || "", ln = user.last_name || "";
-    document.getElementById("userName").textContent = (fn + " " + ln).trim() || "O'qituvchi";
+    document.getElementById("userName").textContent = (fn + " " + ln).trim() || assignmentsT("teacher.classDetail.teacherFallback", "O'qituvchi");
     document.getElementById("userAvatar").textContent = (fn || "T").charAt(0).toUpperCase();
 
     var ASG_COLORS = ["#2f6bff", "#16b06a", "#7c5cfc", "#f59e0b", "#ef4655", "#06b6d4"];
@@ -453,6 +480,8 @@
     var allAsg = [];
     var filtered = [];
     var page = 1, pageSize = 5;
+    var lastDueSoon = [];
+    var lastClassCompletion = [];
 
     // ===== TOPSHIRIQLARNI YUKLASH =====
     async function loadAssignments() {
@@ -465,10 +494,12 @@
         renderStats(data.stats || computeStats(allAsg));
         fillClassFilter(allAsg);
         renderTable();
-        renderDueList(data.due_soon || []);
-        renderClassComp(data.class_completion || []);
+        lastDueSoon = data.due_soon || [];
+        lastClassCompletion = data.class_completion || [];
+        renderDueList(lastDueSoon);
+        renderClassComp(lastClassCompletion);
       } catch (e) {
-        body.innerHTML = '<tr><td colspan="8"><div class="state-msg">Topshiriqlarni yuklab bo\'lmadi.</div></td></tr>';
+        body.innerHTML = '<tr><td colspan="8"><div class="state-msg">' + esc(assignmentsT("teacher.assignments.loadFailed", "Topshiriqlarni yuklab bo'lmadi.")) + '</div></td></tr>';
         document.getElementById("dueList").innerHTML = '<div class="state-msg" style="padding:20px">—</div>';
         document.getElementById("classComp").innerHTML = '<div class="state-msg" style="padding:20px">—</div>';
       }
@@ -487,11 +518,13 @@
     function fillClassFilter(list) {
       var sel = document.getElementById("filterClass");
       if (!sel) return;
-      var seen = {}, opts = '<option value="">Barcha sinflar</option>';
+      var current = sel.value;
+      var seen = {}, opts = '<option value="">' + esc(assignmentsT("teacher.assignments.allClasses", "Barcha sinflar")) + '</option>';
       list.forEach(function (a) {
         if (a.class_name && !seen[a.class_name]) { seen[a.class_name] = true; opts += '<option value="' + esc(a.class_name) + '">' + esc(a.class_name) + '</option>'; }
       });
       sel.innerHTML = opts;
+      if (Array.prototype.some.call(sel.options, function (option) { return option.value === current; })) sel.value = current;
     }
 
     function computeStats(list) {
@@ -513,7 +546,7 @@
     function renderTable() {
       var body = document.getElementById("asgBody");
       if (!filtered.length) {
-        body.innerHTML = '<tr><td colspan="8"><div class="state-msg">Hali topshiriq yo\'q. Sinf sahifasidan topshiriq yarating.</div></td></tr>';
+        body.innerHTML = '<tr><td colspan="8"><div class="state-msg">' + esc(assignmentsT("teacher.assignments.empty", "Hali topshiriq yo'q. Sinf sahifasidan topshiriq yarating.")) + '</div></td></tr>';
         document.getElementById("pager").style.display = "none";
         return;
       }
@@ -525,9 +558,9 @@
         var dleft = daysLeft(a.due_at);
         var dueClass = "normal", dueSub = "";
         if (a.due_at) {
-          if (dleft < 0) { dueClass = "over"; dueSub = "Muddati o'tgan"; }
-          else if (dleft <= 3) { dueClass = "soon"; dueSub = dleft + " kun qoldi"; }
-          else { dueClass = "normal"; dueSub = dleft + " kun qoldi"; }
+          if (dleft < 0) { dueClass = "over"; dueSub = assignmentsT("teacher.assignments.expired", "Muddati o'tgan"); }
+          else if (dleft <= 3) { dueClass = "soon"; dueSub = assignmentsT("teacher.assignments.daysLeft", "{count} kun qoldi", { count: dleft }); }
+          else { dueClass = "normal"; dueSub = assignmentsT("teacher.assignments.daysLeft", "{count} kun qoldi", { count: dleft }); }
         }
         var comp = a.completion_percent != null ? a.completion_percent : 0;
         var done = a.submitted_count != null ? a.submitted_count : 0;
@@ -536,25 +569,25 @@
 
         // Status
         var st = a.status || "active";
-        var stClass = "active", stText = "Faol";
-        if (st === "draft") { stClass = "draft"; stText = "Draft"; }
-        else if (st === "archived") { stClass = "done"; stText = "Yakunlangan"; }
-        else if (dleft != null && dleft < 0) { stClass = "over"; stText = "Muddati o'tgan"; }
+        var stClass = "active", stText = assignmentsT("teacher.classDetail.active", "Faol");
+        if (st === "draft") { stClass = "draft"; stText = assignmentsT("teacher.assignments.draft", "Draft"); }
+        else if (st === "archived" || st === "completed") { stClass = "done"; stText = assignmentsT("teacher.assignments.completed", "Yakunlangan"); }
+        else if (dleft != null && dleft < 0) { stClass = "over"; stText = assignmentsT("teacher.assignments.expired", "Muddati o'tgan"); }
 
         return '<tr>' +
           '<td><div class="asg-name-cell"><div class="asg-ic" style="background:' + color + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + skillIcon(a.skill) + '</svg></div>' +
             '<div><div class="asg-name">' + esc(a.title) + '</div>' + (a.description ? '<div class="asg-desc">' + esc(a.description.length > 50 ? a.description.slice(0, 50) + "…" : a.description) + '</div>' : '') + '</div></div></td>' +
-          '<td><div class="asg-class">' + esc(a.class_name || "—") + '</div>' + (a.class_student_count != null ? '<div class="asg-class-sub">' + a.class_student_count + ' o\'quvchi</div>' : '') + '</td>' +
-          '<td><div class="chip-row"><span class="chip level">' + esc(a.cefr_level || "—") + '</span><span class="chip skill">' + esc(cap(a.skill || "Mixed")) + '</span></div></td>' +
-          '<td><div class="asg-q">' + (a.question_count || 0) + '<span>savol</span></div></td>' +
-          '<td>' + (a.due_at ? '<div class="asg-due ' + dueClass + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(a.due_at) + '</div><div class="asg-due-sub">' + dueSub + '</div>' : '<span style="color:var(--text-dim)">Muddatsiz</span>') + '</td>' +
+          '<td><div class="asg-class">' + esc(a.class_name || "—") + '</div>' + (a.class_student_count != null ? '<div class="asg-class-sub">' + esc(assignmentsT("teacher.assignments.studentUnit", "{count} o'quvchi", { count: a.class_student_count })) + '</div>' : '') + '</td>' +
+          '<td><div class="chip-row"><span class="chip level">' + esc(a.cefr_level || "—") + '</span><span class="chip skill">' + esc(assignmentSkillLabel(a.skill)) + '</span></div></td>' +
+          '<td><div class="asg-q">' + (a.question_count || 0) + '<span>' + esc(assignmentsT("teacher.assignments.questionUnit", "savol")) + '</span></div></td>' +
+          '<td>' + (a.due_at ? '<div class="asg-due ' + dueClass + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(a.due_at) + '</div><div class="asg-due-sub">' + esc(dueSub) + '</div>' : '<span style="color:var(--text-dim)">' + esc(assignmentsT("teacher.assignments.noDeadline", "Muddatsiz")) + '</span>') + '</td>' +
           '<td><div class="asg-prog"><div class="asg-prog-top">' + done + ' / ' + totalStud + '</div><div class="asg-prog-bar"><span style="width:' + comp + '%;background:' + compColor + '"></span></div><div class="asg-prog-pct">' + comp + '%</div></div></td>' +
           '<td><span class="status-badge ' + stClass + '">' + stText + '</span></td>' +
           '<td><div class="act-cell">' +
-            '<button class="act-ic" title="Natijalarni ko\'rish" onclick="window.location.href=\'/teacher-results.html\'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
-            '<button class="act-ic" title="Tahrirlash" onclick="showToast(\'Topshiriq savollari qulflangan — tahrirlash tez orada\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button>' +
-            '<button class="act-ic" title="Statistika" onclick="window.location.href=\'/teacher-results.html\'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>' +
-            '<button class="act-ic" title="Boshqa" onclick="showToast(\'Qo\\\'shimcha amallar tez orada\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>' +
+            '<button class="act-ic" title="' + esc(assignmentsT("teacher.assignments.viewResults", "Natijalarni ko'rish")) + '" onclick="window.location.href=\'/teacher-results.html\'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+            '<button class="act-ic" title="' + esc(assignmentsT("teacher.assignments.edit", "Tahrirlash")) + '" onclick="showEditLocked()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button>' +
+            '<button class="act-ic" title="' + esc(assignmentsT("teacher.assignments.statistics", "Statistika")) + '" onclick="window.location.href=\'/teacher-results.html\'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>' +
+            '<button class="act-ic" title="' + esc(assignmentsT("teacher.assignments.more", "Boshqa")) + '" onclick="showMoreSoon()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>' +
           '</div></td>' +
         '</tr>';
       }).join("");
@@ -562,6 +595,8 @@
       renderPager();
     }
     function cap(s) { return String(s).charAt(0).toUpperCase() + String(s).slice(1); }
+    function showEditLocked() { showToast(assignmentsT("teacher.assignments.editLocked", "Topshiriq savollari qulflangan — tahrirlash tez orada")); }
+    function showMoreSoon() { showToast(assignmentsT("teacher.assignments.moreSoon", "Qo'shimcha amallar tez orada")); }
 
     function renderPager() {
       var totalPages = Math.ceil(filtered.length / pageSize);
@@ -570,7 +605,7 @@
       pager.style.display = "flex";
       var start = (page - 1) * pageSize + 1;
       var end = Math.min(page * pageSize, filtered.length);
-      document.getElementById("pagerInfo").textContent = start + "–" + end + " / " + filtered.length + " ta topshiriq";
+      document.getElementById("pagerInfo").textContent = assignmentsT("teacher.assignments.pagerInfo", "{start}–{end} / {total} ta topshiriq", { start: start, end: end, total: filtered.length });
 
       var nav = document.getElementById("pagerNav");
       var html = '<button class="pg-btn" onclick="goPage(' + (page - 1) + ')"' + (page === 1 ? ' disabled' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>';
@@ -624,12 +659,12 @@
     // O'ng panel — Muddati yaqin
     function renderDueList(list) {
       var box = document.getElementById("dueList");
-      if (!list.length) { box.innerHTML = '<div class="state-msg" style="padding:20px">Muddati yaqin topshiriq yo\'q.</div>'; return; }
+      if (!list.length) { box.innerHTML = '<div class="state-msg" style="padding:20px">' + esc(assignmentsT("teacher.assignments.noDueSoon", "Muddati yaqin topshiriq yo'q.")) + '</div>'; return; }
       box.innerHTML = list.map(function (a) {
         var dleft = daysLeft(a.due_at);
         var over = dleft != null && dleft < 0;
         var badgeColor = over ? "var(--red-soft);color:var(--red)" : (dleft <= 3 ? "var(--amber-soft);color:var(--amber)" : "var(--green-soft);color:var(--green)");
-        var badgeText = over ? "O'tgan" : (dleft + " kun");
+        var badgeText = over ? assignmentsT("teacher.assignments.past", "O'tgan") : assignmentsT("teacher.assignments.dayUnit", "{count} kun", { count: dleft });
         var color = over ? "var(--red)" : "var(--primary)";
         return '<div class="due-item"><div class="due-ic" style="background:' + (over ? "var(--red-soft)" : "var(--primary-soft)") + ';color:' + color + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>' +
           '<div class="due-info"><div class="due-name">' + esc(a.title) + '</div><div class="due-class">' + esc(a.class_name || "") + '</div></div>' +
@@ -640,7 +675,7 @@
     // O'ng panel — Sinflar kesimida bajarilish
     function renderClassComp(list) {
       var box = document.getElementById("classComp");
-      if (!list.length) { box.innerHTML = '<div class="state-msg" style="padding:20px">Ma\'lumot yo\'q.</div>'; return; }
+      if (!list.length) { box.innerHTML = '<div class="state-msg" style="padding:20px">' + esc(assignmentsT("teacher.assignments.noData", "Ma'lumot yo'q.")) + '</div>'; return; }
       box.innerHTML = list.map(function (c) {
         var pct = c.completion != null ? Math.round(c.completion) : 0;
         var color = pct >= 80 ? "var(--green)" : pct >= 65 ? "var(--amber)" : "var(--red)";
@@ -656,11 +691,17 @@
         var res = await authFetch("/teacher/classes");
         var data = await res.json();
         modalClasses = data.classes || [];
-        var sel = document.getElementById("asgClass");
-        sel.innerHTML = '<option value="">Sinf tanlang...</option>' + modalClasses.map(function (c) {
+        renderModalClasses();
+      } catch (e) { /* modal ochilganda qayta urinadi */ }
+    }
+
+    function renderModalClasses() {
+      var sel = document.getElementById("asgClass");
+      var current = sel.value;
+      sel.innerHTML = '<option value="">' + esc(assignmentsT("teacher.assignments.selectClass", "Sinf tanlang...")) + '</option>' + modalClasses.map(function (c) {
           return '<option value="' + c.id + '">' + esc(c.name) + '</option>';
         }).join("");
-      } catch (e) { /* modal ochilganda qayta urinadi */ }
+      if (Array.prototype.some.call(sel.options, function (option) { return option.value === current; })) sel.value = current;
     }
 
     function openAsgModal(preset) {
@@ -681,7 +722,7 @@
     // Shablon bilan ochish (Reading/Grammar/Vocabulary)
     function openTemplate(skill) {
       openAsgModal({ skill: skill });
-      showToast(cap(skill) + " shabloni — sinf va sarlavhani to'ldiring");
+      showToast(assignmentsT("teacher.assignments.templateReady", "{skill} shabloni — sinf va sarlavhani to'ldiring", { skill: assignmentSkillLabel(skill) }));
     }
 
     async function submitAssignment() {
@@ -696,11 +737,11 @@
       var errEl = document.getElementById("asgErr");
       var btn = document.getElementById("asgSubmitBtn");
 
-      if (!classId) { errEl.textContent = "Sinf tanlang"; errEl.style.display = "block"; return; }
-      if (title.length < 3) { errEl.textContent = "Sarlavha kamida 3 belgi bo'lsin"; errEl.style.display = "block"; return; }
-      if (isNaN(count) || count < 1 || count > 50) { errEl.textContent = "Savol soni 1-50 oralig'ida"; errEl.style.display = "block"; return; }
+      if (!classId) { errEl.textContent = assignmentsT("teacher.assignments.selectClassError", "Sinf tanlang"); errEl.style.display = "block"; return; }
+      if (title.length < 3) { errEl.textContent = assignmentsT("teacher.assignments.titleMin", "Sarlavha kamida 3 belgi bo'lsin"); errEl.style.display = "block"; return; }
+      if (isNaN(count) || count < 1 || count > 50) { errEl.textContent = assignmentsT("teacher.assignments.questionRange", "Savol soni 1-50 oralig'ida"); errEl.style.display = "block"; return; }
 
-      btn.disabled = true; btn.textContent = "Yaratilmoqda...";
+      btn.disabled = true; btn.textContent = assignmentsT("teacher.assignments.creating", "Yaratilmoqda...");
       try {
         var payload = { title: title, description: desc, cefr_level: level, skill: skill, question_count: count, max_attempts: attempts };
         if (due) payload.due_at = new Date(due).toISOString();
@@ -711,22 +752,32 @@
         });
         var data = await res.json();
         if (!res.ok) {
-          if (window.handleProLimit && window.handleProLimit(res, data)) { closeAsgModal(); btn.disabled = false; btn.textContent = "Yaratish"; return; }
-          errEl.textContent = data.error || "Xatolik yuz berdi"; errEl.style.display = "block";
-          btn.disabled = false; btn.textContent = "Yaratish"; return;
+          if (window.handleProLimit && window.handleProLimit(res, data)) { closeAsgModal(); btn.disabled = false; btn.textContent = assignmentsT("teacher.assignments.create", "Yaratish"); return; }
+          errEl.textContent = data.error || assignmentsT("teacher.assignments.genericError", "Xatolik yuz berdi"); errEl.style.display = "block";
+          btn.disabled = false; btn.textContent = assignmentsT("teacher.assignments.create", "Yaratish"); return;
         }
         closeAsgModal();
-        showToast("Topshiriq yaratildi!");
-        btn.disabled = false; btn.textContent = "Yaratish";
+        showToast(assignmentsT("teacher.assignments.created", "Topshiriq yaratildi!"));
+        btn.disabled = false; btn.textContent = assignmentsT("teacher.assignments.create", "Yaratish");
         loadAssignments();
       } catch (e) {
-        errEl.textContent = "Server bilan aloqa yo'q"; errEl.style.display = "block";
-        btn.disabled = false; btn.textContent = "Yaratish";
+        errEl.textContent = assignmentsT("teacher.assignments.serverUnavailable", "Server bilan aloqa yo'q"); errEl.style.display = "block";
+        btn.disabled = false; btn.textContent = assignmentsT("teacher.assignments.create", "Yaratish");
       }
     }
     function cap(s) { return String(s).charAt(0).toUpperCase() + String(s).slice(1); }
 
     // ===== ISHGA TUSHIRISH =====
+    updateAssignmentControls();
+    window.addEventListener("ilmliga:languagechange", function () {
+      document.title = assignmentsT("teacher.assignments.pageTitle", "Topshiriqlar — IlmLiga");
+      updateAssignmentControls();
+      fillClassFilter(allAsg);
+      renderModalClasses();
+      renderTable();
+      renderDueList(lastDueSoon);
+      renderClassComp(lastClassCompletion);
+    });
     loadAssignments();
     loadModalClasses();
   </script>

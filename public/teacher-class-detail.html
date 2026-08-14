@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sinf tafsiloti — Knowledge Arena</title>
+  <title>Sinf tafsiloti — English Battle</title>
   <style>
     :root {
       --bg-main: #070b18;
@@ -470,14 +470,14 @@
       <div class="topbar">
         <a class="back-link" href="/teacher-classes.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-          Sinflarga qaytish
+          <span data-i18n="teacher.classDetail.backClasses">Sinflarga qaytish</span>
         </a>
         <div class="topbar-right">
           <div class="profile">
             <div class="avatar" id="avatar">T</div>
             <div class="profile-info">
               <div class="profile-name" id="profileName">O'qituvchi</div>
-              <div class="profile-role">O'qituvchi</div>
+              <div class="profile-role" data-i18n="teacher.classDetail.teacherFallback">O'qituvchi</div>
             </div>
           </div>
         </div>
@@ -517,13 +517,13 @@
               </div>
               <div class="class-stats">
                 <div class="stat-block">
-                  <span class="stat-block-label">O'quvchilar</span>
+                  <span class="stat-block-label" data-i18n="teacher.classDetail.students">O'quvchilar</span>
                   <span class="stat-block-value">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span id="studentCount">0</span>
                   </span>
                 </div>
                 <div class="stat-block">
-                  <span class="stat-block-label">Yaratilgan</span>
+                  <span class="stat-block-label" data-i18n="teacher.classDetail.created">Yaratilgan</span>
                   <span class="stat-block-value" id="createdDate" style="font-size:16px">—</span>
                 </div>
               </div>
@@ -531,13 +531,13 @@
 
             <!-- Join code -->
             <div class="joincode-card">
-              <div class="joincode-label">Qo'shilish kodi</div>
+              <div class="joincode-label" data-i18n="teacher.classDetail.joinCode">Qo'shilish kodi</div>
               <div class="joincode-value" id="joinCode">——————</div>
               <button class="joincode-copy" id="copyBtn" onclick="copyCode()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                Kodni nusxalash
+                <span data-i18n="teacher.classDetail.copyCode">Kodni nusxalash</span>
               </button>
-              <div class="joincode-hint">Bu kodni o'quvchilarga yuboring</div>
+              <div class="joincode-hint" data-i18n="teacher.classDetail.joinHint">Bu kodni o'quvchilarga yuboring</div>
             </div>
           </div>
 
@@ -545,23 +545,23 @@
           <div class="tabs-bar">
             <button class="tab-btn active" id="tabBtnStudents" onclick="switchTab('students')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-              O'quvchilar <span class="tab-num" id="sectionCount">0</span>
+              <span data-i18n="teacher.classDetail.students">O'quvchilar</span> <span class="tab-num" id="sectionCount">0</span>
             </button>
             <button class="tab-btn" id="tabBtnAssignments" onclick="switchTab('assignments')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-              Topshiriqlar <span class="tab-num" id="tabCountAssignments">0</span>
+              <span data-i18n="teacher.classDetail.assignments">Topshiriqlar</span> <span class="tab-num" id="tabCountAssignments">0</span>
             </button>
             <button class="tab-btn" id="tabBtnManage" onclick="switchTab('manage')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h6"/></svg>
-              E'lon va dars
+              <span data-i18n="teacher.classDetail.manage">E'lon va dars</span>
             </button>
             <button class="tab-btn" id="tabBtnAttendance" onclick="switchTab('attendance')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-              Davomat
+              <span data-i18n="teacher.classDetail.attendance">Davomat</span>
             </button>
             <button class="tab-btn" id="tabBtnAI" onclick="switchTab('ai')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>
-              AI tahlil <span class="ai-tab-badge">PRO</span>
+              <span data-i18n="teacher.classDetail.aiAnalysis">AI tahlil</span> <span class="ai-tab-badge">PRO</span>
             </button>
           </div>
 
@@ -571,12 +571,12 @@
               <table>
                 <thead>
                   <tr>
-                    <th>O'quvchi</th>
-                    <th>Daraja</th>
-                    <th>Reyting</th>
-                    <th>Qo'shilgan</th>
-                    <th>Holat</th>
-                    <th style="text-align:right">Amal</th>
+                    <th data-i18n="teacher.classDetail.studentFallback">O'quvchi</th>
+                    <th data-i18n="teacher.classDetail.level">Daraja</th>
+                    <th data-i18n="teacher.classDetail.rating">Reyting</th>
+                    <th data-i18n="teacher.classDetail.joined">Qo'shilgan</th>
+                    <th data-i18n="teacher.classDetail.status">Holat</th>
+                    <th style="text-align:right" data-i18n="teacher.classDetail.action">Amal</th>
                   </tr>
                 </thead>
                 <tbody id="studentsBody"></tbody>
@@ -586,11 +586,11 @@
               <div class="state-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
               </div>
-              <h2>Hali o'quvchi qo'shilmagan</h2>
-              <p>Yuqoridagi qo'shilish kodini o'quvchilarga yuboring. Ular kod orqali sinfingizga qo'shiladi.</p>
+              <h2 data-i18n="teacher.classDetail.emptyStudentsTitle">Hali o'quvchi qo'shilmagan</h2>
+              <p data-i18n="teacher.classDetail.emptyStudentsDesc">Yuqoridagi qo'shilish kodini o'quvchilarga yuboring. Ular kod orqali sinfingizga qo'shiladi.</p>
               <button class="state-btn" onclick="copyCode()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                Kodni nusxalash
+                <span data-i18n="teacher.classDetail.copyCode">Kodni nusxalash</span>
               </button>
             </div>
           </div>
@@ -598,10 +598,10 @@
           <!-- PANEL: Topshiriqlar -->
           <div class="tab-panel" id="tabAssignments">
             <div class="assign-head">
-              <span class="section-title">Topshiriqlar</span>
+              <span class="section-title" data-i18n="teacher.classDetail.assignments">Topshiriqlar</span>
               <button class="btn-primary" onclick="openCreateModal()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Yangi topshiriq
+                <span data-i18n="teacher.classDetail.newAssignment">Yangi topshiriq</span>
               </button>
             </div>
             <div id="assignLoading" style="display:none;">
@@ -613,11 +613,11 @@
               <div class="state-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
               </div>
-              <h2>Bu sinf uchun hali topshiriq yo'q</h2>
-              <p>Yangi topshiriq yaratib, o'quvchilarga vazifa bering. Tizim avtomatik baholaydi.</p>
+              <h2 data-i18n="teacher.classDetail.emptyAssignmentsTitle">Bu sinf uchun hali topshiriq yo'q</h2>
+              <p data-i18n="teacher.classDetail.emptyAssignmentsDesc">Yangi topshiriq yaratib, o'quvchilarga vazifa bering. Tizim avtomatik baholaydi.</p>
               <button class="state-btn" onclick="openCreateModal()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Yangi topshiriq
+                <span data-i18n="teacher.classDetail.newAssignment">Yangi topshiriq</span>
               </button>
             </div>
           </div>
@@ -625,41 +625,41 @@
           <div class="tab-panel" id="tabManage">
             <div class="manage-grid">
               <div class="manage-card">
-                <div class="manage-title">Sinf e'lonlari</div>
-                <div class="manage-sub">O'quvchilar sinf sahifasida darhol ko'radigan xabarni joylang.</div>
-                <div class="form-row"><label class="form-label">Sarlavha</label><input class="form-input" id="annTitle" maxlength="160" placeholder="Masalan: Ertangi dars haqida"></div>
-                <div class="form-row"><label class="form-label">E'lon matni</label><textarea class="form-textarea" id="annBody" maxlength="2000" placeholder="E'lon tafsilotlari"></textarea></div>
-                <label class="inline-check"><input type="checkbox" id="annPinned"> Muhim e'lon sifatida tepaga mahkamlash</label>
-                <button class="btn-primary" id="annSubmit" onclick="createAnnouncement()">E'lon joylash</button>
+                <div class="manage-title" data-i18n="teacher.classDetail.announcements">Sinf e'lonlari</div>
+                <div class="manage-sub" data-i18n="teacher.classDetail.announcementsDesc">O'quvchilar sinf sahifasida darhol ko'radigan xabarni joylang.</div>
+                <div class="form-row"><label class="form-label" data-i18n="teacher.classDetail.title">Sarlavha</label><input class="form-input" id="annTitle" maxlength="160" placeholder="Masalan: Ertangi dars haqida" data-i18n-placeholder="teacher.classDetail.titlePlaceholder"></div>
+                <div class="form-row"><label class="form-label" data-i18n="teacher.classDetail.announcementBody">E'lon matni</label><textarea class="form-textarea" id="annBody" maxlength="2000" placeholder="E'lon tafsilotlari" data-i18n-placeholder="teacher.classDetail.announcementPlaceholder"></textarea></div>
+                <label class="inline-check"><input type="checkbox" id="annPinned"> <span data-i18n="teacher.classDetail.pinAnnouncement">Muhim e'lon sifatida tepaga mahkamlash</span></label>
+                <button class="btn-primary" id="annSubmit" onclick="createAnnouncement()" data-i18n="teacher.classDetail.postAnnouncement">E'lon joylash</button>
                 <div id="announcementList"></div>
               </div>
               <div class="manage-card">
-                <div class="manage-title">Jonli dars</div>
-                <div class="manage-sub">Google Meet, Zoom yoki boshqa xavfsiz dars havolasini o'quvchilarga oching.</div>
-                <div class="live-status" id="liveStatus"><span class="live-dot"></span><span>Faol dars yo'q</span></div>
+                <div class="manage-title" data-i18n="teacher.classDetail.liveLesson">Jonli dars</div>
+                <div class="manage-sub" data-i18n="teacher.classDetail.liveLessonDesc">Google Meet, Zoom yoki boshqa xavfsiz dars havolasini o'quvchilarga oching.</div>
+                <div class="live-status" id="liveStatus"><span class="live-dot"></span><span data-i18n="teacher.classDetail.noActiveLesson">Faol dars yo'q</span></div>
                 <div id="lessonForm">
-                  <div class="form-row"><label class="form-label">Dars nomi</label><input class="form-input" id="lessonTitle" maxlength="160" placeholder="Masalan: Present Simple — jonli dars"></div>
-                  <div class="form-row"><label class="form-label">Dars havolasi</label><input class="form-input" id="lessonUrl" type="url" maxlength="500" placeholder="https://meet.google.com/..."></div>
-                  <div class="form-row"><label class="form-label">Qisqa izoh (ixtiyoriy)</label><textarea class="form-textarea" id="lessonDescription" maxlength="1000"></textarea></div>
-                  <button class="btn-primary" id="lessonStartBtn" onclick="startLiveLesson()">Jonli darsni boshlash</button>
+                  <div class="form-row"><label class="form-label" data-i18n="teacher.classDetail.lessonName">Dars nomi</label><input class="form-input" id="lessonTitle" maxlength="160" placeholder="Masalan: Present Simple — jonli dars" data-i18n-placeholder="teacher.classDetail.lessonNamePlaceholder"></div>
+                  <div class="form-row"><label class="form-label" data-i18n="teacher.classDetail.lessonLink">Dars havolasi</label><input class="form-input" id="lessonUrl" type="url" maxlength="500" placeholder="https://meet.google.com/..."></div>
+                  <div class="form-row"><label class="form-label" data-i18n="teacher.classDetail.shortDescription">Qisqa izoh (ixtiyoriy)</label><textarea class="form-textarea" id="lessonDescription" maxlength="1000"></textarea></div>
+                  <button class="btn-primary" id="lessonStartBtn" onclick="startLiveLesson()" data-i18n="teacher.classDetail.startLiveLesson">Jonli darsni boshlash</button>
                 </div>
-                <div id="liveLessonActions" style="display:none;margin-top:12px"><button class="btn-ghost danger" onclick="finishLiveLesson()">Darsni tugatish</button></div>
+                <div id="liveLessonActions" style="display:none;margin-top:12px"><button class="btn-ghost danger" onclick="finishLiveLesson()" data-i18n="teacher.classDetail.finishLesson">Darsni tugatish</button></div>
               </div>
             </div>
           </div>
 
           <div class="tab-panel" id="tabAttendance">
             <div class="manage-card">
-              <div class="manage-title">Davomat</div>
-              <div class="manage-sub">Dars sanasini yarating, har bir o'quvchining holatini belgilang va saqlang.</div>
+              <div class="manage-title" data-i18n="teacher.classDetail.attendance">Davomat</div>
+              <div class="manage-sub" data-i18n="teacher.classDetail.attendanceDesc">Dars sanasini yarating, har bir o'quvchining holatini belgilang va saqlang.</div>
               <div class="attendance-head">
-                <div class="form-row"><label class="form-label">Mavjud davomat</label><select class="form-select" id="attendanceSession" onchange="loadAttendance(this.value)"><option value="">Davomat yaratilmagan</option></select></div>
-                <div class="form-row"><label class="form-label">Yangi dars nomi</label><input class="form-input" id="attendanceTitle" maxlength="160" placeholder="Masalan: 5-dars"></div>
-                <div class="form-row"><label class="form-label">Sana</label><input class="form-input" id="attendanceDate" type="date"></div>
-                <button class="btn-primary" onclick="createAttendance()">Yangi davomat</button>
+                <div class="form-row"><label class="form-label" data-i18n="teacher.classDetail.existingAttendance">Mavjud davomat</label><select class="form-select" id="attendanceSession" onchange="loadAttendance(this.value)"><option value="" data-i18n="teacher.classDetail.noAttendance">Davomat yaratilmagan</option></select></div>
+                <div class="form-row"><label class="form-label" data-i18n="teacher.classDetail.newLessonName">Yangi dars nomi</label><input class="form-input" id="attendanceTitle" maxlength="160" placeholder="Masalan: 5-dars" data-i18n-placeholder="teacher.classDetail.attendanceTitlePlaceholder"></div>
+                <div class="form-row"><label class="form-label" data-i18n="teacher.classDetail.date">Sana</label><input class="form-input" id="attendanceDate" type="date"></div>
+                <button class="btn-primary" onclick="createAttendance()" data-i18n="teacher.classDetail.newAttendance">Yangi davomat</button>
               </div>
-              <div id="attendanceRows" class="attendance-list"><div class="attendance-empty">Davomatni tanlang yoki yangisini yarating.</div></div>
-              <div id="attendanceActions" style="display:none;justify-content:flex-end;gap:10px;margin-top:14px"><button class="btn-ghost" style="flex:0 0 auto" onclick="saveAttendance(false)">Saqlash</button><button class="btn-primary" onclick="saveAttendance(true)">Saqlash va yopish</button></div>
+              <div id="attendanceRows" class="attendance-list"><div class="attendance-empty" data-i18n="teacher.classDetail.selectAttendance">Davomatni tanlang yoki yangisini yarating.</div></div>
+              <div id="attendanceActions" style="display:none;justify-content:flex-end;gap:10px;margin-top:14px"><button class="btn-ghost" style="flex:0 0 auto" onclick="saveAttendance(false)" data-i18n="teacher.classDetail.save">Saqlash</button><button class="btn-primary" onclick="saveAttendance(true)" data-i18n="teacher.classDetail.saveClose">Saqlash va yopish</button></div>
             </div>
           </div>
 
@@ -674,15 +674,15 @@
           <div class="state-icon error">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           </div>
-          <h2 id="errorTitle">Xatolik yuz berdi</h2>
-          <p id="errorMsg">Sinf ma'lumotlarini yuklashda xatolik yuz berdi. Qayta urinib ko'ring.</p>
+          <h2 id="errorTitle" data-i18n="teacher.classDetail.errorTitle">Xatolik yuz berdi</h2>
+          <p id="errorMsg" data-i18n="teacher.classDetail.errorLoad">Sinf ma'lumotlarini yuklashda xatolik yuz berdi. Qayta urinib ko'ring.</p>
           <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
             <button class="state-btn" onclick="loadDetail()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-              Qayta urinish
+              <span data-i18n="teacher.classDetail.retry">Qayta urinish</span>
             </button>
             <button class="state-btn ghost" onclick="window.location.href='/teacher-classes.html'">
-              Sinflarga qaytish
+              <span data-i18n="teacher.classDetail.backClasses">Sinflarga qaytish</span>
             </button>
           </div>
         </div>
@@ -697,11 +697,11 @@
       <div class="confirm-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
       </div>
-      <div class="confirm-title">O'quvchini olib tashlash</div>
-      <div class="confirm-text"><b id="confirmName">Bu o'quvchi</b>ni sinfdan olib tashlamoqchimisiz? Keyinroq u kod orqali qayta qo'shilishi mumkin.</div>
+      <div class="confirm-title" data-i18n="teacher.classDetail.removeStudentTitle">O'quvchini olib tashlash</div>
+      <div class="confirm-text" id="confirmText"><b id="confirmName">Bu o'quvchi</b>ni sinfdan olib tashlamoqchimisiz? Keyinroq u kod orqali qayta qo'shilishi mumkin.</div>
       <div class="confirm-foot">
-        <button class="confirm-cancel" onclick="closeConfirm()">Bekor qilish</button>
-        <button class="confirm-delete" id="confirmDeleteBtn" onclick="confirmRemove()">Olib tashlash</button>
+        <button class="confirm-cancel" onclick="closeConfirm()" data-i18n="teacher.classDetail.cancel">Bekor qilish</button>
+        <button class="confirm-delete" id="confirmDeleteBtn" onclick="confirmRemove()" data-i18n="teacher.classDetail.remove">Olib tashlash</button>
       </div>
     </div>
   </div>
@@ -710,46 +710,46 @@
   <div class="modal-overlay" id="createOverlay">
     <div class="modal-box">
       <div class="modal-head">
-        <span class="modal-title">Yangi topshiriq</span>
+        <span class="modal-title" data-i18n="teacher.classDetail.newAssignment">Yangi topshiriq</span>
         <button class="modal-close" onclick="closeCreateModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="form-error" id="createError"></div>
       <div class="form-row">
-        <label class="form-label">Sarlavha *</label>
-        <input class="form-input" id="fTitle" maxlength="150" placeholder="Masalan: Present Simple — 1-dars" />
+        <label class="form-label"><span data-i18n="teacher.classDetail.title">Sarlavha</span> *</label>
+        <input class="form-input" id="fTitle" maxlength="150" placeholder="Masalan: Present Simple — 1-dars" data-i18n-placeholder="teacher.classDetail.assignmentTitlePlaceholder" />
       </div>
       <div class="form-row">
-        <label class="form-label">Tavsif (ixtiyoriy)</label>
-        <textarea class="form-textarea" id="fDesc" maxlength="500" placeholder="Topshiriq haqida qisqa izoh"></textarea>
+        <label class="form-label" data-i18n="teacher.classDetail.descriptionOptional">Tavsif (ixtiyoriy)</label>
+        <textarea class="form-textarea" id="fDesc" maxlength="500" placeholder="Topshiriq haqida qisqa izoh" data-i18n-placeholder="teacher.classDetail.assignmentDescPlaceholder"></textarea>
       </div>
       <div class="form-row two">
         <div>
-          <label class="form-label">CEFR daraja *</label>
+          <label class="form-label" data-i18n="teacher.classDetail.cefrLevel">CEFR daraja *</label>
           <select class="form-select" id="fLevel"><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select>
         </div>
         <div>
-          <label class="form-label">Bo'lim (skill)</label>
-          <select class="form-select" id="fSkill"><option value="mixed">Aralash</option><option value="grammar">Grammatika</option><option value="vocabulary">Lug'at</option><option value="reading">O'qish</option><option value="listening">Tinglash</option><option value="speaking">Gapirish</option><option value="writing">Yozish</option></select>
+          <label class="form-label" data-i18n="teacher.classDetail.skill">Bo'lim (skill)</label>
+          <select class="form-select" id="fSkill"><option value="mixed" data-i18n="teacher.classDetail.skillMixed">Aralash</option><option value="grammar" data-i18n="teacher.classDetail.skillGrammar">Grammatika</option><option value="vocabulary" data-i18n="teacher.classDetail.skillVocabulary">Lug'at</option><option value="reading" data-i18n="teacher.classDetail.skillReading">O'qish</option><option value="listening" data-i18n="teacher.classDetail.skillListening">Tinglash</option><option value="speaking" data-i18n="teacher.classDetail.skillSpeaking">Gapirish</option><option value="writing" data-i18n="teacher.classDetail.skillWriting">Yozish</option></select>
         </div>
       </div>
       <div class="form-row two">
         <div>
-          <label class="form-label">Savollar soni *</label>
+          <label class="form-label" data-i18n="teacher.classDetail.questionCount">Savollar soni *</label>
           <select class="form-select" id="fCount"><option value="5">5 ta</option><option value="10" selected>10 ta</option><option value="15">15 ta</option><option value="20">20 ta</option></select>
         </div>
         <div>
-          <label class="form-label">Urinishlar soni</label>
+          <label class="form-label" data-i18n="teacher.classDetail.attempts">Urinishlar soni</label>
           <select class="form-select" id="fAttempts"><option value="1" selected>1 marta</option><option value="2">2 marta</option><option value="3">3 marta</option></select>
         </div>
       </div>
       <div class="form-row">
-        <label class="form-label">Topshirish muddati (ixtiyoriy)</label>
+        <label class="form-label" data-i18n="teacher.classDetail.dueOptional">Topshirish muddati (ixtiyoriy)</label>
         <input class="form-input" id="fDue" type="datetime-local" />
-        <div class="form-hint">Bo'sh qoldirilsa — muddatsiz. Muddatdan keyin topshirilsa "kechikkan" deb belgilanadi.</div>
+        <div class="form-hint" data-i18n="teacher.classDetail.dueHint">Bo'sh qoldirilsa — muddatsiz. Muddatdan keyin topshirilsa "kechikkan" deb belgilanadi.</div>
       </div>
       <div class="modal-foot">
-        <button class="btn-ghost" style="flex:0 0 auto;padding:11px 18px" onclick="closeCreateModal()">Bekor qilish</button>
-        <button class="btn-primary" id="createSubmitBtn" onclick="submitCreateAssignment()">Yaratish</button>
+        <button class="btn-ghost" style="flex:0 0 auto;padding:11px 18px" onclick="closeCreateModal()" data-i18n="teacher.classDetail.cancel">Bekor qilish</button>
+        <button class="btn-primary" id="createSubmitBtn" onclick="submitCreateAssignment()" data-i18n="teacher.classDetail.create">Yaratish</button>
       </div>
     </div>
   </div>
@@ -758,7 +758,7 @@
   <div class="modal-overlay" id="resultsOverlay">
     <div class="modal-box wide">
       <div class="modal-head">
-        <span class="modal-title" id="resultsTitle">Natijalar</span>
+        <span class="modal-title" id="resultsTitle" data-i18n="teacher.classDetail.results">Natijalar</span>
         <button class="modal-close" onclick="closeResults()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div id="resultsBody"></div>
@@ -768,13 +768,14 @@
   <!-- TOAST -->
   <div class="toast" id="toast">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-    <span id="toastText">Bajarildi</span>
+    <span id="toastText" data-i18n="teacher.classDetail.done">Bajarildi</span>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/api.js"></script>
   <script src="/payment-modal.js"></script>
   <script src="/premium-modal.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/teacher-sidebar.js"></script>
   <script>renderTeacherSidebar("classes");</script>
   <script>
@@ -785,12 +786,31 @@
     if (user.role && user.role !== "teacher" && user.role !== "school_admin") {
       window.location.href = "/lobby.html";
     }
-    const fname = user.first_name || "O'qituvchi";
+    function classDetailT(key, fallback, params) {
+      if (window.IlmLigaI18n) return window.IlmLigaI18n.t(key, params);
+      return fallback;
+    }
+    function classDetailLocale() {
+      const language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return language === "ru" ? "ru-RU" : language === "en" ? "en-GB" : "uz-UZ";
+    }
+    function updateLocalizedControls() {
+      document.querySelectorAll("#fCount option").forEach(function (option) {
+        option.textContent = classDetailT("teacher.classDetail.questionUnit", "{count} ta", { count: option.value });
+      });
+      document.querySelectorAll("#fAttempts option").forEach(function (option) {
+        option.textContent = classDetailT("teacher.classDetail.attemptUnit", "{count} marta", { count: option.value });
+      });
+    }
+
+    const fname = user.first_name || classDetailT("teacher.classDetail.teacherFallback", "O'qituvchi");
     document.getElementById("profileName").textContent = fname;
     document.getElementById("avatar").textContent = (fname[0] || "T").toUpperCase();
+    document.title = classDetailT("teacher.classDetail.pageTitle", "Sinf tafsiloti — English Battle");
 
     let currentJoinCode = "";
     let classStudents = [];
+    let currentDetailData = null;
 
     // URL'dan id olamiz
     const params = new URLSearchParams(window.location.search);
@@ -805,7 +825,9 @@
       if (toastTimer) clearTimeout(toastTimer);
       toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
     }
-    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada"); }
+    function comingSoon(name) {
+      showToast(classDetailT("nav.comingSoonMessage", (name ? name + ": " : "") + "tez orada", { name: name || "" }));
+    }
 
     function showState(state) {
       document.getElementById("loadingState").style.display = state === "loading" ? "block" : "none";
@@ -814,15 +836,15 @@
     }
 
     function showError(title, msg) {
-      document.getElementById("errorTitle").textContent = title || "Xatolik yuz berdi";
-      document.getElementById("errorMsg").textContent = msg || "Sinf ma'lumotlarini yuklashda xatolik yuz berdi.";
+      document.getElementById("errorTitle").textContent = title || classDetailT("teacher.classDetail.errorTitle", "Xatolik yuz berdi");
+      document.getElementById("errorMsg").textContent = msg || classDetailT("teacher.classDetail.errorLoad", "Sinf ma'lumotlarini yuklashda xatolik yuz berdi.");
       showState("error");
     }
 
     function formatDate(iso) {
       if (!iso) return "—";
       const d = new Date(iso);
-      return d.toLocaleDateString("uz-UZ", { day: "numeric", month: "short", year: "numeric" });
+      return d.toLocaleDateString(classDetailLocale(), { day: "numeric", month: "short", year: "numeric" });
     }
     function esc(s) {
       return String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -835,17 +857,17 @@
         const btn = document.getElementById("copyBtn");
         btn.classList.add("copied");
         const orig = btn.innerHTML;
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Nusxalandi';
-        showToast("Kod nusxalandi: " + currentJoinCode);
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ' + classDetailT("teacher.classDetail.copied", "Nusxalandi");
+        showToast(classDetailT("teacher.classDetail.codeCopied", "Kod nusxalandi: {code}", { code: currentJoinCode }));
         setTimeout(() => { btn.classList.remove("copied"); btn.innerHTML = orig; }, 1800);
-      }).catch(() => showToast("Nusxalab bo'lmadi"));
+      }).catch(() => showToast(classDetailT("teacher.classDetail.copyFailed", "Nusxalab bo'lmadi")));
     }
 
     // Ma'lumotni yuklash
     async function loadDetail() {
       // id yo'q bo'lsa — xato
       if (!classId) {
-        showError("Sinf topilmadi", "Sinf ID ko'rsatilmagan. Sinflar ro'yxatidan sinfni tanlang.");
+        showError(classDetailT("teacher.classDetail.classNotFound", "Sinf topilmadi"), classDetailT("teacher.classDetail.classIdMissing", "Sinf ID ko'rsatilmagan. Sinflar ro'yxatidan sinfni tanlang."));
         return;
       }
 
@@ -855,7 +877,7 @@
         if (!res.ok) {
           if (res.status === 403) { window.location.href = "/lobby.html"; return; }
           if (res.status === 404) {
-            showError("Sinf topilmadi", "Bu sinf mavjud emas yoki sizga tegishli emas.");
+            showError(classDetailT("teacher.classDetail.classNotFound", "Sinf topilmadi"), classDetailT("teacher.classDetail.classUnavailable", "Bu sinf mavjud emas yoki sizga tegishli emas."));
             return;
           }
           throw new Error("xato");
@@ -863,17 +885,18 @@
         const data = await res.json();
         renderDetail(data);
       } catch (err) {
-        showError("Xatolik yuz berdi", "Sinf ma'lumotlarini yuklashda xatolik yuz berdi. Internet aloqangizni tekshiring.");
+        showError(classDetailT("teacher.classDetail.errorTitle", "Xatolik yuz berdi"), classDetailT("teacher.classDetail.errorLoadConnection", "Sinf ma'lumotlarini yuklashda xatolik yuz berdi. Internet aloqangizni tekshiring."));
       }
     }
 
     function renderDetail(data) {
+      currentDetailData = data;
       const cls = data.class || {};
       const students = data.students || [];
       classStudents = students;
 
       // Sinf ma'lumoti
-      const name = cls.name || "Sinf";
+      const name = cls.name || classDetailT("teacher.classDetail.classFallback", "Sinf");
       document.getElementById("className").textContent = name;
       document.getElementById("classEmblem").textContent = name.trim().substring(0, 2).toUpperCase();
 
@@ -882,7 +905,7 @@
         descEl.textContent = cls.description;
         descEl.classList.remove("empty");
       } else {
-        descEl.textContent = "Tavsif kiritilmagan";
+        descEl.textContent = classDetailT("teacher.classDetail.descriptionMissing", "Tavsif kiritilmagan");
         descEl.classList.add("empty");
       }
 
@@ -903,7 +926,7 @@
         document.getElementById("studentsTable").style.display = "block";
         const body = document.getElementById("studentsBody");
         body.innerHTML = students.map(s => {
-          const fullName = esc((s.first_name || "") + " " + (s.last_name || "")).trim() || "Noma'lum";
+          const fullName = esc((s.first_name || "") + " " + (s.last_name || "")).trim() || classDetailT("teacher.classDetail.unknown", "Noma'lum");
           const initials = esc(((s.first_name || "S")[0] || "S")).toUpperCase();
           const level = esc(s.cefr_level || "A1");
           const rating = (s.rating != null) ? s.rating : "—";
@@ -918,8 +941,8 @@
               <td><span class="level-badge">${level}</span></td>
               <td><span class="rating-val">${rating}</span></td>
               <td class="muted-cell">${formatDate(s.joined_at)}</td>
-              <td><span class="status-badge active"><span class="dot"></span>Faol</span></td>
-              <td style="text-align:right"><button class="remove-btn" onclick="askRemove(${s.id}, '${esc(fullName).replace(/'/g, "\\'")}')" title="Sinfdan olib tashlash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button></td>
+              <td><span class="status-badge active"><span class="dot"></span>${classDetailT("teacher.classDetail.active", "Faol")}</span></td>
+              <td style="text-align:right"><button class="remove-btn" onclick="askRemove(${s.id}, '${esc(fullName).replace(/'/g, "\\'")}')" title="${classDetailT("teacher.classDetail.removeTitle", "Sinfdan olib tashlash")}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button></td>
             </tr>`;
         }).join("");
       }
@@ -929,15 +952,18 @@
 
     // === O'quvchini olib tashlash ===
     let removeStudentId = null;
+    let removeStudentName = "";
 
     function askRemove(studentId, studentName) {
       removeStudentId = studentId;
-      document.getElementById("confirmName").textContent = studentName || "Bu o'quvchi";
+      removeStudentName = studentName || classDetailT("teacher.classDetail.thisStudent", "Bu o'quvchi");
+      document.getElementById("confirmText").textContent = classDetailT("teacher.classDetail.removeStudentText", "{name}ni sinfdan olib tashlamoqchimisiz? Keyinroq u kod orqali qayta qo'shilishi mumkin.", { name: removeStudentName });
       document.getElementById("confirmOverlay").classList.add("show");
     }
     function closeConfirm() {
       document.getElementById("confirmOverlay").classList.remove("show");
       removeStudentId = null;
+      removeStudentName = "";
     }
     document.getElementById("confirmOverlay").addEventListener("click", function(e){
       if (e.target.id === "confirmOverlay") closeConfirm();
@@ -947,7 +973,7 @@
       if (!removeStudentId) return;
       const btn = document.getElementById("confirmDeleteBtn");
       btn.disabled = true;
-      btn.textContent = "Olib tashlanmoqda...";
+      btn.textContent = classDetailT("teacher.classDetail.removing", "Olib tashlanmoqda...");
       try {
         const res = await authFetch(
           "/teacher/classes/" + encodeURIComponent(classId) + "/students/" + encodeURIComponent(removeStudentId),
@@ -955,25 +981,36 @@
         );
         const data = await res.json();
         if (!res.ok) {
-          showToast(data.error || "Xatolik yuz berdi");
+          showToast(data.error || classDetailT("teacher.classDetail.removeFailed", "O'quvchini olib tashlab bo'lmadi"));
           closeConfirm();
           return;
         }
         closeConfirm();
-        showToast("O'quvchi olib tashlandi");
+        showToast(classDetailT("teacher.classDetail.removed", "O'quvchi olib tashlandi"));
         await loadDetail(); // ro'yxatni yangilash
       } catch (err) {
-        showToast("Server bilan aloqa yo'q");
+        showToast(classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q"));
         closeConfirm();
       } finally {
         btn.disabled = false;
-        btn.textContent = "Olib tashlash";
+        btn.textContent = classDetailT("teacher.classDetail.remove", "Olib tashlash");
       }
     }
 
     // ============ TOPSHIRIQLAR (Assignments) ============
     let assignmentsLoaded = false;
-    const SKILL_LABELS = { mixed:"Aralash", grammar:"Grammatika", vocabulary:"Lug'at", reading:"O'qish", listening:"Tinglash", speaking:"Gapirish", writing:"Yozish" };
+    let currentAssignments = null;
+    function skillLabels() {
+      return {
+        mixed: classDetailT("teacher.classDetail.skillMixed", "Aralash"),
+        grammar: classDetailT("teacher.classDetail.skillGrammar", "Grammatika"),
+        vocabulary: classDetailT("teacher.classDetail.skillVocabulary", "Lug'at"),
+        reading: classDetailT("teacher.classDetail.skillReading", "O'qish"),
+        listening: classDetailT("teacher.classDetail.skillListening", "Tinglash"),
+        speaking: classDetailT("teacher.classDetail.skillSpeaking", "Gapirish"),
+        writing: classDetailT("teacher.classDetail.skillWriting", "Yozish")
+      };
+    }
 
     function switchTab(tab) {
       document.getElementById("tabBtnStudents").classList.toggle("active", tab === "students");
@@ -994,7 +1031,7 @@
 
     async function loadAnnouncements() {
       const wrap = document.getElementById("announcementList");
-      wrap.innerHTML = '<div class="manage-sub" style="margin-top:14px">Yuklanmoqda...</div>';
+      wrap.innerHTML = '<div class="manage-sub" style="margin-top:14px">' + classDetailT("teacher.classDetail.loading", "Yuklanmoqda...") + '</div>';
       try {
         const res = await authFetch("/teacher/classes/" + encodeURIComponent(classId) + "/announcements");
         const data = await res.json();
@@ -1003,46 +1040,46 @@
         wrap.innerHTML = rows.length ? rows.map(a => `
           <div class="announce-item ${a.is_pinned ? "pinned" : ""}">
             <div class="announce-top"><div class="announce-name">${a.is_pinned ? "📌 " : ""}${esc(a.title)}</div>
-              <div class="mini-actions"><button class="mini-btn" onclick="editAnnouncement(${a.id})">Tahrirlash</button><button class="mini-btn" onclick="deleteAnnouncement(${a.id})">O'chirish</button></div></div>
+              <div class="mini-actions"><button class="mini-btn" onclick="editAnnouncement(${a.id})">${classDetailT("teacher.classDetail.edit", "Tahrirlash")}</button><button class="mini-btn" onclick="deleteAnnouncement(${a.id})">${classDetailT("teacher.classDetail.delete", "O'chirish")}</button></div></div>
             <div class="announce-body">${esc(a.body)}</div>
-          </div>`).join("") : '<div class="manage-sub" style="margin-top:14px">Hali e\'lon joylanmagan.</div>';
+          </div>`).join("") : '<div class="manage-sub" style="margin-top:14px">' + classDetailT("teacher.classDetail.noAnnouncements", "Hali e'lon joylanmagan.") + '</div>';
         window._classAnnouncements = rows;
-      } catch (_) { wrap.innerHTML='<div class="manage-sub" style="margin-top:14px;color:#fca5a5">E\'lonlarni yuklab bo\'lmadi.</div>'; }
+      } catch (_) { wrap.innerHTML='<div class="manage-sub" style="margin-top:14px;color:#fca5a5">' + classDetailT("teacher.classDetail.announcementsLoadFailed", "E'lonlarni yuklab bo'lmadi.") + '</div>'; }
     }
 
     async function createAnnouncement() {
       const title=document.getElementById("annTitle").value.trim();
       const body=document.getElementById("annBody").value.trim();
-      if(!title || !body) return showToast("Sarlavha va e'lon matnini kiriting");
+      if(!title || !body) return showToast(classDetailT("teacher.classDetail.enterAnnouncement", "Sarlavha va e'lon matnini kiriting"));
       const btn=document.getElementById("annSubmit"); btn.disabled=true;
       try {
         const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/announcements", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,body,is_pinned:document.getElementById("annPinned").checked})});
         const data=await res.json();
-        if(!res.ok) return showToast(data.error||"E'lon joylanmadi");
+        if(!res.ok) return showToast(data.error||classDetailT("teacher.classDetail.postFailed", "E'lon joylanmadi"));
         document.getElementById("annTitle").value=""; document.getElementById("annBody").value=""; document.getElementById("annPinned").checked=false;
-        showToast("E'lon joylandi"); loadAnnouncements();
-      } catch(_){ showToast("Server bilan aloqa yo'q"); } finally { btn.disabled=false; }
+        showToast(classDetailT("teacher.classDetail.posted", "E'lon joylandi")); loadAnnouncements();
+      } catch(_){ showToast(classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q")); } finally { btn.disabled=false; }
     }
 
     async function editAnnouncement(id) {
       const item=(window._classAnnouncements||[]).find(a=>String(a.id)===String(id));
       if(!item) return;
-      const title=window.prompt("E'lon sarlavhasi:", item.title); if(title===null) return;
-      const body=window.prompt("E'lon matni:", item.body); if(body===null) return;
+      const title=window.prompt(classDetailT("teacher.classDetail.editTitlePrompt", "E'lon sarlavhasi:"), item.title); if(title===null) return;
+      const body=window.prompt(classDetailT("teacher.classDetail.editBodyPrompt", "E'lon matni:"), item.body); if(body===null) return;
       try {
         const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/announcements/"+encodeURIComponent(id), {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:title.trim(),body:body.trim(),is_pinned:item.is_pinned})});
-        const data=await res.json(); if(!res.ok) return showToast(data.error||"E'lon yangilanmadi");
-        showToast("E'lon yangilandi"); loadAnnouncements();
-      } catch(_){ showToast("Server bilan aloqa yo'q"); }
+        const data=await res.json(); if(!res.ok) return showToast(data.error||classDetailT("teacher.classDetail.updateFailed", "E'lon yangilanmadi"));
+        showToast(classDetailT("teacher.classDetail.updated", "E'lon yangilandi")); loadAnnouncements();
+      } catch(_){ showToast(classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q")); }
     }
 
     async function deleteAnnouncement(id) {
-      if(!window.confirm("E'lonni o'chirmoqchimisiz?")) return;
+      if(!window.confirm(classDetailT("teacher.classDetail.deleteConfirm", "E'lonni o'chirmoqchimisiz?"))) return;
       try {
         const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/announcements/"+encodeURIComponent(id), {method:"DELETE"});
-        const data=await res.json(); if(!res.ok) return showToast(data.error||"E'lon o'chirilmadi");
-        showToast("E'lon o'chirildi"); loadAnnouncements();
-      } catch(_){ showToast("Server bilan aloqa yo'q"); }
+        const data=await res.json(); if(!res.ok) return showToast(data.error||classDetailT("teacher.classDetail.deleteFailed", "E'lon o'chirilmadi"));
+        showToast(classDetailT("teacher.classDetail.deleted", "E'lon o'chirildi")); loadAnnouncements();
+      } catch(_){ showToast(classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q")); }
     }
 
     let activeLesson=null;
@@ -1054,7 +1091,7 @@
       } catch(_){ activeLesson=null; }
       const status=document.getElementById("liveStatus");
       status.classList.toggle("on",!!activeLesson);
-      status.querySelector("span:last-child").textContent=activeLesson ? "Jonli: "+activeLesson.title : "Faol dars yo'q";
+      status.querySelector("span:last-child").textContent=activeLesson ? classDetailT("teacher.classDetail.livePrefix", "Jonli: {title}", { title: activeLesson.title }) : classDetailT("teacher.classDetail.noActiveLesson", "Faol dars yo'q");
       document.getElementById("lessonForm").style.display=activeLesson?"none":"block";
       document.getElementById("liveLessonActions").style.display=activeLesson?"block":"none";
     }
@@ -1063,22 +1100,22 @@
       const title=document.getElementById("lessonTitle").value.trim();
       const meeting_url=document.getElementById("lessonUrl").value.trim();
       const description=document.getElementById("lessonDescription").value.trim();
-      if(!title || !meeting_url) return showToast("Dars nomi va havolasini kiriting");
+      if(!title || !meeting_url) return showToast(classDetailT("teacher.classDetail.enterLesson", "Dars nomi va havolasini kiriting"));
       const btn=document.getElementById("lessonStartBtn"); btn.disabled=true;
       try {
         const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/lessons", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,meeting_url,description})});
-        const data=await res.json(); if(!res.ok) return showToast(data.error||"Dars boshlanmadi");
-        showToast("Jonli dars boshlandi"); await loadLessons();
-      } catch(_){ showToast("Server bilan aloqa yo'q"); } finally { btn.disabled=false; }
+        const data=await res.json(); if(!res.ok) return showToast(data.error||classDetailT("teacher.classDetail.startFailed", "Dars boshlanmadi"));
+        showToast(classDetailT("teacher.classDetail.started", "Jonli dars boshlandi")); await loadLessons();
+      } catch(_){ showToast(classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q")); } finally { btn.disabled=false; }
     }
 
     async function finishLiveLesson() {
-      if(!activeLesson || !window.confirm("Jonli darsni tugatmoqchimisiz?")) return;
+      if(!activeLesson || !window.confirm(classDetailT("teacher.classDetail.finishConfirm", "Jonli darsni tugatmoqchimisiz?"))) return;
       try {
         const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/lessons/"+encodeURIComponent(activeLesson.id)+"/finish", {method:"POST"});
-        const data=await res.json(); if(!res.ok) return showToast(data.error||"Dars tugatilmadi");
-        showToast("Jonli dars tugatildi"); await loadLessons();
-      } catch(_){ showToast("Server bilan aloqa yo'q"); }
+        const data=await res.json(); if(!res.ok) return showToast(data.error||classDetailT("teacher.classDetail.finishFailed", "Dars tugatilmadi"));
+        showToast(classDetailT("teacher.classDetail.finished", "Jonli dars tugatildi")); await loadLessons();
+      } catch(_){ showToast(classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q")); }
     }
 
     let attendanceData=null;
@@ -1086,23 +1123,23 @@
       try {
         const url="/teacher/classes/"+encodeURIComponent(classId)+"/attendance"+(sessionId?"?sessionId="+encodeURIComponent(sessionId):"");
         const res=await authFetch(url); const data=await res.json();
-        if(!res.ok) return showToast(data.error||"Davomat yuklanmadi");
+        if(!res.ok) return showToast(data.error||classDetailT("teacher.classDetail.attendanceLoadFailed", "Davomat yuklanmadi"));
         attendanceData=data;
         const select=document.getElementById("attendanceSession");
-        select.innerHTML=(data.sessions||[]).length ? data.sessions.map(s=>'<option value="'+s.id+'">'+esc(s.title)+' — '+new Date(s.session_date).toLocaleDateString("uz-UZ")+(s.status==="closed"?" (yopilgan)":"")+'</option>').join("") : '<option value="">Davomat yaratilmagan</option>';
+        select.innerHTML=(data.sessions||[]).length ? data.sessions.map(s=>'<option value="'+s.id+'">'+esc(s.title)+' — '+new Date(s.session_date).toLocaleDateString(classDetailLocale())+(s.status==="closed"?' ('+classDetailT("teacher.classDetail.closed", "yopilgan")+')':"")+'</option>').join("") : '<option value="">'+classDetailT("teacher.classDetail.noAttendance", "Davomat yaratilmagan")+'</option>';
         if(data.selected_session_id) select.value=String(data.selected_session_id);
         renderAttendanceRows();
-      } catch(_){ showToast("Server bilan aloqa yo'q"); }
+      } catch(_){ showToast(classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q")); }
     }
 
     function renderAttendanceRows() {
       const wrap=document.getElementById("attendanceRows");
       const actions=document.getElementById("attendanceActions");
-      if(!attendanceData || !attendanceData.selected_session_id) { wrap.innerHTML='<div class="attendance-empty">Davomatni tanlang yoki yangisini yarating.</div>'; actions.style.display="none"; return; }
+      if(!attendanceData || !attendanceData.selected_session_id) { wrap.innerHTML='<div class="attendance-empty">'+classDetailT("teacher.classDetail.selectAttendance", "Davomatni tanlang yoki yangisini yarating.")+'</div>'; actions.style.display="none"; return; }
       const map={}; (attendanceData.records||[]).forEach(r=>map[r.student_id]=r.status);
       const students=attendanceData.students||classStudents;
-      if(!students.length) { wrap.innerHTML='<div class="attendance-empty">Sinfda o\'quvchi yo\'q.</div>'; actions.style.display="none"; return; }
-      wrap.innerHTML=students.map(s=>{const name=((s.first_name||"")+" "+(s.last_name||"")).trim()||"O'quvchi";const val=map[s.id]||"present";return '<div class="attendance-row"><div class="attendance-student"><div class="student-avatar">'+esc(name[0])+'</div>'+esc(name)+'</div><select class="form-select attendance-value" data-student="'+s.id+'"><option value="present" '+(val==="present"?"selected":"")+'>Qatnashdi</option><option value="late" '+(val==="late"?"selected":"")+'>Kechikdi</option><option value="absent" '+(val==="absent"?"selected":"")+'>Kelmagan</option><option value="excused" '+(val==="excused"?"selected":"")+'>Sababli</option></select></div>';}).join("");
+      if(!students.length) { wrap.innerHTML='<div class="attendance-empty">'+classDetailT("teacher.classDetail.noStudents", "Sinfda o'quvchi yo'q.")+'</div>'; actions.style.display="none"; return; }
+      wrap.innerHTML=students.map(s=>{const name=((s.first_name||"")+" "+(s.last_name||"")).trim()||classDetailT("teacher.classDetail.studentFallback", "O'quvchi");const val=map[s.id]||"present";return '<div class="attendance-row"><div class="attendance-student"><div class="student-avatar">'+esc(name[0])+'</div>'+esc(name)+'</div><select class="form-select attendance-value" data-student="'+s.id+'"><option value="present" '+(val==="present"?"selected":"")+'>'+classDetailT("teacher.classDetail.present", "Qatnashdi")+'</option><option value="late" '+(val==="late"?"selected":"")+'>'+classDetailT("teacher.classDetail.late", "Kechikdi")+'</option><option value="absent" '+(val==="absent"?"selected":"")+'>'+classDetailT("teacher.classDetail.absent", "Kelmagan")+'</option><option value="excused" '+(val==="excused"?"selected":"")+'>'+classDetailT("teacher.classDetail.excused", "Sababli")+'</option></select></div>';}).join("");
       const current=(attendanceData.sessions||[]).find(s=>String(s.id)===String(attendanceData.selected_session_id));
       const isClosed=current && current.status==="closed";
       wrap.querySelectorAll("select").forEach(el=>el.disabled=!!isClosed);
@@ -1110,13 +1147,13 @@
     }
 
     async function createAttendance() {
-      const title=document.getElementById("attendanceTitle").value.trim()||"Dars davomati";
+      const title=document.getElementById("attendanceTitle").value.trim()||classDetailT("teacher.classDetail.defaultAttendanceTitle", "Dars davomati");
       const session_date=document.getElementById("attendanceDate").value;
       try {
         const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/attendance", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,session_date})});
-        const data=await res.json(); if(!res.ok) return showToast(data.error||"Davomat yaratilmadi");
-        document.getElementById("attendanceTitle").value=""; showToast("Davomat yaratildi"); await loadAttendance(data.session.id);
-      } catch(_){ showToast("Server bilan aloqa yo'q"); }
+        const data=await res.json(); if(!res.ok) return showToast(data.error||classDetailT("teacher.classDetail.attendanceCreateFailed", "Davomat yaratilmadi"));
+        document.getElementById("attendanceTitle").value=""; showToast(classDetailT("teacher.classDetail.attendanceCreated", "Davomat yaratildi")); await loadAttendance(data.session.id);
+      } catch(_){ showToast(classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q")); }
     }
 
     async function saveAttendance(close) {
@@ -1124,20 +1161,27 @@
       const records=Array.from(document.querySelectorAll(".attendance-value")).map(el=>({student_id:Number(el.dataset.student),status:el.value}));
       try {
         const res=await authFetch("/teacher/classes/"+encodeURIComponent(classId)+"/attendance/"+encodeURIComponent(attendanceData.selected_session_id), {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({records,close:!!close})});
-        const data=await res.json(); if(!res.ok) return showToast(data.error||"Davomat saqlanmadi");
-        showToast(close?"Davomat saqlandi va yopildi":"Davomat saqlandi"); await loadAttendance(attendanceData.selected_session_id);
-      } catch(_){ showToast("Server bilan aloqa yo'q"); }
+        const data=await res.json(); if(!res.ok) return showToast(data.error||classDetailT("teacher.classDetail.attendanceSaveFailed", "Davomat saqlanmadi"));
+        showToast(close?classDetailT("teacher.classDetail.attendanceSavedClosed", "Davomat saqlandi va yopildi"):classDetailT("teacher.classDetail.attendanceSaved", "Davomat saqlandi")); await loadAttendance(attendanceData.selected_session_id);
+      } catch(_){ showToast(classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q")); }
     }
 
     function fmtDateTime(iso) {
       if (!iso) return null;
       const d = new Date(iso);
-      return d.toLocaleDateString("uz-UZ", { day:"numeric", month:"short" }) + ", " + d.toLocaleTimeString("uz-UZ", { hour:"2-digit", minute:"2-digit" });
+      return d.toLocaleDateString(classDetailLocale(), { day:"numeric", month:"short" }) + ", " + d.toLocaleTimeString(classDetailLocale(), { hour:"2-digit", minute:"2-digit" });
     }
 
     // ===== AI SINF TAHLILI =====
     let aiLoaded = false;
-    const AI_CONF_LABEL = { high:"Yuqori ishonch", medium:"O'rta ishonch", low:"Past ishonch" };
+    let lastAIView = null;
+    function aiConfidenceLabels() {
+      return {
+        high: classDetailT("teacher.classDetail.confidenceHigh", "Yuqori ishonch"),
+        medium: classDetailT("teacher.classDetail.confidenceMedium", "O'rta ishonch"),
+        low: classDetailT("teacher.classDetail.confidenceLow", "Past ishonch")
+      };
+    }
 
     async function loadClassAI(force) {
       const wrap = document.getElementById("aiWrap");
@@ -1151,24 +1195,28 @@
         if (!res.ok) { aiErrView(wrap, data.error); return; }
         if (data.report && data.report.status === "insufficient_data") { aiInsufView(wrap, data.report); return; }
         aiReportView(wrap, data);
-      } catch(e) { aiErrView(wrap, "Server bilan aloqa yo'q"); }
+      } catch(e) { aiErrView(wrap, classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q")); }
     }
 
     function aiLockedView(wrap){
-      wrap.innerHTML = '<div class="ai-state"><div class="ai-state-ic" style="color:var(--secondary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h2>Teacher Pro funksiyasi</h2><p>Sinfingiz uchun AI tahlil: zaif ko\'nikmalar, eng ko\'p xato qilingan savollar va e\'tibor kerak bo\'lgan o\'quvchilar.</p><button class="btn-primary" onclick="window.openPaymentModal(\'teacher_pro\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg> Pro olish</button></div>';
+      lastAIView = { type: "locked" };
+      wrap.innerHTML = '<div class="ai-state"><div class="ai-state-ic" style="color:var(--secondary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h2>'+classDetailT("teacher.classDetail.aiProTitle", "Teacher Pro funksiyasi")+'</h2><p>'+classDetailT("teacher.classDetail.aiProDesc", "Sinfingiz uchun AI tahlil: zaif ko'nikmalar, eng ko'p xato qilingan savollar va e'tibor kerak bo'lgan o'quvchilar.")+'</p><button class="btn-primary" onclick="window.openPaymentModal(\'teacher_pro\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg> '+classDetailT("teacher.classDetail.getPro", "Pro olish")+'</button></div>';
     }
     function aiInsufView(wrap, rep){
+      lastAIView = { type: "insufficient", rep: rep };
       const steps = (rep.next_steps||[]).map(s=>`<li>${esc(s)}</li>`).join("");
-      wrap.innerHTML = '<div class="ai-state"><div class="ai-state-ic" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><h2>'+esc(rep.title||"Hali yetarli ma\'lumot yo\'q")+'</h2><p>'+esc(rep.message||"")+'</p>'+(steps?'<ul class="ai-steps">'+steps+'</ul>':"")+'</div>';
+      wrap.innerHTML = '<div class="ai-state"><div class="ai-state-ic" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><h2>'+esc(rep.title||classDetailT("teacher.classDetail.aiNoData", "Hali yetarli ma'lumot yo'q"))+'</h2><p>'+esc(rep.message||"")+'</p>'+(steps?'<ul class="ai-steps">'+steps+'</ul>':"")+'</div>';
     }
     function aiErrView(wrap, msg){
-      wrap.innerHTML = '<div class="ai-state"><div class="ai-state-ic" style="color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><h2>Tahlil tayyorlanmadi</h2><p>'+esc(msg||"Keyinroq urinib ko\'ring.")+'</p><button class="ai-rfr" onclick="loadClassAI()">Qayta urinish</button></div>';
+      lastAIView = { type: "error", message: msg };
+      wrap.innerHTML = '<div class="ai-state"><div class="ai-state-ic" style="color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><h2>'+classDetailT("teacher.classDetail.analysisFailed", "Tahlil tayyorlanmadi")+'</h2><p>'+esc(msg||classDetailT("teacher.classDetail.tryLater", "Keyinroq urinib ko'ring."))+'</p><button class="ai-rfr" onclick="loadClassAI()">'+classDetailT("teacher.classDetail.retry", "Qayta urinish")+'</button></div>';
     }
     function aiBlock(cls, svg, title, items){
       if (!items || !items.length) return "";
       return '<div class="ai-b '+cls+'"><div class="ai-b-h">'+svg+title+'</div><ul class="ai-b-ul">'+items.map(t=>`<li>${esc(t)}</li>`).join("")+'</ul></div>';
     }
     function aiReportView(wrap, data){
+      lastAIView = { type: "report", data: data };
       const r = data.report || {};
       const conf = r.confidence || data.confidence || "medium";
       const ICO = {
@@ -1177,21 +1225,22 @@
       };
       let h = "";
       if (r.class_summary) h += '<div class="ai-sum">'+esc(r.class_summary)+'</div>';
-      h += aiBlock("find", ICO.find, "Asosiy kuzatuvlar", r.key_findings);
+      h += aiBlock("find", ICO.find, classDetailT("teacher.classDetail.keyFindings", "Asosiy kuzatuvlar"), r.key_findings);
 
       // E'tibor kerak bo'lgan o'quvchilar (alohida ko'rinish)
       if (r.students_need_attention && r.students_need_attention.length) {
-        const rows = r.students_need_attention.map(s=>'<div class="ai-att-row"><div class="ai-att-name">'+esc(s.name||"O\'quvchi")+'</div><div class="ai-att-reason">'+esc(s.reason||"")+'</div></div>').join("");
-        h += '<div class="ai-b attn"><div class="ai-b-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>E\'tibor kerak</div><div class="ai-att-list">'+rows+'</div></div>';
+        const rows = r.students_need_attention.map(s=>'<div class="ai-att-row"><div class="ai-att-name">'+esc(s.name||classDetailT("teacher.classDetail.studentFallback", "O'quvchi"))+'</div><div class="ai-att-reason">'+esc(s.reason||"")+'</div></div>').join("");
+        h += '<div class="ai-b attn"><div class="ai-b-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>'+classDetailT("teacher.classDetail.needsAttention", "E'tibor kerak")+'</div><div class="ai-att-list">'+rows+'</div></div>';
       }
 
-      h += aiBlock("rec", ICO.rec, "Tavsiyalar", r.teaching_recommendations);
-      h += '<div class="ai-ft"><span class="ai-cf '+conf+'"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'+(AI_CONF_LABEL[conf]||conf)+'</span><button class="ai-rfr" id="aiRfrBtn" onclick="refreshClassAI()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Yangilash</button></div>';
-      wrap.innerHTML = '<div class="ai-report">'+(h||'<p style="color:var(--text-muted);text-align:center;padding:20px">Tahlil bo\'sh.</p>')+'</div>';
+      h += aiBlock("rec", ICO.rec, classDetailT("teacher.classDetail.recommendations", "Tavsiyalar"), r.teaching_recommendations);
+      const confidenceLabels = aiConfidenceLabels();
+      h += '<div class="ai-ft"><span class="ai-cf '+conf+'"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'+(confidenceLabels[conf]||conf)+'</span><button class="ai-rfr" id="aiRfrBtn" onclick="refreshClassAI()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> '+classDetailT("teacher.classDetail.refresh", "Yangilash")+'</button></div>';
+      wrap.innerHTML = '<div class="ai-report">'+(h||'<p style="color:var(--text-muted);text-align:center;padding:20px">'+classDetailT("teacher.classDetail.emptyAnalysis", "Tahlil bo'sh.")+'</p>')+'</div>';
     }
     async function refreshClassAI(){
       const btn = document.getElementById("aiRfrBtn");
-      if (btn){ btn.disabled = true; btn.textContent = "Yangilanmoqda..."; }
+      if (btn){ btn.disabled = true; btn.textContent = classDetailT("teacher.classDetail.refreshing", "Yangilanmoqda..."); }
       await loadClassAI(true);
     }
 
@@ -1204,16 +1253,17 @@
         const res = await authFetch("/teacher/classes/" + encodeURIComponent(classId) + "/assignments");
         const data = await res.json();
         loading.style.display = "none";
-        if (!res.ok) { empty.style.display = "block"; empty.querySelector("h2").textContent = data.error || "Yuklashda xatolik"; return; }
+        if (!res.ok) { empty.style.display = "block"; empty.querySelector("h2").textContent = data.error || classDetailT("teacher.classDetail.assignmentLoadError", "Yuklashda xatolik"); return; }
         assignmentsLoaded = true;
         const list = data.assignments || [];
+        currentAssignments = list;
         document.getElementById("tabCountAssignments").textContent = list.length;
         if (list.length === 0) { empty.style.display = "block"; return; }
         grid.innerHTML = list.map(renderAssignmentCard).join("");
       } catch (e) {
         loading.style.display = "none";
         empty.style.display = "block";
-        empty.querySelector("h2").textContent = "Server bilan aloqa yo'q";
+        empty.querySelector("h2").textContent = classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q");
       }
     }
 
@@ -1221,11 +1271,12 @@
       const total = a.total_students || 0;
       const sub = a.submitted_count || 0;
       const pct = total ? Math.round((sub / total) * 100) : 0;
-      const skill = SKILL_LABELS[a.skill] || a.skill || "Aralash";
+      const labels = skillLabels();
+      const skill = labels[a.skill] || a.skill || labels.mixed;
       const due = fmtDateTime(a.due_at);
       const overdue = a.due_at && new Date(a.due_at) < new Date();
       const desc = a.description ? `<div class="assign-desc">${esc(a.description)}</div>` : "";
-      const lateChip = a.late_count ? `<span class="late">${a.late_count} kechikkan</span>` : "";
+      const lateChip = a.late_count ? `<span class="late">${classDetailT("teacher.classDetail.lateCount", "{count} kechikkan", { count: a.late_count })}</span>` : "";
       return `
         <div class="assign-card">
           <div class="assign-card-top">
@@ -1233,25 +1284,25 @@
               <div class="assign-title">${esc(a.title)}</div>
               ${desc}
             </div>
-            <span class="assign-badge ${a.status === "archived" ? "archived" : "active"}">${a.status === "archived" ? "Arxiv" : "Faol"}</span>
+            <span class="assign-badge ${a.status === "archived" ? "archived" : "active"}">${a.status === "archived" ? classDetailT("teacher.classDetail.archived", "Arxiv") : classDetailT("teacher.classDetail.active", "Faol")}</span>
           </div>
           <div class="assign-chips">
             <span class="a-chip lvl">${esc(a.cefr_level)}</span>
             <span class="a-chip">${esc(skill)}</span>
-            <span class="a-chip">${a.question_count} savol</span>
-            ${due ? `<span class="a-chip ${overdue ? "due-over" : ""}">${overdue ? "Muddat o'tgan" : "Muddat"}: ${due}</span>` : `<span class="a-chip">Muddatsiz</span>`}
+            <span class="a-chip">${classDetailT("teacher.classDetail.questionUnit", "{count} ta", { count: a.question_count })}</span>
+            ${due ? `<span class="a-chip ${overdue ? "due-over" : ""}">${overdue ? classDetailT("teacher.classDetail.overdue", "Muddat o'tgan") : classDetailT("teacher.classDetail.due", "Muddat")}: ${due}</span>` : `<span class="a-chip">${classDetailT("teacher.classDetail.noDeadline", "Muddatsiz")}</span>`}
           </div>
           <div>
-            <div class="assign-progress-info"><span>Topshirgan: <b>${sub}/${total}</b></span><span>O'rtacha: <b>${a.average_percent || 0}%</b></span></div>
+            <div class="assign-progress-info"><span>${classDetailT("teacher.classDetail.submitted", "Topshirgan")}: <b>${sub}/${total}</b></span><span>${classDetailT("teacher.classDetail.average", "O'rtacha")}: <b>${a.average_percent || 0}%</b></span></div>
             <div class="assign-bar"><span style="width:${pct}%"></span></div>
           </div>
           <div class="assign-meta">
-            <span>Boshlamagan: ${a.not_started_count || 0}</span>
+            <span>${classDetailT("teacher.classDetail.notStarted", "Boshlamagan")}: ${a.not_started_count || 0}</span>
             ${lateChip}
           </div>
           <div class="assign-actions">
-            <button class="btn-ghost" onclick="openResults(${a.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Natijalar</button>
-            ${a.status === "archived" ? "" : `<button class="btn-ghost danger" onclick="archiveAssignment(${a.id}, this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Arxiv</button>`}
+            <button class="btn-ghost" onclick="openResults(${a.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>${classDetailT("teacher.classDetail.results", "Natijalar")}</button>
+            ${a.status === "archived" ? "" : `<button class="btn-ghost danger" onclick="archiveAssignment(${a.id}, this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>${classDetailT("teacher.classDetail.archive", "Arxiv")}</button>`}
           </div>
         </div>`;
     }
@@ -1274,7 +1325,7 @@
 
     async function submitCreateAssignment() {
       const title = document.getElementById("fTitle").value.trim();
-      if (title.length < 3) { showCreateError("Sarlavha kamida 3 belgi bo'lishi kerak"); return; }
+      if (title.length < 3) { showCreateError(classDetailT("teacher.classDetail.titleMin", "Sarlavha kamida 3 belgi bo'lishi kerak")); return; }
       const payload = {
         title,
         description: document.getElementById("fDesc").value.trim(),
@@ -1285,7 +1336,7 @@
         due_at: document.getElementById("fDue").value ? new Date(document.getElementById("fDue").value).toISOString() : null
       };
       const btn = document.getElementById("createSubmitBtn");
-      btn.disabled = true; btn.textContent = "Yaratilmoqda...";
+      btn.disabled = true; btn.textContent = classDetailT("teacher.classDetail.creating", "Yaratilmoqda...");
       document.getElementById("createError").classList.remove("show");
       try {
         const res = await authFetch("/teacher/classes/" + encodeURIComponent(classId) + "/assignments", {
@@ -1298,14 +1349,14 @@
             closeCreateModal();
             return;
           }
-          showCreateError(data.error || "Topshiriq yaratilmadi"); return;
+          showCreateError(data.error || classDetailT("teacher.classDetail.createFailed", "Topshiriq yaratilmadi")); return;
         }
         closeCreateModal();
-        showToast("Topshiriq yaratildi");
+        showToast(classDetailT("teacher.classDetail.assignmentCreated", "Topshiriq yaratildi"));
         assignmentsLoaded = false;
         await loadAssignments();
-      } catch (e) { showCreateError("Server bilan aloqa yo'q"); }
-      finally { btn.disabled = false; btn.textContent = "Yaratish"; }
+      } catch (e) { showCreateError(classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q")); }
+      finally { btn.disabled = false; btn.textContent = classDetailT("teacher.classDetail.create", "Yaratish"); }
     }
 
     async function archiveAssignment(id, btnEl) {
@@ -1313,68 +1364,76 @@
       try {
         const res = await authFetch("/teacher/assignments/" + encodeURIComponent(id) + "/archive", { method: "POST" });
         const data = await res.json();
-        if (!res.ok) { showToast(data.error || "Arxivlashda xatolik"); if (btnEl) btnEl.disabled = false; return; }
-        showToast("Topshiriq arxivlandi");
+        if (!res.ok) { showToast(data.error || classDetailT("teacher.classDetail.archiveFailed", "Arxivlashda xatolik")); if (btnEl) btnEl.disabled = false; return; }
+        showToast(classDetailT("teacher.classDetail.assignmentArchived", "Topshiriq arxivlandi"));
         assignmentsLoaded = false;
         await loadAssignments();
-      } catch (e) { showToast("Server bilan aloqa yo'q"); if (btnEl) btnEl.disabled = false; }
+      } catch (e) { showToast(classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q")); if (btnEl) btnEl.disabled = false; }
     }
 
     // === Natijalar modali ===
-    const ST_LABEL = { submitted:"Topshirgan", late_submitted:"Kechikkan", not_started:"Boshlamagan", in_progress:"Jarayonda" };
+    function resultStatusLabels() {
+      return {
+        submitted: classDetailT("teacher.classDetail.statusSubmitted", "Topshirgan"),
+        late_submitted: classDetailT("teacher.classDetail.statusLateSubmitted", "Kechikkan"),
+        not_started: classDetailT("teacher.classDetail.statusNotStarted", "Boshlamagan"),
+        in_progress: classDetailT("teacher.classDetail.statusInProgress", "Jarayonda")
+      };
+    }
 
     async function openResults(id) {
       const overlay = document.getElementById("resultsOverlay");
       const body = document.getElementById("resultsBody");
-      document.getElementById("resultsTitle").textContent = "Natijalar";
+      document.getElementById("resultsTitle").textContent = classDetailT("teacher.classDetail.results", "Natijalar");
       body.innerHTML = `<div class="sk" style="width:100%;height:90px;border-radius:12px;margin-bottom:14px"></div><div class="sk" style="width:100%;height:200px;border-radius:12px"></div>`;
       overlay.classList.add("show");
       try {
         const res = await authFetch("/teacher/assignments/" + encodeURIComponent(id) + "/results");
         const data = await res.json();
-        if (!res.ok) { body.innerHTML = `<p style="color:#fca5a5;text-align:center;padding:30px 0">${esc(data.error || "Natijalarni yuklab bo'lmadi")}</p>`; return; }
+        if (!res.ok) { body.innerHTML = `<p style="color:#fca5a5;text-align:center;padding:30px 0">${esc(data.error || classDetailT("teacher.classDetail.resultsLoadFailed", "Natijalarni yuklab bo'lmadi"))}</p>`; return; }
         renderResults(data);
       } catch (e) {
-        body.innerHTML = `<p style="color:#fca5a5;text-align:center;padding:30px 0">Server bilan aloqa yo'q</p>`;
+        body.innerHTML = `<p style="color:#fca5a5;text-align:center;padding:30px 0">${classDetailT("teacher.classDetail.serverUnavailable", "Server bilan aloqa yo'q")}</p>`;
       }
     }
 
     function renderResults(data) {
+      currentResultsData = data;
       const a = data.assignment || {};
       const s = data.summary || {};
       const students = data.students || [];
-      document.getElementById("resultsTitle").textContent = (a.title || "Topshiriq") + " — natijalar";
+      document.getElementById("resultsTitle").textContent = classDetailT("teacher.classDetail.resultsSuffix", "{title} — natijalar", { title: a.title || classDetailT("teacher.classDetail.assignmentFallback", "Topshiriq") });
 
       const summaryHtml = `
         <div class="res-summary">
           <div class="res-stat">
-            <div class="res-stat-label">Bajarish</div>
+            <div class="res-stat-label">${classDetailT("teacher.classDetail.completion", "Bajarish")}</div>
             <div class="res-stat-value">${s.completion_percent || 0}%</div>
-            <div class="res-stat-label" style="margin:6px 0 0">${s.submitted_count || 0}/${s.total_students || 0} o'quvchi</div>
+            <div class="res-stat-label" style="margin:6px 0 0">${classDetailT("teacher.classDetail.studentUnit", "{count} o'quvchi", { count: (s.submitted_count || 0) + "/" + (s.total_students || 0) })}</div>
           </div>
           <div class="res-stat">
-            <div class="res-stat-label">O'rtacha ball</div>
+            <div class="res-stat-label">${classDetailT("teacher.classDetail.averageScore", "O'rtacha ball")}</div>
             <div class="res-stat-value green">${s.average_percent || 0}%</div>
-            <div class="res-stat-label" style="margin:6px 0 0">Eng yuqori ${s.highest_percent || 0}% · past ${s.lowest_percent || 0}%</div>
+            <div class="res-stat-label" style="margin:6px 0 0">${classDetailT("teacher.classDetail.highLow", "Eng yuqori {high}% · past {low}%", { high: s.highest_percent || 0, low: s.lowest_percent || 0 })}</div>
           </div>
           <div class="res-stat">
-            <div class="res-stat-label">Kechikkan</div>
+            <div class="res-stat-label">${classDetailT("teacher.classDetail.statusLateSubmitted", "Kechikkan")}</div>
             <div class="res-stat-value orange">${s.late_count || 0}</div>
           </div>
           <div class="res-stat">
-            <div class="res-stat-label">Boshlamagan</div>
+            <div class="res-stat-label">${classDetailT("teacher.classDetail.notStarted", "Boshlamagan")}</div>
             <div class="res-stat-value">${s.not_started_count || 0}</div>
           </div>
         </div>`;
 
       let tableHtml;
       if (students.length === 0) {
-        tableHtml = `<p style="color:var(--text-muted);text-align:center;padding:24px 0">Bu sinfda faol o'quvchi yo'q.</p>`;
+        tableHtml = `<p style="color:var(--text-muted);text-align:center;padding:24px 0">${classDetailT("teacher.classDetail.noActiveStudents", "Bu sinfda faol o'quvchi yo'q.")}</p>`;
       } else {
         const rows = students.map(st => {
-          const name = esc(st.name || "Noma'lum");
+          const name = esc(st.name || classDetailT("teacher.classDetail.unknown", "Noma'lum"));
           const initials = esc((st.name || "?").trim().substring(0,1).toUpperCase());
-          const label = ST_LABEL[st.status] || st.status;
+          const label = resultStatusLabels()[st.status] || st.status;
           const done = st.status === "submitted" || st.status === "late_submitted";
           const score = done ? `${st.score}/${st.total}` : "—";
           const pct = done ? `${st.percent}%` : "—";
@@ -1398,11 +1457,11 @@
             <table>
               <thead>
                 <tr>
-                  <th>O'quvchi</th>
-                  <th>Holat</th>
-                  <th>Ball</th>
-                  <th>Foiz</th>
-                  <th>Topshirgan vaqti</th>
+                  <th>${classDetailT("teacher.classDetail.studentFallback", "O'quvchi")}</th>
+                  <th>${classDetailT("teacher.classDetail.status", "Holat")}</th>
+                  <th>${classDetailT("teacher.classDetail.score", "Ball")}</th>
+                  <th>${classDetailT("teacher.classDetail.percent", "Foiz")}</th>
+                  <th>${classDetailT("teacher.classDetail.submittedAt", "Topshirgan vaqti")}</th>
                 </tr>
               </thead>
               <tbody>${rows}</tbody>
@@ -1413,8 +1472,28 @@
       document.getElementById("resultsBody").innerHTML = summaryHtml + tableHtml;
     }
 
-    function closeResults() { document.getElementById("resultsOverlay").classList.remove("show"); }
+    let currentResultsData = null;
+    function closeResults() { document.getElementById("resultsOverlay").classList.remove("show"); currentResultsData = null; }
     document.getElementById("resultsOverlay").addEventListener("click", e => { if (e.target.id === "resultsOverlay") closeResults(); });
+
+    updateLocalizedControls();
+    window.addEventListener("ilmliga:languagechange", function () {
+      document.title = classDetailT("teacher.classDetail.pageTitle", "Sinf tafsiloti — English Battle");
+      updateLocalizedControls();
+      if (currentDetailData) renderDetail(currentDetailData);
+      if (currentAssignments) document.getElementById("assignGrid").innerHTML = currentAssignments.map(renderAssignmentCard).join("");
+      if (removeStudentId) document.getElementById("confirmText").textContent = classDetailT("teacher.classDetail.removeStudentText", "{name}ni sinfdan olib tashlamoqchimisiz?", { name: removeStudentName });
+      if (document.getElementById("tabManage").classList.contains("active")) { loadAnnouncements(); loadLessons(); }
+      if (document.getElementById("tabAttendance").classList.contains("active")) loadAttendance(attendanceData && attendanceData.selected_session_id);
+      if (lastAIView) {
+        const wrap = document.getElementById("aiWrap");
+        if (lastAIView.type === "locked") aiLockedView(wrap);
+        if (lastAIView.type === "insufficient") aiInsufView(wrap, lastAIView.rep);
+        if (lastAIView.type === "error") aiErrView(wrap, lastAIView.message);
+        if (lastAIView.type === "report") aiReportView(wrap, lastAIView.data);
+      }
+      if (currentResultsData) renderResults(currentResultsData);
+    });
 
     loadDetail();
 
@@ -1451,7 +1530,7 @@
         if (!res.ok) return;
         const data = await res.json();
         renderDetail(data);
-        showToast("Yangi o'quvchi qo'shildi");
+        showToast(classDetailT("teacher.classDetail.newStudentJoined", "Yangi o'quvchi qo'shildi"));
       } catch (e) { /* jim */ }
     }
 

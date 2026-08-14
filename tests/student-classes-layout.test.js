@@ -10,5 +10,5 @@ const studentClassesHtml = fs.readFileSync(
 
 test("student classes content keeps space below the lobby topbar", () => {
   assert.match(studentClassesHtml, /\.page-wrap\s*\{\s*padding:\s*14px 0 0;\s*\}/);
-  assert.match(studentClassesHtml, /<div class="topbar"><\/div>[\s\S]*<div class="page-wrap">[\s\S]*<h1>Sinflarim<\/h1>/);
+  assert.match(studentClassesHtml, /<div class="topbar"><\/div>[\s\S]*<div class="page-wrap">[\s\S]*<h1 data-i18n="studentClasses\.heading">Sinflarim<\/h1>/);
 });

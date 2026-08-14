@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sinflarim — Knowledge Arena</title>
+  <title data-i18n="studentClasses.metaTitle">Sinflarim — IlmLiga</title>
+  <meta name="description" content="Sinflaringizni ko‘ring, topshiriqlarni kuzating va kod orqali yangi sinfga qo‘shiling." data-i18n-content="studentClasses.metaDescription" />
   <link rel="stylesheet" href="/app.css">
   <script src="/vendor/lucide.min.js"></script>
   <style>
@@ -55,11 +56,11 @@
     .sort-opt i { width: 14px; height: 14px; opacity: 0; }
     .sort-opt.active i { opacity: 1; }
 
-    .class-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
-    @media (max-width: 720px) { .class-grid { grid-template-columns: 1fr; } }
-    .class-card { background: linear-gradient(165deg, rgba(20,28,56,0.92), rgba(12,17,33,0.92)); border: 1px solid var(--border); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; transition: border-color 0.16s, transform 0.14s, box-shadow 0.16s; }
+    .class-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; min-width: 0; }
+    @media (max-width: 720px) { .class-grid { grid-template-columns: minmax(0, 1fr); } }
+    .class-card { min-width: 0; max-width: 100%; background: linear-gradient(165deg, rgba(20,28,56,0.92), rgba(12,17,33,0.92)); border: 1px solid var(--border); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; transition: border-color 0.16s, transform 0.14s, box-shadow 0.16s; }
     .class-card:hover { border-color: var(--border-bright); transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.35); }
-    .cc-top { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 14px; }
+    .cc-top { min-width: 0; max-width: 100%; display: flex; align-items: flex-start; gap: 13px; margin-bottom: 14px; }
     .cc-shield { width: 50px; height: 50px; border-radius: 13px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 17px; color: #fff; }
     .cc-c0 { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
     .cc-c1 { background: linear-gradient(135deg, #22c55e, #16a34a); }
@@ -85,8 +86,8 @@
     .cc-dd-item.disabled .dd-soon { margin-left: auto; font-size: 9.5px; font-weight: 700; color: var(--gold); background: var(--panel-2); padding: 2px 6px; border-radius: 999px; }
     .cc-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px; word-break: break-word; min-height: 38px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .cc-desc.empty { color: var(--text-faint); font-style: italic; }
-    .cc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
-    .cc-stat { padding: 11px 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 11px; }
+    .cc-stats { min-width: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .cc-stat { min-width: 0; padding: 11px 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 11px; }
     .cc-stat-lbl { font-size: 10.5px; color: var(--text-faint); display: flex; align-items: center; gap: 4px; margin-bottom: 5px; }
     .cc-stat-lbl i { width: 12px; height: 12px; }
     .cc-stat-val { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
@@ -94,6 +95,14 @@
     .cc-stat-val.status-faol { color: var(--green); }
     .cc-stat-val.status-arkiv { color: var(--cyan); }
     .cc-stat-val .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    @media (max-width: 560px) {
+      .class-card { padding: 16px; }
+      .cc-stats { gap: 6px; }
+      .cc-stat { padding: 9px 6px; }
+      .cc-stat-lbl,
+      .cc-stat-val { min-width: 0; overflow-wrap: anywhere; }
+      .cc-stat-val { flex-wrap: wrap; font-size: 13px; }
+    }
     .cc-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border: none; border-radius: 12px; color: #fff; font-size: 13.5px; font-weight: 700; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
     .cc-btn:hover { opacity: 0.92; }
     .cc-btn:active { transform: translateY(1px); }
@@ -210,17 +219,17 @@
         <div class="page-head">
           <div class="ph-ic"><i data-lucide="book-open"></i></div>
           <div>
-            <h1>Sinflarim</h1>
-            <p>O'qituvchingiz bergan kod orqali sinfga qo'shiling va topshiriqlarni kuzating.</p>
+            <h1 data-i18n="studentClasses.heading">Sinflarim</h1>
+            <p data-i18n="studentClasses.subtitle">O‘qituvchingiz bergan kod orqali sinfga qo‘shiling va topshiriqlarni kuzating.</p>
           </div>
         </div>
 
         <!-- SUMMARY -->
         <div class="summary-row">
-          <div class="sum-card"><div class="sum-ic blue"><i data-lucide="layout-grid"></i></div><div><div class="sum-label">Jami sinflar</div><div class="sum-value" id="sumTotal">0</div></div></div>
-          <div class="sum-card"><div class="sum-ic green"><i data-lucide="check-circle"></i></div><div><div class="sum-label">Faol sinflar</div><div class="sum-value" id="sumActive">0</div></div></div>
-          <div class="sum-card"><div class="sum-ic orange"><i data-lucide="file-text"></i></div><div><div class="sum-label">Topshiriqlar</div><div class="sum-value" id="sumPending">0 <small>kutilmoqda</small></div></div></div>
-          <div class="sum-card"><div class="sum-ic cyan"><i data-lucide="calendar"></i></div><div><div class="sum-label">Oxirgi qo'shilgan</div><div class="sum-value date" id="sumLatest">—</div></div></div>
+          <div class="sum-card"><div class="sum-ic blue"><i data-lucide="layout-grid"></i></div><div><div class="sum-label" data-i18n="studentClasses.totalClasses">Jami sinflar</div><div class="sum-value" id="sumTotal">0</div></div></div>
+          <div class="sum-card"><div class="sum-ic green"><i data-lucide="check-circle"></i></div><div><div class="sum-label" data-i18n="studentClasses.activeClasses">Faol sinflar</div><div class="sum-value" id="sumActive">0</div></div></div>
+          <div class="sum-card"><div class="sum-ic orange"><i data-lucide="file-text"></i></div><div><div class="sum-label" data-i18n="studentClasses.assignments">Topshiriqlar</div><div class="sum-value" id="sumPending">0 <small data-i18n="studentClasses.pending">kutilmoqda</small></div></div></div>
+          <div class="sum-card"><div class="sum-ic cyan"><i data-lucide="calendar"></i></div><div><div class="sum-label" data-i18n="studentClasses.latestJoined">Oxirgi qo‘shilgan</div><div class="sum-value date" id="sumLatest">—</div></div></div>
         </div>
 
         <!-- LOADING -->
@@ -229,24 +238,24 @@
             <div class="sk-card"><div class="sk" style="width:55%;height:18px;margin-bottom:14px"></div><div class="sk" style="width:85%;height:13px;margin-bottom:22px"></div><div class="sk" style="width:100%;height:60px;margin-bottom:16px"></div><div class="sk" style="width:100%;height:44px"></div></div>
             <div class="sk-card"><div class="sk" style="width:55%;height:18px;margin-bottom:14px"></div><div class="sk" style="width:85%;height:13px;margin-bottom:22px"></div><div class="sk" style="width:100%;height:60px;margin-bottom:16px"></div><div class="sk" style="width:100%;height:44px"></div></div>
           </div>
-          <div class="loading-text">Sinflar yuklanmoqda...</div>
+          <div class="loading-text" data-i18n="studentClasses.loading">Sinflar yuklanmoqda...</div>
         </div>
 
         <!-- ASOSIY -->
         <div id="mainContent" style="display:none;">
           <div class="section-bar">
-            <h2>Mening sinflarim</h2>
+            <h2 data-i18n="studentClasses.myClasses">Mening sinflarim</h2>
             <div class="sort-box" id="sortBox">
-              <span>Tartiblash:</span>
+              <span data-i18n="studentClasses.sortBy">Tartiblash:</span>
               <div class="sort-select" onclick="toggleSortMenu(event)">
-                <span id="sortLabel">Oxirgi qo'shilgan</span> <i data-lucide="chevron-down"></i>
+                <span id="sortLabel" data-i18n="studentClasses.sortRecent">Oxirgi qo‘shilgan</span> <i data-lucide="chevron-down"></i>
               </div>
               <div class="sort-menu" id="sortMenu">
-                <div class="sort-opt active" data-sort="recent" onclick="setSort('recent')"><i data-lucide="check"></i> Oxirgi qo'shilgan</div>
-                <div class="sort-opt" data-sort="oldest" onclick="setSort('oldest')"><i data-lucide="check"></i> Eski qo'shilgan</div>
-                <div class="sort-opt" data-sort="name" onclick="setSort('name')"><i data-lucide="check"></i> Nomi bo'yicha</div>
-                <div class="sort-opt" data-sort="active" onclick="setSort('active')"><i data-lucide="check"></i> Faol sinflar</div>
-                <div class="sort-opt" data-sort="archived" onclick="setSort('archived')"><i data-lucide="check"></i> Arxivlangan sinflar</div>
+                <div class="sort-opt active" data-sort="recent" onclick="setSort('recent')"><i data-lucide="check"></i> <span data-i18n="studentClasses.sortRecent">Oxirgi qo‘shilgan</span></div>
+                <div class="sort-opt" data-sort="oldest" onclick="setSort('oldest')"><i data-lucide="check"></i> <span data-i18n="studentClasses.sortOldest">Eski qo‘shilgan</span></div>
+                <div class="sort-opt" data-sort="name" onclick="setSort('name')"><i data-lucide="check"></i> <span data-i18n="studentClasses.sortName">Nomi bo‘yicha</span></div>
+                <div class="sort-opt" data-sort="active" onclick="setSort('active')"><i data-lucide="check"></i> <span data-i18n="studentClasses.sortActive">Faol sinflar</span></div>
+                <div class="sort-opt" data-sort="archived" onclick="setSort('archived')"><i data-lucide="check"></i> <span data-i18n="studentClasses.sortArchived">Arxivlangan sinflar</span></div>
               </div>
             </div>
           </div>
@@ -254,28 +263,28 @@
 
           <div class="cta-banner">
             <div class="cta-text">
-              <h3>Yana sinfga qo'shilmoqchimisiz?</h3>
-              <p>O'qituvchingiz bergan 6 belgili kod orqali yangi sinfga qo'shiling va topshiriqlarni bajaring.</p>
+              <h3 data-i18n="studentClasses.joinAnotherTitle">Yana sinfga qo‘shilmoqchimisiz?</h3>
+              <p data-i18n="studentClasses.joinAnotherText">O‘qituvchingiz bergan 6 belgili kod orqali yangi sinfga qo‘shiling va topshiriqlarni bajaring.</p>
             </div>
             <div class="cta-illu"><i data-lucide="book-marked"></i><i data-lucide="message-square"></i></div>
-            <button class="cta-btn" onclick="focusJoin()"><i data-lucide="user-plus"></i> Sinfga qo'shilish</button>
+            <button class="cta-btn" onclick="focusJoin()"><i data-lucide="user-plus"></i> <span data-i18n="studentClasses.joinClass">Sinfga qo‘shilish</span></button>
           </div>
         </div>
 
         <!-- EMPTY -->
         <div class="state-box" id="emptyState" style="display:none;">
           <div class="state-ic"><i data-lucide="graduation-cap"></i></div>
-          <h2>Siz hali hech qanday sinfga qo'shilmagansiz</h2>
-          <p>O'qituvchingiz bergan 6 belgili kod orqali sinfga qo'shiling va topshiriqlarni bajaring.</p>
-          <button class="state-btn" onclick="openJoinModal()"><i data-lucide="user-plus"></i> Sinfga qo'shilish</button>
+          <h2 data-i18n="studentClasses.emptyTitle">Siz hali hech qanday sinfga qo‘shilmagansiz</h2>
+          <p data-i18n="studentClasses.emptyText">O‘qituvchingiz bergan 6 belgili kod orqali sinfga qo‘shiling va topshiriqlarni bajaring.</p>
+          <button class="state-btn" onclick="openJoinModal()"><i data-lucide="user-plus"></i> <span data-i18n="studentClasses.joinClass">Sinfga qo‘shilish</span></button>
         </div>
 
         <!-- ERROR -->
         <div class="state-box" id="errorState" style="display:none;">
           <div class="state-ic err"><i data-lucide="alert-circle"></i></div>
-          <h2>Sinflarni yuklashda xatolik yuz berdi</h2>
-          <p>Internet aloqasini tekshiring yoki qayta urinib ko'ring.</p>
-          <button class="state-btn" onclick="loadClasses()"><i data-lucide="rotate-cw"></i> Qayta yuklash</button>
+          <h2 data-i18n="studentClasses.loadErrorTitle">Sinflarni yuklashda xatolik yuz berdi</h2>
+          <p data-i18n="studentClasses.loadErrorText">Internet aloqasini tekshiring yoki qayta urinib ko‘ring.</p>
+          <button class="state-btn" onclick="loadClasses()"><i data-lucide="rotate-cw"></i> <span data-i18n="studentClasses.reload">Qayta yuklash</span></button>
         </div>
 
       </div>
@@ -284,25 +293,25 @@
     <!-- O'NG PANEL (rightbar) -->
     <aside class="rightbar">
       <div class="side-panel">
-        <div class="sp-head"><div class="sp-ic"><i data-lucide="user-plus"></i></div><div class="sp-title">Sinfga qo'shilish</div></div>
-        <div class="sp-sub">O'qituvchingiz bergan 6 belgili kodni kiriting va sinfga qo'shiling.</div>
-        <div class="sp-field-label">6 belgili kod</div>
+        <div class="sp-head"><div class="sp-ic"><i data-lucide="user-plus"></i></div><div class="sp-title" data-i18n="studentClasses.joinClass">Sinfga qo‘shilish</div></div>
+        <div class="sp-sub" data-i18n="studentClasses.joinPanelText">O‘qituvchingiz bergan 6 belgili kodni kiriting va sinfga qo‘shiling.</div>
+        <div class="sp-field-label" data-i18n="studentClasses.sixCharacterCode">6 belgili kod</div>
         <div class="code-wrap">
-          <input type="text" class="code-input" id="codeInput" maxlength="6" placeholder="Masalan: ABC123" autocomplete="off" />
+          <input type="text" class="code-input" id="codeInput" maxlength="6" placeholder="Masalan: ABC123" data-i18n-placeholder="studentClasses.codePlaceholder" aria-label="6 belgili sinf kodi" data-i18n-aria-label="studentClasses.codeAria" autocomplete="off" />
           <i data-lucide="scan-line" class="code-scan"></i>
         </div>
         <div class="sp-msg" id="spMsg"></div>
-        <button class="sp-btn" id="submitBtn" onclick="submitCode()">Qo'shilish</button>
-        <div class="sp-help">Sinfga qo'shilish bo'yicha yordam kerakmi? O'qituvchingiz bilan bog'laning.</div>
+        <button class="sp-btn" id="submitBtn" onclick="submitCode()" data-i18n="studentClasses.join">Qo‘shilish</button>
+        <div class="sp-help" data-i18n="studentClasses.joinHelp">Sinfga qo‘shilish bo‘yicha yordam kerakmi? O‘qituvchingiz bilan bog‘laning.</div>
       </div>
 
       <div class="side-panel">
-        <div class="sp-head"><div class="sp-ic q"><i data-lucide="help-circle"></i></div><div class="sp-title">Qanday ishlaydi?</div></div>
+        <div class="sp-head"><div class="sp-ic q"><i data-lucide="help-circle"></i></div><div class="sp-title" data-i18n="studentClasses.howItWorks">Qanday ishlaydi?</div></div>
         <div class="qa-list">
-          <div class="qa-item"><div class="qa-num">1</div><div class="qa-text">O'qituvchingizdan 6 belgili kod oling</div></div>
-          <div class="qa-item"><div class="qa-num">2</div><div class="qa-text">Kodni yuqoridagi maydonga kiriting</div></div>
-          <div class="qa-item"><div class="qa-num">3</div><div class="qa-text">Sinfga qo'shiling va topshiriqlarni bajarishni boshlang</div></div>
-          <div class="qa-item"><div class="qa-num">4</div><div class="qa-text">Natijangizni kuzatib boring va o'sishda davom eting 🚀</div></div>
+          <div class="qa-item"><div class="qa-num">1</div><div class="qa-text" data-i18n="studentClasses.step1">O‘qituvchingizdan 6 belgili kod oling</div></div>
+          <div class="qa-item"><div class="qa-num">2</div><div class="qa-text" data-i18n="studentClasses.step2">Kodni yuqoridagi maydonga kiriting</div></div>
+          <div class="qa-item"><div class="qa-num">3</div><div class="qa-text" data-i18n="studentClasses.step3">Sinfga qo‘shiling va topshiriqlarni bajarishni boshlang</div></div>
+          <div class="qa-item"><div class="qa-num">4</div><div class="qa-text" data-i18n="studentClasses.step4">Natijangizni kuzatib boring va o‘sishda davom eting 🚀</div></div>
         </div>
       </div>
     </aside>
@@ -313,16 +322,16 @@
     <div class="jm-modal">
       <div class="jm-head">
         <div class="jm-ic"><i data-lucide="users"></i></div>
-        <div class="jm-title">Sinfga qo'shilish</div>
-        <div class="jm-sub">O'qituvchingiz bergan 6 belgili kodni kiriting.</div>
+        <div class="jm-title" data-i18n="studentClasses.joinClass">Sinfga qo‘shilish</div>
+        <div class="jm-sub" data-i18n="studentClasses.modalText">O‘qituvchingiz bergan 6 belgili kodni kiriting.</div>
       </div>
       <div class="jm-body">
-        <input type="text" class="jm-input" id="jmInput" maxlength="6" placeholder="KOD" autocomplete="off" />
+        <input type="text" class="jm-input" id="jmInput" maxlength="6" placeholder="KOD" data-i18n-placeholder="studentClasses.codeShort" aria-label="6 belgili sinf kodi" data-i18n-aria-label="studentClasses.codeAria" autocomplete="off" />
         <div class="jm-msg" id="jmMsg"></div>
       </div>
       <div class="jm-foot">
-        <button class="jm-cancel" onclick="closeJoinModal()">Bekor qilish</button>
-        <button class="jm-submit" id="jmSubmit" onclick="submitModalCode()">Qo'shilish</button>
+        <button class="jm-cancel" onclick="closeJoinModal()" data-i18n="common.cancel">Bekor qilish</button>
+        <button class="jm-submit" id="jmSubmit" onclick="submitModalCode()" data-i18n="studentClasses.join">Qo‘shilish</button>
       </div>
     </div>
   </div>
@@ -330,15 +339,25 @@
   <!-- TOAST -->
   <div class="toast" id="toast">
     <i data-lucide="check" class="tic" id="toastIcon"></i>
-    <span id="toastText">Bajarildi</span>
-    <i data-lucide="x" class="tclose" onclick="hideToast()"></i>
+    <span id="toastText" data-i18n="studentClasses.done">Bajarildi</span>
+    <i data-lucide="x" class="tclose" onclick="hideToast()" role="button" tabindex="0" aria-label="Yopish" data-i18n-aria-label="common.close"></i>
   </div>
 
   <script src="/brand.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/api.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script>
+    function classesT(key, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+    }
+
+    function classesLocale() {
+      var language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return language === "ru" ? "ru-RU" : (language === "en" ? "en-US" : "uz-UZ");
+    }
+
     if (typeof renderSidebar === "function") renderSidebar("myclasses");
 
     const userData = localStorage.getItem("user");
@@ -348,8 +367,8 @@
       window.location.href = (user.role === "teacher" || user.role === "school_admin") ? "/teacher.html" : "/lobby.html";
     }
 
-    // Umumiy topbar (coins, gems, notifications, profil dropdown) — "Lobbyga qaytish" bilan
-    renderTopbar({ back: "/lobby.html", backText: "Lobbyga qaytish" });
+    // Barcha student sahifalari bilan bir xil universal topbar.
+    renderTopbar();
 
     let allClasses = [];
     let sortMode = "recent";
@@ -377,20 +396,19 @@
     function formatDate(iso) {
       if (!iso) return "—";
       var d = new Date(iso);
-      var months = ["yanvar","fevral","mart","aprel","may","iyun","iyul","avgust","sentabr","oktabr","noyabr","dekabr"];
-      return d.getFullYear() + "-yil " + d.getDate() + "-" + months[d.getMonth()];
+      if (Number.isNaN(d.getTime())) return "—";
+      return new Intl.DateTimeFormat(classesLocale(), { year: "numeric", month: "long", day: "numeric" }).format(d);
     }
     function esc(s){ return String(s||"").replace(/[&<>"']/g, function(c){ return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]; }); }
 
     // Spec error xabarlari (backend matnini spec'ga moslash)
     function mapJoinError(status, serverMsg) {
       var m = (serverMsg || "").toLowerCase();
-      if (m.indexOf("topilmadi") > -1) return "Bunday kod topilmadi";
-      if (m.indexOf("allaqachon") > -1 || status === 409) return "Siz bu sinfga allaqachon qo'shilgansiz";
-      if (m.indexOf("faol emas") > -1) return "Bu sinf hozir faol emas";
-      if (status === 403) return "Faqat o'quvchilar sinfga qo'shila oladi";
-      if (status >= 500) return "Sinfga qo'shilishda xatolik yuz berdi. Qayta urinib ko'ring.";
-      return serverMsg || "Sinfga qo'shilishda xatolik yuz berdi. Qayta urinib ko'ring.";
+      if (m.indexOf("topilmadi") > -1 || status === 404) return classesT("studentClasses.codeNotFound");
+      if (m.indexOf("allaqachon") > -1 || status === 409) return classesT("studentClasses.alreadyJoined");
+      if (m.indexOf("faol emas") > -1) return classesT("studentClasses.inactiveClass");
+      if (status === 403) return classesT("studentClasses.studentsOnly");
+      return classesT("studentClasses.joinError");
     }
 
     async function loadClasses() {
@@ -426,20 +444,20 @@
       var sorted = sortClasses(allClasses);
 
       if (sorted.length === 0) {
-        document.getElementById("classGrid").innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-dim);background:var(--panel);border:1px solid var(--border);border-radius:16px;">Bu filtr bo\'yicha sinf topilmadi.</div>';
+        document.getElementById("classGrid").innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-dim);background:var(--panel);border:1px solid var(--border);border-radius:16px;">' + esc(classesT("studentClasses.noFilterResults")) + '</div>';
       } else {
         document.getElementById("classGrid").innerHTML = sorted.map(function(c){
           var realIdx = allClasses.indexOf(c);
           var ci = (realIdx >= 0 ? realIdx : 0) % 6;
           var initials = esc((c.name || "S").trim().substring(0,2).toUpperCase());
-          var descHtml = c.description ? '<div class="cc-desc">' + esc(c.description) + '</div>' : '<div class="cc-desc empty">Tavsif kiritilmagan</div>';
+          var descHtml = c.description ? '<div class="cc-desc">' + esc(c.description) + '</div>' : '<div class="cc-desc empty">' + esc(classesT("studentClasses.noDescription")) + '</div>';
           var teacherName = ((c.teacher_first_name||"")+" "+(c.teacher_last_name||"")).trim();
-          var teacher = teacherName ? esc(teacherName) : "O'qituvchi ko'rsatilmagan";
+          var teacher = teacherName ? esc(teacherName) : esc(classesT("studentClasses.teacherUnknown"));
           var members = (typeof c.student_count === "number") ? c.student_count : (c.student_count != null ? parseInt(c.student_count,10) : null);
           var membersVal = (members != null && !isNaN(members)) ? members : "—";
           var archived = isArchived(c);
           var statusCls = archived ? "status-arkiv" : "status-faol";
-          var statusTxt = archived ? "Arxiv" : "Faol";
+          var statusTxt = archived ? classesT("studentClasses.archived") : classesT("studentClasses.active");
           var hasCount = (typeof c.assignments_count === "number");
           if (hasCount) totalPending += c.assignments_count;
 
@@ -449,24 +467,24 @@
                 '<div class="cc-shield cc-c'+ci+'">' + initials + '</div>' +
                 '<div class="cc-head-txt">' +
                   '<div class="cc-name">' + esc(c.name) + '</div>' +
-                  '<div class="cc-teacher">O\'qituvchi: ' + teacher + ' <i data-lucide="badge-check" class="verif"></i></div>' +
+                  '<div class="cc-teacher">' + esc(classesT("studentClasses.teacherLabel")) + ' ' + teacher + ' <i data-lucide="badge-check" class="verif"></i></div>' +
                 '</div>' +
                 '<div class="cc-menu-wrap" id="menuWrap'+c.id+'">' +
                   '<div class="cc-menu" onclick="toggleCardMenu(event,'+c.id+')"><i data-lucide="more-horizontal"></i></div>' +
                   '<div class="cc-dropdown">' +
-                    '<div class="cc-dd-item" onclick="classInfo('+c.id+')"><i data-lucide="info"></i> Sinf ma\'lumotlari</div>' +
-                    '<div class="cc-dd-item" onclick="teacherProfile('+c.id+')"><i data-lucide="user"></i> O\'qituvchi profili</div>' +
-                    '<div class="cc-dd-item" onclick="leaveClass(event,'+c.id+')"><i data-lucide="log-out"></i> Sinfni tark etish</div>' +
+                    '<div class="cc-dd-item" onclick="classInfo('+c.id+')"><i data-lucide="info"></i> ' + esc(classesT("studentClasses.classInfoAction")) + '</div>' +
+                    '<div class="cc-dd-item" onclick="teacherProfile('+c.id+')"><i data-lucide="user"></i> ' + esc(classesT("studentClasses.teacherProfileAction")) + '</div>' +
+                    '<div class="cc-dd-item" onclick="leaveClass(event,'+c.id+')"><i data-lucide="log-out"></i> ' + esc(classesT("studentClasses.leaveClassAction")) + '</div>' +
                   '</div>' +
                 '</div>' +
               '</div>' +
               descHtml +
               '<div class="cc-stats">' +
-                '<div class="cc-stat"><div class="cc-stat-lbl"><i data-lucide="users"></i> A\'zolar</div><div class="cc-stat-val"><i data-lucide="user" class="si"></i>' + membersVal + '</div></div>' +
-                '<div class="cc-stat"><div class="cc-stat-lbl"><i data-lucide="calendar"></i> Qo\'shilgan sana</div><div class="cc-stat-val" style="font-size:11.5px">' + formatDate(c.joined_at) + '</div></div>' +
-                '<div class="cc-stat"><div class="cc-stat-lbl"><i data-lucide="refresh-cw"></i> Status</div><div class="cc-stat-val ' + statusCls + '"><span class="dot"></span>' + statusTxt + '</div></div>' +
+                '<div class="cc-stat"><div class="cc-stat-lbl"><i data-lucide="users"></i> ' + esc(classesT("studentClasses.members")) + '</div><div class="cc-stat-val"><i data-lucide="user" class="si"></i>' + membersVal + '</div></div>' +
+                '<div class="cc-stat"><div class="cc-stat-lbl"><i data-lucide="calendar"></i> ' + esc(classesT("studentClasses.joinedDate")) + '</div><div class="cc-stat-val" style="font-size:11.5px">' + formatDate(c.joined_at) + '</div></div>' +
+                '<div class="cc-stat"><div class="cc-stat-lbl"><i data-lucide="refresh-cw"></i> ' + esc(classesT("studentClasses.status")) + '</div><div class="cc-stat-val ' + statusCls + '"><span class="dot"></span>' + esc(statusTxt) + '</div></div>' +
               '</div>' +
-              '<button class="cc-btn b'+ci+'" onclick="openAssignments(' + c.id + ')">Topshiriqlarni ko\'rish <i data-lucide="arrow-right"></i></button>' +
+              '<button class="cc-btn b'+ci+'" onclick="openAssignments(' + c.id + ')">' + esc(classesT("studentClasses.viewAssignments")) + ' <i data-lucide="arrow-right"></i></button>' +
             '</div>';
         }).join("");
       }
@@ -474,7 +492,7 @@
       // Summary (spec: jami = barcha faol membership; faol = active; removed/left ko'rinmaydi — backend allaqachon faqat active beradi)
       document.getElementById("sumTotal").textContent = allClasses.length;
       document.getElementById("sumActive").textContent = allClasses.filter(function(c){ return !isArchived(c); }).length;
-      document.getElementById("sumPending").innerHTML = totalPending + ' <small>kutilmoqda</small>';
+      document.getElementById("sumPending").innerHTML = totalPending + ' <small>' + esc(classesT("studentClasses.pending")) + '</small>';
       document.getElementById("sumLatest").textContent = formatDate(sortClasses(allClasses.slice().sort(function(a,b){return new Date(b.joined_at)-new Date(a.joined_at);}))[0] ? allClasses.slice().sort(function(a,b){return new Date(b.joined_at)-new Date(a.joined_at);})[0].joined_at : null);
 
       showState("list");
@@ -500,13 +518,13 @@
       closeAllMenus();
       var c = allClasses.find(function(x){ return x.id === id; });
       if (!c) return;
-      var teacher = ((c.teacher_first_name||"")+" "+(c.teacher_last_name||"")).trim() || "ko'rsatilmagan";
-      showToast("Sinf: " + (c.name||"") + " · O'qituvchi: " + teacher, "info");
+      var teacher = ((c.teacher_first_name||"")+" "+(c.teacher_last_name||"")).trim() || classesT("studentClasses.notSpecified");
+      showToast(classesT("studentClasses.classInfo", { className: c.name || classesT("studentClasses.classFallback"), teacher: teacher }), "info");
     }
     function teacherProfile(id) {
       closeAllMenus();
       var c = allClasses.find(function(x){ return x.id === id; });
-      if (!c || !c.teacher_id) return showToast("O'qituvchi topilmadi", "error");
+      if (!c || !c.teacher_id) return showToast(classesT("studentClasses.teacherNotFound"), "error");
       window.location.href = "/profile.html?id=" + encodeURIComponent(c.teacher_id);
     }
     async function leaveClass(event, id) {
@@ -514,23 +532,26 @@
       closeAllMenus();
       var c = allClasses.find(function(x){ return String(x.id) === String(id); });
       if (!c) return;
-      if (!window.confirm('“' + (c.name || "Sinf") + '” sinfini tark etmoqchimisiz? Keyin sinf kodi orqali qayta qo‘shilishingiz mumkin.')) return;
+      if (!window.confirm(classesT("studentClasses.leaveConfirm", { name: c.name || classesT("studentClasses.classFallback") }))) return;
       try {
         var res = await authFetch("/student/classes/" + encodeURIComponent(id) + "/leave", { method:"POST" });
         var data = await res.json();
-        if (!res.ok) return showToast(data.error || "Sinfni tark etib bo'lmadi", "error");
+        if (!res.ok) return showToast(data.error || classesT("studentClasses.leaveError"), "error");
         allClasses = allClasses.filter(function(x){ return String(x.id) !== String(id); });
         renderClasses();
-        showToast("Sinf tark etildi", "success");
-      } catch (_) { showToast("Server bilan aloqa yo'q", "error"); }
+        showToast(classesT("studentClasses.leftSuccess"), "success");
+      } catch (_) { showToast(classesT("studentClasses.networkError"), "error"); }
     }
 
     // === Sort menu ===
     function toggleSortMenu(e) { e.stopPropagation(); var b = document.getElementById("sortBox"); var was = b.classList.contains("open"); closeAllMenus(); if (!was) b.classList.add("open"); }
+    function sortLabel(mode) {
+      var keys = { recent:"studentClasses.sortRecent", oldest:"studentClasses.sortOldest", name:"studentClasses.sortName", active:"studentClasses.sortActive", archived:"studentClasses.sortArchived" };
+      return classesT(keys[mode] || keys.recent);
+    }
     function setSort(mode) {
       sortMode = mode;
-      var labels = { recent:"Oxirgi qo'shilgan", oldest:"Eski qo'shilgan", name:"Nomi bo'yicha", active:"Faol sinflar", archived:"Arxivlangan sinflar" };
-      document.getElementById("sortLabel").textContent = labels[mode] || labels.recent;
+      document.getElementById("sortLabel").textContent = sortLabel(mode);
       document.querySelectorAll(".sort-opt").forEach(function(o){ o.classList.toggle("active", o.getAttribute("data-sort") === mode); });
       closeAllMenus();
       renderClasses();
@@ -552,9 +573,9 @@
     function focusJoin() { codeInput.focus(); codeInput.scrollIntoView({ behavior: "smooth", block: "center" }); }
 
     function validateCode(code, showFn) {
-      if (!code) { showFn("Kod kiriting"); return false; }
-      if (code.length !== 6) { showFn("Kod 6 belgidan iborat bo'lishi kerak"); return false; }
-      if (!/^[A-Z0-9]+$/.test(code)) { showFn("Kod faqat harf va raqamlardan iborat bo'lishi kerak"); return false; }
+      if (!code) { showFn(classesT("studentClasses.enterCode")); return false; }
+      if (code.length !== 6) { showFn(classesT("studentClasses.codeLength")); return false; }
+      if (!/^[A-Z0-9]+$/.test(code)) { showFn(classesT("studentClasses.codeCharacters")); return false; }
       return true;
     }
 
@@ -574,15 +595,15 @@
       if (!validateCode(code, showErr)) return;
 
       var btn = document.getElementById("submitBtn");
-      btn.disabled = true; btn.textContent = "Qo'shilmoqda...";
+      btn.disabled = true; btn.textContent = classesT("studentClasses.joining");
       try {
         var r = await doJoin(code);
         if (!r.ok) { showErr(mapJoinError(r.status, r.data.error)); return; }
         inp.value = "";
-        showToast("Sinfga muvaffaqiyatli qo'shildingiz", "success");
+        showToast(classesT("studentClasses.joinedSuccess"), "success");
         await loadClasses();
-      } catch (err) { showErr("Server bilan aloqa yo'q. Qayta urinib ko'ring."); }
-      finally { btn.disabled = false; btn.textContent = "Qo'shilish"; }
+      } catch (err) { showErr(classesT("studentClasses.networkRetry")); }
+      finally { btn.disabled = false; btn.textContent = classesT("studentClasses.join"); }
     }
 
     // === Join modal (empty holat — prompt o'rniga professional) ===
@@ -609,16 +630,29 @@
       if (!validateCode(code, showErr)) return;
 
       var btn = document.getElementById("jmSubmit");
-      btn.disabled = true; btn.textContent = "Qo'shilmoqda...";
+      btn.disabled = true; btn.textContent = classesT("studentClasses.joining");
       try {
         var r = await doJoin(code);
         if (!r.ok) { showErr(mapJoinError(r.status, r.data.error)); return; }
         closeJoinModal();
-        showToast("Sinfga muvaffaqiyatli qo'shildingiz", "success");
+        showToast(classesT("studentClasses.joinedSuccess"), "success");
         await loadClasses();
-      } catch (err) { showErr("Server bilan aloqa yo'q. Qayta urinib ko'ring."); }
-      finally { btn.disabled = false; btn.textContent = "Qo'shilish"; }
+      } catch (err) { showErr(classesT("studentClasses.networkRetry")); }
+      finally { btn.disabled = false; btn.textContent = classesT("studentClasses.join"); }
     }
+
+    window.addEventListener("ilmliga:languagechange", function() {
+      renderTopbar();
+      document.getElementById("sortLabel").textContent = sortLabel(sortMode);
+      document.getElementById("spMsg").className = "sp-msg";
+      document.getElementById("jmMsg").className = "jm-msg";
+      if (allClasses.length) renderClasses();
+      var submitButton = document.getElementById("submitBtn");
+      var modalButton = document.getElementById("jmSubmit");
+      submitButton.textContent = classesT(submitButton.disabled ? "studentClasses.joining" : "studentClasses.join");
+      modalButton.textContent = classesT(modalButton.disabled ? "studentClasses.joining" : "studentClasses.join");
+      if (window.lucide) lucide.createIcons();
+    });
 
     if (window.lucide) lucide.createIcons();
     loadClasses();

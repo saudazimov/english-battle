@@ -56,7 +56,7 @@ test("progress dashboard uses the evidence-based today, 7 and 30 day analysis en
 
   assert.match(script, /requestJson\("\/ai\/reports\/student\/weekly\?period=" \+ period/);
   assert.match(script, /loadPeriod\("7d"\)/);
-  assert.match(script, /today: "Bugungi natijalar"/);
+  assert.match(script, /today: progressT\("progress\.periodResultsToday"\)/);
   assert.match(script, /data\.analysis\.learning_diagnostics/);
   assert.match(script, /diagnostics\.priority_topics/);
   assert.match(script, /report\.topic_lessons/);

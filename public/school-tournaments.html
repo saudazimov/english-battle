@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Maktab turnirlari</title>
+  <title data-i18n="schoolTournaments.metaTitle">IlmLiga — Maktab turnirlari</title>
   <link rel="stylesheet" href="/app.css">
   <style>
     .app { grid-template-columns: 230px 1fr; gap: 20px; max-width: 1680px; margin: 0 auto; padding: 20px; }
@@ -98,11 +98,11 @@
 
       <div class="page-head">
         <div class="crest-ic"><i data-lucide="trophy"></i></div>
-        <div><h1>Maktab Turnirlari</h1><p>Maktabingiz nomidan turnirlarda qatnashing — jamoa tuzing va g'alaba qozoning.</p></div>
+        <div><h1 data-i18n="schoolTournaments.heading">Maktab turnirlari</h1><p data-i18n="schoolTournaments.subtitle">Maktabingiz nomidan turnirlarda qatnashing — jamoa tuzing va g'alaba qozoning.</p></div>
       </div>
 
       <div id="tournListWrap">
-        <div class="empty-box"><div class="empty-box-title">Yuklanmoqda...</div></div>
+        <div class="empty-box"><div class="empty-box-title" data-i18n="schoolTournaments.loading">Yuklanmoqda...</div></div>
       </div>
     </main>
   </div>
@@ -112,11 +112,11 @@
     <div class="tm-box" style="max-width:900px;">
       <div class="tm-head">
         <div class="tm-head-ic"><i data-lucide="git-fork"></i></div>
-        <div class="tm-head-title">Turnir setkasi<div class="tm-head-sub" id="brSubtitle">—</div></div>
+        <div class="tm-head-title"><span data-i18n="schoolTournaments.bracketTitle">Turnir setkasi</span><div class="tm-head-sub" id="brSubtitle">—</div></div>
         <div class="tm-close" onclick="closeBracket()"><i data-lucide="x"></i></div>
       </div>
       <div class="tm-body" id="brBody">
-        <div style="text-align:center;padding:40px;color:var(--text-dim);">Yuklanmoqda...</div>
+        <div style="text-align:center;padding:40px;color:var(--text-dim);" data-i18n="schoolTournaments.loading">Yuklanmoqda...</div>
       </div>
     </div>
   </div>
@@ -151,31 +151,31 @@
     <div class="tm-box">
       <div class="tm-head">
         <div class="tm-head-ic"><i data-lucide="users"></i></div>
-        <div class="tm-head-title">Jamoa tuzish<div class="tm-head-sub" id="tmSubtitle">—</div></div>
+        <div class="tm-head-title"><span data-i18n="schoolTournaments.teamTitle">Jamoa tuzish</span><div class="tm-head-sub" id="tmSubtitle">—</div></div>
         <div class="tm-close" onclick="closeTeamModal()"><i data-lucide="x"></i></div>
       </div>
       <div class="tm-body">
-        <input type="text" class="tm-search" id="tmSearch" placeholder="O'quvchi izlash..." oninput="renderStudentPool()">
+        <input type="text" class="tm-search" id="tmSearch" placeholder="O'quvchi izlash..." data-i18n-placeholder="schoolTournaments.searchPlaceholder" oninput="renderStudentPool()">
         <div class="tm-cols">
           <div>
-            <div class="tm-col-title"><i data-lucide="user-check" style="width:15px;height:15px;"></i> Asosiy o'yinchilar <span class="cnt" id="tmStarterCnt">0/0</span></div>
+            <div class="tm-col-title"><i data-lucide="user-check" style="width:15px;height:15px;"></i> <span data-i18n="schoolTournaments.starters">Asosiy o'yinchilar</span> <span class="cnt" id="tmStarterCnt">0/0</span></div>
             <div class="tm-list" id="tmStarterList"></div>
           </div>
           <div>
-            <div class="tm-col-title"><i data-lucide="user-plus" style="width:15px;height:15px;"></i> Zaxira <span class="cnt" id="tmReserveCnt">0/0</span></div>
+            <div class="tm-col-title"><i data-lucide="user-plus" style="width:15px;height:15px;"></i> <span data-i18n="schoolTournaments.reserve">Zaxira</span> <span class="cnt" id="tmReserveCnt">0/0</span></div>
             <div class="tm-list" id="tmReserveList"></div>
           </div>
         </div>
         <div style="margin-top:18px;">
-          <div class="tm-col-title"><i data-lucide="list" style="width:15px;height:15px;"></i> Maktab o'quvchilari (reyting bo'yicha)</div>
+          <div class="tm-col-title"><i data-lucide="list" style="width:15px;height:15px;"></i> <span data-i18n="schoolTournaments.schoolStudents">Maktab o'quvchilari (reyting bo'yicha)</span></div>
           <div class="tm-list" id="tmPool"></div>
         </div>
         <p class="tm-hint" id="tmHint"></p>
       </div>
       <div class="tm-foot">
         <div class="tm-foot-msg" id="tmFootMsg"></div>
-        <button class="btn btn-ghost" onclick="autoFillTeam()"><i data-lucide="wand-2" style="width:15px;height:15px;"></i> Avto (eng kuchli)</button>
-        <button class="btn" id="tmSaveBtn" onclick="saveTeam()"><i data-lucide="check" style="width:16px;height:16px;"></i> Jamoani saqlash</button>
+        <button class="btn btn-ghost" onclick="autoFillTeam()"><i data-lucide="wand-2" style="width:15px;height:15px;"></i> <span data-i18n="schoolTournaments.autoStrongest">Avto (eng kuchli)</span></button>
+        <button class="btn" id="tmSaveBtn" onclick="saveTeam()"><i data-lucide="check" style="width:16px;height:16px;"></i> <span data-i18n="schoolTournaments.saveTeam">Jamoani saqlash</span></button>
       </div>
     </div>
   </div>
@@ -183,6 +183,7 @@
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script>
     const userData = localStorage.getItem("user");
@@ -192,6 +193,11 @@
     renderTopbar();
     renderSidebar("tournaments");
 
+    function schoolTournamentT(key, params) { return window.IlmLigaI18n ? window.IlmLigaI18n.t("schoolTournaments." + key, params) : key; }
+    function schoolTournamentLocale() {
+      var language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return { uz: "uz-UZ", en: "en-US", ru: "ru-RU" }[language] || "uz-UZ";
+    }
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     function schoolLabel(school, schoolKey) {
       var parts = String(schoolKey || "").split("\x1f");
@@ -202,41 +208,64 @@
       return '<div class="tm-ava-init">' + esc((firstName || "?").charAt(0).toUpperCase()) + '</div>';
     }
 
-    var statusLabels = { registration: "Ro'yxat ochiq", bracket: "Setka tuzilgan", live: "Jonli", finished: "Tugagan" };
+    function tournamentStatusLabel(status) {
+      var keys = { registration: "statusRegistration", bracket: "statusBracket", live: "statusLive", finished: "statusFinished" };
+      return keys[status] ? schoolTournamentT(keys[status]) : status;
+    }
 
     function fmtDeadline(d) {
       if (!d) return "";
       var date = new Date(d);
       var now = new Date();
       var diff = date - now;
-      if (diff < 0) return "Muddat tugagan";
+      if (diff < 0) return schoolTournamentT("deadlineExpired");
       var days = Math.floor(diff / 86400000);
       var hours = Math.floor((diff % 86400000) / 3600000);
-      if (days > 0) return days + " kun " + hours + " soat qoldi";
-      return hours + " soat qoldi";
+      if (days > 0) return schoolTournamentT("deadlineDays", { days: days, hours: hours });
+      return schoolTournamentT("deadlineHours", { hours: hours });
     }
 
     // ===== Turnirlar ro'yxati =====
-    async function loadTournaments() {
+    var tournamentsData = null;
+    var tournamentsState = "loading";
+
+    function renderTournamentList() {
       var wrap = document.getElementById("tournListWrap");
+      if (tournamentsState === "forbidden") {
+        wrap.innerHTML = '<div class="empty-box"><i data-lucide="shield-alert"></i><div class="empty-box-title">' + esc(schoolTournamentT("accessDenied")) + '</div><div>' + esc(schoolTournamentT("schoolAdminsOnly")) + '</div></div>';
+        lucide.createIcons();
+        return;
+      }
+      if (tournamentsState === "error") {
+        wrap.innerHTML = '<div class="empty-box"><div class="empty-box-title">' + esc(schoolTournamentT("loadFailed")) + '</div></div>';
+        return;
+      }
+      if (!tournamentsData) return;
+      var list = tournamentsData.tournaments || [];
+      if (list.length === 0) {
+        var schoolName = tournamentsData.school || schoolTournamentT("yourSchool");
+        wrap.innerHTML = '<div class="empty-box"><i data-lucide="trophy"></i><div class="empty-box-title">' + esc(schoolTournamentT("noTournaments")) + '</div><div>' + esc(schoolTournamentT("noTournamentsForSchool", { school: schoolName })) + '</div></div>';
+        lucide.createIcons();
+        return;
+      }
+      wrap.innerHTML = list.map(renderTournamentCard).join("");
+      lucide.createIcons();
+    }
+
+    async function loadTournaments() {
       try {
         var r = await authFetch("/school/tournaments");
         if (r.status === 403) {
-          wrap.innerHTML = '<div class="empty-box"><i data-lucide="shield-alert"></i><div class="empty-box-title">Ruxsat yo\'q</div><div>Bu sahifa faqat maktab adminlari uchun.</div></div>';
-          lucide.createIcons();
+          tournamentsState = "forbidden";
+          renderTournamentList();
           return;
         }
-        var d = await r.json();
-        var list = d.tournaments || [];
-        if (list.length === 0) {
-          wrap.innerHTML = '<div class="empty-box"><i data-lucide="trophy"></i><div class="empty-box-title">Hozircha turnir yo\'q</div><div>' + esc(d.school || "Maktabingiz") + ' uchun faol turnir mavjud emas. Tez orada yangi turnirlar e\'lon qilinadi.</div></div>';
-          lucide.createIcons();
-          return;
-        }
-        wrap.innerHTML = list.map(renderTournamentCard).join("");
-        lucide.createIcons();
+        tournamentsData = await r.json();
+        tournamentsState = "ready";
+        renderTournamentList();
       } catch (e) {
-        wrap.innerHTML = '<div class="empty-box"><div class="empty-box-title">Yuklab bo\'lmadi</div></div>';
+        tournamentsState = "error";
+        renderTournamentList();
       }
     }
 
@@ -245,24 +274,24 @@
       var needed = t.team_size;
       var teamDone = teamCount >= needed;
       var canEdit = (t.status === "registration");
-      var levelLabel = t.level === "district" ? "Tuman" : (t.level === "region" ? "Viloyat" : "Respublika");
+      var levelLabel = t.level === "district" ? schoolTournamentT("levelDistrict") : (t.level === "region" ? schoolTournamentT("levelRegion") : schoolTournamentT("levelCountry"));
 
       var teamStatusHtml;
       if (!canEdit) {
-        teamStatusHtml = '<div class="team-status locked"><i data-lucide="lock"></i> Ro\'yxat yopilgan — jamoa qulflangan (' + teamCount + ' o\'yinchi)</div>';
+        teamStatusHtml = '<div class="team-status locked"><i data-lucide="lock"></i> ' + esc(schoolTournamentT("teamLocked", { count: teamCount })) + '</div>';
       } else if (teamDone) {
-        teamStatusHtml = '<div class="team-status done"><i data-lucide="check-circle"></i> Jamoa tayyor: ' + teamCount + ' asosiy o\'yinchi tanlangan</div>';
+        teamStatusHtml = '<div class="team-status done"><i data-lucide="check-circle"></i> ' + esc(schoolTournamentT("teamReady", { count: teamCount })) + '</div>';
       } else {
-        teamStatusHtml = '<div class="team-status empty"><i data-lucide="alert-circle"></i> Jamoa hali to\'liq emas (' + teamCount + '/' + needed + ' tanlangan)</div>';
+        teamStatusHtml = '<div class="team-status empty"><i data-lucide="alert-circle"></i> ' + esc(schoolTournamentT("teamIncomplete", { count: teamCount, needed: needed })) + '</div>';
       }
 
       var btnHtml;
       if (canEdit) {
-        btnHtml = '<button class="btn" onclick="openTeamModal(' + t.id + ')"><i data-lucide="users" style="width:16px;height:16px;"></i> ' + (teamCount > 0 ? "Jamoani tahrirlash" : "Jamoa tuzish") + '</button>';
+        btnHtml = '<button class="btn" onclick="openTeamModal(' + t.id + ')"><i data-lucide="users" style="width:16px;height:16px;"></i> ' + esc(teamCount > 0 ? schoolTournamentT("editTeam") : schoolTournamentT("createTeam")) + '</button>';
       } else {
         // Setka tuzilgan — jamoani ko'rish + setkani ko'rish
-        btnHtml = '<button class="btn btn-ghost" onclick="openTeamModal(' + t.id + ')"><i data-lucide="eye" style="width:16px;height:16px;"></i> Jamoa</button>' +
-          ' <button class="btn" onclick="openBracket(' + t.id + ')"><i data-lucide="git-fork" style="width:16px;height:16px;"></i> Setkani ko\'rish</button>';
+        btnHtml = '<button class="btn btn-ghost" onclick="openTeamModal(' + t.id + ')"><i data-lucide="eye" style="width:16px;height:16px;"></i> ' + esc(schoolTournamentT("viewTeam")) + '</button>' +
+          ' <button class="btn" onclick="openBracket(' + t.id + ')"><i data-lucide="git-fork" style="width:16px;height:16px;"></i> ' + esc(schoolTournamentT("viewBracket")) + '</button>';
       }
 
       var deadlineHtml = (canEdit && t.registration_deadline)
@@ -274,16 +303,16 @@
           '<div class="tcard-ic"><i data-lucide="trophy"></i></div>' +
           '<div class="tcard-info">' +
             '<div class="tcard-name">' + esc(t.name) + '</div>' +
-            '<div class="tcard-meta">' + levelLabel + ' bosqichi · ' + esc(t.scope_value || "") + (t.region ? ", " + esc(t.region) : "") + '</div>' +
+            '<div class="tcard-meta">' + esc(schoolTournamentT("levelStage", { level: levelLabel })) + ' · ' + esc(t.scope_value || "") + (t.region ? ", " + esc(t.region) : "") + '</div>' +
           '</div>' +
-          '<span class="tcard-status st-' + t.status + '">' + (statusLabels[t.status] || t.status) + '</span>' +
+          '<span class="tcard-status st-' + t.status + '">' + esc(tournamentStatusLabel(t.status)) + '</span>' +
         '</div>' +
         '<div class="tcard-body">' +
           '<div class="tcard-stats">' +
-            '<div class="tstat"><span class="tstat-v">' + t.team_size + '+' + t.reserve_size + '</span><span class="tstat-k">Jamoa hajmi</span></div>' +
-            '<div class="tstat"><span class="tstat-v ' + (teamDone ? "ok" : "warn") + '">' + teamCount + '</span><span class="tstat-k">Tanlangan</span></div>' +
-            '<div class="tstat"><span class="tstat-v">' + t.questions_per_match + '</span><span class="tstat-k">Savol/match</span></div>' +
-            '<div class="tstat"><span class="tstat-v">' + Math.round((t.seconds_per_match || 300) / 60) + ' min</span><span class="tstat-k">Match vaqti</span></div>' +
+            '<div class="tstat"><span class="tstat-v">' + t.team_size + '+' + t.reserve_size + '</span><span class="tstat-k">' + esc(schoolTournamentT("teamSize")) + '</span></div>' +
+            '<div class="tstat"><span class="tstat-v ' + (teamDone ? "ok" : "warn") + '">' + teamCount + '</span><span class="tstat-k">' + esc(schoolTournamentT("selected")) + '</span></div>' +
+            '<div class="tstat"><span class="tstat-v">' + t.questions_per_match + '</span><span class="tstat-k">' + esc(schoolTournamentT("questionsPerMatch")) + '</span></div>' +
+            '<div class="tstat"><span class="tstat-v">' + Math.round((t.seconds_per_match || 300) / 60) + ' ' + esc(schoolTournamentT("minutesShort")) + '</span><span class="tstat-k">' + esc(schoolTournamentT("matchTime")) + '</span></div>' +
           '</div>' +
           teamStatusHtml +
           deadlineHtml +
@@ -293,16 +322,19 @@
     }
 
     // ===== Setka ko'rish =====
+    var currentBracketData = null;
+
     async function openBracket(tid) {
       document.getElementById("bracketModal").classList.add("show");
-      document.getElementById("brBody").innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Yuklanmoqda...</div>';
+      currentBracketData = null;
+      document.getElementById("brBody").innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">' + esc(schoolTournamentT("loading")) + '</div>';
       try {
         var r = await authFetch("/school/tournaments/" + tid + "/bracket");
-        var d = await r.json();
-        document.getElementById("brSubtitle").textContent = d.tournament.name;
-        renderBracket(d);
+        currentBracketData = await r.json();
+        document.getElementById("brSubtitle").textContent = currentBracketData.tournament.name;
+        renderBracket(currentBracketData);
       } catch (e) {
-        document.getElementById("brBody").innerHTML = '<div style="text-align:center;padding:40px;color:#f87171;">Yuklab bo\'lmadi</div>';
+        document.getElementById("brBody").innerHTML = '<div style="text-align:center;padding:40px;color:#f87171;">' + esc(schoolTournamentT("loadFailed")) + '</div>';
       }
     }
 
@@ -316,29 +348,29 @@
       var body = document.getElementById("brBody");
 
       if (roundKeys.length === 0) {
-        body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Setka hali yaratilmagan</div>';
+        body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">' + esc(schoolTournamentT("bracketNotCreated")) + '</div>';
         return;
       }
 
       var totalRounds = roundKeys.length;
       var roundName = function (rnd) {
         var fromEnd = totalRounds - rnd;
-        if (fromEnd === 0) return "Final";
-        if (fromEnd === 1) return "Yarim final";
-        if (fromEnd === 2) return "Chorak final";
-        return rnd + "-raund";
+        if (fromEnd === 0) return schoolTournamentT("final");
+        if (fromEnd === 1) return schoolTournamentT("semifinal");
+        if (fromEnd === 2) return schoolTournamentT("quarterfinal");
+        return schoolTournamentT("round", { round: rnd });
       };
-      var statusLabels = { pending: "Kutilmoqda", checkin: "Tayyorlanish", live: "Jonli", done: "Tugadi" };
+      var matchStatusLabels = { pending: schoolTournamentT("matchPending"), checkin: schoolTournamentT("matchCheckin"), live: schoolTournamentT("matchLive"), done: schoolTournamentT("matchDone") };
 
       // Mening maktabim holati (yuqorida)
       var html = "";
       var mp = d.my_participation;
       if (mp) {
-        var statusTxt = mp.placement === 1 ? "🏆 Chempion!" : (mp.eliminated ? "Turnirdan chiqgan" : "Turnirda davom etmoqda");
+        var statusTxt = mp.placement === 1 ? schoolTournamentT("champion") : (mp.eliminated ? schoolTournamentT("eliminated") : schoolTournamentT("continuing"));
         html += '<div class="br-my-status">' +
           '<span class="br-my-seed">#' + mp.seed + '</span>' +
-          '<div><div class="br-my-txt">' + esc(schoolLabel(d.my_school, d.my_school_key)) + ' — Seed ' + mp.seed + '</div>' +
-          '<div class="br-my-sub">' + statusTxt + '</div></div>' +
+          '<div><div class="br-my-txt">' + esc(schoolLabel(d.my_school, d.my_school_key)) + ' — ' + esc(schoolTournamentT("seed")) + ' ' + mp.seed + '</div>' +
+          '<div class="br-my-sub">' + esc(statusTxt) + '</div></div>' +
         '</div>';
       }
 
@@ -354,11 +386,11 @@
           html += brTeamRow(m.school_a, m.school_a_key, m.score_a, aWin, m.status, d.my_school_key);
           html += brTeamRow(m.school_b, m.school_b_key, m.score_b, bWin, m.status, d.my_school_key);
           if (isBye) {
-            html += '<div class="br-match-status">Avtomatik o\'tdi</div>';
+            html += '<div class="br-match-status">' + esc(schoolTournamentT("advancedAutomatically")) + '</div>';
           } else {
             var scls = m.status === "live" ? "live" : (m.status === "done" ? "done" : "");
-            var sched = m.scheduled_at ? " · " + new Date(m.scheduled_at).toLocaleString("uz", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
-            html += '<div class="br-match-status ' + scls + '">' + (statusLabels[m.status] || m.status) + sched + '</div>';
+            var sched = m.scheduled_at ? " · " + new Date(m.scheduled_at).toLocaleString(schoolTournamentLocale(), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+            html += '<div class="br-match-status ' + scls + '">' + esc(matchStatusLabels[m.status] || m.status) + sched + '</div>';
           }
           html += '</div>';
         });
@@ -374,7 +406,7 @@
       var isMe = (schoolKey && schoolKey === mySchoolKey);
       var name = school
         ? '<span class="br-team-name">' + esc(schoolLabel(school, schoolKey)) + '</span>'
-        : '<span class="br-team-name tbd">— kutilmoqda —</span>';
+        : '<span class="br-team-name tbd">— ' + esc(schoolTournamentT("waitingTeam")) + ' —</span>';
       return '<div class="br-team' + (isWinner ? " winner" : "") + (isMe ? " is-me" : "") + '">' +
         name +
         (showScore && school ? '<span class="br-score">' + (score || 0) + '</span>' : "") +
@@ -389,6 +421,18 @@
     var tmStarters = [];       // tanlangan asosiy (user_id)
     var tmReserves = [];       // tanlangan zaxira (user_id)
     var tmReadOnly = false;
+
+    function renderTeamModalCopy() {
+      if (!tmTournament) return;
+      document.getElementById("tmSubtitle").textContent = schoolTournamentT("teamSubtitle", {
+        name: tmTournament.name,
+        starters: tmTournament.team_size,
+        reserves: tmTournament.reserve_size
+      });
+      document.getElementById("tmHint").textContent = tmReadOnly
+        ? schoolTournamentT("readOnlyHint")
+        : schoolTournamentT("editHint");
+    }
 
     async function openTeamModal(tid) {
       try {
@@ -411,20 +455,19 @@
         tmStarters = team.filter(function (m) { return m.member_role === "starter"; }).map(function (m) { return m.user_id; });
         tmReserves = team.filter(function (m) { return m.member_role === "reserve"; }).map(function (m) { return m.user_id; });
 
-        document.getElementById("tmSubtitle").textContent = tmTournament.name + " · " + tmTournament.team_size + " asosiy + " + tmTournament.reserve_size + " zaxira";
+        renderTeamModalCopy();
         document.getElementById("tmSearch").value = "";
         document.getElementById("tmFootMsg").textContent = "";
         document.getElementById("tmSaveBtn").style.display = tmReadOnly ? "none" : "";
         document.querySelector('[onclick="autoFillTeam()"]').style.display = tmReadOnly ? "none" : "";
-        document.getElementById("tmHint").textContent = tmReadOnly
-          ? "Ro'yxat yopilgan — jamoa faqat ko'rish uchun."
-          : "O'quvchini bosing → asosiy jamoaga qo'shiladi. To'lgach, keyingilar zaxiraga tushadi. Qayta bosish — olib tashlaydi.";
 
         renderTeamLists();
         renderStudentPool();
         document.getElementById("teamModal").classList.add("show");
         lucide.createIcons();
-      } catch (e) {}
+      } catch (e) {
+        console.error("School tournament team load failed:", e);
+      }
     }
 
     function closeTeamModal() {
@@ -447,7 +490,7 @@
         } else if (tmReserves.length < tmTournament.reserve_size) {
           tmReserves.push(uid);
         } else {
-          showFootMsg("Jamoa to'lgan. Avval birovni olib tashlang.", "error");
+          showFootMsg(schoolTournamentT("teamFull"), "error");
           return;
         }
       }
@@ -464,10 +507,10 @@
 
       document.getElementById("tmStarterList").innerHTML = tmStarters.length
         ? tmStarters.map(function (uid) { return studentRow(studentById(uid), "starter"); }).join("")
-        : '<div style="color:var(--text-faint);font-size:13px;padding:10px;text-align:center;">Hali tanlanmagan</div>';
+        : '<div style="color:var(--text-faint);font-size:13px;padding:10px;text-align:center;">' + esc(schoolTournamentT("notSelected")) + '</div>';
       document.getElementById("tmReserveList").innerHTML = tmReserves.length
         ? tmReserves.map(function (uid) { return studentRow(studentById(uid), "reserve"); }).join("")
-        : '<div style="color:var(--text-faint);font-size:13px;padding:10px;text-align:center;">Hali tanlanmagan</div>';
+        : '<div style="color:var(--text-faint);font-size:13px;padding:10px;text-align:center;">' + esc(schoolTournamentT("notSelected")) + '</div>';
       lucide.createIcons();
     }
 
@@ -477,7 +520,7 @@
       return '<div class="tm-student ' + (role === "starter" ? "selected" : "reserve-sel") + '" onclick="toggleStudent(' + s.id + ')">' +
         '<div class="tm-ava">' + avatarHtml(s.first_name, s.profile_picture) + '</div>' +
         '<div class="tm-st-info"><div class="tm-st-name">' + name + '</div><div class="tm-st-sub">' + (s.cefr_level || "—") + '</div></div>' +
-        '<span class="tm-badge ' + role + '">' + (role === "starter" ? "Asosiy" : "Zaxira") + '</span>' +
+        '<span class="tm-badge ' + role + '">' + esc(role === "starter" ? schoolTournamentT("starter") : schoolTournamentT("reserveBadge")) + '</span>' +
         '<span class="tm-st-rating">' + (s.rating || 1000) + '</span>' +
       '</div>';
     }
@@ -490,7 +533,7 @@
         return !q || name.indexOf(q) !== -1;
       });
       if (filtered.length === 0) {
-        pool.innerHTML = '<div style="color:var(--text-faint);font-size:13px;padding:14px;text-align:center;">O\'quvchi topilmadi</div>';
+        pool.innerHTML = '<div style="color:var(--text-faint);font-size:13px;padding:14px;text-align:center;">' + esc(schoolTournamentT("studentNotFound")) + '</div>';
         return;
       }
       pool.innerHTML = filtered.map(function (s) {
@@ -498,7 +541,7 @@
         var inReserve = tmReserves.indexOf(s.id) !== -1;
         var cls = inStarter ? "selected" : (inReserve ? "reserve-sel" : "");
         var name = (esc(s.first_name) + " " + esc(s.last_name || "")).trim();
-        var badge = inStarter ? '<span class="tm-badge starter">Asosiy</span>' : (inReserve ? '<span class="tm-badge reserve">Zaxira</span>' : "");
+        var badge = inStarter ? '<span class="tm-badge starter">' + esc(schoolTournamentT("starter")) + '</span>' : (inReserve ? '<span class="tm-badge reserve">' + esc(schoolTournamentT("reserveBadge")) + '</span>' : "");
         return '<div class="tm-student ' + cls + '" onclick="toggleStudent(' + s.id + ')">' +
           '<div class="tm-ava">' + avatarHtml(s.first_name, s.profile_picture) + '</div>' +
           '<div class="tm-st-info"><div class="tm-st-name">' + name + '</div><div class="tm-st-sub">' + (s.cefr_level || "—") + '</div></div>' +
@@ -517,7 +560,7 @@
       tmReserves = sorted.slice(tmTournament.team_size, tmTournament.team_size + tmTournament.reserve_size).map(function (s) { return s.id; });
       renderTeamLists();
       renderStudentPool();
-      showFootMsg("Eng kuchli o'quvchilar tanlandi", "success");
+      showFootMsg(schoolTournamentT("autoSelected"), "success");
     }
 
     function showFootMsg(text, type) {
@@ -529,7 +572,7 @@
     async function saveTeam() {
       if (tmReadOnly) return;
       if (tmStarters.length !== tmTournament.team_size) {
-        showFootMsg("Asosiy o'yinchilar " + tmTournament.team_size + " ta bo'lishi kerak (hozir " + tmStarters.length + ")", "error");
+        showFootMsg(schoolTournamentT("startersRequired", { required: tmTournament.team_size, current: tmStarters.length }), "error");
         return;
       }
       var btn = document.getElementById("tmSaveBtn");
@@ -542,16 +585,28 @@
         });
         var d = await r.json();
         if (d.success) {
-          showFootMsg("✓ Jamoa saqlandi", "success");
+          showFootMsg(schoolTournamentT("teamSaved"), "success");
           setTimeout(function () { closeTeamModal(); loadTournaments(); }, 700);
         } else {
-          showFootMsg(d.error || "Xato", "error");
+          showFootMsg(d.error || schoolTournamentT("genericError"), "error");
         }
       } catch (e) {
-        showFootMsg("Server xatosi", "error");
+        showFootMsg(schoolTournamentT("serverError"), "error");
       }
       btn.disabled = false;
     }
+
+    window.addEventListener("ilmliga:languagechange", function () {
+      renderTournamentList();
+      if (currentBracketData && document.getElementById("bracketModal").classList.contains("show")) {
+        renderBracket(currentBracketData);
+      }
+      if (tmTournament && document.getElementById("teamModal").classList.contains("show")) {
+        renderTeamModalCopy();
+        renderTeamLists();
+        renderStudentPool();
+      }
+    });
 
     loadTournaments();
     lucide.createIcons();

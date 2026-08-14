@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>IlmLiga — O‘rgan. Kurash. Yuksal.</title>
+  <title data-i18n="meta.title">IlmLiga — O‘rgan. Kurash. Yuksal.</title>
   <meta name="application-name" content="IlmLiga">
   <meta name="theme-color" content="#090d1b">
-  <meta name="description" content="Ingliz tilini o‘rganing, bilim janglarida bellashing va reytingda yuksaling.">
+  <meta name="description" content="Ingliz tilini o‘rganing, bilim janglarida bellashing va reytingda yuksaling." data-i18n-content="meta.description">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
   <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
   <link rel="stylesheet" href="/vendor/flag-icons/css/flag-icons.min.css">
@@ -17,11 +17,11 @@
 
   <main class="auth-shell">
     <header class="auth-topbar">
-      <a class="mini-brand" href="/" aria-label="IlmLiga bosh sahifasi">
+      <a class="mini-brand" href="/" aria-label="IlmLiga bosh sahifasi" data-i18n-aria-label="common.homeAria">
         <span data-logo></span><span>Ilm<span class="brand-accent">Liga</span></span>
       </a>
       <div class="language-switch">
-        <button type="button" class="language-button" data-language-toggle aria-label="Tilni almashtirish">
+        <button type="button" class="language-button" data-language-toggle aria-label="Tilni almashtirish" data-i18n-aria-label="common.languageSwitch">
           <span data-language-current><span class="fi fi-uz auth-flag auth-flag--current" aria-hidden="true"></span><span>UZ</span></span><span data-icon="chevron-down" data-icon-class="control-chevron"></span>
         </button>
         <div class="language-menu" data-language-menu></div>
@@ -71,7 +71,7 @@
           <div class="field">
             <label for="loginPhone" data-i18n="login.phone">Telefon raqami</label>
             <div class="phone-control">
-              <button type="button" class="country-trigger" id="loginCountryButton"><span class="fi fi-uz auth-flag" aria-hidden="true"></span><span>+998</span><span data-icon="chevron-down" data-icon-class="control-chevron"></span></button>
+              <button type="button" class="country-trigger" id="loginCountryButton" aria-label="Telefon kodi uchun davlatni tanlang" data-i18n-aria-label="common.choosePhoneCountry"><span class="fi fi-uz auth-flag" aria-hidden="true"></span><span>+998</span><span data-icon="chevron-down" data-icon-class="control-chevron"></span></button>
               <input class="phone-number" id="loginPhone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="90 123 45 67">
             </div>
           </div>
@@ -79,7 +79,7 @@
             <label for="loginPassword" data-i18n="login.password">Parol</label>
             <div class="password-control">
               <input class="text-input" id="loginPassword" type="password" autocomplete="current-password" data-i18n-placeholder="login.passwordPlaceholder" placeholder="Parolingiz">
-              <button type="button" class="password-toggle" data-password-toggle="loginPassword" aria-label="Show password"><span data-icon="eye"></span></button>
+              <button type="button" class="password-toggle" data-password-toggle="loginPassword" aria-label="Parolni ko‘rsatish" data-i18n-aria-label="common.showPassword"><span data-icon="eye"></span></button>
             </div>
           </div>
           <button type="submit" class="primary-button" id="loginSubmit" data-i18n="login.submit">Kirish</button>
@@ -99,7 +99,7 @@
           <div class="field">
             <label for="forgotPhone" data-i18n="login.phone">Telefon raqami</label>
             <div class="phone-control">
-              <button type="button" class="country-trigger" id="forgotCountryButton"><span class="fi fi-uz auth-flag" aria-hidden="true"></span><span>+998</span><span data-icon="chevron-down" data-icon-class="control-chevron"></span></button>
+              <button type="button" class="country-trigger" id="forgotCountryButton" aria-label="Telefon kodi uchun davlatni tanlang" data-i18n-aria-label="common.choosePhoneCountry"><span class="fi fi-uz auth-flag" aria-hidden="true"></span><span>+998</span><span data-icon="chevron-down" data-icon-class="control-chevron"></span></button>
               <input class="phone-number" id="forgotPhone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="90 123 45 67">
             </div>
           </div>
@@ -115,17 +115,17 @@
         <h1 class="auth-title" id="resetTitle" data-i18n="reset.title">Yangi parol</h1>
         <p class="auth-subtitle"><span id="resetPhoneText" class="otp-phone"></span> — <span data-i18n="reset.subtitle">6 xonali kodni kiriting va yangi parol o‘rnating</span></p>
         <form class="auth-form" id="resetForm" novalidate>
-          <div class="otp-row" id="resetOtp" aria-label="Tasdiqlash kodi">
-            <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="1-raqam"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="2-raqam"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="3-raqam"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="4-raqam"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="5-raqam"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="6-raqam">
+          <div class="otp-row" id="resetOtp" aria-label="Tasdiqlash kodi" data-i18n-aria-label="common.otpCode">
+            <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Tasdiqlash kodining 1-raqami" data-i18n-aria-label="common.otpDigit" data-i18n-number="1"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Tasdiqlash kodining 2-raqami" data-i18n-aria-label="common.otpDigit" data-i18n-number="2"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Tasdiqlash kodining 3-raqami" data-i18n-aria-label="common.otpDigit" data-i18n-number="3"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Tasdiqlash kodining 4-raqami" data-i18n-aria-label="common.otpDigit" data-i18n-number="4"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Tasdiqlash kodining 5-raqami" data-i18n-aria-label="common.otpDigit" data-i18n-number="5"><input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Tasdiqlash kodining 6-raqami" data-i18n-aria-label="common.otpDigit" data-i18n-number="6">
           </div>
           <div class="field">
             <label for="resetPassword" data-i18n="reset.password">Yangi parol</label>
-            <div class="password-control"><input class="text-input" id="resetPassword" type="password" autocomplete="new-password" data-i18n-placeholder="register.passwordPlaceholder"><button type="button" class="password-toggle" data-password-toggle="resetPassword" aria-label="Show password"><span data-icon="eye"></span></button></div>
+            <div class="password-control"><input class="text-input" id="resetPassword" type="password" autocomplete="new-password" data-i18n-placeholder="register.passwordPlaceholder"><button type="button" class="password-toggle" data-password-toggle="resetPassword" aria-label="Parolni ko‘rsatish" data-i18n-aria-label="common.showPassword"><span data-icon="eye"></span></button></div>
             <p class="field-hint" id="resetStrength"></p>
           </div>
           <div class="field">
             <label for="resetConfirm" data-i18n="reset.confirm">Parolni tasdiqlang</label>
-            <div class="password-control"><input class="text-input" id="resetConfirm" type="password" autocomplete="new-password" data-i18n-placeholder="register.confirmPlaceholder"><button type="button" class="password-toggle" data-password-toggle="resetConfirm" aria-label="Show password"><span data-icon="eye"></span></button></div>
+            <div class="password-control"><input class="text-input" id="resetConfirm" type="password" autocomplete="new-password" data-i18n-placeholder="register.confirmPlaceholder"><button type="button" class="password-toggle" data-password-toggle="resetConfirm" aria-label="Parolni ko‘rsatish" data-i18n-aria-label="common.showPassword"><span data-icon="eye"></span></button></div>
             <p class="field-hint" id="resetMatch"></p>
           </div>
           <button type="submit" class="primary-button" id="resetSubmit" disabled data-i18n="reset.submit">Parolni yangilash</button>
@@ -135,7 +135,7 @@
   </main>
 
   <dialog class="country-dialog" id="countryDialog">
-    <div class="dialog-head"><h2 data-i18n="common.selectCountry">Davlatni tanlang</h2><button type="button" class="dialog-close" data-dialog-close aria-label="Close"><span data-icon="x"></span></button></div>
+    <div class="dialog-head"><h2 data-i18n="common.selectCountry">Davlatni tanlang</h2><button type="button" class="dialog-close" data-dialog-close aria-label="Yopish" data-i18n-aria-label="common.close"><span data-icon="x"></span></button></div>
     <input class="text-input country-search" id="countrySearch" type="search" data-i18n-placeholder="common.searchCountry" placeholder="Davlat nomi yoki kodi">
     <div class="country-list" id="countryList"></div>
   </dialog>

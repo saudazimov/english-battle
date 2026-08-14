@@ -34,6 +34,15 @@
   style.textContent = css;
   document.head.appendChild(style);
 
+  function rankInfoT(key, fallback) {
+    if (window.IlmLigaI18n) return window.IlmLigaI18n.t(key);
+    return fallback;
+  }
+
+  function optionValue(value) {
+    return typeof value === "function" ? value() : value;
+  }
+
   function ensureDialog(headerIcon) {
     var existing = document.getElementById("rankInfoModal");
     if (existing) return existing;
@@ -51,7 +60,7 @@
         '<button type="button" class="rank-info-close" id="rankInfoClose" aria-label="Yopish"><i data-lucide="x"></i></button>' +
       '</div><div class="rank-info-body">' +
         '<div class="rank-info-summary"><div class="rank-info-stat"><span id="rankInfoPrimaryLabel"></span><b id="rankInfoPrimary"></b></div><div class="rank-info-stat"><span id="rankInfoSecondaryLabel"></span><b id="rankInfoSecondary"></b></div></div>' +
-        '<div class="rank-info-progress" id="rankInfoProgressWrap"><div class="rank-info-progress-top"><span>Keyingi bosqich</span><b id="rankInfoNext"></b></div><div class="rank-info-bar"><span id="rankInfoProgress"></span></div></div>' +
+        '<div class="rank-info-progress" id="rankInfoProgressWrap"><div class="rank-info-progress-top"><span id="rankInfoNextLabel"></span><b id="rankInfoNext"></b></div><div class="rank-info-bar"><span id="rankInfoProgress"></span></div></div>' +
         '<div id="rankInfoDetails"></div>' +
       '</div><div class="rank-info-foot"><a class="rank-info-link" id="rankInfoLink"><i data-lucide="bar-chart-3"></i><span></span></a></div></div>';
     document.body.appendChild(overlay);
@@ -60,8 +69,8 @@
 
   function renderRatingRules(container) {
     container.innerHTML =
-      '<div class="rank-info-rules"><div class="rank-info-rule"><b style="color:var(--green)">+20 RP</b>G‘alaba</div><div class="rank-info-rule"><b style="color:var(--text-dim)">0 RP</b>Durrang</div><div class="rank-info-rule"><b style="color:var(--red)">−20 RP</b>Mag‘lubiyat</div></div>' +
-      '<div class="rank-info-note"><i data-lucide="info"></i><span>Reytingli janglar RP’ga ta’sir qiladi. Casual va Practice rejimlari reytingni o‘zgartirmaydi.</span></div>';
+      '<div class="rank-info-rules"><div class="rank-info-rule"><b style="color:var(--green)">+20 RP</b>' + rankInfoT("rankInfo.win", "G‘alaba") + '</div><div class="rank-info-rule"><b style="color:var(--text-dim)">0 RP</b>' + rankInfoT("rankInfo.draw", "Durrang") + '</div><div class="rank-info-rule"><b style="color:var(--red)">−20 RP</b>' + rankInfoT("rankInfo.loss", "Mag‘lubiyat") + '</div></div>' +
+      '<div class="rank-info-note"><i data-lucide="info"></i><span>' + rankInfoT("rankInfo.ratingNote", "Reytingli janglar RP’ga ta’sir qiladi.") + '</span></div>';
   }
 
   function renderScopes(container, scopes) {
@@ -96,11 +105,13 @@
 
     function open() {
       var data = options.getData();
+      closeButton.setAttribute("aria-label", rankInfoT("common.close", "Yopish"));
+      document.getElementById("rankInfoNextLabel").textContent = rankInfoT("rankInfo.nextStage", "Keyingi bosqich");
       document.querySelector("#rankInfoModal .rank-info-head-ic").innerHTML = '<i data-lucide="' + (options.headerIcon || "trophy") + '"></i>';
-      document.getElementById("rankInfoTitle").textContent = options.title;
-      document.getElementById("rankInfoSub").textContent = options.subtitle;
-      document.getElementById("rankInfoPrimaryLabel").textContent = options.primaryLabel;
-      document.getElementById("rankInfoSecondaryLabel").textContent = options.secondaryLabel;
+      document.getElementById("rankInfoTitle").textContent = optionValue(options.title);
+      document.getElementById("rankInfoSub").textContent = optionValue(options.subtitle);
+      document.getElementById("rankInfoPrimaryLabel").textContent = optionValue(options.primaryLabel);
+      document.getElementById("rankInfoSecondaryLabel").textContent = optionValue(options.secondaryLabel);
       document.getElementById("rankInfoPrimary").textContent = data.primary;
       document.getElementById("rankInfoSecondary").textContent = data.secondary;
       var progressWrap = document.getElementById("rankInfoProgressWrap");
@@ -117,7 +128,7 @@
       footer.hidden = options.hideFooter === true;
       if (!footer.hidden) {
         link.href = options.footerHref;
-        link.querySelector("span").textContent = options.footerLabel;
+        link.querySelector("span").textContent = optionValue(options.footerLabel);
       }
       previousFocus = document.activeElement;
       overlay.classList.add("show");

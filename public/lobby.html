@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Battle Lobby</title>
+  <title data-i18n="lobby.metaTitle">IlmLiga — Battle Lobby</title>
+  <meta name="description" content="Jang rejimini tanlang, raqib toping va bilimingizni sinang." data-i18n-content="lobby.metaDescription">
   <link rel="stylesheet" href="/app.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -207,6 +208,57 @@
     .pc-stat-val { font-size: 20px; font-weight: 800; }
     .pc-green { color: var(--green); }
     .pc-gold { color: var(--gold); }
+
+    @media (max-width: 640px) {
+      .profile-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 20px;
+      }
+      .pc-info,
+      .pc-name-row,
+      .pc-meta,
+      .pc-stats {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+      }
+      .pc-name {
+        font-size: 22px;
+        overflow-wrap: anywhere;
+      }
+      .pc-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 12px;
+      }
+      .pc-stat,
+      .pc-stat > div {
+        min-width: 0;
+      }
+      .pc-stat-label {
+        overflow-wrap: anywhere;
+      }
+      .modes {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .mode-card {
+        min-width: 0;
+      }
+      .mode-title,
+      .mode-desc {
+        overflow-wrap: anywhere;
+      }
+      .find-btn {
+        width: 100%;
+        min-width: 0;
+        padding: 14px 16px;
+        font-size: 16px;
+        letter-spacing: 0.5px;
+      }
+    }
 
     /* Lucide ikona o'lchamlari */
     .nav-item .ic { width: 20px; height: 20px; }
@@ -602,7 +654,7 @@
     .party-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .party-title { font-size: 19px; font-weight: 800; }
     .party-sub { font-size: 13px; color: var(--text-dim); margin-top: 3px; }
-    .party-close-x { width: 34px; height: 34px; border-radius: 9px; background: var(--bg); display: grid; place-items: center; cursor: pointer; color: var(--text-dim); }
+    .party-close-x { width: 34px; height: 34px; padding: 0; border: 0; border-radius: 9px; background: var(--bg); display: grid; place-items: center; cursor: pointer; color: var(--text-dim); }
     .party-close-x:hover { color: var(--red); }
     .party-close-x i { width: 18px; height: 18px; }
 
@@ -672,8 +724,8 @@
       <div class="page-head">
         <div class="crest-ic"><i data-lucide="swords" style="width:28px;height:28px;"></i></div>
         <div>
-          <h1>Battle Lobby</h1>
-          <p>Choose your mode and find your opponent.</p>
+          <h1 data-i18n="lobby.heading">Battle Lobby</h1>
+          <p data-i18n="lobby.subtitle">Jang rejimini tanlang va raqibingizni toping.</p>
         </div>
       </div>
 
@@ -682,26 +734,26 @@
         <div class="pc-avatar" id="pcAvatar">J</div>
         <div class="pc-info">
           <div class="pc-name-row">
-            <span class="pc-name" id="pcName">O'yinchi</span>
+            <span class="pc-name" id="pcName" data-i18n="lobby.player">O‘yinchi</span>
           </div>
           <div class="pc-meta">
             <span class="pc-cefr">CEFR <b id="pcCefr">A1</b></span>
             <span class="pc-cefr-label" id="pcCefrLabel">Beginner</span>
             <span class="pc-divider"></span>
-            <span class="pc-league">League <b id="pcLeague">🥈 Silver</b></span>
+            <span class="pc-league"><span data-i18n="lobby.league">Liga</span> <b id="pcLeague">🥈 Silver</b></span>
           </div>
           <div class="pc-stats">
             <div class="pc-stat">
               <i data-lucide="trophy" class="pc-stat-ic" style="color:var(--gold);"></i>
-              <div><div class="pc-stat-label">Rating</div><div class="pc-stat-val" id="pcRating">1000</div></div>
+              <div><div class="pc-stat-label" data-i18n="lobby.rating">Reyting</div><div class="pc-stat-val" id="pcRating">1000</div></div>
             </div>
             <div class="pc-stat">
               <i data-lucide="target" class="pc-stat-ic" style="color:var(--green);"></i>
-              <div><div class="pc-stat-label">Win Rate</div><div class="pc-stat-val pc-green" id="pcWinRate">0%</div></div>
+              <div><div class="pc-stat-label" data-i18n="lobby.winRate">G‘alaba foizi</div><div class="pc-stat-val pc-green" id="pcWinRate">0%</div></div>
             </div>
             <div class="pc-stat">
               <i data-lucide="flame" class="pc-stat-ic" style="color:var(--gold);"></i>
-              <div><div class="pc-stat-label">Win Streak</div><div class="pc-stat-val pc-gold" id="pcStreak">0</div></div>
+              <div><div class="pc-stat-label" data-i18n="lobby.winStreak">G‘alaba seriyasi</div><div class="pc-stat-val pc-gold" id="pcStreak">0</div></div>
             </div>
           </div>
         </div>
@@ -712,62 +764,62 @@
         <div class="mode-card active" data-mode="ranked" onclick="selectMode(this)">
           <div class="mode-check"><i data-lucide="check"></i></div>
           <div class="mode-ic mode-ic-blue"><i data-lucide="swords"></i></div>
-          <div class="mode-title">1v1 Ranked</div>
-          <div class="mode-desc">Compete for rating</div>
+          <div class="mode-title" data-i18n="lobby.modeRanked">1v1 Ranked</div>
+          <div class="mode-desc" data-i18n="lobby.modeRankedDesc">Reyting uchun bellashing</div>
         </div>
         <div class="mode-card" data-mode="casual" onclick="selectMode(this)">
           <div class="mode-check"><i data-lucide="check"></i></div>
           <div class="mode-ic mode-ic-slate"><i data-lucide="swords"></i></div>
-          <div class="mode-title">1v1 Casual</div>
-          <div class="mode-desc">No pressure</div>
+          <div class="mode-title" data-i18n="lobby.modeCasual">1v1 Casual</div>
+          <div class="mode-desc" data-i18n="lobby.modeCasualDesc">Bosimsiz jang</div>
         </div>
         <div class="mode-card" data-mode="duo" onclick="selectMode(this)">
           <div class="mode-check"><i data-lucide="check"></i></div>
           <div class="mode-ic mode-ic-purple"><i data-lucide="users"></i></div>
-          <div class="mode-title">Duo (2v2)</div>
-          <div class="mode-desc">Jamoa jang</div>
+          <div class="mode-title" data-i18n="lobby.modeDuo">Duo (2v2)</div>
+          <div class="mode-desc" data-i18n="lobby.modeDuoDesc">Jamoaviy jang</div>
         </div>
         <div class="mode-card" data-mode="squad" onclick="selectMode(this)">
           <div class="mode-check"><i data-lucide="check"></i></div>
           <div class="mode-ic mode-ic-purple"><i data-lucide="swords"></i></div>
-          <div class="mode-title">Squad (4v4)</div>
-          <div class="mode-desc">Jamoaviy urush</div>
+          <div class="mode-title" data-i18n="lobby.modeSquad">Squad (4v4)</div>
+          <div class="mode-desc" data-i18n="lobby.modeSquadDesc">To‘rt kishilik jamoa jangi</div>
         </div>
         
         <div class="mode-card" data-mode="friend" onclick="selectMode(this)">
           <div class="mode-check"><i data-lucide="check"></i></div>
           <div class="mode-ic mode-ic-gold"><i data-lucide="user-plus"></i></div>
-          <div class="mode-title">Friend Challenge</div>
-          <div class="mode-desc">Challenge a friend</div>
+          <div class="mode-title" data-i18n="lobby.modeFriend">Do‘st bilan jang</div>
+          <div class="mode-desc" data-i18n="lobby.modeFriendDesc">Do‘stingizni jangga chorlang</div>
         </div>
         <div class="mode-card" data-mode="school" onclick="selectMode(this)">
           <div class="mode-check"><i data-lucide="check"></i></div>
           <div class="mode-ic mode-ic-cyan"><i data-lucide="building-2"></i></div>
-          <div class="mode-title">School Battle</div>
-          <div class="mode-desc">Represent your school</div>
+          <div class="mode-title" data-i18n="lobby.modeSchool">Maktab jangi</div>
+          <div class="mode-desc" data-i18n="lobby.modeSchoolDesc">Maktabingiz nomidan bellashing</div>
         </div>
       </div>
 
       <!-- Find Opponent -->
       <div class="card find-panel">
-        <h2 class="find-title">Find Opponent</h2>
+        <h2 class="find-title" data-i18n="lobby.findTitle">Raqib topish</h2>
         <div class="find-info">
           <div class="find-orb find-orb-left"><i data-lucide="swords"></i></div>
           <div class="find-stats">
             <div class="find-stat">
-              <div class="find-stat-label"><i data-lucide="gamepad-2"></i> Selected Mode</div>
+              <div class="find-stat-label"><i data-lucide="gamepad-2"></i> <span data-i18n="lobby.selectedMode">Tanlangan rejim</span></div>
               <div class="find-stat-val" id="fiMode">1v1 Ranked</div>
             </div>
             <div class="find-stat">
-              <div class="find-stat-label"><i data-lucide="bar-chart-3"></i> Your Level</div>
+              <div class="find-stat-label"><i data-lucide="bar-chart-3"></i> <span data-i18n="lobby.yourLevel">Darajangiz</span></div>
               <div class="find-stat-val" id="fiLevel">A1</div>
             </div>
             <div class="find-stat">
-              <div class="find-stat-label"><i data-lucide="clock"></i> Estimated Wait</div>
+              <div class="find-stat-label"><i data-lucide="clock"></i> <span data-i18n="lobby.estimatedWait">Taxminiy kutish</span></div>
               <div class="find-stat-val">00:18</div>
             </div>
             <div class="find-stat">
-              <div class="find-stat-label"><i data-lucide="signal"></i> Rating Range</div>
+              <div class="find-stat-label"><i data-lucide="signal"></i> <span data-i18n="lobby.ratingRange">Reyting oralig‘i</span></div>
               <div class="find-stat-val" id="fiRange">900 - 1100</div>
             </div>
           </div>
@@ -775,27 +827,27 @@
         </div>
         <button class="find-btn" onclick="findOpponent()">
           <i data-lucide="chevron-right"></i>
-          <span id="findBtnText">FIND OPPONENT</span>
+          <span id="findBtnText" data-i18n="lobby.findOpponent">RAQIB TOPISH</span>
           <i data-lucide="chevron-right"></i>
         </button>
-        <div class="find-note">You can cancel matchmaking at any time.</div>
+        <div class="find-note" data-i18n="lobby.findNote">Raqib qidiruvini istalgan payt bekor qilishingiz mumkin.</div>
       </div>
 
       <!-- Recent Opponents -->
       <div class="card recent-panel">
         <div class="recent-head">
-          <h3>Recent Opponents</h3>
-          <a class="view-all" onclick="window.location.href='/history.html'">View All <i data-lucide="chevron-right"></i></a>
+          <h3 data-i18n="lobby.recentOpponents">So‘nggi raqiblar</h3>
+          <a class="view-all" onclick="window.location.href='/history.html'"><span data-i18n="lobby.viewAll">Barchasini ko‘rish</span> <i data-lucide="chevron-right"></i></a>
         </div>
         <div class="recent-cols">
-          <span>Opponent</span>
-          <span>Result</span>
-          <span>Score</span>
-          <span>Rating</span>
+          <span data-i18n="lobby.opponent">Raqib</span>
+          <span data-i18n="lobby.result">Natija</span>
+          <span data-i18n="lobby.score">Hisob</span>
+          <span data-i18n="lobby.rating">Reyting</span>
           <span></span>
         </div>
         <div id="recentList">
-          <div class="recent-empty">Yuklanmoqda...</div>
+          <div class="recent-empty" data-i18n="common.loading">Yuklanmoqda...</div>
         </div>
       </div>
     </main>
@@ -805,7 +857,7 @@
 
       <!-- Current Rank -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Current Rank</span><button type="button" class="rb-info-btn" id="rankInfoButton" aria-label="Reyting tizimi haqida ma'lumot" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
+        <div class="rb-head"><span data-i18n="lobby.currentRank">Joriy liga</span><button type="button" class="rb-info-btn" id="rankInfoButton" aria-label="Reyting tizimi haqida ma’lumot" data-i18n-aria-label="lobby.rankInfoAria" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
         <div class="rank-display">
           <div class="rank-medal" id="rankMedal">💠</div>
           <div>
@@ -814,27 +866,27 @@
           </div>
         </div>
         <div class="rank-bar"><div class="rank-bar-fill" id="rankBarFill" style="width:40%;"></div></div>
-        <div class="rank-next">Next Rank: <span id="rankNext">Gold</span></div>
+        <div class="rank-next"><span data-i18n="lobby.nextRank">Keyingi liga:</span> <span id="rankNext">Gold</span></div>
       </div>
 
       <!-- Maktabim (School Battle) -->
       <div class="card rb-card" id="mySchoolCard">
-        <div class="rb-head"><span>Maktabim</span><a class="view-all" href="/rankings.html">Batafsil</a></div>
-        <div id="mySchoolBody"><div class="rb-empty">Yuklanmoqda...</div></div>
+        <div class="rb-head"><span data-i18n="lobby.mySchool">Maktabim</span><a class="view-all" href="/rankings.html" data-i18n="lobby.details">Batafsil</a></div>
+        <div id="mySchoolBody"><div class="rb-empty" data-i18n="common.loading">Yuklanmoqda...</div></div>
       </div>
 
       <!-- Daily Quests -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Daily Quests</span><span class="rb-timer"><i data-lucide="clock"></i> 12h 34m</span></div>
-        <div id="questList"><div class="rb-empty">Yuklanmoqda...</div></div>
+        <div class="rb-head"><span data-i18n="lobby.dailyQuests">Kunlik vazifalar</span><span class="rb-timer"><i data-lucide="clock"></i> 12h 34m</span></div>
+        <div id="questList"><div class="rb-empty" data-i18n="common.loading">Yuklanmoqda...</div></div>
       </div>
 
       <!-- Possible Rewards -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Possible Rewards</span></div>
+        <div class="rb-head"><span data-i18n="lobby.possibleRewards">Mumkin bo‘lgan mukofotlar</span></div>
         <div class="rewards-grid" id="rewardsGrid">
-          <div class="reward-box"><i data-lucide="coins" style="color:var(--gold);"></i><div class="reward-val" id="rwCoins">100</div><div class="reward-lbl">Coins</div></div>
-          <div class="reward-box"><i data-lucide="gem" style="color:var(--cyan);"></i><div class="reward-val" id="rwGems">10</div><div class="reward-lbl">Gems</div></div>
+          <div class="reward-box"><i data-lucide="coins" style="color:var(--gold);"></i><div class="reward-val" id="rwCoins">100</div><div class="reward-lbl" data-i18n="lobby.coins">Tangalar</div></div>
+          <div class="reward-box"><i data-lucide="gem" style="color:var(--cyan);"></i><div class="reward-val" id="rwGems">10</div><div class="reward-lbl" data-i18n="lobby.gems">Olmoslar</div></div>
           <div class="reward-box"><i data-lucide="zap" style="color:var(--accent);"></i><div class="reward-val" id="rwXp">200</div><div class="reward-lbl">XP</div></div>
           <div class="reward-box" id="rwLastBox"><i data-lucide="gift" style="color:var(--accent-2);" id="rwLastIcon"></i><div class="reward-val" id="rwLast">?</div><div class="reward-lbl" id="rwLastLbl">Skin</div></div>
         </div>
@@ -842,9 +894,9 @@
 
       <!-- Friends Online -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Friends Online</span><a class="view-all" onclick="window.location.href='/friends.html'">View All</a></div>
+        <div class="rb-head"><span data-i18n="lobby.friendsOnline">Onlayn do‘stlar</span><a class="view-all" onclick="window.location.href='/friends.html'" data-i18n="lobby.viewAll">Barchasini ko‘rish</a></div>
         <div class="friends-online" id="friendsOnline">
-          <div class="rb-empty">Yuklanmoqda...</div>
+          <div class="rb-empty" data-i18n="common.loading">Yuklanmoqda...</div>
         </div>
       </div>
     </aside>
@@ -855,15 +907,15 @@
     <div class="length-modal">
       <div class="length-head">
         <div>
-          <div class="length-title">Battle formatini tanlang</div>
-          <div class="length-sub">Savollar soni, vaqt va mukofotni tanlang</div>
+          <div class="length-title" data-i18n="lobby.formatTitle">Jang formatini tanlang</div>
+          <div class="length-sub" data-i18n="lobby.formatSubtitle">Savollar soni, vaqt va mukofotni tanlang</div>
         </div>
         <i data-lucide="x" class="length-close" onclick="closeLengthModal()"></i>
       </div>
       <div class="length-grid" id="lengthGrid"></div>
       <div class="length-foot">
-        <button class="length-cancel" onclick="closeLengthModal()">Bekor qilish</button>
-        <button class="length-start" onclick="startBattleWithLength()"><i data-lucide="swords"></i> Raqib topish</button>
+        <button class="length-cancel" onclick="closeLengthModal()" data-i18n="common.cancel">Bekor qilish</button>
+        <button class="length-start" onclick="startBattleWithLength()"><i data-lucide="swords"></i> <span data-i18n="lobby.findOpponent">Raqib topish</span></button>
       </div>
     </div>
   </div>
@@ -871,6 +923,7 @@
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/rank-info-dialog.js"></script>
   <script src="/profile-modal.js"></script>
@@ -898,18 +951,42 @@
     // Umumiy topbar (coins, gems, bell+notifications, avatar) — sidebar.js'dan
     renderTopbar();
 
+    function lobbyT(key, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+    }
+
+    function lobbyLocale() {
+      const language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return language === "ru" ? "ru-RU" : (language === "en" ? "en-US" : "uz-UZ");
+    }
+
+    function questTitle(quest) {
+      const keyByType = {
+        play_battles: "lobby.questPlayBattles",
+        win_battles: "lobby.questWinBattles",
+        correct_answers: "lobby.questCorrectAnswers",
+        earn_xp: "lobby.questEarnXp",
+      };
+      const key = keyByType[quest.quest_type];
+      return key ? lobbyT(key) : (quest.title || "");
+    }
+
     // Profil kartasini to'ldirish
-    const cefrLabels = { A1: "Beginner", A2: "Elementary", B1: "Intermediate", B2: "Upper-Intermediate", C1: "Advanced", C2: "Proficient" };
+    const cefrLabelKeys = { A1: "lobby.cefrA1", A2: "lobby.cefrA2", B1: "lobby.cefrB1", B2: "lobby.cefrB2", C1: "lobby.cefrC1", C2: "lobby.cefrC2" };
+
+    function cefrLabel(level) {
+      return lobbyT(cefrLabelKeys[level] || "lobby.cefrA1");
+    }
 
     // Liga nomi (faqat matn)
     function leagueName(rating) {
-      if (rating >= 2000) return "Grandmaster";
-      if (rating >= 1800) return "Master";
-      if (rating >= 1600) return "Diamond";
-      if (rating >= 1400) return "Platinum";
-      if (rating >= 1200) return "Gold";
-      if (rating >= 1000) return "Silver";
-      return "Bronze";
+      if (rating >= 2000) return lobbyT("lobby.rankGrandmaster");
+      if (rating >= 1800) return lobbyT("lobby.rankMaster");
+      if (rating >= 1600) return lobbyT("lobby.rankDiamond");
+      if (rating >= 1400) return lobbyT("lobby.rankPlatinum");
+      if (rating >= 1200) return lobbyT("lobby.rankGold");
+      if (rating >= 1000) return lobbyT("lobby.rankSilver");
+      return lobbyT("lobby.rankBronze");
     }
 
     // Liga ikon (SVG) + nom
@@ -928,7 +1005,7 @@
     document.getElementById("pcAvatar").innerHTML = avatarHTML(user.first_name, user.profile_picture);
     document.getElementById("pcName").textContent = user.first_name + " " + user.last_name;
     document.getElementById("pcCefr").textContent = user.cefr_level || "A1";
-    document.getElementById("pcCefrLabel").textContent = cefrLabels[user.cefr_level] || "Beginner";
+    document.getElementById("pcCefrLabel").textContent = cefrLabel(user.cefr_level);
     document.getElementById("pcLeague").innerHTML = leagueFull(user.rating || 1000);
     document.getElementById("pcRating").textContent = user.rating || 1000;
 
@@ -947,7 +1024,7 @@
           // CEFR daraja — bazadan eng yangi (Ultimate Exam'dan keyin A1->A2 ko'tarilsa, darhol to'g'ri ko'rinadi)
           if (data.user.cefr_level) {
             document.getElementById("pcCefr").textContent = data.user.cefr_level;
-            document.getElementById("pcCefrLabel").textContent = cefrLabels[data.user.cefr_level] || "Beginner";
+            document.getElementById("pcCefrLabel").textContent = cefrLabel(data.user.cefr_level);
           }
 
           // Ism-familya — bazadan eng yangi (profil tahrirlansa to'g'ri ko'rinadi)
@@ -999,32 +1076,32 @@
     //   last: oxirgi quti (icon = lucide nomi, color, val, lbl)
     const modeConfig = {
       ranked: {
-        name: "1v1 Ranked", btn: "FIND OPPONENT", rating: true,
-        rewards: { coins: 100, gems: 10, xp: 200, last: { icon: "gift", color: "var(--accent-2)", val: "?", lbl: "Skin" } }
+        nameKey: "lobby.modeRanked", btnKey: "lobby.findOpponent", rating: true,
+        rewards: { coins: 100, gems: 10, xp: 200, last: { icon: "gift", color: "var(--accent-2)", val: "?", labelKey: "lobby.skin" } }
       },
       casual: {
-        name: "1v1 Casual", btn: "FIND OPPONENT", rating: false,
-        rewards: { coins: 50, gems: 5, xp: 100, last: { icon: "gift", color: "var(--accent-2)", val: "?", lbl: "Skin" } }
+        nameKey: "lobby.modeCasual", btnKey: "lobby.findOpponent", rating: false,
+        rewards: { coins: 50, gems: 5, xp: 100, last: { icon: "gift", color: "var(--accent-2)", val: "?", labelKey: "lobby.skin" } }
       },
       duo: {
-        name: "Duo (2v2)", btn: "FIND TEAM", rating: true,
-        rewards: { coins: 100, gems: 10, xp: 200, last: { icon: "users", color: "var(--accent)", val: "2v2", lbl: "Team" } }
+        nameKey: "lobby.modeDuo", btnKey: "lobby.findTeam", rating: true,
+        rewards: { coins: 100, gems: 10, xp: 200, last: { icon: "users", color: "var(--accent)", val: "2v2", labelKey: "lobby.team" } }
       },
       squad: {
-        name: "Squad (4v4)", btn: "FIND SQUAD", rating: true,
-        rewards: { coins: 200, gems: 20, xp: 400, last: { icon: "swords", color: "var(--gold)", val: "4v4", lbl: "Squad" } }
+        nameKey: "lobby.modeSquad", btnKey: "lobby.findSquad", rating: true,
+        rewards: { coins: 200, gems: 20, xp: 400, last: { icon: "swords", color: "var(--gold)", val: "4v4", labelKey: "lobby.squad" } }
       },
       practice: {
-        name: "Practice Mode", btn: "START PRACTICE", rating: false,
-        rewards: { coins: 10, gems: 0, xp: 50, last: { icon: "book-open", color: "var(--green)", val: "+", lbl: "Skill" } }
+        nameKey: "nav.practice", btnKey: "nav.practice", rating: false,
+        rewards: { coins: 10, gems: 0, xp: 50, last: { icon: "book-open", color: "var(--green)", val: "+", labelKey: "lobby.skill" } }
       },
       friend: {
-        name: "Friend Challenge", btn: "CHALLENGE FRIEND", rating: false,
-        rewards: { coins: 30, gems: 3, xp: 80, last: { icon: "heart", color: "var(--red)", val: "+", lbl: "Friend" } }
+        nameKey: "lobby.modeFriend", btnKey: "lobby.challengeFriend", rating: false,
+        rewards: { coins: 30, gems: 3, xp: 80, last: { icon: "heart", color: "var(--red)", val: "+", labelKey: "lobby.friend" } }
       },
       school: {
-        name: "School Battle", btn: "FIND OPPONENT", rating: true,
-        rewards: { coins: 80, gems: 8, xp: 150, last: { icon: "building-2", color: "var(--cyan)", val: "+", lbl: "School" } }
+        nameKey: "lobby.modeSchool", btnKey: "lobby.findOpponent", rating: true,
+        rewards: { coins: 80, gems: 8, xp: 150, last: { icon: "building-2", color: "var(--cyan)", val: "+", labelKey: "lobby.school" } }
       }
     };
 
@@ -1033,7 +1110,7 @@
       const cfg = modeConfig[selectedMode] || modeConfig.ranked;
 
       // --- Find panel ---
-      document.getElementById("fiMode").textContent = cfg.name;
+      document.getElementById("fiMode").textContent = lobbyT(cfg.nameKey);
       document.getElementById("fiLevel").textContent = user.cefr_level || "A1";
 
       // Rating Range: faqat ratingli rejimlarda ko'rsatamiz
@@ -1048,7 +1125,7 @@
       }
 
       // Tugma matni
-      document.getElementById("findBtnText").textContent = cfg.btn;
+      document.getElementById("findBtnText").textContent = lobbyT(cfg.btnKey);
 
       // --- Possible Rewards ---
       document.getElementById("rwCoins").textContent = cfg.rewards.coins;
@@ -1057,7 +1134,7 @@
 
       const last = cfg.rewards.last;
       document.getElementById("rwLast").textContent = last.val;
-      document.getElementById("rwLastLbl").textContent = last.lbl;
+      document.getElementById("rwLastLbl").textContent = lobbyT(last.labelKey);
       const lastIcon = document.getElementById("rwLastIcon");
       lastIcon.setAttribute("data-lucide", last.icon);
       lastIcon.style.color = last.color;
@@ -1089,10 +1166,10 @@
 
     // ===== BATTLE FORMAT (savol soni) MODALI =====
     const battleLengths = {
-      quick:    { label: "Quick",    uzLabel: "Tezkor",       questions: 10, totalSeconds: 150, xp: 4 },
-      standard: { label: "Standard", uzLabel: "Standart",     questions: 20, totalSeconds: 300, xp: 8, recommended: true },
-      extended: { label: "Extended", uzLabel: "Uzaytirilgan", questions: 30, totalSeconds: 450, xp: 12 },
-      marathon: { label: "Marathon", uzLabel: "Marafon",      questions: 40, totalSeconds: 600, xp: 16 },
+      quick:    { nameKey: "lobby.formatQuick", descKey: "lobby.formatQuickDesc", questions: 10, totalSeconds: 150, xp: 4 },
+      standard: { nameKey: "lobby.formatStandard", descKey: "lobby.formatStandardDesc", questions: 20, totalSeconds: 300, xp: 8, recommended: true },
+      extended: { nameKey: "lobby.formatExtended", descKey: "lobby.formatExtendedDesc", questions: 30, totalSeconds: 450, xp: 12 },
+      marathon: { nameKey: "lobby.formatMarathon", descKey: "lobby.formatMarathonDesc", questions: 40, totalSeconds: 600, xp: 16 },
     };
     let selectedLength = "standard"; // recommended default
 
@@ -1108,10 +1185,10 @@
         const active = key === selectedLength ? " active" : "";
         return '<div class="length-card' + active + '" data-key="' + key + '" onclick="selectLength(\'' + key + '\')">' +
             '<div class="lf-check"><i data-lucide="check"></i></div>' +
-            '<div class="lf-name">' + L.label + '</div>' +
-            '<div class="lf-uz">' + L.uzLabel + '</div>' +
+            '<div class="lf-name">' + lobbyT(L.nameKey) + '</div>' +
+            '<div class="lf-uz">' + lobbyT(L.descKey) + '</div>' +
             '<div class="lf-rows">' +
-              '<div class="lf-row"><i data-lucide="list-checks"></i> ' + L.questions + ' savol</div>' +
+              '<div class="lf-row"><i data-lucide="list-checks"></i> ' + lobbyT("lobby.questions", { count: L.questions }) + '</div>' +
               '<div class="lf-row"><i data-lucide="clock"></i> ' + fmtTime(L.totalSeconds) + '</div>' +
               '<div class="lf-row lf-xp"><i data-lucide="zap"></i> +' + L.xp + ' XP</div>' +
             '</div>' +
@@ -1220,9 +1297,9 @@
         if (battles.length === 0) {
           list.innerHTML = stateBox(
             "blue", "swords",
-            "Hali battle tarixi yo'q",
-            "Birinchi battle'ingizni boshlang va raqiblaringiz shu yerda ko'rinadi.",
-            "Find Opponent", "scrollToFind()"
+            lobbyT("lobby.noHistory"),
+            lobbyT("lobby.noHistoryText"),
+            lobbyT("lobby.findTitle"), "scrollToFind()"
           );
           lucide.createIcons();
           return;
@@ -1233,14 +1310,14 @@
         battles.slice(0, 4).forEach(b => {
           const isWin = b.outcome === "win";
           const isDraw = b.outcome === "draw";
-          const oppName = escapeHtml(b.opponent_name || "Raqib"); // Sprint 1: XSS himoya
+          const oppName = escapeHtml(b.opponent_name || lobbyT("lobby.opponentFallback")); // Sprint 1: XSS himoya
           const ratingChange = b.rating_change >= 0 ? "+" + b.rating_change : b.rating_change;
           const ratingColor = b.rating_change >= 0 ? "var(--green)" : "#f87171";
 
           const resClass = isWin ? "res-win" : (isDraw ? "res-draw" : "res-lose");
           const resHtml = isWin
-            ? '<i data-lucide="trophy"></i> Victory'
-            : (isDraw ? '<i data-lucide="minus"></i> Draw' : '<i data-lucide="x"></i> Defeat');
+            ? '<i data-lucide="trophy"></i> ' + lobbyT("lobby.victory")
+            : (isDraw ? '<i data-lucide="minus"></i> ' + lobbyT("lobby.draw") : '<i data-lucide="x"></i> ' + lobbyT("lobby.defeat"));
 
           const oppId = b.opponent_id || "";
 
@@ -1257,7 +1334,7 @@
             '<div class="recent-rating" style="color:' + ratingColor + ';">' + ratingChange + '</div>' +
             '<div>' +
               '<button class="rematch-btn" ' + (oppId ? 'onclick="requestRematch(\'' + oppId + '\')"' : 'disabled') + '>' +
-                '<i data-lucide="rotate-ccw"></i> Qayta jang' +
+                '<i data-lucide="rotate-ccw"></i> ' + lobbyT("lobby.rematch") +
               '</button>' +
             '</div>';
           list.appendChild(row);
@@ -1267,9 +1344,9 @@
         // 4) ERROR: yuklab bo'lmadi
         list.innerHTML = stateBox(
           "red", "alert-triangle",
-          "Ma'lumotlarni yuklashda xatolik",
-          "Battle tarixini yuklab bo'lmadi.",
-          "Qayta urinish", "loadRecent()"
+          lobbyT("lobby.loadError"),
+          lobbyT("lobby.historyLoadError"),
+          lobbyT("lobby.retry"), "loadRecent()"
         );
         lucide.createIcons();
       }
@@ -1284,14 +1361,14 @@
     loadRecent();
     function requestRematch(opponentId) {
       var s = partySocket();
-      if (!s || !s.connected) return showToast("Serverga ulanish kutilmoqda");
+      if (!s || !s.connected) return showToast(lobbyT("lobby.serverWaiting"));
       s.emit("requestRematch", {
         opponentId: opponentId,
         myName: ((user.first_name || "") + " " + (user.last_name || "")).trim(),
         level: user.cefr_level || "A1",
         lengthKey: "standard",
       });
-      showToast("Qayta jang so'rovi yuborildi");
+      showToast(lobbyT("lobby.rematchSent"));
     }
     // Raqib profilini ko'rish (o'sha sahifada modal'da ochiladi)
     function viewOppProfile(opponentId) {
@@ -1308,50 +1385,50 @@
       const r = user.rating || 1000;
       const ic = (n, c) => '<i data-lucide="' + n + '" style="width:100%;height:100%;color:' + c + ';"></i>';
       const leagues = [
-        { name: "Bronze", min: 0, max: 999, icon: ic("shield", "#cd7f32") },
-        { name: "Silver", min: 1000, max: 1199, icon: ic("shield", "#cbd5e1") },
-        { name: "Gold", min: 1200, max: 1399, icon: ic("medal", "#fbbf24") },
-        { name: "Platinum", min: 1400, max: 1599, icon: ic("gem", "#5b8cff") },
-        { name: "Diamond", min: 1600, max: 1799, icon: ic("gem", "#38e1ff") },
-        { name: "Master", min: 1800, max: 1999, icon: ic("crown", "#a855f7") },
-        { name: "Grandmaster", min: 2000, max: 99999, icon: ic("crown", "#fbbf24") },
+        { nameKey: "lobby.rankBronze", min: 0, max: 999, icon: ic("shield", "#cd7f32") },
+        { nameKey: "lobby.rankSilver", min: 1000, max: 1199, icon: ic("shield", "#cbd5e1") },
+        { nameKey: "lobby.rankGold", min: 1200, max: 1399, icon: ic("medal", "#fbbf24") },
+        { nameKey: "lobby.rankPlatinum", min: 1400, max: 1599, icon: ic("gem", "#5b8cff") },
+        { nameKey: "lobby.rankDiamond", min: 1600, max: 1799, icon: ic("gem", "#38e1ff") },
+        { nameKey: "lobby.rankMaster", min: 1800, max: 1999, icon: ic("crown", "#a855f7") },
+        { nameKey: "lobby.rankGrandmaster", min: 2000, max: 99999, icon: ic("crown", "#fbbf24") },
       ];
       let cur = leagues[0], idx = 0;
       leagues.forEach((l, i) => { if (r >= l.min && r <= l.max) { cur = l; idx = i; } });
       const next = leagues[idx + 1];
 
       document.getElementById("rankMedal").innerHTML = cur.icon;
-      document.getElementById("rankName").textContent = cur.name;
+      document.getElementById("rankName").textContent = lobbyT(cur.nameKey);
       document.getElementById("rankRP").textContent = r;
 
       if (next) {
         const range = cur.max - cur.min + 1;
         const prog = Math.round(((r - cur.min) / range) * 100);
         document.getElementById("rankBarFill").style.width = prog + "%";
-        document.getElementById("rankNext").textContent = next.name;
+        document.getElementById("rankNext").textContent = lobbyT(next.nameKey);
       } else {
         document.getElementById("rankBarFill").style.width = "100%";
-        document.getElementById("rankNext").textContent = "Eng yuqori!";
+        document.getElementById("rankNext").textContent = lobbyT("lobby.highest");
       }
     }
     setupRank();
 
     createRankInfoDialog({
       triggerId: "rankInfoButton",
-      title: "Reyting tizimi",
-      subtitle: "Ligangiz va RP o‘sishi haqida",
-      primaryLabel: "Joriy liga",
-      secondaryLabel: "Joriy reyting",
+      get title() { return lobbyT("lobby.rankSystem"); },
+      get subtitle() { return lobbyT("lobby.rankSystemSub"); },
+      get primaryLabel() { return lobbyT("lobby.currentLeague"); },
+      get secondaryLabel() { return lobbyT("lobby.currentRating"); },
       detailType: "rating",
       footerHref: "/leaderboard.html",
-      footerLabel: "To‘liq ranking",
+      get footerLabel() { return lobbyT("lobby.fullRanking"); },
       getData: function () {
         const nextRank = document.getElementById("rankNext").textContent || "—";
         return {
           primary: document.getElementById("rankName").textContent || "—",
           secondary: (document.getElementById("rankRP").textContent || "0") + " RP",
           progress: {
-            label: nextRank === "Eng yuqori!" ? "Maksimal liga" : nextRank,
+            label: nextRank === lobbyT("lobby.highest") ? lobbyT("lobby.maxLeague") : nextRank,
             percent: document.getElementById("rankBarFill").style.width || "0%",
           },
         };
@@ -1378,8 +1455,8 @@
         if (quests.length === 0) {
           list.innerHTML = stateBox(
             "blue", "clipboard-list",
-            "Vazifalar tayyorlanmoqda",
-            "Bugungi vazifalar tez orada shu yerda paydo bo'ladi.",
+            lobbyT("lobby.questsPreparing"),
+            lobbyT("lobby.questsPreparingText"),
             null, null
           );
           lucide.createIcons();
@@ -1396,7 +1473,7 @@
           item.innerHTML =
             '<div class="quest-top">' +
               '<i data-lucide="target" class="quest-ic"></i>' +
-              '<span class="quest-name">' + q.title + '</span>' +
+              '<span class="quest-name">' + escapeHtml(questTitle(q)) + '</span>' +
               '<span class="quest-prog-text">' + q.progress + ' / ' + q.target + '</span>' +
               '<span class="quest-reward"><i data-lucide="coins"></i> ' + q.xp_reward + '</span>' +
             '</div>' +
@@ -1408,9 +1485,9 @@
         // ERROR
         list.innerHTML = stateBox(
           "red", "alert-triangle",
-          "Yuklashda xatolik",
-          "Vazifalarni yuklab bo'lmadi.",
-          "Qayta urinish", "loadQuests()"
+          lobbyT("lobby.loadError"),
+          lobbyT("lobby.questsLoadError"),
+          lobbyT("lobby.retry"), "loadQuests()"
         );
         lucide.createIcons();
       }
@@ -1424,7 +1501,7 @@
         var res = await authFetch("/school-battle/my");
         var d = await res.json();
         if (!d.has_school) {
-          body.innerHTML = '<div class="ms-empty"><div class="ms-empty-txt">Maktab tanlanmagan. Profilingizda maktabni belgilang — keyin maktabingiz uchun jang qiling.</div></div>';
+          body.innerHTML = '<div class="ms-empty"><div class="ms-empty-txt">' + lobbyT("lobby.noSchool") + '</div></div>';
           return;
         }
         var initial = (d.school || "?").charAt(0).toUpperCase();
@@ -1434,24 +1511,24 @@
           '<div class="ms-school-loc">' + escapeHtml((d.district || "") + (d.region ? ", " + d.region : "")) + '</div></div></div>';
         if (!d.total_points) {
           body.innerHTML = schoolBlock +
-            '<div class="ms-empty"><div class="ms-empty-txt">Hali ochko yo\'q. Birinchi jangni yutib, maktabingizga birinchi ochkoni qo\'shing!</div></div>';
+            '<div class="ms-empty"><div class="ms-empty-txt">' + lobbyT("lobby.noSchoolPoints") + '</div></div>';
           return;
         }
         var rankBlock =
           '<div class="ms-rank-row"><div class="ms-rank-num">#' + d.rank_district + '</div>' +
-          '<div class="ms-rank-ctx">tumanda<br><span class="ms-rank-of">' + d.total_district + ' maktabdan</span></div></div>' +
-          '<div class="ms-rank-sub">Viloyatda #' + d.rank_region + ' · Respublikada #' + d.rank_national + '</div>';
+          '<div class="ms-rank-ctx">' + lobbyT("lobby.inDistrict") + '<br><span class="ms-rank-of">' + lobbyT("lobby.fromSchools", { count: d.total_district }) + '</span></div></div>' +
+          '<div class="ms-rank-sub">' + lobbyT("lobby.regionRank", { rank: d.rank_region }) + ' · ' + lobbyT("lobby.nationalRank", { rank: d.rank_national }) + '</div>';
         var statsBlock =
           '<div class="ms-stats">' +
-          '<div class="ms-stat"><div class="ms-stat-val">' + Number(d.total_points).toLocaleString() + '</div><div class="ms-stat-lbl">Jami ochko</div></div>' +
-          '<div class="ms-stat"><div class="ms-stat-val">' + Number(d.season_points).toLocaleString() + '</div><div class="ms-stat-lbl">Bu mavsum</div></div>' +
+          '<div class="ms-stat"><div class="ms-stat-val">' + Number(d.total_points).toLocaleString(lobbyLocale()) + '</div><div class="ms-stat-lbl">' + lobbyT("lobby.totalPoints") + '</div></div>' +
+          '<div class="ms-stat"><div class="ms-stat-val">' + Number(d.season_points).toLocaleString(lobbyLocale()) + '</div><div class="ms-stat-lbl">' + lobbyT("lobby.thisSeason") + '</div></div>' +
           '</div>';
         var contribBlock =
-          '<div class="ms-contrib"><i data-lucide="user"></i> Sening hissang: <b>' + Number(d.my_contribution).toLocaleString() + '</b> · Maktabda #' + d.my_rank_in_school + '</div>';
+          '<div class="ms-contrib"><i data-lucide="user"></i> ' + lobbyT("lobby.yourContribution", { points: '<b>' + Number(d.my_contribution).toLocaleString(lobbyLocale()) + '</b>' }) + ' · ' + lobbyT("lobby.schoolRank", { rank: d.my_rank_in_school }) + '</div>';
         body.innerHTML = schoolBlock + rankBlock + statsBlock + contribBlock;
         if (window.lucide) lucide.createIcons();
       } catch (err) {
-        body.innerHTML = '<div class="rb-empty">Maktab ma\'lumotini yuklab bo\'lmadi</div>';
+        body.innerHTML = '<div class="rb-empty">' + lobbyT("lobby.schoolLoadError") + '</div>';
       }
     }
     loadMySchool();
@@ -1472,9 +1549,9 @@
         if (friends.length === 0) {
           box.innerHTML = stateBox(
             "blue", "user-plus",
-            "Hali do'st yo'q",
-            "Do'st qo'shing va ular bilan battle qiling.",
-            "Do'st qo'shish", "window.location.href='/friends.html'"
+            lobbyT("lobby.noFriends"),
+            lobbyT("lobby.noFriendsText"),
+            lobbyT("lobby.addFriend"), "window.location.href='/friends.html'"
           );
           lucide.createIcons();
           return;
@@ -1487,9 +1564,9 @@
         if (onlineFriends.length === 0) {
           box.innerHTML = stateBox(
             "blue", "users",
-            "Hozir onlayn do'st yo'q",
-            "Do'stlaringiz onlayn bo'lganda shu yerda ko'rinadi.",
-            "Do'st qo'shish", "window.location.href='/friends.html'"
+            lobbyT("lobby.noOnlineFriends"),
+            lobbyT("lobby.noOnlineFriendsText"),
+            lobbyT("lobby.addFriend"), "window.location.href='/friends.html'"
           );
           lucide.createIcons();
           return;
@@ -1504,21 +1581,21 @@
               '<span style="position:absolute; bottom:2px; right:2px; width:12px; height:12px; border-radius:50%; background:#34d399; border:2px solid #070b16;"></span>' +
             '</div>' +
             '<div style="font-size:11px; margin-top:6px; text-align:center;">' + escapeHtml(f.first_name || "") + '</div>' +
-            '<div style="font-size:10px; color:#34d399; text-align:center;">Online</div>';
+            '<div style="font-size:10px; color:#34d399; text-align:center;">' + lobbyT("lobby.online") + '</div>';
           box.appendChild(chip);
         });
         if (onlineFriends.length > 4) {
           const more = document.createElement("div");
           more.className = "friend-chip";
-          more.innerHTML = '<div class="fava" style="background:var(--panel-2);">+' + (onlineFriends.length - 4) + '</div><div class="fname">More</div>';
+          more.innerHTML = '<div class="fava" style="background:var(--panel-2);">+' + (onlineFriends.length - 4) + '</div><div class="fname">' + lobbyT("lobby.more") + '</div>';
           box.appendChild(more);
         }
       } catch (err) {
         box.innerHTML = stateBox(
           "red", "alert-triangle",
-          "Yuklashda xatolik",
-          "Do'stlar ro'yxatini yuklab bo'lmadi.",
-          "Qayta urinish", "loadFriendsOnline()"
+          lobbyT("lobby.loadError"),
+          lobbyT("lobby.friendsLoadError"),
+          lobbyT("lobby.retry"), "loadFriendsOnline()"
         );
         lucide.createIcons();
       }
@@ -1557,7 +1634,7 @@
 
     function attachPartyEvents(s) {
       s.on("rematchRequested", function (d) {
-        var accepted = window.confirm((d.fromName || "Raqib") + " sizni qayta jangga chaqirdi. Qabul qilasizmi?");
+        var accepted = window.confirm(lobbyT("lobby.rematchConfirm", { name: d.fromName || lobbyT("lobby.opponentFallback") }));
         s.emit("rematchResponse", {
           accepted: accepted,
           fromSocketId: d.fromSocketId,
@@ -1568,8 +1645,8 @@
           lengthKey: d.lengthKey || "standard",
         });
       });
-      s.on("rematchUnavailable", function (d) { showToast((d && d.message) || "Raqib hozir mavjud emas"); });
-      s.on("rematchDeclined", function (d) { showToast((d && d.byName ? d.byName : "Raqib") + " so'rovni rad etdi"); });
+      s.on("rematchUnavailable", function (d) { showToast((d && d.message) || lobbyT("lobby.rematchUnavailable")); });
+      s.on("rematchDeclined", function (d) { showToast(lobbyT("lobby.rematchDeclined", { name: d && d.byName ? d.byName : lobbyT("lobby.opponentFallback") })); });
       s.on("partyCreated", function (d) {
         // party yaratildi — panel ochiladi (partyUpdated bilan to'ladi)
       });
@@ -1585,13 +1662,13 @@
       s.on("partyInviteSent", function (d) {
         // taklif yuborildi — do'st tugmasini "Yuborildi" qilamiz
         var btn = document.getElementById("inviteBtn_" + d.toUserId);
-        if (btn) { btn.textContent = "Yuborildi"; btn.disabled = true; }
+        if (btn) { btn.textContent = lobbyT("lobby.inviteSent"); btn.disabled = true; }
       });
       s.on("partyInviteDeclined", function (d) {
-        showToast((d.byName || "Do'stingiz") + " taklifni rad etdi");
+        showToast(lobbyT("lobby.friendDeclined", { name: d.byName || lobbyT("lobby.friendFallback") }));
       });
       s.on("partyError", function (d) {
-        showToast(d.message || "Party xatosi");
+        showToast(d.message || lobbyT("lobby.partyError"));
       });
       s.on("partyLeft", function () {
         partyState = null;
@@ -1619,8 +1696,8 @@
     function choosePlayParty() {
       closePartyChoice();
       var s = partySocket();
-      if (!s) { showToast("Ulanish kutilmoqda, qayta urinib ko'ring"); return; }
-      s.emit("createParty", { userId: user.id, name: user.first_name || "O'yinchi", teamMode: partyChoiceMode, profile_picture: user.profile_picture || null });
+      if (!s) { showToast(lobbyT("lobby.connectionWaiting")); return; }
+      s.emit("createParty", { userId: user.id, name: user.first_name || lobbyT("lobby.playerFallback"), teamMode: partyChoiceMode, profile_picture: user.profile_picture || null });
     }
 
     // ---- Party panel ----
@@ -1649,12 +1726,12 @@
         membersHtml += '<div class="party-member' + (m.isLeader ? ' leader' : '') + '">' +
           '<div class="party-member-ava">' + avaInner + '</div>' +
           '<div class="party-member-name">' + escapeHtml(m.name) + '</div>' +
-          '<div class="party-member-badge ' + (m.isLeader ? 'leader' : 'member') + '">' + (m.isLeader ? 'Lider' : 'A\'zo') + '</div></div>';
+          '<div class="party-member-badge ' + (m.isLeader ? 'leader' : 'member') + '">' + (m.isLeader ? lobbyT("lobby.leader") : lobbyT("lobby.member")) + '</div></div>';
       });
       // Bo'sh slotlar
       var emptySlots = partyState.maxSize - partyState.members.length;
       for (var i = 0; i < emptySlots; i++) {
-        membersHtml += '<div class="party-slot-empty"><div class="party-slot-empty-ava"><i data-lucide="user" style="width:18px;height:18px;"></i></div><div class="party-slot-empty-text">Bo\'sh joy — do\'st chaqiring</div></div>';
+        membersHtml += '<div class="party-slot-empty"><div class="party-slot-empty-ava"><i data-lucide="user" style="width:18px;height:18px;"></i></div><div class="party-slot-empty-text">' + lobbyT("lobby.emptySlot") + '</div></div>';
       }
       document.getElementById("ppMembers").innerHTML = membersHtml;
 
@@ -1667,7 +1744,7 @@
       if (amLeader) {
         startBtn.style.display = "flex";
         startBtn.disabled = false;
-        document.getElementById("ppStartText").textContent = partyState.members.length < 2 ? "Kamida 2 o'yinchi kerak" : "Jang boshlash";
+        document.getElementById("ppStartText").textContent = partyState.members.length < 2 ? lobbyT("lobby.needTwoPlayers") : lobbyT("lobby.startBattle");
         startBtn.disabled = partyState.members.length < 2;
         waitNote.style.display = "none";
       } else {
@@ -1688,7 +1765,7 @@
         friends = friends.filter(function (f) { return inParty.indexOf(String(f.id)) === -1; });
 
         if (friends.length === 0) {
-          box.innerHTML = '<div class="party-empty-sm">Chaqirish uchun onlayn do\'st yo\'q</div>';
+          box.innerHTML = '<div class="party-empty-sm">' + lobbyT("lobby.noFriendsToInvite") + '</div>';
           return;
         }
         var full = partyState && partyState.members.length >= partyState.maxSize;
@@ -1698,10 +1775,10 @@
           var ava = f.profile_picture ? '<img src="' + escapeHtml(f.profile_picture) + '" alt="">' : escapeHtml(initial);
           return '<div class="party-friend-item"><div class="party-friend-ava">' + ava + '<span class="party-friend-dot"></span></div>' +
             '<div class="party-friend-name">' + escapeHtml(nm.trim()) + '</div>' +
-            '<button class="party-invite-btn" id="inviteBtn_' + f.id + '" onclick="invitePartyFriend(' + f.id + ')"' + (full ? ' disabled' : '') + '>Chaqirish</button></div>';
+            '<button class="party-invite-btn" id="inviteBtn_' + f.id + '" onclick="invitePartyFriend(' + f.id + ')"' + (full ? ' disabled' : '') + '>' + lobbyT("lobby.invite") + '</button></div>';
         }).join("");
       } catch (err) {
-        box.innerHTML = '<div class="party-empty-sm">Do\'stlarni yuklab bo\'lmadi</div>';
+        box.innerHTML = '<div class="party-empty-sm">' + lobbyT("lobby.friendsCouldNotLoad") + '</div>';
       }
     }
 
@@ -1709,7 +1786,7 @@
       if (!partyState) return;
       var s = partySocket();
       if (!s) return;
-      s.emit("inviteToParty", { partyId: partyState.partyId, fromName: user.first_name || "O'yinchi", toUserId: friendId });
+      s.emit("inviteToParty", { partyId: partyState.partyId, fromName: user.first_name || lobbyT("lobby.playerFallback"), toUserId: friendId });
     }
 
     function startPartyMatch() {
@@ -1720,20 +1797,24 @@
     }
 
     // ---- Taklif popup (chaqirilgan do'st) ----
-    function showInvitePopup(d) {
+    function renderInvitePopupText(d) {
       var modeLabel = d.teamMode === "squad" ? "Squad (4v4)" : "Duo (2v2)";
-      document.getElementById("pipText").textContent = d.fromName + " sizni " + modeLabel + " partyga chaqirdi";
+      document.getElementById("pipText").textContent = lobbyT("lobby.partyInviteText", { name: d.fromName || lobbyT("lobby.friendFallback"), mode: modeLabel });
+    }
+
+    function showInvitePopup(d) {
+      renderInvitePopupText(d);
       document.getElementById("partyInvitePopup").classList.add("show");
       if (window.lucide) lucide.createIcons();
 
       document.getElementById("pipAcceptBtn").onclick = function () {
         var s = partySocket();
-        if (s) s.emit("acceptPartyInvite", { partyId: d.partyId, userId: user.id, name: user.first_name || "O'yinchi", profile_picture: user.profile_picture || null });
+        if (s) s.emit("acceptPartyInvite", { partyId: d.partyId, userId: user.id, name: user.first_name || lobbyT("lobby.playerFallback"), profile_picture: user.profile_picture || null });
         hideInvitePopup();
       };
       document.getElementById("pipDeclineBtn").onclick = function () {
         var s = partySocket();
-        if (s) s.emit("declinePartyInvite", { partyId: d.partyId, name: user.first_name || "O'yinchi" });
+        if (s) s.emit("declinePartyInvite", { partyId: d.partyId, name: user.first_name || lobbyT("lobby.playerFallback") });
         hideInvitePopup();
       };
       // 15s dan keyin avtomatik yopiladi
@@ -1757,6 +1838,22 @@
       return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
 
+    window.addEventListener("ilmliga:languagechange", function () {
+      document.getElementById("pcName").textContent =
+        ((user.first_name || "") + " " + (user.last_name || "")).trim() || lobbyT("lobby.player");
+      document.getElementById("pcCefrLabel").textContent = cefrLabel(user.cefr_level || "A1");
+      document.getElementById("pcLeague").innerHTML = leagueFull(Number(user.rating) || 1000);
+      updateFindPanel();
+      setupRank();
+      if (document.getElementById("lengthModal").classList.contains("show")) openLengthModal();
+      if (partyState) renderPartyPanel();
+      if (pendingInvite) renderInvitePopupText(pendingInvite);
+      loadRecent();
+      loadQuests();
+      loadMySchool();
+      loadFriendsOnline();
+    });
+
   </script>
 
   <!-- PARTY TANLOV MODAL (Yolg'iz / Do'st bilan) -->
@@ -1764,21 +1861,21 @@
     <div class="party-box" style="max-width:440px;">
       <div class="party-choice-head">
         <div class="party-choice-title" id="pcTitle">Duo (2v2)</div>
-        <div class="party-choice-sub">Qanday o'ynaysiz?</div>
+        <div class="party-choice-sub" data-i18n="lobby.partyHow">Qanday o‘ynaysiz?</div>
       </div>
       <div class="party-choice-options">
         <div class="party-choice-opt" onclick="choosePlaySolo()">
           <div class="pco-ic"><i data-lucide="user"></i></div>
-          <div class="pco-text"><div class="pco-name">Yolg'iz o'ynash</div><div class="pco-desc">Tasodifiy jamoadoshlar bilan</div></div>
+          <div class="pco-text"><div class="pco-name" data-i18n="lobby.playSolo">Yolg‘iz o‘ynash</div><div class="pco-desc" data-i18n="lobby.playSoloDesc">Tasodifiy jamoadoshlar bilan</div></div>
           <i data-lucide="chevron-right" class="pco-arrow"></i>
         </div>
         <div class="party-choice-opt" onclick="choosePlayParty()">
           <div class="pco-ic purple"><i data-lucide="users"></i></div>
-          <div class="pco-text"><div class="pco-name">Do'st bilan o'ynash</div><div class="pco-desc">Party tuzing, do'stlaringizni chaqiring</div></div>
+          <div class="pco-text"><div class="pco-name" data-i18n="lobby.playParty">Do‘st bilan o‘ynash</div><div class="pco-desc" data-i18n="lobby.playPartyDesc">Jamoa tuzing va do‘stlaringizni chaqiring</div></div>
           <i data-lucide="chevron-right" class="pco-arrow"></i>
         </div>
       </div>
-      <button class="party-close-btn" onclick="closePartyChoice()">Bekor qilish</button>
+      <button class="party-close-btn" onclick="closePartyChoice()" data-i18n="common.cancel">Bekor qilish</button>
     </div>
   </div>
 
@@ -1787,21 +1884,21 @@
     <div class="party-box">
       <div class="party-head">
         <div>
-          <div class="party-title" id="ppTitle">Sizning Party</div>
+          <div class="party-title" id="ppTitle" data-i18n="lobby.yourParty">Sizning jamoangiz</div>
           <div class="party-sub" id="ppSub">Duo (2v2) · <span id="ppCount">1/2</span></div>
         </div>
-        <div class="party-close-x" onclick="leavePartyAndClose()"><i data-lucide="x"></i></div>
+        <button type="button" class="party-close-x" onclick="leavePartyAndClose()" aria-label="Yopish" data-i18n-aria-label="common.close"><i data-lucide="x"></i></button>
       </div>
 
       <div class="party-members" id="ppMembers"></div>
 
       <div class="party-invite-section">
-        <div class="party-section-label"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> Do'st chaqirish</div>
-        <div class="party-friends-list" id="ppFriendsList"><div class="party-empty-sm">Yuklanmoqda...</div></div>
+        <div class="party-section-label"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> <span data-i18n="lobby.inviteFriend">Do‘st chaqirish</span></div>
+        <div class="party-friends-list" id="ppFriendsList"><div class="party-empty-sm" data-i18n="common.loading">Yuklanmoqda...</div></div>
       </div>
 
-      <button class="party-start-btn" id="ppStartBtn" onclick="startPartyMatch()"><i data-lucide="swords"></i> <span id="ppStartText">Jang boshlash</span></button>
-      <div class="party-wait-note" id="ppWaitNote" style="display:none;">Faqat lider jangni boshlay oladi</div>
+      <button class="party-start-btn" id="ppStartBtn" onclick="startPartyMatch()"><i data-lucide="swords"></i> <span id="ppStartText" data-i18n="lobby.startBattle">Jang boshlash</span></button>
+      <div class="party-wait-note" id="ppWaitNote" style="display:none;" data-i18n="lobby.onlyLeaderStarts">Faqat lider jangni boshlay oladi</div>
     </div>
   </div>
 
@@ -1809,12 +1906,12 @@
   <div class="party-invite-popup" id="partyInvitePopup">
     <div class="pip-ic"><i data-lucide="users"></i></div>
     <div class="pip-body">
-      <div class="pip-title" id="pipTitle">Party taklifi</div>
+      <div class="pip-title" id="pipTitle" data-i18n="lobby.partyInvitation">Jamoa taklifi</div>
       <div class="pip-text" id="pipText">—</div>
     </div>
     <div class="pip-actions">
-      <button class="pip-accept" id="pipAcceptBtn"><i data-lucide="check"></i></button>
-      <button class="pip-decline" id="pipDeclineBtn"><i data-lucide="x"></i></button>
+      <button class="pip-accept" id="pipAcceptBtn" aria-label="Qabul qilish" data-i18n-aria-label="lobby.accept"><i data-lucide="check"></i></button>
+      <button class="pip-decline" id="pipDeclineBtn" aria-label="Rad etish" data-i18n-aria-label="lobby.decline"><i data-lucide="x"></i></button>
     </div>
   </div>
 

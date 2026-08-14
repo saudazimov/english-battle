@@ -358,25 +358,25 @@
     <div class="main">
       <header class="topbar">
         <div class="tb-greet">
-          <h1 id="greetText">Salom! <span style="font-size:22px">👋</span></h1>
-          <p id="greetSub">Bugun ajoyib kun! O'quvchilaringiz sizni kutishmoqda.</p>
+          <h1 id="greetText"><span data-i18n="teacher.dashboard.greetingDefault">Salom!</span> <span style="font-size:22px">👋</span></h1>
+          <p id="greetSub" data-i18n="teacher.dashboard.greetingSubDefault">Bugun ajoyib kun! O'quvchilaringiz sizni kutishmoqda.</p>
         </div>
-        <div class="tb-year" onclick="comingSoon('O\'quv yili')">
+        <div class="tb-year" onclick="comingSoonKey('teacher.dashboard.academicYear')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          2024–2025 O'quv yili
+          <span data-i18n="teacher.dashboard.academicYear">2024–2025 O'quv yili</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <button class="theme-toggle" id="themeToggle" title="Tema almashtirish" onclick="toggleTheme()">
+        <button class="theme-toggle" id="themeToggle" title="Tema almashtirish" data-i18n-title="teacher.dashboard.changeTheme" onclick="toggleTheme()">
           <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg>
         </button>
-        <button class="tb-icon-btn" onclick="comingSoon('Bildirishnomalar')">
+        <button class="tb-icon-btn" data-i18n-title="topbar.notifications" onclick="comingSoonKey('topbar.notifications')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span class="dot">3</span>
         </button>
         <div class="tb-user" onclick="window.location.href='/profile.html'">
           <div class="tb-user-info">
             <div class="tb-user-name" id="userName">O'qituvchi</div>
-            <div class="tb-user-role">Teacher</div>
+            <div class="tb-user-role" data-i18n="teacher.dashboard.role">Teacher</div>
           </div>
           <div class="tb-avatar" id="userAvatar">T</div>
         </div>
@@ -387,48 +387,48 @@
         <div class="quick-row">
           <div class="quick-card" onclick="window.location.href='/teacher-classes.html'">
             <div class="quick-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></div>
-            <div class="quick-tx"><h3>Topshiriq yaratish</h3><p>Yangi topshiriq berish</p></div>
+            <div class="quick-tx"><h3 data-i18n="teacher.dashboard.createAssignment">Topshiriq yaratish</h3><p data-i18n="teacher.dashboard.createAssignmentDesc">Yangi topshiriq berish</p></div>
           </div>
           <div class="quick-card" onclick="window.location.href='/teacher-students.html'">
             <div class="quick-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
-            <div class="quick-tx"><h3>O'quvchilar</h3><p>O'quvchilarni boshqarish</p></div>
+            <div class="quick-tx"><h3 data-i18n="teacher.dashboard.students">O'quvchilar</h3><p data-i18n="teacher.dashboard.manageStudents">O'quvchilarni boshqarish</p></div>
           </div>
           <div class="quick-card" onclick="window.location.href='/teacher-classes.html'">
             <div class="quick-ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
-            <div class="quick-tx"><h3>Sinf yaratish</h3><p>Yangi sinf qo'shish</p></div>
+            <div class="quick-tx"><h3 data-i18n="teacher.dashboard.createClass">Sinf yaratish</h3><p data-i18n="teacher.dashboard.createClassDesc">Yangi sinf qo'shish</p></div>
           </div>
           <div class="quick-card" onclick="window.location.href='/teacher-classes.html'">
             <div class="quick-ic violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg></div>
-            <div class="quick-tx"><h3>AI Hisobot olish</h3><p>Sinf tahlili</p></div>
+            <div class="quick-tx"><h3 data-i18n="teacher.dashboard.aiReport">AI Hisobot olish</h3><p data-i18n="teacher.dashboard.classAnalysis">Sinf tahlili</p></div>
           </div>
         </div>
 
         <!-- UMUMIY KO'RSATKICHLAR -->
         <div class="panel">
           <div class="panel-h">
-            <h2>Umumiy ko'rsatkichlar</h2>
-            <div class="panel-sel" onclick="comingSoon('Davr')">Bu hafta <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <h2 data-i18n="teacher.dashboard.overview">Umumiy ko'rsatkichlar</h2>
+            <div class="panel-sel" onclick="comingSoonKey('teacher.dashboard.period')"><span data-i18n="teacher.dashboard.thisWeek">Bu hafta</span> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
           </div>
           <div class="stats-row">
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><span class="stat-label">O'quvchilar soni</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><span class="stat-label" data-i18n="teacher.dashboard.studentCount">O'quvchilar soni</span></div>
               <div class="stat-val" id="statStudents">—</div>
-              <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>12% <span>o'tgan haftaga nisbatan</span></div>
+              <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>12% <span data-i18n="teacher.dashboard.comparedLastWeek">o'tgan haftaga nisbatan</span></div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><span class="stat-label">Topshiriqlar bajarildi</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><span class="stat-label" data-i18n="teacher.dashboard.completedAssignments">Topshiriqlar bajarildi</span></div>
               <div class="stat-val" id="statCompleted">87%</div>
-              <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>8% <span>o'tgan haftaga nisbatan</span></div>
+              <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>8% <span data-i18n="teacher.dashboard.comparedLastWeek">o'tgan haftaga nisbatan</span></div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span class="stat-label">O'rtacha natija</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span class="stat-label" data-i18n="teacher.dashboard.averageScore">O'rtacha natija</span></div>
               <div class="stat-val" id="statAvg">78.4%</div>
-              <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>5.6% <span>o'tgan haftaga nisbatan</span></div>
+              <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>5.6% <span data-i18n="teacher.dashboard.comparedLastWeek">o'tgan haftaga nisbatan</span></div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="stat-label">Faol o'quvchilar</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="stat-label" data-i18n="teacher.dashboard.activeStudents">Faol o'quvchilar</span></div>
               <div class="stat-val" id="statActive">—</div>
-              <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>15% <span>o'tgan haftaga nisbatan</span></div>
+              <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>15% <span data-i18n="teacher.dashboard.comparedLastWeek">o'tgan haftaga nisbatan</span></div>
             </div>
           </div>
         </div>
@@ -436,14 +436,14 @@
         <!-- SINFLAR + AI -->
         <div class="grid-main">
           <div class="panel">
-            <div class="panel-h"><h2>Sinflarim</h2><span class="panel-link" onclick="window.location.href='/teacher-classes.html'">Barchasini ko'rish</span></div>
+            <div class="panel-h"><h2 data-i18n="teacher.dashboard.myClasses">Sinflarim</h2><span class="panel-link" data-i18n="teacher.dashboard.viewAll" onclick="window.location.href='/teacher-classes.html'">Barchasini ko'rish</span></div>
             <div class="class-list" id="classList">
-              <div style="padding:30px;text-align:center;color:var(--text-dim);font-size:13px">Yuklanmoqda...</div>
+              <div style="padding:30px;text-align:center;color:var(--text-dim);font-size:13px" data-i18n="teacher.dashboard.loading">Yuklanmoqda...</div>
             </div>
           </div>
 
           <div class="panel">
-            <div class="panel-h"><h2>AI sinf tahlili</h2><span class="panel-link" onclick="window.location.href='/teacher-classes.html'">Barchasini ko'rish</span></div>
+            <div class="panel-h"><h2 data-i18n="teacher.dashboard.aiClassAnalysis">AI sinf tahlili</h2><span class="panel-link" data-i18n="teacher.dashboard.viewAll" onclick="window.location.href='/teacher-classes.html'">Barchasini ko'rish</span></div>
             <div class="ai-card-inner" id="aiCard">
               <div class="ai-loading"><div class="ai-shim lg"></div><div class="ai-shim" style="width:85%"></div><div class="ai-shim" style="width:70%"></div></div>
             </div>
@@ -453,17 +453,17 @@
         <!-- FAOLIYAT + VAZIFALAR -->
         <div class="grid-main">
           <div class="panel">
-            <div class="panel-h"><h2>Faoliyat statistikasi</h2><div class="panel-sel" onclick="comingSoon('Davr')">Bu oy <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+            <div class="panel-h"><h2 data-i18n="teacher.dashboard.activityStatistics">Faoliyat statistikasi</h2><div class="panel-sel" onclick="comingSoonKey('teacher.dashboard.period')"><span data-i18n="teacher.dashboard.thisMonth">Bu oy</span> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div></div>
             <div class="chart-wrap">
               <div class="chart-legend">
-                <div class="chart-leg"><span class="ld" style="background:var(--primary)"></span>Topshirilgan topshiriqlar</div>
+                <div class="chart-leg"><span class="ld" style="background:var(--primary)"></span><span data-i18n="teacher.dashboard.submittedAssignments">Topshirilgan topshiriqlar</span></div>
               </div>
               <svg class="chart" id="activityChart" viewBox="0 0 600 230" preserveAspectRatio="none"></svg>
             </div>
           </div>
 
           <div class="panel">
-            <div class="panel-h"><h2>Kelayotgan vazifalar</h2></div>
+            <div class="panel-h"><h2 data-i18n="teacher.dashboard.upcomingTasks">Kelayotgan vazifalar</h2></div>
             <div class="task-list" id="taskList"></div>
           </div>
         </div>
@@ -471,7 +471,7 @@
         <!-- SO'NGGI FAOLIYAT + KALENDAR -->
         <div class="grid-main">
           <div class="panel">
-            <div class="panel-h"><h2>So'nggi faoliyat</h2><span class="panel-link" onclick="comingSoon('Faoliyat')">Barchasini ko'rish</span></div>
+            <div class="panel-h"><h2 data-i18n="teacher.dashboard.recentActivity">So'nggi faoliyat</h2><span class="panel-link" data-i18n="teacher.dashboard.viewAll" onclick="comingSoonKey('teacher.dashboard.activity')">Barchasini ko'rish</span></div>
             <div class="feed-list" id="feedList"></div>
           </div>
 
@@ -495,6 +495,7 @@
   <script src="/api.js"></script>
   <script src="/payment-modal.js"></script>
   <script src="/premium-modal.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/teacher-sidebar.js"></script>
   <script>renderTeacherSidebar("home");</script>
   <script>
@@ -521,7 +522,15 @@
       }
     }
 
-    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada tayyor bo'ladi"); }
+    function dashboardT(key, fallback, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : fallback;
+    }
+    function dashboardLocale() {
+      var language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return { uz: "uz-UZ", en: "en-US", ru: "ru-RU" }[language] || "uz-UZ";
+    }
+    function comingSoonKey(key) { comingSoon(dashboardT(key, key)); }
+    function comingSoon(name) { showToast((name ? name + ": " : "") + dashboardT("teacher.comingSoon", "tez orada tayyor bo‘ladi")); }
     function showToast(text) { var t = document.getElementById("toast"); if (!t) return; t.textContent = text; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2600); }
     function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 
@@ -544,8 +553,9 @@
       // Profil
       var fn = user.first_name || "";
       var ln = user.last_name || "";
-      document.getElementById("greetText").innerHTML = "Salom, " + esc(fn || "O'qituvchi") + "! <span style='font-size:22px'>👋</span>";
-      document.getElementById("userName").textContent = (fn + " " + ln).trim() || "O'qituvchi";
+      var teacherName = fn || dashboardT("teacher.dashboard.role", "O‘qituvchi");
+      document.getElementById("greetText").innerHTML = esc(dashboardT("teacher.dashboard.greetingNamed", "Salom, {name}!", { name: teacherName })) + " <span style='font-size:22px'>👋</span>";
+      document.getElementById("userName").textContent = (fn + " " + ln).trim() || dashboardT("teacher.dashboard.role", "O‘qituvchi");
       var initial = (fn || "T").charAt(0).toUpperCase();
       document.getElementById("userAvatar").textContent = initial;
 
@@ -565,8 +575,8 @@
 
           var cls = (d.recent_activity && d.recent_activity.length) || 0;
           document.getElementById("greetSub").textContent = st.total_students > 0
-            ? st.total_students + " ta o'quvchingiz bor. Bugun ajoyib kun!"
-            : "Birinchi sinfingizni yarating va o'quvchilarni qo'shing.";
+            ? dashboardT("teacher.dashboard.greetingStudents", "Sizda {count} nafar o‘quvchi bor. Bugun ajoyib kun!", { count: st.total_students })
+            : dashboardT("teacher.dashboard.greetingNoStudents", "Birinchi sinfingizni yarating va o‘quvchilarni qo‘shing.");
 
           drawChart(d.chart);
           renderTasks(d.upcoming_tasks);
@@ -597,7 +607,9 @@
         var data = await res.json();
         var classes = data.classes || data || [];
         if (!Array.isArray(classes) || classes.length === 0) {
-          box.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-dim);font-size:13px">Hali sinf yo\'q. <span style="color:var(--primary);cursor:pointer" onclick="window.location.href=\'/teacher-classes.html\'">Sinf yaratish</span></div>';
+          box.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-dim);font-size:13px">' +
+            esc(dashboardT("teacher.dashboard.noClasses", "Hali sinf yo‘q.")) + ' <span style="color:var(--primary);cursor:pointer" onclick="window.location.href=\'/teacher-classes.html\'">' +
+            esc(dashboardT("teacher.dashboard.createClass", "Sinf yaratish")) + '</span></div>';
           return;
         }
         var html = "";
@@ -608,14 +620,14 @@
           var barColor = avg == null ? "var(--border-strong)" : (avg >= 80 ? "var(--green)" : avg >= 65 ? "var(--amber)" : "var(--red)");
           html += '<div class="class-row" onclick="window.location.href=\'/teacher-class-detail.html?id=' + c.id + '\'">' +
             '<div class="class-av" style="background:' + color + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>' +
-            '<div class="class-info"><div class="class-name">' + esc(c.name) + '</div><div class="class-meta">' + count + ' o\'quvchi</div></div>' +
-            '<div class="class-score"><div class="class-score-label">O\'rtacha natija</div>' +
+            '<div class="class-info"><div class="class-name">' + esc(c.name) + '</div><div class="class-meta">' + esc(dashboardT("teacher.dashboard.classStudents", "{count} o‘quvchi", { count: count })) + '</div></div>' +
+            '<div class="class-score"><div class="class-score-label">' + esc(dashboardT("teacher.dashboard.averageScore", "O‘rtacha natija")) + '</div>' +
               (avg != null ? '<div class="class-score-pct">' + avg + '%</div><div class="class-bar"><span style="width:' + avg + '%;background:' + barColor + '"></span></div>' : '<div class="class-score-pct" style="color:var(--text-dim)">—</div>') +
             '</div></div>';
         });
         box.innerHTML = html;
       } catch (e) {
-        box.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-dim);font-size:13px">Sinflarni yuklab bo\'lmadi.</div>';
+        box.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-dim);font-size:13px">' + esc(dashboardT("teacher.dashboard.classesLoadError", "Sinflarni yuklab bo‘lmadi.")) + '</div>';
       }
     }
 
@@ -627,24 +639,24 @@
         var cData = await cRes.json();
         var classes = cData.classes || cData || [];
         if (!Array.isArray(classes) || classes.length === 0) {
-          box.innerHTML = '<div style="text-align:center;padding:30px 10px;color:var(--text-dim);font-size:13px">Sinf yaratilgach AI tahlil shu yerda chiqadi.</div>';
+          box.innerHTML = '<div style="text-align:center;padding:30px 10px;color:var(--text-dim);font-size:13px">' + esc(dashboardT("teacher.dashboard.aiAfterClass", "Sinf yaratilgach AI tahlil shu yerda chiqadi.")) + '</div>';
           return;
         }
         var first = classes[0];
         var res = await authFetch("/ai/reports/teacher/classes/" + first.id + "/weekly", { method: "POST" });
         if (res.status === 402) {
-          box.innerHTML = '<div class="ai-rep"><div style="text-align:center;padding:10px"><div style="font-size:14px;font-weight:700;margin-bottom:6px">Teacher Pro funksiyasi</div><p style="font-size:12.5px;color:var(--text-sub);margin-bottom:14px">AI sinf tahlilini ko\'rish uchun Premium kerak.</p><button class="ai-rep-btn" onclick="window.openPaymentModal && window.openPaymentModal(\'teacher_pro\')">Pro olish</button></div></div>';
+          box.innerHTML = '<div class="ai-rep"><div style="text-align:center;padding:10px"><div style="font-size:14px;font-weight:700;margin-bottom:6px">' + esc(dashboardT("teacher.dashboard.proFeature", "Teacher Pro funksiyasi")) + '</div><p style="font-size:12.5px;color:var(--text-sub);margin-bottom:14px">' + esc(dashboardT("teacher.dashboard.premiumRequired", "AI sinf tahlilini ko‘rish uchun Premium kerak.")) + '</p><button class="ai-rep-btn" onclick="window.openPaymentModal && window.openPaymentModal(\'teacher_pro\')">' + esc(dashboardT("teacher.dashboard.getPro", "Pro olish")) + '</button></div></div>';
           return;
         }
         var data = await res.json();
         var r = data.report || {};
         if (r.status === "insufficient_data") {
-          box.innerHTML = '<div class="ai-rep"><div class="ai-rep-h"><span class="ai-rep-title">' + esc(first.name) + '</span></div><p class="ai-rep-txt">' + esc(r.message || "Hali yetarli ma'lumot yo'q.") + '</p></div>';
+          box.innerHTML = '<div class="ai-rep"><div class="ai-rep-h"><span class="ai-rep-title">' + esc(first.name) + '</span></div><p class="ai-rep-txt">' + esc(r.message || dashboardT("teacher.dashboard.insufficientData", "Hali yetarli ma’lumot yo‘q.")) + '</p></div>';
           return;
         }
         renderClassAI(box, first, r);
       } catch (e) {
-        box.innerHTML = '<div style="text-align:center;padding:30px 10px;color:var(--text-dim);font-size:13px">AI tahlilni yuklab bo\'lmadi.</div>';
+        box.innerHTML = '<div style="text-align:center;padding:30px 10px;color:var(--text-dim);font-size:13px">' + esc(dashboardT("teacher.dashboard.aiLoadError", "AI tahlilni yuklab bo‘lmadi.")) + '</div>';
       }
     }
 
@@ -658,13 +670,13 @@
         if (/zaif|past|qiyin|kerak|rivoj/i.test(f)) weak.push(f); else strong.push(f);
       });
       var html = '<div class="ai-rep">' +
-        '<div class="ai-rep-h"><span class="ai-rep-title">' + esc(cls.name) + ' tahlili</span><span class="ai-rep-tag">AI</span></div>' +
+        '<div class="ai-rep-h"><span class="ai-rep-title">' + esc(dashboardT("teacher.dashboard.analysisFor", "{name} tahlili", { name: cls.name })) + '</span><span class="ai-rep-tag">AI</span></div>' +
         '<p class="ai-rep-txt">' + esc(summary) + '</p>';
       if (recs.length) {
-        html += '<div class="ai-rep-sub">Tavsiyalar</div><div class="ai-chips">' +
+        html += '<div class="ai-rep-sub">' + esc(dashboardT("teacher.dashboard.recommendations", "Tavsiyalar")) + '</div><div class="ai-chips">' +
           recs.slice(0, 3).map(function (x) { return '<span class="ai-chip bad">' + esc(x.length > 28 ? x.slice(0, 28) + "…" : x) + '</span>'; }).join("") + '</div>';
       }
-      html += '<button class="ai-rep-btn" onclick="window.location.href=\'/teacher-class-detail.html?id=' + cls.id + '\'">To\'liq AI hisobotni ko\'rish <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div>';
+      html += '<button class="ai-rep-btn" onclick="window.location.href=\'/teacher-class-detail.html?id=' + cls.id + '\'">' + esc(dashboardT("teacher.dashboard.fullAiReport", "To‘liq AI hisobotni ko‘rish")) + ' <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div>';
       box.innerHTML = html;
     }
 
@@ -678,7 +690,7 @@
         labels = chartData.labels || [];
       } else {
         // Yetarli real ma'lumot yo'q — bo'sh holat
-        svg.innerHTML = '<text x="300" y="115" fill="var(--text-dim)" font-size="13" text-anchor="middle">Faoliyat ma\'lumoti hali yetarli emas</text>';
+        svg.innerHTML = '<text x="300" y="115" fill="var(--text-dim)" font-size="13" text-anchor="middle">' + esc(dashboardT("teacher.dashboard.chartInsufficient", "Faoliyat ma’lumoti hali yetarli emas")) + '</text>';
         return;
       }
       var n = d1.length;
@@ -711,49 +723,51 @@
     function renderTasks(tasksData) {
       var box = document.getElementById("taskList");
       if (!tasksData || !tasksData.length) {
-        box.innerHTML = '<div style="padding:28px 10px;text-align:center;color:var(--text-dim);font-size:13px">Hozircha tekshirilиши kerak vazifa yo\'q.</div>';
+        box.innerHTML = '<div style="padding:28px 10px;text-align:center;color:var(--text-dim);font-size:13px">' + esc(dashboardT("teacher.dashboard.noTasks", "Hozircha tekshirilishi kerak vazifa yo‘q.")) + '</div>';
         return;
       }
       box.innerHTML = tasksData.map(function (t) {
         var due = dueLabel(t.due_at);
         var c = due.urgent ? "var(--red)" : "var(--amber)";
         var cs = due.urgent ? "var(--red-soft)" : "var(--amber-soft)";
-        var meta = (t.class_name ? esc(t.class_name) : "") + (t.submitted_count != null ? " · " + t.submitted_count + " topshiriq" : "");
+        var meta = (t.class_name ? esc(t.class_name) : "") + (t.submitted_count != null ? " · " + esc(dashboardT("teacher.dashboard.submissions", "{count} topshiriq", { count: t.submitted_count })) : "");
         return '<div class="task-row" onclick="window.location.href=\'/teacher-classes.html\'" style="cursor:pointer"><div class="task-ic" style="background:' + cs + ';color:' + c + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>' +
           '<div class="task-info"><div class="task-name">' + esc(t.title) + '</div><div class="task-meta">' + meta + '</div></div>' +
           '<span class="task-due" style="background:' + cs + ';color:' + c + '">' + due.label + '</span></div>';
-      }).join("") + '<div style="text-align:center;padding:12px 0 4px"><span class="panel-link" onclick="window.location.href=\'/teacher-classes.html\'">Barchasini ko\'rish →</span></div>';
+      }).join("") + '<div style="text-align:center;padding:12px 0 4px"><span class="panel-link" onclick="window.location.href=\'/teacher-classes.html\'">' + esc(dashboardT("teacher.dashboard.viewAll", "Barchasini ko‘rish")) + ' →</span></div>';
     }
 
     // Muddat yorlig'i (due_at -> "Ertaga", "3 kun", "Muddati o'tdi")
     function dueLabel(dueAt) {
-      if (!dueAt) return { label: "Muddatsiz", urgent: false };
+      if (!dueAt) return { label: dashboardT("teacher.dashboard.noDeadline", "Muddatsiz"), urgent: false };
       var due = new Date(dueAt);
       var now = new Date();
       var diffMs = due - now;
       var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-      if (diffDays < 0) return { label: "Muddati o'tdi", urgent: true };
-      if (diffDays === 0) return { label: "Bugun", urgent: true };
-      if (diffDays === 1) return { label: "Ertaga", urgent: true };
-      if (diffDays <= 3) return { label: diffDays + " kun", urgent: true };
-      return { label: diffDays + " kun", urgent: false };
+      if (diffDays < 0) return { label: dashboardT("teacher.dashboard.overdue", "Muddati o‘tdi"), urgent: true };
+      if (diffDays === 0) return { label: dashboardT("teacher.dashboard.today", "Bugun"), urgent: true };
+      if (diffDays === 1) return { label: dashboardT("teacher.dashboard.tomorrow", "Ertaga"), urgent: true };
+      if (diffDays <= 3) return { label: dashboardT("teacher.dashboard.inDays", "{count} kun", { count: diffDays }), urgent: true };
+      return { label: dashboardT("teacher.dashboard.inDays", "{count} kun", { count: diffDays }), urgent: false };
     }
 
     // ===== SO'NGGI FAOLIYAT (real — oxirgi topshirishlar) =====
     function renderFeed(feedData) {
       var box = document.getElementById("feedList");
       if (!feedData || !feedData.length) {
-        box.innerHTML = '<div style="padding:28px 10px;text-align:center;color:var(--text-dim);font-size:13px">Hozircha faoliyat yo\'q. O\'quvchilar topshiriq topshirgach shu yerda ko\'rinadi.</div>';
+        box.innerHTML = '<div style="padding:28px 10px;text-align:center;color:var(--text-dim);font-size:13px">' + esc(dashboardT("teacher.dashboard.noActivity", "Hozircha faoliyat yo‘q. O‘quvchilar topshiriq topshirgach shu yerda ko‘rinadi.")) + '</div>';
         return;
       }
       box.innerHTML = feedData.map(function (f) {
         var pct = f.percent != null ? f.percent : 0;
         var good = pct >= 80;
         var c = good ? ["var(--green-soft)","var(--green)"] : (pct >= 60 ? ["var(--primary-soft)","var(--primary)"] : ["var(--amber-soft)","var(--amber)"]);
-        var name = esc(f.student_name || "O'quvchi");
-        var title = esc(f.assignment_title || "topshiriq");
+        var name = esc(f.student_name || dashboardT("teacher.dashboard.studentFallback", "O‘quvchi"));
+        var title = esc(f.assignment_title || dashboardT("teacher.dashboard.assignmentFallback", "topshiriq"));
         var cls = f.class_name ? esc(f.class_name) + " — " : "";
-        var txt = '<b>' + name + '</b> "' + title + '" topshirig\'ini ' + pct + '% bilan yakunladi';
+        var txt = dashboardT("teacher.dashboard.feedCompleted", "{name} “{title}” topshirig‘ini {percent}% bilan yakunladi", {
+          name: '<b>' + name + '</b>', title: title, percent: pct
+        });
         return '<div class="feed-row"><div class="feed-ic" style="background:' + c[0] + ';color:' + c[1] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>' +
           '<div class="feed-info"><div class="feed-txt">' + txt + '</div><div class="feed-time">' + cls + relTime(f.submitted_at) + '</div></div></div>';
       }).join("");
@@ -765,30 +779,29 @@
       var then = new Date(ts);
       var now = new Date();
       var sec = Math.floor((now - then) / 1000);
-      if (sec < 60) return "hozirgina";
+      if (sec < 60) return dashboardT("teacher.dashboard.justNow", "hozirgina");
       var min = Math.floor(sec / 60);
-      if (min < 60) return min + " daqiqa oldin";
+      if (min < 60) return dashboardT("teacher.dashboard.minutesAgo", "{count} daqiqa oldin", { count: min });
       var hr = Math.floor(min / 60);
-      if (hr < 24) return hr + " soat oldin";
+      if (hr < 24) return dashboardT("teacher.dashboard.hoursAgo", "{count} soat oldin", { count: hr });
       var day = Math.floor(hr / 24);
-      if (day < 30) return day + " kun oldin";
-      return then.toLocaleDateString("uz-UZ");
+      if (day < 30) return dashboardT("teacher.dashboard.daysAgo", "{count} kun oldin", { count: day });
+      return then.toLocaleDateString(dashboardLocale());
     }
 
     // ===== KALENDAR (real topshiriq muddatlari) =====
     var calDate = new Date();
     var dueDates = {}; // "YYYY-M-D" -> true (topshiriq muddati bor kunlar, backenddan)
-    var MONTHS = ["Yanvar","Fevral","Mart","Aprel","May","Iyun","Iyul","Avgust","Sentabr","Oktabr","Noyabr","Dekabr"];
-    var DOW = ["Du","Se","Ch","Pa","Ju","Sh","Ya"];
     function renderCalendar() {
       var y = calDate.getFullYear(), m = calDate.getMonth();
-      document.getElementById("calMonth").textContent = MONTHS[m] + " " + y;
+      document.getElementById("calMonth").textContent = new Intl.DateTimeFormat(dashboardLocale(), { month: "long", year: "numeric" }).format(calDate);
       var first = new Date(y, m, 1);
       var startDow = (first.getDay() + 6) % 7; // dushanba = 0
       var daysInMonth = new Date(y, m + 1, 0).getDate();
       var prevDays = new Date(y, m, 0).getDate();
       var today = new Date();
-      var html = DOW.map(function (d) { return '<div class="cal-dow">' + d + '</div>'; }).join("");
+      var weekdays = dashboardT("teacher.dashboard.weekdays", "Du|Se|Ch|Pa|Ju|Sh|Ya").split("|");
+      var html = weekdays.map(function (d) { return '<div class="cal-dow">' + esc(d) + '</div>'; }).join("");
       // oldingi oy
       for (var i = startDow - 1; i >= 0; i--) html += '<div class="cal-day other">' + (prevDays - i) + '</div>';
       // joriy oy
@@ -807,6 +820,13 @@
     function calNext() { calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); }
 
     // ===== ISHGA TUSHIRISH =====
+    document.title = dashboardT("teacher.dashboard.pageTitle", "O‘qituvchi paneli — English Battle");
+    window.addEventListener("ilmliga:languagechange", function () {
+      document.title = dashboardT("teacher.dashboard.pageTitle", "O‘qituvchi paneli — English Battle");
+      loadDashboard();
+      loadFirstClassAI();
+      renderCalendar();
+    });
     loadDashboard();
     loadFirstClassAI();
     // Premium card (sidebar) endi teacher-sidebar.js tomonidan boshqariladi

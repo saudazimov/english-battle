@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Practice — English Battle</title>
+  <title data-i18n="practice.metaTitle">Practice — IlmLiga</title>
+  <meta name="description" content="Raqibsiz mashq qiling va har bir javob uchun tushuntirish oling." data-i18n-content="practice.metaDescription">
   <link rel="stylesheet" href="/app.css">
   <style>
     :root {
@@ -195,16 +196,16 @@
       <div class="pr-header">
         <div class="pr-head-ic"><i data-lucide="dumbbell"></i></div>
         <div>
-          <div class="pr-title">Practice Mode</div>
-          <div class="pr-sub">Raqibsiz, bosimsiz mashq — bilimingizni sinab ko'ring</div>
+          <div class="pr-title" data-i18n="practice.heading">Practice Mode</div>
+          <div class="pr-sub" data-i18n="practice.subtitle">Raqibsiz, bosimsiz mashq — bilimingizni sinab ko‘ring</div>
         </div>
       </div>
 
       <!-- SOZLAMA EKRANI -->
       <div id="setupScreen">
-        <button class="pr-back-link" onclick="window.location.href='/lobby.html'"><i data-lucide="arrow-left"></i> Lobbyga qaytish</button>
+        <button class="pr-back-link" onclick="window.location.href='/lobby.html'"><i data-lucide="arrow-left"></i> <span data-i18n="practice.backLobby">Lobbyga qaytish</span></button>
         <div class="card">
-          <div class="pr-setup-label">Daraja (CEFR)</div>
+          <div class="pr-setup-label" data-i18n="practice.levelLabel">Daraja (CEFR)</div>
           <div class="pr-options" id="levelOptions">
             <button class="pr-opt" data-level="A1">A1</button>
             <button class="pr-opt" data-level="A2">A2</button>
@@ -214,20 +215,20 @@
             <button class="pr-opt" data-level="C2">C2</button>
           </div>
 
-          <div class="pr-setup-label">Savollar soni</div>
+          <div class="pr-setup-label" data-i18n="practice.questionCount">Savollar soni</div>
           <div class="pr-options" id="countOptions">
-            <button class="pr-opt" data-count="5">5 ta</button>
-            <button class="pr-opt active" data-count="10">10 ta</button>
-            <button class="pr-opt" data-count="15">15 ta</button>
-            <button class="pr-opt" data-count="20">20 ta</button>
+            <button class="pr-opt" data-count="5" data-i18n="practice.count5">5 ta</button>
+            <button class="pr-opt active" data-count="10" data-i18n="practice.count10">10 ta</button>
+            <button class="pr-opt" data-count="15" data-i18n="practice.count15">15 ta</button>
+            <button class="pr-opt" data-count="20" data-i18n="practice.count20">20 ta</button>
           </div>
 
-          <button class="pr-start-btn" onclick="startPractice()"><i data-lucide="play"></i> Mashqni boshlash</button>
+          <button class="pr-start-btn" onclick="startPractice()"><i data-lucide="play"></i> <span data-i18n="practice.start">Mashqni boshlash</span></button>
 
           <div class="pr-info-row">
-            <div class="pr-info"><div class="pr-info-ic"><i data-lucide="shield-off"></i></div><div class="pr-info-text">Reyting o'zgarmaydi</div></div>
-            <div class="pr-info"><div class="pr-info-ic"><i data-lucide="zap"></i></div><div class="pr-info-text">Har to'g'ri javob +2 XP</div></div>
-            <div class="pr-info"><div class="pr-info-ic"><i data-lucide="lightbulb"></i></div><div class="pr-info-text">Darhol tushuntirish</div></div>
+            <div class="pr-info"><div class="pr-info-ic"><i data-lucide="shield-off"></i></div><div class="pr-info-text" data-i18n="practice.noRating">Reyting o‘zgarmaydi</div></div>
+            <div class="pr-info"><div class="pr-info-ic"><i data-lucide="zap"></i></div><div class="pr-info-text" data-i18n="practice.correctXp">Har to‘g‘ri javob +2 XP</div></div>
+            <div class="pr-info"><div class="pr-info-ic"><i data-lucide="lightbulb"></i></div><div class="pr-info-text" data-i18n="practice.instantExplanation">Darhol tushuntirish</div></div>
           </div>
         </div>
       </div>
@@ -235,7 +236,7 @@
       <!-- MASHQ EKRANI -->
       <div id="quizScreen" style="display:none;">
         <div class="pr-progress-top">
-          <button class="pr-exit" onclick="exitPractice()" title="Chiqish"><i data-lucide="x"></i></button>
+          <button class="pr-exit" onclick="exitPractice()" title="Chiqish" aria-label="Mashqdan chiqish" data-i18n-title="practice.exit" data-i18n-aria-label="practice.exitAria"><i data-lucide="x"></i></button>
           <div class="pr-progress-bar"><div class="pr-progress-fill" id="progressFill"></div></div>
           <div class="pr-progress-text" id="progressText">1 / 10</div>
         </div>
@@ -247,7 +248,7 @@
             <div class="pr-feedback-title" id="feedbackTitle">—</div>
             <div class="pr-feedback-text" id="feedbackText">—</div>
           </div>
-          <button class="pr-next-btn" id="nextBtn" onclick="nextQuestion()"><i data-lucide="arrow-right"></i> Keyingi savol</button>
+          <button class="pr-next-btn" id="nextBtn" onclick="nextQuestion()"><i data-lucide="arrow-right"></i> <span data-i18n="practice.nextQuestion">Keyingi savol</span></button>
         </div>
       </div>
 
@@ -256,16 +257,16 @@
         <div class="card">
           <div class="pr-result">
             <div class="pr-result-ic" id="resultIc"><i data-lucide="award"></i></div>
-            <div class="pr-result-title" id="resultTitle">Mashq tugadi!</div>
+            <div class="pr-result-title" id="resultTitle" data-i18n="practice.finished">Mashq tugadi!</div>
             <div class="pr-result-sub" id="resultSub">—</div>
             <div class="pr-result-stats">
-              <div class="pr-result-stat"><div class="pr-result-stat-val" id="resultCorrect" style="color:var(--green);">0</div><div class="pr-result-stat-lbl">To'g'ri javob</div></div>
-              <div class="pr-result-stat"><div class="pr-result-stat-val" id="resultPercent" style="color:var(--accent);">0%</div><div class="pr-result-stat-lbl">Aniqlik</div></div>
+              <div class="pr-result-stat"><div class="pr-result-stat-val" id="resultCorrect" style="color:var(--green);">0</div><div class="pr-result-stat-lbl" data-i18n="practice.correctAnswers">To‘g‘ri javob</div></div>
+              <div class="pr-result-stat"><div class="pr-result-stat-val" id="resultPercent" style="color:var(--accent);">0%</div><div class="pr-result-stat-lbl" data-i18n="practice.accuracy">Aniqlik</div></div>
               <div class="pr-result-stat"><div class="pr-result-stat-val" id="resultXp" style="color:var(--gold);">0</div><div class="pr-result-stat-lbl">XP</div></div>
             </div>
             <div class="pr-result-actions">
-              <button class="pr-again-btn" onclick="practiceAgain()"><i data-lucide="rotate-ccw"></i> Yana mashq</button>
-              <button class="pr-lobby-btn" onclick="window.location.href='/lobby.html'"><i data-lucide="home"></i> Lobbyga</button>
+              <button class="pr-again-btn" onclick="practiceAgain()"><i data-lucide="rotate-ccw"></i> <span data-i18n="practice.again">Yana mashq</span></button>
+              <button class="pr-lobby-btn" onclick="window.location.href='/lobby.html'"><i data-lucide="home"></i> <span data-i18n="practice.toLobby">Lobbyga</span></button>
             </div>
           </div>
         </div>
@@ -278,17 +279,18 @@
     <div class="pr-exit-backdrop" onclick="closeExitModal()" aria-hidden="true"></div>
     <section class="pr-exit-dialog" role="dialog" aria-modal="true" aria-labelledby="exitPracticeTitle" aria-describedby="exitPracticeCopy">
       <div class="pr-exit-icon"><i data-lucide="triangle-alert"></i></div>
-      <h2 class="pr-exit-title" id="exitPracticeTitle">Mashqdan chiqmoqchimisiz?</h2>
-      <p class="pr-exit-copy" id="exitPracticeCopy">Hozirgi mashq yakunlanadi va ushbu sessiyadagi progress saqlanmaydi.</p>
+      <h2 class="pr-exit-title" id="exitPracticeTitle" data-i18n="practice.exitTitle">Mashqdan chiqmoqchimisiz?</h2>
+      <p class="pr-exit-copy" id="exitPracticeCopy" data-i18n="practice.exitCopy">Hozirgi mashq yakunlanadi va ushbu sessiyadagi progress saqlanmaydi.</p>
       <div class="pr-exit-actions">
-        <button class="pr-exit-continue" id="continuePracticeBtn" type="button" onclick="closeExitModal()">Mashqni davom ettirish</button>
-        <button class="pr-exit-confirm" type="button" onclick="confirmExitPractice()">Chiqish</button>
+        <button class="pr-exit-continue" id="continuePracticeBtn" type="button" onclick="closeExitModal()" data-i18n="practice.continue">Mashqni davom ettirish</button>
+        <button class="pr-exit-confirm" type="button" onclick="confirmExitPractice()" data-i18n="practice.exitConfirm">Chiqish</button>
       </div>
     </section>
   </div>
 
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/profile-modal.js"></script>
   <script>
@@ -306,8 +308,27 @@
     var practiceSessionId = null;
     var questionShownAt = null;
     var exitModalTrigger = null;
+    var lastFeedbackState = null;
+    var lastResultState = null;
 
     function icons() { if (window.lucide) lucide.createIcons(); }
+
+    function practiceT(key, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+    }
+
+    function practiceSkillLabel(skill) {
+      var normalized = String(skill || "grammar").trim().toLowerCase();
+      var keyBySkill = {
+        grammar: "practice.skillGrammar",
+        vocabulary: "practice.skillVocabulary",
+        reading: "practice.skillReading",
+        listening: "practice.skillListening",
+        writing: "practice.skillWriting",
+        speaking: "practice.skillSpeaking"
+      };
+      return keyBySkill[normalized] ? practiceT(keyBySkill[normalized]) : skill;
+    }
 
     // Foydalanuvchi darajasini default qilamiz
     (function initLevel() {
@@ -345,20 +366,22 @@
 
     async function startPractice() {
       showScreen("quizScreen");
-      document.getElementById("answersBox").innerHTML = '<div class="pr-loading">Savollar yuklanmoqda...</div>';
+      lastFeedbackState = null;
+      lastResultState = null;
+      document.getElementById("answersBox").innerHTML = '<div class="pr-loading">' + practiceT("practice.loadingQuestions") + '</div>';
       try {
         // Sprint 2A: authFetch — token avtomatik qo'shiladi, 401 bo'lsa login'ga qaytaradi
         var res = await authFetch("/practice/start?level=" + selectedLevel + "&count=" + selectedCount);
         var data = await res.json();
-        if (!res.ok) { alert(data.error || "Xato"); showScreen("setupScreen"); return; }
+        if (!res.ok) { alert(data.error || practiceT("practice.genericError")); showScreen("setupScreen"); return; }
         questions = data.questions || [];
         practiceSessionId = data.session_id || null;
-        if (questions.length === 0) { alert("Savol topilmadi"); showScreen("setupScreen"); return; }
+        if (questions.length === 0) { alert(practiceT("practice.noQuestions")); showScreen("setupScreen"); return; }
         currentIndex = 0;
         correctCount = 0;
         renderQuestion();
       } catch (err) {
-        alert("Server xatosi");
+        alert(practiceT("practice.serverError"));
         showScreen("setupScreen");
       }
     }
@@ -373,7 +396,7 @@
       document.getElementById("progressFill").style.width = pct + "%";
       document.getElementById("progressText").textContent = (currentIndex + 1) + " / " + questions.length;
 
-      document.getElementById("skillBadge").textContent = q.skill || "grammar";
+      document.getElementById("skillBadge").textContent = practiceSkillLabel(q.skill || "grammar");
       document.getElementById("questionText").textContent = q.question_text;
 
       // Javoblar
@@ -419,11 +442,11 @@
           })
         });
         result = await response.json();
-        if (!response.ok) throw new Error(result.error || "Javobni tekshirib bo'lmadi");
+        if (!response.ok) throw new Error(result.error || practiceT("practice.answerCheckError"));
       } catch (err) {
         answered = false;
         document.querySelectorAll("#answersBox .pr-answer").forEach(function (btn) { btn.disabled = false; });
-        alert(err.message || "Server xatosi");
+        alert(err.message || practiceT("practice.serverError"));
         return;
       }
 
@@ -441,22 +464,36 @@
         }
       });
 
-      var fb = document.getElementById("feedback");
-      fb.className = "pr-feedback show " + (isCorrect ? "correct" : "wrong");
-      document.getElementById("feedbackTitle").innerHTML = isCorrect
-        ? '<i data-lucide="check-circle"></i> To\'g\'ri!'
-        : '<i data-lucide="x-circle"></i> Noto\'g\'ri';
-      var explain = result.explanation && result.explanation.trim()
-        ? result.explanation
-        : (isCorrect ? "Ajoyib, davom eting!" : "To'g'ri javob: " + result.correct_option);
-      document.getElementById("feedbackText").textContent = explain;
+      lastFeedbackState = {
+        isCorrect: isCorrect,
+        correctOption: result.correct_option,
+        explanation: result.explanation && result.explanation.trim() ? result.explanation : ""
+      };
+      renderFeedback();
+      renderNextButton();
+      icons();
+    }
 
+    function renderFeedback() {
+      if (!lastFeedbackState) return;
+      var state = lastFeedbackState;
+      var fb = document.getElementById("feedback");
+      fb.className = "pr-feedback show " + (state.isCorrect ? "correct" : "wrong");
+      document.getElementById("feedbackTitle").innerHTML = state.isCorrect
+        ? '<i data-lucide="check-circle"></i> ' + practiceT("practice.correctFeedback")
+        : '<i data-lucide="x-circle"></i> ' + practiceT("practice.wrongFeedback");
+      var explanation = state.explanation || (state.isCorrect
+        ? practiceT("practice.correctFallback")
+        : practiceT("practice.correctAnswer", { option: state.correctOption }));
+      document.getElementById("feedbackText").textContent = explanation;
+    }
+
+    function renderNextButton() {
       var nextBtn = document.getElementById("nextBtn");
       nextBtn.className = "pr-next-btn show";
       nextBtn.innerHTML = (currentIndex === questions.length - 1)
-        ? '<i data-lucide="flag"></i> Natijani ko\'rish'
-        : '<i data-lucide="arrow-right"></i> Keyingi savol';
-      icons();
+        ? '<i data-lucide="flag"></i> ' + practiceT("practice.viewResult")
+        : '<i data-lucide="arrow-right"></i> ' + practiceT("practice.nextQuestion");
     }
 
     function nextQuestion() {
@@ -498,24 +535,32 @@
         }
       } catch (err) { /* XP olinmasa ham natija ko'rsatamiz */ }
 
-      // Natija ko'rsatish
+      lastResultState = { total: total, correct: correctCount, percent: percent, xpEarned: xpEarned };
+      renderResult();
+      icons();
+    }
+
+    function renderResult() {
+      if (!lastResultState) return;
+      var total = lastResultState.total;
+      var correct = lastResultState.correct;
+      var percent = lastResultState.percent;
       var icEl = document.getElementById("resultIc");
       var titleEl = document.getElementById("resultTitle");
       if (percent >= 80) {
         icEl.className = "pr-result-ic great"; icEl.innerHTML = '<i data-lucide="trophy"></i>';
-        titleEl.textContent = "Ajoyib natija!";
+        titleEl.textContent = practiceT("practice.resultGreat");
       } else if (percent >= 50) {
         icEl.className = "pr-result-ic good"; icEl.innerHTML = '<i data-lucide="thumbs-up"></i>';
-        titleEl.textContent = "Yaxshi mashq!";
+        titleEl.textContent = practiceT("practice.resultGood");
       } else {
         icEl.className = "pr-result-ic ok"; icEl.innerHTML = '<i data-lucide="book-open"></i>';
-        titleEl.textContent = "Mashq qilishda davom eting!";
+        titleEl.textContent = practiceT("practice.resultKeepGoing");
       }
-      document.getElementById("resultSub").textContent = total + " ta savoldan " + correctCount + " tasiga to'g'ri javob berdingiz";
-      document.getElementById("resultCorrect").textContent = correctCount + "/" + total;
+      document.getElementById("resultSub").textContent = practiceT("practice.resultSummary", { total: total, correct: correct });
+      document.getElementById("resultCorrect").textContent = correct + "/" + total;
       document.getElementById("resultPercent").textContent = percent + "%";
-      document.getElementById("resultXp").textContent = "+" + xpEarned;
-      icons();
+      document.getElementById("resultXp").textContent = "+" + lastResultState.xpEarned;
     }
 
     function exitPractice() {
@@ -547,6 +592,20 @@
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
+
+    window.addEventListener("ilmliga:languagechange", function () {
+      var loading = document.querySelector("#answersBox .pr-loading");
+      if (loading) loading.textContent = practiceT("practice.loadingQuestions");
+      if (questions[currentIndex]) {
+        document.getElementById("skillBadge").textContent = practiceSkillLabel(questions[currentIndex].skill || "grammar");
+      }
+      if (lastFeedbackState) {
+        renderFeedback();
+        renderNextButton();
+      }
+      if (lastResultState) renderResult();
+      icons();
+    });
 
     icons();
   </script>
