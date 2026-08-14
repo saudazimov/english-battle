@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Imtihonlar — English Battle</title>
+  <title data-i18n="teacherExams.metaTitle">Imtihonlar — IlmLiga</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
@@ -243,12 +243,12 @@
     <div class="main">
       <header class="topbar">
         <div class="tb-head">
-          <h1><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="13" y2="11"/></svg> Imtihonlar</h1>
-          <p>Imtihonlarni yarating, boshqaring va natijalarni tahlil qiling</p>
+          <h1><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="13" y2="11"/></svg> <span data-i18n="teacherExams.heading">Imtihonlar</span></h1>
+          <p data-i18n="teacherExams.subtitle">Imtihonlarni yarating, boshqaring va natijalarni tahlil qiling</p>
         </div>
         <div class="tb-year" onclick="comingSoon('O\'quv yili')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          2024–2025 O'quv yili
+          <span data-i18n="teacherExams.schoolYear">2024–2025 O'quv yili</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <button class="theme-toggle" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
@@ -256,7 +256,7 @@
         <div class="tb-user" onclick="window.location.href='/profile.html'">
           <div class="tb-user-info">
             <div class="tb-user-name" id="userName">O'qituvchi</div>
-            <div class="tb-user-role">Teacher</div>
+            <div class="tb-user-role" data-i18n="teacherExams.teacher">O'qituvchi</div>
           </div>
           <div class="tb-avatar" id="userAvatar">T</div>
         </div>
@@ -265,33 +265,33 @@
       <div class="content">
         <div class="col-main">
           <div class="create-row">
-            <button class="btn-create" onclick="openExamModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Yangi imtihon yaratish</button>
+            <button class="btn-create" onclick="openExamModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span data-i18n="teacherExams.createNew">Yangi imtihon yaratish</span></button>
           </div>
 
           <!-- Statistika (5 ta) -->
           <div class="stats-row">
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><span class="stat-label">Jami imtihonlar</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><span class="stat-label" data-i18n="teacherExams.totalExams">Jami imtihonlar</span></div>
               <div class="stat-val" id="statTotal">0</div>
-              <div class="stat-delta up"><span>barcha imtihonlar</span></div>
+              <div class="stat-delta up"><span data-i18n="teacherExams.allExams">barcha imtihonlar</span></div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><span class="stat-label">Faol imtihonlar</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><span class="stat-label" data-i18n="teacherExams.activeExams">Faol imtihonlar</span></div>
               <div class="stat-val" id="statActive">0</div>
-              <div class="stat-delta up"><span>hozir faol</span></div>
+              <div class="stat-delta up"><span data-i18n="teacherExams.activeNow">hozir faol</span></div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><span class="stat-label">Yakunlangan</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><span class="stat-label" data-i18n="teacherExams.finished">Yakunlangan</span></div>
               <div class="stat-val" id="statDone">0</div>
-              <div class="stat-delta up"><span>tugagan</span></div>
+              <div class="stat-delta up"><span data-i18n="teacherExams.completed">tugagan</span></div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span class="stat-label">O'rtacha natija</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span class="stat-label" data-i18n="teacherExams.averageResult">O'rtacha natija</span></div>
               <div class="stat-val" id="statAvg">—</div>
               <div class="stat-delta up"><span>barcha imtihonlar</span></div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:rgba(6,182,212,.14);color:var(--cyan)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="stat-label">O'rtacha davomiylik</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:rgba(6,182,212,.14);color:var(--cyan)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="stat-label" data-i18n="teacherExams.averageDuration">O'rtacha davomiylik</span></div>
               <div class="stat-val" id="statDur">—</div>
               <div class="stat-delta up"><span>daqiqa</span></div>
             </div>
@@ -302,11 +302,11 @@
             <div class="filters">
               <div class="search-box">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input id="searchInput" type="text" placeholder="Imtihon nomi bo'yicha qidirish..." oninput="onSearch(this.value)" />
+                <input id="searchInput" type="text" placeholder="Imtihon nomi bo'yicha qidirish..." data-i18n-placeholder="teacherExams.searchPlaceholder" oninput="onSearch(this.value)" />
               </div>
-              <select class="filter-sel" id="filterStatus" onchange="applyFilters()"><option value="">Barcha status</option><option value="active">Faol</option><option value="scheduled">Rejalashtirilgan</option><option value="finished">Yakunlangan</option></select>
-              <select class="filter-sel" id="filterSkill" onchange="applyFilters()"><option value="">Barcha ko'nikma</option><option value="mixed">Aralash</option><option value="grammar">Grammar</option><option value="vocabulary">Vocabulary</option><option value="reading">Reading</option><option value="listening">Listening</option></select>
-              <select class="filter-sel" id="filterSort" onchange="applyFilters()"><option value="new">Yangi birinchi</option><option value="old">Eski birinchi</option><option value="name">Nomi (A-Z)</option></select>
+              <select class="filter-sel" id="filterStatus" onchange="applyFilters()"><option value="" data-i18n="teacherExams.allStatuses">Barcha status</option><option value="active" data-i18n="teacherExams.active">Faol</option><option value="scheduled" data-i18n="teacherExams.scheduled">Rejalashtirilgan</option><option value="finished" data-i18n="teacherExams.finished">Yakunlangan</option></select>
+              <select class="filter-sel" id="filterSkill" onchange="applyFilters()"><option value="" data-i18n="teacherExams.allSkills">Barcha ko'nikma</option><option value="mixed" data-i18n="teacherExams.mixed">Aralash</option><option value="grammar" data-i18n="teacherExams.grammar">Grammar</option><option value="vocabulary" data-i18n="teacherExams.vocabulary">Vocabulary</option><option value="reading" data-i18n="teacherExams.reading">Reading</option><option value="listening" data-i18n="teacherExams.listening">Listening</option></select>
+              <select class="filter-sel" id="filterSort" onchange="applyFilters()"><option value="new" data-i18n="teacherExams.newestFirst">Yangi birinchi</option><option value="old" data-i18n="teacherExams.oldestFirst">Eski birinchi</option><option value="name" data-i18n="teacherExams.nameAZ">Nomi (A-Z)</option></select>
             </div>
             <div id="examArea">
               <div class="skeleton-bar"></div>
@@ -316,7 +316,7 @@
             <div class="pager" id="pager" style="display:none">
               <div class="pager-info" id="pagerInfo"></div>
               <div class="pager-nav" id="pagerNav"></div>
-              <div class="pager-size">Har sahifada: <select id="pageSize" onchange="changePageSize(this.value)"><option>8</option><option>15</option><option>25</option></select></div>
+              <div class="pager-size"><span data-i18n="teacherExams.perPage">Har sahifada:</span> <select id="pageSize" onchange="changePageSize(this.value)"><option>8</option><option>15</option><option>25</option></select></div>
             </div>
           </div>
         </div>
@@ -324,23 +324,23 @@
         <!-- O'ng panel -->
         <div class="col-side">
           <div class="side-card">
-            <div class="side-head"><h3>Imtihonlar bo'yicha qisqacha</h3></div>
+            <div class="side-head"><h3 data-i18n="teacherExams.summary">Imtihonlar bo'yicha qisqacha</h3></div>
             <div class="qsum-item">
               <div class="qsum-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-              <div class="qsum-info"><div class="qsum-name">Muddati yaqin</div><div class="qsum-sub">7 kun ichida boshlanadi</div></div>
+              <div class="qsum-info"><div class="qsum-name" data-i18n="teacherExams.upcoming">Muddati yaqin</div><div class="qsum-sub" data-i18n="teacherExams.startsWithinSevenDays">7 kun ichida boshlanadi</div></div>
               <div class="qsum-val" id="qsumSoon">0</div>
             </div>
             <div class="qsum-item">
               <div class="qsum-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-              <div class="qsum-info"><div class="qsum-name">Topshirilishi kutilmoqda</div><div class="qsum-sub">Faol imtihonlar bo'yicha</div></div>
+              <div class="qsum-info"><div class="qsum-name" data-i18n="teacherExams.awaitingSubmission">Topshirilishi kutilmoqda</div><div class="qsum-sub" data-i18n="teacherExams.forActiveExams">Faol imtihonlar bo'yicha</div></div>
               <div class="qsum-val" id="qsumPending">0</div>
             </div>
             <div class="qsum-item">
               <div class="qsum-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-              <div class="qsum-info"><div class="qsum-name">Baholash kutilmoqda</div><div class="qsum-sub">Yakunlangan imtihonlar</div></div>
+              <div class="qsum-info"><div class="qsum-name" data-i18n="teacherExams.awaitingGrading">Baholash kutilmoqda</div><div class="qsum-sub" data-i18n="teacherExams.finishedExams">Yakunlangan imtihonlar</div></div>
               <div class="qsum-val" id="qsumGrade">0</div>
             </div>
-            <span class="side-link" onclick="showToast('Barcha imtihonlar quyida ro\'yxatda')">Barchasini ko'rish →</span>
+            <span class="side-link" onclick="showToast(teacherExamsT('teacherExams.allListedBelow'))" data-i18n="teacherExams.viewAll">Barchasini ko'rish →</span>
           </div>
 
           <div class="side-card">
@@ -350,9 +350,9 @@
             </div>
             <div class="cal-grid" id="calGrid"></div>
             <div class="cal-legend">
-              <div class="cal-leg"><span class="d" style="background:var(--primary)"></span> Faol</div>
-              <div class="cal-leg"><span class="d" style="background:var(--amber)"></span> Rejalashtirilgan</div>
-              <div class="cal-leg"><span class="d" style="background:var(--green)"></span> Yakunlangan</div>
+              <div class="cal-leg"><span class="d" style="background:var(--primary)"></span> <span data-i18n="teacherExams.active">Faol</span></div>
+              <div class="cal-leg"><span class="d" style="background:var(--amber)"></span> <span data-i18n="teacherExams.scheduled">Rejalashtirilgan</span></div>
+              <div class="cal-leg"><span class="d" style="background:var(--green)"></span> <span data-i18n="teacherExams.finished">Yakunlangan</span></div>
             </div>
           </div>
 
@@ -380,69 +380,69 @@
     <div class="ex-modal">
       <div class="ex-modal-head">
         <div>
-          <div class="ex-modal-title">Yangi imtihon yaratish</div>
-          <div class="ex-modal-sub">Tizim savollarni avtomatik tanlaydi. O'quvchilar belgilangan vaqtda topshiradi.</div>
+          <div class="ex-modal-title" data-i18n="teacherExams.createNew">Yangi imtihon yaratish</div>
+          <div class="ex-modal-sub" data-i18n="teacherExams.modalSubtitle">Tizim savollarni avtomatik tanlaydi. O'quvchilar belgilangan vaqtda topshiradi.</div>
         </div>
         <button class="ex-modal-close" onclick="closeExamModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="ex-modal-body">
         <div class="ex-field">
-          <label>Imtihon nomi *</label>
-          <input id="exTitle" type="text" placeholder="Masalan: A1 daraja yakuniy imtihoni" maxlength="200" />
+          <label data-i18n="teacherExams.examName">Imtihon nomi *</label>
+          <input id="exTitle" type="text" placeholder="Masalan: A1 daraja yakuniy imtihoni" data-i18n-placeholder="teacherExams.titlePlaceholder" maxlength="200" />
         </div>
         <div class="ex-field">
-          <label>Sinf</label>
-          <select id="exClass"><option value="">Sinf tanlang...</option></select>
+          <label data-i18n="teacherExams.class">Sinf</label>
+          <select id="exClass"><option value="" data-i18n="teacherExams.selectClass">Sinf tanlang...</option></select>
         </div>
         <div class="ex-field">
-          <label>Tavsif (ixtiyoriy)</label>
-          <textarea id="exDesc" rows="2" placeholder="Imtihon haqida qisqacha"></textarea>
+          <label data-i18n="teacherExams.descriptionOptional">Tavsif (ixtiyoriy)</label>
+          <textarea id="exDesc" rows="2" placeholder="Imtihon haqida qisqacha" data-i18n-placeholder="teacherExams.descriptionPlaceholder"></textarea>
         </div>
         <div class="ex-row3">
           <div class="ex-field">
-            <label>CEFR daraja *</label>
+            <label data-i18n="teacherExams.cefrLevel">CEFR daraja *</label>
             <select id="exLevel"><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select>
           </div>
           <div class="ex-field">
-            <label>Ko'nikma *</label>
-            <select id="exSkill"><option value="mixed">Aralash</option><option value="grammar">Grammar</option><option value="vocabulary">Vocabulary</option><option value="reading">Reading</option><option value="listening">Listening</option></select>
+            <label data-i18n="teacherExams.skill">Ko'nikma *</label>
+            <select id="exSkill"><option value="mixed" data-i18n="teacherExams.mixed">Aralash</option><option value="grammar" data-i18n="teacherExams.grammar">Grammar</option><option value="vocabulary" data-i18n="teacherExams.vocabulary">Vocabulary</option><option value="reading" data-i18n="teacherExams.reading">Reading</option><option value="listening" data-i18n="teacherExams.listening">Listening</option></select>
           </div>
           <div class="ex-field">
-            <label>Savollar soni *</label>
+            <label data-i18n="teacherExams.questionCount">Savollar soni *</label>
             <input id="exCount" type="number" min="1" max="50" value="20" />
           </div>
         </div>
         <div class="ex-row3">
           <div class="ex-field">
-            <label>Davomiylik (daqiqa) *</label>
+            <label data-i18n="teacherExams.durationMinutes">Davomiylik (daqiqa) *</label>
             <input id="exDuration" type="number" min="5" max="180" value="30" />
           </div>
           <div class="ex-field">
-            <label>O'tish balli (%)</label>
+            <label data-i18n="teacherExams.passScore">O'tish balli (%)</label>
             <input id="exPass" type="number" min="0" max="100" value="60" />
           </div>
           <div class="ex-field">
-            <label>Urinishlar</label>
-            <select id="exAttempts"><option value="1">1 marta</option><option value="2">2 marta</option><option value="3">3 marta</option></select>
+            <label data-i18n="teacherExams.attempts">Urinishlar</label>
+            <select id="exAttempts"><option value="1" data-i18n="teacherExams.once">1 marta</option><option value="2" data-i18n="teacherExams.twice">2 marta</option><option value="3" data-i18n="teacherExams.threeTimes">3 marta</option></select>
           </div>
         </div>
         <div class="ex-row2">
           <div class="ex-field">
-            <label>Boshlanish vaqti (ixtiyoriy)</label>
+            <label data-i18n="teacherExams.startOptional">Boshlanish vaqti (ixtiyoriy)</label>
             <input id="exStart" type="datetime-local" />
-            <span class="ex-note">Bo'sh — darhol faol bo'ladi</span>
+            <span class="ex-note" data-i18n="teacherExams.startNote">Bo'sh — darhol faol bo'ladi</span>
           </div>
           <div class="ex-field">
-            <label>Tugash vaqti (ixtiyoriy)</label>
+            <label data-i18n="teacherExams.endOptional">Tugash vaqti (ixtiyoriy)</label>
             <input id="exEnd" type="datetime-local" />
-            <span class="ex-note">Bo'sh — cheklanmagan</span>
+            <span class="ex-note" data-i18n="teacherExams.endNote">Bo'sh — cheklanmagan</span>
           </div>
         </div>
         <div class="ex-modal-err" id="exErr"></div>
       </div>
       <div class="ex-modal-foot">
-        <button class="ex-mbtn cancel" onclick="closeExamModal()">Bekor qilish</button>
-        <button class="ex-mbtn confirm" id="exSubmitBtn" onclick="submitExam()">Imtihon yaratish</button>
+        <button class="ex-mbtn cancel" onclick="closeExamModal()" data-i18n="common.cancel">Bekor qilish</button>
+        <button class="ex-mbtn confirm" id="exSubmitBtn" onclick="submitExam()" data-i18n="teacherExams.createExam">Imtihon yaratish</button>
       </div>
     </div>
   </div>
@@ -452,19 +452,20 @@
     <div class="ex-modal">
       <div class="ex-modal-head">
         <div>
-          <div class="ex-modal-title" id="viewExTitle">Imtihon</div>
+          <div class="ex-modal-title" id="viewExTitle" data-i18n="teacherExams.exam">Imtihon</div>
           <div class="ex-modal-sub" id="viewExSub">—</div>
         </div>
         <button class="ex-modal-close" onclick="closeViewExam()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <div class="ex-modal-body" id="viewExBody"><div class="state-msg">Yuklanmoqda...</div></div>
-      <div class="ex-modal-foot"><button class="ex-mbtn cancel" onclick="closeViewExam()">Yopish</button></div>
+      <div class="ex-modal-body" id="viewExBody"><div class="state-msg" data-i18n="teacherExams.loading">Yuklanmoqda...</div></div>
+      <div class="ex-modal-foot"><button class="ex-mbtn cancel" onclick="closeViewExam()" data-i18n="common.close">Yopish</button></div>
     </div>
   </div>
 
   <div class="toast" id="toast"></div>
 
   <script src="/api.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/payment-modal.js"></script>
   <script src="/premium-modal.js"></script>
   <script src="/teacher-sidebar.js"></script>
@@ -490,10 +491,12 @@
         : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>';
     }
 
-    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada tayyor bo'ladi"); }
+    function teacherExamsT(key, params) { return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key; }
+    function teacherExamsLocale() { var language=window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz"; return {uz:"uz-UZ",en:"en-GB",ru:"ru-RU"}[language] || "uz-UZ"; }
+    function comingSoon(name) { showToast(teacherExamsT("teacherExams.comingSoon", {name:name || ""})); }
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     function showToast(text) { var t = document.getElementById("toast"); t.textContent = text; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2600); }
-    function fmtDate(iso) { if (!iso) return "—"; var d = new Date(iso); return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); }
+    function fmtDate(iso) { if (!iso) return "—"; var d = new Date(iso); return d.toLocaleDateString(teacherExamsLocale(), { day: "2-digit", month: "short", year: "numeric" }); }
 
     // ===== AUTH =====
     var userData = localStorage.getItem("user");
@@ -506,11 +509,12 @@
     renderTeacherSidebar("exams");
 
     var fn = user.first_name || "", ln = user.last_name || "";
-    document.getElementById("userName").textContent = (fn + " " + ln).trim() || "O'qituvchi";
+    document.getElementById("userName").textContent = (fn + " " + ln).trim() || teacherExamsT("teacherExams.teacher");
     document.getElementById("userAvatar").textContent = (fn || "T").charAt(0).toUpperCase();
 
     var EX_COLORS = ["#2f6bff", "#f59e0b", "#16b06a", "#06b6d4", "#7c5cfc", "#ef4655"];
     var allExams = [], filtered = [], page = 1, pageSize = 8;
+    var latestExamStats = {}, examsLoaded = false, currentExamDetail = null;
 
     // ===== IMTIHONLARNI YUKLASH =====
     async function loadExams() {
@@ -522,7 +526,9 @@
         var data = await res.json();
         allExams = data.exams || [];
         filtered = allExams.slice();
-        renderStats(data.stats || {});
+        latestExamStats = data.stats || {};
+        examsLoaded = true;
+        renderStats(latestExamStats);
         fillExamDates();
         if (!allExams.length) { showEmpty(); return; }
         renderTable();
@@ -535,9 +541,9 @@
       document.getElementById("examArea").innerHTML =
         '<div class="empty-state">' +
           '<div class="empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="13" y2="11"/></svg></div>' +
-          '<div class="empty-title">Hali imtihon yo\'q</div>' +
-          '<div class="empty-text">Sinflaringiz uchun imtihon yarating. O\'quvchilar imtihonni topshiradi, natijalar shu yerda jamlanadi.</div>' +
-          '<button class="btn-create" style="margin:0 auto" onclick="openExamModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Yangi imtihon yaratish</button>' +
+          '<div class="empty-title">'+teacherExamsT("teacherExams.emptyTitle")+'</div>' +
+          '<div class="empty-text">'+teacherExamsT("teacherExams.emptyText")+'</div>' +
+          '<button class="btn-create" style="margin:0 auto" onclick="openExamModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> '+teacherExamsT("teacherExams.createNew")+'</button>' +
         '</div>';
       document.getElementById("pager").style.display = "none";
       // Statistika 0/— qoladi (default)
@@ -548,46 +554,46 @@
       document.getElementById("statActive").textContent = s.active != null ? s.active : 0;
       document.getElementById("statDone").textContent = s.finished != null ? s.finished : 0;
       document.getElementById("statAvg").textContent = s.avg_score ? s.avg_score + "%" : "—";
-      document.getElementById("statDur").innerHTML = s.avg_duration != null ? s.avg_duration + ' <small>daqiqa</small>' : "—";
+      document.getElementById("statDur").innerHTML = s.avg_duration != null ? s.avg_duration + ' <small>'+teacherExamsT("teacherExams.minutes")+'</small>' : "—";
     }
     function renderQSum(q) { /* Faza 2 — o'quvchi topshirish qismida to'ldiriladi */ }
 
     function renderTable() {
       var area = document.getElementById("examArea");
       if (!filtered.length) {
-        area.innerHTML = '<div class="state-msg">Qidiruvga mos imtihon topilmadi.</div>';
+        area.innerHTML = '<div class="state-msg">'+teacherExamsT("teacherExams.noSearchResults")+'</div>';
         document.getElementById("pager").style.display = "none";
         return;
       }
       var start = (page - 1) * pageSize;
       var pageItems = filtered.slice(start, start + pageSize);
-      var SKILL_LABEL = { mixed: "Aralash", grammar: "Grammar", vocabulary: "Vocabulary", reading: "Reading", listening: "Listening", speaking: "Speaking", writing: "Writing" };
+      var SKILL_LABEL = { mixed: "teacherExams.mixed", grammar: "teacherExams.grammar", vocabulary: "teacherExams.vocabulary", reading: "teacherExams.reading", listening: "teacherExams.listening", speaking: "teacherExams.speaking", writing: "teacherExams.writing" };
 
       var rows = pageItems.map(function (e, i) {
         var color = EX_COLORS[(start + i) % EX_COLORS.length];
         var sk = (e.skill || "mixed").toLowerCase();
         var st = e.status || "active";
         var stClass = st === "finished" ? "done" : st === "draft" ? "draft" : st === "scheduled" ? "draft" : "active";
-        var stText = st === "finished" ? "Yakunlangan" : st === "draft" ? "Draft" : st === "scheduled" ? "Rejalashtirilgan" : "Faol";
+        var stText = st === "finished" ? teacherExamsT("teacherExams.finished") : st === "draft" ? teacherExamsT("teacherExams.draft") : st === "scheduled" ? teacherExamsT("teacherExams.scheduled") : teacherExamsT("teacherExams.active");
         var studentCount = e.class_student_count != null ? e.class_student_count : 0;
 
         return '<tr>' +
-          '<td><div class="ex-name-cell"><div class="ex-ic" style="background:' + color + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="ex-name">' + esc(e.title) + '</div>' + (e.cefr_level ? '<div class="ex-sub">' + esc(e.cefr_level) + ' daraja</div>' : '') + '</div></div></td>' +
-          '<td><span class="ex-class">' + esc(e.class_name || "Barcha sinflar") + '</span></td>' +
-          '<td><span class="chip ' + sk + '">' + esc(SKILL_LABEL[sk] || e.skill) + '</span></td>' +
-          '<td><span class="ex-cell-txt">' + (e.question_count || 0) + ' savol</span></td>' +
-          '<td><span class="ex-cell-txt">' + (e.duration_minutes || 0) + ' daq</span></td>' +
-          '<td>' + (e.starts_at ? '<div class="ex-date">' + fmtDate(e.starts_at) + '</div>' : '<span style="color:var(--text-dim)">Darhol</span>') + '</td>' +
-          '<td><span class="ex-cell-txt">' + studentCount + ' o\'quvchi</span></td>' +
-          '<td><span class="ex-cell-txt" style="color:var(--text-dim)">Kutilmoqda</span></td>' +
+          '<td><div class="ex-name-cell"><div class="ex-ic" style="background:' + color + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="ex-name">' + esc(e.title) + '</div>' + (e.cefr_level ? '<div class="ex-sub">' + teacherExamsT("teacherExams.levelValue",{level:esc(e.cefr_level)}) + '</div>' : '') + '</div></div></td>' +
+          '<td><span class="ex-class">' + esc(e.class_name || teacherExamsT("teacherExams.allClasses")) + '</span></td>' +
+          '<td><span class="chip ' + sk + '">' + esc(teacherExamsT(SKILL_LABEL[sk] || e.skill)) + '</span></td>' +
+          '<td><span class="ex-cell-txt">' + teacherExamsT("teacherExams.questionValue",{count:e.question_count || 0}) + '</span></td>' +
+          '<td><span class="ex-cell-txt">' + teacherExamsT("teacherExams.minuteShortValue",{count:e.duration_minutes || 0}) + '</span></td>' +
+          '<td>' + (e.starts_at ? '<div class="ex-date">' + fmtDate(e.starts_at) + '</div>' : '<span style="color:var(--text-dim)">'+teacherExamsT("teacherExams.immediately")+'</span>') + '</td>' +
+          '<td><span class="ex-cell-txt">' + teacherExamsT("teacherExams.studentValue",{count:studentCount}) + '</span></td>' +
+          '<td><span class="ex-cell-txt" style="color:var(--text-dim)">'+teacherExamsT("teacherExams.pending")+'</span></td>' +
           '<td><span class="status-badge ' + stClass + '">' + stText + '</span></td>' +
-          '<td><div class="ex-act"><button class="ex-act-btn" onclick="viewExam(' + e.id + ')">Ko\'rish</button><button class="act-ic danger" title="O\'chirish" onclick="deleteExam(' + e.id + ', \'' + esc((e.title || "").replace(/'/g, "")) + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></div></td>' +
+          '<td><div class="ex-act"><button class="ex-act-btn" onclick="viewExam(' + e.id + ')">'+teacherExamsT("teacherExams.view")+'</button><button class="act-ic danger" title="'+esc(teacherExamsT("teacherExams.delete"))+'" onclick="deleteExam(' + e.id + ', \'' + esc((e.title || "").replace(/'/g, "")) + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></div></td>' +
         '</tr>';
       }).join("");
 
       area.innerHTML =
         '<div class="table-wrap"><table class="ex-table"><thead><tr>' +
-          '<th>Imtihon nomi</th><th>Sinf</th><th>Ko\'nikma</th><th>Savollar</th><th>Davomiylik</th><th>Boshlanish</th><th>O\'quvchilar</th><th>Natija</th><th>Status</th><th>Amallar</th>' +
+          '<th>'+teacherExamsT("teacherExams.examTitle")+'</th><th>'+teacherExamsT("teacherExams.class")+'</th><th>'+teacherExamsT("teacherExams.skill")+'</th><th>'+teacherExamsT("teacherExams.questions")+'</th><th>'+teacherExamsT("teacherExams.duration")+'</th><th>'+teacherExamsT("teacherExams.start")+'</th><th>'+teacherExamsT("teacherExams.students")+'</th><th>'+teacherExamsT("teacherExams.result")+'</th><th>'+teacherExamsT("teacherExams.status")+'</th><th>'+teacherExamsT("teacherExams.actions")+'</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table></div>';
 
       renderPager();
@@ -601,7 +607,7 @@
       pager.style.display = "flex";
       var start = (page - 1) * pageSize + 1;
       var end = Math.min(page * pageSize, filtered.length);
-      document.getElementById("pagerInfo").textContent = "Jami " + filtered.length + " ta imtihondan " + start + "–" + end + " tasi ko'rsatilmoqda";
+      document.getElementById("pagerInfo").textContent = teacherExamsT("teacherExams.pagerInfo",{total:filtered.length,start:start,end:end});
 
       var html = '<button class="pg-btn" onclick="goPage(' + (page - 1) + ')"' + (page === 1 ? ' disabled' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>';
       for (var p = 1; p <= totalPages; p++) {
@@ -649,7 +655,7 @@
         var data = await res.json();
         examClasses = data.classes || [];
         var sel = document.getElementById("exClass");
-        sel.innerHTML = '<option value="">Sinf tanlang...</option>' + examClasses.map(function (c) {
+        sel.innerHTML = '<option value="">'+teacherExamsT("teacherExams.selectClass")+'</option>' + examClasses.map(function (c) {
           return '<option value="' + c.id + '">' + esc(c.name) + '</option>';
         }).join("");
       } catch (e) { /* keyin */ }
@@ -669,7 +675,7 @@
       document.getElementById("exEnd").value = "";
       document.getElementById("exErr").style.display = "none";
       document.getElementById("exSubmitBtn").disabled = false;
-      document.getElementById("exSubmitBtn").textContent = "Imtihon yaratish";
+      document.getElementById("exSubmitBtn").textContent = teacherExamsT("teacherExams.createExam");
       document.getElementById("examModal").classList.add("show");
     }
     function closeExamModal() { document.getElementById("examModal").classList.remove("show"); }
@@ -680,11 +686,11 @@
       var classId = document.getElementById("exClass").value;
       var errEl = document.getElementById("exErr");
       var btn = document.getElementById("exSubmitBtn");
-      if (title.length < 3) { errEl.textContent = "Sarlavha kamida 3 belgi bo'lsin"; errEl.style.display = "block"; return; }
+      if (title.length < 3) { errEl.textContent = teacherExamsT("teacherExams.titleMin"); errEl.style.display = "block"; return; }
       var count = parseInt(document.getElementById("exCount").value);
       var dur = parseInt(document.getElementById("exDuration").value);
-      if (isNaN(count) || count < 1 || count > 50) { errEl.textContent = "Savol soni 1-50 oralig'ida"; errEl.style.display = "block"; return; }
-      if (isNaN(dur) || dur < 5 || dur > 180) { errEl.textContent = "Davomiylik 5-180 daqiqa oralig'ida"; errEl.style.display = "block"; return; }
+      if (isNaN(count) || count < 1 || count > 50) { errEl.textContent = teacherExamsT("teacherExams.questionRange"); errEl.style.display = "block"; return; }
+      if (isNaN(dur) || dur < 5 || dur > 180) { errEl.textContent = teacherExamsT("teacherExams.durationRange"); errEl.style.display = "block"; return; }
 
       var payload = {
         class_id: classId || null,
@@ -702,7 +708,7 @@
       if (s) payload.starts_at = new Date(s).toISOString();
       if (en) payload.ends_at = new Date(en).toISOString();
 
-      btn.disabled = true; btn.textContent = "Yaratilmoqda...";
+      btn.disabled = true; btn.textContent = teacherExamsT("teacherExams.creating");
       errEl.style.display = "none";
       try {
         var res = await authFetch("/teacher/exams", {
@@ -710,67 +716,68 @@
         });
         var data = await res.json();
         if (!res.ok) {
-          if (window.handleProLimit && window.handleProLimit(res, data)) { closeExamModal(); btn.disabled = false; btn.textContent = "Imtihon yaratish"; return; }
-          errEl.textContent = data.error || "Xatolik yuz berdi"; errEl.style.display = "block";
-          btn.disabled = false; btn.textContent = "Imtihon yaratish"; return;
+          if (window.handleProLimit && window.handleProLimit(res, data)) { closeExamModal(); btn.disabled = false; btn.textContent = teacherExamsT("teacherExams.createExam"); return; }
+          errEl.textContent = data.error || teacherExamsT("teacherExams.errorOccurred"); errEl.style.display = "block";
+          btn.disabled = false; btn.textContent = teacherExamsT("teacherExams.createExam"); return;
         }
         closeExamModal();
-        showToast("Imtihon yaratildi! (" + (data.question_count || 0) + " savol)");
-        btn.disabled = false; btn.textContent = "Imtihon yaratish";
+        showToast(teacherExamsT("teacherExams.createdToast",{count:data.question_count || 0}));
+        btn.disabled = false; btn.textContent = teacherExamsT("teacherExams.createExam");
         loadExams();
       } catch (e) {
-        errEl.textContent = "Server bilan aloqa yo'q"; errEl.style.display = "block";
-        btn.disabled = false; btn.textContent = "Imtihon yaratish";
+        errEl.textContent = teacherExamsT("teacherExams.serverUnavailable"); errEl.style.display = "block";
+        btn.disabled = false; btn.textContent = teacherExamsT("teacherExams.createExam");
       }
     }
 
     // ===== IMTIHON KO'RISH =====
     async function viewExam(id) {
       document.getElementById("examViewModal").classList.add("show");
-      document.getElementById("viewExBody").innerHTML = '<div class="state-msg">Yuklanmoqda...</div>';
-      document.getElementById("viewExTitle").textContent = "Imtihon";
+      document.getElementById("viewExBody").innerHTML = '<div class="state-msg">'+teacherExamsT("teacherExams.loading")+'</div>';
+      document.getElementById("viewExTitle").textContent = teacherExamsT("teacherExams.exam");
       document.getElementById("viewExSub").textContent = "—";
       try {
         var res = await authFetch("/teacher/exams/" + id);
-        if (!res.ok) { document.getElementById("viewExBody").innerHTML = '<div class="state-msg">Yuklab bo\'lmadi.</div>'; return; }
+        if (!res.ok) { document.getElementById("viewExBody").innerHTML = '<div class="state-msg">'+teacherExamsT("teacherExams.loadFailed")+'</div>'; return; }
         var data = await res.json();
-        var ex = data.exam || {};
-        var qs = data.questions || [];
-        var SKILL_LABEL = { mixed: "Aralash", grammar: "Grammar", vocabulary: "Vocabulary", reading: "Reading", listening: "Listening" };
-        document.getElementById("viewExTitle").textContent = ex.title || "Imtihon";
-        document.getElementById("viewExSub").textContent = (ex.class_name || "Barcha sinflar") + " · " + (ex.cefr_level || "") + " · " + (ex.duration_minutes || 0) + " daqiqa";
-        var meta = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">' +
-          metaBox("Savollar", (ex.question_count || 0) + " ta") +
-          metaBox("Davomiylik", (ex.duration_minutes || 0) + " daqiqa") +
-          metaBox("O'tish balli", (ex.pass_percent || 0) + "%") +
-          metaBox("Urinishlar", (ex.max_attempts || 1) + " marta") +
-        '</div>';
-        var qhtml = qs.map(function (q) {
-          return '<div class="vq-item"><div class="vq-q">' + q.q_order + '. ' + esc((q.question_text || "").length > 100 ? q.question_text.slice(0, 100) + "…" : q.question_text) + '</div><div class="vq-meta">' + esc(SKILL_LABEL[(q.skill || "").toLowerCase()] || q.skill || "") + (q.difficulty ? ' · ' + esc(q.difficulty) : '') + '</div></div>';
-        }).join("");
-        document.getElementById("viewExBody").innerHTML = meta +
-          '<div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text-sub)">Savollar ro\'yxati (' + qs.length + ')</div>' +
-          (qhtml || '<div class="state-msg">Savol yo\'q</div>');
+        currentExamDetail = data;
+        renderExamDetail(data);
       } catch (e) {
-        document.getElementById("viewExBody").innerHTML = '<div class="state-msg">Server bilan aloqa yo\'q.</div>';
+        document.getElementById("viewExBody").innerHTML = '<div class="state-msg">'+teacherExamsT("teacherExams.serverUnavailable")+'</div>';
       }
+    }
+    function renderExamDetail(data) {
+      var ex = data.exam || {}, qs = data.questions || [];
+      var labels = { mixed:"teacherExams.mixed", grammar:"teacherExams.grammar", vocabulary:"teacherExams.vocabulary", reading:"teacherExams.reading", listening:"teacherExams.listening" };
+      document.getElementById("viewExTitle").textContent = ex.title || teacherExamsT("teacherExams.exam");
+      document.getElementById("viewExSub").textContent = (ex.class_name || teacherExamsT("teacherExams.allClasses")) + " · " + (ex.cefr_level || "") + " · " + teacherExamsT("teacherExams.minuteValue",{count:ex.duration_minutes || 0});
+      var meta = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">' +
+        metaBox(teacherExamsT("teacherExams.questions"), teacherExamsT("teacherExams.countValue",{count:ex.question_count || 0})) +
+        metaBox(teacherExamsT("teacherExams.duration"), teacherExamsT("teacherExams.minuteValue",{count:ex.duration_minutes || 0})) +
+        metaBox(teacherExamsT("teacherExams.passScorePlain"), (ex.pass_percent || 0) + "%") +
+        metaBox(teacherExamsT("teacherExams.attempts"), teacherExamsT("teacherExams.attemptValue",{count:ex.max_attempts || 1})) + '</div>';
+      var qhtml = qs.map(function (q) {
+        var skill = labels[(q.skill || "").toLowerCase()];
+        return '<div class="vq-item"><div class="vq-q">' + q.q_order + '. ' + esc((q.question_text || "").length > 100 ? q.question_text.slice(0,100) + "…" : q.question_text) + '</div><div class="vq-meta">' + esc(teacherExamsT(skill || q.skill || "")) + (q.difficulty ? ' · ' + esc(q.difficulty) : '') + '</div></div>';
+      }).join("");
+      document.getElementById("viewExBody").innerHTML = meta + '<div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text-sub)">'+teacherExamsT("teacherExams.questionList",{count:qs.length})+'</div>' + (qhtml || '<div class="state-msg">'+teacherExamsT("teacherExams.noQuestions")+'</div>');
     }
     function metaBox(k, v) {
       return '<div style="background:var(--bg-soft);border-radius:10px;padding:12px 14px"><div style="font-size:11.5px;color:var(--text-dim);margin-bottom:3px">' + k + '</div><div style="font-size:15px;font-weight:700">' + v + '</div></div>';
     }
-    function closeViewExam() { document.getElementById("examViewModal").classList.remove("show"); }
+    function closeViewExam() { document.getElementById("examViewModal").classList.remove("show"); currentExamDetail=null; }
     document.getElementById("examViewModal").addEventListener("click", function (e) { if (e.target === this) closeViewExam(); });
 
     // ===== IMTIHON O'CHIRISH =====
     async function deleteExam(id, title) {
-      if (!confirm('"' + title + '" imtihonini o\'chirasizmi?\n\nBu amalni bekor qilib bo\'lmaydi.')) return;
+      if (!confirm(teacherExamsT("teacherExams.deleteConfirm",{title:title}))) return;
       try {
         var res = await authFetch("/teacher/exams/" + id, { method: "DELETE" });
         var data = await res.json();
-        if (!res.ok) { showToast(data.error || "O'chirishda xatolik"); return; }
-        showToast("Imtihon o'chirildi");
+        if (!res.ok) { showToast(data.error || teacherExamsT("teacherExams.deleteError")); return; }
+        showToast(teacherExamsT("teacherExams.deleted"));
         loadExams();
-      } catch (e) { showToast("Server bilan aloqa yo'q"); }
+      } catch (e) { showToast(teacherExamsT("teacherExams.serverUnavailable")); }
     }
 
     // ===== CALENDAR (real imtihon sanalari) =====
@@ -794,9 +801,8 @@
     }
     function renderCalendar() {
       var y = calDate.getFullYear(), m = calDate.getMonth();
-      var months = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
-      document.getElementById("calTitle").textContent = months[m] + " " + y;
-      var dows = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
+      document.getElementById("calTitle").textContent = new Intl.DateTimeFormat(teacherExamsLocale(), {month:"long",year:"numeric"}).format(new Date(y,m,1));
+      var dows = teacherExamsT("teacherExams.weekdays").split(",");
       var first = new Date(y, m, 1);
       var startDow = (first.getDay() + 6) % 7;
       var daysInMonth = new Date(y, m + 1, 0).getDate();
@@ -818,6 +824,23 @@
     }
     function calPrev() { calDate.setMonth(calDate.getMonth() - 1); renderCalendar(); }
     function calNext() { calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); }
+
+    window.addEventListener("ilmliga:languagechange", function () {
+      if (!(fn + " " + ln).trim()) document.getElementById("userName").textContent = teacherExamsT("teacherExams.teacher");
+      renderCalendar();
+      if (examClasses.length) {
+        var classSelect = document.getElementById("exClass"), selectedClass = classSelect.value;
+        classSelect.innerHTML = '<option value="">'+teacherExamsT("teacherExams.selectClass")+'</option>' + examClasses.map(function(c){ return '<option value="'+c.id+'">'+esc(c.name)+'</option>'; }).join("");
+        classSelect.value = selectedClass;
+      }
+      if (examsLoaded) {
+        renderStats(latestExamStats);
+        if (allExams.length) renderTable(); else showEmpty();
+      } else if (document.querySelector("#examArea .empty-state")) showEmpty();
+      if (currentExamDetail && document.getElementById("examViewModal").classList.contains("show")) renderExamDetail(currentExamDetail);
+      var submitButton=document.getElementById("exSubmitBtn");
+      if (submitButton) submitButton.textContent=teacherExamsT(submitButton.disabled ? "teacherExams.creating" : "teacherExams.createExam");
+    });
 
     // ===== ISHGA TUSHIRISH =====
     loadExams();

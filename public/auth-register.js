@@ -116,6 +116,7 @@
 
   function loadSchoolOptions() {
     const select = document.getElementById("schoolSelect");
+    const selectedSchool = select ? select.value : "";
     const region = document.getElementById("regionSelect").value;
     const district = document.getElementById("districtSelect").value;
     if (!select || !region || (districtRequired && !district)) {
@@ -124,11 +125,13 @@
     }
     const options = Array.from({ length: 200 }, (_, index) => {
       const school = String(index + 1) + "-maktab";
-      return '<option value="' + school + '">' + school + '</option>';
+      return '<option value="' + school + '">' +
+        AuthApp.escapeHtml(AuthApp.t("register.schoolOption", { number: index + 1 })) + '</option>';
     }).join("");
     select.innerHTML = '<option value="" data-i18n="register.schoolPlaceholder">' +
       AuthApp.escapeHtml(AuthApp.t("register.schoolPlaceholder")) + "</option>" + options;
     select.disabled = false;
+    if (selectedSchool) select.value = selectedSchool;
     updateProfileValidity();
   }
 
@@ -149,17 +152,22 @@
     window.clearInterval(resendInterval);
     resendSeconds = 60;
     const button = document.getElementById("resendButton");
-    const timer = document.getElementById("resendTimer");
     button.disabled = true;
-    timer.textContent = "(" + resendSeconds + "s)";
+    renderResendTimer();
     resendInterval = window.setInterval(() => {
       resendSeconds -= 1;
-      timer.textContent = resendSeconds > 0 ? "(" + resendSeconds + "s)" : "";
+      renderResendTimer();
       if (resendSeconds <= 0) {
         window.clearInterval(resendInterval);
         button.disabled = false;
       }
     }, 1000);
+  }
+
+  function renderResendTimer() {
+    const timer = document.getElementById("resendTimer");
+    if (!timer) return;
+    timer.textContent = resendSeconds > 0 ? "(" + resendSeconds + " " + AuthApp.t("register.secondsShort") + ")" : "";
   }
 
   async function loadStates() {
@@ -422,6 +430,8 @@
 
     document.addEventListener("auth:language", () => {
       if (selectedRole) applyRoleToProfile();
+      renderResendTimer();
+      if (!document.getElementById("schoolSelect").disabled) loadSchoolOptions();
       updateProfileValidity();
       if (currentStep === "profile" && selectedRole !== "parent" && !document.getElementById("regionSelect").value) loadStates();
     });

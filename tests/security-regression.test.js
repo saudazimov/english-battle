@@ -43,7 +43,7 @@ test("lobby school details link targets the existing school rankings page", () =
 
   assert.match(
     lobby,
-    /<a class="view-all" href="\/rankings\.html">Batafsil<\/a>/
+    /<a class="view-all" href="\/rankings\.html" data-i18n="lobby\.details">Batafsil<\/a>/
   );
   assert.doesNotMatch(lobby, /\/school-battle\.html/);
   assert.ok(fs.existsSync(path.join(root, "public/rankings.html")));
@@ -107,7 +107,7 @@ test("history performance chart uses live rating changes", () => {
   assert.match(history, /performanceChart\.destroy\(\)/);
   assert.match(history, /renderPerformanceChart\(\);/);
   assert.match(history, /function formatPerformanceDate\(dateValue\)/);
-  assert.match(history, /"yanvar", "fevral", "mart"/);
+  assert.match(history, /new Intl\.DateTimeFormat\(historyLocale\(\), \{ day: "numeric", month: "short" \}\)/);
   assert.match(history, /label: formatPerformanceDate\(battle\.played_at\)/);
   assert.doesNotMatch(history, /toLocaleDateString\("uz-UZ", \{ day: "2-digit", month: "short" \}\)/);
 });
@@ -121,8 +121,8 @@ test("history achievements use live battle and streak progress", () => {
   assert.match(history, /function renderAchievements\(\)/);
   assert.match(history, /battle\.outcome === "win"/);
   assert.match(history, /Number\(user\.win_streak\)/);
-  for (const name of ["Birinchi g‘alaba", "Faol jangchi", "G‘alabalar sari", "Streak ustasi"]) {
-    assert.match(history, new RegExp(name));
+  for (const key of ["achievementFirstWin", "achievementActiveFighter", "achievementWinningPath", "achievementStreakMaster"]) {
+    assert.match(history, new RegExp(`history\\.${key}`));
   }
 });
 

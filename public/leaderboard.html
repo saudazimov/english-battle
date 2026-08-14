@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Leaderboard</title>
+  <title data-i18n="leaderboard.metaTitle">Ranking — IlmLiga</title>
+  <meta name="description" content="IlmLiga reytingida eng yaxshi o‘yinchilarni ko‘ring va o‘z o‘rningizni kuzating." data-i18n-content="leaderboard.metaDescription">
   <link rel="stylesheet" href="/app.css">
   <style>
     .app { grid-template-columns: 230px 1fr 340px; max-width: 1680px; }
@@ -149,8 +150,62 @@
     .lb-loc { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .lb-rating { display: flex; align-items: center; gap: 5px; font-weight: 800; color: var(--gold); }
     .lb-rating i { width: 15px; height: 15px; }
+    .lb-mobile-label { display: none; }
     .lb-empty { text-align: center; color: var(--text-faint); padding: 30px; }
     .lb-foot { text-align: center; font-size: 12px; color: var(--text-faint); margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+    @media (max-width: 640px) {
+      .lb-card { min-width: 0; padding: 16px; }
+      .lb-cols { display: none; }
+      #lbList { min-width: 0; }
+      .lb-row {
+        min-width: 0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 10px;
+        padding: 14px;
+        margin-bottom: 10px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.02);
+      }
+      .lb-row > * {
+        min-width: 0;
+        max-width: 100%;
+      }
+      .lb-rank,
+      .lb-player { grid-column: 1 / -1; }
+      .lb-player,
+      .lb-rating { flex-wrap: wrap; }
+      .lb-mobile-label {
+        display: block;
+        width: 100%;
+        margin-bottom: 4px;
+        color: var(--text-faint);
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1.2;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        overflow-wrap: anywhere;
+      }
+      .lb-name,
+      .lb-league,
+      .lb-wins,
+      .lb-loc,
+      .lb-rating {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .lb-loc {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+      }
+      .lb-loc svg {
+        width: 24px !important;
+        height: 12px !important;
+        max-width: 24px;
+      }
+    }
 
     /* ===== O'NG PANEL ===== */
     .rb-card { padding: 20px; }
@@ -197,44 +252,44 @@
       <!-- Sarlavha -->
       <div class="page-head">
         <div class="crest-ic"><i data-lucide="trophy"></i></div>
-        <div><h1>Leaderboard</h1><p>See the top players and climb the rankings.</p></div>
+        <div><h1 data-i18n="leaderboard.heading">Ranking</h1><p data-i18n="leaderboard.subtitle">Eng yaxshi o‘yinchilarni ko‘ring va reytingda yuqorilang.</p></div>
       </div>
 
       <!-- Filtrlar -->
       <div class="card filter-card">
         <div class="filter-tabs">
-          <div class="ftab active" data-scope="global" onclick="switchScope('global')"><i data-lucide="globe"></i> Global</div>
-          <div class="ftab" data-scope="national" onclick="switchScope('national')"><i data-lucide="flag"></i> National</div>
-          <div class="ftab" data-scope="region" onclick="switchScope('region')"><i data-lucide="map-pin"></i> Region</div>
-          <div class="ftab" data-scope="district" onclick="switchScope('district')"><i data-lucide="building"></i> District</div>
-          <div class="ftab" data-scope="school" onclick="switchScope('school')"><i data-lucide="building-2"></i> School</div>
-          <div class="ftab" data-scope="friends" onclick="switchScope('friends')"><i data-lucide="users"></i> Friends</div>
+          <div class="ftab active" data-scope="global" onclick="switchScope('global')"><i data-lucide="globe"></i> <span data-i18n="leaderboard.global">Global</span></div>
+          <div class="ftab" data-scope="national" onclick="switchScope('national')"><i data-lucide="flag"></i> <span data-i18n="leaderboard.national">Milliy</span></div>
+          <div class="ftab" data-scope="region" onclick="switchScope('region')"><i data-lucide="map-pin"></i> <span data-i18n="leaderboard.region">Viloyat</span></div>
+          <div class="ftab" data-scope="district" onclick="switchScope('district')"><i data-lucide="building"></i> <span data-i18n="leaderboard.district">Tuman</span></div>
+          <div class="ftab" data-scope="school" onclick="switchScope('school')"><i data-lucide="building-2"></i> <span data-i18n="leaderboard.school">Maktab</span></div>
+          <div class="ftab" data-scope="friends" onclick="switchScope('friends')"><i data-lucide="users"></i> <span data-i18n="leaderboard.friends">Do‘stlar</span></div>
         </div>
         <div class="filter-time">
-          <div class="ttab active" data-period="all" onclick="switchPeriod('all')"><i data-lucide="calendar"></i> All Time</div>
-          <div class="ttab" data-period="week" onclick="switchPeriod('week')"><i data-lucide="sparkles"></i> Weekly</div>
-          <div class="ttab" data-period="month" onclick="switchPeriod('month')"><i data-lucide="calendar-days"></i> Monthly</div>
-          <div class="ttab" data-period="season" onclick="switchPeriod('season')"><i data-lucide="trophy"></i> Season</div>
+          <div class="ttab active" data-period="all" onclick="switchPeriod('all')"><i data-lucide="calendar"></i> <span data-i18n="leaderboard.allTime">Barcha vaqt</span></div>
+          <div class="ttab" data-period="week" onclick="switchPeriod('week')"><i data-lucide="sparkles"></i> <span data-i18n="leaderboard.weekly">Haftalik</span></div>
+          <div class="ttab" data-period="month" onclick="switchPeriod('month')"><i data-lucide="calendar-days"></i> <span data-i18n="leaderboard.monthly">Oylik</span></div>
+          <div class="ttab" data-period="season" onclick="switchPeriod('season')"><i data-lucide="trophy"></i> <span data-i18n="leaderboard.season">Mavsum</span></div>
           <span class="time-note" id="timeNote">Joriy rating bo'yicha</span>
         </div>
       </div>
       <!-- Podium -->
       <div class="podium" id="podium">
-        <div class="podium-empty">Yuklanmoqda...</div>
+        <div class="podium-empty" data-i18n="leaderboard.loading">Yuklanmoqda...</div>
       </div>
       <!-- Reyting jadvali -->
       <div class="card lb-card">
         <div class="lb-cols">
-          <span>Rank</span>
-          <span>Player</span>
-          <span>Level</span>
-          <span>League</span>
-          <span>Wins</span>
+          <span data-i18n="leaderboard.rank">O‘rin</span>
+          <span data-i18n="leaderboard.player">O‘yinchi</span>
+          <span data-i18n="leaderboard.level">Daraja</span>
+          <span data-i18n="leaderboard.league">Liga</span>
+          <span data-i18n="leaderboard.wins">G‘alabalar</span>
           <span id="colLoc">Davlat</span>
           <span id="colRating">Rating</span>
         </div>
-        <div id="lbList"><div class="lb-empty">Yuklanmoqda...</div></div>
-        <div class="lb-foot">Reyting har 10 daqiqada yangilanadi</div>
+        <div id="lbList"><div class="lb-empty" data-i18n="leaderboard.loading">Yuklanmoqda...</div></div>
+        <div class="lb-foot" data-i18n="leaderboard.refreshNote">Reyting har 10 daqiqada yangilanadi</div>
       </div>
     </main>
 
@@ -242,43 +297,43 @@
 
       <!-- Your Rankings -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Your Rankings</span><button type="button" class="rb-info-btn" id="rankingInfoButton" aria-label="Ranking o‘rinlari haqida ma'lumot" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
+        <div class="rb-head"><span data-i18n="leaderboard.yourRankings">Sizning reytingingiz</span><button type="button" class="rb-info-btn" id="rankingInfoButton" aria-label="Ranking o‘rinlari haqida ma’lumot" data-i18n-aria-label="leaderboard.infoAria" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
         <div class="yr-top">
           <div class="yr-medal" id="yrMedal">🥈</div>
           <div>
             <div class="yr-league" id="yrLeague">Silver</div>
-            <div class="yr-points"><i data-lucide="trophy" style="width:14px;height:14px;color:var(--gold);"></i> <span id="yrPoints">1000</span> ball</div>
+            <div class="yr-points"><i data-lucide="trophy" style="width:14px;height:14px;color:var(--gold);"></i> <span id="yrPoints">1000</span> <span data-i18n="leaderboard.points">ball</span></div>
           </div>
         </div>
         <div class="yr-rows">
-          <div class="yr-row"><span>Global Rank</span><span class="yr-rank" id="yrGlobal">#—</span></div>
-          <div class="yr-row"><span>National Rank</span><span class="yr-rank" id="yrNational">#—</span></div>
-          <div class="yr-row"><span>Region Rank</span><span class="yr-rank" id="yrRegion">#—</span></div>
-          <div class="yr-row"><span>District Rank</span><span class="yr-rank" id="yrDistrict">#—</span></div>
-          <div class="yr-row"><span>School Rank</span><span class="yr-rank" id="yrSchool">#—</span></div>
+          <div class="yr-row"><span data-i18n="leaderboard.globalRank">Global o‘rin</span><span class="yr-rank" id="yrGlobal">#—</span></div>
+          <div class="yr-row"><span data-i18n="leaderboard.nationalRank">Milliy o‘rin</span><span class="yr-rank" id="yrNational">#—</span></div>
+          <div class="yr-row"><span data-i18n="leaderboard.regionRank">Viloyatdagi o‘rin</span><span class="yr-rank" id="yrRegion">#—</span></div>
+          <div class="yr-row"><span data-i18n="leaderboard.districtRank">Tumandagi o‘rin</span><span class="yr-rank" id="yrDistrict">#—</span></div>
+          <div class="yr-row"><span data-i18n="leaderboard.schoolRank">Maktabdagi o‘rin</span><span class="yr-rank" id="yrSchool">#—</span></div>
         </div>
       </div>
 
       <!-- School Rankings -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Maktab reytingi</span></div>
+        <div class="rb-head"><span data-i18n="leaderboard.schoolRanking">Maktab reytingi</span></div>
         <div class="sr-school">
           <i data-lucide="building-2" style="width:22px;height:22px;color:var(--cyan);"></i>
           <span id="srName">Maktabingiz</span>
         </div>
         <button class="btn btn-ghost sr-btn" onclick="window.location.href='/rankings.html'">
-          Maktab reytingini ko'rish <i data-lucide="chevron-right" style="width:16px;height:16px;"></i>
+          <span data-i18n="leaderboard.viewSchoolRanking">Maktab reytingini ko‘rish</span> <i data-lucide="chevron-right" style="width:16px;height:16px;"></i>
         </button>
       </div>
 
       <!-- Rewards -->
       <div class="card rb-card">
-        <div class="rb-head"><span>Top o'yinchilar mukofoti</span><span class="soon-badge">Tez kunda</span></div>
+        <div class="rb-head"><span data-i18n="leaderboard.topRewards">Top o‘yinchilar mukofoti</span><span class="soon-badge" data-i18n="leaderboard.comingSoon">Tez kunda</span></div>
         <div class="rw-grid">
-          <div class="rw-box rw-gold"><i data-lucide="coins"></i><div class="rw-val">10,000</div><div class="rw-lbl">Coins</div></div>
-          <div class="rw-box rw-cyan"><i data-lucide="gem"></i><div class="rw-val">1,000</div><div class="rw-lbl">Gems</div></div>
+          <div class="rw-box rw-gold"><i data-lucide="coins"></i><div class="rw-val">10,000</div><div class="rw-lbl" data-i18n="leaderboard.coins">Tangalar</div></div>
+          <div class="rw-box rw-cyan"><i data-lucide="gem"></i><div class="rw-val">1,000</div><div class="rw-lbl" data-i18n="leaderboard.gems">Olmoslar</div></div>
           <div class="rw-box rw-blue"><i data-lucide="zap"></i><div class="rw-val">2,000</div><div class="rw-lbl">XP</div></div>
-          <div class="rw-box rw-purple"><i data-lucide="gift"></i><div class="rw-val">?</div><div class="rw-lbl">Skin</div></div>
+          <div class="rw-box rw-purple"><i data-lucide="gift"></i><div class="rw-val">?</div><div class="rw-lbl" data-i18n="leaderboard.skin">Ko‘rinish</div></div>
         </div>
       </div>
 
@@ -287,10 +342,15 @@
 
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/rank-info-dialog.js"></script>
   <script src="/profile-modal.js"></script>
   <script>
+    function lbT(key, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+    }
+
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
     const user = JSON.parse(userData);
@@ -300,24 +360,24 @@
     renderSidebar("ranking");
     // ===== LEADERBOARD YUKLASH =====
     function leagueOf(rating) {
-      if (rating >= 2000) return "👑 Grandmaster";
-      if (rating >= 1800) return "🔱 Master";
-      if (rating >= 1600) return "💠 Diamond";
-      if (rating >= 1400) return "💎 Platinum";
-      if (rating >= 1200) return "🥇 Gold";
-      if (rating >= 1000) return "🥈 Silver";
-      return "🥉 Bronze";
+      if (rating >= 2000) return "👑 " + lbT("leaderboard.leagueGrandmaster");
+      if (rating >= 1800) return "🔱 " + lbT("leaderboard.leagueMaster");
+      if (rating >= 1600) return "💠 " + lbT("leaderboard.leagueDiamond");
+      if (rating >= 1400) return "💎 " + lbT("leaderboard.leaguePlatinum");
+      if (rating >= 1200) return "🥇 " + lbT("leaderboard.leagueGold");
+      if (rating >= 1000) return "🥈 " + lbT("leaderboard.leagueSilver");
+      return "🥉 " + lbT("leaderboard.leagueBronze");
     }
 
     // Liga nomi (faqat matn)
     function leagueName(rating) {
-      if (rating >= 2000) return "Grandmaster";
-      if (rating >= 1800) return "Master";
-      if (rating >= 1600) return "Diamond";
-      if (rating >= 1400) return "Platinum";
-      if (rating >= 1200) return "Gold";
-      if (rating >= 1000) return "Silver";
-      return "Bronze";
+      if (rating >= 2000) return lbT("leaderboard.leagueGrandmaster");
+      if (rating >= 1800) return lbT("leaderboard.leagueMaster");
+      if (rating >= 1600) return lbT("leaderboard.leagueDiamond");
+      if (rating >= 1400) return lbT("leaderboard.leaguePlatinum");
+      if (rating >= 1200) return lbT("leaderboard.leagueGold");
+      if (rating >= 1000) return lbT("leaderboard.leagueSilver");
+      return lbT("leaderboard.leagueBronze");
     }
 
     // Liga ikonkasi (Lucide SVG) + rang
@@ -341,18 +401,24 @@
     let currentScope = "global";
     let currentPeriod = "all";
     let myRankInfo = {};
-    const periodNotes = {
-      all: "Joriy rating bo'yicha",
-      week: "Shu hafta yutilgan rating bo'yicha",
-      month: "Shu oy yutilgan rating bo'yicha",
-      season: "Shu mavsum yutilgan rating bo'yicha",
+    const periodNoteKeys = {
+      all: "leaderboard.periodAllNote",
+      week: "leaderboard.periodWeekNote",
+      month: "leaderboard.periodMonthNote",
+      season: "leaderboard.periodSeasonNote",
     };
+
+    function updatePeriodHeader() {
+      var note = document.getElementById("timeNote");
+      if (note) note.textContent = lbT(periodNoteKeys[currentPeriod] || periodNoteKeys.all);
+      var col = document.getElementById("colRating");
+      if (col) col.textContent = currentPeriod === "all" ? lbT("leaderboard.rating") : lbT("leaderboard.growth");
+    }
 
     function switchPeriod(period) {
       currentPeriod = period;
       document.querySelectorAll(".ttab").forEach(t => t.classList.toggle("active", t.getAttribute("data-period") === period));
-      var note = document.getElementById("timeNote"); if (note) note.textContent = periodNotes[period] || "";
-      var col = document.getElementById("colRating"); if (col) col.textContent = (period === "all") ? "Rating" : "O'sish";
+      updatePeriodHeader();
       loadLeaderboard();
     }
 
@@ -363,18 +429,38 @@
       US: "AQSH", GB: "Buyuk Britaniya", DE: "Germaniya", FR: "Fransiya", CN: "Xitoy",
       KR: "Janubiy Koreya", JP: "Yaponiya", IN: "Hindiston", SA: "Saudiya Arabistoni", AE: "BAA",
     };
-    function countryName(code) { return COUNTRY_NAMES[(code || "UZ").toUpperCase()] || (code || "—"); }
+    function leaderboardLocale() {
+      const language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return language === "ru" ? "ru-RU" : (language === "en" ? "en-GB" : "uz-UZ");
+    }
+    function countryName(code) {
+      const normalized = (code || "UZ").toUpperCase();
+      const language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      if (language === "uz") return COUNTRY_NAMES[normalized] || normalized;
+      try {
+        return new Intl.DisplayNames([leaderboardLocale()], { type: "region" }).of(normalized) || normalized;
+      } catch (_) {
+        return COUNTRY_NAMES[normalized] || normalized;
+      }
+    }
     function compactRegionName(value) { return String(value || "—").replace(/\s+Region$/i, ""); }
     function flagHtml(code) {
       code = (code || "UZ").toLowerCase();
       if (code === "uz") return UZ_FLAG;
       return '<img src="https://flagcdn.com/' + code + '.svg" alt="' + code.toUpperCase() + '" onerror="this.style.display=\'none\'" style="width:24px;height:16px;object-fit:cover;border-radius:2px;vertical-align:middle;margin-right:7px;flex-shrink:0;">';
     }
-    const scopeLocLabel = { global: "Davlat", national: "Viloyat", region: "Tuman", district: "Maktab", school: "G'alaba %", friends: "Maktab" };
+    const scopeLocKeys = {
+      global: "leaderboard.country",
+      national: "leaderboard.regionColumn",
+      region: "leaderboard.districtColumn",
+      district: "leaderboard.schoolColumn",
+      school: "leaderboard.winRate",
+      friends: "leaderboard.schoolColumn",
+    };
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
     function updateLocHeader() {
       var el = document.getElementById("colLoc");
-      if (el) el.textContent = scopeLocLabel[currentScope] || "Joy";
+      if (el) el.textContent = lbT(scopeLocKeys[currentScope] || "leaderboard.location");
     }
     function locCellHtml(p) {
       if (currentScope === "global") return flagHtml(p.country) + countryName(p.country);
@@ -402,7 +488,7 @@
         renderTable();
         setupYourRankings();
       } catch (err) {
-        document.getElementById("podium").innerHTML = '<div class="podium-empty">Yuklab bo\'lmadi</div>';
+        document.getElementById("podium").innerHTML = '<div class="podium-empty">' + lbT("leaderboard.loadError") + '</div>';
       }
     }
 
@@ -443,13 +529,28 @@
         '<div class="lb-wins">' + (p.wins || 0) + '</div>' +
         '<div class="lb-loc">' + locCellHtml(p) + '</div>' +
         ratingCell;
+      const mobileLabels = [
+        lbT("leaderboard.rank"),
+        lbT("leaderboard.player"),
+        lbT("leaderboard.level"),
+        lbT("leaderboard.league"),
+        lbT("leaderboard.wins"),
+        lbT(scopeLocKeys[currentScope] || "leaderboard.location"),
+        lbT(currentPeriod === "all" ? "leaderboard.rating" : "leaderboard.growth"),
+      ];
+      Array.from(row.children).forEach((cell, index) => {
+        const label = document.createElement("span");
+        label.className = "lb-mobile-label";
+        label.textContent = mobileLabels[index] || "";
+        cell.prepend(label);
+      });
       return row;
     }
 
     function renderTable() {
       const list = document.getElementById("lbList");
       if (allPlayers.length === 0) {
-        list.innerHTML = '<div class="lb-empty">' + (currentPeriod === "all" ? "Bu qamrovda hali o'yinchi yo'q" : "Bu davrda hali hech kim o'ynamagan") + '</div>';
+        list.innerHTML = '<div class="lb-empty">' + (currentPeriod === "all" ? lbT("leaderboard.noPlayersScope") : lbT("leaderboard.noPlayersPeriod")) + '</div>';
         return;
       }
       list.innerHTML = "";
@@ -476,7 +577,7 @@
       document.getElementById("yrLeague").textContent = leagueName(myRating);
       document.getElementById("yrMedal").innerHTML = leagueIcon(myRating);
       document.getElementById("yrPoints").textContent = myRating;
-      document.getElementById("srName").textContent = user.school || "Maktabingiz";
+      document.getElementById("srName").textContent = user.school || lbT("leaderboard.yourSchool");
       lucide.createIcons();
     }
 
@@ -497,7 +598,7 @@
     function renderPodium() {
       const podium = document.getElementById("podium");
       if (allPlayers.length < 3) {
-        podium.innerHTML = '<div class="podium-empty">Top 3 uchun kamida 3 o\'yinchi kerak</div>';
+        podium.innerHTML = '<div class="podium-empty">' + lbT("leaderboard.topThreeRequired") + '</div>';
         return;
       }
       const top3 = allPlayers.slice(0, 3);
@@ -529,31 +630,45 @@
       lucide.createIcons();
     }
     updateLocHeader();
+    updatePeriodHeader();
     loadLeaderboard();
     loadMyRanks();
 
-    createRankInfoDialog({
+    const rankingInfoDialog = createRankInfoDialog({
       triggerId: "rankingInfoButton",
-      title: "Ranking qanday ishlaydi?",
-      subtitle: "O‘rningiz hudud va maktab bo‘yicha alohida hisoblanadi",
-      primaryLabel: "Joriy liga",
-      secondaryLabel: "Joriy rating",
+      get title() { return lbT("leaderboard.infoTitle"); },
+      get subtitle() { return lbT("leaderboard.infoSubtitle"); },
+      get primaryLabel() { return lbT("leaderboard.currentLeague"); },
+      get secondaryLabel() { return lbT("leaderboard.currentRating"); },
       detailType: "scopes",
       footerHref: "/rankings.html",
-      footerLabel: "Maktablar reytingi",
+      get footerLabel() { return lbT("leaderboard.schoolsRanking"); },
       getData: function () {
         return {
           primary: document.getElementById("yrLeague").textContent || "—",
-          secondary: (document.getElementById("yrPoints").textContent || "0") + " ball",
+          secondary: (document.getElementById("yrPoints").textContent || "0") + " " + lbT("leaderboard.points"),
           scopes: [
-            { icon: "globe", name: "Global", description: "Barcha o‘yinchilar orasida", value: document.getElementById("yrGlobal").textContent || "—" },
-            { icon: "flag", name: "National", description: "Davlatingiz ichida", value: document.getElementById("yrNational").textContent || "—" },
-            { icon: "map-pin", name: "Region", description: "Viloyatingiz ichida", value: document.getElementById("yrRegion").textContent || "—" },
-            { icon: "building", name: "District", description: "Tuman yoki shaharingizda", value: document.getElementById("yrDistrict").textContent || "—" },
-            { icon: "building-2", name: "School", description: "Maktabingiz ichida", value: document.getElementById("yrSchool").textContent || "—" },
+            { icon: "globe", name: lbT("leaderboard.global"), description: lbT("leaderboard.infoGlobal"), value: document.getElementById("yrGlobal").textContent || "—" },
+            { icon: "flag", name: lbT("leaderboard.national"), description: lbT("leaderboard.infoNational"), value: document.getElementById("yrNational").textContent || "—" },
+            { icon: "map-pin", name: lbT("leaderboard.region"), description: lbT("leaderboard.infoRegion"), value: document.getElementById("yrRegion").textContent || "—" },
+            { icon: "building", name: lbT("leaderboard.district"), description: lbT("leaderboard.infoDistrict"), value: document.getElementById("yrDistrict").textContent || "—" },
+            { icon: "building-2", name: lbT("leaderboard.school"), description: lbT("leaderboard.infoSchool"), value: document.getElementById("yrSchool").textContent || "—" },
           ],
         };
       },
+    });
+
+    window.addEventListener("ilmliga:languagechange", function () {
+      updateLocHeader();
+      updatePeriodHeader();
+      renderPodium();
+      renderTable();
+      setupYourRankings();
+      if (document.getElementById("rankingInfoButton").getAttribute("aria-expanded") === "true") {
+        rankingInfoDialog.close();
+        rankingInfoDialog.open();
+      }
+      lucide.createIcons();
     });
 
     lucide.createIcons();

@@ -48,7 +48,7 @@ test("lesson preparation blocks duplicate clicks and refreshes after pending gen
 
 test("lesson completion shows mastery failures inline and keeps retry available", () => {
   assert.match(source,/lessonCompletionStatus/);
-  assert.match(source,/Natija tekshirilmoqda/);
+  assert.match(source,/progressT\("progress\.checkingResult"\)/);
   assert.match(source,/catch \(error\)/);
   assert.match(source,/completionStatus\.textContent = error\.message/);
   assert.match(source,/button\.disabled = false/);
@@ -57,9 +57,9 @@ test("lesson completion shows mastery failures inline and keeps retry available"
 });
 
 test("retest cards show two-attempt progress and keep future retests locked", () => {
-  assert.match(learningSource,/Mustaqil retest: /);
+  assert.match(learningSource,/learningT\("progress\.independentRetest"/);
   assert.match(learningSource,/upcoming_retests/);
-  assert.match(learningSource,/Ochilishi: /);
+  assert.match(learningSource,/learningT\("progress\.opensAt"/);
   assert.match(learningSource,/button\.disabled = isUpcoming/);
-  assert.match(learningSource,/Kutilmoqda/);
+  assert.match(learningSource,/learningT\("progress\.waiting"\)/);
 });

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Xabarlar — English Battle</title>
+  <title data-i18n="teacherMessages.metaTitle">Xabarlar — IlmLiga</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
@@ -180,20 +180,20 @@
     <div class="main">
       <header class="topbar">
         <div class="tb-head">
-          <h1>Xabarlar</h1>
-          <p>O'quvchilar, ota-onalar va jamoa bilan muloqot qiling</p>
+          <h1 data-i18n="teacherMessages.heading">Xabarlar</h1>
+          <p data-i18n="teacherMessages.subtitle">O'quvchilar, ota-onalar va jamoa bilan muloqot qiling</p>
         </div>
-        <div class="tb-year" onclick="comingSoon('O\'quv yili')">
+        <div class="tb-year" onclick="comingSoon(teacherMessagesT('schoolYearLabel'))">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          2024–2025 O'quv yili
+          <span data-i18n="teacherMessages.schoolYear">2024–2025 O'quv yili</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <button class="theme-toggle" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
-        <button class="tb-icon-btn" onclick="comingSoon('Bildirishnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
+        <button class="theme-toggle" onclick="toggleTheme()" data-i18n-aria-label="teacherMessages.themeAria"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
+        <button class="tb-icon-btn" onclick="comingSoon(teacherMessagesT('notifications'))" data-i18n-aria-label="teacherMessages.notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
         <div class="tb-user" onclick="window.location.href='/profile.html'">
           <div class="tb-user-info">
-            <div class="tb-user-name" id="userName">O'qituvchi</div>
-            <div class="tb-user-role">Teacher</div>
+            <div class="tb-user-name" id="userName" data-i18n="teacherMessages.teacher">O'qituvchi</div>
+            <div class="tb-user-role" data-i18n="teacherMessages.teacherRole">Teacher</div>
           </div>
           <div class="tb-avatar" id="userAvatar">T</div>
         </div>
@@ -202,16 +202,16 @@
       <div class="chat-wrap">
         <div class="chat-grid">
           <section class="conv-col">
-            <div class="conv-search"><div class="conv-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="convSearch" placeholder="O'quvchi qidirish..." oninput="renderConversations()"></div></div>
-            <div class="conv-tabs"><button class="conv-tab active">Suhbatlar <span class="cnt" id="convCount">0</span></button></div>
-            <div class="conv-list" id="convList"><div class="chat-empty-mid">Yuklanmoqda...</div></div>
+            <div class="conv-search"><div class="conv-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="convSearch" data-i18n-placeholder="teacherMessages.searchPlaceholder" placeholder="O'quvchi qidirish..." oninput="renderConversations()"></div></div>
+            <div class="conv-tabs"><button class="conv-tab active"><span data-i18n="teacherMessages.conversations">Suhbatlar</span> <span class="cnt" id="convCount">0</span></button></div>
+            <div class="conv-list" id="convList"><div class="chat-empty-mid" data-i18n="teacherMessages.loading">Yuklanmoqda...</div></div>
           </section>
           <section class="chat-col">
             <div class="chat-header" id="chatHeader" style="display:none"><div class="chat-h-av" id="chatAvatar"></div><div class="chat-h-info"><div class="chat-h-name" id="chatName"></div><div class="chat-h-status" id="chatStatus"></div></div></div>
-            <div class="chat-body" id="chatBody"><div class="chat-empty-mid">Suhbatni boshlash uchun o'quvchini tanlang</div></div>
-            <div class="chat-input" id="chatInput" style="display:none"><div class="chat-input-box"><input id="messageInput" maxlength="1000" placeholder="Xabar yozing..." onkeydown="if(event.key==='Enter')sendMessage()"></div><button class="chat-send" onclick="sendMessage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>
+            <div class="chat-body" id="chatBody"><div class="chat-empty-mid" data-i18n="teacherMessages.selectStudent">Suhbatni boshlash uchun o'quvchini tanlang</div></div>
+            <div class="chat-input" id="chatInput" style="display:none"><div class="chat-input-box"><input id="messageInput" maxlength="1000" data-i18n-placeholder="teacherMessages.messagePlaceholder" placeholder="Xabar yozing..." onkeydown="if(event.key==='Enter')sendMessage()"></div><button class="chat-send" onclick="sendMessage()" data-i18n-aria-label="teacherMessages.sendMessage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>
           </section>
-          <aside class="prof-col" id="profileCol"><div class="chat-empty-mid">O'quvchi ma'lumoti</div></aside>
+          <aside class="prof-col" id="profileCol"><div class="chat-empty-mid" data-i18n="teacherMessages.studentInfo">O'quvchi ma'lumoti</div></aside>
         </div>
       </div>
     </div>
@@ -220,6 +220,7 @@
   <div class="toast" id="toast"></div>
 
   <script src="/api.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/payment-modal.js"></script>
   <script src="/premium-modal.js"></script>
   <script src="/teacher-sidebar.js"></script>
@@ -235,6 +236,7 @@
         if (u.first_name && nameEl) {
           var full = ((u.first_name || "") + " " + (u.last_name || "")).trim();
           nameEl.textContent = full;
+          nameEl.removeAttribute("data-i18n");
           if (avaEl) avaEl.textContent = (u.first_name[0] || "T").toUpperCase();
         }
       } catch (e) {}
@@ -243,10 +245,15 @@
     var currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     var conversations = [];
     var selectedStudent = null;
+    var currentMessages = [];
+    var conversationsState = "loading";
+    var messagesState = "idle";
+    function teacherMessagesT(key, params) { return window.IlmLigaI18n ? window.IlmLigaI18n.t("teacherMessages." + key, params) : key; }
+    function teacherMessagesLocale() { var lang=window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz"; return {uz:"uz-UZ",en:"en-US",ru:"ru-RU"}[lang]||"uz-UZ"; }
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
     function showToast(text) { var t=document.getElementById("toast"); t.textContent=text; t.classList.add("show"); setTimeout(function(){t.classList.remove("show");},2400); }
-    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada"); }
-    function fmtTime(value) { if(!value) return ""; try { return new Date(value).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}); } catch(e){ return ""; } }
+    function comingSoon(name) { showToast(teacherMessagesT("comingSoon", {name:name||""})); }
+    function fmtTime(value) { if(!value) return ""; try { return new Date(value).toLocaleTimeString(teacherMessagesLocale(), {hour:"2-digit",minute:"2-digit"}); } catch(e){ return ""; } }
     function avatarInner(c) { return c.profile_picture ? '<img src="'+esc(c.profile_picture)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">' : esc((c.first_name||"?").charAt(0).toUpperCase()); }
 
     async function loadConversations() {
@@ -254,51 +261,63 @@
         var res=await authFetch("/teacher/conversations"); var data=await res.json();
         if(!res.ok) throw new Error(data.error||"Xato");
         conversations=data.conversations||[];
+        conversationsState="loaded";
         document.getElementById("convCount").textContent=conversations.length;
         renderConversations();
         if(selectedStudent) {
           var fresh=conversations.find(function(c){return String(c.id)===String(selectedStudent.id);});
           if(fresh) selectedStudent=fresh;
         }
-      } catch(e){ document.getElementById("convList").innerHTML='<div class="chat-empty-mid">Suhbatlarni yuklab bo\'lmadi</div>'; }
+      } catch(e){ conversationsState="error"; renderConversations(); }
     }
     function renderConversations() {
+      if(conversationsState==="loading") { document.getElementById("convList").innerHTML='<div class="chat-empty-mid">'+esc(teacherMessagesT("loading"))+'</div>'; return; }
+      if(conversationsState==="error") { document.getElementById("convList").innerHTML='<div class="chat-empty-mid">'+esc(teacherMessagesT("conversationsLoadFailed"))+'</div>'; return; }
       var q=(document.getElementById("convSearch").value||"").toLowerCase();
       var list=conversations.filter(function(c){return ((c.first_name||"")+" "+(c.last_name||"")+" "+(c.class_name||"")).toLowerCase().includes(q);});
       document.getElementById("convList").innerHTML=list.length ? list.map(function(c){
         var name=((c.first_name||"")+" "+(c.last_name||"")).trim();
         return '<div class="conv-item '+(selectedStudent&&String(selectedStudent.id)===String(c.id)?'active':'')+'" onclick="selectConversation('+c.id+')">'+
           '<div class="conv-av" style="background:linear-gradient(135deg,var(--accent),var(--primary))">'+avatarInner(c)+(c.is_online?'<span class="online"></span>':'')+'</div>'+
-          '<div class="conv-info"><div class="conv-top"><span class="conv-name">'+esc(name)+'</span><span class="conv-tag">'+esc(c.class_name||"Sinf")+'</span><span class="conv-time">'+fmtTime(c.last_message_at)+'</span></div><div class="conv-last">'+esc(c.last_message||"Suhbatni boshlang")+'</div></div>'+
+          '<div class="conv-info"><div class="conv-top"><span class="conv-name">'+esc(name)+'</span><span class="conv-tag">'+esc(c.class_name||teacherMessagesT("class"))+'</span><span class="conv-time">'+fmtTime(c.last_message_at)+'</span></div><div class="conv-last">'+esc(c.last_message||teacherMessagesT("startConversation"))+'</div></div>'+
           (Number(c.unread_count)>0?'<span class="conv-unread">'+Number(c.unread_count)+'</span>':'')+'</div>';
-      }).join("") : '<div class="chat-empty-mid">O\'quvchi topilmadi</div>';
+      }).join("") : '<div class="chat-empty-mid">'+esc(teacherMessagesT("studentNotFound"))+'</div>';
     }
-    async function selectConversation(id) {
-      selectedStudent=conversations.find(function(c){return String(c.id)===String(id);});
+    function renderSelectedConversation() {
       if(!selectedStudent) return;
-      renderConversations();
       var name=((selectedStudent.first_name||"")+" "+(selectedStudent.last_name||"")).trim();
       document.getElementById("chatHeader").style.display="flex";
       document.getElementById("chatInput").style.display="flex";
       document.getElementById("chatAvatar").style.background="linear-gradient(135deg,var(--accent),var(--primary))";
       document.getElementById("chatAvatar").innerHTML=avatarInner(selectedStudent);
       document.getElementById("chatName").textContent=name;
-      document.getElementById("chatStatus").innerHTML=selectedStudent.is_online?'<span class="dot"></span> Online':'Offline';
-      document.getElementById("profileCol").innerHTML='<div class="prof-card"><div class="prof-av" style="background:linear-gradient(135deg,var(--accent),var(--primary))">'+avatarInner(selectedStudent)+'</div><div class="prof-name">'+esc(name)+'</div><div class="prof-role">'+esc(selectedStudent.class_name||"O\'quvchi")+'</div><button class="prof-btn" onclick="location.href=\'/profile.html?id='+selectedStudent.id+'\'">Profilni ko\'rish</button></div><div class="prof-sec"><div class="prof-row"><span class="k">Daraja</span><span class="v">'+esc(selectedStudent.cefr_level||"A1")+'</span></div><div class="prof-row"><span class="k">Holat</span><span class="v">'+(selectedStudent.is_online?'Online':'Offline')+'</span></div></div>';
+      document.getElementById("chatStatus").innerHTML=selectedStudent.is_online?'<span class="dot"></span> '+esc(teacherMessagesT("online")):esc(teacherMessagesT("offline"));
+      document.getElementById("profileCol").innerHTML='<div class="prof-card"><div class="prof-av" style="background:linear-gradient(135deg,var(--accent),var(--primary))">'+avatarInner(selectedStudent)+'</div><div class="prof-name">'+esc(name)+'</div><div class="prof-role">'+esc(selectedStudent.class_name||teacherMessagesT("student"))+'</div><button class="prof-btn" onclick="location.href=\'/profile.html?id='+selectedStudent.id+'\'">'+esc(teacherMessagesT("viewProfile"))+'</button></div><div class="prof-sec"><div class="prof-row"><span class="k">'+esc(teacherMessagesT("level"))+'</span><span class="v">'+esc(selectedStudent.cefr_level||"A1")+'</span></div><div class="prof-row"><span class="k">'+esc(teacherMessagesT("status"))+'</span><span class="v">'+esc(selectedStudent.is_online?teacherMessagesT("online"):teacherMessagesT("offline"))+'</span></div></div>';
+    }
+    async function selectConversation(id) {
+      selectedStudent=conversations.find(function(c){return String(c.id)===String(id);});
+      if(!selectedStudent) return;
+      renderConversations();
+      renderSelectedConversation();
       await loadMessages();
       selectedStudent.unread_count=0;
       renderConversations();
     }
     async function loadMessages() {
       if(!selectedStudent) return;
-      var body=document.getElementById("chatBody"); body.innerHTML='<div class="chat-empty-mid">Yuklanmoqda...</div>';
+      var body=document.getElementById("chatBody"); messagesState="loading"; renderMessages();
       try {
         var res=await authFetch("/teacher/conversations/"+selectedStudent.id+"/messages"); var data=await res.json();
         if(!res.ok) throw new Error(data.error||"Xato");
-        var items=data.messages||[];
-        body.innerHTML=items.length?items.map(function(m){var out=String(m.sender_id)===String(currentUser.id); return '<div class="msg '+(out?'msg-out':'msg-in')+'">'+esc(m.message)+'<div class="msg-time">'+fmtTime(m.created_at)+'</div></div>';}).join(""):'<div class="chat-empty-mid">Hali xabar yo\'q. Birinchi xabarni yuboring.</div>';
-        body.scrollTop=body.scrollHeight;
-      } catch(e){ body.innerHTML='<div class="chat-empty-mid">Xabarlarni yuklab bo\'lmadi</div>'; }
+        currentMessages=data.messages||[]; messagesState="loaded"; renderMessages();
+      } catch(e){ messagesState="error"; renderMessages(); }
+    }
+    function renderMessages() {
+      var body=document.getElementById("chatBody");
+      if(messagesState==="loading") body.innerHTML='<div class="chat-empty-mid">'+esc(teacherMessagesT("loading"))+'</div>';
+      else if(messagesState==="error") body.innerHTML='<div class="chat-empty-mid">'+esc(teacherMessagesT("messagesLoadFailed"))+'</div>';
+      else if(messagesState==="loaded") body.innerHTML=currentMessages.length?currentMessages.map(function(m){var out=String(m.sender_id)===String(currentUser.id); return '<div class="msg '+(out?'msg-out':'msg-in')+'">'+esc(m.message)+'<div class="msg-time">'+fmtTime(m.created_at)+'</div></div>';}).join(""):'<div class="chat-empty-mid">'+esc(teacherMessagesT("noMessages"))+'</div>';
+      body.scrollTop=body.scrollHeight;
     }
     async function sendMessage() {
       if(!selectedStudent) return;
@@ -306,12 +325,16 @@
       input.value="";
       try {
         var res=await authFetch("/teacher/conversations/"+selectedStudent.id+"/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text})});
-        var data=await res.json(); if(!res.ok) throw new Error(data.error||"Yuborilmadi");
+        var data=await res.json(); if(!res.ok) throw new Error(data.error||teacherMessagesT("sendFailed"));
         await loadMessages(); await loadConversations();
-      } catch(e){ input.value=text; showToast(e.message||"Xabar yuborilmadi"); }
+      } catch(e){ input.value=text; showToast(e.message||teacherMessagesT("sendFailed")); }
     }
     (function bindMessageSocket(){var s=window.globalSocket||window.socket;if(!s){setTimeout(bindMessageSocket,500);return;}s.on("teacherMessage",function(d){loadConversations();if(selectedStudent&&String(d.student_id||"")===String(selectedStudent.id))loadMessages();});})();
     loadConversations();
+    window.addEventListener("ilmliga:languagechange", function () {
+      renderConversations();
+      if(selectedStudent) { renderSelectedConversation(); renderMessages(); }
+    });
 
     // ===== TEMA — boshqa sahifalar bilan BIR XIL (eb_theme kaliti) =====
     // Muhim: kalit "eb_theme" bo'lishi shart, aks holda sahifalar orasida sinxron bo'lmaydi.

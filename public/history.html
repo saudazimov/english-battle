@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — History</title>
+  <title data-i18n="history.metaTitle">IlmLiga — Tarix</title>
   <link rel="stylesheet" href="/app.css">
   <style>
     .app { grid-template-columns: 230px 1fr 340px; max-width: 1680px; }
@@ -139,45 +139,45 @@
 
       <div class="page-head">
         <div class="crest-ic"><i data-lucide="history"></i></div>
-        <div><h1>History</h1><p>Janglaringiz tarixi, natijalar va vaqt o'tgan sayin o'sish.</p></div>
+        <div><h1 data-i18n="history.heading">Tarix</h1><p data-i18n="history.subtitle">Janglaringiz tarixi, natijalaringiz va vaqt davomida erishgan o‘sishingiz.</p></div>
       </div>
 
       <div class="card filter-card">
         <div class="mode-tabs">
-          <div class="mtab active" data-mode="all" onclick="switchMode('all')"><i data-lucide="list"></i> Barchasi</div>
-          <div class="mtab" data-mode="ranked" onclick="switchMode('ranked')"><i data-lucide="swords"></i> 1v1 Ranked</div>
-          <div class="mtab" data-mode="casual" onclick="switchMode('casual')"><i data-lucide="gamepad-2"></i> Casual</div>
-          <div class="mtab" data-mode="school" onclick="switchMode('school')"><i data-lucide="building-2"></i> School Battle</div>
+          <div class="mtab active" data-mode="all" onclick="switchMode('all')"><i data-lucide="list"></i> <span data-i18n="history.allModes">Barchasi</span></div>
+          <div class="mtab" data-mode="ranked" onclick="switchMode('ranked')"><i data-lucide="swords"></i> <span data-i18n="history.ranked">1v1 reytingli</span></div>
+          <div class="mtab" data-mode="casual" onclick="switchMode('casual')"><i data-lucide="gamepad-2"></i> <span data-i18n="history.casual">Oddiy jang</span></div>
+          <div class="mtab" data-mode="school" onclick="switchMode('school')"><i data-lucide="building-2"></i> <span data-i18n="history.schoolBattle">Maktab jangi</span></div>
         </div>
         <div class="filter-row">
-          <div class="ttab active" data-period="all" onclick="switchPeriod('all')"><i data-lucide="calendar"></i> Barcha vaqt</div>
-          <div class="ttab" data-period="today" onclick="switchPeriod('today')"><i data-lucide="sun"></i> Bugun</div>
-          <div class="ttab" data-period="week" onclick="switchPeriod('week')"><i data-lucide="calendar-days"></i> Shu hafta</div>
-          <div class="ttab" data-period="month" onclick="switchPeriod('month')"><i data-lucide="calendar-range"></i> Shu oy</div>
-          <button class="btn btn-ghost export-btn"><i data-lucide="download" style="width:15px;height:15px;"></i> Eksport</button>
+          <div class="ttab active" data-period="all" onclick="switchPeriod('all')"><i data-lucide="calendar"></i> <span data-i18n="history.allTime">Barcha vaqt</span></div>
+          <div class="ttab" data-period="today" onclick="switchPeriod('today')"><i data-lucide="sun"></i> <span data-i18n="history.today">Bugun</span></div>
+          <div class="ttab" data-period="week" onclick="switchPeriod('week')"><i data-lucide="calendar-days"></i> <span data-i18n="history.thisWeek">Shu hafta</span></div>
+          <div class="ttab" data-period="month" onclick="switchPeriod('month')"><i data-lucide="calendar-range"></i> <span data-i18n="history.thisMonth">Shu oy</span></div>
+          <button class="btn btn-ghost export-btn"><i data-lucide="download" style="width:15px;height:15px;"></i> <span data-i18n="history.export">Eksport</span></button>
         </div>
       </div>
 
       <div class="card hist-card">
-        <div id="histList"><div class="hist-empty"><div class="note-txt">Yuklanmoqda...</div></div></div>
+        <div id="histList"><div class="hist-empty"><div class="note-txt" data-i18n="history.loading">Yuklanmoqda...</div></div></div>
       </div>
     </main>
 
     <aside class="rightbar">
       <div class="card rb-card">
-        <div class="rb-head"><span>History Overview</span><button type="button" class="rb-info-btn" id="historyOverviewInfoButton" aria-label="Jang tarixi statistikasi haqida ma'lumot" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
+        <div class="rb-head"><span data-i18n="history.overview">Tarix statistikasi</span><button type="button" class="rb-info-btn" id="historyOverviewInfoButton" aria-label="Jang tarixi statistikasi haqida ma’lumot" data-i18n-aria-label="history.overviewInfoAria" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
         <div class="ov-grid">
-          <div class="ov-box"><div class="ov-num blue" id="ovTotal">0</div><div class="ov-lbl">Jami jang</div></div>
-          <div class="ov-box"><div class="ov-num green" id="ovWins">0</div><div class="ov-lbl">G'alaba</div></div>
-          <div class="ov-box"><div class="ov-num red" id="ovLosses">0</div><div class="ov-lbl">Mag'lubiyat</div></div>
-          <div class="ov-box"><div class="ov-num" id="ovWinRate">0%</div><div class="ov-lbl">Win Rate</div></div>
-          <div class="ov-box"><div class="ov-num gold" id="ovBest">0</div><div class="ov-lbl">Eng yuqori RP</div></div>
-          <div class="ov-box"><div class="ov-num" id="ovStreak">0</div><div class="ov-lbl">Streak</div></div>
+          <div class="ov-box"><div class="ov-num blue" id="ovTotal">0</div><div class="ov-lbl" data-i18n="history.totalBattles">Jami janglar</div></div>
+          <div class="ov-box"><div class="ov-num green" id="ovWins">0</div><div class="ov-lbl" data-i18n="history.wins">G‘alabalar</div></div>
+          <div class="ov-box"><div class="ov-num red" id="ovLosses">0</div><div class="ov-lbl" data-i18n="history.losses">Mag‘lubiyatlar</div></div>
+          <div class="ov-box"><div class="ov-num" id="ovWinRate">0%</div><div class="ov-lbl" data-i18n="history.winRate">G‘alaba foizi</div></div>
+          <div class="ov-box"><div class="ov-num gold" id="ovBest">0</div><div class="ov-lbl" data-i18n="history.highestRating">Eng yuqori RP</div></div>
+          <div class="ov-box"><div class="ov-num" id="ovStreak">0</div><div class="ov-lbl" data-i18n="history.streak">Seriya</div></div>
         </div>
       </div>
 
       <div class="card rb-card">
-        <div class="rb-head"><span>Eng ko'p o'ynalган daraja</span></div>
+        <div class="rb-head"><span data-i18n="history.mostPlayedLevel">Eng ko‘p o‘ynalgan daraja</span></div>
         <div class="donut-wrap">
           <canvas id="levelDonut" width="120" height="120" style="max-width:120px;max-height:120px;"></canvas>
           <div class="donut-legend" id="donutLegend"></div>
@@ -185,19 +185,19 @@
       </div>
 
       <div class="card rb-card">
-        <div class="rb-head"><span>Performance grafigi</span><span class="soon-badge" id="performanceCurrentRating">0 RP</span></div>
+        <div class="rb-head"><span data-i18n="history.performanceChart">Natijalar grafigi</span><span class="soon-badge" id="performanceCurrentRating">0 RP</span></div>
         <div class="performance-chart-wrap">
-          <canvas id="performanceChart" role="img" aria-label="Oxirgi janglardagi rating o‘zgarishi grafigi"></canvas>
-          <div class="performance-empty note-txt" id="performanceEmpty">Grafik uchun janglar tarixi hali mavjud emas.</div>
+          <canvas id="performanceChart" role="img" aria-label="Oxirgi janglardagi reyting o‘zgarishi grafigi" data-i18n-aria-label="history.performanceChartAria"></canvas>
+          <div class="performance-empty note-txt" id="performanceEmpty" data-i18n="history.noChartData">Grafik uchun janglar tarixi hali mavjud emas.</div>
         </div>
         <div class="performance-summary">
-          <span>Oxirgi <strong id="performanceBattleCount">0</strong> jang</span>
+          <span><span data-i18n="history.recentPrefix">Oxirgi</span> <strong id="performanceBattleCount">0</strong> <span data-i18n="history.battleSuffix">jang</span></span>
           <span class="performance-delta zero" id="performanceDelta">0 RP</span>
         </div>
       </div>
 
       <div class="card rb-card">
-        <div class="rb-head"><span>Yutuqlar</span><span class="soon-badge" id="achievementsProgress">0 / 4</span></div>
+        <div class="rb-head"><span data-i18n="history.achievements">Yutuqlar</span><span class="soon-badge" id="achievementsProgress">0 / 4</span></div>
         <div class="achievement-list" id="achievementList"></div>
       </div>
     </aside>
@@ -207,6 +207,7 @@
   <script src="/vendor/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/rank-info-dialog.js"></script>
   <script src="/profile-modal.js"></script>
@@ -219,25 +220,35 @@
 
     renderSidebar("history");
 
+    function historyT(key, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+    }
+
+    function historyLocale() {
+      const language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return language === "ru" ? "ru-RU" : (language === "en" ? "en-GB" : "uz-UZ");
+    }
+
     function timeAgo(dateStr) {
       const date = new Date(dateStr);
-      const d = date.toLocaleDateString("uz-UZ");
-      const t = date.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+      const d = date.toLocaleDateString(historyLocale());
+      const t = date.toLocaleTimeString(historyLocale(), { hour: "2-digit", minute: "2-digit" });
       return { d, t };
     }
 
     function leagueShort(rating) {
-      if (rating >= 2000) return "Grandmaster";
-      if (rating >= 1800) return "Master";
-      if (rating >= 1600) return "Diamond";
-      if (rating >= 1400) return "Platinum";
-      if (rating >= 1200) return "Gold";
-      if (rating >= 1000) return "Silver";
-      return "Bronze";
+      if (rating >= 2000) return historyT("history.leagueGrandmaster");
+      if (rating >= 1800) return historyT("history.leagueMaster");
+      if (rating >= 1600) return historyT("history.leagueDiamond");
+      if (rating >= 1400) return historyT("history.leaguePlatinum");
+      if (rating >= 1200) return historyT("history.leagueGold");
+      if (rating >= 1000) return historyT("history.leagueSilver");
+      return historyT("history.leagueBronze");
     }
 
     let allHistory = [];
     let performanceChart = null;
+    let levelDonutChart = null;
 
     let currentMode = "all";
     let currentPeriod = "all";
@@ -253,7 +264,7 @@
         renderPerformanceChart();
         renderAchievements();
       } catch (err) {
-        document.getElementById("histList").innerHTML = '<div class="hist-empty"><div class="note-txt">Yuklab bo\'lmadi</div></div>';
+        document.getElementById("histList").innerHTML = '<div class="hist-empty"><div class="note-txt">' + historyT("history.loadError") + '</div></div>';
       }
     }
 
@@ -316,18 +327,18 @@
         list.innerHTML =
           '<div class="hist-empty">' +
             '<div class="hist-empty-ic"><i data-lucide="swords"></i></div>' +
-            '<div class="hist-empty-txt">' + (isFiltered ? "Bu filtrga mos jang yo'q" : "Hali jang tarixi yo'q") + '</div>' +
-            '<div class="hist-empty-sub">' + (isFiltered ? "Boshqa filtrni tanlab ko'ring." : "Birinchi jangingizni boshlang — natijalar shu yerda ko'rinadi.") + '</div>' +
-            (isFiltered ? "" : '<button class="btn btn-primary" onclick="window.location.href=\'/lobby.html\'"><i data-lucide="swords" style="width:16px;height:16px;"></i> Jang boshlash</button>') +
+            '<div class="hist-empty-txt">' + (isFiltered ? historyT("history.noFilteredBattles") : historyT("history.noHistory")) + '</div>' +
+            '<div class="hist-empty-sub">' + (isFiltered ? historyT("history.tryAnotherFilter") : historyT("history.startFirstBattleHint")) + '</div>' +
+            (isFiltered ? "" : '<button class="btn btn-primary" onclick="window.location.href=\'/lobby.html\'"><i data-lucide="swords" style="width:16px;height:16px;"></i> ' + historyT("history.startBattle") + '</button>') +
           '</div>';
         lucide.createIcons();
         return;
       }
       list.innerHTML = "";
       filtered.forEach(h => {
-        let res = "draw", icon = "minus", resText = "Durang";
-        if (h.outcome === "win") { res = "win"; icon = "trophy"; resText = "G'alaba"; }
-        else if (h.outcome === "lose") { res = "lose"; icon = "x"; resText = "Mag'lub"; }
+        let res = "draw", icon = "minus", resText = historyT("history.draw");
+        if (h.outcome === "win") { res = "win"; icon = "trophy"; resText = historyT("history.win"); }
+        else if (h.outcome === "lose") { res = "lose"; icon = "x"; resText = historyT("history.loss"); }
 
         const dt = timeAgo(h.played_at);
         let rpCls = "zero", rpText = "0";
@@ -335,12 +346,12 @@
         else if (h.rating_change < 0) { rpCls = "down"; rpText = "" + h.rating_change; }
 
         // Sprint 1: raqib ismi innerHTML'ga kirishidan oldin escape (sbEsc — sidebar.js)
-        const oppName = sbEsc(h.opponent_name || "Raqib");
+        const oppName = sbEsc(h.opponent_name || historyT("history.opponent"));
         const oppAva = avatarHTML(oppName, h.opponent_picture);
         const oppLeague = h.opponent_rating ? leagueShort(h.opponent_rating) : null;
         const oppSub = oppLeague
           ? (h.cefr_level || "A1") + " · " + oppLeague
-          : (h.cefr_level || "A1") + " daraja";
+          : historyT("history.levelValue", { level: h.cefr_level || "A1" });
 
         list.innerHTML +=
           '<div class="battle-row ' + res + '">' +
@@ -348,7 +359,7 @@
             '<div class="br-opp"' + (h.opponent_id ? ' style="cursor:pointer" onclick="openProfileModal(' + h.opponent_id + ')"' : '') + '><div class="br-ava">' + oppAva + '</div>' +
               '<div class="br-opp-info"><div class="br-opp-name">' + oppName + '</div>' +
               '<div class="br-opp-sub">' + oppSub + '</div></div></div>' +
-            '<div class="br-score"><div class="br-score-val">' + h.my_score + ' : ' + h.opponent_score + '</div><div class="br-score-lbl">Hisob</div></div>' +
+            '<div class="br-score"><div class="br-score-val">' + h.my_score + ' : ' + h.opponent_score + '</div><div class="br-score-lbl">' + historyT("history.score") + '</div></div>' +
             '<div class="br-rating"><div class="br-rp ' + rpCls + '">' + rpText + ' RP</div><div class="br-xp">+' + (h.xp_earned || 0) + ' XP</div></div>' +
             '<div class="br-date"><div class="br-date-d">' + dt.d + '</div><div class="br-date-t">' + dt.t + '</div></div>' +
             '<div class="br-arrow"><i data-lucide="chevron-right"></i></div>' +
@@ -384,7 +395,11 @@
       const legend = document.getElementById("donutLegend");
 
       if (levels.length === 0) {
-        legend.innerHTML = '<div class="note-txt">Ma\'lumot yo\'q</div>';
+        if (levelDonutChart) {
+          levelDonutChart.destroy();
+          levelDonutChart = null;
+        }
+        legend.innerHTML = '<div class="note-txt">' + historyT("history.noData") + '</div>';
         return;
       }
 
@@ -395,7 +410,8 @@
                '<span class="leg-name">' + l + '</span><span class="leg-val">' + pct + '%</span></div>';
       }).join("");
 
-      new Chart(document.getElementById("levelDonut"), {
+      if (levelDonutChart) levelDonutChart.destroy();
+      levelDonutChart = new Chart(document.getElementById("levelDonut"), {
         type: "doughnut",
         data: {
           labels: levels,
@@ -407,9 +423,8 @@
 
     function formatPerformanceDate(dateValue) {
       const date = new Date(dateValue);
-      const months = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"];
       if (Number.isNaN(date.getTime())) return "—";
-      return date.getDate() + "-" + months[date.getMonth()];
+      return new Intl.DateTimeFormat(historyLocale(), { day: "numeric", month: "short" }).format(date);
     }
 
     function renderPerformanceChart() {
@@ -432,8 +447,8 @@
         canvas.style.display = "none";
         empty.style.display = "flex";
         empty.textContent = recent.length === 0
-          ? "Grafik uchun janglar tarixi hali mavjud emas."
-          : "Grafik kutubxonasini yuklab bo‘lmadi.";
+          ? historyT("history.noChartData")
+          : historyT("history.chartLibraryError");
         delta.textContent = "0 RP";
         delta.className = "performance-delta zero";
         return;
@@ -491,10 +506,10 @@
       const wins = allHistory.filter(function (battle) { return battle.outcome === "win"; }).length;
       const streak = Number(user.win_streak) || 0;
       const achievements = [
-        { name: "Birinchi g‘alaba", icon: "trophy", value: wins, goal: 1 },
-        { name: "Faol jangchi", icon: "swords", value: allHistory.length, goal: 10 },
-        { name: "G‘alabalar sari", icon: "medal", value: wins, goal: 10 },
-        { name: "Streak ustasi", icon: "flame", value: streak, goal: 3 },
+        { name: historyT("history.achievementFirstWin"), icon: "trophy", value: wins, goal: 1 },
+        { name: historyT("history.achievementActiveFighter"), icon: "swords", value: allHistory.length, goal: 10 },
+        { name: historyT("history.achievementWinningPath"), icon: "medal", value: wins, goal: 10 },
+        { name: historyT("history.achievementStreakMaster"), icon: "flame", value: streak, goal: 3 },
       ];
       const unlocked = achievements.filter(function (achievement) {
         return achievement.value >= achievement.goal;
@@ -516,11 +531,11 @@
 
     createRankInfoDialog({
       triggerId: "historyOverviewInfoButton",
-      title: "History Overview",
-      subtitle: "Barcha saqlangan janglaringiz bo‘yicha statistika",
+      get title() { return historyT("history.overview"); },
+      get subtitle() { return historyT("history.overviewSubtitle"); },
       headerIcon: "history",
-      primaryLabel: "Jami jang",
-      secondaryLabel: "Win Rate",
+      get primaryLabel() { return historyT("history.totalBattles"); },
+      get secondaryLabel() { return historyT("history.winRate"); },
       detailType: "scopes",
       hideFooter: true,
       getData: function () {
@@ -528,15 +543,21 @@
           primary: document.getElementById("ovTotal").textContent || "0",
           secondary: document.getElementById("ovWinRate").textContent || "0%",
           scopes: [
-            { icon: "swords", name: "Jami jang", description: "Saqlangan barcha janglar", value: document.getElementById("ovTotal").textContent || "0" },
-            { icon: "trophy", name: "G‘alaba", description: "G‘alaba bilan yakunlangan", value: document.getElementById("ovWins").textContent || "0" },
-            { icon: "x-circle", name: "Mag‘lubiyat", description: "Mag‘lubiyat bilan yakunlangan", value: document.getElementById("ovLosses").textContent || "0" },
-            { icon: "target", name: "Win Rate", description: "G‘alabalarning umumiy ulushi", value: document.getElementById("ovWinRate").textContent || "0%" },
-            { icon: "award", name: "Eng yuqori RP", description: "Ko‘rsatilgan rating qiymati", value: document.getElementById("ovBest").textContent || "0" },
-            { icon: "flame", name: "Streak", description: "Joriy ketma-ket g‘alabalar", value: document.getElementById("ovStreak").textContent || "0" },
+            { icon: "swords", name: historyT("history.totalBattles"), description: historyT("history.totalBattlesDescription"), value: document.getElementById("ovTotal").textContent || "0" },
+            { icon: "trophy", name: historyT("history.wins"), description: historyT("history.winsDescription"), value: document.getElementById("ovWins").textContent || "0" },
+            { icon: "x-circle", name: historyT("history.losses"), description: historyT("history.lossesDescription"), value: document.getElementById("ovLosses").textContent || "0" },
+            { icon: "target", name: historyT("history.winRate"), description: historyT("history.winRateDescription"), value: document.getElementById("ovWinRate").textContent || "0%" },
+            { icon: "award", name: historyT("history.highestRating"), description: historyT("history.highestRatingDescription"), value: document.getElementById("ovBest").textContent || "0" },
+            { icon: "flame", name: historyT("history.streak"), description: historyT("history.streakDescription"), value: document.getElementById("ovStreak").textContent || "0" },
           ],
         };
       },
+    });
+    window.addEventListener("ilmliga:languagechange", function () {
+      renderList();
+      renderDonut();
+      renderPerformanceChart();
+      renderAchievements();
     });
     loadHistory();
     lucide.createIcons();

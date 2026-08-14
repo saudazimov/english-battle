@@ -1,0 +1,221 @@
+/* IlmLiga universal authenticated topbar.
+   Markup is rendered only by renderTopbar() in sidebar.js. */
+.app.il-shell {
+  column-gap: 24px;
+}
+
+.topbar.il-topbar {
+  position: relative;
+  z-index: 100;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  margin: 0 0 2px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.topbar.il-topbar > .tb-language .ilm-language-menu {
+  right: auto;
+  left: 0;
+  transform-origin: top left;
+}
+
+.topbar.il-topbar.il-topbar--center-column {
+  width: calc(100% - 340px);
+}
+
+.topbar.il-topbar > .tb-language .ilm-language-trigger {
+  width: 100px;
+  min-width: 100px;
+}
+
+.topbar.il-topbar > .currency {
+  width: 104px;
+  min-width: 104px;
+  height: 42px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border, #22304d);
+  border-radius: 12px;
+  background: var(--panel, #10182d);
+  color: var(--text, #f5f7ff);
+  font-size: 15px;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.topbar.il-topbar > .currency .plus {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 7px;
+  background: rgba(91, 140, 255, 0.2);
+  color: var(--accent, #5b8cff);
+  font-weight: 700;
+}
+
+.topbar.il-topbar > .notif-wrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.topbar.il-topbar > .notif-wrap > .icon-btn {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border, #22304d);
+  border-radius: 12px;
+  background: var(--panel, #10182d);
+  color: var(--text, #f5f7ff);
+  box-sizing: border-box;
+}
+
+.topbar.il-topbar > .notif-wrap > .icon-btn > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.topbar.il-topbar > .user-chip {
+  min-width: 248px;
+  height: 46px;
+  padding: 5px 11px 5px 5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border, #22304d);
+  border-radius: 12px;
+  background: var(--panel, #10182d);
+  color: var(--text, #f5f7ff);
+  box-sizing: border-box;
+}
+
+.topbar.il-topbar > .user-chip > .ava {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+}
+
+.topbar.il-topbar > .user-chip .uname {
+  max-width: 158px;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar.il-topbar > .user-chip .ulevel {
+  margin-top: 3px;
+  color: var(--text-dim, #91a0c0);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.topbar.il-topbar > .user-chip > .chip-arrow {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 1200px) {
+  .topbar.il-topbar.il-topbar--center-column {
+    width: 100%;
+  }
+}
+
+@media (min-width: 781px) and (max-width: 1400px) {
+  .topbar.il-topbar {
+    gap: 10px;
+  }
+
+  .topbar.il-topbar > .currency {
+    width: 92px;
+    min-width: 92px;
+  }
+
+  .topbar.il-topbar > .user-chip {
+    min-width: 210px;
+  }
+
+  .topbar.il-topbar > .user-chip .uname {
+    max-width: 122px;
+  }
+}
+
+@media (max-width: 780px) {
+  .app.il-shell {
+    column-gap: 0;
+  }
+
+  .topbar.il-topbar {
+    min-height: 98px;
+    margin-bottom: 2px;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .topbar.il-topbar > .tb-language {
+    width: 100%;
+    order: 2;
+  }
+
+  .topbar.il-topbar > .currency {
+    width: 54px;
+    min-width: 54px;
+    height: 42px;
+    padding: 0 8px;
+    display: flex !important;
+    order: 1;
+  }
+
+  .topbar.il-topbar > .currency .plus {
+    display: none;
+  }
+
+  .topbar.il-topbar > .notif-wrap,
+  .topbar.il-topbar > .user-chip {
+    order: 1;
+  }
+
+  .topbar.il-topbar > .user-chip {
+    width: 46px;
+    min-width: 46px;
+    padding: 5px;
+    justify-content: center;
+  }
+
+  .topbar.il-topbar > .user-chip > div:not(.ava),
+  .topbar.il-topbar > .user-chip > .chip-arrow {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .topbar.il-topbar {
+    gap: 6px;
+  }
+
+  .topbar.il-topbar > .currency {
+    width: 50px;
+    min-width: 50px;
+    padding: 0 6px;
+    font-size: 13px;
+  }
+}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sozlamalar — English Battle</title>
+  <title data-i18n="teacherSettings.metaTitle">Sozlamalar — IlmLiga</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
@@ -159,20 +159,20 @@
     <div class="main">
       <header class="topbar">
         <div class="tb-head">
-          <h1>Sozlamalar</h1>
-          <p>Hisobingiz va platforma sozlamalarini boshqaring</p>
+          <h1 data-i18n="teacherSettings.heading">Sozlamalar</h1>
+          <p data-i18n="teacherSettings.subtitle">Hisobingiz va platforma sozlamalarini boshqaring</p>
         </div>
-        <div class="tb-year" onclick="comingSoon('O\'quv yili')">
+        <div class="tb-year" onclick="comingSoon(settingsT('schoolYearLabel'))">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          2024–2025 O'quv yili
+          <span data-i18n="teacherSettings.schoolYear">2024–2025 O'quv yili</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <button class="theme-toggle" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
-        <button class="tb-icon-btn" onclick="comingSoon('Bildirishnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
+        <button class="theme-toggle" onclick="toggleTheme()" data-i18n-aria-label="teacherSettings.themeAria"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
+        <button class="tb-icon-btn" onclick="comingSoon(settingsT('notifications'))" data-i18n-aria-label="teacherSettings.notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
         <div class="tb-user" onclick="window.location.href='/profile.html'">
           <div class="tb-user-info">
-            <div class="tb-user-name" id="userName">O'qituvchi</div>
-            <div class="tb-user-role">Teacher</div>
+            <div class="tb-user-name" id="userName" data-i18n="teacherSettings.teacher">O'qituvchi</div>
+            <div class="tb-user-role" data-i18n="teacherSettings.teacherRole">Teacher</div>
           </div>
           <div class="tb-avatar" id="userAvatar">T</div>
         </div>
@@ -182,60 +182,60 @@
         <div class="col-main">
           <!-- Tab'lar -->
           <div class="tabs-bar">
-            <button class="tab active" id="tabProfil" onclick="switchTab('profil')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profil</button>
-            <button class="tab" id="tabHisob" onclick="switchTab('hisob')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20"/></svg> Hisob</button>
-            <button class="tab" id="tabBildirishnomalar" onclick="switchTab('bildirishnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Bildirishnomalar</button>
-            <button class="tab" id="tabMaxfiylik" onclick="switchTab('maxfiylik')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Maxfiylik</button>
-            <button class="tab" id="tabTashqi" onclick="switchTab('tashqi')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Tashqi xizmatlar</button>
-            <button class="tab" id="tabKorinish" onclick="switchTab('korinish')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2"/></svg> Ko'rinish</button>
+            <button class="tab active" id="tabProfil" onclick="switchTab('profil')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <span data-i18n="teacherSettings.profileTab">Profil</span></button>
+            <button class="tab" id="tabHisob" onclick="switchTab('hisob')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20"/></svg> <span data-i18n="teacherSettings.accountTab">Hisob</span></button>
+            <button class="tab" id="tabBildirishnomalar" onclick="switchTab('bildirishnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> <span data-i18n="teacherSettings.notificationsTab">Bildirishnomalar</span></button>
+            <button class="tab" id="tabMaxfiylik" onclick="switchTab('maxfiylik')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> <span data-i18n="teacherSettings.privacyTab">Maxfiylik</span></button>
+            <button class="tab" id="tabTashqi" onclick="switchTab('tashqi')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> <span data-i18n="teacherSettings.externalTab">Tashqi xizmatlar</span></button>
+            <button class="tab" id="tabKorinish" onclick="switchTab('korinish')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2"/></svg> <span data-i18n="teacherSettings.appearanceTab">Ko'rinish</span></button>
           </div>
 
           <!-- PROFIL TAB -->
           <div id="paneProfil">
             <!-- Profil ma'lumotlari -->
             <div class="panel">
-              <div class="panel-head"><div class="panel-head-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><h2>Profil ma'lumotlari</h2></div>
+              <div class="panel-head"><div class="panel-head-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><h2 data-i18n="teacherSettings.profileInfo">Profil ma'lumotlari</h2></div>
               <div class="profile-grid">
                 <div class="avatar-col">
                   <div class="avatar-big" id="avatarBig">T</div>
-                  <button class="avatar-btn" onclick="document.getElementById('avatarFile').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Rasmni o'zgartirish</button>
+                  <button class="avatar-btn" onclick="document.getElementById('avatarFile').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> <span data-i18n="teacherSettings.changePicture">Rasmni o'zgartirish</span></button>
                   <input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onchange="uploadAvatar(this.files[0])" />
-                  <div class="avatar-hint">JPG, PNG, WEBP yoki GIF. Maks. 5MB</div>
+                  <div class="avatar-hint" data-i18n="teacherSettings.pictureHint">JPG, PNG, WEBP yoki GIF. Maks. 5MB</div>
                 </div>
                 <div>
                   <div class="field-grid">
-                    <div class="field"><label>To'liq ism</label><input id="inpName" type="text" placeholder="Ism familiya" /></div>
-                    <div class="field"><label>Email</label><input id="inpEmail" type="email" placeholder="email@example.com" /></div>
-                    <div class="field"><label>Telefon raqam</label><input id="inpPhone" type="text" disabled placeholder="+998 90 123 45 67" /><span class="field-note">Telefon faqat OTP orqali almashtiriladi</span></div>
-                    <div class="field"><label>Fan</label><select id="inpSubject"><option>English</option><option>Boshqa</option></select></div>
-                    <div class="field full"><label>Qisqacha bio</label><textarea id="inpBio" placeholder="O'zingiz haqingizda qisqacha yozing..."></textarea></div>
+                    <div class="field"><label data-i18n="teacherSettings.fullName">To'liq ism</label><input id="inpName" type="text" data-i18n-placeholder="teacherSettings.namePlaceholder" placeholder="Ism familiya" /></div>
+                    <div class="field"><label data-i18n="teacherSettings.email">Email</label><input id="inpEmail" type="email" placeholder="email@example.com" /></div>
+                    <div class="field"><label data-i18n="teacherSettings.phone">Telefon raqam</label><input id="inpPhone" type="text" disabled placeholder="+998 90 123 45 67" /><span class="field-note" data-i18n="teacherSettings.phoneNote">Telefon faqat OTP orqali almashtiriladi</span></div>
+                    <div class="field"><label data-i18n="teacherSettings.subject">Fan</label><select id="inpSubject"><option value="English">English</option><option value="Boshqa" data-i18n="teacherSettings.other">Boshqa</option></select></div>
+                    <div class="field full"><label data-i18n="teacherSettings.bio">Qisqacha bio</label><textarea id="inpBio" data-i18n-placeholder="teacherSettings.bioPlaceholder" placeholder="O'zingiz haqingizda qisqacha yozing..."></textarea></div>
                   </div>
-                  <div class="form-foot"><button class="btn-save" onclick="saveProfile()">Saqlash</button></div>
+                  <div class="form-foot"><button class="btn-save" onclick="saveProfile()" data-i18n="teacherSettings.save">Saqlash</button></div>
                 </div>
               </div>
             </div>
 
             <!-- Parolni o'zgartirish -->
             <div class="panel" style="margin-top:20px">
-              <div class="panel-head"><div class="panel-head-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h2>Parolni o'zgartirish</h2></div>
+              <div class="panel-head"><div class="panel-head-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h2 data-i18n="teacherSettings.changePassword">Parolni o'zgartirish</h2></div>
               <div class="field-grid" style="grid-template-columns:1fr 1fr 1fr">
-                <div class="field"><label>Joriy parol</label><div class="input-lock"><input id="pwCurrent" type="password" placeholder="Joriy parolni kiriting" /><button class="input-eye" onclick="togglePw('pwCurrent',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
-                <div class="field"><label>Yangi parol</label><div class="input-lock"><input id="pwNew" type="password" placeholder="Yangi parolni kiriting" /><button class="input-eye" onclick="togglePw('pwNew',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
-                <div class="field"><label>Yangi parolni tasdiqlang</label><div class="input-lock"><input id="pwConfirm" type="password" placeholder="Yangi parolni qayta kiriting" /><button class="input-eye" onclick="togglePw('pwConfirm',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+                <div class="field"><label data-i18n="teacherSettings.currentPassword">Joriy parol</label><div class="input-lock"><input id="pwCurrent" type="password" data-i18n-placeholder="teacherSettings.currentPasswordPlaceholder" placeholder="Joriy parolni kiriting" /><button class="input-eye" onclick="togglePw('pwCurrent',this)" data-i18n-aria-label="teacherSettings.togglePassword"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+                <div class="field"><label data-i18n="teacherSettings.newPassword">Yangi parol</label><div class="input-lock"><input id="pwNew" type="password" data-i18n-placeholder="teacherSettings.newPasswordPlaceholder" placeholder="Yangi parolni kiriting" /><button class="input-eye" onclick="togglePw('pwNew',this)" data-i18n-aria-label="teacherSettings.togglePassword"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+                <div class="field"><label data-i18n="teacherSettings.confirmPassword">Yangi parolni tasdiqlang</label><div class="input-lock"><input id="pwConfirm" type="password" data-i18n-placeholder="teacherSettings.confirmPasswordPlaceholder" placeholder="Yangi parolni qayta kiriting" /><button class="input-eye" onclick="togglePw('pwConfirm',this)" data-i18n-aria-label="teacherSettings.togglePassword"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
               </div>
-              <div class="form-foot"><button class="btn-save" onclick="changePassword()">Parolni yangilash</button></div>
+              <div class="form-foot"><button class="btn-save" onclick="changePassword()" data-i18n="teacherSettings.updatePassword">Parolni yangilash</button></div>
             </div>
 
             <!-- Til va vaqt mintaqasi -->
             <div class="panel" style="margin-top:20px">
-              <div class="panel-head"><div class="panel-head-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h2>Til va vaqt mintaqasi</h2></div>
+              <div class="panel-head"><div class="panel-head-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><h2 data-i18n="teacherSettings.localeTitle">Til va vaqt mintaqasi</h2></div>
               <div class="field-grid" style="grid-template-columns:1fr 1fr 1fr 1fr">
-                <div class="field"><label>Til</label><select id="inpLang" onchange="saveLocale()"><option value="uz">O'zbekcha</option><option value="ru">Русский</option><option value="en">English</option></select></div>
-                <div class="field"><label>Vaqt mintaqasi</label><select id="inpTz"><option>(UTC+05:00) Tashkent</option><option>(UTC+03:00) Moscow</option><option>(UTC+00:00) London</option></select></div>
-                <div class="field"><label>Sana formati</label><select id="inpDateFmt"><option>DD.MM.YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select></div>
-                <div class="field"><label>Vaqt formati</label><select id="inpTimeFmt"><option>24 soat</option><option>12 soat (AM/PM)</option></select></div>
+                <div class="field"><label data-i18n="teacherSettings.language">Til</label><select id="inpLang" onchange="saveLocale()"><option value="uz">O'zbekcha</option><option value="ru">Русский</option><option value="en">English</option></select></div>
+                <div class="field"><label data-i18n="teacherSettings.timezone">Vaqt mintaqasi</label><select id="inpTz"><option>(UTC+05:00) Tashkent</option><option>(UTC+03:00) Moscow</option><option>(UTC+00:00) London</option></select></div>
+                <div class="field"><label data-i18n="teacherSettings.dateFormat">Sana formati</label><select id="inpDateFmt"><option>DD.MM.YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select></div>
+                <div class="field"><label data-i18n="teacherSettings.timeFormat">Vaqt formati</label><select id="inpTimeFmt"><option value="24" data-i18n="teacherSettings.hour24">24 soat</option><option value="12" data-i18n="teacherSettings.hour12">12 soat (AM/PM)</option></select></div>
               </div>
-              <div class="form-foot"><button class="btn-save" onclick="saveLocale()">Saqlash</button></div>
+              <div class="form-foot"><button class="btn-save" onclick="saveLocale()" data-i18n="teacherSettings.save">Saqlash</button></div>
             </div>
           </div>
 
@@ -243,9 +243,9 @@
           <div id="paneOther" style="display:none">
             <div class="panel">
               <div class="state-msg">
-                <div id="otherTabName" style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:8px">Bo'lim</div>
-                <div>Bu bo'lim tez orada tayyor bo'ladi.</div>
-                <div class="soon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Ishlab chiqilmoqda</div>
+                <div id="otherTabName" style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:8px" data-i18n="teacherSettings.section">Bo'lim</div>
+                <div data-i18n="teacherSettings.sectionSoon">Bu bo'lim tez orada tayyor bo'ladi.</div>
+                <div class="soon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <span data-i18n="teacherSettings.inDevelopment">Ishlab chiqilmoqda</span></div>
               </div>
             </div>
           </div>
@@ -254,32 +254,32 @@
         <!-- O'ng panel -->
         <div class="col-side">
           <div class="side-card">
-            <h3>Hisobingiz haqida</h3>
-            <div class="info-row"><div class="info-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="info-body"><span class="info-k">Hisob turi</span><span class="info-v">Teacher</span></div></div>
-            <div class="info-row"><div class="info-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="info-body"><span class="info-k">A'zo bo'lish sanasi</span><span class="info-v" id="joinDate">—</span></div></div>
-            <div class="info-row"><div class="info-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="info-body"><span class="info-k">So'nggi kirish</span><span class="info-v">Bugun</span></div></div>
+            <h3 data-i18n="teacherSettings.aboutAccount">Hisobingiz haqida</h3>
+            <div class="info-row"><div class="info-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="info-body"><span class="info-k" data-i18n="teacherSettings.accountType">Hisob turi</span><span class="info-v" data-i18n="teacherSettings.teacherRole">Teacher</span></div></div>
+            <div class="info-row"><div class="info-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="info-body"><span class="info-k" data-i18n="teacherSettings.joinDate">A'zo bo'lish sanasi</span><span class="info-v" id="joinDate">—</span></div></div>
+            <div class="info-row"><div class="info-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="info-body"><span class="info-k" data-i18n="teacherSettings.lastLogin">So'nggi kirish</span><span class="info-v" data-i18n="teacherSettings.today">Bugun</span></div></div>
           </div>
 
           <div class="prem-card" id="premCard">
-            <div class="prem-top"><div class="prem-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div><span class="prem-title">Premium Teacher</span><span class="prem-badge free" id="premBadge">Free</span></div>
-            <div class="prem-desc" id="premDesc">Cheksiz sinf, topshiriq va AI imkoniyatlar.</div>
-            <button class="prem-btn" id="premBtn" onclick="onPremiumClick()">Pro ga o'tish</button>
+            <div class="prem-top"><div class="prem-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div><span class="prem-title">Premium Teacher</span><span class="prem-badge free" id="premBadge" data-i18n="teacherSettings.free">Free</span></div>
+            <div class="prem-desc" id="premDesc" data-i18n="teacherSettings.premiumDesc">Cheksiz sinf, topshiriq va AI imkoniyatlar.</div>
+            <button class="prem-btn" id="premBtn" onclick="onPremiumClick()" data-i18n="teacherSettings.goPro">Pro ga o'tish</button>
           </div>
 
           <div class="side-card">
-            <h3>Xavfsizlik</h3>
+            <h3 data-i18n="teacherSettings.security">Xavfsizlik</h3>
             <div class="act-row" onclick="comingSoon('Ikki bosqichli tasdiqlash')"><div class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="act-body"><div class="act-title">Ikki bosqichli tasdiqlash</div><div class="act-sub">Hisobingiz xavfsizligini oshiring</div></div><span class="act-tag">O'chirilgan</span></div>
             <div class="act-row" onclick="comingSoon('Faol qurilmalar')"><div class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg></div><div class="act-body"><div class="act-title">Faol qurilmalar</div><div class="act-sub">Ulangan qurilmalarni ko'ring</div></div><span class="act-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
           </div>
 
           <div class="side-card">
-            <h3>Ma'lumotlar va eksport</h3>
+            <h3 data-i18n="teacherSettings.dataExport">Ma'lumotlar va eksport</h3>
             <div class="act-row" onclick="comingSoon('Eksport')"><div class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div class="act-body"><div class="act-title">Ma'lumotlarni eksport qilish</div><div class="act-sub">Hisobingiz ma'lumotlarini yuklab oling</div></div><span class="act-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
             <div class="act-row danger" onclick="comingSoon('Hisobni o\'chirish')"><div class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div><div class="act-body"><div class="act-title">Hisobni o'chirish</div><div class="act-sub">Hisobingizni butunlay o'chirib tashlang</div></div></div>
           </div>
 
           <div class="side-card">
-            <h3>Platforma haqida</h3>
+            <h3 data-i18n="teacherSettings.aboutPlatform">Platforma haqida</h3>
             <div class="act-row" onclick="comingSoon('Versiya')"><div class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><div class="info-body"><span class="act-title">Versiya</span><span class="info-v">1.0.0</span></div></div>
             <div class="act-row" onclick="comingSoon('Yordam markazi')"><div class="act-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="act-body"><div class="act-title">Yordam markazi</div><div class="act-sub">Yordam va qo'llanmalar</div></div><span class="act-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div>
           </div>
@@ -291,10 +291,26 @@
   <div class="toast" id="toast"></div>
 
   <script src="/api.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/payment-modal.js"></script>
   <script src="/premium-modal.js"></script>
   <script src="/teacher-sidebar.js"></script>
   <script>
+    function settingsT(key, params) { return window.IlmLigaI18n ? window.IlmLigaI18n.t("teacherSettings." + key, params) : key; }
+    function settingsLocale() { var lang=window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz"; return {uz:"uz-UZ",en:"en-US",ru:"ru-RU"}[lang]||"uz-UZ"; }
+    function settingsApiError(data, fallbackKey) { var lang=window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz"; return lang==="uz"&&data&&data.error?data.error:settingsT(fallbackKey); }
+    function bindSettingsTranslations() {
+      var cards=document.querySelectorAll(".col-side .side-card");
+      var bindings=[
+        [cards[1]&&cards[1].querySelectorAll(".act-title")[0],"twoFactor"], [cards[1]&&cards[1].querySelectorAll(".act-sub")[0],"twoFactorDesc"], [cards[1]&&cards[1].querySelector(".act-tag"),"disabled"],
+        [cards[1]&&cards[1].querySelectorAll(".act-title")[1],"activeDevices"], [cards[1]&&cards[1].querySelectorAll(".act-sub")[1],"activeDevicesDesc"],
+        [cards[2]&&cards[2].querySelectorAll(".act-title")[0],"exportData"], [cards[2]&&cards[2].querySelectorAll(".act-sub")[0],"exportDataDesc"],
+        [cards[2]&&cards[2].querySelectorAll(".act-title")[1],"deleteAccount"], [cards[2]&&cards[2].querySelectorAll(".act-sub")[1],"deleteAccountDesc"],
+        [cards[3]&&cards[3].querySelectorAll(".act-title")[0],"version"], [cards[3]&&cards[3].querySelectorAll(".act-title")[1],"helpCenter"], [cards[3]&&cards[3].querySelectorAll(".act-sub")[0],"helpCenterDesc"]
+      ];
+      bindings.forEach(function(item){ if(item[0]) item[0].setAttribute("data-i18n", "teacherSettings."+item[1]); });
+      if(window.IlmLigaI18n) window.IlmLigaI18n.apply(document.querySelector(".col-side"));
+    }
     // ===== TEMA =====
     (function initTheme() {
       var saved = localStorage.getItem("eb_theme") || "light";
@@ -316,7 +332,11 @@
         : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>';
     }
 
-    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada tayyor bo'ladi"); }
+    function comingSoon(name) {
+      var legacy={"Ikki bosqichli tasdiqlash":"twoFactor","Faol qurilmalar":"activeDevices","Eksport":"export","Hisobni o'chirish":"deleteAccount","Versiya":"version","Yordam markazi":"helpCenter"};
+      var localized=legacy[name]?settingsT(legacy[name]):name;
+      showToast(settingsT("comingSoon", {name:localized||""}));
+    }
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     function showToast(text) { var t = document.getElementById("toast"); t.textContent = text; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2600); }
 
@@ -329,10 +349,12 @@
       if (R[user.role]) window.location.href = R[user.role];
     }
     renderTeacherSidebar("settings");
+    bindSettingsTranslations();
 
     var fn = user.first_name || "", ln = user.last_name || "";
-    var fullName = (fn + " " + ln).trim() || "O'qituvchi";
+    var fullName = (fn + " " + ln).trim() || settingsT("teacher");
     document.getElementById("userName").textContent = fullName;
+    document.getElementById("userName").removeAttribute("data-i18n");
     var initial = (fn || "T").charAt(0).toUpperCase();
     document.getElementById("userAvatar").textContent = initial;
     document.getElementById("avatarBig").textContent = initial;
@@ -350,6 +372,11 @@
     document.getElementById("inpEmail").value = user.email || "";
     document.getElementById("inpBio").value = user.bio || "";
 
+    var settingsProfileCreatedAt = user.created_at || null;
+    function renderJoinDate() {
+      if (!settingsProfileCreatedAt) return;
+      try { document.getElementById("joinDate").textContent = new Date(settingsProfileCreatedAt).toLocaleDateString(settingsLocale(), { day: "2-digit", month: "short", year: "numeric" }); } catch (e) {}
+    }
     function renderServerProfile(profile) {
       if (!profile) return;
       var name = ((profile.first_name || "") + " " + (profile.last_name || "")).trim();
@@ -358,14 +385,15 @@
       document.getElementById("inpEmail").value = profile.email || "";
       document.getElementById("inpBio").value = profile.bio || "";
       document.getElementById("inpSubject").value = profile.teaching_subject || "English";
-      document.getElementById("userName").textContent = name || "O'qituvchi";
+      document.getElementById("userName").textContent = name || settingsT("teacher");
+      document.getElementById("userName").removeAttribute("data-i18n");
       if (profile.profile_picture) {
         var image = '<img src="' + esc(profile.profile_picture) + '" alt="">';
         document.getElementById("userAvatar").innerHTML = image;
         document.getElementById("avatarBig").innerHTML = image;
       }
       if (profile.created_at) {
-        try { document.getElementById("joinDate").textContent = new Date(profile.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); } catch (e) {}
+        settingsProfileCreatedAt=profile.created_at; renderJoinDate();
       }
     }
 
@@ -383,17 +411,17 @@
 
     async function uploadAvatar(file) {
       if (!file) return;
-      if (file.size > 5 * 1024 * 1024) return showToast("Rasm 5MB dan oshmasin");
+      if (file.size > 5 * 1024 * 1024) return showToast(settingsT("pictureTooLarge"));
       var form = new FormData(); form.append("picture", file);
       try {
         var res = await authFetch("/profile/" + user.id + "/picture", { method: "POST", body: form });
         var data = await res.json();
-        if (!res.ok) return showToast(data.error || "Rasm yuklanmadi");
+        if (!res.ok) return showToast(settingsApiError(data, "pictureUploadFailed"));
         user.profile_picture = data.profile_picture;
         localStorage.setItem("user", JSON.stringify(user));
         renderServerProfile(user);
-        showToast("Rasm yangilandi");
-      } catch (e) { showToast("Rasm yuklashda aloqa xatosi"); }
+        showToast(settingsT("pictureUpdated"));
+      } catch (e) { showToast(settingsT("serverUnavailable")); }
     }
 
     // Til (localStorage'dan)
@@ -402,12 +430,14 @@
 
     // A'zo bo'lish sanasi
     if (user.created_at) {
-      try { document.getElementById("joinDate").textContent = new Date(user.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); } catch (e) {}
+      renderJoinDate();
     }
 
     // ===== TAB'LAR =====
-    var TAB_NAMES = { hisob: "Hisob", bildirishnomalar: "Bildirishnomalar", maxfiylik: "Maxfiylik", tashqi: "Tashqi xizmatlar", korinish: "Ko'rinish" };
+    var currentSettingsTab = "profil";
+    var TAB_KEYS = { hisob: "accountTab", bildirishnomalar: "notificationsTab", maxfiylik: "privacyTab", tashqi: "externalTab", korinish: "appearanceTab" };
     function switchTab(tab) {
+      currentSettingsTab = tab;
       ["profil", "hisob", "bildirishnomalar", "maxfiylik", "tashqi", "korinish"].forEach(function (t) {
         var cap = t.charAt(0).toUpperCase() + t.slice(1);
         var id = t === "tashqi" ? "tabTashqi" : t === "korinish" ? "tabKorinish" : "tab" + cap;
@@ -417,15 +447,15 @@
       var isProfil = tab === "profil";
       document.getElementById("paneProfil").style.display = isProfil ? "block" : "none";
       document.getElementById("paneOther").style.display = isProfil ? "none" : "block";
-      if (!isProfil) document.getElementById("otherTabName").textContent = TAB_NAMES[tab] || "Bo'lim";
+      if (!isProfil) { document.getElementById("otherTabName").removeAttribute("data-i18n"); document.getElementById("otherTabName").textContent = settingsT(TAB_KEYS[tab] || "section"); }
     }
 
     // ===== PROFIL SAQLASH =====
     async function saveProfile() {
       var name = document.getElementById("inpName").value.trim();
-      if (!name) { showToast("Ism bo'sh bo'lmasligi kerak"); return; }
+      if (!name) { showToast(settingsT("nameRequired")); return; }
       var parts = name.split(/\s+/);
-      if (parts.length < 2) { showToast("Ism va familiyani kiriting"); return; }
+      if (parts.length < 2) { showToast(settingsT("fullNameRequired")); return; }
       try {
         var res = await authFetch("/teacher/settings/profile", {
           method: "PUT", headers: { "Content-Type": "application/json" },
@@ -437,12 +467,12 @@
           }),
         });
         var data = await res.json();
-        if (!res.ok) return showToast(data.error || "Saqlab bo'lmadi");
+        if (!res.ok) return showToast(settingsApiError(data, "saveFailed"));
         user = Object.assign({}, user, data.profile);
         localStorage.setItem("user", JSON.stringify(user));
         renderServerProfile(data.profile);
-        showToast("Profil saqlandi");
-      } catch (e) { showToast("Server bilan aloqa xatosi"); }
+        showToast(settingsT("profileSaved"));
+      } catch (e) { showToast(settingsT("serverUnavailable")); }
     }
 
     // ===== PAROL O'ZGARTIRISH =====
@@ -454,50 +484,63 @@
       var cur = document.getElementById("pwCurrent").value;
       var nw = document.getElementById("pwNew").value;
       var cf = document.getElementById("pwConfirm").value;
-      if (!cur || !nw || !cf) { showToast("Barcha parol maydonlarini to'ldiring"); return; }
-      if (nw.length < 8 || !/[A-Za-z]/.test(nw) || !/\d/.test(nw)) { showToast("Parol kamida 8 belgi, harf va raqamdan iborat bo'lsin"); return; }
-      if (nw !== cf) { showToast("Yangi parollar mos kelmadi"); return; }
+      if (!cur || !nw || !cf) { showToast(settingsT("passwordFieldsRequired")); return; }
+      if (nw.length < 8 || !/[A-Za-z]/.test(nw) || !/\d/.test(nw)) { showToast(settingsT("passwordRule")); return; }
+      if (nw !== cf) { showToast(settingsT("passwordMismatch")); return; }
       try {
         var res = await authFetch("/teacher/settings/password", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ current_password: cur, new_password: nw }),
         });
         var data = await res.json();
-        if (!res.ok) return showToast(data.error || "Parol yangilanmadi");
+        if (!res.ok) return showToast(settingsApiError(data, "passwordUpdateFailed"));
         localStorage.removeItem("token"); localStorage.removeItem("user");
         window.location.href = "/?screen=login";
-      } catch (e) { showToast("Server bilan aloqa xatosi"); }
+      } catch (e) { showToast(settingsT("serverUnavailable")); }
     }
 
     // ===== TIL/VAQT SAQLASH =====
     function saveLocale() {
       var lang = document.getElementById("inpLang").value;
-      localStorage.setItem("eb_lang", lang);
-      showToast("Sozlamalar saqlandi");
+      if (window.IlmLigaI18n) window.IlmLigaI18n.setLanguage(lang);
+      else localStorage.setItem("eb_lang", lang);
+      showToast(settingsT("settingsSaved"));
     }
 
     // ===== PREMIUM =====
+    var isTeacherPro = false;
+    function renderPremiumState() {
+      if (!isTeacherPro) return;
+      document.getElementById("premBadge").textContent = "Pro";
+      document.getElementById("premBadge").removeAttribute("data-i18n");
+      document.getElementById("premBadge").classList.remove("free");
+      document.getElementById("premDesc").removeAttribute("data-i18n");
+      document.getElementById("premDesc").textContent = settingsT("premiumActiveDesc");
+      var btn = document.getElementById("premBtn");
+      btn.removeAttribute("data-i18n"); btn.textContent = settingsT("activeCheck");
+      btn.classList.add("pro");
+      btn.onclick = function () { showToast(settingsT("premiumActive")); };
+    }
     async function loadPremium() {
       try {
         var res = await authFetch("/me/subscription");
         if (!res.ok) return;
         var data = await res.json();
-        var isPro = data && (data.is_pro || (data.plan && data.plan !== "free"));
-        if (isPro) {
-          document.getElementById("premBadge").textContent = "Pro";
-          document.getElementById("premBadge").classList.remove("free");
-          document.getElementById("premDesc").textContent = "Barcha imkoniyatlar faol. Rahmat!";
-          var btn = document.getElementById("premBtn");
-          btn.textContent = "Faol ✓";
-          btn.classList.add("pro");
-          btn.onclick = function () { showToast("Premium Teacher faol"); };
-        }
+        isTeacherPro = !!(data && (data.is_pro || (data.plan && data.plan !== "free")));
+        renderPremiumState();
       } catch (e) {}
     }
     function onPremiumClick() {
       if (window.openPaymentModal) window.openPaymentModal("teacher_pro");
       else window.location.href = "/pricing.html?plan=teacher_pro";
     }
+
+    window.addEventListener("ilmliga:languagechange", function () {
+      document.getElementById("inpLang").value = window.IlmLigaI18n.getLanguage();
+      renderJoinDate();
+      if (currentSettingsTab !== "profil") switchTab(currentSettingsTab);
+      renderPremiumState();
+    });
 
     // ===== ISHGA TUSHIRISH =====
     loadPremium();

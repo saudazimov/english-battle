@@ -439,6 +439,8 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/vendor/lucide.min.js"></script>
+  <script src="/i18n.js"></script>
+  <script src="/team-battle-i18n.js"></script>
   <script>
     var token = localStorage.getItem("token");
     if (!token) window.location.href = "/index.html";
@@ -740,7 +742,7 @@
         var pct = Math.round((p.answeredCount / total) * 100);
         var ord = (i === 0 ? "1st" : i === 1 ? "2nd" : i === 2 ? "3rd" : (i + 1) + "th");
         var dotClass = p.offline ? "bt-pl-online offline" : "bt-pl-online";
-        var nameExtra = p.offline ? ' <span style="color:#f87171;font-size:11px;font-weight:600;">(oflayn)</span>' : "";
+        var nameExtra = p.offline ? ' <span style="color:#f87171;font-size:11px;font-weight:600;">' + (window.TeamBattleI18n ? window.TeamBattleI18n.t("offline") : "(oflayn)") + '</span>' : "";
         return '<div class="bt-pl"' + (p.offline ? ' style="opacity:0.6;"' : '') + '>' +
           '<div class="bt-pl-ava-wrap"><div class="bt-pl-ava">' + avaInner(p) + '</div>' +
             '<span class="bt-pl-cefr">' + esc(p.level || "A1") + '</span>' +

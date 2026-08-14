@@ -106,6 +106,7 @@ button { color: inherit; }
 
 .auth-topbar {
   min-height: 60px;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -221,6 +222,7 @@ button { color: inherit; }
   display: none;
   flex: 1;
   width: 100%;
+  min-width: 0;
   animation: auth-enter .28s ease both;
 }
 
@@ -318,6 +320,7 @@ button { color: inherit; }
 
 .auth-card {
   width: 100%;
+  min-width: 0;
   margin: auto 0;
   padding: 28px;
   border: 1px solid rgba(80, 120, 255, .14);
@@ -582,6 +585,8 @@ button { color: inherit; }
 .resend-row { margin-top: 18px; text-align: center; color: var(--auth-dim); font-size: 14px; }
 
 .progress {
+  width: 100%;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -690,6 +695,7 @@ button { color: inherit; }
   .mini-brand { gap: 3px; font-size: 18px; }
   .mini-brand [data-logo], .mini-brand svg { width: 34px; height: 34px; }
   .language-button { min-width: 78px; height: 40px; padding: 0 13px; font-size: 13px; }
+  .language-switch { flex: 0 0 auto; }
   .auth-flag--current { width: 22px; height: 16.5px; line-height: 16.5px; }
   .auth-card { margin: 8px 0 auto; padding: 24px 19px; border-radius: 21px; }
   .welcome-screen { padding-top: 32px; }
@@ -698,6 +704,8 @@ button { color: inherit; }
   .otp-row { gap: 6px; }
   .otp-input { height: 54px; border-radius: 12px; font-size: 20px; }
   .profile-card { padding-bottom: 28px; }
+  .progress-step { min-width: 0; font-size: 9px; }
+  .progress-line { width: auto; min-width: 8px; max-width: 32px; flex: 1 1 20px; margin-left: 4px; margin-right: 4px; }
   .role-choice-grid { grid-template-columns: 1fr; }
   .role-choice { min-height: 0; padding: 15px; display:grid; grid-template-columns:46px 1fr 22px; align-items:start; gap:12px; }
   .role-choice-icon { width:46px; height:46px; grid-row:1; }

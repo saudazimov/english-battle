@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sinf topshiriqlari — Knowledge Arena</title>
+  <title data-i18n="studentAssignments.metaTitle">Sinf topshiriqlari — IlmLiga</title>
+  <meta name="description" content="Sinf topshiriqlari, imtihonlar va natijalarni boshqaring." data-i18n-content="studentAssignments.metaDescription" />
   <link rel="stylesheet" href="/app.css">
   <script src="/vendor/lucide.min.js"></script>
   <style>
@@ -260,8 +261,10 @@
     <aside class="sidebar"></aside>
     <main class="main">
 
+      <div class="topbar"></div>
+
       <div class="top-actions">
-        <a class="back-link" href="/student-classes.html"><i data-lucide="arrow-left"></i> Sinflarimga qaytish</a>
+        <a class="back-link" href="/student-classes.html"><i data-lucide="arrow-left"></i> <span data-i18n="studentAssignments.backClasses">Sinflarimga qaytish</span></a>
       </div>
 
       <!-- LOADING -->
@@ -280,34 +283,34 @@
           <div class="cx-shield" id="cbShield">S</div>
           <div class="cx-head-main">
             <div class="cx-name" id="cbName">Sinf</div>
-            <div class="cx-teacher"><span class="cx-teacher-ava" id="cbTeacherAva"></span> O'qituvchi: <span id="cbTeacher">—</span></div>
+            <div class="cx-teacher"><span class="cx-teacher-ava" id="cbTeacherAva"></span> <span data-i18n="studentAssignments.teacherLabel">O‘qituvchi:</span> <span id="cbTeacher">—</span></div>
             <div class="cx-badges">
               <span class="cx-badge lvl" id="cbLevel">A1</span>
-              <span class="cx-badge active">Faol sinf</span>
+              <span class="cx-badge active" data-i18n="studentAssignments.activeClass">Faol sinf</span>
             </div>
             <div class="cx-meta">
-              <span><i data-lucide="users"></i> <span id="cbStudents">0</span> o'quvchi</span>
+              <span><i data-lucide="users"></i> <span id="cbStudents">0</span> <span data-i18n="studentAssignments.students">o‘quvchi</span></span>
               <span class="cx-meta-sep">|</span>
               <span><i data-lucide="calendar"></i> <span id="cbSchedule">—</span></span>
             </div>
           </div>
           <div class="cx-head-side">
             <div class="cx-code-box">
-              <div class="cx-code-label">Sinf kodi:</div>
-              <div class="cx-code-row"><span class="cx-code" id="cbCode">—</span><button class="cx-copy" onclick="copyCode()" title="Nusxa olish"><i data-lucide="copy"></i></button></div>
+              <div class="cx-code-label" data-i18n="studentAssignments.classCode">Sinf kodi:</div>
+              <div class="cx-code-row"><span class="cx-code" id="cbCode">—</span><button class="cx-copy" onclick="copyCode()" title="Nusxa olish" data-i18n-title="studentAssignments.copyCode" aria-label="Nusxa olish" data-i18n-aria-label="studentAssignments.copyCode"><i data-lucide="copy"></i></button></div>
             </div>
-            <button class="cx-btn primary" id="joinLessonBtn" onclick="joinLiveLesson()"><i data-lucide="video"></i> Darsga kirish</button>
-            <button class="cx-btn ghost" onclick="messageTeacher()"><i data-lucide="message-circle"></i> O'qituvchiga yozish</button>
+            <button class="cx-btn primary" id="joinLessonBtn" onclick="joinLiveLesson()"><i data-lucide="video"></i> <span data-i18n="studentAssignments.joinLesson">Darsga kirish</span></button>
+            <button class="cx-btn ghost" onclick="messageTeacher()"><i data-lucide="message-circle"></i> <span data-i18n="studentAssignments.messageTeacher">O‘qituvchiga yozish</span></button>
           </div>
         </div>
 
         <!-- STATISTIKA -->
         <div class="cx-stats">
-          <div class="cx-stat"><div class="cx-stat-ic blue"><i data-lucide="clipboard-list"></i></div><div><div class="cx-stat-label">Topshiriqlar</div><div class="cx-stat-val" id="stAssign">0 ta</div></div></div>
-          <div class="cx-stat"><div class="cx-stat-ic purple"><i data-lucide="graduation-cap"></i></div><div><div class="cx-stat-label">Imtihonlar</div><div class="cx-stat-val" id="stExams">0 ta</div></div></div>
-          <div class="cx-stat"><div class="cx-stat-ic green"><i data-lucide="home"></i></div><div><div class="cx-stat-label">Bugungi vazifa</div><div class="cx-stat-val" id="stToday">—</div></div></div>
-          <div class="cx-stat"><div class="cx-stat-ic amber"><i data-lucide="bar-chart-2"></i></div><div><div class="cx-stat-label">O'rtacha natija</div><div class="cx-stat-val" id="stAvg">—</div></div></div>
-          <div class="cx-stat"><div class="cx-stat-ic cyan"><i data-lucide="calendar-check"></i></div><div><div class="cx-stat-label">Davomat</div><div class="cx-stat-val" id="stAttend">—</div></div></div>
+          <div class="cx-stat"><div class="cx-stat-ic blue"><i data-lucide="clipboard-list"></i></div><div><div class="cx-stat-label" data-i18n="studentAssignments.assignments">Topshiriqlar</div><div class="cx-stat-val" id="stAssign" data-i18n="studentAssignments.zeroItems">0 ta</div></div></div>
+          <div class="cx-stat"><div class="cx-stat-ic purple"><i data-lucide="graduation-cap"></i></div><div><div class="cx-stat-label" data-i18n="studentAssignments.exams">Imtihonlar</div><div class="cx-stat-val" id="stExams" data-i18n="studentAssignments.zeroItems">0 ta</div></div></div>
+          <div class="cx-stat"><div class="cx-stat-ic green"><i data-lucide="home"></i></div><div><div class="cx-stat-label" data-i18n="studentAssignments.todayTask">Bugungi vazifa</div><div class="cx-stat-val" id="stToday">—</div></div></div>
+          <div class="cx-stat"><div class="cx-stat-ic amber"><i data-lucide="bar-chart-2"></i></div><div><div class="cx-stat-label" data-i18n="studentAssignments.averageResult">O‘rtacha natija</div><div class="cx-stat-val" id="stAvg">—</div></div></div>
+          <div class="cx-stat"><div class="cx-stat-ic cyan"><i data-lucide="calendar-check"></i></div><div><div class="cx-stat-label" data-i18n="studentAssignments.attendance">Davomat</div><div class="cx-stat-val" id="stAttend">—</div></div></div>
         </div>
 
         <!-- IKKI USTUN -->
@@ -316,39 +319,39 @@
           <div class="cx-main-col">
             <!-- E'LONLAR -->
             <div class="cx-panel">
-              <div class="cx-panel-head"><i data-lucide="megaphone"></i> E'lonlar</div>
+              <div class="cx-panel-head"><i data-lucide="megaphone"></i> <span data-i18n="studentAssignments.announcements">E’lonlar</span></div>
               <div id="announceArea">
-                <div class="cx-loading-row">Yuklanmoqda...</div>
+                <div class="cx-loading-row" data-i18n="studentAssignments.loading">Yuklanmoqda...</div>
               </div>
             </div>
 
             <!-- SINF IMTIHONLARI -->
             <div class="cx-panel">
-              <div class="cx-panel-head"><i data-lucide="graduation-cap"></i> Sinf imtihonlari <span class="cx-panel-sub">O'qituvchi yaratgan maxsus sinf imtihonlari</span></div>
+              <div class="cx-panel-head"><i data-lucide="graduation-cap"></i> <span data-i18n="studentAssignments.classExams">Sinf imtihonlari</span> <span class="cx-panel-sub" data-i18n="studentAssignments.classExamsSubtitle">O‘qituvchi yaratgan maxsus sinf imtihonlari</span></div>
               <div id="examArea">
-                <div class="cx-loading-row">Yuklanmoqda...</div>
+                <div class="cx-loading-row" data-i18n="studentAssignments.loading">Yuklanmoqda...</div>
               </div>
             </div>
 
             <!-- TOPSHIRIQLAR -->
             <div class="cx-panel">
-              <div class="cx-panel-head"><i data-lucide="clipboard-list"></i> Topshiriqlar</div>
+              <div class="cx-panel-head"><i data-lucide="clipboard-list"></i> <span data-i18n="studentAssignments.assignments">Topshiriqlar</span></div>
               <div class="filters" id="filters">
-                <div class="filter-chip active" onclick="setFilter('all', this)">Hammasi</div>
-                <div class="filter-chip" onclick="setFilter('not_started', this)">Boshlanmagan</div>
-                <div class="filter-chip" onclick="setFilter('submitted', this)">Bajarilgan</div>
-                <div class="filter-chip" onclick="setFilter('overdue', this)">Muddati o'tgan</div>
+                <div class="filter-chip active" onclick="setFilter('all', this)" data-i18n="studentAssignments.filterAll">Hammasi</div>
+                <div class="filter-chip" onclick="setFilter('not_started', this)" data-i18n="studentAssignments.notStarted">Boshlanmagan</div>
+                <div class="filter-chip" onclick="setFilter('submitted', this)" data-i18n="studentAssignments.completed">Bajarilgan</div>
+                <div class="filter-chip" onclick="setFilter('overdue', this)" data-i18n="studentAssignments.overdue">Muddati o‘tgan</div>
               </div>
               <div class="assign-list" id="assignList"></div>
               <div class="state-box" id="emptyAssign" style="display:none;">
                 <div class="state-ic"><i data-lucide="clipboard-list"></i></div>
-                <h2>Bu sinf uchun hali topshiriqlar berilmagan</h2>
-                <p>O'qituvchingiz topshiriq berishni boshlaganda, ular shu yerda paydo bo'ladi.</p>
+                <h2 data-i18n="studentAssignments.emptyTitle">Bu sinf uchun hali topshiriqlar berilmagan</h2>
+                <p data-i18n="studentAssignments.emptyText">O‘qituvchingiz topshiriq berishni boshlaganda, ular shu yerda paydo bo‘ladi.</p>
               </div>
               <div class="state-box" id="emptyFilter" style="display:none;">
                 <div class="state-ic"><i data-lucide="filter"></i></div>
-                <h2>Bu filtrda topshiriq yo'q</h2>
-                <p>Boshqa filtrni tanlab ko'ring.</p>
+                <h2 data-i18n="studentAssignments.emptyFilterTitle">Bu filtrda topshiriq yo‘q</h2>
+                <p data-i18n="studentAssignments.emptyFilterText">Boshqa filtrni tanlab ko‘ring.</p>
               </div>
             </div>
           </div>
@@ -357,35 +360,35 @@
           <div class="cx-side-col">
             <!-- MENING PROGRESSIM -->
             <div class="cx-panel">
-              <div class="cx-panel-head sm"><i data-lucide="trending-up"></i> Mening progressim</div>
+              <div class="cx-panel-head sm"><i data-lucide="trending-up"></i> <span data-i18n="studentAssignments.myProgress">Mening progressim</span></div>
               <div class="cx-prog">
                 <div class="cx-prog-ring" id="progRing"><span id="progPct">0%</span></div>
                 <div class="cx-prog-info">
-                  <div class="cx-prog-row"><span>Bajarilgan topshiriqlar:</span><b id="progDone">0/0</b></div>
-                  <div class="cx-prog-row"><span>Haftalik streak:</span><b id="progStreak">0 kun</b></div>
+                  <div class="cx-prog-row"><span data-i18n="studentAssignments.completedAssignments">Bajarilgan topshiriqlar:</span><b id="progDone">0/0</b></div>
+                  <div class="cx-prog-row"><span data-i18n="studentAssignments.weeklyStreak">Haftalik streak:</span><b id="progStreak">—</b></div>
                 </div>
               </div>
             </div>
 
             <!-- YAQIN IMTIHON -->
             <div class="cx-panel" id="nextExamPanel" style="display:none;">
-              <div class="cx-panel-head sm"><i data-lucide="calendar-clock"></i> Yaqin imtihon</div>
+              <div class="cx-panel-head sm"><i data-lucide="calendar-clock"></i> <span data-i18n="studentAssignments.nextExam">Yaqin imtihon</span></div>
               <div id="nextExamBody"></div>
             </div>
 
             <!-- SINF REYTINGI -->
             <div class="cx-panel">
-              <div class="cx-panel-head sm"><i data-lucide="trophy"></i> Sinf reytingi</div>
-              <div id="classRank"><div class="cx-loading-row">Yuklanmoqda...</div></div>
+              <div class="cx-panel-head sm"><i data-lucide="trophy"></i> <span data-i18n="studentAssignments.classRanking">Sinf reytingi</span></div>
+              <div id="classRank"><div class="cx-loading-row" data-i18n="studentAssignments.loading">Yuklanmoqda...</div></div>
             </div>
 
             <!-- SINF HAQIDA -->
             <div class="cx-panel">
-              <div class="cx-panel-head sm"><i data-lucide="info"></i> Sinf haqida</div>
+              <div class="cx-panel-head sm"><i data-lucide="info"></i> <span data-i18n="studentAssignments.aboutClass">Sinf haqida</span></div>
               <div class="cx-about">
-                <div class="cx-about-row"><span><i data-lucide="bar-chart"></i> Daraja:</span><b id="abLevel">—</b></div>
-                <div class="cx-about-row"><span><i data-lucide="user"></i> O'qituvchi:</span><b id="abTeacher">—</b></div>
-                <div class="cx-about-row"><span><i data-lucide="calendar"></i> Boshlanish sanasi:</span><b id="abDate">—</b></div>
+                <div class="cx-about-row"><span><i data-lucide="bar-chart"></i> <span data-i18n="studentAssignments.level">Daraja:</span></span><b id="abLevel">—</b></div>
+                <div class="cx-about-row"><span><i data-lucide="user"></i> <span data-i18n="studentAssignments.teacherLabel">O‘qituvchi:</span></span><b id="abTeacher">—</b></div>
+                <div class="cx-about-row"><span><i data-lucide="calendar"></i> <span data-i18n="studentAssignments.startDate">Boshlanish sanasi:</span></span><b id="abDate">—</b></div>
               </div>
             </div>
           </div>
@@ -395,9 +398,9 @@
       <!-- ERROR -->
       <div class="state-box" id="errorState" style="display:none;">
         <div class="state-ic err"><i data-lucide="alert-circle"></i></div>
-        <h2>Sinf topilmadi</h2>
-        <p id="errMsg">Bu sinf mavjud emas yoki siz unga a'zo emassiz.</p>
-        <a class="state-btn" href="/student-classes.html"><i data-lucide="arrow-left"></i> Sinflarimga qaytish</a>
+        <h2 data-i18n="studentAssignments.classNotFound">Sinf topilmadi</h2>
+        <p id="errMsg" data-i18n="studentAssignments.classNotFoundText">Bu sinf mavjud emas yoki siz unga a’zo emassiz.</p>
+        <a class="state-btn" href="/student-classes.html"><i data-lucide="arrow-left"></i> <span data-i18n="studentAssignments.backClasses">Sinflarimga qaytish</span></a>
       </div>
 
       <!-- QUIZ EKRANI -->
@@ -410,9 +413,9 @@
         <div class="q-text" id="qText">—</div>
         <div id="qOptions"></div>
         <div class="quiz-nav">
-          <button class="nav-btn" id="prevBtn" onclick="prevQ()"><i data-lucide="chevron-left"></i> Oldingi</button>
+          <button class="nav-btn" id="prevBtn" onclick="prevQ()"><i data-lucide="chevron-left"></i> <span data-i18n="studentAssignments.previous">Oldingi</span></button>
           <div class="quiz-dots" id="quizDots"></div>
-          <button class="nav-btn primary" id="nextBtn" onclick="nextQ()">Keyingi <i data-lucide="chevron-right"></i></button>
+          <button class="nav-btn primary" id="nextBtn" onclick="nextQ()"><span data-i18n="studentAssignments.next">Keyingi</span> <i data-lucide="chevron-right"></i></button>
         </div>
       </div>
 
@@ -422,26 +425,26 @@
           <div class="result-ring" id="resultRing"></div>
           <div class="result-sub" id="resultSub">—</div>
           <div class="result-stats">
-            <div class="r-stat ok">To'g'ri <b id="rOk">0</b></div>
-            <div class="r-stat no">Xato <b id="rNo">0</b></div>
-            <div class="r-stat skip">Javobsiz <b id="rSkip">0</b></div>
+            <div class="r-stat ok"><span data-i18n="studentAssignments.correct">To‘g‘ri</span> <b id="rOk">0</b></div>
+            <div class="r-stat no"><span data-i18n="studentAssignments.wrong">Xato</span> <b id="rNo">0</b></div>
+            <div class="r-stat skip"><span data-i18n="studentAssignments.unanswered">Javobsiz</span> <b id="rSkip">0</b></div>
           </div>
           <div id="lateWrap"></div>
         </div>
-        <div class="review-title">Javoblar tahlili</div>
+        <div class="review-title" data-i18n="studentAssignments.answerReview">Javoblar tahlili</div>
         <div id="reviewList"></div>
-        <button class="state-btn ghost" style="margin-top:18px" onclick="backToList()"><i data-lucide="arrow-left"></i> Topshiriqlarga qaytish</button>
+        <button class="state-btn ghost" style="margin-top:18px" onclick="backToList()"><i data-lucide="arrow-left"></i> <span data-i18n="studentAssignments.backAssignments">Topshiriqlarga qaytish</span></button>
       </div>
 
       <!-- TASDIQLASH MODALI -->
       <div class="ov" id="confirmOv">
         <div class="ov-box">
           <div class="ov-ic"><i data-lucide="send"></i></div>
-          <div class="ov-title">Topshiriqni topshirmoqchimisiz?</div>
-          <div class="ov-text" id="confirmText">Topshirganingizdan keyin javoblarni qayta o'zgartira olmaysiz.</div>
+          <div class="ov-title" data-i18n="studentAssignments.submitTitle">Topshiriqni topshirmoqchimisiz?</div>
+          <div class="ov-text" id="confirmText" data-i18n="studentAssignments.submitWarning">Topshirganingizdan keyin javoblarni qayta o‘zgartira olmaysiz.</div>
           <div class="ov-foot">
-            <button class="ov-cancel" onclick="closeConfirm()">Bekor qilish</button>
-            <button class="ov-confirm" id="confirmBtn" onclick="doSubmit()">Topshirish</button>
+            <button class="ov-cancel" onclick="closeConfirm()" data-i18n="common.cancel">Bekor qilish</button>
+            <button class="ov-confirm" id="confirmBtn" onclick="doSubmit()" data-i18n="studentAssignments.submit">Topshirish</button>
           </div>
         </div>
       </div>
@@ -451,8 +454,22 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/api.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script>
+    function assignmentsT(key, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+    }
+
+    function assignmentsLocale() {
+      var language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return language === "ru" ? "ru-RU" : (language === "en" ? "en-US" : "uz-UZ");
+    }
+
+    function assignmentCount(count) {
+      return assignmentsT("studentAssignments.itemCount", { count: count });
+    }
+
     if (typeof renderSidebar === "function") renderSidebar("myclasses");
 
     const userData = localStorage.getItem("user");
@@ -461,15 +478,16 @@
     if (user.role && user.role !== "student") {
       window.location.href = (user.role === "teacher" || user.role === "school_admin") ? "/teacher.html" : "/lobby.html";
     }
+    if (typeof renderTopbar === "function") renderTopbar();
 
     function esc(s){ return String(s||"").replace(/[&<>"']/g, function(c){ return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]; }); }
-    function comingSoon(name){ showToast((name?name+": ":"")+"tez orada tayyor bo'ladi"); }
+    function comingSoon(name){ showToast(assignmentsT("studentAssignments.comingSoon", { name: name ? name + ": " : "" })); }
     function showToast(t){ var el=document.getElementById("cxToast"); if(!el){ el=document.createElement("div"); el.id="cxToast"; el.style.cssText="position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#111a2e;color:#fff;padding:13px 22px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:9000;transition:opacity .3s;"; document.body.appendChild(el); } el.textContent=t; el.style.opacity="1"; clearTimeout(window._cxT); window._cxT=setTimeout(function(){el.style.opacity="0";},2600); }
     var curClassData = null;
-    function copyCode(){ var code=curClassData&&curClassData.join_code; if(!code) return; navigator.clipboard.writeText(code).then(function(){ showToast("Sinf kodi nusxalandi"); }).catch(function(){ showToast(code); }); }
+    function copyCode(){ var code=curClassData&&curClassData.join_code; if(!code) return; navigator.clipboard.writeText(code).then(function(){ showToast(assignmentsT("studentAssignments.codeCopied")); }).catch(function(){ showToast(code); }); }
     async function messageTeacher() {
-      if (!curClassData || !curClassData.teacher_id) return showToast("O'qituvchi topilmadi");
-      var text = window.prompt("O'qituvchiga xabar yozing:");
+      if (!curClassData || !curClassData.teacher_id) return showToast(assignmentsT("studentAssignments.teacherNotFound"));
+      var text = window.prompt(assignmentsT("studentAssignments.messagePrompt"));
       if (!text || !text.trim()) return;
       try {
         var res = await authFetch("/student/teachers/" + curClassData.teacher_id + "/messages", {
@@ -477,8 +495,8 @@
           body: JSON.stringify({ message: text.trim() }),
         });
         var data = await res.json();
-        showToast(res.ok ? "Xabar yuborildi" : (data.error || "Xabar yuborilmadi"));
-      } catch (e) { showToast("Server bilan aloqa xatosi"); }
+        showToast(res.ok ? assignmentsT("studentAssignments.messageSent") : (data.error || assignmentsT("studentAssignments.messageFailed")));
+      } catch (e) { showToast(assignmentsT("studentAssignments.networkError")); }
     }
     function showState(s) {
       document.getElementById("loadingState").style.display = s === "loading" ? "block" : "none";
@@ -488,10 +506,12 @@
 
     var params = new URLSearchParams(window.location.search);
     var classId = params.get("classId");
+    var currentErrorKey = "studentAssignments.classNotFoundText";
 
     async function load() {
       if (!classId) {
-        document.getElementById("errMsg").textContent = "Sinf ko'rsatilmagan. Sinflar ro'yxatidan sinfni tanlang.";
+        currentErrorKey = "studentAssignments.classMissing";
+        document.getElementById("errMsg").textContent = assignmentsT(currentErrorKey);
         showState("error"); return;
       }
       showState("loading");
@@ -504,20 +524,21 @@
         }
         var data = await res.json();
         var cls = (data.classes || []).find(function(c){ return String(c.id) === String(classId); });
-        if (!cls) { showState("error"); return; }
+        if (!cls) { currentErrorKey = "studentAssignments.classNotFoundText"; showState("error"); return; }
         render(cls);
       } catch (e) {
-        document.getElementById("errMsg").textContent = "Ma'lumotlarni yuklashda xatolik yuz berdi.";
+        currentErrorKey = "studentAssignments.loadError";
+        document.getElementById("errMsg").textContent = assignmentsT(currentErrorKey);
         showState("error");
       }
     }
 
     function render(cls) {
       curClassData = cls;
-      var name = cls.name || "Sinf";
+      var name = cls.name || assignmentsT("studentAssignments.classFallback");
       document.getElementById("cbName").textContent = name;
       document.getElementById("cbShield").textContent = name.trim().substring(0,2).toUpperCase();
-      var teacher = ((cls.teacher_first_name || "") + " " + (cls.teacher_last_name || "")).trim() || "O'qituvchi";
+      var teacher = ((cls.teacher_first_name || "") + " " + (cls.teacher_last_name || "")).trim() || assignmentsT("studentAssignments.teacherFallback");
       document.getElementById("cbTeacher").textContent = teacher;
       // Sinf kodi
       document.getElementById("cbCode").textContent = cls.join_code || "—";
@@ -528,7 +549,7 @@
       // O'quvchi soni
       document.getElementById("cbStudents").textContent = cls.student_count != null ? cls.student_count : 0;
       // Dars kunlari/jadval (endpoint bersa)
-      document.getElementById("cbSchedule").textContent = cls.schedule || "Jadval belgilanmagan";
+      document.getElementById("cbSchedule").textContent = cls.schedule || assignmentsT("studentAssignments.scheduleMissing");
       // Sinf haqida
       document.getElementById("abTeacher").textContent = teacher;
       document.getElementById("abDate").textContent = cls.created_at ? fmtDue(cls.created_at) : "—";
@@ -550,15 +571,15 @@
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || "xato");
         var items = data.announcements || [];
-        if (!items.length) { area.innerHTML = '<div class="cx-soon">O\'qituvchi hali e\'lon joylamagan.</div>'; return; }
+        if (!items.length) { area.innerHTML = '<div class="cx-soon">' + esc(assignmentsT("studentAssignments.noAnnouncements")) + '</div>'; return; }
         area.innerHTML = items.map(function(a){
           return '<div class="cx-ann '+(a.is_pinned?'pinned':'')+'">' +
             '<div class="cx-ann-title">'+(a.is_pinned?'<i data-lucide="pin"></i>':'')+esc(a.title)+'</div>' +
             '<div class="cx-ann-body">'+esc(a.body)+'</div>' +
-            '<div class="cx-ann-date">'+new Date(a.created_at).toLocaleString("uz-UZ")+'</div></div>';
+            '<div class="cx-ann-date">'+new Date(a.created_at).toLocaleString(assignmentsLocale())+'</div></div>';
         }).join("");
         if (window.lucide) lucide.createIcons();
-      } catch (_) { area.innerHTML = '<div class="cx-soon">E\'lonlarni yuklab bo\'lmadi.</div>'; }
+      } catch (_) { area.innerHTML = '<div class="cx-soon">' + esc(assignmentsT("studentAssignments.announcementsError")) + '</div>'; }
     }
 
     async function loadClassRanking() {
@@ -568,15 +589,15 @@
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || "xato");
         var rows = data.ranking || [];
-        if (!rows.length) { area.innerHTML='<div class="cx-soon">Reyting uchun o\'quvchilar yo\'q.</div>'; return; }
+        if (!rows.length) { area.innerHTML='<div class="cx-soon">' + esc(assignmentsT("studentAssignments.noRankingStudents")) + '</div>'; return; }
         area.innerHTML = rows.slice(0, 10).map(function(r){
-          var name=((r.first_name||"")+" "+(r.last_name||"")).trim()||"O'quvchi";
+          var name=((r.first_name||"")+" "+(r.last_name||"")).trim()||assignmentsT("studentAssignments.studentFallback");
           var medal=r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':r.rank;
           return '<div class="cx-rank-row '+(String(r.id)===String(user.id)?'me':'')+'"><div class="cx-rank-num">'+medal+'</div>'+
             '<div class="cx-rank-ava">'+esc(name.charAt(0).toUpperCase())+'</div><div class="cx-rank-name">'+esc(name)+'</div>'+
             '<div class="cx-rank-score">'+Number(r.avg_percent||0)+'%</div></div>';
         }).join("");
-      } catch (_) { area.innerHTML='<div class="cx-soon">Reytingni yuklab bo\'lmadi.</div>'; }
+      } catch (_) { area.innerHTML='<div class="cx-soon">' + esc(assignmentsT("studentAssignments.rankingError")) + '</div>'; }
     }
 
     async function loadAttendance() {
@@ -595,28 +616,34 @@
         var data=await res.json();
         currentLiveLesson=res.ok ? data.lesson : null;
         var btn=document.getElementById("joinLessonBtn");
-        if (currentLiveLesson) { btn.innerHTML='<i data-lucide="radio"></i> Jonli darsga kirish'; btn.style.boxShadow='0 0 0 4px rgba(91,140,255,.12)'; }
-        else { btn.innerHTML='<i data-lucide="video"></i> Darsga kirish'; btn.style.boxShadow='none'; }
+        if (currentLiveLesson) { btn.innerHTML='<i data-lucide="radio"></i> ' + esc(assignmentsT("studentAssignments.joinLiveLesson")); btn.style.boxShadow='0 0 0 4px rgba(91,140,255,.12)'; }
+        else { btn.innerHTML='<i data-lucide="video"></i> ' + esc(assignmentsT("studentAssignments.joinLesson")); btn.style.boxShadow='none'; }
         if(window.lucide) lucide.createIcons();
       } catch (_) { currentLiveLesson=null; }
     }
     async function joinLiveLesson() {
       await checkLiveLesson();
-      if (!currentLiveLesson || !currentLiveLesson.meeting_url) return showToast("Hozir faol jonli dars yo'q");
+      if (!currentLiveLesson || !currentLiveLesson.meeting_url) return showToast(assignmentsT("studentAssignments.noLiveLesson"));
       var opened=window.open(currentLiveLesson.meeting_url,"_blank","noopener,noreferrer");
       if (!opened) window.location.href=currentLiveLesson.meeting_url;
     }
 
     // ===== Topshiriqlar ro'yxati =====
-    var SKILL_LABELS = { mixed:"Aralash", grammar:"Grammatika", vocabulary:"Lug'at", reading:"O'qish", listening:"Tinglash", speaking:"Gapirish", writing:"Yozish" };
-    var ST_LABEL = { not_started:"Boshlanmagan", in_progress:"Jarayonda", submitted:"Bajarilgan", late_submitted:"Kechikib topshirilgan" };
+    function assignmentSkillLabel(skill) {
+      var keys = { mixed:"studentAssignments.skillMixed", grammar:"studentAssignments.skillGrammar", vocabulary:"studentAssignments.skillVocabulary", reading:"studentAssignments.skillReading", listening:"studentAssignments.skillListening", speaking:"studentAssignments.skillSpeaking", writing:"studentAssignments.skillWriting" };
+      return keys[skill] ? assignmentsT(keys[skill]) : (skill || assignmentsT("studentAssignments.skillMixed"));
+    }
+    function assignmentStatusLabel(status) {
+      var keys = { not_started:"studentAssignments.notStarted", in_progress:"studentAssignments.inProgress", submitted:"studentAssignments.completed", late_submitted:"studentAssignments.lateSubmitted" };
+      return keys[status] ? assignmentsT(keys[status]) : (status || "");
+    }
     var allAssignments = [];
     var curFilter = "all";
 
     function fmtDue(iso) {
       if (!iso) return null;
       var d = new Date(iso);
-      return d.toLocaleDateString("uz-UZ", { day:"numeric", month:"short" }) + ", " + d.toLocaleTimeString("uz-UZ", { hour:"2-digit", minute:"2-digit" });
+      return d.toLocaleDateString(assignmentsLocale(), { day:"numeric", month:"long" }) + ", " + d.toLocaleTimeString(assignmentsLocale(), { hour:"2-digit", minute:"2-digit" });
     }
     function isOverdue(a) {
       return a.due_at && new Date(a.due_at) < new Date() && a.submission_status !== "submitted" && a.submission_status !== "late_submitted";
@@ -636,7 +663,7 @@
     // Topshiriq statistika + progress (real)
     function updateAssignStats() {
       var total = allAssignments.length;
-      document.getElementById("stAssign").textContent = total + " ta";
+      document.getElementById("stAssign").textContent = assignmentCount(total);
       var done = allAssignments.filter(function(a){ return a.submission_status === "submitted" || a.submission_status === "late_submitted"; });
       // Bugungi vazifa: muddati bugun bo'lgan va bajarilmagan
       var today = new Date(); today.setHours(0,0,0,0);
@@ -647,7 +674,7 @@
         var notDone = a.submission_status !== "submitted" && a.submission_status !== "late_submitted";
         return d >= today && d < tomorrow && notDone;
       }).length;
-      document.getElementById("stToday").textContent = todayCount + " ta";
+      document.getElementById("stToday").textContent = assignmentCount(todayCount);
       // O'rtacha natija (bajarilgan topshiriqlar ballidan)
       var scored = done.filter(function(a){ return a.percent != null; });
       if (scored.length) {
@@ -667,7 +694,7 @@
     }
 
     // ===== SINF IMTIHONLARI (Faza 2 — real) =====
-    var EX_SKILL = { mixed:"Aralash", grammar:"Grammar", vocabulary:"Vocabulary", reading:"Reading", listening:"Listening" };
+    var EX_SKILL = { mixed:"mixed", grammar:"grammar", vocabulary:"vocabulary", reading:"reading", listening:"listening" };
     async function loadExams() {
       var area = document.getElementById("examArea");
       try {
@@ -675,20 +702,20 @@
         if (!res.ok) { examEmpty(); return; }
         var data = await res.json();
         var exams = (data.exams || []).filter(function(e){ return String(e.class_id) === String(classId); });
-        document.getElementById("stExams").textContent = exams.length + " ta";
+        document.getElementById("stExams").textContent = assignmentCount(exams.length);
         if (!exams.length) { examEmpty(); return; }
         renderExamTable(exams);
         renderNextExam(exams);
       } catch (e) { examEmpty(); }
     }
     function examEmpty() {
-      document.getElementById("examArea").innerHTML = '<div class="cx-soon">Bu sinf uchun hali imtihon yaratilmagan.</div>';
-      document.getElementById("stExams").textContent = "0 ta";
+      document.getElementById("examArea").innerHTML = '<div class="cx-soon">' + esc(assignmentsT("studentAssignments.noExams")) + '</div>';
+      document.getElementById("stExams").textContent = assignmentCount(0);
     }
     function fmtExDate(iso) {
       if (!iso) return "—";
       var d = new Date(iso);
-      return d.toLocaleDateString("uz-UZ", { day:"numeric", month:"short" }) + ", " + d.toLocaleTimeString("uz-UZ", { hour:"2-digit", minute:"2-digit" });
+      return d.toLocaleDateString(assignmentsLocale(), { day:"numeric", month:"long" }) + ", " + d.toLocaleTimeString(assignmentsLocale(), { hour:"2-digit", minute:"2-digit" });
     }
     function renderExamTable(exams) {
       var COLORS = ["rgba(168,85,247,.16)","rgba(91,140,255,.16)","rgba(52,211,153,.16)","rgba(251,191,36,.16)"];
@@ -699,25 +726,25 @@
         var isDone = e.my_attempts > 0 && attemptsLeft <= 0 && !canResume;
         var isFinished = e.status === "finished";
         var stCls, stTxt;
-        if (isFinished) { stCls="finished"; stTxt="Yakunlangan"; }
-        else if (isDone) { stCls="done"; stTxt="Topshirilgan"; }
-        else if (e.status === "scheduled") { stCls="scheduled"; stTxt="Rejalashtirilgan"; }
-        else { stCls="active"; stTxt="Faol"; }
+        if (isFinished) { stCls="finished"; stTxt=assignmentsT("studentAssignments.finished"); }
+        else if (isDone) { stCls="done"; stTxt=assignmentsT("studentAssignments.submitted"); }
+        else if (e.status === "scheduled") { stCls="scheduled"; stTxt=assignmentsT("studentAssignments.scheduled"); }
+        else { stCls="active"; stTxt=assignmentsT("studentAssignments.active"); }
         var btn;
-        if (canResume) btn = '<button class="cx-ebtn" onclick="goExam('+e.id+')">Davom ettirish</button>';
-        else if (isDone || isFinished) btn = '<button class="cx-ebtn done">'+(e.best_percent!=null?e.best_percent+"%":"Topshirilgan")+'</button>';
-        else btn = '<button class="cx-ebtn" onclick="goExam('+e.id+')">Boshlash</button>';
+        if (canResume) btn = '<button class="cx-ebtn" onclick="goExam('+e.id+')">' + esc(assignmentsT("studentAssignments.continue")) + '</button>';
+        else if (isDone || isFinished) btn = '<button class="cx-ebtn done">'+(e.best_percent!=null?e.best_percent+"%":esc(assignmentsT("studentAssignments.submitted")))+'</button>';
+        else btn = '<button class="cx-ebtn" onclick="goExam('+e.id+')">' + esc(assignmentsT("studentAssignments.start")) + '</button>';
         return '<tr>' +
           '<td><div class="cx-ename"><div class="cx-ename-ic" style="background:'+COLORS[i%4]+';color:'+ICOLORS[i%4]+'"><i data-lucide="file-text"></i></div>'+esc(e.title)+'</div></td>' +
           '<td>'+fmtExDate(e.starts_at)+'</td>' +
           '<td>'+fmtExDate(e.ends_at)+'</td>' +
-          '<td>'+(e.duration_minutes||0)+' daqiqa</td>' +
+          '<td>'+esc(assignmentsT("studentAssignments.minutes", { count: e.duration_minutes || 0 }))+'</td>' +
           '<td><span class="cx-estatus '+stCls+'">'+stTxt+'</span></td>' +
           '<td>'+btn+'</td>' +
         '</tr>';
       }).join("");
       document.getElementById("examArea").innerHTML =
-        '<table class="cx-etable"><thead><tr><th>Imtihon nomi</th><th>Ochiladi</th><th>Muddat</th><th>Davomiyligi</th><th>Status</th><th>Harakat</th></tr></thead><tbody>'+rows+'</tbody></table>';
+        '<table class="cx-etable"><thead><tr><th>'+esc(assignmentsT("studentAssignments.examName"))+'</th><th>'+esc(assignmentsT("studentAssignments.opens"))+'</th><th>'+esc(assignmentsT("studentAssignments.deadline"))+'</th><th>'+esc(assignmentsT("studentAssignments.duration"))+'</th><th>'+esc(assignmentsT("studentAssignments.status"))+'</th><th>'+esc(assignmentsT("studentAssignments.action"))+'</th></tr></thead><tbody>'+rows+'</tbody></table>';
       if (window.lucide) lucide.createIcons();
     }
     function renderNextExam(exams) {
@@ -734,10 +761,10 @@
       document.getElementById("nextExamPanel").style.display = "block";
       document.getElementById("nextExamBody").innerHTML =
         '<div class="cx-ne-title">'+esc(e.title)+'</div>' +
-        '<div class="cx-ne-row"><i data-lucide="clock"></i> Ochiladi: <b>'+fmtExDate(e.starts_at)+'</b></div>' +
-        '<div class="cx-ne-row"><i data-lucide="calendar"></i> Muddat: <b>'+fmtExDate(e.ends_at)+'</b></div>' +
-        '<div class="cx-ne-row"><i data-lucide="hourglass"></i> Davomiyligi: <b>'+(e.duration_minutes||0)+' daqiqa</b></div>' +
-        '<button class="cx-ne-btn" onclick="goExam('+e.id+')"><i data-lucide="play"></i> Imtihonga o\'tish</button>';
+        '<div class="cx-ne-row"><i data-lucide="clock"></i> '+esc(assignmentsT("studentAssignments.opensLabel"))+' <b>'+fmtExDate(e.starts_at)+'</b></div>' +
+        '<div class="cx-ne-row"><i data-lucide="calendar"></i> '+esc(assignmentsT("studentAssignments.deadlineLabel"))+' <b>'+fmtExDate(e.ends_at)+'</b></div>' +
+        '<div class="cx-ne-row"><i data-lucide="hourglass"></i> '+esc(assignmentsT("studentAssignments.durationLabel"))+' <b>'+esc(assignmentsT("studentAssignments.minutes", { count: e.duration_minutes || 0 }))+'</b></div>' +
+        '<button class="cx-ne-btn" onclick="goExam('+e.id+')"><i data-lucide="play"></i> '+esc(assignmentsT("studentAssignments.openExam"))+'</button>';
       if (window.lucide) lucide.createIcons();
     }
     function goExam(id) { window.location.href = "/student-exam-room.html?id=" + id; }
@@ -769,17 +796,17 @@
     }
 
     function cardHtml(a) {
-      var skill = SKILL_LABELS[a.skill] || a.skill || "Aralash";
+      var skill = assignmentSkillLabel(a.skill);
       var over = isOverdue(a);
       var due = fmtDue(a.due_at);
       var st = a.submission_status;
-      var statusLabel = over ? "Muddati o'tgan" : (ST_LABEL[st] || st);
+      var statusLabel = over ? assignmentsT("studentAssignments.overdue") : assignmentStatusLabel(st);
       var statusCls = over ? "late_submitted" : st;
       var done = (st === "submitted" || st === "late_submitted");
       var btn = done
-        ? '<button class="a-btn ghost" onclick="openAssignment('+a.id+')"><i data-lucide="eye"></i> Natija</button>'
-        : '<button class="a-btn" onclick="openAssignment('+a.id+')"><i data-lucide="play"></i> '+(st==="in_progress"?"Davom ettirish":"Boshlash")+'</button>';
-      var scoreLine = done ? '<span class="a-chip">Ball: '+a.percent+'%</span>' : '';
+        ? '<button class="a-btn ghost" onclick="openAssignment('+a.id+')"><i data-lucide="eye"></i> ' + esc(assignmentsT("studentAssignments.result")) + '</button>'
+        : '<button class="a-btn" onclick="openAssignment('+a.id+')"><i data-lucide="play"></i> '+esc(assignmentsT(st==="in_progress"?"studentAssignments.continue":"studentAssignments.start"))+'</button>';
+      var scoreLine = done ? '<span class="a-chip">'+esc(assignmentsT("studentAssignments.scoreLabel"))+' '+a.percent+'%</span>' : '';
       return '<div class="a-card">' +
           '<div class="a-card-ic"><i data-lucide="file-text"></i></div>' +
           '<div class="a-card-main">' +
@@ -787,8 +814,8 @@
             '<div class="a-card-chips">' +
               '<span class="a-chip lvl">'+esc(a.cefr_level)+'</span>' +
               '<span class="a-chip">'+esc(skill)+'</span>' +
-              '<span class="a-chip">'+a.question_count+' savol</span>' +
-              (due ? '<span class="a-chip '+(over?"over":"")+'">'+(over?"Muddat o\'tgan: ":"Muddat: ")+due+'</span>' : '<span class="a-chip">Muddatsiz</span>') +
+              '<span class="a-chip">'+esc(assignmentsT("studentAssignments.questionCount", { count: a.question_count }))+'</span>' +
+              (due ? '<span class="a-chip '+(over?"over":"")+'">'+esc(assignmentsT(over?"studentAssignments.overdueLabel":"studentAssignments.deadlineLabel"))+due+'</span>' : '<span class="a-chip">'+esc(assignmentsT("studentAssignments.noDeadline"))+'</span>') +
               scoreLine +
             '</div>' +
           '</div>' +
@@ -806,11 +833,11 @@
       try {
         var res = await authFetch("/student/assignments/" + encodeURIComponent(id) + "/start");
         var data = await res.json();
-        if (!res.ok) { alert(data.error || "Topshiriqni ochib bo'lmadi"); return; }
+        if (!res.ok) { alert(data.error || assignmentsT("studentAssignments.openError")); return; }
         if (data.locked) { showResultFromReview(data); return; }
-        quiz = { id: id, title: (data.assignment && data.assignment.title) || "Topshiriq", questions: data.questions || [], answers: {}, idx: 0 };
+        quiz = { id: id, title: (data.assignment && data.assignment.title) || assignmentsT("studentAssignments.assignmentFallback"), questions: data.questions || [], answers: {}, idx: 0 };
         startQuiz();
-      } catch (e) { alert("Server bilan aloqa yo'q"); }
+      } catch (e) { alert(assignmentsT("studentAssignments.networkUnavailable")); }
     }
 
     function startQuiz() {
@@ -844,8 +871,8 @@
       document.getElementById("prevBtn").disabled = quiz.idx === 0;
       var isLast = quiz.idx === quiz.questions.length - 1;
       var nextBtn = document.getElementById("nextBtn");
-      if (isLast) { nextBtn.innerHTML = 'Topshirish <i data-lucide="check"></i>'; nextBtn.onclick = openConfirm; }
-      else { nextBtn.innerHTML = 'Keyingi <i data-lucide="chevron-right"></i>'; nextBtn.onclick = nextQ; }
+      if (isLast) { nextBtn.innerHTML = esc(assignmentsT("studentAssignments.submit")) + ' <i data-lucide="check"></i>'; nextBtn.onclick = openConfirm; }
+      else { nextBtn.innerHTML = esc(assignmentsT("studentAssignments.next")) + ' <i data-lucide="chevron-right"></i>'; nextBtn.onclick = nextQ; }
       if (window.lucide) lucide.createIcons();
     }
 
@@ -858,8 +885,8 @@
     function openConfirm() {
       var answered = Object.keys(quiz.answers).length;
       var total = quiz.questions.length;
-      var txt = "Topshirganingizdan keyin javoblarni qayta o'zgartira olmaysiz.";
-      if (answered < total) txt = (total - answered) + " ta savol javobsiz qoladi. " + txt;
+      var txt = assignmentsT("studentAssignments.submitWarning");
+      if (answered < total) txt = assignmentsT("studentAssignments.unansweredWarning", { count: total - answered }) + " " + txt;
       document.getElementById("confirmText").textContent = txt;
       document.getElementById("confirmOv").classList.add("show");
     }
@@ -868,21 +895,23 @@
 
     async function doSubmit() {
       var btn = document.getElementById("confirmBtn");
-      btn.disabled = true; btn.textContent = "Topshirilmoqda...";
+      btn.disabled = true; btn.textContent = assignmentsT("studentAssignments.submitting");
       var answers = quiz.questions.map(function(q){ return { assignment_question_id: q.assignment_question_id, answer: quiz.answers[q.assignment_question_id] || null }; });
       try {
         var res = await authFetch("/student/assignments/" + encodeURIComponent(quiz.id) + "/submit", {
           method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ answers: answers })
         });
         var data = await res.json();
-        if (!res.ok) { alert(data.error || "Topshirishda xatolik"); closeConfirm(); return; }
+        if (!res.ok) { alert(data.error || assignmentsT("studentAssignments.submitError")); closeConfirm(); return; }
         closeConfirm();
         showResult(data.result, data.review);
-      } catch (e) { alert("Server bilan aloqa yo'q"); }
-      finally { btn.disabled = false; btn.textContent = "Topshirish"; }
+      } catch (e) { alert(assignmentsT("studentAssignments.networkUnavailable")); }
+      finally { btn.disabled = false; btn.textContent = assignmentsT("studentAssignments.submit"); }
     }
 
     // ===== Natija + review =====
+    var lastResult = null;
+    var lastReview = [];
     function showResultFromReview(data) {
       var sub = data.submission || {};
       var result = { percent: sub.percent, score: sub.score, total: sub.total, correct_count: sub.correct_count, wrong_count: sub.wrong_count, unanswered_count: sub.unanswered_count, is_late: sub.is_late };
@@ -890,6 +919,8 @@
     }
 
     function showResult(result, review) {
+      lastResult = result;
+      lastReview = review || [];
       document.getElementById("content").style.display = "none";
       document.getElementById("quizScreen").style.display = "none";
       document.getElementById("resultScreen").style.display = "block";
@@ -898,21 +929,21 @@
       var ring = document.getElementById("resultRing");
       ring.style.background = "conic-gradient(" + col + " " + (pct*3.6) + "deg, var(--panel-2) 0deg)";
       ring.innerHTML = '<div style="width:104px;height:104px;border-radius:50%;background:var(--bg-2);display:grid;place-items:center"><div class="result-pct" style="color:'+col+'">'+pct+'%</div></div>';
-      document.getElementById("resultSub").textContent = (result.score||0) + " / " + (result.total||0) + " to'g'ri javob";
+      document.getElementById("resultSub").textContent = assignmentsT("studentAssignments.resultSummary", { score: result.score || 0, total: result.total || 0 });
       document.getElementById("rOk").textContent = result.correct_count || 0;
       document.getElementById("rNo").textContent = result.wrong_count || 0;
       document.getElementById("rSkip").textContent = result.unanswered_count || 0;
-      document.getElementById("lateWrap").innerHTML = result.is_late ? '<div class="late-pill"><i data-lucide="clock"></i> Kechikib topshirilgan</div>' : '';
+      document.getElementById("lateWrap").innerHTML = result.is_late ? '<div class="late-pill"><i data-lucide="clock"></i> ' + esc(assignmentsT("studentAssignments.lateSubmitted")) + '</div>' : '';
 
-      document.getElementById("reviewList").innerHTML = (review || []).map(function(r){
+      document.getElementById("reviewList").innerHTML = lastReview.map(function(r){
         var opts = r.options.map(function(o){
           var cls = "", tag = "";
-          if (o.key === r.correct_answer) { cls = "correct"; tag = '<span class="rev-tag" style="color:#86efac">To\'g\'ri javob</span>'; }
-          else if (o.key === r.user_answer) { cls = "wrong"; tag = '<span class="rev-tag" style="color:#fca5a5">Sizning javobingiz</span>'; }
+          if (o.key === r.correct_answer) { cls = "correct"; tag = '<span class="rev-tag" style="color:#86efac">' + esc(assignmentsT("studentAssignments.correctAnswer")) + '</span>'; }
+          else if (o.key === r.user_answer) { cls = "wrong"; tag = '<span class="rev-tag" style="color:#fca5a5">' + esc(assignmentsT("studentAssignments.yourAnswer")) + '</span>'; }
           return '<div class="rev-opt '+cls+'"><span class="rl">'+o.key+'</span><span>'+esc(o.text)+'</span>'+tag+'</div>';
         }).join("");
-        var unanswered = !r.user_answer ? '<div class="rev-tag" style="color:var(--text-dim);margin:6px 0 0">Javob berilmagan</div>' : '';
-        var expl = r.explanation ? '<div class="rev-expl"><b>Izoh:</b> '+esc(r.explanation)+'</div>' : '';
+        var unanswered = !r.user_answer ? '<div class="rev-tag" style="color:var(--text-dim);margin:6px 0 0">' + esc(assignmentsT("studentAssignments.notAnswered")) + '</div>' : '';
+        var expl = r.explanation ? '<div class="rev-expl"><b>' + esc(assignmentsT("studentAssignments.explanationLabel")) + '</b> '+esc(r.explanation)+'</div>' : '';
         return '<div class="rev-card">' +
           '<div class="rev-q"><span class="rev-qnum">'+r.q_order+'.</span><span>'+esc(r.question_text)+'</span></div>' +
           opts + unanswered + expl +
@@ -929,6 +960,18 @@
       loadAssignments();
       window.scrollTo(0,0);
     }
+
+    window.addEventListener("ilmliga:languagechange", function() {
+      document.getElementById("errMsg").textContent = assignmentsT(currentErrorKey);
+      if (document.getElementById("resultScreen").style.display === "block" && lastResult) {
+        showResult(lastResult, lastReview);
+      } else if (document.getElementById("quizScreen").style.display === "block" && quiz.questions.length) {
+        renderQuestion();
+      } else if (curClassData) {
+        render(curClassData);
+      }
+      if (window.lucide) lucide.createIcons();
+    });
 
     if (window.lucide) lucide.createIcons();
     load();

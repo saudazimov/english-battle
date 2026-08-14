@@ -27,7 +27,7 @@ test("teacher learning analytics browser module is valid JavaScript and exposes 
   assert.match(source, /global\.renderTeacherLearningAnalytics = renderTeacherLearningAnalytics/);
   assert.match(source, /global\.openStudentLearningReport = openStudentLearningReport/);
   assert.match(source, /global\.closeStudentLearningReport = closeStudentLearningReport/);
-  assert.match(source, /REGRESSED: \["Orqaga ketgan", "regressed"\]/);
+  assert.match(source, /REGRESSED: \["teacher\.results\.stateRegressed", "Orqaga ketgan", "regressed"\]/);
   assert.match(source, /safe\(student\.name\)/);
 });
 
@@ -68,7 +68,7 @@ test("teacher learning analytics renders heatmap and escaped student report", ()
 
   context.window.teacherAnalyticsData = analytics;
   context.window.renderTeacherLearningAnalytics(analytics);
-  assert.match(elements.resultArea.innerHTML, /Zaifliklar heatmap/);
+  assert.match(elements.resultArea.innerHTML, /Zaifliklar xaritasi/);
   assert.match(elements.resultArea.innerHTML, /Tasdiqlangan/);
   assert.match(elements.resultArea.innerHTML, /&lt;Ali&gt;/);
 

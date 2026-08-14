@@ -1,7 +1,63 @@
 // ===== UMUMIY SIDEBAR =====
 // Har sahifada chaqiriladi: renderSidebar("battle") — qaysi menyu aktiv
 
+let _sidebarActivePage = null;
+let _topbarOptions = null;
+let _topbarWasRendered = false;
+
+function sidebarWaitForI18n(callback) {
+  if (window.IlmLigaI18n || window.__ilmLigaI18nLoadFailed) return false;
+  if (!window.__ilmLigaI18nPromise) {
+    window.__ilmLigaI18nPromise = new Promise(function (resolve) {
+      const script = document.createElement("script");
+      script.src = "/i18n.js";
+      script.onload = resolve;
+      script.onerror = function () {
+        window.__ilmLigaI18nLoadFailed = true;
+        resolve();
+      };
+      document.head.appendChild(script);
+    });
+  }
+  window.__ilmLigaI18nPromise.then(callback);
+  return true;
+}
+
+function sidebarWaitForLanguageSwitcher(callback) {
+  if (window.IlmLigaLanguageSwitcher || window.__ilmLigaLanguageSwitcherLoadFailed) return false;
+  if (!window.__ilmLigaLanguageSwitcherPromise) {
+    window.__ilmLigaLanguageSwitcherPromise = new Promise(function (resolve) {
+      const script = document.createElement("script");
+      script.src = "/language-switcher.js?v=13";
+      script.onload = resolve;
+      script.onerror = function () {
+        window.__ilmLigaLanguageSwitcherLoadFailed = true;
+        resolve();
+      };
+      document.head.appendChild(script);
+    });
+  }
+  window.__ilmLigaLanguageSwitcherPromise.then(callback);
+  return true;
+}
+
+function ensureSharedTopbarStyles() {
+  if (document.getElementById("ilmLigaTopbarStyles")) return;
+  const link = document.createElement("link");
+  link.id = "ilmLigaTopbarStyles";
+  link.rel = "stylesheet";
+  link.href = "/topbar.css?v=1";
+  document.head.appendChild(link);
+}
+
+function sbT(key, fallback, params) {
+  if (window.IlmLigaI18n) return window.IlmLigaI18n.t(key, params);
+  return fallback;
+}
+
 function renderSidebar(activePage) {
+  _sidebarActivePage = activePage;
+  if (sidebarWaitForI18n(function () { renderSidebar(activePage); })) return "";
   // School_admin himoyasi: o'quvchi sahifalariga kira olmaydi → o'z paneliga
   try {
     const _guard = JSON.parse(localStorage.getItem("user") || "{}");
@@ -32,9 +88,9 @@ function renderSidebar(activePage) {
   try { _saUser = JSON.parse(localStorage.getItem("user") || "{}"); } catch (e) {}
   if (_saUser.role === "school_admin") {
     const saMenu = [
-      { id: "home", icon: "layout-dashboard", label: "Bosh sahifa", href: "/school-admin.html", ready: true },
-      { id: "tournaments", icon: "trophy", label: "Turnirlar", href: "/school-tournaments.html", ready: true },
-      { id: "profile", icon: "user", label: "Profil", href: "/school-admin-profile.html", ready: true },
+      { id: "home", icon: "layout-dashboard", label: sbT("nav.home", "Bosh sahifa"), href: "/school-admin.html", ready: true },
+      { id: "tournaments", icon: "trophy", label: sbT("nav.tournaments", "Turnirlar"), href: "/school-tournaments.html", ready: true },
+      { id: "profile", icon: "user", label: sbT("nav.profile", "Profil"), href: "/school-admin-profile.html", ready: true },
     ];
     let saNavHtml = "";
     saMenu.forEach(m => {
@@ -43,17 +99,17 @@ function renderSidebar(activePage) {
         '<i data-lucide="' + m.icon + '" class="ic"></i> ' + m.label + '</a>';
     });
     saNavHtml += '<a class="nav-item" onclick="sidebarLogout()" style="cursor:pointer;">' +
-      '<i data-lucide="log-out" class="ic"></i> Chiqish</a>';
+      '<i data-lucide="log-out" class="ic"></i> ' + sbT("nav.logout", "Chiqish") + '</a>';
 
     const saSidebar =
       '<div class="logo-box"><div class="crest">' +
-        sidebarBrandMarkup('Maktab paneli') +
+        sidebarBrandMarkup(sbT("school.panel", "Maktab paneli")) +
       '</div></div>' +
       '<nav class="nav">' + saNavHtml + '</nav>' +
       '<div class="sidebar-foot"><div class="mascot-box">' +
         '<div style="font-size:34px;">🏫</div>' +
-        '<div style="margin-top:6px;">Maktabingiz nomidan turnirlarda g\'alaba qozoning!</div>' +
-        '<a href="/school-tournaments.html" style="display:block;margin-top:10px;padding:9px;background:linear-gradient(95deg,var(--accent),var(--accent-2));color:#fff;border-radius:10px;font-size:12.5px;font-weight:700;text-decoration:none;">Turnirlarga o\'tish</a>' +
+        '<div style="margin-top:6px;">' + sbT("school.promo", "Maktabingiz nomidan turnirlarda g‘alaba qozoning!") + '</div>' +
+        '<a href="/school-tournaments.html" style="display:block;margin-top:10px;padding:9px;background:linear-gradient(95deg,var(--accent),var(--accent-2));color:#fff;border-radius:10px;font-size:12.5px;font-weight:700;text-decoration:none;">' + sbT("school.openTournaments", "Turnirlarga o‘tish") + '</a>' +
       '</div></div>';
 
     const sb = document.querySelector(".sidebar");
@@ -64,16 +120,16 @@ function renderSidebar(activePage) {
 
   // ready:false => sahifa hali tayyor emas (coming soon), broken link bo'lmaydi
   const menu = [
-    { id: "battle", icon: "swords", label: "Battle", href: "/lobby.html", ready: true },
-    { id: "practice", icon: "dumbbell", label: "Practice", href: "/practice.html", ready: true }, // Sprint 2A: ochildi
-    { id: "myclasses", icon: "book-open", label: "Sinflarim", href: "/student-classes.html", ready: true },
-    { id: "exam", icon: "graduation-cap", label: "Daraja imtihoni", href: "/exam.html", ready: true },
-    { id: "ranking", icon: "trophy", label: "Ranking", href: "/leaderboard.html", ready: true },
-    { id: "tournaments", icon: "swords", label: "Turnirlar", href: "/student-tournaments.html", ready: true },
-    { id: "friends", icon: "users", label: "Do'stlar", href: "/friends.html", ready: true },
-    { id: "history", icon: "scroll-text", label: "Tarix", href: "/history.html", ready: true },
-    { id: "progress", icon: "trending-up", label: "Progress", href: "/progress.html", ready: true },
-    { id: "profile", icon: "user", label: "Profile", href: "/profile.html", ready: true },
+    { id: "battle", icon: "swords", label: sbT("nav.battle", "Battle"), href: "/lobby.html", ready: true },
+    { id: "practice", icon: "dumbbell", label: sbT("nav.practice", "Practice"), href: "/practice.html", ready: true }, // Sprint 2A: ochildi
+    { id: "myclasses", icon: "book-open", label: sbT("nav.classes", "Sinflarim"), href: "/student-classes.html", ready: true },
+    { id: "exam", icon: "graduation-cap", label: sbT("nav.exam", "Daraja imtihoni"), href: "/exam.html", ready: true },
+    { id: "ranking", icon: "trophy", label: sbT("nav.ranking", "Ranking"), href: "/leaderboard.html", ready: true },
+    { id: "tournaments", icon: "swords", label: sbT("nav.tournaments", "Turnirlar"), href: "/student-tournaments.html", ready: true },
+    { id: "friends", icon: "users", label: sbT("nav.friends", "Do‘stlar"), href: "/friends.html", ready: true },
+    { id: "history", icon: "scroll-text", label: sbT("nav.history", "Tarix"), href: "/history.html", ready: true },
+    { id: "progress", icon: "trending-up", label: sbT("nav.progress", "Progress"), href: "/progress.html", ready: true },
+    { id: "profile", icon: "user", label: sbT("nav.profile", "Profil"), href: "/profile.html", ready: true },
   ];
 
   // School admin uchun qo'shimcha: Turnirlar (faqat school_admin ko'radi)
@@ -98,23 +154,22 @@ function renderSidebar(activePage) {
       // Tayyor emas — coming soon (broken link emas)
       navHtml += '<a class="nav-item" onclick="sidebarComingSoon(\'' + m.label + '\')" style="cursor:pointer;">' +
         '<i data-lucide="' + m.icon + '" class="ic"></i> ' + m.label +
-        '<span style="margin-left:auto;font-size:9px;font-weight:700;color:var(--gold);background:var(--panel);padding:2px 6px;border-radius:999px;">tez orada</span></a>';
+        '<span style="margin-left:auto;font-size:9px;font-weight:700;color:var(--gold);background:var(--panel);padding:2px 6px;border-radius:999px;">' + sbT("nav.comingSoon", "tez orada") + '</span></a>';
     }
   });
 
   // Chiqish
   navHtml += '<a class="nav-item" onclick="sidebarLogout()" style="cursor:pointer;">' +
-    '<i data-lucide="log-out" class="ic"></i> Chiqish</a>';
+    '<i data-lucide="log-out" class="ic"></i> ' + sbT("nav.logout", "Chiqish") + '</a>';
 
   const sidebarHtml =
     '<div class="logo-box"><div class="crest">' +
-      sidebarBrandMarkup(B.sloganEn || '') +
+      sidebarBrandMarkup(sbT("brand.slogan", B.sloganEn || "")) +
     '</div></div>' +
     '<nav class="nav">' + navHtml + '</nav>' +
     '<div class="sidebar-foot"><div class="mascot-box">' +
-      '<img src="/images/brand/logo-icon.png" alt="IlmLiga" style="height:56px;width:auto;display:block;margin:0 auto;filter:drop-shadow(0 6px 16px rgba(37,99,235,0.35));" onerror="this.outerHTML=\'<div style=&quot;font-size:34px;&quot;>🏆</div>\'">' +
-      '<div style="margin-top:6px;">Battle va o\'rganish orqali eng yuqori o\'ringa chiqing!</div>' +
-      '<a href="/leaderboard.html" style="display:block;margin-top:10px;padding:9px;background:linear-gradient(95deg,var(--accent),var(--accent-2));color:#fff;border-radius:10px;font-size:12.5px;font-weight:700;text-decoration:none;">Rankingga o\'tish</a>' +
+      '<img src="/images/brand/logo-mark-new.svg" alt="IlmLiga" style="width:42px;height:42px;display:block;object-fit:contain;margin:0 auto;filter:drop-shadow(0 5px 12px rgba(37,99,235,0.32));" onerror="this.onerror=null;this.src=\'/images/brand/logo-icon.png\';">' +
+      '<div style="margin-top:6px;">' + sbT("student.promo", "Battle va o‘rganish orqali eng yuqori o‘ringa chiqing!") + '</div>' +
     '</div></div>';
 
   const sidebar = document.querySelector(".sidebar");
@@ -126,7 +181,8 @@ function renderSidebar(activePage) {
 
 // Tayyor bo'lmagan sahifa bosilganda — coming soon toast/modal
 function sidebarComingSoon(name) {
-  if (typeof showToast === "function") { showToast((name ? name + ": " : "") + "tez orada qo'shiladi"); return; }
+  const message = sbT("nav.comingSoonMessage", (name ? name + ": " : "") + "tez orada qo‘shiladi", { name: name || "" });
+  if (typeof showToast === "function") { showToast(message); return; }
   // showToast yo'q bo'lsa — kichik vaqtinchalik xabar
   let t = document.getElementById("scToast");
   if (!t) {
@@ -135,7 +191,7 @@ function sidebarComingSoon(name) {
     t.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10172a;border:1px solid rgba(120,150,255,0.4);border-radius:12px;padding:13px 20px;font-size:14px;color:#e6ecff;box-shadow:0 12px 40px rgba(0,0,0,0.5);z-index:3000;transition:opacity 0.2s;";
     document.body.appendChild(t);
   }
-  t.textContent = (name ? name + ": " : "") + "tez orada qo'shiladi";
+  t.textContent = message;
   t.style.opacity = "1";
   clearTimeout(window._scTimer);
   window._scTimer = setTimeout(function(){ t.style.opacity = "0"; }, 2200);
@@ -158,11 +214,11 @@ function showLogoutModal() {
     overlay.innerHTML =
       '<div class="modal-box">' +
         '<div class="modal-icon"><i data-lucide="log-out"></i></div>' +
-        '<div class="modal-title">Hisobdan chiqmoqchimisiz?</div>' +
-        '<div class="modal-text">Qaytadan kirish uchun login va parolingiz kerak bo\'ladi.</div>' +
+        '<div class="modal-title">' + sbT("logout.title", "Hisobdan chiqmoqchimisiz?") + '</div>' +
+        '<div class="modal-text">' + sbT("logout.text", "Qaytadan kirish uchun login va parolingiz kerak bo‘ladi.") + '</div>' +
         '<div class="modal-actions">' +
-          '<button class="modal-btn modal-btn-cancel" onclick="closeLogoutModal()">Bekor qilish</button>' +
-          '<button class="modal-btn modal-btn-confirm" onclick="doLogout()">Chiqish</button>' +
+          '<button class="modal-btn modal-btn-cancel" onclick="closeLogoutModal()">' + sbT("common.cancel", "Bekor qilish") + '</button>' +
+          '<button class="modal-btn modal-btn-confirm" onclick="doLogout()">' + sbT("common.logout", "Chiqish") + '</button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(overlay);
@@ -260,33 +316,60 @@ function avatarHTML(firstName, picPath) {
   return letter;
 }
 
+window.changeShellLanguage = function (language) {
+  if (window.IlmLigaI18n) window.IlmLigaI18n.setLanguage(language);
+};
+
 // ===== UMUMIY TOPBAR (hamma sahifada) =====
 // Chaqirilishi: renderTopbar()  yoki  renderTopbar({ back: "/lobby.html" })
 // opts.back — agar berilsa, chap tomonda "Orqaga" tugmasi chiqadi (havola bilan)
 function renderTopbar(opts) {
   opts = opts || {};
-  const host = document.querySelector(".topbar");
+  _topbarOptions = opts;
+  _topbarWasRendered = true;
+  if (sidebarWaitForI18n(function () { renderTopbar(opts); })) return;
+  if (sidebarWaitForLanguageSwitcher(function () { renderTopbar(opts); })) return;
+  const host = opts.host
+    ? (typeof opts.host === "string" ? document.querySelector(opts.host) : opts.host)
+    : document.querySelector(".topbar");
   if (!host) return; // bu sahifada topbar yo'q
+  ensureSharedTopbarStyles();
+
+  const appHost = host.closest(".app");
+  const hasRightbar = appHost && Array.prototype.some.call(appHost.children, function (child) {
+    return child.classList && child.classList.contains("rightbar");
+  });
+  if (appHost) appHost.classList.add("il-shell");
+  host.classList.add("il-topbar");
+  host.classList.toggle("il-topbar--center-column", opts.alignWithRightbar !== false && !hasRightbar);
 
   const u = JSON.parse(localStorage.getItem("user") || "{}");
   const level = Math.floor((u.xp || 0) / 100) + 1;
-  const fullName = ((u.first_name || "") + " " + (u.last_name || "")).trim() || "O'yinchi";
+  const fullName = ((u.first_name || "") + " " + (u.last_name || "")).trim() || sbT("topbar.player", "O‘yinchi");
+  const language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
 
   const backHtml = opts.back
-    ? '<a class="tb-back" href="' + opts.back + '"><i data-lucide="arrow-left"></i> ' + (opts.backText || "Orqaga") + '</a>'
+    ? '<a class="tb-back" href="' + opts.back + '"><i data-lucide="arrow-left"></i> ' + (opts.backText || sbT("topbar.back", "Orqaga")) + '</a>'
     : '';
 
   host.innerHTML =
     backHtml +
+    '<div class="tb-language" title="' + sbT("topbar.language", "Til") + '">' +
+      '<select class="tb-language-select" id="tbLanguage" aria-label="' + sbT("topbar.language", "Til") + '" onchange="changeShellLanguage(this.value)">' +
+        '<option value="uz"' + (language === "uz" ? " selected" : "") + '>UZ</option>' +
+        '<option value="en"' + (language === "en" ? " selected" : "") + '>EN</option>' +
+        '<option value="ru"' + (language === "ru" ? " selected" : "") + '>RU</option>' +
+      '</select>' +
+    '</div>' +
     '<div class="currency"><i data-lucide="coins" style="color:var(--gold);width:18px;height:18px;"></i> <span id="tbCoins">' + (u.coins || 0) + '</span> <span class="plus">+</span></div>' +
     '<div class="currency"><i data-lucide="gem" style="color:var(--cyan);width:18px;height:18px;"></i> <span id="tbGems">' + (u.gems || 0) + '</span> <span class="plus">+</span></div>' +
     '<div class="notif-wrap" id="notifWrap">' +
       '<div class="icon-btn" onclick="toggleNotif(event)" style="cursor:pointer;"><i data-lucide="bell"></i> <span class="badge" id="notifBadge" style="display:none">0</span></div>' +
       '<div class="notif-bar" id="notifBar">' +
         '<div class="notif-bar-head">' +
-          '<span>Bildirishnomalar</span>' +
+          '<span>' + sbT("topbar.notifications", "Bildirishnomalar") + '</span>' +
           '<div class="notif-head-actions">' +
-            '<button class="notif-act-btn" id="notifClearBtn" onclick="clearAllNotifs(event)" title="Hammasini tozalash"><i data-lucide="trash-2"></i></button>' +
+            '<button class="notif-act-btn" id="notifClearBtn" onclick="clearAllNotifs(event)" title="' + sbT("topbar.clearNotifications", "Hammasini tozalash") + '"><i data-lucide="trash-2"></i></button>' +
             '<i data-lucide="x" class="notif-close" onclick="closeNotif()"></i>' +
           '</div>' +
         '</div>' +
@@ -295,15 +378,23 @@ function renderTopbar(opts) {
     '</div>' +
     '<div class="user-chip" id="userChip" onclick="toggleUserMenu(event)">' +
       '<div class="ava" id="topAva">' + (fullName[0] || "?").toUpperCase() + '</div>' +
-      '<div><div class="uname">' + sbEsc(fullName) + '</div><div class="ulevel">Level <span>' + level + '</span></div></div>' +
+      '<div><div class="uname">' + sbEsc(fullName) + '</div><div class="ulevel">' + sbT("topbar.level", "Daraja") + ' <span>' + level + '</span></div></div>' +
       '<i data-lucide="chevron-down" class="chip-arrow"></i>' +
       '<div class="tb-dropdown">' +
-        '<div class="tb-dd-item" onclick="event.stopPropagation();window.location.href=\'/profile.html\'"><i data-lucide="user"></i> Profil</div>' +
-        '<div class="tb-dd-item" onclick="event.stopPropagation();tbSettingsSoon()"><i data-lucide="settings"></i> Sozlamalar</div>' +
+        '<div class="tb-dd-item" onclick="event.stopPropagation();window.location.href=\'/profile.html\'"><i data-lucide="user"></i> ' + sbT("topbar.profile", "Profil") + '</div>' +
+        '<div class="tb-dd-item" onclick="event.stopPropagation();tbSettingsSoon()"><i data-lucide="settings"></i> ' + sbT("topbar.settings", "Sozlamalar") + '</div>' +
         '<div class="tb-dd-sep"></div>' +
-        '<div class="tb-dd-item danger" onclick="event.stopPropagation();sidebarLogout()"><i data-lucide="log-out"></i> Chiqish</div>' +
+        '<div class="tb-dd-item danger" onclick="event.stopPropagation();sidebarLogout()"><i data-lucide="log-out"></i> ' + sbT("nav.logout", "Chiqish") + '</div>' +
       '</div>' +
     '</div>';
+
+  if (window.IlmLigaLanguageSwitcher) {
+    window.IlmLigaLanguageSwitcher.mount({
+      selectId: "tbLanguage",
+      ariaLabel: sbT("topbar.language", "Til"),
+      placement: "bottom"
+    });
+  }
 
   // Avatar (rasm yoki harf)
   const av = document.getElementById("topAva");
@@ -431,7 +522,7 @@ function renderNotifList() {
   if (!list) return;
   if (!_notifData || _notifData.length === 0) {
     list.innerHTML =
-      '<div class="notif-empty"><i data-lucide="bell-off"></i><div class="notif-empty-text">Hozircha yangi xabarlar yo\'q</div></div>';
+      '<div class="notif-empty"><i data-lucide="bell-off"></i><div class="notif-empty-text">' + sbT("topbar.noNotifications", "Hozircha yangi xabarlar yo‘q") + '</div></div>';
     if (window.lucide) lucide.createIcons();
     return;
   }
@@ -442,7 +533,7 @@ function renderNotifList() {
         '<div class="notif-msg">' + sbEsc(n.message || "") + '</div>' +
         '<div class="notif-time">' + notifTimeAgo(n.created_at) + '</div>' +
       '</div>' +
-      '<div class="notif-x" onclick="deleteNotif(event, ' + n.id + ')" title="O\'chirish"><i data-lucide="x"></i></div>' +
+      '<div class="notif-x" onclick="deleteNotif(event, ' + n.id + ')" title="' + sbT("topbar.delete", "O‘chirish") + '"><i data-lucide="x"></i></div>' +
     '</div>'
   ).join("");
   if (window.lucide) lucide.createIcons();
@@ -475,14 +566,18 @@ function attachNotifSocket() {
   // Yangi do'st so'rovi keldi (B oladi)
   sock.on("newFriendRequest", function (data) {
     loadNotifs(); // badge + ro'yxat darhol yangilanadi (F5 kerak emas)
-    showNotifToast((data && data.fromName ? data.fromName : "Kimdir") + " sizga do'st so'rovi yubordi");
+    showNotifToast(sbT("notifications.friendRequest", "{name} sizga do‘st so‘rovi yubordi", {
+      name: data && data.fromName ? data.fromName : sbT("notifications.someone", "Kimdir")
+    }));
   });
 
   // So'rovga javob keldi — qabul/rad (A oladi)
   sock.on("requestResponded", function (data) {
     loadNotifs(); // badge + panel darhol yangilanadi
     if (data && data.action === "accept") {
-      showNotifToast((data.byName || "Kimdir") + " do'st so'rovingizni qabul qildi");
+      showNotifToast(sbT("notifications.friendAccepted", "{name} do‘st so‘rovingizni qabul qildi", {
+        name: data.byName || sbT("notifications.someone", "Kimdir")
+      }));
     }
     // Rad etilganda — toast ko'rsatmaymiz (bildirishnoma ham yaratilmaydi), jim qoladi
   });
@@ -561,7 +656,7 @@ async function clearAllNotifs(e) {
     if (btn) {
       btn.classList.add("armed");
       btn.innerHTML = '<i data-lucide="check"></i>';
-      btn.title = "Tasdiqlash uchun yana bosing";
+      btn.title = sbT("topbar.confirmClear", "Tasdiqlash uchun yana bosing");
       if (window.lucide) lucide.createIcons();
     }
     // 3 soniyada bekor bo'ladi (foydalanuvchi fikridan qaytsa)
@@ -591,7 +686,7 @@ function _resetClearBtn() {
   if (btn) {
     btn.classList.remove("armed");
     btn.innerHTML = '<i data-lucide="trash-2"></i>';
-    btn.title = "Hammasini tozalash";
+    btn.title = sbT("topbar.clearNotifications", "Hammasini tozalash");
     if (window.lucide) lucide.createIcons();
   }
 }
@@ -606,7 +701,7 @@ function toggleUserMenu(e) {
   closeNotif();
 }
 function tbSettingsSoon() {
-  if (typeof sidebarComingSoon === "function") sidebarComingSoon("Sozlamalar");
+  if (typeof sidebarComingSoon === "function") sidebarComingSoon(sbT("topbar.settings", "Sozlamalar"));
 }
 
 // Tashqariga bosilsa bar yopiladi
@@ -758,3 +853,8 @@ function handleSocketAuthError(err) {
   localStorage.removeItem("user");
   window.location.href = "/?screen=login";
 }
+
+window.addEventListener("ilmliga:languagechange", function () {
+  if (_sidebarActivePage) renderSidebar(_sidebarActivePage);
+  if (_topbarWasRendered) renderTopbar(_topbarOptions || {});
+});

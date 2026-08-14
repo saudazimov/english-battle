@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Admin profili</title>
+  <title data-i18n="schoolAdminProfile.metaTitle">IlmLiga — Admin profili</title>
   <link rel="stylesheet" href="/app.css">
   <style>
     .app { grid-template-columns: 230px 1fr; gap: 20px; max-width: 1680px; margin: 0 auto; padding: 20px; }
@@ -84,19 +84,19 @@
 
       <div class="page-head">
         <div class="crest-ic"><i data-lucide="user"></i></div>
-        <div><h1>Profil</h1><p>Shaxsiy ma'lumotlaringiz va maktab boshqaruvi.</p></div>
+        <div><h1 data-i18n="schoolAdminProfile.heading">Profil</h1><p data-i18n="schoolAdminProfile.subtitle">Shaxsiy ma'lumotlaringiz va maktab boshqaruvi.</p></div>
       </div>
 
       <!-- Profil sarlavhasi -->
       <div class="prof-hero">
         <div class="prof-ava-wrap">
           <div class="prof-ava" id="profAva"><div class="prof-ava-init">?</div></div>
-          <div class="prof-ava-edit" onclick="document.getElementById('avaInput').click()" title="Rasmni o'zgartirish"><i data-lucide="camera"></i></div>
+          <div class="prof-ava-edit" onclick="document.getElementById('avaInput').click()" title="Rasmni o'zgartirish" data-i18n-title="schoolAdminProfile.changePicture"><i data-lucide="camera"></i></div>
           <input type="file" id="avaInput" accept="image/*" style="display:none;" onchange="uploadAvatar(event)">
         </div>
         <div>
-          <div class="prof-name" id="profName">Yuklanmoqda...</div>
-          <span class="prof-role-badge"><i data-lucide="shield-check"></i> Maktab Admini</span>
+          <div class="prof-name" id="profName" data-i18n="schoolAdminProfile.loading">Yuklanmoqda...</div>
+          <span class="prof-role-badge"><i data-lucide="shield-check"></i> <span data-i18n="schoolAdminProfile.role">Maktab admini</span></span>
           <div class="prof-meta" id="profMeta"></div>
         </div>
       </div>
@@ -106,14 +106,14 @@
         <div>
           <!-- Shaxsiy ma'lumotlar -->
           <div class="card pcard" style="margin-bottom:22px;">
-            <div class="pcard-head"><i data-lucide="user-circle"></i> Shaxsiy ma'lumotlar</div>
-            <div id="personalInfo"><div class="loading-mini">Yuklanmoqda...</div></div>
+            <div class="pcard-head"><i data-lucide="user-circle"></i> <span data-i18n="schoolAdminProfile.personalInfo">Shaxsiy ma'lumotlar</span></div>
+            <div id="personalInfo"><div class="loading-mini" data-i18n="schoolAdminProfile.loading">Yuklanmoqda...</div></div>
           </div>
 
           <!-- Boshqaradigan maktab -->
           <div class="card pcard">
-            <div class="pcard-head"><i data-lucide="building-2"></i> Boshqaradigan maktab</div>
-            <div id="schoolInfo"><div class="loading-mini">Yuklanmoqda...</div></div>
+            <div class="pcard-head"><i data-lucide="building-2"></i> <span data-i18n="schoolAdminProfile.managedSchool">Boshqaradigan maktab</span></div>
+            <div id="schoolInfo"><div class="loading-mini" data-i18n="schoolAdminProfile.loading">Yuklanmoqda...</div></div>
           </div>
         </div>
 
@@ -121,22 +121,22 @@
         <div>
           <!-- Boshqaruv faoliyati -->
           <div class="card pcard" style="margin-bottom:22px;">
-            <div class="pcard-head"><i data-lucide="clipboard-list"></i> Boshqaruv faoliyati</div>
-            <div id="mgmtInfo"><div class="loading-mini">Yuklanmoqda...</div></div>
+            <div class="pcard-head"><i data-lucide="clipboard-list"></i> <span data-i18n="schoolAdminProfile.managementActivity">Boshqaruv faoliyati</span></div>
+            <div id="mgmtInfo"><div class="loading-mini" data-i18n="schoolAdminProfile.loading">Yuklanmoqda...</div></div>
           </div>
 
           <!-- Tezkor harakatlar -->
           <div class="card pcard">
-            <div class="pcard-head"><i data-lucide="zap"></i> Tezkor harakatlar</div>
+            <div class="pcard-head"><i data-lucide="zap"></i> <span data-i18n="schoolAdminProfile.quickActions">Tezkor harakatlar</span></div>
             <div class="quick-actions">
               <a class="qa-btn" href="/school-admin.html">
                 <div class="qa-ic"><i data-lucide="layout-dashboard"></i></div>
-                <div><div class="qa-title">Maktab paneli</div><div class="qa-sub">Umumiy ko'rinish va statistika</div></div>
+                <div><div class="qa-title" data-i18n="schoolAdminProfile.dashboard">Maktab paneli</div><div class="qa-sub" data-i18n="schoolAdminProfile.dashboardDescription">Umumiy ko'rinish va statistika</div></div>
                 <i data-lucide="chevron-right" class="qa-arrow"></i>
               </a>
               <a class="qa-btn" href="/school-tournaments.html">
                 <div class="qa-ic"><i data-lucide="trophy"></i></div>
-                <div><div class="qa-title">Turnirlar</div><div class="qa-sub">Jamoa tuzish va boshqarish</div></div>
+                <div><div class="qa-title" data-i18n="schoolAdminProfile.tournaments">Turnirlar</div><div class="qa-sub" data-i18n="schoolAdminProfile.tournamentsDescription">Jamoa tuzish va boshqarish</div></div>
                 <i data-lucide="chevron-right" class="qa-arrow"></i>
               </a>
             </div>
@@ -149,6 +149,7 @@
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script>
     const userData = localStorage.getItem("user");
@@ -163,13 +164,18 @@
     renderTopbar();
     renderSidebar("profile");
 
+    function schoolAdminProfileT(key, params) { return window.IlmLigaI18n ? window.IlmLigaI18n.t("schoolAdminProfile." + key, params) : key; }
+    function schoolAdminProfileLocale() {
+      var language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return { uz: "uz-UZ", en: "en-US", ru: "ru-RU" }[language] || "uz-UZ";
+    }
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
 
     function fmtDate(d) {
       if (!d) return "—";
       var date = new Date(d);
-      var months = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"];
-      return date.getDate() + " " + months[date.getMonth()] + " " + date.getFullYear();
+      if (Number.isNaN(date.getTime())) return "—";
+      return new Intl.DateTimeFormat(schoolAdminProfileLocale(), { day: "numeric", month: "long", year: "numeric" }).format(date);
     }
 
     function fmtPhone(p) {
@@ -181,61 +187,78 @@
       return "+" + s;
     }
 
+    var schoolProfileData = null;
+    var schoolProfileState = "loading";
+
+    function renderProfile(d) {
+      var nameBox = document.getElementById("profName");
+      if (schoolProfileState === "forbidden") {
+        nameBox.removeAttribute("data-i18n");
+        nameBox.textContent = schoolAdminProfileT("accessDenied");
+        return;
+      }
+      if (schoolProfileState === "error") {
+        nameBox.removeAttribute("data-i18n");
+        nameBox.textContent = schoolAdminProfileT("loadFailed");
+        return;
+      }
+      if (!d) return;
+
+      var a = d.admin;
+      var fullName = ((a.first_name || "") + " " + (a.last_name || "")).trim();
+      nameBox.removeAttribute("data-i18n");
+      nameBox.textContent = fullName;
+
+      var avaBox = document.getElementById("profAva");
+      if (a.profile_picture) {
+        avaBox.innerHTML = '<img src="' + esc(a.profile_picture) + '" alt="">';
+      } else {
+        avaBox.innerHTML = '<div class="prof-ava-init">' + esc((a.first_name || "?").charAt(0).toUpperCase()) + '</div>';
+      }
+
+      document.getElementById("profMeta").innerHTML =
+        '<div class="prof-meta-item"><i data-lucide="building-2"></i> ' + esc(d.school || "—") + '</div>' +
+        '<div class="prof-meta-item"><i data-lucide="map-pin"></i> ' + esc((d.district || "") + (d.region ? ", " + d.region : "")) + '</div>';
+
+      document.getElementById("personalInfo").innerHTML =
+        infoRow("phone", schoolAdminProfileT("phone"), fmtPhone(a.phone)) +
+        infoRow("calendar", schoolAdminProfileT("joinedAt"), fmtDate(a.created_at)) +
+        infoRow("shield-check", schoolAdminProfileT("roleLabel"), schoolAdminProfileT("role"));
+
+      var ss = d.school_stats;
+      document.getElementById("schoolInfo").innerHTML =
+        infoRow("building-2", schoolAdminProfileT("school"), d.school || "—") +
+        infoRow("map", schoolAdminProfileT("district"), d.district || "—") +
+        infoRow("map-pin", schoolAdminProfileT("region"), d.region || "—") +
+        '<div class="mini-stats">' +
+          '<div class="mini-stat"><div class="mini-stat-v blue">' + ss.total_students + '</div><div class="mini-stat-k">' + esc(schoolAdminProfileT("students")) + '</div></div>' +
+          '<div class="mini-stat"><div class="mini-stat-v gold">' + (ss.top_rating || "—") + '</div><div class="mini-stat-k">' + esc(schoolAdminProfileT("highest")) + '</div></div>' +
+          '<div class="mini-stat"><div class="mini-stat-v green">' + (ss.avg_rating || "—") + '</div><div class="mini-stat-k">' + esc(schoolAdminProfileT("average")) + '</div></div>' +
+        '</div>';
+
+      var m = d.management;
+      document.getElementById("mgmtInfo").innerHTML =
+        mgmtRow("purple", "swords", m.active_tournaments, schoolAdminProfileT("activeTournaments")) +
+        mgmtRow("gold", "trophy", m.total_tournaments, schoolAdminProfileT("totalTournaments")) +
+        mgmtRow("cyan", "users", m.teams_built, schoolAdminProfileT("teamsBuilt"));
+
+      lucide.createIcons();
+    }
+
     async function loadProfile() {
       try {
         var r = await authFetch("/school/profile");
         if (r.status === 403) {
-          document.getElementById("profName").textContent = "Ruxsat yo'q";
+          schoolProfileState = "forbidden";
+          renderProfile(null);
           return;
         }
-        var d = await r.json();
-        var a = d.admin;
-
-        // Hero
-        var fullName = ((a.first_name || "") + " " + (a.last_name || "")).trim();
-        document.getElementById("profName").textContent = fullName;
-
-        // Avatar
-        var avaBox = document.getElementById("profAva");
-        if (a.profile_picture) {
-          avaBox.innerHTML = '<img src="' + esc(a.profile_picture) + '" alt="">';
-        } else {
-          avaBox.innerHTML = '<div class="prof-ava-init">' + esc((a.first_name || "?").charAt(0).toUpperCase()) + '</div>';
-        }
-
-        // Meta (maktab + joylashuv)
-        document.getElementById("profMeta").innerHTML =
-          '<div class="prof-meta-item"><i data-lucide="building-2"></i> ' + esc(d.school || "—") + '</div>' +
-          '<div class="prof-meta-item"><i data-lucide="map-pin"></i> ' + esc((d.district || "") + (d.region ? ", " + d.region : "")) + '</div>';
-
-        // Shaxsiy ma'lumotlar
-        document.getElementById("personalInfo").innerHTML =
-          infoRow("phone", "Telefon", fmtPhone(a.phone)) +
-          infoRow("calendar", "Ro'yxatdan o'tgan", fmtDate(a.created_at)) +
-          infoRow("shield-check", "Rol", "Maktab Admini");
-
-        // Maktab ma'lumotlari + statistika
-        var ss = d.school_stats;
-        document.getElementById("schoolInfo").innerHTML =
-          infoRow("building-2", "Maktab", d.school || "—") +
-          infoRow("map", "Tuman", d.district || "—") +
-          infoRow("map-pin", "Viloyat", d.region || "—") +
-          '<div class="mini-stats">' +
-            '<div class="mini-stat"><div class="mini-stat-v blue">' + ss.total_students + '</div><div class="mini-stat-k">O\'quvchilar</div></div>' +
-            '<div class="mini-stat"><div class="mini-stat-v gold">' + (ss.top_rating || "—") + '</div><div class="mini-stat-k">Eng yuqori</div></div>' +
-            '<div class="mini-stat"><div class="mini-stat-v green">' + (ss.avg_rating || "—") + '</div><div class="mini-stat-k">O\'rtacha</div></div>' +
-          '</div>';
-
-        // Boshqaruv faoliyati
-        var m = d.management;
-        document.getElementById("mgmtInfo").innerHTML =
-          mgmtRow("purple", "swords", m.active_tournaments, "Faol turnirlar") +
-          mgmtRow("gold", "trophy", m.total_tournaments, "Jami turnirlar") +
-          mgmtRow("cyan", "users", m.teams_built, "Tuzilgan jamoalar");
-
-        lucide.createIcons();
+        schoolProfileData = await r.json();
+        schoolProfileState = "ready";
+        renderProfile(schoolProfileData);
       } catch (e) {
-        document.getElementById("profName").textContent = "Yuklab bo'lmadi";
+        schoolProfileState = "error";
+        renderProfile(null);
       }
     }
 
@@ -269,6 +292,10 @@
         }
       } catch (e) {}
     }
+
+    window.addEventListener("ilmliga:languagechange", function () {
+      renderProfile(schoolProfileData);
+    });
 
     loadProfile();
     lucide.createIcons();

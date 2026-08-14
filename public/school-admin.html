@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Maktab paneli</title>
+  <title data-i18n="schoolAdmin.metaTitle">IlmLiga — Maktab paneli</title>
   <link rel="stylesheet" href="/app.css">
   <style>
     .app { grid-template-columns: 230px 1fr; gap: 20px; max-width: 1680px; margin: 0 auto; padding: 20px; }
@@ -74,7 +74,7 @@
       <div class="school-hero" id="schoolHero">
         <div class="school-hero-ic"><i data-lucide="building-2"></i></div>
         <div>
-          <div class="school-hero-name" id="heroName">Yuklanmoqda...</div>
+          <div class="school-hero-name" id="heroName" data-i18n="schoolAdmin.loading">Yuklanmoqda...</div>
           <div class="school-hero-sub" id="heroSub">—</div>
           <div class="school-hero-admin" id="heroAdmin"></div>
         </div>
@@ -84,34 +84,34 @@
         <div class="card scard">
           <div class="scard-ic blue"><i data-lucide="users"></i></div>
           <div class="scard-v" id="statStudents">—</div>
-          <div class="scard-k">O'quvchilar</div>
+          <div class="scard-k" data-i18n="schoolAdmin.students">O'quvchilar</div>
         </div>
         <div class="card scard">
           <div class="scard-ic gold"><i data-lucide="trophy"></i></div>
           <div class="scard-v" id="statTop">—</div>
-          <div class="scard-k">Eng yuqori reyting</div>
+          <div class="scard-k" data-i18n="schoolAdmin.topRating">Eng yuqori reyting</div>
         </div>
         <div class="card scard">
           <div class="scard-ic green"><i data-lucide="trending-up"></i></div>
           <div class="scard-v" id="statAvg">—</div>
-          <div class="scard-k">O'rtacha reyting</div>
+          <div class="scard-k" data-i18n="schoolAdmin.averageRating">O'rtacha reyting</div>
         </div>
         <div class="card scard">
           <div class="scard-ic purple"><i data-lucide="swords"></i></div>
           <div class="scard-v" id="statTourn">—</div>
-          <div class="scard-k">Faol turnirlar</div>
+          <div class="scard-k" data-i18n="schoolAdmin.activeTournaments">Faol turnirlar</div>
         </div>
       </div>
 
       <div class="panel-grid">
         <div class="card pcard">
-          <div class="pcard-head"><i data-lucide="award"></i> Eng yaxshi o'quvchilar</div>
-          <div id="topStudents"><div class="loading-mini">Yuklanmoqda...</div></div>
+          <div class="pcard-head"><i data-lucide="award"></i> <span data-i18n="schoolAdmin.topStudents">Eng yaxshi o'quvchilar</span></div>
+          <div id="topStudents"><div class="loading-mini" data-i18n="schoolAdmin.loading">Yuklanmoqda...</div></div>
         </div>
 
         <div class="card pcard">
-          <div class="pcard-head"><i data-lucide="trophy"></i> Turnirlar</div>
-          <div id="tournPanel"><div class="loading-mini">Yuklanmoqda...</div></div>
+          <div class="pcard-head"><i data-lucide="trophy"></i> <span data-i18n="schoolAdmin.tournaments">Turnirlar</span></div>
+          <div id="tournPanel"><div class="loading-mini" data-i18n="schoolAdmin.loading">Yuklanmoqda...</div></div>
         </div>
       </div>
     </main>
@@ -120,6 +120,7 @@
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script>
     const userData = localStorage.getItem("user");
@@ -134,74 +135,91 @@
     renderTopbar();
     renderSidebar("home");
 
+    function schoolAdminT(key, params) { return window.IlmLigaI18n ? window.IlmLigaI18n.t("schoolAdmin." + key, params) : key; }
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     function avatarHtml(firstName, pic) {
       if (pic) return '<img src="' + esc(pic) + '" alt="">';
       return '<div class="top-ava-init">' + esc((firstName || "?").charAt(0).toUpperCase()) + '</div>';
     }
 
+    var overviewData = null;
+    var overviewState = "loading";
+    function renderOverview(d) {
+      if (overviewState === "forbidden") {
+        document.getElementById("heroName").textContent = schoolAdminT("accessDenied");
+        document.getElementById("heroSub").textContent = schoolAdminT("schoolAdminsOnly");
+        return;
+      }
+      if (overviewState === "error") {
+        document.getElementById("heroName").textContent = schoolAdminT("loadFailed");
+        return;
+      }
+      if (!d) return;
+      document.getElementById("heroName").removeAttribute("data-i18n");
+      document.getElementById("heroName").textContent = d.school || schoolAdminT("school");
+      document.getElementById("heroSub").textContent = (d.district || "") + (d.region ? ", " + d.region : "");
+      document.getElementById("heroAdmin").innerHTML = '<i data-lucide="shield-check"></i> ' + esc(schoolAdminT("adminLabel")) + ': ' + esc(((d.admin.first_name || "") + " " + (d.admin.last_name || "")).trim());
+
+      document.getElementById("statStudents").textContent = d.stats.total_students;
+      document.getElementById("statTop").textContent = d.stats.top_rating || "—";
+      document.getElementById("statAvg").textContent = d.stats.avg_rating || "—";
+      document.getElementById("statTourn").textContent = d.stats.active_tournaments;
+
+      var top = d.top_students || [];
+      var topBox = document.getElementById("topStudents");
+      if (top.length === 0) {
+        topBox.innerHTML = '<div class="empty-mini">' + esc(schoolAdminT("noStudents")) + '</div>';
+      } else {
+        topBox.innerHTML = top.map(function (s, i) {
+          var rcls = i === 0 ? "r1" : (i === 1 ? "r2" : (i === 2 ? "r3" : ""));
+          var name = (esc(s.first_name) + " " + esc(s.last_name || "")).trim();
+          return '<div class="top-row">' +
+            '<div class="top-rank ' + rcls + '">' + (i + 1) + '</div>' +
+            '<div class="top-ava">' + avatarHtml(s.first_name, s.profile_picture) + '</div>' +
+            '<div class="top-name">' + name + '<div class="top-cefr">' + (s.cefr_level || "—") + '</div></div>' +
+            '<div class="top-rating">' + (s.rating || 1000) + '</div>' +
+          '</div>';
+        }).join("");
+      }
+
+      var tp = document.getElementById("tournPanel");
+      var cnt = d.stats.active_tournaments;
+      if (cnt > 0) {
+        tp.innerHTML = '<div class="tourn-cta">' +
+          '<div class="tourn-cta-ic"><i data-lucide="trophy"></i></div>' +
+          '<div class="tourn-count">' + esc(schoolAdminT("activeTournamentCount", {count:cnt})) + '</div>' +
+          '<div class="tourn-cta-sub">' + esc(schoolAdminT("activeTournamentText")) + '</div>' +
+          '<button class="btn" onclick="window.location.href=\'/school-tournaments.html\'"><i data-lucide="users" style="width:16px;height:16px;"></i> ' + esc(schoolAdminT("goToTournaments")) + '</button>' +
+        '</div>';
+      } else {
+        tp.innerHTML = '<div class="tourn-cta">' +
+          '<div class="tourn-cta-ic"><i data-lucide="trophy"></i></div>' +
+          '<div class="tourn-cta-title">' + esc(schoolAdminT("noTournaments")) + '</div>' +
+          '<div class="tourn-cta-sub">' + esc(schoolAdminT("noTournamentsText")) + '</div>' +
+        '</div>';
+      }
+      lucide.createIcons();
+    }
+
     async function loadOverview() {
       try {
         var r = await authFetch("/school/overview");
         if (r.status === 403) {
-          document.getElementById("heroName").textContent = "Ruxsat yo'q";
-          document.getElementById("heroSub").textContent = "Bu sahifa faqat maktab adminlari uchun.";
+          overviewState = "forbidden";
+          renderOverview();
           return;
         }
         var d = await r.json();
-
-        // Hero
-        document.getElementById("heroName").textContent = d.school || "Maktab";
-        document.getElementById("heroSub").textContent = (d.district || "") + (d.region ? ", " + d.region : "");
-        document.getElementById("heroAdmin").innerHTML = '<i data-lucide="shield-check"></i> Admin: ' + esc(((d.admin.first_name || "") + " " + (d.admin.last_name || "")).trim());
-
-        // Stats
-        document.getElementById("statStudents").textContent = d.stats.total_students;
-        document.getElementById("statTop").textContent = d.stats.top_rating || "—";
-        document.getElementById("statAvg").textContent = d.stats.avg_rating || "—";
-        document.getElementById("statTourn").textContent = d.stats.active_tournaments;
-
-        // Top o'quvchilar
-        var top = d.top_students || [];
-        var topBox = document.getElementById("topStudents");
-        if (top.length === 0) {
-          topBox.innerHTML = '<div class="empty-mini">Hali o\'quvchi yo\'q</div>';
-        } else {
-          topBox.innerHTML = top.map(function (s, i) {
-            var rcls = i === 0 ? "r1" : (i === 1 ? "r2" : (i === 2 ? "r3" : ""));
-            var name = (esc(s.first_name) + " " + esc(s.last_name || "")).trim();
-            return '<div class="top-row">' +
-              '<div class="top-rank ' + rcls + '">' + (i + 1) + '</div>' +
-              '<div class="top-ava">' + avatarHtml(s.first_name, s.profile_picture) + '</div>' +
-              '<div class="top-name">' + name + '<div class="top-cefr">' + (s.cefr_level || "—") + '</div></div>' +
-              '<div class="top-rating">' + (s.rating || 1000) + '</div>' +
-            '</div>';
-          }).join("");
-        }
-
-        // Turnir paneli
-        var tp = document.getElementById("tournPanel");
-        var cnt = d.stats.active_tournaments;
-        if (cnt > 0) {
-          tp.innerHTML = '<div class="tourn-cta">' +
-            '<div class="tourn-cta-ic"><i data-lucide="trophy"></i></div>' +
-            '<div class="tourn-count">' + cnt + ' ta faol turnir</div>' +
-            '<div class="tourn-cta-sub">Maktabingiz qatnashishi mumkin bo\'lgan turnirlar bor. Jamoangizni tuzing!</div>' +
-            '<button class="btn" onclick="window.location.href=\'/school-tournaments.html\'"><i data-lucide="users" style="width:16px;height:16px;"></i> Turnirlarga o\'tish</button>' +
-          '</div>';
-        } else {
-          tp.innerHTML = '<div class="tourn-cta">' +
-            '<div class="tourn-cta-ic"><i data-lucide="trophy"></i></div>' +
-            '<div class="tourn-cta-title">Hozircha turnir yo\'q</div>' +
-            '<div class="tourn-cta-sub">Maktabingiz uchun faol turnir mavjud emas. Tez orada yangi turnirlar e\'lon qilinadi.</div>' +
-          '</div>';
-        }
-
-        lucide.createIcons();
+        overviewData = d;
+        overviewState = "ready";
+        renderOverview(d);
       } catch (e) {
-        document.getElementById("heroName").textContent = "Yuklab bo'lmadi";
+        overviewState = "error";
+        renderOverview();
       }
     }
+
+    window.addEventListener("ilmliga:languagechange", function () { renderOverview(overviewData); });
 
     loadOverview();
     lucide.createIcons();

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Imtihon</title>
+  <title data-i18n="examHub.metaTitle">Daraja imtihoni — IlmLiga</title>
+  <meta name="description" content="CEFR darajangizni oshirish uchun tayyorlik holati va daraja imtihonlarini ko‘ring." data-i18n-content="examHub.metaDescription">
   <link rel="stylesheet" href="/app.css">
   <style>
     .app { grid-template-columns: 230px 1fr 340px; max-width: 1680px; }
@@ -62,6 +63,54 @@
     .me-ready-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
     .me-start { width: 100%; justify-content: center; font-size: 16px; padding: 16px; }
 
+    @media (max-width: 640px) {
+      .me-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 20px;
+      }
+      .me-info,
+      .me-title,
+      .me-sub {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+      }
+      .me-body { padding: 20px; }
+      .me-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .me-meta-box,
+      .me-meta-v,
+      .me-meta-l {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+      }
+      .me-meta-box { padding: 12px 8px; }
+      .exam-row {
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .er-action {
+        width: 100%;
+        min-width: 0;
+      }
+      .er-locked-txt {
+        min-width: 0;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+      .er-action > .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
     /* Boshqa imtihonlar ro'yxati */
     .exam-row { display: flex; align-items: center; gap: 16px; padding: 18px; border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--border); background: var(--panel); transition: all 0.2s; }
     .exam-row:last-child { margin-bottom: 0; }
@@ -107,14 +156,14 @@
 
       <div class="page-head">
         <div class="crest-ic"><i data-lucide="graduation-cap"></i></div>
-        <div><h1>Imtihon</h1><p>O'z bilimingizni sinang va keyingi darajaga o'ting!</p></div>
+        <div><h1 data-i18n="examHub.heading">Imtihon</h1><p data-i18n="examHub.subtitle">O‘z bilimingizni sinang va keyingi darajaga o‘ting!</p></div>
       </div>
 
       <div class="cat-tabs">
-        <div class="cat-tab active"><i data-lucide="trending-up"></i> Daraja imtihonlari</div>
-        <div class="cat-tab soon"><i data-lucide="book-open"></i> Mavzu imtihonlari</div>
-        <div class="cat-tab soon"><i data-lucide="clipboard-check"></i> Simulyatsion</div>
-        <div class="cat-tab soon"><i data-lucide="bar-chart-3"></i> Natijalarim</div>
+        <div class="cat-tab active"><i data-lucide="trending-up"></i> <span data-i18n="examHub.levelExams">Daraja imtihonlari</span></div>
+        <div class="cat-tab soon"><i data-lucide="book-open"></i> <span data-i18n="examHub.topicExams">Mavzu imtihonlari</span></div>
+        <div class="cat-tab soon"><i data-lucide="clipboard-check"></i> <span data-i18n="examHub.simulation">Simulyatsion</span></div>
+        <div class="cat-tab soon"><i data-lucide="bar-chart-3"></i> <span data-i18n="examHub.myResults">Natijalarim</span></div>
       </div>
 
       <div class="card" style="padding:16px 20px; margin-bottom:18px;">
@@ -123,31 +172,31 @@
 
       <div class="card main-exam" id="mainExam"></div>
 
-      <div class="section-title">Boshqa daraja imtihonlari</div>
+      <div class="section-title" data-i18n="examHub.otherLevelExams">Boshqa daraja imtihonlari</div>
       <div id="otherExams"></div>
     </main>
 
     <aside class="rightbar">
       <div class="card rb-card">
-        <div class="rb-head"><span>Keyingi imtihon</span><span class="soon-badge" style="background:rgba(52,211,153,0.15);color:var(--green);border-color:rgba(52,211,153,0.3);">Tavsiya</span></div>
-        <div class="next-exam-box" id="nextExamBox"><div class="note-txt">Yuklanmoqda...</div></div>
+        <div class="rb-head"><span data-i18n="examHub.nextExam">Keyingi imtihon</span><span class="soon-badge" style="background:rgba(52,211,153,0.15);color:var(--green);border-color:rgba(52,211,153,0.3);" data-i18n="examHub.recommended">Tavsiya</span></div>
+        <div class="next-exam-box" id="nextExamBox"><div class="note-txt" data-i18n="examHub.loading">Yuklanmoqda...</div></div>
       </div>
 
       <div class="card rb-card">
-        <div class="rb-head"><span>Imtihon progressi</span><span class="soon-badge">Tez kunda</span></div>
-        <div class="note-txt">Har daraja bo'yicha tayyorlik foizi tez kunda shu yerda ko'rinadi.</div>
+        <div class="rb-head"><span data-i18n="examHub.examProgress">Imtihon progressi</span><span class="soon-badge" data-i18n="examHub.comingSoon">Tez kunda</span></div>
+        <div class="note-txt" data-i18n="examHub.progressComingSoon">Har daraja bo‘yicha tayyorlik foizi tez kunda shu yerda ko‘rinadi.</div>
       </div>
 
       <div class="card rb-card">
-        <div class="rb-head"><span>Oxirgi natijalarim</span><span class="soon-badge">Tez kunda</span></div>
-        <div class="note-txt">O'tgan imtihon natijalaringiz tez kunda shu yerda ko'rinadi.</div>
+        <div class="rb-head"><span data-i18n="examHub.recentResults">Oxirgi natijalarim</span><span class="soon-badge" data-i18n="examHub.comingSoon">Tez kunda</span></div>
+        <div class="note-txt" data-i18n="examHub.resultsComingSoon">O‘tgan imtihon natijalaringiz tez kunda shu yerda ko‘rinadi.</div>
       </div>
 
       <div class="card rb-card">
-        <div class="rb-head"><span>Tayyorlanish maslahatlari</span></div>
-        <div class="tip-row"><i data-lucide="check-circle"></i> Muntazam janglar o'ynang — bilimingizni mustahkamlaydi.</div>
-        <div class="tip-row"><i data-lucide="target"></i> Aniqlikni oshiring — har savolga diqqat bilan javob bering.</div>
-        <div class="tip-row"><i data-lucide="repeat"></i> Xatolaringiz ustida ishlang — tarix sahifasini ko'ring.</div>
+        <div class="rb-head"><span data-i18n="examHub.preparationTips">Tayyorlanish maslahatlari</span></div>
+        <div class="tip-row"><i data-lucide="check-circle"></i> <span data-i18n="examHub.tipBattles">Muntazam janglar o‘ynang — bilimingizni mustahkamlaydi.</span></div>
+        <div class="tip-row"><i data-lucide="target"></i> <span data-i18n="examHub.tipAccuracy">Aniqlikni oshiring — har savolga diqqat bilan javob bering.</span></div>
+        <div class="tip-row"><i data-lucide="repeat"></i> <span data-i18n="examHub.tipMistakes">Xatolaringiz ustida ishlang — tarix sahifasini ko‘ring.</span></div>
       </div>
     </aside>
   </div>
@@ -155,8 +204,13 @@
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script>
+    function examT(key, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+    }
+
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
     const user = JSON.parse(userData);
@@ -168,6 +222,8 @@
     const allLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
     // Hozir faqat A1, A2 darajada savollar bor (imtihon ishlaydi). B1+ keyin.
     const availableLevels = ["A1", "A2"];
+    let latestExamStatus = null;
+    let latestCurrentLevel = "A1";
 
     async function loadExamHub() {
       let status = null;
@@ -186,6 +242,9 @@
         freshUser.cefr_level ||
         user.cefr_level ||
         "A1";
+
+      latestExamStatus = status;
+      latestCurrentLevel = currentLevel;
 
       renderLevelFilter(currentLevel);
       renderMainExam(status, currentLevel);
@@ -211,7 +270,7 @@
       const prog = status && status.progress;
 
       if (!nextLevel) {
-        box.innerHTML = '<div class="me-body" style="text-align:center;padding:40px;"><div class="note-txt">Siz eng yuqori darajadasiz! 🎉</div></div>';
+        box.innerHTML = '<div class="me-body" style="text-align:center;padding:40px;"><div class="note-txt">' + examT("examHub.highestLevel") + '</div></div>';
         return;
       }
 
@@ -219,39 +278,39 @@
       if (eligible) {
         readyHtml =
           '<div class="me-ready ok"><i data-lucide="check-circle"></i>' +
-            '<div><div class="me-ready-txt">Siz imtihonga tayyorsiz!</div>' +
-            '<div class="me-ready-sub">Hamma shartlar bajarilgan. Omad!</div></div></div>' +
-          '<button class="btn btn-primary me-start" onclick="window.location.href=\'/exam-room.html\'"><i data-lucide="play" style="width:18px;height:18px;"></i> Imtihonga kirish</button>';
+            '<div><div class="me-ready-txt">' + examT("examHub.readyTitle") + '</div>' +
+            '<div class="me-ready-sub">' + examT("examHub.readySubtitle") + '</div></div></div>' +
+          '<button class="btn btn-primary me-start" onclick="window.location.href=\'/exam-room.html\'"><i data-lucide="play" style="width:18px;height:18px;"></i> ' + examT("examHub.enterExam") + '</button>';
       } else {
-        let reason = "Imtihon hali ochilmagan.";
+        let reason = examT("examHub.notOpenYet");
         if (prog) {
           const bOk = prog.battles >= prog.battles_required;
           const aOk = prog.accuracy >= prog.accuracy_required;
-          reason = "Janglar: " + prog.battles + "/" + prog.battles_required + (bOk ? " ✓" : "") +
-                   " · Aniqlik: " + prog.accuracy + "%/" + prog.accuracy_required + "%" + (aOk ? " ✓" : "");
+          reason = examT("examHub.battlesProgress", { current: prog.battles, required: prog.battles_required }) + (bOk ? " ✓" : "") +
+                   " · " + examT("examHub.accuracyProgress", { current: prog.accuracy, required: prog.accuracy_required }) + (aOk ? " ✓" : "");
         }
         readyHtml =
           '<div class="me-ready no"><i data-lucide="alert-circle"></i>' +
-            '<div><div class="me-ready-txt">Siz hali tayyor emassiz</div>' +
+            '<div><div class="me-ready-txt">' + examT("examHub.notReadyTitle") + '</div>' +
             '<div class="me-ready-sub">' + reason + '</div></div></div>' +
-          '<button class="btn btn-ghost me-start" onclick="window.location.href=\'/lobby.html\'"><i data-lucide="swords" style="width:18px;height:18px;"></i> Tayyorlanishni davom ettirish</button>';
+          '<button class="btn btn-ghost me-start" onclick="window.location.href=\'/lobby.html\'"><i data-lucide="swords" style="width:18px;height:18px;"></i> ' + examT("examHub.continuePreparation") + '</button>';
       }
 
       box.innerHTML =
         '<div class="me-top">' +
           '<div class="me-badge">' + currentLevel + '</div>' +
           '<div class="me-info">' +
-            '<div class="me-title">' + currentLevel + ' Daraja Imtihoni</div>' +
-            '<div class="me-sub">' + currentLevel + ' dan ' + nextLevel + ' darajaga o\'tish uchun yakuniy imtihon.</div>' +
-            (eligible ? '<div class="me-rec">Tavsiya etilgan</div>' : '') +
+            '<div class="me-title">' + examT("examHub.levelExamTitle", { level: currentLevel }) + '</div>' +
+            '<div class="me-sub">' + examT("examHub.finalExamTransition", { current: currentLevel, next: nextLevel }) + '</div>' +
+            (eligible ? '<div class="me-rec">' + examT("examHub.recommendedFull") + '</div>' : '') +
           '</div>' +
         '</div>' +
         '<div class="me-body">' +
           '<div class="me-meta">' +
-            '<div class="me-meta-box"><i data-lucide="list-checks" class="me-meta-ic"></i><div class="me-meta-v">20</div><div class="me-meta-l">Savol</div></div>' +
-            '<div class="me-meta-box"><i data-lucide="clock" class="me-meta-ic"></i><div class="me-meta-v">30s</div><div class="me-meta-l">Har savol</div></div>' +
-            '<div class="me-meta-box"><i data-lucide="target" class="me-meta-ic"></i><div class="me-meta-v">75%</div><div class="me-meta-l">O\'tish</div></div>' +
-            '<div class="me-meta-box"><i data-lucide="layers" class="me-meta-ic"></i><div class="me-meta-v">4</div><div class="me-meta-l">Mavzu</div></div>' +
+            '<div class="me-meta-box"><i data-lucide="list-checks" class="me-meta-ic"></i><div class="me-meta-v">20</div><div class="me-meta-l">' + examT("examHub.questions") + '</div></div>' +
+            '<div class="me-meta-box"><i data-lucide="clock" class="me-meta-ic"></i><div class="me-meta-v">30s</div><div class="me-meta-l">' + examT("examHub.perQuestion") + '</div></div>' +
+            '<div class="me-meta-box"><i data-lucide="target" class="me-meta-ic"></i><div class="me-meta-v">75%</div><div class="me-meta-l">' + examT("examHub.passMark") + '</div></div>' +
+            '<div class="me-meta-box"><i data-lucide="layers" class="me-meta-ic"></i><div class="me-meta-v">4</div><div class="me-meta-l">' + examT("examHub.topics") + '</div></div>' +
           '</div>' +
           readyHtml +
         '</div>';
@@ -270,9 +329,9 @@
           rows.push(
             '<div class="exam-row">' +
               '<div class="er-badge">' + lv + '</div>' +
-              '<div class="er-info"><div class="er-title">' + lv + ' Daraja Imtihoni</div>' +
-                '<div class="er-sub">' + lv + ' dan ' + nextLv + ' darajaga o\'tish.</div></div>' +
-              '<div class="er-action"><button class="btn btn-ghost" onclick="window.location.href=\'/lobby.html\'">Tayyorlanish</button></div>' +
+              '<div class="er-info"><div class="er-title">' + examT("examHub.levelExamTitle", { level: lv }) + '</div>' +
+                '<div class="er-sub">' + examT("examHub.levelTransition", { current: lv, next: nextLv }) + '</div></div>' +
+              '<div class="er-action"><button class="btn btn-ghost" onclick="window.location.href=\'/lobby.html\'">' + examT("examHub.prepare") + '</button></div>' +
             '</div>'
           );
         } else {
@@ -280,32 +339,32 @@
           rows.push(
             '<div class="exam-row locked">' +
               '<div class="er-badge lk">' + lv + '</div>' +
-              '<div class="er-info"><div class="er-title">' + lv + ' Daraja Imtihoni</div>' +
-                '<div class="er-sub">' + lv + ' dan ' + nextLv + ' darajaga o\'tish.</div></div>' +
-              '<div class="er-action"><span class="er-locked-txt"><i data-lucide="lock"></i> ' + (prevLv || "Oldingi") + ' imtihonini topshiring</span></div>' +
+              '<div class="er-info"><div class="er-title">' + examT("examHub.levelExamTitle", { level: lv }) + '</div>' +
+                '<div class="er-sub">' + examT("examHub.levelTransition", { current: lv, next: nextLv }) + '</div></div>' +
+              '<div class="er-action"><span class="er-locked-txt"><i data-lucide="lock"></i> ' + examT("examHub.completePrevious", { level: prevLv || examT("examHub.previous") }) + '</span></div>' +
             '</div>'
           );
         }
       });
-      box.innerHTML = rows.join("") || '<div class="note-txt" style="padding:16px;">Boshqa imtihon yo\'q.</div>';
+      box.innerHTML = rows.join("") || '<div class="note-txt" style="padding:16px;">' + examT("examHub.noOtherExams") + '</div>';
     }
 
     function renderNextExam(status, currentLevel) {
       const box = document.getElementById("nextExamBox");
       const nextLevel = (status && status.next_level) || nextOf(currentLevel);
       if (!nextLevel) {
-        box.innerHTML = '<div class="note-txt">Eng yuqori darajadasiz! 🎉</div>';
+        box.innerHTML = '<div class="note-txt">' + examT("examHub.highestLevelShort") + '</div>';
         return;
       }
       const eligible = status && status.eligible;
       box.innerHTML =
         '<div class="next-badge">' + currentLevel + '</div>' +
-        '<div class="next-title">' + currentLevel + ' Daraja Imtihoni</div>' +
-        '<div class="next-sub">' + currentLevel + ' → ' + nextLevel + ' darajaga o\'tish</div>' +
-        '<div class="next-meta"><span><b>20</b> savol</span><span><b>~10</b> daqiqa</span></div>' +
+        '<div class="next-title">' + examT("examHub.levelExamTitle", { level: currentLevel }) + '</div>' +
+        '<div class="next-sub">' + examT("examHub.levelTransition", { current: currentLevel, next: nextLevel }) + '</div>' +
+        '<div class="next-meta"><span><b>20</b> ' + examT("examHub.questionsLower") + '</span><span><b>~10</b> ' + examT("examHub.minutes") + '</span></div>' +
         (eligible
-          ? '<button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="window.location.href=\'/exam-room.html\'"><i data-lucide="play" style="width:16px;height:16px;"></i> Hozir boshlash</button>'
-          : '<button class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="window.location.href=\'/lobby.html\'">Tayyorgarlikni davom ettirish</button>');
+          ? '<button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="window.location.href=\'/exam-room.html\'"><i data-lucide="play" style="width:16px;height:16px;"></i> ' + examT("examHub.startNow") + '</button>'
+          : '<button class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="window.location.href=\'/lobby.html\'">' + examT("examHub.continuePreparation") + '</button>');
     }
 
     function nextOf(level) {
@@ -323,6 +382,13 @@
         user.cefr_level = fresh.cefr_level;
         loadExamHub(); // yangi daraja bilan qayta render
       }
+    });
+    window.addEventListener("ilmliga:languagechange", function () {
+      renderLevelFilter(latestCurrentLevel);
+      renderMainExam(latestExamStatus, latestCurrentLevel);
+      renderOtherExams(latestCurrentLevel);
+      renderNextExam(latestExamStatus, latestCurrentLevel);
+      lucide.createIcons();
     });
     lucide.createIcons();
   </script>

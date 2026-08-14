@@ -233,20 +233,20 @@
     <div class="main">
       <header class="topbar">
         <div class="tb-head">
-          <h1>Natijalar</h1>
-          <p>Topshiriqlar va imtihonlar natijalarini tahlil qiling</p>
+          <h1 data-i18n="teacher.results.heading">Natijalar</h1>
+          <p data-i18n="teacher.results.subtitle">Topshiriqlar va imtihonlar natijalarini tahlil qiling</p>
         </div>
-        <div class="tb-year" onclick="comingSoon('O\'quv yili')">
+        <div class="tb-year" onclick="comingSoonKey('teacher.dashboard.academicYear')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          2024–2025 O'quv yili
+          2024–2025 <span data-i18n="teacher.dashboard.academicYear">O'quv yili</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <button class="theme-toggle" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
-        <button class="tb-icon-btn" onclick="comingSoon('Bildirishnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
+        <button class="theme-toggle" onclick="toggleTheme()" data-i18n-title="teacher.dashboard.changeTheme" data-i18n-aria-label="teacher.dashboard.changeTheme"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
+        <button class="tb-icon-btn" onclick="comingSoonKey('topbar.notifications')" data-i18n-title="topbar.notifications" data-i18n-aria-label="topbar.notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dot">3</span></button>
         <div class="tb-user" onclick="window.location.href='/profile.html'">
           <div class="tb-user-info">
             <div class="tb-user-name" id="userName">O'qituvchi</div>
-            <div class="tb-user-role">Teacher</div>
+            <div class="tb-user-role" data-i18n="teacher.dashboard.role">O‘qituvchi</div>
           </div>
           <div class="tb-avatar" id="userAvatar">T</div>
         </div>
@@ -257,71 +257,71 @@
           <!-- Filtrlar qatori -->
           <div class="filter-row">
             <div class="filter-group">
-              <label>Topshiriq</label>
-              <div class="filter-input wide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><select id="selAssignment" onchange="onAssignmentChange(this.value)"><option value="">Topshiriq tanlang...</option></select></div>
+              <label data-i18n="teacher.results.assignment">Topshiriq</label>
+              <div class="filter-input wide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><select id="selAssignment" onchange="onAssignmentChange(this.value)"><option value="" data-i18n="teacher.results.selectAssignment">Topshiriq tanlang...</option></select></div>
             </div>
             <div class="filter-group">
-              <label>Sinf</label>
-              <div class="filter-input"><select id="selClass" onchange="showToast('Topshiriq tanlash orqali filtrlang')"><option>Barcha sinflar</option></select></div>
+              <label data-i18n="teacher.results.class">Sinf</label>
+              <div class="filter-input"><select id="selClass" onchange="showResultsToast('teacher.results.classFilterHint')"><option data-i18n="teacher.results.allClasses">Barcha sinflar</option></select></div>
             </div>
             <div class="filter-group">
-              <label>O'quvchilar</label>
-              <div class="filter-input"><select onchange="comingSoon('O\'quvchi filtri')"><option>Barcha o'quvchilar</option></select></div>
+              <label data-i18n="teacher.results.students">O'quvchilar</label>
+              <div class="filter-input"><select onchange="comingSoonKey('teacher.results.studentFilter')"><option data-i18n="teacher.results.allStudents">Barcha o'quvchilar</option></select></div>
             </div>
             <div class="filter-group">
-              <label>Sana oralig'i</label>
-              <div class="filter-input" onclick="showToast('Sana bo\'yicha filtr tez orada')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span style="color:var(--text-dim)">Sana tanlang</span></div>
+              <label data-i18n="teacher.results.dateRange">Sana oralig'i</label>
+              <div class="filter-input" onclick="showResultsToast('teacher.results.dateFilterSoon')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span style="color:var(--text-dim)" data-i18n="teacher.results.selectDate">Sana tanlang</span></div>
             </div>
             <div class="filter-group">
               <label>&nbsp;</label>
-              <button class="btn-export" onclick="exportResultsCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
+              <button class="btn-export" onclick="exportResultsCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> <span data-i18n="teacher.results.export">Eksport</span></button>
             </div>
           </div>
 
           <!-- 6 statistika -->
           <div class="stats-row">
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><span class="stat-label">Jami o'quvchilar</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><span class="stat-label" data-i18n="teacher.results.totalStudents">Jami o'quvchilar</span></div>
               <div class="stat-val" id="stTotal">0</div>
-              <div class="stat-sub">Barchasi</div>
+              <div class="stat-sub" data-i18n="teacher.results.all">Barchasi</div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span class="stat-label">O'rtacha natija</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><span class="stat-label" data-i18n="teacher.results.averageResult">O'rtacha natija</span></div>
               <div class="stat-val" id="stAvg">—</div>
-              <div class="stat-sub up">Ushbu topshiriq</div>
+              <div class="stat-sub up" data-i18n="teacher.results.thisAssignment">Ushbu topshiriq</div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg></div><span class="stat-label">Yuqori natija</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg></div><span class="stat-label" data-i18n="teacher.results.topResult">Yuqori natija</span></div>
               <div class="stat-val" id="stTop">—</div>
               <div class="stat-sub" id="stTopName">—</div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 15h8M9.5 9h.01M14.5 9h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div><span class="stat-label">Quyi natija</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 15h8M9.5 9h.01M14.5 9h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div><span class="stat-label" data-i18n="teacher.results.lowResult">Quyi natija</span></div>
               <div class="stat-val" id="stLow">—</div>
               <div class="stat-sub" id="stLowName">—</div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><span class="stat-label">Topshirganlar</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--primary-soft);color:var(--primary)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><span class="stat-label" data-i18n="teacher.results.submitted">Topshirganlar</span></div>
               <div class="stat-val" id="stSubmitted">0</div>
-              <div class="stat-sub">Topshirilish darajasi</div>
+              <div class="stat-sub" data-i18n="teacher.results.submissionRate">Topshirilish darajasi</div>
             </div>
             <div class="stat">
-              <div class="stat-top"><div class="stat-ic" style="background:var(--red-soft);color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="stat-label">Muddatdan kechikkan</span></div>
+              <div class="stat-top"><div class="stat-ic" style="background:var(--red-soft);color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="stat-label" data-i18n="teacher.results.late">Muddatdan kechikkan</span></div>
               <div class="stat-val" id="stLate">0</div>
-              <div class="stat-sub">Kechikkanlar</div>
+              <div class="stat-sub" data-i18n="teacher.results.lateStudents">Kechikkanlar</div>
             </div>
           </div>
 
           <!-- Tab'lar + jadval -->
           <div class="panel">
             <div class="tabs-bar">
-              <button class="tab active" id="tabStudents" onclick="switchTab('students')">O'quvchilar bo'yicha</button>
-              <button class="tab" id="tabQuestions" onclick="switchTab('questions')">Savollar bo'yicha</button>
-              <button class="tab" id="tabSkills" onclick="switchTab('skills')">Ko'nikmalar bo'yicha</button>
-              <button class="tab" id="tabAnalytics" onclick="switchTab('analytics')">O'quv diagnostikasi</button>
+              <button class="tab active" id="tabStudents" onclick="switchTab('students')" data-i18n="teacher.results.byStudents">O'quvchilar bo'yicha</button>
+              <button class="tab" id="tabQuestions" onclick="switchTab('questions')" data-i18n="teacher.results.byQuestions">Savollar bo'yicha</button>
+              <button class="tab" id="tabSkills" onclick="switchTab('skills')" data-i18n="teacher.results.bySkills">Ko'nikmalar bo'yicha</button>
+              <button class="tab" id="tabAnalytics" onclick="switchTab('analytics')" data-i18n="teacher.results.learningDiagnostics">O'quv diagnostikasi</button>
               <div class="tabs-spacer"></div>
-              <div class="tab-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="searchInput" type="text" placeholder="O'quvchi nomi..." oninput="onSearch(this.value)" /></div>
-              <button class="tab-filter" onclick="showToast('Qo\'shimcha filtrlar tez orada')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filtr</button>
+              <div class="tab-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="searchInput" type="text" placeholder="O'quvchi nomi..." data-i18n-placeholder="teacher.results.studentSearch" oninput="onSearch(this.value)" /></div>
+              <button class="tab-filter" onclick="showResultsToast('teacher.results.moreFiltersSoon')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> <span data-i18n="teacher.results.filter">Filtr</span></button>
             </div>
             <div id="resultArea">
               <div class="skeleton-bar"></div><div class="skeleton-bar"></div><div class="skeleton-bar"></div>
@@ -329,23 +329,23 @@
             <div class="pager" id="pager" style="display:none">
               <div class="pager-info" id="pagerInfo"></div>
               <div class="pager-nav" id="pagerNav"></div>
-              <div class="pager-size">Har sahifada: <select id="pageSize" onchange="changePageSize(this.value)"><option>10</option><option>20</option><option>50</option></select></div>
+              <div class="pager-size"><span data-i18n="teacher.results.perPage">Har sahifada:</span> <select id="pageSize" onchange="changePageSize(this.value)"><option>10</option><option>20</option><option>50</option></select></div>
             </div>
           </div>
 
           <!-- Pastki 3 panel -->
           <div class="bottom-row">
             <div class="b-card">
-              <div class="b-head"><h3>Natijalar trendi</h3><div class="b-sel" onclick="comingSoon('Ko\'rsatkich')">O'rtacha natija <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div></div>
-              <div id="trendArea"><div class="chart-empty">Topshiriq tanlanганда<br>trend ko'rsatiladi.</div></div>
+              <div class="b-head"><h3 data-i18n="teacher.results.trend">Natijalar trendi</h3><div class="b-sel" onclick="comingSoonKey('teacher.results.metric')"><span data-i18n="teacher.results.averageResult">O'rtacha natija</span> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+              <div id="trendArea"><div class="chart-empty" data-i18n="teacher.results.trendPlaceholder">Topshiriq tanlanganda trend ko'rsatiladi.</div></div>
             </div>
             <div class="b-card">
-              <div class="b-head"><h3>Ko'nikmalar bo'yicha natijalar</h3></div>
-              <div id="skillsArea"><div class="chart-empty">Ma'lumot yo'q</div></div>
+              <div class="b-head"><h3 data-i18n="teacher.results.skillsResults">Ko'nikmalar bo'yicha natijalar</h3></div>
+              <div id="skillsArea"><div class="chart-empty" data-i18n="teacher.results.noData">Ma'lumot yo'q</div></div>
             </div>
             <div class="b-card">
-              <div class="b-head"><h3>Savollar qiyinlik darajasi</h3></div>
-              <div id="difficultyArea"><div class="chart-empty">Ma'lumot yo'q</div></div>
+              <div class="b-head"><h3 data-i18n="teacher.results.questionDifficulty">Savollar qiyinlik darajasi</h3></div>
+              <div id="difficultyArea"><div class="chart-empty" data-i18n="teacher.results.noData">Ma'lumot yo'q</div></div>
             </div>
           </div>
         </div>
@@ -353,20 +353,20 @@
         <!-- O'ng panel -->
         <div class="col-side">
           <div class="side-card">
-            <div class="side-head"><h3>Natijalar taqsimoti</h3></div>
-            <div id="distArea"><div class="chart-empty">Topshiriq tanlang</div></div>
+            <div class="side-head"><h3 data-i18n="teacher.results.distribution">Natijalar taqsimoti</h3></div>
+            <div id="distArea"><div class="chart-empty" data-i18n="teacher.results.selectAssignmentShort">Topshiriq tanlang</div></div>
           </div>
 
           <div class="side-card">
-            <div class="side-head"><h3>Sinf bo'yicha taqqoslash</h3></div>
-            <div id="classCmpArea"><div class="state-msg" style="padding:14px 0">Ma'lumot yo'q</div></div>
-            <button class="btn-block" onclick="window.location.href='/teacher-classes.html'">Sinflarni taqqoslash →</button>
+            <div class="side-head"><h3 data-i18n="teacher.results.classComparison">Sinf bo'yicha taqqoslash</h3></div>
+            <div id="classCmpArea"><div class="state-msg" style="padding:14px 0" data-i18n="teacher.results.noData">Ma'lumot yo'q</div></div>
+            <button class="btn-block" onclick="window.location.href='/teacher-classes.html'" data-i18n="teacher.results.compareClasses">Sinflarni taqqoslash →</button>
           </div>
 
           <div class="side-card">
-            <div class="side-head"><h3>Tezkor tahlil</h3></div>
-            <div class="tip-item"><div class="tip-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="tip-txt">Topshiriq tanlab, o'quvchilar natijalarini ko'ring. AI tahlil zaif va kuchli tomonlarni aniqlaydi.</div></div>
-            <button class="btn-block ai" onclick="window.location.href='/teacher-ai.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>AI tahlil olish</button>
+            <div class="side-head"><h3 data-i18n="teacher.results.quickAnalysis">Tezkor tahlil</h3></div>
+            <div class="tip-item"><div class="tip-ic" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="tip-txt" data-i18n="teacher.results.quickAnalysisText">Topshiriq tanlab, o'quvchilar natijalarini ko'ring. AI tahlil zaif va kuchli tomonlarni aniqlaydi.</div></div>
+            <button class="btn-block ai" onclick="window.location.href='/teacher-ai.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg><span data-i18n="teacher.results.getAiAnalysis">AI tahlil olish</span></button>
           </div>
         </div>
       </div>
@@ -379,6 +379,7 @@
   <script src="/api.js"></script>
   <script src="/payment-modal.js"></script>
   <script src="/premium-modal.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/teacher-sidebar.js"></script>
   <script src="/teacher-learning-analytics.js"></script>
   <script>
@@ -403,7 +404,25 @@
         : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>';
     }
 
-    function comingSoon(name) { showToast((name ? name + ": " : "") + "tez orada tayyor bo'ladi"); }
+    function resultsT(key, fallback, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : fallback;
+    }
+    function resultsSkillLabel(skill) {
+      var labels = {
+        mixed: ["teacher.results.skillMixed", "Aralash"],
+        reading: ["teacher.classDetail.skillReading", "O'qish"],
+        grammar: ["teacher.classDetail.skillGrammar", "Grammatika"],
+        vocabulary: ["teacher.classDetail.skillVocabulary", "Lug'at"],
+        listening: ["teacher.classDetail.skillListening", "Tinglash"],
+        speaking: ["teacher.classDetail.skillSpeaking", "Gapirish"],
+        writing: ["teacher.classDetail.skillWriting", "Yozish"],
+      };
+      var item = labels[String(skill || "mixed").toLowerCase()] || labels.mixed;
+      return resultsT(item[0], item[1]);
+    }
+    function comingSoon(name) { showToast(resultsT("nav.comingSoonMessage", "{name}: tez orada tayyor bo'ladi", { name: name || "" })); }
+    function comingSoonKey(key) { comingSoon(resultsT(key, key)); }
+    function showResultsToast(key, params) { showToast(resultsT(key, key, params)); }
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     function showToast(text) { var t = document.getElementById("toast"); t.textContent = text; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2600); }
     function fmtTime(sec) {
@@ -421,9 +440,10 @@
       if (R[user.role]) window.location.href = R[user.role];
     }
     renderTeacherSidebar("results");
+    document.title = resultsT("teacher.results.pageTitle", "Natijalar — English Battle");
 
     var fn = user.first_name || "", ln = user.last_name || "";
-    document.getElementById("userName").textContent = (fn + " " + ln).trim() || "O'qituvchi";
+    document.getElementById("userName").textContent = (fn + " " + ln).trim() || resultsT("teacher.classDetail.teacherFallback", "O'qituvchi");
     document.getElementById("userAvatar").textContent = (fn || "T").charAt(0).toUpperCase();
 
     var AV_COLORS = ["#2f6bff", "#16b06a", "#7c5cfc", "#f59e0b", "#06b6d4", "#ef4655"];
@@ -436,6 +456,8 @@
     var teacherAnalyticsData = null;
     var rows = [], filtered = [], page = 1, pageSize = 10;
     var currentAssignmentId = null;
+    var assignmentList = [];
+    var lastDistribution = [], lastClassComparison = [];
 
     // ===== TOPSHIRIQLAR RO'YXATINI YUKLASH (dropdown) =====
     async function loadAssignmentList() {
@@ -443,22 +465,29 @@
         var res = await authFetch("/teacher/assignments");
         if (!res.ok) { showNoAssignments(); return; }
         var data = await res.json();
-        var list = data.assignments || [];
-        if (!list.length) { showNoAssignments(); return; }
+        assignmentList = data.assignments || [];
+        if (!assignmentList.length) { showNoAssignments(); return; }
+        renderAssignmentOptions();
         var sel = document.getElementById("selAssignment");
-        sel.innerHTML = '<option value="">Topshiriq tanlang...</option>' + list.map(function (a) {
+        // Birinchi topshiriqni avtomatik tanlaymiz
+        if (assignmentList[0]) { sel.value = assignmentList[0].id; onAssignmentChange(assignmentList[0].id); }
+      } catch (e) { showNoAssignments(); }
+    }
+
+    function renderAssignmentOptions() {
+      var sel = document.getElementById("selAssignment");
+      var current = sel.value || currentAssignmentId || "";
+      sel.innerHTML = '<option value="">' + esc(resultsT("teacher.results.selectAssignment", "Topshiriq tanlang...")) + '</option>' + assignmentList.map(function (a) {
           return '<option value="' + a.id + '">' + esc(a.title) + (a.class_name ? " — " + esc(a.class_name) : "") + '</option>';
         }).join("");
-        // Birinchi topshiriqni avtomatik tanlaymiz
-        if (list[0]) { sel.value = list[0].id; onAssignmentChange(list[0].id); }
-      } catch (e) { showNoAssignments(); }
+      if (Array.prototype.some.call(sel.options, function (option) { return String(option.value) === String(current); })) sel.value = current;
     }
 
     function showNoAssignments() {
       document.getElementById("resultArea").innerHTML =
         '<div class="empty-state"><div class="empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>' +
-        '<div class="empty-title">Hali natija yo\'q</div>' +
-        '<div class="empty-text">Topshiriq yoki imtihon yarating. O\'quvchilar topshirgach, natijalar shu yerda batafsil tahlil bilan ko\'rinadi.</div></div>';
+        '<div class="empty-title">' + esc(resultsT("teacher.results.noAssignmentsTitle", "Hali natija yo'q")) + '</div>' +
+        '<div class="empty-text">' + esc(resultsT("teacher.results.noAssignmentsText", "Topshiriq yoki imtihon yarating. O'quvchilar topshirgach, natijalar shu yerda batafsil tahlil bilan ko'rinadi.")) + '</div></div>';
       document.getElementById("pager").style.display = "none";
     }
 
@@ -469,7 +498,7 @@
       document.getElementById("resultArea").innerHTML = '<div class="skeleton-bar"></div><div class="skeleton-bar"></div><div class="skeleton-bar"></div>';
       try {
         var res = await authFetch("/teacher/results/" + id);
-        if (!res.ok) { document.getElementById("resultArea").innerHTML = '<div class="state-msg">Natijalarni yuklab bo\'lmadi.</div>'; return; }
+        if (!res.ok) { document.getElementById("resultArea").innerHTML = '<div class="state-msg">' + esc(resultsT("teacher.results.loadFailed", "Natijalarni yuklab bo'lmadi.")) + '</div>'; return; }
         var data = await res.json();
         rows = data.students || [];
         filtered = rows.slice();
@@ -479,12 +508,14 @@
         teacherAnalyticsData = data.teacher_analytics || null;
         renderStats(data.stats || {});
         switchTab(currentTab); // joriy tab'ni qayta chizadi (yangi ma'lumot bilan)
-        renderDist(data.distribution || []);
-        renderClassCmp(data.class_comparison || []);
+        lastDistribution = data.distribution || [];
+        lastClassComparison = data.class_comparison || [];
+        renderDist(lastDistribution);
+        renderClassCmp(lastClassComparison);
         renderSkills(skillsData);
         renderDifficulty(difficultyData);
       } catch (e) {
-        document.getElementById("resultArea").innerHTML = '<div class="state-msg">Xatolik yuz berdi.</div>';
+        document.getElementById("resultArea").innerHTML = '<div class="state-msg">' + esc(resultsT("teacher.results.genericError", "Xatolik yuz berdi.")) + '</div>';
       }
     }
 
@@ -515,15 +546,14 @@
     function renderQuestionsTab() {
       var area = document.getElementById("resultArea");
       if (!questionsData.length) {
-        area.innerHTML = '<div class="state-msg">Bu topshiriq bo\'yicha savol tahlili uchun hali javoblar yo\'q.</div>';
+        area.innerHTML = '<div class="state-msg">' + esc(resultsT("teacher.results.questionsNoData", "Bu topshiriq bo'yicha savol tahlili uchun hali javoblar yo'q.")) + '</div>';
         return;
       }
-      var SKILL_LABEL = { reading: "Reading", grammar: "Grammar", vocabulary: "Vocabulary", listening: "Listening", speaking: "Speaking", writing: "Writing", mixed: "Aralash" };
       var body = questionsData.map(function (q) {
         var rate = q.correct_rate != null ? q.correct_rate : 0;
         var rateColor = rate >= 75 ? "var(--green)" : rate >= 50 ? "var(--amber)" : "var(--red)";
-        var qText = (q.question_text || "").length > 80 ? (q.question_text || "").slice(0, 80) + "…" : (q.question_text || "Savol " + q.q_order);
-        var skillChip = q.skill ? '<span class="chip ' + (q.skill || "").toLowerCase() + '">' + esc(SKILL_LABEL[(q.skill || "").toLowerCase()] || q.skill) + '</span>' : '';
+        var qText = (q.question_text || "").length > 80 ? (q.question_text || "").slice(0, 80) + "…" : (q.question_text || resultsT("teacher.results.questionFallback", "Savol {number}", { number: q.q_order }));
+        var skillChip = q.skill ? '<span class="chip ' + (q.skill || "").toLowerCase() + '">' + esc(resultsSkillLabel(q.skill)) + '</span>' : '';
         return '<tr>' +
           '<td><span class="rs-num">' + q.q_order + '</span></td>' +
           '<td><div style="max-width:400px"><div style="font-size:13.5px;font-weight:600;line-height:1.4">' + esc(qText) + '</div>' + (skillChip ? '<div style="margin-top:6px">' + skillChip + '</div>' : '') + '</div></td>' +
@@ -533,7 +563,7 @@
         '</tr>';
       }).join("");
       area.innerHTML = '<div class="table-wrap"><table class="rs-table"><thead><tr>' +
-        '<th>#</th><th>Savol</th><th>To\'g\'ri javob</th><th>Xato javob</th><th>To\'g\'rilik darajasi</th>' +
+        '<th>#</th><th>' + esc(resultsT("teacher.results.question", "Savol")) + '</th><th>' + esc(resultsT("teacher.results.correctAnswer", "To'g'ri javob")) + '</th><th>' + esc(resultsT("teacher.results.wrongAnswer", "Xato javob")) + '</th><th>' + esc(resultsT("teacher.results.accuracy", "To'g'rilik darajasi")) + '</th>' +
         '</tr></thead><tbody>' + body + '</tbody></table></div>';
     }
 
@@ -541,10 +571,9 @@
     function renderSkillsTab() {
       var area = document.getElementById("resultArea");
       if (!skillsData.length) {
-        area.innerHTML = '<div class="state-msg">Bu topshiriq bo\'yicha ko\'nikma tahlili uchun hali javoblar yo\'q.</div>';
+        area.innerHTML = '<div class="state-msg">' + esc(resultsT("teacher.results.skillsNoData", "Bu topshiriq bo'yicha ko'nikma tahlili uchun hali javoblar yo'q.")) + '</div>';
         return;
       }
-      var SKILL_LABEL = { reading: "Reading", grammar: "Grammar", vocabulary: "Vocabulary", listening: "Listening", speaking: "Speaking", writing: "Writing", mixed: "Aralash" };
       var SKILL_ICON = {
         reading: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
         grammar: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>',
@@ -559,7 +588,7 @@
         return '<div style="margin-bottom:22px">' +
           '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">' +
             '<div style="width:38px;height:38px;border-radius:10px;background:var(--bg-soft);display:grid;place-items:center;color:var(--text-sub)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px">' + icon + '</svg></div>' +
-            '<div style="flex:1"><div style="font-size:14.5px;font-weight:700">' + esc(SKILL_LABEL[key] || sk.skill) + '</div><div style="font-size:12.5px;color:var(--text-dim);margin-top:2px">' + sk.correct + ' / ' + sk.total + ' savol to\'g\'ri</div></div>' +
+            '<div style="flex:1"><div style="font-size:14.5px;font-weight:700">' + esc(resultsSkillLabel(sk.skill)) + '</div><div style="font-size:12.5px;color:var(--text-dim);margin-top:2px">' + esc(resultsT("teacher.results.correctOfTotal", "{correct} / {total} savol to'g'ri", { correct: sk.correct, total: sk.total })) + '</div></div>' +
             '<div style="font-size:20px;font-weight:800;color:' + color + '">' + pct + '%</div>' +
           '</div>' +
           '<div style="height:10px;border-radius:999px;background:var(--bg-hover);overflow:hidden"><span style="display:block;height:100%;border-radius:999px;width:' + pct + '%;background:' + color + '"></span></div>' +
@@ -571,7 +600,7 @@
       if (currentTab !== "students") return;
       var area = document.getElementById("resultArea");
       if (!filtered.length) {
-        area.innerHTML = '<div class="state-msg">Bu topshiriqni hali hech kim topshirmagan.</div>';
+        area.innerHTML = '<div class="state-msg">' + esc(resultsT("teacher.results.noSubmissions", "Bu topshiriqni hali hech kim topshirmagan.")) + '</div>';
         document.getElementById("pager").style.display = "none";
         return;
       }
@@ -579,11 +608,11 @@
       var pageItems = filtered.slice(start, start + pageSize);
 
       var body = pageItems.map(function (r, i) {
-        var name = r.name || "O'quvchi";
+        var name = r.name || resultsT("teacher.results.studentFallback", "O'quvchi");
         var pct = r.percent != null ? r.percent : 0;
         var pctColor = pct >= 75 ? "var(--green)" : pct >= 50 ? "var(--amber)" : "var(--red)";
         var stClass = pct >= 75 ? "good" : pct >= 50 ? "mid" : "low";
-        var stText = pct >= 75 ? "Yaxshi" : pct >= 50 ? "O'rta" : "Past";
+        var stText = pct >= 75 ? resultsT("teacher.results.good", "Yaxshi") : pct >= 50 ? resultsT("teacher.results.medium", "O'rta") : resultsT("teacher.results.low", "Past");
         var skip = r.unanswered_count != null ? r.unanswered_count : 0;
         var wrong = r.wrong_count != null ? r.wrong_count : 0;
         var wrongDisplay = wrong > 8 ? '<span class="rs-arrow" style="color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>' + wrong + '</span>' : wrong;
@@ -598,12 +627,12 @@
           '<td><span class="rs-ball">' + (r.score != null ? r.score : 0) + ' / ' + (r.total != null ? r.total : 100) + '</span></td>' +
           '<td><span class="rs-time">' + fmtTime(r.time_seconds) + '</span></td>' +
           '<td><span class="status-badge ' + stClass + '">' + stText + '</span></td>' +
-          '<td><button class="act-ic" onclick="openStudentLearningReport(' + r.student_id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>' +
+          '<td><button class="act-ic" title="' + esc(resultsT("teacher.results.viewReport", "O'quvchi hisobotini ko'rish")) + '" onclick="openStudentLearningReport(' + r.student_id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>' +
         '</tr>';
       }).join("");
 
       area.innerHTML = '<div class="table-wrap"><table class="rs-table"><thead><tr>' +
-        '<th>#</th><th>O\'quvchi</th><th>To\'g\'ri</th><th>Xato</th><th>O\'tkazib yuborilgan</th><th>Natija</th><th>Ball (maks. 100)</th><th>Vaqt</th><th>Status</th><th></th>' +
+        '<th>#</th><th>' + esc(resultsT("teacher.results.studentFallback", "O'quvchi")) + '</th><th>' + esc(resultsT("teacher.results.correct", "To'g'ri")) + '</th><th>' + esc(resultsT("teacher.results.wrong", "Xato")) + '</th><th>' + esc(resultsT("teacher.results.skipped", "O'tkazib yuborilgan")) + '</th><th>' + esc(resultsT("teacher.results.result", "Natija")) + '</th><th>' + esc(resultsT("teacher.results.scoreMax", "Ball (maks. 100)")) + '</th><th>' + esc(resultsT("teacher.results.time", "Vaqt")) + '</th><th>' + esc(resultsT("teacher.results.status", "Status")) + '</th><th></th>' +
         '</tr></thead><tbody>' + body + '</tbody></table></div>';
       renderPager();
     }
@@ -615,7 +644,7 @@
       pager.style.display = "flex";
       var start = (page - 1) * pageSize + 1;
       var end = Math.min(page * pageSize, filtered.length);
-      document.getElementById("pagerInfo").textContent = "Jami " + filtered.length + " ta o'quvchidan " + start + "–" + end + " tasi ko'rsatilmoqda";
+      document.getElementById("pagerInfo").textContent = resultsT("teacher.results.pagerInfo", "Jami {total} ta o'quvchidan {start}–{end} tasi ko'rsatilmoqda", { total: filtered.length, start: start, end: end });
       var html = '<button class="pg-btn" onclick="goPage(' + (page - 1) + ')"' + (page === 1 ? ' disabled' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>';
       for (var p = 1; p <= totalPages; p++) {
         if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) html += '<button class="pg-btn' + (p === page ? ' active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
@@ -641,17 +670,17 @@
     // ===== DONUT: Natijalar taqsimoti =====
     function renderDist(list) {
       var box = document.getElementById("distArea");
-      drawDonut(box, list, "o'quvchi");
+      drawDonut(box, list, resultsT("teacher.results.studentUnit", "o'quvchi"));
     }
     function renderDifficulty(list) {
       var box = document.getElementById("difficultyArea");
-      if (!list.length) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
-      drawDonut(box, list, "savol");
+      if (!list.length) { box.innerHTML = '<div class="chart-empty">' + esc(resultsT("teacher.results.noData", "Ma'lumot yo'q")) + '</div>'; return; }
+      drawDonut(box, list, resultsT("teacher.results.questionUnit", "savol"));
     }
     function drawDonut(box, list, unit) {
-      if (!list.length) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
+      if (!list.length) { box.innerHTML = '<div class="chart-empty">' + esc(resultsT("teacher.results.noData", "Ma'lumot yo'q")) + '</div>'; return; }
       var total = list.reduce(function (s, c) { return s + c.count; }, 0);
-      if (total === 0) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
+      if (total === 0) { box.innerHTML = '<div class="chart-empty">' + esc(resultsT("teacher.results.noData", "Ma'lumot yo'q")) + '</div>'; return; }
       var r = 46, cx = 55, cy = 55, circ = 2 * Math.PI * r, offset = 0;
       var segs = list.map(function (c, i) {
         var len = (c.count / total) * circ;
@@ -662,13 +691,13 @@
         var pct = Math.round((c.count / total) * 100);
         return '<div class="dleg"><span class="d" style="background:' + (c.color || DONUT_COLORS[i % DONUT_COLORS.length]) + '"></span><span class="dleg-name">' + esc(c.label) + '</span><span class="dleg-val">' + c.count + ' (' + pct + '%)</span></div>';
       }).join("");
-      box.innerHTML = '<div class="donut-wrap"><svg class="donut" viewBox="0 0 110 110">' + segs + '</svg><div class="donut-legend">' + legend + '</div></div><div class="donut-total">Jami: ' + total + ' ta ' + unit + '</div>';
+      box.innerHTML = '<div class="donut-wrap"><svg class="donut" viewBox="0 0 110 110">' + segs + '</svg><div class="donut-legend">' + legend + '</div></div><div class="donut-total">' + esc(resultsT("teacher.results.totalUnit", "Jami: {total} ta {unit}", { total: total, unit: unit })) + '</div>';
     }
 
     // ===== Sinf taqqoslash =====
     function renderClassCmp(list) {
       var box = document.getElementById("classCmpArea");
-      if (!list.length) { box.innerHTML = '<div class="state-msg" style="padding:14px 0">Ma\'lumot yo\'q</div>'; return; }
+      if (!list.length) { box.innerHTML = '<div class="state-msg" style="padding:14px 0">' + esc(resultsT("teacher.results.noData", "Ma'lumot yo'q")) + '</div>'; return; }
       box.innerHTML = list.map(function (c, i) {
         var pct = c.avg != null ? Math.round(c.avg) : 0;
         var color = ["#7c5cfc", "#2f6bff", "#16b06a", "#f59e0b", "#ef4655"][i % 5];
@@ -679,7 +708,7 @@
     // ===== Ko'nikmalar =====
     function renderSkills(list) {
       var box = document.getElementById("skillsArea");
-      if (!list.length) { box.innerHTML = '<div class="chart-empty">Ma\'lumot yo\'q</div>'; return; }
+      if (!list.length) { box.innerHTML = '<div class="chart-empty">' + esc(resultsT("teacher.results.noData", "Ma'lumot yo'q")) + '</div>'; return; }
       var ICONS = {
         reading: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
         grammar: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>',
@@ -691,18 +720,18 @@
         var key = (sk.skill || "").toLowerCase();
         var pct = sk.avg != null ? Math.round(sk.avg) : 0;
         var color = pct >= 75 ? "var(--green)" : pct >= 60 ? "var(--amber)" : "var(--red)";
-        return '<div class="skill-row"><div class="skill-ic" style="background:var(--bg-soft);color:var(--text-sub)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[key] || ICONS.reading) + '</svg></div><span class="skill-name">' + esc(cap(sk.skill)) + '</span><div class="skill-bar"><span style="width:' + pct + '%;background:' + color + '"></span></div><span class="skill-val">' + pct + '%</span></div>';
+        return '<div class="skill-row"><div class="skill-ic" style="background:var(--bg-soft);color:var(--text-sub)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[key] || ICONS.reading) + '</svg></div><span class="skill-name">' + esc(resultsSkillLabel(sk.skill)) + '</span><div class="skill-bar"><span style="width:' + pct + '%;background:' + color + '"></span></div><span class="skill-val">' + pct + '%</span></div>';
       }).join("");
     }
     function cap(s) { return String(s).charAt(0).toUpperCase() + String(s).slice(1); }
 
     // Natijalarni CSV eksport (real)
     function exportResultsCSV() {
-      if (!rows.length) { showToast("Eksport uchun natija yo'q"); return; }
-      var head = [["#", "O'quvchi", "Sinf", "To'g'ri", "Xato", "O'tkazib yuborilgan", "Ball", "Jami", "Natija (%)", "Status"]];
+      if (!rows.length) { showToast(resultsT("teacher.results.exportNoData", "Eksport uchun natija yo'q")); return; }
+      var head = [["#", resultsT("teacher.results.studentFallback", "O'quvchi"), resultsT("teacher.results.class", "Sinf"), resultsT("teacher.results.correct", "To'g'ri"), resultsT("teacher.results.wrong", "Xato"), resultsT("teacher.results.skipped", "O'tkazib yuborilgan"), "Ball", "Jami", resultsT("teacher.results.result", "Natija") + " (%)", resultsT("teacher.results.status", "Status")]];
       var data = rows.map(function (r, i) {
         var pct = r.percent != null ? r.percent : 0;
-        var st = pct >= 75 ? "Yaxshi" : pct >= 50 ? "O'rta" : "Past";
+        var st = pct >= 75 ? resultsT("teacher.results.good", "Yaxshi") : pct >= 50 ? resultsT("teacher.results.medium", "O'rta") : resultsT("teacher.results.low", "Past");
         return [i + 1, r.name || "", r.class_name || "", r.correct_count != null ? r.correct_count : 0,
           r.wrong_count != null ? r.wrong_count : 0, r.unanswered_count != null ? r.unanswered_count : 0,
           r.score != null ? r.score : 0, r.total != null ? r.total : 100, pct, st];
@@ -718,10 +747,19 @@
       a.download = "natijalar_" + new Date().toISOString().slice(0, 10) + ".csv";
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast(rows.length + " ta natija eksport qilindi");
+      showToast(resultsT("teacher.results.exported", "{count} ta natija eksport qilindi", { count: rows.length }));
     }
 
     // ===== ISHGA TUSHIRISH =====
+    window.addEventListener("ilmliga:languagechange", function () {
+      document.title = resultsT("teacher.results.pageTitle", "Natijalar — English Battle");
+      renderAssignmentOptions();
+      switchTab(currentTab);
+      renderDist(lastDistribution);
+      renderClassCmp(lastClassComparison);
+      renderSkills(skillsData);
+      renderDifficulty(difficultyData);
+    });
     loadAssignmentList();
   </script>
 </body>

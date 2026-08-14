@@ -1004,6 +1004,8 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/leagues.js"></script>
+  <script src="/i18n.js"></script>
+  <script src="/battle-i18n.js"></script>
   <script>
     const userData = localStorage.getItem("user");
     if (!userData) window.location.href = "/index.html";
@@ -2073,15 +2075,15 @@
       var dot = document.getElementById("oppOnlineDot");
       if (dot) dot.classList.add("offline");
       var nm = document.getElementById("oppName");
-      if (nm && nm.textContent.indexOf("(oflayn)") === -1) {
-        nm.textContent = nm.textContent + " (oflayn)";
+      if (nm && !/\s\((?:oflayn|offline|не в сети)\)$/.test(nm.textContent)) {
+        nm.textContent = nm.textContent + " " + (window.BattleI18n ? window.BattleI18n.t("offline") : "(oflayn)");
       }
     });
     socket.on("playerOnline", (data) => {
       var dot = document.getElementById("oppOnlineDot");
       if (dot) dot.classList.remove("offline");
       var nm = document.getElementById("oppName");
-      if (nm) nm.textContent = nm.textContent.replace(" (oflayn)", "");
+      if (nm) nm.textContent = nm.textContent.replace(/\s\((?:oflayn|offline|не в сети)\)$/, "");
     });
 
     socket.on("opponentProgress", (data) => {
@@ -2557,7 +2559,7 @@
       // Tushuntirish
       var explainText = a.explanation && a.explanation.trim()
         ? revEsc(a.explanation)
-        : "Bu savol uchun tushuntirish hali qo'shilmagan.";
+        : (window.BattleI18n ? window.BattleI18n.t("explanationMissing") : "Bu savol uchun tushuntirish hali qo'shilmagan.");
 
       // Shikoyat tugmasi
       var flagBtn = a.question_id

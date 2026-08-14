@@ -10,6 +10,16 @@
 
   const messages = {
     uz: {
+      "meta.title": "IlmLiga — O‘rgan. Kurash. Yuksal.",
+      "meta.description": "Ingliz tilini o‘rganing, bilim janglarida bellashing va reytingda yuksaling.",
+      "common.homeAria": "IlmLiga bosh sahifasi",
+      "common.languageSwitch": "Tilni almashtirish",
+      "common.choosePhoneCountry": "Telefon kodi uchun davlatni tanlang",
+      "common.close": "Yopish",
+      "common.showPassword": "Parolni ko‘rsatish",
+      "common.hidePassword": "Parolni yashirish",
+      "common.otpCode": "Tasdiqlash kodi",
+      "common.otpDigit": "Tasdiqlash kodining {number}-raqami",
       "language.title": "Tilni tanlang",
       "language.subtitle": "Ilova tilini tanlang",
       "language.continue": "Davom etish",
@@ -87,6 +97,12 @@
       "register.changeRole": "O‘zgartirish",
       "register.parentProfileSubtitle": "Shaxsiy ma’lumotlaringizni kiriting — farzandingizni xavfsiz kod orqali keyin bog‘laysiz",
       "register.teacherProfileSubtitle": "O‘qituvchi profilingiz va ishlaydigan hududingizni kiriting",
+      "register.metaTitle": "Ro‘yxatdan o‘tish — IlmLiga",
+      "register.metaDescription": "IlmLiga hisobini yarating va ingliz tilini bilim janglari orqali o‘rganishni boshlang.",
+      "register.progressAria": "Ro‘yxatdan o‘tish bosqichlari",
+      "register.privacyConsent": "IlmLiga akkauntini yaratish orqali platforma qoidalari va maxfiylik shartlariga rozilik bildirasiz.",
+      "register.schoolOption": "{number}-maktab",
+      "register.secondsShort": "son",
       "register.haveAccount": "Allaqachon hisobingiz bormi?",
       "common.back": "Orqaga",
       "common.selectCountry": "Davlatni tanlang",
@@ -108,6 +124,16 @@
       "common.resetDone": "Parolingiz yangilandi. Endi kirishingiz mumkin.",
     },
     en: {
+      "meta.title": "IlmLiga — Learn. Compete. Rise.",
+      "meta.description": "Learn English, compete in knowledge battles and climb the rankings.",
+      "common.homeAria": "IlmLiga home page",
+      "common.languageSwitch": "Change language",
+      "common.choosePhoneCountry": "Choose a country calling code",
+      "common.close": "Close",
+      "common.showPassword": "Show password",
+      "common.hidePassword": "Hide password",
+      "common.otpCode": "Verification code",
+      "common.otpDigit": "Verification code digit {number}",
       "language.title": "Choose language", "language.subtitle": "Select your app language", "language.continue": "Continue",
       "welcome.tagline": "Learn. Compete. Rise.", "welcome.kicker": "A new way to learn English", "welcome.title": "Battle for Knowledge", "welcome.subtitle": "Learn English, win battles and climb the rankings", "welcome.register": "Sign up", "welcome.login": "Log in",
       "login.back": "Back", "login.title": "Log in to your account", "login.subtitle": "Enter your phone number and password", "login.phone": "Phone number", "login.password": "Password", "login.passwordPlaceholder": "Your password", "login.submit": "Log in", "login.forgot": "Forgot password?", "login.noAccount": "Don’t have an account?", "login.signup": "Sign up",
@@ -118,6 +144,16 @@
       "common.back": "Back", "common.selectCountry": "Choose country", "common.searchCountry": "Country name or code", "common.loading": "Loading...", "common.serverError": "Could not connect to the server", "common.passwordMismatch": "Passwords don’t match", "common.passwordMatch": "Passwords match", "common.weakPassword": "Use at least 8 characters with a letter and a number", "common.goodPassword": "Good password", "common.strongPassword": "Strong password", "common.usernameChecking": "Checking...", "common.usernameAvailable": "This username is available", "common.usernameTaken": "This username is taken — choose another", "common.usernameInvalid": "Enter 5–32 characters; only a-z, 0-9 and _ are allowed", "common.phoneInvalid": "Enter the complete phone number", "common.codeResent": "New code sent", "common.registrationDone": "Account created successfully", "common.resetDone": "Password updated. You can now log in.",
     },
     ru: {
+      "meta.title": "IlmLiga — Учись. Соревнуйся. Побеждай.",
+      "meta.description": "Изучайте английский, участвуйте в битвах знаний и поднимайтесь в рейтинге.",
+      "common.homeAria": "Главная страница IlmLiga",
+      "common.languageSwitch": "Сменить язык",
+      "common.choosePhoneCountry": "Выберите телефонный код страны",
+      "common.close": "Закрыть",
+      "common.showPassword": "Показать пароль",
+      "common.hidePassword": "Скрыть пароль",
+      "common.otpCode": "Код подтверждения",
+      "common.otpDigit": "Цифра {number} кода подтверждения",
       "language.title": "Выберите язык", "language.subtitle": "Выберите язык приложения", "language.continue": "Продолжить",
       "welcome.tagline": "Учись. Соревнуйся. Побеждай.", "welcome.kicker": "Новый способ изучать английский", "welcome.title": "Битва за знания", "welcome.subtitle": "Учи английский, побеждай в битвах и поднимайся в рейтинге", "welcome.register": "Регистрация", "welcome.login": "Вход",
       "login.back": "Назад", "login.title": "Войдите в аккаунт", "login.subtitle": "Введите номер телефона и пароль", "login.phone": "Номер телефона", "login.password": "Пароль", "login.passwordPlaceholder": "Ваш пароль", "login.submit": "Войти", "login.forgot": "Забыли пароль?", "login.noAccount": "Нет аккаунта?", "login.signup": "Регистрация",
@@ -130,6 +166,12 @@
   };
 
   Object.assign(messages.en, {
+    "register.metaTitle": "Sign up — IlmLiga",
+    "register.metaDescription": "Create an IlmLiga account and start learning English through knowledge battles.",
+    "register.progressAria": "Sign-up steps",
+    "register.privacyConsent": "By creating an IlmLiga account, you agree to the platform rules and privacy terms.",
+    "register.schoolOption": "School {number}",
+    "register.secondsShort": "s",
     "register.stepRole": "Role",
     "register.roleTitle": "How will you use IlmLiga?",
     "register.roleSubtitle": "Choose an account type so we can prepare the right experience",
@@ -150,6 +192,12 @@
   });
 
   Object.assign(messages.ru, {
+    "register.metaTitle": "Регистрация — IlmLiga",
+    "register.metaDescription": "Создайте аккаунт IlmLiga и начните изучать английский через битвы знаний.",
+    "register.progressAria": "Этапы регистрации",
+    "register.privacyConsent": "Создавая аккаунт IlmLiga, вы соглашаетесь с правилами платформы и условиями конфиденциальности.",
+    "register.schoolOption": "Школа №{number}",
+    "register.secondsShort": "с",
     "register.stepRole": "Роль",
     "register.roleTitle": "Как вы будете использовать IlmLiga?",
     "register.roleSubtitle": "Выберите тип аккаунта, чтобы мы подготовили подходящие возможности",
@@ -188,8 +236,12 @@
   let countryCallback = null;
   let toastTimer = null;
 
-  function t(key) {
-    return (messages[language] && messages[language][key]) || messages.uz[key] || key;
+  function t(key, params) {
+    const template = (messages[language] && messages[language][key]) || messages.uz[key] || key;
+    if (!params) return template;
+    return template.replace(/\{(\w+)\}/g, (match, name) => (
+      Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
+    ));
   }
 
   function logoSvg() {
@@ -259,6 +311,11 @@
     const scope = root || document;
     document.documentElement.lang = language;
     scope.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    scope.querySelectorAll("[data-i18n-content]").forEach((el) => { el.setAttribute("content", t(el.dataset.i18nContent)); });
+    scope.querySelectorAll("[data-i18n-aria-label]").forEach((el) => {
+      const params = el.dataset.i18nNumber ? { number: el.dataset.i18nNumber } : null;
+      el.setAttribute("aria-label", t(el.dataset.i18nAriaLabel, params));
+    });
     scope.querySelectorAll("[data-brand-highlight]").forEach(highlightBrandName);
     scope.querySelectorAll("[data-i18n-placeholder]").forEach((el) => { el.placeholder = t(el.dataset.i18nPlaceholder); });
     scope.querySelectorAll("[data-logo]").forEach((el) => { if (!el.innerHTML) el.innerHTML = logoSvg(); });
@@ -514,7 +571,8 @@
       if (!input) return;
       input.type = input.type === "password" ? "text" : "password";
       button.innerHTML = iconSvg(input.type === "password" ? "eye" : "eye-off");
-      button.setAttribute("aria-label", input.type === "password" ? "Show password" : "Hide password");
+      button.dataset.i18nAriaLabel = input.type === "password" ? "common.showPassword" : "common.hidePassword";
+      button.setAttribute("aria-label", t(button.dataset.i18nAriaLabel));
     });
   }
 

@@ -301,7 +301,7 @@ test("profile premium AI lock state is responsive and contained", () => {
   assert.match(profile, /\.ai-premium-features \{[^}]*repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(profile, /@media \(max-width:700px\)/);
   assert.match(profile, /class="ai-empty ai-premium-lock"/);
-  assert.match(profile, /Shaxsiy AI murabbiyingiz/);
+  assert.match(profile, /profileT\("profile\.personalAiCoach"\)/);
   assert.match(profile, /class="ai-premium-btn"/);
   assert.match(profile, /window\.openPaymentModal\(\\'student_premium\\'\)/);
   assert.doesNotMatch(profile, /class="btn nlp-btn" style="max-width:200px/);

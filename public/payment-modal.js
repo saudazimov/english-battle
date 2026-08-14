@@ -7,24 +7,33 @@
   if (window.__paymentModalLoaded) return;
   window.__paymentModalLoaded = true;
 
+  function paymentT(key, params) {
+    return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+  }
+
+  function paymentLocale() {
+    var language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+    return { uz: "uz-UZ", en: "en-US", ru: "ru-RU" }[language] || "uz-UZ";
+  }
+
   // Plan ma'lumotlari (narx server'da, bu faqat ko'rsatish uchun — so'mда)
   var PLANS = {
     student_premium: { name: "Student Premium", price: 50000, color: "var(--pm-accent)",
-      perks: ["AI haftalik hisobot", "Cheksiz batafsil tahlil", "Kuchli/zaif mavzular", "Shaxsiy mashq rejasi"] },
+      perks: ["pricing.studentFeatWeekly", "pricing.studentFeatDetailed", "pricing.studentFeatStrengths", "pricing.studentFeatPlan"] },
     parent_premium: { name: "Parent Premium", price: 50000, color: "var(--pm-accent)",
-      perks: ["Farzand AI hisoboti", "Zaif mavzular tahlili", "Keyingi hafta tavsiyalari", "To'liq progress kuzatuvi"] },
+      perks: ["pricing.parentFeatReport", "pricing.parentFeatWeaknesses", "pricing.parentFeatAdvice", "pricing.parentFeatProgress"] },
     teacher_pro: { name: "Teacher Pro", price: 150000, color: "var(--pm-green)",
-      perks: ["AI sinf tahlili", "E'tibor kerak o'quvchilar", "Eng ko'p xato savollar", "O'qitish tavsiyalari"] },
+      perks: ["pricing.teacherFeatAi", "paymentModal.teacherAttention", "paymentModal.teacherErrors", "paymentModal.teacherAdvice"] },
     center_pro: { name: "Center Pro", price: 500000, color: "var(--pm-gold)",
-      perks: ["Markaz tahlili", "O'qituvchilar boshqaruvi", "Markaz reytingи", "Barcha hisobotlar"] },
+      perks: ["pricing.centerFeatAnalytics", "pricing.centerFeatTeachers", "pricing.centerFeatRanking", "pricing.centerFeatReports"] },
   };
 
   // Oy variantlari (chegirma bilan)
   var MONTH_OPTS = [
-    { months: 1, label: "1 oy", discount: 0 },
-    { months: 3, label: "3 oy", discount: 10 },
-    { months: 6, label: "6 oy", discount: 15 },
-    { months: 12, label: "1 yil", discount: 25 },
+    { months: 1, labelKey: "paymentModal.oneMonth", discount: 0 },
+    { months: 3, labelKey: "paymentModal.threeMonths", discount: 10 },
+    { months: 6, labelKey: "paymentModal.sixMonths", discount: 15 },
+    { months: 12, labelKey: "paymentModal.oneYear", discount: 25 },
   ];
 
   var css =
@@ -86,9 +95,12 @@
 
   var currentPlan = null;
   var currentMonths = 1;
+  var currentView = "choose";
+  var currentPaymentId = null;
+  var currentError = "";
 
   function fmtSom(n) {
-    return n.toLocaleString("uz-UZ").replace(/,/g, " ");
+    return n.toLocaleString(paymentLocale());
   }
 
   function calcTotal() {
@@ -102,6 +114,7 @@
   window.openPaymentModal = function (planKey) {
     currentPlan = planKey && PLANS[planKey] ? planKey : "parent_premium";
     currentMonths = 1;
+    currentView = "choose";
     renderChoose();
     overlay.classList.add("open");
     document.body.style.overflow = "hidden";
@@ -113,17 +126,18 @@
   };
 
   function renderChoose() {
+    currentView = "choose";
     var plan = PLANS[currentPlan];
     var perksHtml = plan.perks.map(function (p) {
-      return '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' + p + "</li>";
+      return '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' + paymentT(p).replace(/^[✓✔]\s*/, "") + "</li>";
     }).join("");
 
     var monthsHtml = MONTH_OPTS.map(function (o) {
       var perMonth = Math.round(plan.price * (1 - o.discount / 100));
       return '<div class="pm-month' + (o.months === currentMonths ? " active" : "") + '" onclick="window.__pmSelectMonth(' + o.months + ')">' +
         (o.discount ? '<span class="pm-disc">-' + o.discount + "%</span>" : "") +
-        '<div class="pm-month-label">' + o.label + "</div>" +
-        '<div class="pm-month-price">' + fmtSom(perMonth) + " so'm/oy</div>" +
+        '<div class="pm-month-label">' + paymentT(o.labelKey) + "</div>" +
+        '<div class="pm-month-price">' + paymentT("paymentModal.perMonthPrice", { price: fmtSom(perMonth) }) + "</div>" +
       "</div>";
     }).join("");
 
@@ -132,24 +146,24 @@
     overlay.innerHTML =
       '<div class="pm-modal">' +
         '<div class="pm-head">' +
-          '<button class="pm-close" onclick="window.closePaymentModal()">&times;</button>' +
+          '<button class="pm-close" onclick="window.closePaymentModal()" aria-label="' + paymentT("paymentModal.close") + '">&times;</button>' +
           '<div class="pm-badge"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg> PREMIUM</div>' +
           '<div class="pm-title">' + plan.name + "</div>" +
-          '<div class="pm-sub">Eng yaxshi imkoniyatlarni oching</div>' +
+          '<div class="pm-sub">' + paymentT("paymentModal.unlockBest") + '</div>' +
         "</div>" +
         '<div class="pm-body">' +
           '<ul class="pm-perks">' + perksHtml + "</ul>" +
-          '<div class="pm-months-label">Muddatni tanlang</div>' +
+          '<div class="pm-months-label">' + paymentT("paymentModal.chooseDuration") + '</div>' +
           '<div class="pm-months">' + monthsHtml + "</div>" +
           '<div class="pm-total">' +
-            '<span class="pm-total-label">Jami to\'lov</span>' +
-            '<span class="pm-total-val" id="pmTotalVal">' + fmtSom(calc.total) + ' <small>so\'m</small></span>' +
+            '<span class="pm-total-label">' + paymentT("paymentModal.totalPayment") + '</span>' +
+            '<span class="pm-total-val" id="pmTotalVal">' + fmtSom(calc.total) + ' <small>' + paymentT("pricing.currency") + '</small></span>' +
           "</div>" +
           '<button class="pm-pay-btn" id="pmPayBtn" onclick="window.__pmPay()">' +
             '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>' +
-            "Payme orqali to'lash" +
+            paymentT("paymentModal.payViaPayme") +
           "</button>" +
-          '<div class="pm-note">To\'lov Payme xavfsiz tizimi orqali amalga oshiriladi. To\'lovdan so\'ng premium darhol faollashadi.</div>' +
+          '<div class="pm-note">' + paymentT("paymentModal.securityNote") + '</div>' +
         "</div>" +
       "</div>";
   }
@@ -161,7 +175,7 @@
 
   window.__pmPay = async function () {
     var btn = document.getElementById("pmPayBtn");
-    if (btn) { btn.disabled = true; btn.innerHTML = "Yaratilmoqda..."; }
+    if (btn) { btn.disabled = true; btn.innerHTML = paymentT("paymentModal.creating"); }
     try {
       var res = await authFetch("/payments/create", {
         method: "POST",
@@ -169,52 +183,57 @@
         body: JSON.stringify({ plan: currentPlan, months: currentMonths }),
       });
       var data = await res.json();
-      if (!res.ok) { renderError(data.error || "To'lov yaratilmadi"); return; }
+      if (!res.ok) { renderError(data.error || paymentT("paymentModal.createFailed")); return; }
       // Payme checkout'ga yo'naltirimiz (yangi tab)
       if (data.checkout_url) {
         window.open(data.checkout_url, "_blank");
         startPolling(data.payment_id);
       } else {
-        renderError("To'lov havolasi yaratilmadi");
+        renderError(paymentT("paymentModal.checkoutMissing"));
       }
     } catch (e) {
-      renderError("Server bilan aloqa yo'q");
+      renderError(paymentT("paymentModal.serverUnavailable"));
     }
   };
 
   function renderPending(paymentId) {
+    currentView = "pending";
+    currentPaymentId = paymentId;
     var modal = overlay.querySelector(".pm-modal");
     if (!modal) return;
     modal.innerHTML =
       '<div class="pm-state">' +
         '<div class="pm-spin"></div>' +
-        "<h3>To'lov kutilmoqda</h3>" +
-        "<p>Payme oynasida to'lovni yakunlang. To'lov tasdiqlangach, bu yerda avtomatik ko'rsatiladi.</p>" +
-        '<button class="pm-pay-btn" style="background:rgba(255,255,255,0.06);max-width:200px;margin:0 auto" onclick="window.closePaymentModal()">Yopish</button>' +
+        '<h3>' + paymentT("paymentModal.pendingTitle") + '</h3>' +
+        '<p>' + paymentT("paymentModal.pendingText") + '</p>' +
+        '<button class="pm-pay-btn" style="background:rgba(255,255,255,0.06);max-width:200px;margin:0 auto" onclick="window.closePaymentModal()">' + paymentT("paymentModal.close") + '</button>' +
       "</div>";
   }
 
   function renderSuccess() {
+    currentView = "success";
     var modal = overlay.querySelector(".pm-modal");
     if (!modal) return;
     modal.innerHTML =
       '<div class="pm-state">' +
         '<div class="pm-state-ic ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>' +
-        "<h3>Tabriklaymiz! 🎉</h3>" +
-        "<p>To'lov muvaffaqiyatli amalga oshdi. Premium faollashtirildi.</p>" +
-        '<button class="pm-pay-btn" style="max-width:220px;margin:0 auto" onclick="location.reload()">Davom etish</button>' +
+        '<h3>' + paymentT("paymentModal.successTitle") + '</h3>' +
+        '<p>' + paymentT("paymentModal.successText") + '</p>' +
+        '<button class="pm-pay-btn" style="max-width:220px;margin:0 auto" onclick="location.reload()">' + paymentT("paymentModal.continue") + '</button>' +
       "</div>";
   }
 
   function renderError(msg) {
+    currentView = "error";
+    currentError = msg || paymentT("paymentModal.tryLater");
     var modal = overlay.querySelector(".pm-modal");
     if (!modal) return;
     modal.innerHTML =
       '<div class="pm-state">' +
         '<div class="pm-state-ic err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>' +
-        "<h3>Xatolik</h3>" +
-        "<p>" + (msg || "Keyinroq urinib ko'ring.") + "</p>" +
-        '<button class="pm-pay-btn" style="background:rgba(255,255,255,0.06);max-width:200px;margin:0 auto" onclick="window.closePaymentModal()">Yopish</button>' +
+        '<h3>' + paymentT("paymentModal.errorTitle") + '</h3>' +
+        '<p>' + currentError + '</p>' +
+        '<button class="pm-pay-btn" style="background:rgba(255,255,255,0.06);max-width:200px;margin:0 auto" onclick="window.closePaymentModal()">' + paymentT("paymentModal.close") + '</button>' +
       "</div>";
   }
 
@@ -235,9 +254,17 @@
           renderSuccess();
         } else if (data.status === "cancelled" || data.status === "failed") {
           clearInterval(pollTimer);
-          renderError("To'lov bekor qilindi yoki amalga oshmadi.");
+          renderError(paymentT("paymentModal.cancelled"));
         }
       } catch (e) { /* davom etamiz */ }
     }, 5000);
   }
+
+  window.addEventListener("ilmliga:languagechange", function () {
+    if (!overlay.classList.contains("open")) return;
+    if (currentView === "pending") renderPending(currentPaymentId);
+    else if (currentView === "success") renderSuccess();
+    else if (currentView === "error") renderError(currentError);
+    else renderChoose();
+  });
 })();

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Battle — Mening turnirlarim</title>
+  <title data-i18n="studentTournaments.metaTitle">IlmLiga — Mening turnirlarim</title>
+  <meta name="description" content="Maktab turnirlaringiz, matchlaringiz va turnir setkasini kuzating." data-i18n-content="studentTournaments.metaDescription">
   <link rel="stylesheet" href="/app.css">
   <style>
     .app { grid-template-columns: 230px 1fr; gap: 20px; max-width: 1680px; margin: 0 auto; padding: 20px; }
@@ -92,12 +93,12 @@
 
       <div class="page-head">
         <div class="crest-ic"><i data-lucide="trophy"></i></div>
-        <div><h1>Mening Turnirlarim</h1><p>Maktabingiz nomidan turnirlarda qatnashing — matchlaringizni kuzating va jangga kiring.</p></div>
+        <div><h1 data-i18n="studentTournaments.heading">Mening turnirlarim</h1><p data-i18n="studentTournaments.subtitle">Maktabingiz nomidan turnirlarda qatnashing — matchlaringizni kuzating va jangga kiring.</p></div>
       </div>
 
       <div id="activeBannerWrap"></div>
       <div id="tournListWrap">
-        <div class="empty-box"><div class="empty-box-title">Yuklanmoqda...</div></div>
+        <div class="empty-box"><div class="empty-box-title" data-i18n="studentTournaments.loading">Yuklanmoqda...</div></div>
       </div>
     </main>
   </div>
@@ -107,16 +108,17 @@
     <div class="br-box">
       <div class="br-head">
         <i data-lucide="git-fork" style="width:20px;height:20px;color:var(--gold);"></i>
-        <div class="br-head-title" id="brTitle">Turnir setkasi</div>
-        <div class="br-close" onclick="closeBracket()"><i data-lucide="x"></i></div>
+        <div class="br-head-title" id="brTitle" data-i18n="studentTournaments.bracketTitle">Turnir setkasi</div>
+        <div class="br-close" onclick="closeBracket()" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); closeBracket(); }" role="button" tabindex="0" data-i18n-title="studentTournaments.closeBracket" data-i18n-aria-label="studentTournaments.closeBracket"><i data-lucide="x"></i></div>
       </div>
-      <div class="br-body" id="brBody"><div style="text-align:center;padding:40px;color:var(--text-dim);">Yuklanmoqda...</div></div>
+      <div class="br-body" id="brBody"><div style="text-align:center;padding:40px;color:var(--text-dim);" data-i18n="studentTournaments.loading">Yuklanmoqda...</div></div>
     </div>
   </div>
 
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script>
     const userData = localStorage.getItem("user");
@@ -126,13 +128,30 @@
     renderTopbar();
     renderSidebar("tournaments");
 
+    function tournamentT(key, params) {
+      return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
+    }
+
+    function tournamentLocale() {
+      var language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+      return language === "ru" ? "ru-RU" : (language === "en" ? "en-GB" : "uz-UZ");
+    }
+
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     function schoolLabel(school, schoolKey) {
       var parts = String(schoolKey || "").split("\x1f");
       return school && parts.length === 3 && parts[1] ? school + " · " + parts[1] : school;
     }
 
-    var statusLabels = { registration: "Ro'yxat", bracket: "Setka", live: "Jonli", finished: "Tugagan" };
+    var statusLabelKeys = {
+      registration: "studentTournaments.statusRegistration",
+      bracket: "studentTournaments.statusBracket",
+      live: "studentTournaments.statusLive",
+      finished: "studentTournaments.statusFinished"
+    };
+    var loadedTournaments = [];
+    var loadedBracket = null;
+    var tournamentLoadState = "loading";
 
     // Socket — match holati o'zgarsa yangilash
     const socket = io({ auth: { token: localStorage.getItem("token") } });
@@ -143,25 +162,40 @@
     socket.on("matchFinished", () => loadTournaments());
 
     async function loadTournaments() {
-      var wrap = document.getElementById("tournListWrap");
+      tournamentLoadState = "loading";
       try {
         var r = await authFetch("/student/tournaments");
         var d = await r.json();
         var list = d.tournaments || [];
+        loadedTournaments = list;
+        tournamentLoadState = "loaded";
 
         // Faol match banneri (live yoki checkin)
         renderActiveBanner(list);
 
         if (list.length === 0) {
-          wrap.innerHTML = '<div class="empty-box"><i data-lucide="trophy"></i><div class="empty-box-title">Hozircha turnir yo\'q</div><div>Siz hali hech qanday turnir jamoasiga qo\'shilmagansiz. Maktab adminingiz sizni jamoaga qo\'shsa, bu yerda ko\'rinadi.</div></div>';
-          lucide.createIcons();
+          renderTournamentCollection();
           return;
         }
-        wrap.innerHTML = list.map(renderTournamentCard).join("");
-        lucide.createIcons();
+        renderTournamentCollection();
       } catch (e) {
-        wrap.innerHTML = '<div class="empty-box"><div class="empty-box-title">Yuklab bo\'lmadi</div></div>';
+        tournamentLoadState = "error";
+        renderTournamentCollection();
       }
+    }
+
+    function renderTournamentCollection() {
+      var wrap = document.getElementById("tournListWrap");
+      if (tournamentLoadState === "loading") {
+        wrap.innerHTML = '<div class="empty-box"><div class="empty-box-title">' + tournamentT("studentTournaments.loading") + '</div></div>';
+      } else if (tournamentLoadState === "error") {
+        wrap.innerHTML = '<div class="empty-box"><div class="empty-box-title">' + tournamentT("studentTournaments.loadError") + '</div></div>';
+      } else if (loadedTournaments.length === 0) {
+        wrap.innerHTML = '<div class="empty-box"><i data-lucide="trophy"></i><div class="empty-box-title">' + tournamentT("studentTournaments.emptyTitle") + '</div><div>' + tournamentT("studentTournaments.emptyDescription") + '</div></div>';
+      } else {
+        wrap.innerHTML = loadedTournaments.map(renderTournamentCard).join("");
+      }
+      lucide.createIcons();
     }
 
     function renderActiveBanner(list) {
@@ -187,16 +221,17 @@
       bw.innerHTML = '<div class="active-banner ' + (isLive ? "live" : "checkin") + '">' +
         '<div class="ab-ic"><i data-lucide="' + (isLive ? "swords" : "clock") + '"></i></div>' +
         '<div class="ab-info">' +
-          '<div class="ab-title">' + (isLive ? "Jangingiz boshlandi!" : "Check-in ochiq — jangga tayyorlaning!") + '</div>' +
+          '<div class="ab-title">' + tournamentT(isLive ? "studentTournaments.battleStarted" : "studentTournaments.checkinBanner") + '</div>' +
           '<div class="ab-sub">' + esc(urgent.tournament.name) + ' · ' + esc(schoolLabel(urgent.tournament.my_school, urgent.tournament.my_school_key)) + ' vs ' + esc(opponent) + '</div>' +
         '</div>' +
-        '<button class="ab-btn" onclick="enterMatch(' + m.id + ')">' + (isLive ? "Jangga kirish" : "Tayyorlanish") + '</button>' +
+        '<button class="ab-btn" onclick="enterMatch(' + m.id + ')">' + tournamentT(isLive ? "studentTournaments.enterBattle" : "studentTournaments.prepare") + '</button>' +
       '</div>';
       lucide.createIcons();
     }
 
     function renderTournamentCard(t) {
-      var levelLabel = t.level === "district" ? "Tuman" : (t.level === "region" ? "Viloyat" : "Respublika");
+      var levelKey = t.level === "district" ? "studentTournaments.levelDistrict" : (t.level === "region" ? "studentTournaments.levelRegion" : "studentTournaments.levelCountry");
+      var levelLabel = tournamentT(levelKey);
       var m = t.active_match;
 
       var matchHtml = "";
@@ -208,54 +243,54 @@
 
         var statusLine = "", actionBtn = "";
         if (m.status === "pending") {
-          var when = m.scheduled_at ? new Date(m.scheduled_at).toLocaleString("uz", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "tez orada";
-          statusLine = '<div class="mm-status-line">Boshlanishi: ' + when + '</div>';
+          var when = m.scheduled_at ? new Date(m.scheduled_at).toLocaleString(tournamentLocale(), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : tournamentT("studentTournaments.soon");
+          statusLine = '<div class="mm-status-line">' + tournamentT("studentTournaments.startsAt", { time: when }) + '</div>';
         } else if (m.status === "checkin") {
-          statusLine = '<div class="mm-status-line" style="color:var(--gold);font-weight:700;">Check-in ochiq!</div>';
-          actionBtn = '<button class="btn" onclick="enterMatch(' + m.id + ')"><i data-lucide="clock" style="width:16px;height:16px;"></i> Tayyorlanish</button>';
+          statusLine = '<div class="mm-status-line" style="color:var(--gold);font-weight:700;">' + tournamentT("studentTournaments.checkinOpen") + '</div>';
+          actionBtn = '<button class="btn" onclick="enterMatch(' + m.id + ')"><i data-lucide="clock" style="width:16px;height:16px;"></i> ' + tournamentT("studentTournaments.prepare") + '</button>';
         } else if (m.status === "live") {
-          statusLine = '<div class="mm-status-line" style="color:#f87171;font-weight:700;">Jang davom etmoqda!</div>';
-          actionBtn = '<button class="btn" onclick="enterMatch(' + m.id + ')"><i data-lucide="swords" style="width:16px;height:16px;"></i> Jangga kirish</button>';
+          statusLine = '<div class="mm-status-line" style="color:#f87171;font-weight:700;">' + tournamentT("studentTournaments.battleInProgress") + '</div>';
+          actionBtn = '<button class="btn" onclick="enterMatch(' + m.id + ')"><i data-lucide="swords" style="width:16px;height:16px;"></i> ' + tournamentT("studentTournaments.enterBattle") + '</button>';
         } else if (m.status === "done") {
           var iWon = (m.winner_school_key === t.my_school_key);
           var isDraw = !m.winner_school;
-          statusLine = '<div class="mm-status-line ' + (iWon ? "win" : (isDraw ? "" : "lose")) + '">' + (isDraw ? "Durang" : (iWon ? "✓ G'alaba" : "Mag'lubiyat")) + '</div>';
+          statusLine = '<div class="mm-status-line ' + (iWon ? "win" : (isDraw ? "" : "lose")) + '">' + tournamentT(isDraw ? "studentTournaments.draw" : (iWon ? "studentTournaments.win" : "studentTournaments.loss")) + '</div>';
         }
 
         matchHtml = '<div class="my-match-box">' +
-          '<div class="mm-label">Mening matchim · ' + roundLabel(m.round, t.bracket_size) + '</div>' +
+          '<div class="mm-label">' + tournamentT("studentTournaments.myMatch") + ' · ' + roundLabel(m.round, t.bracket_size) + '</div>' +
           '<div class="mm-teams">' +
             '<span class="mm-team' + (m.school_a_key === t.my_school_key ? " me" : "") + '">' + esc(schoolLabel(m.school_a, m.school_a_key) || "?") + '</span>' +
-            (m.status === "done" || m.status === "live" ? '<span class="mm-score">' + (myScore||0) + ' : ' + (oppScore||0) + '</span>' : '<span class="mm-vs">vs</span>') +
+            (m.status === "done" || m.status === "live" ? '<span class="mm-score">' + (myScore||0) + ' : ' + (oppScore||0) + '</span>' : '<span class="mm-vs">' + tournamentT("studentTournaments.versus") + '</span>') +
             '<span class="mm-team' + (m.school_b_key === t.my_school_key ? " me" : "") + '">' + esc(schoolLabel(m.school_b, m.school_b_key) || "?") + '</span>' +
           '</div>' +
           statusLine +
         '</div>' +
-        (actionBtn ? '<div class="stcard-actions">' + actionBtn + '<button class="btn btn-ghost" onclick="openBracket(' + t.id + ')"><i data-lucide="git-fork" style="width:16px;height:16px;"></i> Setka</button></div>' : '<div class="stcard-actions"><button class="btn btn-ghost" onclick="openBracket(' + t.id + ')"><i data-lucide="git-fork" style="width:16px;height:16px;"></i> Setkani ko\'rish</button></div>');
+        (actionBtn ? '<div class="stcard-actions">' + actionBtn + '<button class="btn btn-ghost" onclick="openBracket(' + t.id + ')"><i data-lucide="git-fork" style="width:16px;height:16px;"></i> ' + tournamentT("studentTournaments.bracket") + '</button></div>' : '<div class="stcard-actions"><button class="btn btn-ghost" onclick="openBracket(' + t.id + ')"><i data-lucide="git-fork" style="width:16px;height:16px;"></i> ' + tournamentT("studentTournaments.viewBracket") + '</button></div>');
       } else {
-        matchHtml = '<div class="my-match-box"><div class="mm-status-line">Match hali belgilanmagan</div></div>' +
-          '<div class="stcard-actions"><button class="btn btn-ghost" onclick="openBracket(' + t.id + ')"><i data-lucide="git-fork" style="width:16px;height:16px;"></i> Setkani ko\'rish</button></div>';
+        matchHtml = '<div class="my-match-box"><div class="mm-status-line">' + tournamentT("studentTournaments.matchNotScheduled") + '</div></div>' +
+          '<div class="stcard-actions"><button class="btn btn-ghost" onclick="openBracket(' + t.id + ')"><i data-lucide="git-fork" style="width:16px;height:16px;"></i> ' + tournamentT("studentTournaments.viewBracket") + '</button></div>';
       }
 
       return '<div class="card stcard">' +
         '<div class="stcard-head">' +
           '<div class="stcard-ic"><i data-lucide="trophy"></i></div>' +
           '<div style="flex:1;"><div class="stcard-name">' + esc(t.name) + '</div>' +
-          '<div class="stcard-meta">' + levelLabel + ' · ' + esc(schoolLabel(t.my_school, t.my_school_key)) + ' (' + (t.my_role === "reserve" ? "Zaxira" : "Asosiy") + ')</div></div>' +
-          '<span class="stcard-status sts-' + t.status + '">' + (statusLabels[t.status] || t.status) + '</span>' +
+          '<div class="stcard-meta">' + levelLabel + ' · ' + esc(schoolLabel(t.my_school, t.my_school_key)) + ' (' + tournamentT(t.my_role === "reserve" ? "studentTournaments.roleReserve" : "studentTournaments.roleMain") + ')</div></div>' +
+          '<span class="stcard-status sts-' + t.status + '">' + (statusLabelKeys[t.status] ? tournamentT(statusLabelKeys[t.status]) : esc(t.status)) + '</span>' +
         '</div>' +
         '<div class="stcard-body">' + matchHtml + '</div>' +
       '</div>';
     }
 
     function roundLabel(round, bracketSize) {
-      if (!bracketSize) return round + "-raund";
+      if (!bracketSize) return tournamentT("studentTournaments.round", { round: round });
       var totalRounds = Math.log2(bracketSize);
       var fromEnd = totalRounds - round;
-      if (fromEnd === 0) return "Final";
-      if (fromEnd === 1) return "Yarim final";
-      if (fromEnd === 2) return "Chorak final";
-      return round + "-raund";
+      if (fromEnd === 0) return tournamentT("studentTournaments.final");
+      if (fromEnd === 1) return tournamentT("studentTournaments.semifinal");
+      if (fromEnd === 2) return tournamentT("studentTournaments.quarterfinal");
+      return tournamentT("studentTournaments.round", { round: round });
     }
 
     function enterMatch(matchId) {
@@ -265,14 +300,16 @@
     // ===== Setka =====
     async function openBracket(tid) {
       document.getElementById("bracketModal").classList.add("show");
-      document.getElementById("brBody").innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Yuklanmoqda...</div>';
+      document.getElementById("brBody").innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">' + tournamentT("studentTournaments.loading") + '</div>';
       try {
         var r = await authFetch("/student/tournaments/" + tid + "/bracket");
         var d = await r.json();
-        document.getElementById("brTitle").textContent = d.tournament.name + " — Setka";
+        loadedBracket = d;
+        document.getElementById("brTitle").textContent = tournamentT("studentTournaments.bracketFor", { name: d.tournament.name });
         renderBracket(d);
       } catch (e) {
-        document.getElementById("brBody").innerHTML = '<div style="text-align:center;padding:40px;color:#f87171;">Yuklab bo\'lmadi</div>';
+        loadedBracket = null;
+        document.getElementById("brBody").innerHTML = '<div style="text-align:center;padding:40px;color:#f87171;">' + tournamentT("studentTournaments.loadError") + '</div>';
       }
     }
     function closeBracket() { document.getElementById("bracketModal").classList.remove("show"); }
@@ -281,18 +318,23 @@
       var rounds = d.rounds || {};
       var roundKeys = Object.keys(rounds).sort(function (a, b) { return a - b; });
       if (roundKeys.length === 0) {
-        document.getElementById("brBody").innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Setka hali yaratilmagan</div>';
+        document.getElementById("brBody").innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">' + tournamentT("studentTournaments.bracketNotCreated") + '</div>';
         return;
       }
       var totalRounds = roundKeys.length;
       var roundName = function (rnd) {
         var fromEnd = totalRounds - rnd;
-        if (fromEnd === 0) return "Final";
-        if (fromEnd === 1) return "Yarim final";
-        if (fromEnd === 2) return "Chorak final";
-        return rnd + "-raund";
+        if (fromEnd === 0) return tournamentT("studentTournaments.final");
+        if (fromEnd === 1) return tournamentT("studentTournaments.semifinal");
+        if (fromEnd === 2) return tournamentT("studentTournaments.quarterfinal");
+        return tournamentT("studentTournaments.round", { round: rnd });
       };
-      var statusLabels2 = { pending: "Kutilmoqda", checkin: "Tayyorlanish", live: "Jonli", done: "Tugadi" };
+      var bracketStatusKeys = {
+        pending: "studentTournaments.statusPending",
+        checkin: "studentTournaments.statusCheckin",
+        live: "studentTournaments.statusLive",
+        done: "studentTournaments.statusDone"
+      };
 
       var html = '<div class="br-rounds">';
       roundKeys.forEach(function (rnd) {
@@ -305,11 +347,11 @@
           html += brTeam(m.school_a, m.school_a_key, m.score_a, aWin, m.status, d.my_school_key);
           html += brTeam(m.school_b, m.school_b_key, m.score_b, bWin, m.status, d.my_school_key);
           if (isBye) {
-            html += '<div class="br-match-status">Avtomatik o\'tdi</div>';
+            html += '<div class="br-match-status">' + tournamentT("studentTournaments.advancedAutomatically") + '</div>';
           } else {
             var scls = m.status === "live" ? "live" : (m.status === "done" ? "done" : "");
-            var sched = m.scheduled_at ? " · " + new Date(m.scheduled_at).toLocaleString("uz", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
-            html += '<div class="br-match-status ' + scls + '">' + (statusLabels2[m.status] || m.status) + sched + '</div>';
+            var sched = m.scheduled_at ? " · " + new Date(m.scheduled_at).toLocaleString(tournamentLocale(), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+            html += '<div class="br-match-status ' + scls + '">' + (bracketStatusKeys[m.status] ? tournamentT(bracketStatusKeys[m.status]) : esc(m.status)) + sched + '</div>';
           }
           html += '</div>';
         });
@@ -323,10 +365,20 @@
     function brTeam(school, schoolKey, score, isWinner, status, mySchoolKey) {
       var showScore = (status === "done" || status === "live");
       var isMe = (schoolKey && schoolKey === mySchoolKey);
-      var name = school ? '<span class="br-team-name">' + esc(schoolLabel(school, schoolKey)) + '</span>' : '<span class="br-team-name tbd">— kutilmoqda —</span>';
+      var name = school ? '<span class="br-team-name">' + esc(schoolLabel(school, schoolKey)) + '</span>' : '<span class="br-team-name tbd">' + tournamentT("studentTournaments.waitingTeam") + '</span>';
       return '<div class="br-team' + (isWinner ? " winner" : "") + (isMe ? " is-me" : "") + '">' + name +
         (showScore && school ? '<span class="br-score">' + (score || 0) + '</span>' : "") + '</div>';
     }
+
+    window.addEventListener("ilmliga:languagechange", function () {
+      renderActiveBanner(loadedTournaments);
+      renderTournamentCollection();
+      if (loadedBracket) {
+        document.getElementById("brTitle").textContent = tournamentT("studentTournaments.bracketFor", { name: loadedBracket.tournament.name });
+        renderBracket(loadedBracket);
+      }
+      lucide.createIcons();
+    });
 
     loadTournaments();
     lucide.createIcons();

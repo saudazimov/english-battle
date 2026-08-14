@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Progress — IlmLiga</title>
+  <title data-i18n="progress.metaTitle">AI Progress — IlmLiga</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -52,116 +52,117 @@
     <main class="content">
       <div class="topbar"></div>
       <header class="page-head">
-        <div class="page-head-main"><div class="page-icon"><i data-lucide="brain-circuit"></i></div><div><h1>Bilim diagnostikasi</h1><p>Xatolaringiz, bilim bo‘shliqlari va ilmiy o‘rganish rejasi.</p></div></div>
-        <div class="period-switch" aria-label="Tahlil davri"><button class="period-btn" data-period="today" type="button">Bugun</button><button class="period-btn active" data-period="7d" type="button">7 kun</button><button class="period-btn" data-period="30d" type="button">30 kun</button></div>
+        <div class="page-head-main"><div class="page-icon"><i data-lucide="brain-circuit"></i></div><div><h1 data-i18n="progress.heading">Bilim diagnostikasi</h1><p data-i18n="progress.subtitle">Xatolaringiz, bilim bo‘shliqlari va ilmiy o‘rganish rejasi.</p></div></div>
+        <div class="period-switch" aria-label="Tahlil davri" data-i18n-aria-label="progress.periodAria"><button class="period-btn" data-period="today" type="button" data-i18n="progress.periodToday">Bugun</button><button class="period-btn active" data-period="7d" type="button" data-i18n="progress.period7d">7 kun</button><button class="period-btn" data-period="30d" type="button" data-i18n="progress.period30d">30 kun</button></div>
       </header>
-      <section class="learning-flow" aria-label="Xatolardan o‘rganish">
+      <section class="learning-flow" aria-label="Xatolardan o‘rganish" data-i18n-aria-label="progress.learningFlowAria">
         <article class="card flow-summary">
-          <div class="flow-summary-copy"><h2>Tanlangan davrdagi bilim bo‘shliqlari</h2><p>Har bir xato aniq qoida bilan bog‘lanadi. Qoidani ochib, darsni o‘qing, 10 ta misolni ko‘ring va 10 ta testni bajaring.</p></div>
+          <div class="flow-summary-copy"><h2 data-i18n="progress.gapsTitle">Tanlangan davrdagi bilim bo‘shliqlari</h2><p data-i18n="progress.gapsText">Har bir xato aniq qoida bilan bog‘lanadi. Qoidani ochib, darsni o‘qing, 10 ta misolni ko‘ring va 10 ta testni bajaring.</p></div>
           <div class="flow-summary-stats" id="flowSummaryStats"></div>
         </article>
         <div class="rule-topic-list" id="ruleTopicList"></div>
       </section>
-      <div class="status-line show" id="pageStatus"><span class="spinner"></span><span>Progress ma’lumotlari yuklanmoqda...</span></div>
+      <div class="status-line show" id="pageStatus"><span class="spinner"></span><span data-i18n="progress.loading">Progress ma’lumotlari yuklanmoqda...</span></div>
 
-      <section class="metric-grid" aria-label="O‘quv ko‘rsatkichlari">
-        <article class="card metric" style="--metric-color:var(--green);--metric-glow:rgba(53,215,160,.13)"><div class="metric-top"><span>Aniqlik</span><i data-lucide="target"></i></div><div class="metric-value" id="metricAccuracy">—</div><div class="metric-foot" id="metricAccuracyFoot">Tekshirilgan javoblar bo‘yicha</div></article>
-        <article class="card metric" style="--metric-color:var(--cyan);--metric-glow:rgba(56,225,255,.12)"><div class="metric-top"><span>Tahlil qilingan</span><i data-lucide="scan-search"></i></div><div class="metric-value" id="metricAnswers">—</div><div class="metric-foot" id="metricAnswersFoot">Javoblar soni</div></article>
-        <article class="card metric" style="--metric-color:var(--red);--metric-glow:rgba(255,107,122,.13)"><div class="metric-top"><span>Aniqlangan xatolar</span><i data-lucide="circle-alert"></i></div><div class="metric-value" id="metricErrors">—</div><div class="metric-foot" id="metricErrorsFoot">Takroriy xatolar hisoblanmoqda</div></article>
-        <article class="card metric" style="--metric-color:var(--accent2);--metric-glow:rgba(168,85,247,.13)"><div class="metric-top"><span>Ustuvor mavzular</span><i data-lucide="book-open-check"></i></div><div class="metric-value" id="metricTopics">—</div><div class="metric-foot" id="metricTopicsFoot">Ishlash kerak bo‘lgan mavzular</div></article>
+      <section class="metric-grid" aria-label="O‘quv ko‘rsatkichlari" data-i18n-aria-label="progress.metricsAria">
+        <article class="card metric" style="--metric-color:var(--green);--metric-glow:rgba(53,215,160,.13)"><div class="metric-top"><span data-i18n="progress.accuracy">Aniqlik</span><i data-lucide="target"></i></div><div class="metric-value" id="metricAccuracy">—</div><div class="metric-foot" id="metricAccuracyFoot" data-i18n="progress.checkedAnswers">Tekshirilgan javoblar bo‘yicha</div></article>
+        <article class="card metric" style="--metric-color:var(--cyan);--metric-glow:rgba(56,225,255,.12)"><div class="metric-top"><span data-i18n="progress.analyzed">Tahlil qilingan</span><i data-lucide="scan-search"></i></div><div class="metric-value" id="metricAnswers">—</div><div class="metric-foot" id="metricAnswersFoot" data-i18n="progress.answerCount">Javoblar soni</div></article>
+        <article class="card metric" style="--metric-color:var(--red);--metric-glow:rgba(255,107,122,.13)"><div class="metric-top"><span data-i18n="progress.detectedErrors">Aniqlangan xatolar</span><i data-lucide="circle-alert"></i></div><div class="metric-value" id="metricErrors">—</div><div class="metric-foot" id="metricErrorsFoot" data-i18n="progress.repeatedCalculating">Takroriy xatolar hisoblanmoqda</div></article>
+        <article class="card metric" style="--metric-color:var(--accent2);--metric-glow:rgba(168,85,247,.13)"><div class="metric-top"><span data-i18n="progress.priorityTopics">Ustuvor mavzular</span><i data-lucide="book-open-check"></i></div><div class="metric-value" id="metricTopics">—</div><div class="metric-foot" id="metricTopicsFoot" data-i18n="progress.topicsToWork">Ishlash kerak bo‘lgan mavzular</div></article>
       </section>
 
       <section class="dashboard">
         <article class="card section-card wide">
-          <div class="section-head"><div><div class="section-title"><i data-lucide="gauge"></i><span>O‘rganish holati</span></div><div class="section-sub">Ishonchli urinishlar, o‘zlashtirish va mustahkamlashning real holati</div></div></div>
+          <div class="section-head"><div><div class="section-title"><i data-lucide="gauge"></i><span data-i18n="progress.learningStatus">O‘rganish holati</span></div><div class="section-sub" data-i18n="progress.learningStatusText">Ishonchli urinishlar, o‘zlashtirish va mustahkamlashning real holati</div></div></div>
           <div class="overview-grid" id="learningOverview"></div>
-          <div class="subsection-title">Aniq bilim bo‘shliqlari</div>
+          <div class="subsection-title" data-i18n="progress.exactKnowledgeGaps">Aniq bilim bo‘shliqlari</div>
           <div class="weakness-grid" id="exactWeaknesses"></div>
         </article>
 
         <article class="card section-card wide" id="reviewDueSection">
-          <div class="section-head"><div><div class="section-title"><i data-lucide="calendar-check-2"></i><span>Bugun bajariladigan mustahkamlash</span></div><div class="section-sub">Darsdan keyingi retest va interval asosidagi takrorlashlar</div></div><span class="badge-pill" id="reviewDueBadge">0 ta</span></div>
+          <div class="section-head"><div><div class="section-title"><i data-lucide="calendar-check-2"></i><span data-i18n="progress.todayReinforcement">Bugun bajariladigan mustahkamlash</span></div><div class="section-sub" data-i18n="progress.todayReinforcementText">Darsdan keyingi retest va interval asosidagi takrorlashlar</div></div><span class="badge-pill" id="reviewDueBadge">0 ta</span></div>
           <div class="review-grid" id="reviewDueList"></div>
         </article>
 
         <article class="card section-card ai-card">
-          <div class="section-head"><div><div class="section-title"><i data-lucide="sparkles"></i><span>Professional pedagogik tahlil</span></div><div class="section-sub">Faqat haqiqiy javoblar va xato dalillaridan yaratiladi</div></div><span class="badge-pill" id="aiConfidence">AI</span></div>
-          <div class="ai-body" id="aiBody"><div class="ai-empty"><div><div class="ai-empty-icon"><span class="spinner"></span></div><h3>AI tahlil tayyorlanmoqda</h3><p>Real natijalaringiz asosida kuchli va rivojlantiriladigan tomonlar aniqlanmoqda.</p></div></div></div>
+          <div class="section-head"><div><div class="section-title"><i data-lucide="sparkles"></i><span data-i18n="progress.professionalAnalysis">Professional pedagogik tahlil</span></div><div class="section-sub" data-i18n="progress.professionalAnalysisText">Faqat haqiqiy javoblar va xato dalillaridan yaratiladi</div></div><span class="badge-pill" id="aiConfidence">AI</span></div>
+          <div class="ai-body" id="aiBody"><div class="ai-empty"><div><div class="ai-empty-icon"><span class="spinner"></span></div><h3 data-i18n="progress.aiPreparing">AI tahlil tayyorlanmoqda</h3><p data-i18n="progress.aiPreparingText">Real natijalaringiz asosida kuchli va rivojlantiriladigan tomonlar aniqlanmoqda.</p></div></div></div>
         </article>
 
         <article class="card section-card wide">
-          <div class="section-head"><div><div class="section-title"><i data-lucide="triangle-alert"></i><span>Eng ko‘p xato qilinayotgan mavzular</span></div><div class="section-sub">Xatolar soni, aniqlik va real savol dalillari</div></div><span class="badge-pill" id="topicCountBadge">0 mavzu</span></div>
+          <div class="section-head"><div><div class="section-title"><i data-lucide="triangle-alert"></i><span data-i18n="progress.topErrorTopics">Eng ko‘p xato qilinayotgan mavzular</span></div><div class="section-sub" data-i18n="progress.topErrorTopicsText">Xatolar soni, aniqlik va real savol dalillari</div></div><span class="badge-pill" id="topicCountBadge">0 mavzu</span></div>
           <div class="topic-grid" id="topicGrid"></div>
         </article>
 
         <article class="card section-card wide">
-          <div class="section-head"><div><div class="section-title"><i data-lucide="library-big"></i><span>Xatolardan yaratilgan shaxsiy darslik</span></div><div class="section-sub">Har bir zaif mavzu uchun qoida, yechilgan misol, faol mashq va takrorlash jadvali</div></div><span class="badge-pill" id="lessonCountBadge">0 dars</span></div>
+          <div class="section-head"><div><div class="section-title"><i data-lucide="library-big"></i><span data-i18n="progress.personalLessonLibrary">Xatolardan yaratilgan shaxsiy darslik</span></div><div class="section-sub" data-i18n="progress.personalLessonLibraryText">Har bir zaif mavzu uchun qoida, yechilgan misol, faol mashq va takrorlash jadvali</div></div><span class="badge-pill" id="lessonCountBadge">0 dars</span></div>
           <div class="lesson-library" id="lessonLibrary"></div>
         </article>
 
         <article class="card section-card wide">
-          <div class="section-head"><div><div class="section-title"><i data-lucide="history"></i><span>O‘rganish tarixi</span></div><div class="section-sub">Zaiflik aniqlanishidan barqaror o‘zlashtirishgacha bo‘lgan dalillar</div></div></div>
+          <div class="section-head"><div><div class="section-title"><i data-lucide="history"></i><span data-i18n="progress.learningHistory">O‘rganish tarixi</span></div><div class="section-sub" data-i18n="progress.learningHistoryText">Zaiflik aniqlanishidan barqaror o‘zlashtirishgacha bo‘lgan dalillar</div></div></div>
           <div class="timeline-list" id="learningTimeline"></div>
         </article>
 
         <article class="card section-card wide">
-          <div class="section-head"><div><div class="section-title"><i data-lucide="route"></i><span>Shaxsiy o‘quv rejasi</span></div><div class="section-sub">Tushunishdan mustahkamlashgacha o‘lchanadigan bosqichlar</div></div></div>
+          <div class="section-head"><div><div class="section-title"><i data-lucide="route"></i><span data-i18n="progress.personalLearningPlan">Shaxsiy o‘quv rejasi</span></div><div class="section-sub" data-i18n="progress.personalLearningPlanText">Tushunishdan mustahkamlashgacha o‘lchanadigan bosqichlar</div></div></div>
           <div class="plan-list" id="learningPlan"></div>
         </article>
       </section>
     </main>
     <aside class="rightbar">
       <section class="card right-card">
-        <div class="right-title"><span>Ma’lumot sifati</span><span class="badge-pill" id="qualityConfidence">—</span></div>
+        <div class="right-title"><span data-i18n="progress.dataQuality">Ma’lumot sifati</span><span class="badge-pill" id="qualityConfidence">—</span></div>
         <div class="quality-bar"><div class="quality-fill" id="qualityFill" style="width:0%"></div></div>
-        <div class="quality-meta"><div class="quality-stat"><div class="quality-value" id="qualityAnswers">0</div><div class="quality-label">Javob</div></div><div class="quality-stat"><div class="quality-value" id="qualityDays">0</div><div class="quality-label">Faol kun</div></div><div class="quality-stat"><div class="quality-value" id="qualityAssignments">0</div><div class="quality-label">Topshiriq</div></div><div class="quality-stat"><div class="quality-value" id="qualityExams">0</div><div class="quality-label">Imtihon</div></div></div>
-        <div class="pulse-note"><i data-lucide="shield-check"></i><span id="qualityNote">Dalillar tekshirilmoqda...</span></div>
+        <div class="quality-meta"><div class="quality-stat"><div class="quality-value" id="qualityAnswers">0</div><div class="quality-label" data-i18n="progress.answer">Javob</div></div><div class="quality-stat"><div class="quality-value" id="qualityDays">0</div><div class="quality-label" data-i18n="progress.activeDay">Faol kun</div></div><div class="quality-stat"><div class="quality-value" id="qualityAssignments">0</div><div class="quality-label" data-i18n="progress.assignment">Topshiriq</div></div><div class="quality-stat"><div class="quality-value" id="qualityExams">0</div><div class="quality-label" data-i18n="progress.exam">Imtihon</div></div></div>
+        <div class="pulse-note"><i data-lucide="shield-check"></i><span id="qualityNote" data-i18n="progress.checkingEvidence">Dalillar tekshirilmoqda...</span></div>
       </section>
 
       <section class="card right-card">
-        <div class="right-title"><span>Ilmiy metodlar</span><i data-lucide="flask-conical"></i></div>
+        <div class="right-title"><span data-i18n="progress.scientificMethods">Ilmiy metodlar</span><i data-lucide="flask-conical"></i></div>
         <div class="method-list" id="studyMethods"></div>
       </section>
 
       <section class="card right-card">
-        <div class="section-head"><div><div class="section-title"><i data-lucide="clipboard-check"></i><span>Keyingi qadamlar</span></div><div class="section-sub" id="periodDates">Tanlangan davr</div></div></div>
+        <div class="section-head"><div><div class="section-title"><i data-lucide="clipboard-check"></i><span data-i18n="progress.nextSteps">Keyingi qadamlar</span></div><div class="section-sub" id="periodDates" data-i18n="progress.selectedPeriod">Tanlangan davr</div></div></div>
         <div class="method-list" id="nextSteps"></div>
-        <div class="quick-actions"><a class="btn primary" href="/practice.html"><i data-lucide="dumbbell"></i>Mashqni boshlash</a><a class="btn" href="/exam.html"><i data-lucide="graduation-cap"></i>Bilimni tekshirish</a></div>
+        <div class="quick-actions"><a class="btn primary" href="/practice.html"><i data-lucide="dumbbell"></i><span data-i18n="progress.startPractice">Mashqni boshlash</span></a><a class="btn" href="/exam.html"><i data-lucide="graduation-cap"></i><span data-i18n="progress.testKnowledge">Bilimni tekshirish</span></a></div>
       </section>
     </aside>
   </div>
   <div class="lesson-dialog" id="lessonDialog" role="dialog" aria-modal="true" aria-labelledby="lessonDialogTitle">
     <div class="lesson-dialog-panel">
-      <div class="lesson-dialog-head"><div><h2 id="lessonDialogTitle">Shaxsiy dars</h2><p id="lessonDialogObjective"></p></div><button class="btn lesson-close" id="lessonDialogClose" type="button" aria-label="Darsni yopish"><i data-lucide="x"></i></button></div>
+      <div class="lesson-dialog-head"><div><h2 id="lessonDialogTitle" data-i18n="progress.personalLesson">Shaxsiy dars</h2><p id="lessonDialogObjective"></p></div><button class="btn lesson-close" id="lessonDialogClose" type="button" aria-label="Darsni yopish" data-i18n-aria-label="progress.closeLesson"><i data-lucide="x"></i></button></div>
       <div class="lesson-source-error" id="lessonDialogSourceError" hidden>
-        <div><span>Xato qilingan savol</span><strong id="lessonDialogQuestion"></strong></div>
-        <div class="wrong"><span>Sizning javobingiz</span><strong id="lessonDialogSelectedAnswer"></strong></div>
-        <div class="correct"><span>To‘g‘ri javob</span><strong id="lessonDialogCorrectAnswer"></strong></div>
+        <div><span data-i18n="progress.wrongQuestion">Xato qilingan savol</span><strong id="lessonDialogQuestion"></strong></div>
+        <div class="wrong"><span data-i18n="progress.yourAnswer">Sizning javobingiz</span><strong id="lessonDialogSelectedAnswer"></strong></div>
+        <div class="correct"><span data-i18n="progress.correctAnswer">To‘g‘ri javob</span><strong id="lessonDialogCorrectAnswer"></strong></div>
       </div>
       <div class="lesson-rule" id="lessonDialogRule"></div>
       <section class="lesson-dialog-section">
-        <div class="lesson-dialog-section-head"><h3>10 ta misol gap</h3><span class="badge-pill" id="lessonExampleCount">0/10</span></div>
+        <div class="lesson-dialog-section-head"><h3 data-i18n="progress.tenExamples">10 ta misol gap</h3><span class="badge-pill" id="lessonExampleCount">0/10</span></div>
         <div class="lesson-example-list" id="lessonDialogExamples"></div>
       </section>
       <section class="lesson-dialog-section">
-        <div class="lesson-dialog-section-head"><h3>Mustahkamlash testi</h3><span class="badge-pill" id="lessonTestCount">0/10</span></div>
+        <div class="lesson-dialog-section-head"><h3 data-i18n="progress.reinforcementTest">Mustahkamlash testi</h3><span class="badge-pill" id="lessonTestCount">0/10</span></div>
       <div class="lesson-exercises" id="lessonDialogExercises"></div>
       </section>
-      <div class="lesson-dialog-footer"><p class="lesson-completion-status" id="lessonCompletionStatus" role="status" aria-live="polite"></p><button class="btn primary" id="lessonCompleteButton" type="button">Darsni yakunlash</button></div>
+      <div class="lesson-dialog-footer"><p class="lesson-completion-status" id="lessonCompletionStatus" role="status" aria-live="polite"></p><button class="btn primary" id="lessonCompleteButton" type="button" data-i18n="progress.completeLesson">Darsni yakunlash</button></div>
     </div>
   </div>
   <div class="lesson-dialog" id="assessmentDialog" role="dialog" aria-modal="true" aria-labelledby="assessmentDialogTitle">
     <div class="lesson-dialog-panel">
-      <div class="lesson-dialog-head"><div><h2 id="assessmentDialogTitle">Bilimni mustahkamlash</h2><p id="assessmentDialogObjective"></p></div><button class="btn lesson-close" id="assessmentDialogClose" type="button" aria-label="Tekshiruvni yopish"><i data-lucide="x"></i></button></div>
+      <div class="lesson-dialog-head"><div><h2 id="assessmentDialogTitle" data-i18n="progress.reinforceKnowledge">Bilimni mustahkamlash</h2><p id="assessmentDialogObjective"></p></div><button class="btn lesson-close" id="assessmentDialogClose" type="button" aria-label="Tekshiruvni yopish" data-i18n-aria-label="progress.closeAssessment"><i data-lucide="x"></i></button></div>
       <div class="assessment-progress"><span id="assessmentProgressFill" style="width:0%"></span></div>
       <div class="assessment-status" id="assessmentDialogStatus"></div>
       <div class="lesson-exercises" id="assessmentQuestions"></div>
-      <div class="lesson-dialog-footer"><button class="btn primary" id="assessmentCompleteButton" type="button">Natijani yakunlash</button></div>
+      <div class="lesson-dialog-footer"><button class="btn primary" id="assessmentCompleteButton" type="button" data-i18n="progress.completeAssessment">Natijani yakunlash</button></div>
     </div>
   </div>
   <script src="/api.js"></script>
   <script src="/payment-modal.js"></script>
   <script src="/vendor/lucide.min.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/progress-learning.js"></script>
   <script src="/progress.js"></script>

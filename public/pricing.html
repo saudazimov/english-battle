@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Narxlar — English Battle</title>
+  <title data-i18n="pricing.metaTitle">Narxlar — English Battle</title>
+  <meta name="description" content="IlmLiga Premium tariflarini taqqoslang." data-i18n-content="pricing.metaDescription" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
@@ -84,87 +85,88 @@
       <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 7v6c0 5 3.5 8 9 9 5.5-1 9-4 9-9V7z"/></svg></div>
       <div class="logo-name">English Battle</div>
     </div>
-    <button class="theme-toggle" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
-    <button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> Orqaga</button>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Mavzuni almashtirish" data-i18n-aria-label="pricing.themeAria"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg></button>
+    <button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> <span data-i18n="pricing.back">Orqaga</span></button>
   </div>
 
   <div class="hero">
-    <h1>O'zingizga mos rejani tanlang</h1>
-    <p>English Battle bilan o'qitish va o'rganishni keyingi bosqichga olib chiqing.</p>
+    <h1 data-i18n="pricing.heading">O'zingizga mos rejani tanlang</h1>
+    <p data-i18n="pricing.subtitle">IlmLiga bilan o'qitish va o'rganishni keyingi bosqichga olib chiqing.</p>
   </div>
 
   <div class="plans">
     <!-- TEACHER PRO (featured) -->
     <div class="plan featured" id="planTeacher">
-      <div class="plan-pop">Eng mashhur</div>
+      <div class="plan-pop" data-i18n="pricing.popular">Eng mashhur</div>
       <div class="plan-ic ic-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
       <div class="plan-name">Teacher Pro</div>
-      <div class="plan-who">O'qituvchilar uchun</div>
-      <div class="plan-price"><b>99 000</b><span>so'm</span></div>
-      <div class="plan-price-sub">oyiga</div>
+      <div class="plan-who" data-i18n="pricing.teacherFor">O'qituvchilar uchun</div>
+      <div class="plan-price"><b>99 000</b><span data-i18n="pricing.currency">so'm</span></div>
+      <div class="plan-price-sub" data-i18n="pricing.perMonth">oyiga</div>
       <ul class="plan-feats">
-        <li>✓ Cheksiz sinflar</li>
-        <li>✓ Cheksiz o'quvchilar</li>
-        <li>✓ Cheksiz topshiriqlar</li>
-        <li>✓ AI sinf tahlili</li>
-        <li>✓ Topshiriq tahlili</li>
-        <li>✓ PDF/Excel eksport</li>
+        <li data-i18n="pricing.teacherFeatClasses">✓ Cheksiz sinflar</li>
+        <li data-i18n="pricing.teacherFeatStudents">✓ Cheksiz o'quvchilar</li>
+        <li data-i18n="pricing.teacherFeatAssignments">✓ Cheksiz topshiriqlar</li>
+        <li data-i18n="pricing.teacherFeatAi">✓ AI sinf tahlili</li>
+        <li data-i18n="pricing.teacherFeatAnalytics">✓ Topshiriq tahlili</li>
+        <li data-i18n="pricing.teacherFeatExport">✓ PDF/Excel eksport</li>
       </ul>
-      <button class="plan-btn primary" onclick="choose('teacher_pro')">Teacher Pro olish</button>
+      <button class="plan-btn primary" onclick="choose('teacher_pro')" data-i18n="pricing.getTeacherPro">Teacher Pro olish</button>
     </div>
 
     <!-- STUDENT PREMIUM -->
     <div class="plan" id="planStudent">
       <div class="plan-ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
       <div class="plan-name">Student Premium</div>
-      <div class="plan-who">O'quvchilar uchun</div>
-      <div class="plan-price"><b>50 000</b><span>so'm</span></div>
-      <div class="plan-price-sub">oyiga</div>
+      <div class="plan-who" data-i18n="pricing.studentFor">O'quvchilar uchun</div>
+      <div class="plan-price"><b>50 000</b><span data-i18n="pricing.currency">so'm</span></div>
+      <div class="plan-price-sub" data-i18n="pricing.perMonth">oyiga</div>
       <ul class="plan-feats">
-        <li>✓ AI haftalik hisobot</li>
-        <li>✓ Kuchli/zaif tahlil</li>
-        <li>✓ Shaxsiy mashq rejasi</li>
-        <li>✓ Cheksiz batafsil tahlil</li>
+        <li data-i18n="pricing.studentFeatWeekly">✓ AI haftalik hisobot</li>
+        <li data-i18n="pricing.studentFeatStrengths">✓ Kuchli/zaif tahlil</li>
+        <li data-i18n="pricing.studentFeatPlan">✓ Shaxsiy mashq rejasi</li>
+        <li data-i18n="pricing.studentFeatDetailed">✓ Cheksiz batafsil tahlil</li>
       </ul>
-      <button class="plan-btn ghost" onclick="choose('student_premium')">Tanlash</button>
+      <button class="plan-btn ghost" onclick="choose('student_premium')" data-i18n="pricing.select">Tanlash</button>
     </div>
 
     <!-- PARENT PREMIUM -->
     <div class="plan" id="planParent">
       <div class="plan-ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
       <div class="plan-name">Parent Premium</div>
-      <div class="plan-who">Ota-onalar uchun</div>
-      <div class="plan-price"><b>50 000</b><span>so'm</span></div>
-      <div class="plan-price-sub">oyiga</div>
+      <div class="plan-who" data-i18n="pricing.parentFor">Ota-onalar uchun</div>
+      <div class="plan-price"><b>50 000</b><span data-i18n="pricing.currency">so'm</span></div>
+      <div class="plan-price-sub" data-i18n="pricing.perMonth">oyiga</div>
       <ul class="plan-feats">
-        <li>✓ Farzand AI hisoboti</li>
-        <li>✓ Zaif mavzular tahlili</li>
-        <li>✓ Keyingi hafta tavsiyalari</li>
-        <li>✓ To'liq progress kuzatuvi</li>
+        <li data-i18n="pricing.parentFeatReport">✓ Farzand AI hisoboti</li>
+        <li data-i18n="pricing.parentFeatWeaknesses">✓ Zaif mavzular tahlili</li>
+        <li data-i18n="pricing.parentFeatAdvice">✓ Keyingi hafta tavsiyalari</li>
+        <li data-i18n="pricing.parentFeatProgress">✓ To'liq progress kuzatuvi</li>
       </ul>
-      <button class="plan-btn ghost" onclick="choose('parent_premium')">Tanlash</button>
+      <button class="plan-btn ghost" onclick="choose('parent_premium')" data-i18n="pricing.select">Tanlash</button>
     </div>
 
     <!-- CENTER PRO -->
     <div class="plan" id="planCenter">
       <div class="plan-ic ic-gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg></div>
       <div class="plan-name">Center Pro</div>
-      <div class="plan-who">O'quv markazlari uchun</div>
-      <div class="plan-price"><b>500 000</b><span>so'm</span></div>
-      <div class="plan-price-sub">oyiga</div>
+      <div class="plan-who" data-i18n="pricing.centerFor">O'quv markazlari uchun</div>
+      <div class="plan-price"><b>500 000</b><span data-i18n="pricing.currency">so'm</span></div>
+      <div class="plan-price-sub" data-i18n="pricing.perMonth">oyiga</div>
       <ul class="plan-feats">
-        <li>✓ Markaz tahlili</li>
-        <li>✓ O'qituvchilar boshqaruvi</li>
-        <li>✓ Markaz reytingi</li>
-        <li>✓ Barcha hisobotlar</li>
+        <li data-i18n="pricing.centerFeatAnalytics">✓ Markaz tahlili</li>
+        <li data-i18n="pricing.centerFeatTeachers">✓ O'qituvchilar boshqaruvi</li>
+        <li data-i18n="pricing.centerFeatRanking">✓ Markaz reytingi</li>
+        <li data-i18n="pricing.centerFeatReports">✓ Barcha hisobotlar</li>
       </ul>
-      <button class="plan-btn ghost" onclick="choose('center_pro')">Tanlash</button>
+      <button class="plan-btn ghost" onclick="choose('center_pro')" data-i18n="pricing.select">Tanlash</button>
     </div>
   </div>
 
-  <div class="foot-note">To'lov Payme xavfsiz tizimi orqali. Istalgan vaqtda bekor qilish mumkin.</div>
+  <div class="foot-note" data-i18n="pricing.paymentNote">To'lov Payme xavfsiz tizimi orqali. Istalgan vaqtda bekor qilish mumkin.</div>
 
   <script src="/api.js"></script>
+  <script src="/i18n.js"></script>
   <script src="/payment-modal.js"></script>
   <script>
     (function initTheme() {
@@ -207,7 +209,7 @@
       if (window.openPaymentModal) {
         window.openPaymentModal(plan);
       } else {
-        alert("To'lov tizimi tez orada ulanadi.");
+        alert(window.IlmLigaI18n ? window.IlmLigaI18n.t("pricing.paymentUnavailable") : "To'lov tizimi tez orada ulanadi.");
       }
     }
   </script>
