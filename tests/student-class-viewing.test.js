@@ -14,6 +14,7 @@ const {
 
 const listSql = `SELECT c.id, c.name, c.description, c.join_code, c.created_at, c.teacher_id,
               t.first_name AS teacher_first_name, t.last_name AS teacher_last_name,
+              t.profile_picture AS teacher_profile_picture,
               (SELECT COUNT(*) FROM class_students m WHERE m.class_id = c.id AND m.status = 'active') AS student_count
        FROM class_students cs
        JOIN classes c ON c.id = cs.class_id
@@ -32,7 +33,12 @@ function createResponse() {
 
 test("student class list preserves SQL, parameters, and response", async () => {
   const calls = [];
-  const rows = [{ id: 4, name: "B1", student_count: "12" }];
+  const rows = [{
+    id: 4,
+    name: "B1",
+    teacher_profile_picture: "/uploads/teacher.jpg",
+    student_count: "12",
+  }];
   const service = createStudentClassViewingService({
     pool: { async query(sql, params) { calls.push([sql, params]); return { rows }; } },
     activeClassMembership: async () => true,
