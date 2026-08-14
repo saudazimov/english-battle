@@ -294,7 +294,150 @@ img, svg, video, canvas {
 
 
 /* ============================================================================
-   7. UNIVERSAL PROFILE PICTURE VIEWPORT
+   7. STUDENT MOBILE SHELL
+   Student sahifalarida oddiy ustma-ust stacking o'rniga ikki tomondan ochiladigan
+   drawer ishlaydi. Klasslar sidebar.js tomonidan faqat student shell'ga beriladi.
+   ============================================================================ */
+
+.il-mobile-shell-toggle,
+.il-shell-backdrop {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  body.il-student-shell.il-shell-drawer-open {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+  }
+
+  body.il-student-shell .app.il-student-shell-app {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 100dvh;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 14px !important;
+    overflow: visible !important;
+  }
+
+  body.il-student-shell .app.il-student-shell-app > :is(.main, .content, .page-content, .app-main, .dashboard-main) {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  body.il-student-shell .sidebar.il-student-sidebar,
+  body.il-student-shell .app.il-student-shell-app > .rightbar {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    z-index: 2000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    padding: 18px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    visibility: hidden;
+    pointer-events: none;
+    background: var(--bg, #080f20) !important;
+    box-shadow: 0 0 48px rgba(2, 6, 23, 0.62);
+    transition: transform 220ms ease, visibility 220ms ease;
+    will-change: transform;
+  }
+
+  body.il-student-shell .sidebar.il-student-sidebar {
+    left: 0 !important;
+    right: auto !important;
+    width: min(84vw, 300px) !important;
+    border-right: 1px solid var(--border, #22304d) !important;
+    transform: translate3d(-104%, 0, 0);
+  }
+
+  body.il-student-shell .app.il-student-shell-app > .rightbar {
+    right: 0 !important;
+    left: auto !important;
+    width: min(88vw, 380px) !important;
+    border-left: 1px solid var(--border, #22304d) !important;
+    transform: translate3d(104%, 0, 0);
+  }
+
+  body.il-student-shell.il-left-drawer-open .sidebar.il-student-sidebar,
+  body.il-student-shell.il-right-drawer-open .app.il-student-shell-app > .rightbar {
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate3d(0, 0, 0);
+  }
+
+  body.il-student-shell .il-shell-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1900;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    background: rgba(2, 6, 23, 0.68);
+    backdrop-filter: blur(4px);
+    transition: opacity 180ms ease, visibility 180ms ease;
+  }
+
+  body.il-student-shell.il-shell-drawer-open .il-shell-backdrop {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  body.il-student-shell .il-mobile-shell-toggle {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    padding: 0;
+    border: 1px solid var(--border, #22304d);
+    border-radius: 12px;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 42px;
+    color: var(--text, #f5f7ff);
+    background: var(--panel, #10182d);
+    cursor: pointer;
+  }
+
+  body.il-student-shell .il-mobile-shell-toggle:hover,
+  body.il-student-shell .il-mobile-shell-toggle[aria-expanded="true"] {
+    border-color: var(--accent, #5b8cff);
+    background: color-mix(in srgb, var(--panel, #10182d) 86%, var(--accent, #5b8cff) 14%);
+  }
+
+  body.il-student-shell .il-mobile-shell-toggle svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  body.il-student-shell .app.il-student-shell-app {
+    padding: 10px !important;
+  }
+
+  body.il-student-shell .app.il-student-shell-app > :is(.main, .content, .page-content, .app-main, .dashboard-main) {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
+
+/* ============================================================================
+   8. UNIVERSAL PROFILE PICTURE VIEWPORT
    Telegram uslubi: barcha profil rasmlari markazdan kesiladi va dumaloq
    konteynerni bo'shliqsiz to'ldiradi. Faqat avatar konteynerining bevosita
    img farzandiga ta'sir qiladi; logo va kontent rasmlari o'zgarmaydi.

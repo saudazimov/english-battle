@@ -55,6 +55,128 @@ function sbT(key, fallback, params) {
   return fallback;
 }
 
+function closeStudentShellDrawers(options) {
+  options = options || {};
+  const body = document.body;
+  if (!body) return;
+
+  body.classList.remove("il-left-drawer-open", "il-right-drawer-open", "il-shell-drawer-open");
+  const sidebar = document.querySelector(".sidebar.il-student-sidebar");
+  const rightbar = document.querySelector(".app.il-student-shell-app > .rightbar");
+  const leftToggle = document.querySelector('[data-student-shell-toggle="left"]');
+  const rightToggle = document.querySelector('[data-student-shell-toggle="right"]');
+
+  if (sidebar) sidebar.setAttribute("aria-hidden", window.matchMedia("(max-width: 980px)").matches ? "true" : "false");
+  if (rightbar) rightbar.setAttribute("aria-hidden", window.matchMedia("(max-width: 980px)").matches ? "true" : "false");
+  if (leftToggle) leftToggle.setAttribute("aria-expanded", "false");
+  if (rightToggle) rightToggle.setAttribute("aria-expanded", "false");
+
+  if (options.restoreFocus !== false && window.__ilmLigaDrawerTrigger && document.contains(window.__ilmLigaDrawerTrigger)) {
+    window.__ilmLigaDrawerTrigger.focus();
+  }
+  window.__ilmLigaDrawerTrigger = null;
+}
+
+function toggleStudentShellDrawer(side, trigger) {
+  const body = document.body;
+  if (!body || !window.matchMedia("(max-width: 980px)").matches) return;
+  const className = side === "right" ? "il-right-drawer-open" : "il-left-drawer-open";
+  const drawer = side === "right"
+    ? document.querySelector(".app.il-student-shell-app > .rightbar")
+    : document.querySelector(".sidebar.il-student-sidebar");
+  if (!drawer) return;
+
+  const willOpen = !body.classList.contains(className);
+  closeStudentShellDrawers({ restoreFocus: false });
+  if (!willOpen) return;
+
+  window.__ilmLigaDrawerTrigger = trigger || null;
+  body.classList.add(className, "il-shell-drawer-open");
+  drawer.setAttribute("aria-hidden", "false");
+  if (trigger) trigger.setAttribute("aria-expanded", "true");
+
+  const firstFocusable = drawer.querySelector('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+  if (firstFocusable) window.setTimeout(function () { firstFocusable.focus(); }, 180);
+}
+
+function setupStudentResponsiveShell() {
+  const body = document.body;
+  const sidebar = document.querySelector(".sidebar");
+  if (!body || !sidebar || !body.classList.contains("il-student-shell")) return;
+
+  const app = sidebar.closest(".app") || document.querySelector(".app");
+  if (!app) return;
+  app.classList.add("il-student-shell-app");
+  sidebar.classList.add("il-student-sidebar");
+  sidebar.id = sidebar.id || "studentSidebar";
+
+  const rightbar = Array.prototype.find.call(app.children, function (child) {
+    return child.classList && child.classList.contains("rightbar");
+  });
+  if (rightbar) rightbar.id = rightbar.id || "studentRightbar";
+
+  let backdrop = document.getElementById("studentShellBackdrop");
+  if (!backdrop) {
+    backdrop = document.createElement("button");
+    backdrop.id = "studentShellBackdrop";
+    backdrop.className = "il-shell-backdrop";
+    backdrop.type = "button";
+    backdrop.tabIndex = -1;
+    backdrop.setAttribute("aria-label", sbT("common.close", "Yopish"));
+    backdrop.addEventListener("click", function () { closeStudentShellDrawers(); });
+    body.appendChild(backdrop);
+  }
+
+  const topbar = app.querySelector(".topbar.il-topbar");
+  if (topbar && !topbar.querySelector('[data-student-shell-toggle="left"]')) {
+    const leftToggle = document.createElement("button");
+    leftToggle.type = "button";
+    leftToggle.className = "il-mobile-shell-toggle il-mobile-shell-toggle-left";
+    leftToggle.dataset.studentShellToggle = "left";
+    leftToggle.setAttribute("aria-controls", sidebar.id);
+    leftToggle.setAttribute("aria-expanded", "false");
+    leftToggle.setAttribute("aria-label", sbT("nav.openMenu", "Menyuni ochish"));
+    leftToggle.innerHTML = '<i data-lucide="menu"></i>';
+    leftToggle.addEventListener("click", function () { toggleStudentShellDrawer("left", leftToggle); });
+    topbar.insertBefore(leftToggle, topbar.firstChild);
+  }
+
+  if (topbar && rightbar && !topbar.querySelector('[data-student-shell-toggle="right"]')) {
+    const rightToggle = document.createElement("button");
+    rightToggle.type = "button";
+    rightToggle.className = "il-mobile-shell-toggle il-mobile-shell-toggle-right";
+    rightToggle.dataset.studentShellToggle = "right";
+    rightToggle.setAttribute("aria-controls", rightbar.id);
+    rightToggle.setAttribute("aria-expanded", "false");
+    rightToggle.setAttribute("aria-label", sbT("nav.openSummary", "Yon panelni ochish"));
+    rightToggle.innerHTML = '<i data-lucide="panel-right"></i>';
+    rightToggle.addEventListener("click", function () { toggleStudentShellDrawer("right", rightToggle); });
+    const language = topbar.querySelector(".tb-language");
+    topbar.insertBefore(rightToggle, language || topbar.firstChild.nextSibling);
+  }
+
+  if (!sidebar.dataset.mobileDrawerBound) {
+    sidebar.dataset.mobileDrawerBound = "true";
+    sidebar.addEventListener("click", function (event) {
+      if (event.target.closest("a.nav-item")) closeStudentShellDrawers({ restoreFocus: false });
+    });
+  }
+
+  if (!window.__ilmLigaStudentShellBound) {
+    window.__ilmLigaStudentShellBound = true;
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && document.body.classList.contains("il-shell-drawer-open")) {
+        closeStudentShellDrawers();
+      }
+    });
+    window.addEventListener("resize", function () {
+      if (!window.matchMedia("(max-width: 980px)").matches) closeStudentShellDrawers({ restoreFocus: false });
+    });
+  }
+
+  closeStudentShellDrawers({ restoreFocus: false });
+}
+
 function renderSidebar(activePage) {
   _sidebarActivePage = activePage;
   if (sidebarWaitForI18n(function () { renderSidebar(activePage); })) return "";
@@ -174,7 +296,9 @@ function renderSidebar(activePage) {
 
   const sidebar = document.querySelector(".sidebar");
   if (sidebar) {
+    document.body.classList.add("il-student-shell");
     sidebar.innerHTML = sidebarHtml;
+    setupStudentResponsiveShell();
     if (window.lucide) lucide.createIcons();
   }
 }
@@ -395,6 +519,8 @@ function renderTopbar(opts) {
       placement: "bottom"
     });
   }
+
+  setupStudentResponsiveShell();
 
   // Avatar (rasm yoki harf)
   const av = document.getElementById("topAva");

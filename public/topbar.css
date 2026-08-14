@@ -131,6 +131,10 @@
   flex: 0 0 auto;
 }
 
+.topbar.il-topbar > .il-mobile-shell-toggle {
+  display: none;
+}
+
 @media (max-width: 1200px) {
   .topbar.il-topbar.il-topbar--center-column {
     width: 100%;
@@ -171,6 +175,15 @@
     gap: 8px;
   }
 
+  .topbar.il-topbar > .il-mobile-shell-toggle {
+    display: inline-grid;
+    order: 1;
+  }
+
+  .topbar.il-topbar > .il-mobile-shell-toggle-left {
+    margin-right: auto;
+  }
+
   .topbar.il-topbar > .tb-language {
     width: 100%;
     order: 2;
@@ -204,6 +217,45 @@
   .topbar.il-topbar > .user-chip > div:not(.ava),
   .topbar.il-topbar > .user-chip > .chip-arrow {
     display: none;
+  }
+}
+
+@media (min-width: 781px) and (max-width: 980px) {
+  .topbar.il-topbar > .il-mobile-shell-toggle {
+    display: inline-grid;
+  }
+
+  .topbar.il-topbar > .il-mobile-shell-toggle-left {
+    margin-right: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar.il-topbar > .il-mobile-shell-toggle,
+  .topbar.il-topbar > .notif-wrap > .icon-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    flex-basis: 40px;
+  }
+
+  .topbar.il-topbar > .currency {
+    width: 48px;
+    min-width: 48px;
+    height: 40px;
+  }
+
+  .topbar.il-topbar > .user-chip {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    padding: 3px;
+  }
+
+  .topbar.il-topbar > .user-chip > .ava {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
   }
 }
 
