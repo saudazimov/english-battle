@@ -6,7 +6,7 @@ const REQUIRED_FIELDS = [
   "CLIENT_ORIGIN", "DB_USER", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME", "DB_SSL",
   "JWT_SECRET", "PARENT_CODE_PEPPER", "SCHOOL_INVITE_PEPPER",
   "ADMIN_PASSWORD", "ADMIN_TOTP_SECRET",
-  "ESKIZ_EMAIL", "ESKIZ_PASSWORD", "PAYME_MERCHANT_ID", "PAYME_KEY",
+  "ESKIZ_EMAIL", "ESKIZ_PASSWORD",
   "METRICS_TOKEN",
 ];
 
@@ -66,6 +66,14 @@ function validateAiConfiguration(environment, errors) {
   }
 }
 
+function validatePaymentConfiguration(environment, errors) {
+  if (valueOf(environment, "PAYMENTS_ENABLED").toLowerCase() !== "true") return;
+  const merchantId = valueOf(environment, "PAYME_MERCHANT_ID");
+  const providerKey = valueOf(environment, "PAYME_KEY");
+  if (!merchantId) errors.push("PAYME_MERCHANT_ID Payme sozlanganda majburiy");
+  if (!providerKey) errors.push("PAYME_KEY Payme sozlanganda majburiy");
+}
+
 function collectProductionEnvironmentErrors(environment = process.env) {
   if (valueOf(environment, "NODE_ENV") !== "production") return [];
   const errors = [];
@@ -108,6 +116,7 @@ function collectProductionEnvironmentErrors(environment = process.env) {
   const totpSecret = valueOf(environment, "ADMIN_TOTP_SECRET");
   if (totpSecret && !/^[A-Z2-7]+=*$/i.test(totpSecret)) errors.push("ADMIN_TOTP_SECRET Base32 formatida bo'lishi kerak");
   errors.push(...collectDatabaseConfigurationErrors(environment));
+  validatePaymentConfiguration(environment, errors);
   validateAiConfiguration(environment, errors);
   return [...new Set(errors)];
 }

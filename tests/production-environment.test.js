@@ -26,8 +26,6 @@ function validProductionEnvironment(overrides = {}) {
     ADMIN_TOTP_SECRET: "JBSWY3DPEHPK3PXP",
     ESKIZ_EMAIL: "sms@ilmliga.uz",
     ESKIZ_PASSWORD: "eskiz-provider-password",
-    PAYME_MERCHANT_ID: "merchant-id",
-    PAYME_KEY: "payme-provider-key",
     METRICS_TOKEN: "metrics-token-unique-0123456789-abcdef",
     AI_REPORTS_ENABLED: "false",
     ...overrides,
@@ -55,7 +53,6 @@ test("missing and unsafe production values stop startup without exposing values"
     SCHOOL_INVITE_PEPPER: "same-secret-value-that-is-long-enough-123",
     ADMIN_TOTP_SECRET: "not-base32-secret!",
     ESKIZ_EMAIL: "invalid-email",
-    PAYME_KEY: "",
     METRICS_TOKEN: "short",
   });
 
@@ -63,7 +60,6 @@ test("missing and unsafe production values stop startup without exposing values"
     () => validateProductionEnvironment(environment),
     (error) => {
       assert.equal(error.code, "INVALID_PRODUCTION_ENVIRONMENT");
-      assert.ok(error.issues.some((issue) => issue.startsWith("PAYME_KEY")));
       assert.ok(error.issues.some((issue) => issue.startsWith("CLIENT_ORIGIN")));
       assert.ok(error.issues.some((issue) => issue.includes("alohida qiymat")));
       assert.ok(error.issues.some((issue) => issue.startsWith("ADMIN_TOTP_SECRET")));
@@ -85,6 +81,16 @@ test("enabled AI provider requires its key and model", () => {
   assert.ok(errors.includes("OPENAI_API_KEY AI hisobotlari yoqilganda majburiy"));
   assert.ok(errors.includes("OPENAI_MODEL AI hisobotlari yoqilganda majburiy"));
   assert.ok(errors.some((issue) => issue.startsWith("AI_MONTHLY_HARD_LIMIT_USD")));
+});
+
+test("Payme is optional but partial configuration is rejected", () => {
+  assert.deepEqual(collectProductionEnvironmentErrors(validProductionEnvironment()), []);
+  const errors = collectProductionEnvironmentErrors(validProductionEnvironment({
+    PAYMENTS_ENABLED: "true",
+    PAYME_MERCHANT_ID: "merchant-id",
+    PAYME_KEY: "",
+  }));
+  assert.ok(errors.includes("PAYME_KEY Payme sozlanganda majburiy"));
 });
 
 test("enabled production AI requires explicit pricing and a persistent hard limit", () => {

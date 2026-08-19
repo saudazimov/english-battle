@@ -14,11 +14,7 @@ function normalizeCountry(country) {
 
 function validateRole(role) {
   const requestedRole = String(role || "student").trim().toLowerCase();
-  const publicRoles = new Set(["student", "teacher", "parent"]);
-  if (!publicRoles.has(requestedRole) && requestedRole !== "school_admin") {
-    return null;
-  }
-  return requestedRole;
+  return requestedRole === "student" ? "student" : null;
 }
 
 function normalizeRoleSchool(role, school) {

@@ -161,8 +161,7 @@ test("payment, session and upload integrity guards remain present", () => {
   assert.match(auth, /auth_version/);
   assert.match(server, /uploadedContentMatches/);
   assert.match(questClaim, /FOR UPDATE OF uq/);
-  assert.match(registerService, /new Set\(\["student", "teacher", "parent"\]\)/);
-  assert.match(registerService, /requestedRole !== "school_admin"/);
+  assert.match(registerService, /requestedRole === "student" \? "student" : null/);
 });
 
 test("all required security migrations exist", () => {
