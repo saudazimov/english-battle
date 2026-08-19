@@ -16,6 +16,15 @@
     return { uz: "uz-UZ", en: "en-US", ru: "ru-RU" }[language] || "uz-UZ";
   }
 
+  function comingSoonCopy() {
+    var language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
+    return {
+      uz: { title: "Premium obuna tez orada", text: "Premium imkoniyatlar va xavfsiz to‘lov tizimi tayyorlanmoqda.", close: "Yopish" },
+      en: { title: "Premium is coming soon", text: "Premium features and secure payments are being prepared.", close: "Close" },
+      ru: { title: "Premium скоро появится", text: "Мы готовим Premium-функции и безопасную оплату.", close: "Закрыть" },
+    }[language] || null;
+  }
+
   // Plan ma'lumotlari (narx server'da, bu faqat ko'rsatish uchun — so'mда)
   var PLANS = {
     student_premium: { name: "Student Premium", price: 50000, color: "var(--pm-accent)",
@@ -114,8 +123,8 @@
   window.openPaymentModal = function (planKey) {
     currentPlan = planKey && PLANS[planKey] ? planKey : "parent_premium";
     currentMonths = 1;
-    currentView = "choose";
-    renderChoose();
+    currentView = "coming-soon";
+    renderComingSoon();
     overlay.classList.add("open");
     document.body.style.overflow = "hidden";
   };
@@ -124,6 +133,19 @@
     overlay.classList.remove("open");
     document.body.style.overflow = "";
   };
+
+  function renderComingSoon() {
+    var copy = comingSoonCopy();
+    overlay.innerHTML =
+      '<div class="pm-modal"><div class="pm-head">' +
+        '<button class="pm-close" onclick="window.closePaymentModal()" aria-label="' + copy.close + '">&times;</button>' +
+        '<div class="pm-badge">PREMIUM</div>' +
+        '<div class="pm-title">' + copy.title + '</div>' +
+        '<div class="pm-sub">' + copy.text + '</div>' +
+      '</div><div class="pm-body">' +
+        '<button class="pm-pay-btn" type="button" onclick="window.closePaymentModal()">' + copy.close + '</button>' +
+      '</div></div>';
+  }
 
   function renderChoose() {
     currentView = "choose";

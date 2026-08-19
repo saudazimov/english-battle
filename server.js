@@ -567,7 +567,9 @@ registerPremiumSubscriptionRoutes({ app, premium, logAudit });
 
 // ============ TO'LOV (PAYME) ============
 
-registerPaymentRoutes({ app });
+if (String(process.env.PAYMENTS_ENABLED || "").toLowerCase() === "true") {
+  registerPaymentRoutes({ app });
+}
 
 // ============ AI HISOBOTLAR: PARENT, STUDENT, TEACHER ============
 app.use("/ai/reports", aiGenerationLimiter);

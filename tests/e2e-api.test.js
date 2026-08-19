@@ -204,35 +204,26 @@ test("student and teacher complete the core platform flow", async (t) => {
   const citiesResponse = await api(`/locations/cities?country=UZ&state=${encodeURIComponent(registrationState.code)}`);
   assert.equal(citiesResponse.response.status, 200);
   const registrationDistrict = citiesResponse.body.cities[0] || null;
-  const roleOtp = "654321";
-  const roleOtpHash = await bcrypt.hash(roleOtp, 6);
-
-  async function registerRole(role, phonePrefix, usernamePrefix) {
+  async function registerBlockedRole(role, phonePrefix, usernamePrefix) {
     const phone = phonePrefix + suffix;
-    await pool.query(
-      "INSERT INTO otp_codes (phone, code, expires_at) VALUES ($1,$2,NOW()+INTERVAL '10 minutes')",
-      [phone, roleOtpHash]
-    );
-    const result = await api("/register", {
+    return api("/register", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         first_name: "E2E", last_name: role === "parent" ? "Parent" : "Teacher",
-        phone, password, code: roleOtp, role, username: usernamePrefix + suffix,
+        phone, password, code: "654321", role, username: usernamePrefix + suffix,
         country: "UZ", region: role === "parent" ? null : registrationState.name,
         district: role === "parent" ? null : registrationDistrict,
         school: role === "parent" ? null : "42-maktab",
       }),
     });
-    if (result.response.status === 201) fixture.userIds.push(result.body.user.id);
-    return result;
   }
 
-  const teacherRegistration = await registerRole("teacher", "+99895", "e2e_role_teacher_");
-  assert.equal(teacherRegistration.response.status, 201, JSON.stringify(teacherRegistration.body));
-  assert.equal(teacherRegistration.body.user.role, "teacher");
-  const parentRegistration = await registerRole("parent", "+99896", "e2e_role_parent_");
-  assert.equal(parentRegistration.response.status, 201, JSON.stringify(parentRegistration.body));
-  assert.equal(parentRegistration.body.user.role, "parent");
+  const teacherRegistration = await registerBlockedRole("teacher", "+99895", "e2e_role_teacher_");
+  assert.equal(teacherRegistration.response.status, 400, JSON.stringify(teacherRegistration.body));
+  assert.equal(teacherRegistration.body.error, "Hisob turi noto'g'ri tanlangan");
+  const parentRegistration = await registerBlockedRole("parent", "+99896", "e2e_role_parent_");
+  assert.equal(parentRegistration.response.status, 400, JSON.stringify(parentRegistration.body));
+  assert.equal(parentRegistration.body.error, "Hisob turi noto'g'ri tanlangan");
 
   const passwordChanged = await api("/teacher/settings/password", {
     method: "POST", headers: auth(teacherToken),

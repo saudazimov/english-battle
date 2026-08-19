@@ -166,60 +166,33 @@ test("register preserves student SQL order, normalization, token, and response",
   assert.deepEqual(calls.at(-1), ["sign", user]);
 });
 
-test("register preserves school-admin invite lookup, overrides, and usage update", async () => {
-  const user = { id: 21, username: "admin_one", role: "school_admin" };
-  const invite = {
-    id: 8,
-    school_name: "45-maktab",
-    region: "Samarqand",
-    district: "Urgut",
-    used_by: null,
-    expires_at: new Date(Date.now() + 60_000),
-  };
-  const { dependencies, calls } = createHarness({
-    queryResponses: [
-      { rows: [] },
-      { rows: [invite] },
-      { rows: [] },
-      { rows: [{ code: "otp-hash", expires_at: new Date(Date.now() + 60_000) }] },
-      { rows: [user] },
-      { rows: [] },
-      { rows: [] },
-    ],
-  });
-  const service = createRegisterService(dependencies);
-  const result = await service.register({
-    req: {},
-    body: studentBody({
-      role: "school_admin",
-      username: "Admin_One",
-      school_code: "INVITE-1",
-      school: "client-school",
-      region: "client-region",
-      district: "client-district",
-    }),
-  });
+test("public registration rejects non-student roles before invite lookup", async () => {
+  for (const role of ["teacher", "parent", "school_admin"]) {
+    const { dependencies, calls } = createHarness({
+      queryResponses: [{ rows: [] }],
+    });
+    const service = createRegisterService(dependencies);
+    const result = await service.register({
+      req: {},
+      body: studentBody({
+        role,
+        username: `${role}_user`,
+        school_code: "INVITE-1",
+        school: "client-school",
+        region: "client-region",
+        district: "client-district",
+      }),
+    });
 
-  assert.deepEqual(result, { statusCode: 201, user });
-  const queries = calls.filter(([type]) => type === "query");
-  assert.match(queries[1][1], /^SELECT id, school_name, region, district/);
-  assert.deepEqual(queries[1][2], ["invite-hash"]);
-  assert.deepEqual(queries[4][2].slice(6, 13), [
-    "Samarqand",
-    "Urgut",
-    "safe:Bunyodkor",
-    "normalized:45-maktab",
-    "school_admin",
-    "admin_one",
-    "UZ",
-  ]);
-  assert.equal(
-    queries[5][1],
-    "UPDATE school_invites SET used_by = $1, used_at = NOW() WHERE id = $2"
-  );
-  assert.deepEqual(queries[5][2], [21, 8]);
-  assert.equal(queries[6][1], "DELETE FROM otp_codes WHERE phone = $1");
-  assert.equal(calls.some(([type]) => type === "location"), true);
+    assert.deepEqual(result, {
+      statusCode: 400,
+      body: { error: "Hisob turi noto'g'ri tanlangan" },
+    });
+    const queries = calls.filter(([type]) => type === "query");
+    assert.equal(queries.length, 1);
+    assert.equal(queries.some(([, sql]) => /school_invites/.test(sql)), false);
+    assert.equal(calls.some(([type]) => type === "location"), false);
+  }
 });
 
 test("register preserves validation short circuits before database access", async () => {
