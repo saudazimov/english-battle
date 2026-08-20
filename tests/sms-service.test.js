@@ -69,7 +69,7 @@ test("SMS service preserves login, send request, and token cache", async () => {
   assert.equal(harness.fetchCalls[1].options.headers.Authorization, "Bearer cached-token");
   assert.deepEqual(JSON.parse(harness.fetchCalls[1].options.body), {
     mobile_phone: "998901112233",
-    message: "English Battle: tasdiqlash kodingiz 111111. Kodni hech kimga bermang.",
+    message: "IlmLiga: tasdiqlash kodingiz 111111. Kodni hech kimga bermang.",
     from: "4546",
   });
   assert.equal(harness.fetchCalls[2].options.headers.Authorization, "Bearer cached-token");

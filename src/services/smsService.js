@@ -41,7 +41,7 @@ function createSmsService({
 
   return async function sendSms(phone, code) {
     const to = String(phone).replace(/\D/g, "");
-    const message = `English Battle: tasdiqlash kodingiz ${code}. Kodni hech kimga bermang.`;
+    const message = `IlmLiga: tasdiqlash kodingiz ${code}. Kodni hech kimga bermang.`;
 
     if (!environment.ESKIZ_EMAIL || !environment.ESKIZ_PASSWORD) {
       logger.log("========================================");
