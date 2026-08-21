@@ -72,6 +72,34 @@
     .pr-info-ic i { width: 20px; height: 20px; color: var(--accent); }
     .pr-info-text { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
 
+    .pr-smartboard-list { display: grid; gap: 14px; margin-top: 18px; }
+    .pr-smartboard { padding: 22px 24px; border: 1px solid rgba(56,225,255,0.28); border-radius: 18px; background: linear-gradient(135deg, rgba(56,225,255,0.08), rgba(168,85,247,0.10)); display: flex; align-items: center; gap: 18px; box-shadow: 0 18px 45px rgba(0,0,0,0.18); }
+    .pr-smartboard.word-builder { border-color: rgba(52,211,153,0.30); background: linear-gradient(135deg, rgba(52,211,153,0.09), rgba(91,140,255,0.10)); }
+    .pr-smartboard.word-builder .pr-smartboard-icon { color: var(--green); border-color: rgba(52,211,153,0.30); background: rgba(52,211,153,0.10); }
+    .pr-smartboard.word-builder .pr-smartboard-eyebrow { color: var(--green); }
+    .pr-smartboard.word-builder .pr-smartboard-action { border-color: rgba(52,211,153,0.38); background: linear-gradient(135deg, var(--green), #67e8f9); }
+    .pr-smartboard.sentence-builder { border-color: rgba(251,191,36,0.32); background: linear-gradient(135deg, rgba(251,191,36,0.09), rgba(236,72,153,0.09)); }
+    .pr-smartboard.sentence-builder .pr-smartboard-icon { color: var(--gold); border-color: rgba(251,191,36,0.32); background: rgba(251,191,36,0.10); }
+    .pr-smartboard.sentence-builder .pr-smartboard-eyebrow { color: var(--gold); }
+    .pr-smartboard.sentence-builder .pr-smartboard-action { border-color: rgba(251,191,36,0.42); background: linear-gradient(135deg, var(--gold), #fb7185); }
+    .pr-smartboard.error-hunter { border-color: rgba(251,113,133,0.34); background: linear-gradient(135deg, rgba(251,113,133,0.10), rgba(251,191,36,0.08)); }
+    .pr-smartboard.error-hunter .pr-smartboard-icon { color: var(--red); border-color: rgba(251,113,133,0.34); background: rgba(251,113,133,0.10); }
+    .pr-smartboard.error-hunter .pr-smartboard-eyebrow { color: var(--red); }
+    .pr-smartboard.error-hunter .pr-smartboard-action { border-color: rgba(251,113,133,0.42); background: linear-gradient(135deg, var(--red), var(--gold)); }
+    .pr-smartboard.match-master { border-color: rgba(56,225,255,0.32); background: linear-gradient(135deg, rgba(52,211,153,0.09), rgba(56,225,255,0.09)); }
+    .pr-smartboard.match-master .pr-smartboard-icon { color: var(--cyan); border-color: rgba(56,225,255,0.32); background: rgba(56,225,255,0.10); }
+    .pr-smartboard.match-master .pr-smartboard-eyebrow { color: var(--cyan); }
+    .pr-smartboard.match-master .pr-smartboard-action { border-color: rgba(56,225,255,0.42); background: linear-gradient(135deg, var(--green), var(--cyan)); }
+    .pr-smartboard-icon { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; flex: 0 0 auto; color: var(--cyan); background: rgba(56,225,255,0.10); border: 1px solid rgba(56,225,255,0.28); }
+    .pr-smartboard-icon i { width: 27px; height: 27px; }
+    .pr-smartboard-copy { min-width: 0; flex: 1; }
+    .pr-smartboard-eyebrow { color: var(--cyan); font-size: 11px; font-weight: 800; letter-spacing: 0.9px; text-transform: uppercase; }
+    .pr-smartboard-title { margin-top: 4px; font-size: 19px; font-weight: 800; }
+    .pr-smartboard-text { margin-top: 5px; color: var(--text-dim); font-size: 13px; line-height: 1.45; }
+    .pr-smartboard-action { min-height: 46px; padding: 0 18px; border: 1px solid rgba(56,225,255,0.34); border-radius: 12px; color: #051018; background: linear-gradient(135deg, var(--cyan), #7dd3fc); font-family: inherit; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; transition: transform 0.15s, filter 0.15s; }
+    .pr-smartboard-action:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    .pr-smartboard-action i { width: 18px; height: 18px; }
+
     /* ===== MASHQ EKRANI ===== */
     .pr-progress-top { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
     .pr-progress-bar { flex: 1; height: 10px; background: var(--panel-2); border-radius: 999px; overflow: hidden; }
@@ -175,6 +203,9 @@
       #levelOptions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       #countOptions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .pr-info-row, .pr-result-stats, .pr-result-actions { flex-direction: column; }
+      .pr-smartboard { align-items: flex-start; flex-wrap: wrap; }
+      .pr-smartboard-copy { flex-basis: calc(100% - 72px); }
+      .pr-smartboard-action { width: 100%; justify-content: center; }
       .pr-question { font-size: 21px; }
       .pr-answer { padding: 16px; gap: 12px; }
       .pr-answer-text { font-size: 15px; }
@@ -230,6 +261,69 @@
             <div class="pr-info"><div class="pr-info-ic"><i data-lucide="zap"></i></div><div class="pr-info-text" data-i18n="practice.correctXp">Har to‘g‘ri javob +2 XP</div></div>
             <div class="pr-info"><div class="pr-info-ic"><i data-lucide="lightbulb"></i></div><div class="pr-info-text" data-i18n="practice.instantExplanation">Darhol tushuntirish</div></div>
           </div>
+        </div>
+
+        <div class="pr-smartboard-list">
+          <section class="pr-smartboard" aria-labelledby="smartboardPracticeTitle">
+            <div class="pr-smartboard-icon"><i data-lucide="panels-top-left"></i></div>
+            <div class="pr-smartboard-copy">
+              <div class="pr-smartboard-eyebrow" data-i18n="practice.smartboardEyebrow">Smart doska uchun</div>
+              <h2 class="pr-smartboard-title" id="smartboardPracticeTitle" data-i18n="practice.smartboardTitle">Grammar Arena — 2 o‘quvchi</h2>
+              <p class="pr-smartboard-text" data-i18n="practice.smartboardText">Bitta ekran ikki maydonga bo‘linadi. Akkaunt shart emas va natijalar saqlanmaydi.</p>
+            </div>
+            <button class="pr-smartboard-action" type="button" onclick="window.location.href='/smartboard-game.html'">
+              <i data-lucide="gamepad-2"></i>
+              <span data-i18n="practice.smartboardStart">O‘yinni ochish</span>
+            </button>
+          </section>
+          <section class="pr-smartboard word-builder" aria-labelledby="wordBuilderPracticeTitle">
+            <div class="pr-smartboard-icon"><i data-lucide="blocks"></i></div>
+            <div class="pr-smartboard-copy">
+              <div class="pr-smartboard-eyebrow" data-i18n="practice.smartboardEyebrow">Smart doska uchun</div>
+              <h2 class="pr-smartboard-title" id="wordBuilderPracticeTitle" data-i18n="practice.wordBuilderTitle">Word Builder Duel — 2 o‘quvchi</h2>
+              <p class="pr-smartboard-text" data-i18n="practice.wordBuilderText">Aralashtirilgan harflardan gapga mos so‘zni kim tezroq tuzadi?</p>
+            </div>
+            <button class="pr-smartboard-action" type="button" onclick="window.location.href='/word-builder-game.html'">
+              <i data-lucide="puzzle"></i>
+              <span data-i18n="practice.smartboardStart">O‘yinni ochish</span>
+            </button>
+          </section>
+          <section class="pr-smartboard sentence-builder" aria-labelledby="sentenceBuilderPracticeTitle">
+            <div class="pr-smartboard-icon"><i data-lucide="list-ordered"></i></div>
+            <div class="pr-smartboard-copy">
+              <div class="pr-smartboard-eyebrow" data-i18n="practice.smartboardEyebrow">Smart doska uchun</div>
+              <h2 class="pr-smartboard-title" id="sentenceBuilderPracticeTitle" data-i18n="practice.sentenceBuilderTitle">Sentence Builder Duel — 2 o‘quvchi</h2>
+              <p class="pr-smartboard-text" data-i18n="practice.sentenceBuilderText">Aralashtirilgan so‘zlardan to‘g‘ri inglizcha gapni kim tezroq tuzadi?</p>
+            </div>
+            <button class="pr-smartboard-action" type="button" onclick="window.location.href='/word-builder-game.html?mode=sentence'">
+              <i data-lucide="play"></i>
+              <span data-i18n="practice.smartboardStart">O‘yinni ochish</span>
+            </button>
+          </section>
+          <section class="pr-smartboard error-hunter" aria-labelledby="errorHunterPracticeTitle">
+            <div class="pr-smartboard-icon"><i data-lucide="scan-search"></i></div>
+            <div class="pr-smartboard-copy">
+              <div class="pr-smartboard-eyebrow" data-i18n="practice.smartboardEyebrow">Smart doska uchun</div>
+              <h2 class="pr-smartboard-title" id="errorHunterPracticeTitle" data-i18n="practice.errorHunterTitle">Error Hunter Duel — 2 o‘quvchi</h2>
+              <p class="pr-smartboard-text" data-i18n="practice.errorHunterText">Grammatik xatoni toping va gap uchun to‘g‘ri variantni tanlang.</p>
+            </div>
+            <button class="pr-smartboard-action" type="button" onclick="window.location.href='/smartboard-game.html?mode=error'">
+              <i data-lucide="crosshair"></i>
+              <span data-i18n="practice.smartboardStart">O‘yinni ochish</span>
+            </button>
+          </section>
+          <section class="pr-smartboard match-master" aria-labelledby="matchMasterPracticeTitle">
+            <div class="pr-smartboard-icon"><i data-lucide="combine"></i></div>
+            <div class="pr-smartboard-copy">
+              <div class="pr-smartboard-eyebrow" data-i18n="practice.smartboardEyebrow">Smart doska uchun</div>
+              <h2 class="pr-smartboard-title" id="matchMasterPracticeTitle" data-i18n="practice.matchMasterTitle">Match Master Duel — 2 o‘quvchi</h2>
+              <p class="pr-smartboard-text" data-i18n="practice.matchMasterText">Bo‘sh joyli gaplarni ularga mos to‘g‘ri javoblar bilan juftlang.</p>
+            </div>
+            <button class="pr-smartboard-action" type="button" onclick="window.location.href='/smartboard-game.html?mode=match'">
+              <i data-lucide="waypoints"></i>
+              <span data-i18n="practice.smartboardStart">O‘yinni ochish</span>
+            </button>
+          </section>
         </div>
       </div>
 

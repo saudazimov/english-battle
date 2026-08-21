@@ -6,6 +6,11 @@ const {
   createPracticeController,
 } = require("../src/controllers/practiceController");
 const { createPracticeRoutes } = require("../src/routes/practiceRoutes");
+const {
+  createSmartboardQuestionService,
+  normalizeOptions: normalizeSmartboardOptions,
+  normalizeWordOptions,
+} = require("../src/services/smartboardQuestionService");
 
 const VALID_SESSION_ID = "11111111-1111-4111-8111-111111111111";
 
@@ -558,7 +563,7 @@ test("practice routers preserve separated route and middleware order", () => {
   const finishLimiter = function practiceFinishLimiter() {};
   const finishRouter = routes.createFinishRouter(finishLimiter);
 
-  assert.equal(routes.sessionRouter.stack.length, 2);
+  assert.equal(routes.sessionRouter.stack.length, 4);
   const startRoute = routes.sessionRouter.stack[0].route;
   assert.equal(startRoute.path, "/practice/start");
   assert.equal(startRoute.methods.get, true);
@@ -567,6 +572,16 @@ test("practice routers preserve separated route and middleware order", () => {
   assert.equal(answerRoute.path, "/practice/answer");
   assert.equal(answerRoute.methods.post, true);
   assert.equal(answerRoute.stack[0].handle, authMiddleware);
+  const smartboardRoute = routes.sessionRouter.stack[2].route;
+  assert.equal(smartboardRoute.path, "/smartboard/questions");
+  assert.equal(smartboardRoute.methods.get, true);
+  assert.equal(smartboardRoute.stack.length, 2);
+  assert.equal(smartboardRoute.stack[0].handle, authMiddleware);
+  const wordBuilderRoute = routes.sessionRouter.stack[3].route;
+  assert.equal(wordBuilderRoute.path, "/smartboard/word-builder/words");
+  assert.equal(wordBuilderRoute.methods.get, true);
+  assert.equal(wordBuilderRoute.stack.length, 2);
+  assert.equal(wordBuilderRoute.stack[0].handle, authMiddleware);
 
   assert.equal(finishRouter.stack.length, 1);
   const finishRoute = finishRouter.stack[0].route;
@@ -575,4 +590,102 @@ test("practice routers preserve separated route and middleware order", () => {
   assert.equal(finishRoute.stack.length, 3);
   assert.equal(finishRoute.stack[0].handle, authMiddleware);
   assert.equal(finishRoute.stack[1].handle, finishLimiter);
+});
+
+test("smartboard options accept only supported CEFR levels and game sizes", () => {
+  assert.deepEqual(normalizeSmartboardOptions({ level: "b1", count: "10" }), {
+    level: "B1",
+    count: 10,
+    skill: "grammar",
+  });
+  assert.equal(normalizeSmartboardOptions({ level: "B1", count: "7" }), null);
+  assert.equal(normalizeSmartboardOptions({ level: "B3", count: "10" }), null);
+});
+
+test("smartboard question service uses one parameterized, read-only grammar query", async () => {
+  const calls = [];
+  const rows = Array.from({ length: 5 }, (_, index) => ({
+    id: index + 1,
+    question_text: "Question " + (index + 1),
+    option_a: "A",
+    option_b: "B",
+    option_c: "C",
+    option_d: "D",
+    correct_option: index === 0 ? "a" : "B",
+    explanation: null,
+    skill: "grammar",
+    cefr_level: "A2",
+  }));
+  const service = createSmartboardQuestionService({
+    pool: {
+      async query(sql, params) {
+        calls.push([normalizeSql(sql), params]);
+        return { rows };
+      },
+    },
+  });
+
+  const result = await service.list({ level: "A2", count: "5" });
+  assert.equal(result.status, "ok");
+  assert.equal(result.questions.length, 5);
+  assert.equal(result.questions[0].correct_option, "A");
+  assert.deepEqual(calls[0][1], ["A2", "grammar", 5]);
+  assert.match(calls[0][0], /^SELECT /);
+  assert.doesNotMatch(calls[0][0], /\b(?:INSERT|UPDATE|DELETE)\b/i);
+  assert.match(calls[0][0], /cefr_level = \$1/);
+  assert.match(calls[0][0], /LOWER\(skill\) = \$2/);
+  assert.match(calls[0][0], /LIMIT \$3/);
+});
+
+test("smartboard service never fills a shortage from another level or skill", async () => {
+  let queryCount = 0;
+  const service = createSmartboardQuestionService({
+    pool: {
+      async query() {
+        queryCount += 1;
+        return { rows: [{ id: 1 }] };
+      },
+    },
+  });
+
+  const result = await service.list({ level: "C2", count: "5" });
+  assert.deepEqual(result, { status: "insufficient", available: 1, required: 5 });
+  assert.equal(queryCount, 1);
+});
+
+test("word builder options accept only supported CEFR levels and round counts", () => {
+  assert.deepEqual(normalizeWordOptions({ level: "b2", count: "15" }), {
+    level: "B2",
+    count: 15,
+  });
+  assert.equal(normalizeWordOptions({ level: "A1", count: "8" }), null);
+  assert.equal(normalizeWordOptions({ level: "C3", count: "10" }), null);
+});
+
+test("word builder service returns only parameterized read-only word candidates", async () => {
+  const calls = [];
+  const rows = Array.from({ length: 5 }, (_, index) => ({
+    id: index + 1,
+    question_text: "They ___ English.",
+    answer: index === 0 ? "SPEAK" : "learn",
+    explanation: null,
+    skill: "grammar",
+    cefr_level: "A1",
+  }));
+  const service = createSmartboardQuestionService({
+    pool: {
+      async query(sql, params) {
+        calls.push([normalizeSql(sql), params]);
+        return { rows };
+      },
+    },
+  });
+
+  const result = await service.listWords({ level: "A1", count: "5" });
+  assert.equal(result.status, "ok");
+  assert.equal(result.words[0].answer, "speak");
+  assert.deepEqual(calls[0][1], ["A1", 5]);
+  assert.doesNotMatch(calls[0][0], /\b(?:INSERT|UPDATE|DELETE)\b/i);
+  assert.match(calls[0][0], /answer ~ '\^\[A-Za-z\]/);
+  assert.match(calls[0][0], /LIMIT \$2/);
 });
