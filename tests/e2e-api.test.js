@@ -219,11 +219,11 @@ test("student and teacher complete the core platform flow", async (t) => {
   }
 
   const teacherRegistration = await registerBlockedRole("teacher", "+99895", "e2e_role_teacher_");
-  assert.equal(teacherRegistration.response.status, 400, JSON.stringify(teacherRegistration.body));
-  assert.equal(teacherRegistration.body.error, "Hisob turi noto'g'ri tanlangan");
+  assert.equal(teacherRegistration.response.status, 403, JSON.stringify(teacherRegistration.body));
+  assert.equal(teacherRegistration.body.error, "Ochiq ro'yxatdan o'tish vaqtincha yopilgan");
   const parentRegistration = await registerBlockedRole("parent", "+99896", "e2e_role_parent_");
-  assert.equal(parentRegistration.response.status, 400, JSON.stringify(parentRegistration.body));
-  assert.equal(parentRegistration.body.error, "Hisob turi noto'g'ri tanlangan");
+  assert.equal(parentRegistration.response.status, 403, JSON.stringify(parentRegistration.body));
+  assert.equal(parentRegistration.body.error, "Ochiq ro'yxatdan o'tish vaqtincha yopilgan");
 
   const passwordChanged = await api("/teacher/settings/password", {
     method: "POST", headers: auth(teacherToken),

@@ -700,6 +700,7 @@
       <div class="nav-item" onclick="openImportModal()"><i data-lucide="upload" class="ico"></i> Bulk Import</div>
       <div class="nav-label">Boshqaruv</div>
       <div class="nav-item" id="nav-users" onclick="switchView('users')"><i data-lucide="users" class="ico"></i> Foydalanuvchilar</div>
+      <div class="nav-item" onclick="openStudentProvisionModal()"><i data-lucide="user-plus" class="ico"></i> O‘quvchi akkauntlari</div>
       <div class="nav-item" id="nav-schools" onclick="switchView('schools')"><i data-lucide="school" class="ico"></i> Maktablar</div>
       <div class="nav-item" id="nav-tournaments" onclick="switchView('tournaments')"><i data-lucide="trophy" class="ico"></i> Turnirlar <span class="tag">YANGI</span></div>
       <div class="nav-item" id="nav-reports" onclick="switchView('reports')"><i data-lucide="bar-chart-3" class="ico"></i> Hisobotlar</div>
@@ -1375,6 +1376,52 @@
       <div class="modal-actions">
         <button class="modal-btn modal-btn-cancel" onclick="closeDelModal()">Bekor qilish</button>
         <button class="modal-btn modal-btn-confirm" onclick="confirmDelete()">O'chirish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENT ACCOUNT PROVISIONING MODAL -->
+  <div class="modal-overlay" id="studentProvisionModal">
+    <div class="modal-box wide" style="max-width:980px;">
+      <div class="modal-head-wide">
+        <div class="mh-ic"><i data-lucide="user-plus" class="ico"></i></div>
+        <div class="mh-title">O‘quvchi akkauntlarini yaratish</div>
+        <div class="mh-close" onclick="closeStudentProvisionModal()"><i data-lucide="x" class="ico"></i></div>
+      </div>
+
+      <div id="studentProvisionForm">
+        <div style="padding:12px 14px;margin-bottom:16px;border:1px solid var(--border);border-radius:12px;color:var(--text-dim);font-size:13px;line-height:1.6;">
+          Barcha akkauntlar <b>o‘quvchi</b> rolida yaratiladi. Login va parol faqat natija oynasida bir marta ko‘rsatiladi.
+        </div>
+        <div class="row" style="margin-bottom:14px;">
+          <div><label>Ism</label><input id="studentFirstName" placeholder="Ali"></div>
+          <div><label>Familiya</label><input id="studentLastName" placeholder="Valiyev"></div>
+        </div>
+        <div class="row" style="margin-bottom:14px;">
+          <div><label>Maktab</label><input id="studentSchool" placeholder="42-son maktab"></div>
+          <div><label>Sinf</label><input id="studentClassName" placeholder="7-A"></div>
+        </div>
+        <button class="modal-btn" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;" onclick="createSingleStudent()">Bitta o‘quvchi yaratish</button>
+
+        <div style="height:1px;background:var(--border);margin:22px 0;"></div>
+        <div style="font-weight:800;margin-bottom:8px;">Excel orqali ko‘p o‘quvchi yaratish</div>
+        <div class="imp-drop" onclick="document.getElementById('studentXlsxFile').click()">
+          <i data-lucide="file-spreadsheet" class="ico-lg" style="margin:0 auto 10px;color:var(--green);"></i>
+          <div style="font-weight:600;margin-bottom:4px;">Excel faylni tanlang (.xlsx yoki .xls)</div>
+          <div style="font-size:12.5px;color:var(--text-faint);">Ustunlar: ism, familiya, maktab, sinf</div>
+        </div>
+        <input type="file" id="studentXlsxFile" accept=".xlsx,.xls" style="display:none;" onchange="handleStudentXlsx(this.files[0])">
+        <div style="margin-top:10px;font-size:12px;color:var(--text-faint);">
+          <a href="#" onclick="downloadStudentTemplate();return false;" style="color:var(--accent);">Namuna Excel yuklab olish</a>
+        </div>
+        <div id="studentImportPreview" style="display:none;margin-top:14px;"></div>
+      </div>
+
+      <div id="studentProvisionResult" style="display:none;"></div>
+      <div id="studentProvisionMsg" class="message" style="display:none;margin-top:14px;"></div>
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="modal-btn modal-btn-cancel" onclick="closeStudentProvisionModal()">Yopish</button>
+        <button class="modal-btn" id="studentProvisionDownload" style="display:none;background:linear-gradient(135deg,var(--green),#059669);color:#fff;" onclick="downloadStudentCredentials()">Login-parollarni Excel qilish</button>
       </div>
     </div>
   </div>
@@ -2751,6 +2798,7 @@
         '<div class="um-actions">' +
           '<button class="btn btn-ghost" onclick="openUserEdit()"><i data-lucide="pencil" class="ico-sm"></i> Tahrirlash</button>' +
           '<button class="btn btn-ghost" onclick="askRoleChange()"><i data-lucide="user-cog" class="ico-sm"></i> Rol</button>' +
+          (u.role === "student" ? '<button class="btn btn-ghost" onclick="resetStudentPassword(' + Number(u.id) + ')"><i data-lucide="key-round" class="ico-sm"></i> Yangi parol</button>' : '') +
           (u.is_banned
             ? '<button class="btn" style="background:linear-gradient(135deg,var(--green),#10b981);" onclick="askBan(false)"><i data-lucide="user-check" class="ico-sm"></i> Blokni ochish</button>'
             : '<button class="btn" style="background:linear-gradient(135deg,var(--red),#dc2626);" onclick="askBan(true)"><i data-lucide="ban" class="ico-sm"></i> Bloklash</button>') +
@@ -3494,6 +3542,151 @@
       t.innerHTML = '<i data-lucide="' + ic + '" class="ico t-ic"></i><div class="t-txt">' + esc(text) + '</div>';
       w.appendChild(t); icons();
       setTimeout(function () { t.style.opacity = "0"; t.style.transform = "translateX(60px)"; t.style.transition = "all 0.3s"; setTimeout(function () { t.remove(); }, 300); }, 3000);
+    }
+
+    // ===== STUDENT ACCOUNT PROVISIONING =====
+    var _studentProvisionRows = [];
+    var _studentCredentials = [];
+
+    function openStudentProvisionModal() {
+      _studentProvisionRows = [];
+      _studentCredentials = [];
+      document.getElementById("studentProvisionForm").style.display = "block";
+      document.getElementById("studentProvisionResult").style.display = "none";
+      document.getElementById("studentProvisionDownload").style.display = "none";
+      document.getElementById("studentImportPreview").style.display = "none";
+      document.getElementById("studentProvisionMsg").style.display = "none";
+      document.getElementById("studentXlsxFile").value = "";
+      ["studentFirstName", "studentLastName", "studentSchool", "studentClassName"].forEach(function (id) {
+        document.getElementById(id).value = "";
+      });
+      document.getElementById("studentProvisionModal").classList.add("show");
+      icons();
+    }
+
+    function closeStudentProvisionModal() {
+      document.getElementById("studentProvisionModal").classList.remove("show");
+      _studentCredentials = [];
+    }
+
+    function studentProvisionError(message) {
+      var box = document.getElementById("studentProvisionMsg");
+      box.textContent = message;
+      box.className = "message error";
+      box.style.display = "block";
+    }
+
+    async function createSingleStudent() {
+      var row = {
+        first_name: document.getElementById("studentFirstName").value.trim(),
+        last_name: document.getElementById("studentLastName").value.trim(),
+        school: document.getElementById("studentSchool").value.trim(),
+        class_name: document.getElementById("studentClassName").value.trim(),
+      };
+      await provisionStudentRows([row]);
+    }
+
+    function handleStudentXlsx(file) {
+      if (!file) return;
+      if (typeof XLSX === "undefined") return studentProvisionError("Excel kutubxonasi yuklanmadi");
+      var reader = new FileReader();
+      reader.onload = function (event) {
+        try {
+          var workbook = XLSX.read(event.target.result, { type: "array" });
+          var sheet = workbook.Sheets[workbook.SheetNames[0]];
+          _studentProvisionRows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+          if (!_studentProvisionRows.length) return studentProvisionError("Excel faylda o‘quvchilar topilmadi");
+          var preview = document.getElementById("studentImportPreview");
+          preview.style.display = "flex";
+          preview.style.alignItems = "center";
+          preview.style.justifyContent = "space-between";
+          preview.innerHTML = '<span><b>' + _studentProvisionRows.length + '</b> ta qator topildi</span>' +
+            '<button class="modal-btn" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;" onclick="provisionStudentRows(_studentProvisionRows)">Akkauntlarni yaratish</button>';
+        } catch (error) {
+          studentProvisionError("Excel faylni o‘qib bo‘lmadi");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    async function provisionStudentRows(rows) {
+      document.getElementById("studentProvisionMsg").style.display = "none";
+      try {
+        var response = await apiPost("/admin/students/provision", { rows: rows });
+        var data = await response.json();
+        if (!response.ok) return studentProvisionError(data.error || "Akkauntlarni yaratib bo‘lmadi");
+        renderStudentCredentials(data.credentials || []);
+        loadAll();
+        toast(data.created + " ta o‘quvchi akkaunti yaratildi", "success");
+      } catch (error) {
+        if (error.message !== "auth") studentProvisionError("Server bilan bog‘lanib bo‘lmadi");
+      }
+    }
+
+    function renderStudentCredentials(credentials) {
+      _studentCredentials = credentials;
+      document.getElementById("studentProvisionForm").style.display = "none";
+      var result = document.getElementById("studentProvisionResult");
+      result.style.display = "block";
+      result.innerHTML = '<div style="padding:12px 14px;margin-bottom:14px;border:1px solid #f59e0b;border-radius:12px;color:#fbbf24;font-size:13px;">' +
+        '<b>Muhim:</b> parollar faqat hozir ko‘rsatiladi. Excel faylni yuklab olib, xavfsiz saqlang.</div>' +
+        '<div class="imp-table-wrap"><table class="imp-table"><thead><tr><th>O‘quvchi</th><th>Maktab / sinf</th><th>Login</th><th>Vaqtinchalik parol</th></tr></thead><tbody>' +
+        credentials.map(function (item) {
+          return '<tr><td>' + esc(item.firstName + " " + item.lastName) + '</td><td>' + esc(item.school + " / " + item.className) + '</td><td><b>' + esc(item.login) + '</b></td><td><b>' + esc(item.password) + '</b></td></tr>';
+        }).join("") + '</tbody></table></div>';
+      document.getElementById("studentProvisionDownload").style.display = credentials.length ? "inline-flex" : "none";
+    }
+
+    function downloadStudentTemplate() {
+      if (typeof XLSX === "undefined") return studentProvisionError("Excel kutubxonasi yuklanmadi");
+      var sheet = XLSX.utils.aoa_to_sheet([
+        ["ism", "familiya", "maktab", "sinf"],
+        ["Ali", "Valiyev", "42-son maktab", "7-A"],
+      ]);
+      sheet["!cols"] = [{ wch: 18 }, { wch: 22 }, { wch: 28 }, { wch: 12 }];
+      var workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, sheet, "Oquvchilar");
+      XLSX.writeFile(workbook, "oquvchilar_namuna.xlsx");
+    }
+
+    function downloadStudentCredentials() {
+      if (!_studentCredentials.length || typeof XLSX === "undefined") return;
+      var rows = _studentCredentials.map(function (item) {
+        return {
+          ism: item.firstName,
+          familiya: item.lastName,
+          maktab: item.school,
+          sinf: item.className,
+          login: item.login,
+          parol: item.password,
+        };
+      });
+      var sheet = XLSX.utils.json_to_sheet(rows);
+      sheet["!cols"] = [{ wch: 18 }, { wch: 22 }, { wch: 28 }, { wch: 12 }, { wch: 18 }, { wch: 18 }];
+      var workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, sheet, "Login-parollar");
+      XLSX.writeFile(workbook, "oquvchilar_login_parollar.xlsx");
+    }
+
+    async function resetStudentPassword(userId) {
+      try {
+        var response = await apiPost("/admin/students/" + userId + "/reset-password", {});
+        var data = await response.json();
+        if (!response.ok) return toast(data.error || "Parolni yangilab bo‘lmadi", "error");
+        closeUserModal();
+        openStudentProvisionModal();
+        renderStudentCredentials([{
+          firstName: data.student.first_name,
+          lastName: data.student.last_name,
+          school: data.student.school || "—",
+          className: data.student.class_name || "—",
+          login: data.student.username,
+          password: data.password,
+        }]);
+        toast("Yangi parol yaratildi", "success");
+      } catch (error) {
+        if (error.message !== "auth") toast("Server bilan bog‘lanib bo‘lmadi", "error");
+      }
     }
 
     // ===== BULK IMPORT =====

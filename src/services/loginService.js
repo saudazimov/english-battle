@@ -3,10 +3,11 @@ function createLoginService({ pool, bcrypt, noteFail, noteOk, phoneIpKey, signTo
     noteFail("login", phoneIpKey(req), 8, 15 * 60 * 1000);
   }
 
-  async function login({ req, phone, password }) {
+  async function login({ req, phone, login, password }) {
+    const identifier = String(login || phone || "").trim();
     const result = await pool.query(
-      "SELECT * FROM users WHERE phone = $1",
-      [phone]
+      "SELECT * FROM users WHERE phone = $1 OR LOWER(username) = LOWER($1) LIMIT 1",
+      [identifier]
     );
     if (result.rows.length === 0) {
       recordFailure(req);

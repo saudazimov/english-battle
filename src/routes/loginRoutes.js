@@ -21,7 +21,12 @@ function loginRoutes({
     signToken,
   });
 
-  router.post("/login", requireNormalizedPhone, loginGate, controller.login);
+  function normalizeLegacyPhone(req, res, next) {
+    if (req.body && req.body.login) return next();
+    return requireNormalizedPhone(req, res, next);
+  }
+
+  router.post("/login", normalizeLegacyPhone, loginGate, controller.login);
 
   return router;
 }
