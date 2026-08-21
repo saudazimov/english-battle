@@ -55,7 +55,7 @@
         <h2 class="welcome-title welcome-title--with-icon" id="welcomeTitle"><span data-i18n="welcome.title">Bilim uchun kurash</span><span class="title-icon title-icon--trophy" data-icon="trophy"></span></h2>
         <p class="welcome-subtitle" data-i18n="welcome.subtitle">Ingliz tilini o‘rgan, jangda g‘olib chiq va reytingda ko‘taril</p>
         <div class="button-stack">
-          <a href="/register.html" class="primary-button" style="display:grid;place-items:center;text-decoration:none" data-i18n="welcome.register">Ro‘yxatdan o‘tish</a>
+          <a href="/register.html" class="primary-button" style="display:none;place-items:center;text-decoration:none" data-i18n="welcome.register" aria-hidden="true" tabindex="-1">Ro‘yxatdan o‘tish</a>
           <button type="button" class="secondary-button" data-open-screen="login" data-i18n="welcome.login">Kirish</button>
         </div>
       </div>
@@ -66,14 +66,11 @@
         <button type="button" class="back-button" data-open-screen="welcome"><span data-icon="arrow-left"></span><span data-i18n="login.back">Orqaga</span></button>
         <p class="compact-brand">Ilm<span class="brand-accent">Liga</span></p>
         <h1 class="auth-title" id="loginTitle" data-i18n="login.title">Hisobingizga kiring</h1>
-        <p class="auth-subtitle" data-i18n="login.subtitle">Telefon raqami va parolingizni kiriting</p>
+        <p class="auth-subtitle" data-i18n="login.subtitle">Admin bergan login va parolni kiriting</p>
         <form class="auth-form" id="loginForm" novalidate>
           <div class="field">
-            <label for="loginPhone" data-i18n="login.phone">Telefon raqami</label>
-            <div class="phone-control">
-              <button type="button" class="country-trigger" id="loginCountryButton" aria-label="Telefon kodi uchun davlatni tanlang" data-i18n-aria-label="common.choosePhoneCountry"><span class="fi fi-uz auth-flag" aria-hidden="true"></span><span>+998</span><span data-icon="chevron-down" data-icon-class="control-chevron"></span></button>
-              <input class="phone-number" id="loginPhone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="90 123 45 67">
-            </div>
+            <label for="loginIdentifier" data-i18n="login.identifier">Login</label>
+            <input class="text-input" id="loginIdentifier" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" data-i18n-placeholder="login.identifierPlaceholder" placeholder="IL-7K3M-482Q">
           </div>
           <div class="field">
             <label for="loginPassword" data-i18n="login.password">Parol</label>
@@ -84,8 +81,8 @@
           </div>
           <button type="submit" class="primary-button" id="loginSubmit" data-i18n="login.submit">Kirish</button>
         </form>
-        <div class="center-link"><button type="button" class="text-link" data-open-screen="forgot" data-i18n="login.forgot">Parolni unutdingizmi?</button></div>
-        <p class="auth-footer-copy"><span data-i18n="login.noAccount">Hisobingiz yo‘qmi?</span> <a class="inline-link" href="/register.html" data-i18n="login.signup">Ro‘yxatdan o‘tish</a></p>
+        <div class="center-link" hidden><button type="button" class="text-link" data-open-screen="forgot" data-i18n="login.forgot">Parolni unutdingizmi?</button></div>
+        <p class="auth-footer-copy" hidden><span data-i18n="login.noAccount">Hisobingiz yo‘qmi?</span> <a class="inline-link" href="/register.html" data-i18n="login.signup">Ro‘yxatdan o‘tish</a></p>
       </div>
     </section>
 

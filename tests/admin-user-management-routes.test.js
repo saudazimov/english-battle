@@ -19,6 +19,7 @@ test("admin user management registrar preserves order and dependencies", () => {
     ban: factory("ban"),
     update: factory("update"),
     detail: factory("detail"),
+    studentProvisioning: factory("student-provisioning"),
   };
   const app = {
     use(router) {
@@ -34,6 +35,7 @@ test("admin user management registrar preserves order and dependencies", () => {
     "ban-router",
     "update-router",
     "detail-router",
+    "student-provisioning-router",
   ]);
   assert.deepEqual(calls, [
     ["list", { pool }],
@@ -41,5 +43,6 @@ test("admin user management registrar preserves order and dependencies", () => {
     ["ban", { pool, logAudit }],
     ["update", { pool, logAudit }],
     ["detail", { pool }],
+    ["student-provisioning", { pool, logAudit }],
   ]);
 });

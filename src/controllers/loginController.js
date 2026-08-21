@@ -12,14 +12,14 @@ function createLoginController({ pool, bcrypt, noteFail, noteOk, phoneIpKey, sig
 
   async function login(req, res) {
     try {
-      const { phone, password } = req.body;
-      if (!phone || !password) {
-        return res.status(400).json({ error: "Telefon va parolni kiriting" });
+      const { phone, login: loginName, password } = req.body;
+      if ((!phone && !loginName) || !password) {
+        return res.status(400).json({ error: "Login va parolni kiriting" });
       }
 
-      const outcome = await service.login({ req, phone, password });
+      const outcome = await service.login({ req, phone, login: loginName, password });
       if (outcome.status === "invalid-credentials") {
-        return res.status(400).json({ error: "Telefon yoki parol noto'g'ri" });
+        return res.status(400).json({ error: "Login yoki parol noto'g'ri" });
       }
       if (outcome.status === "banned") {
         return res.status(403).json({ error: "Hisobingiz bloklangan. Administrator bilan bog'laning." });

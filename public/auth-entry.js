@@ -86,29 +86,19 @@
       showScreen(next || "welcome", false);
     });
 
-    const loginPhone = document.getElementById("loginPhone");
-    const loginCountryButton = document.getElementById("loginCountryButton");
+    const loginIdentifier = document.getElementById("loginIdentifier");
     const forgotPhone = document.getElementById("forgotPhone");
     const forgotCountryButton = document.getElementById("forgotCountryButton");
-    bindPhone(loginPhone, () => loginCountry);
     bindPhone(forgotPhone, () => forgotCountry);
 
     try {
       const countries = await AuthApp.loadCountries();
-      loginCountry = countries.find((country) => country.code === "UZ") || countries[0] || loginCountry;
-      forgotCountry = loginCountry;
-      updatePhoneUi(loginCountryButton, loginPhone, loginCountry);
+      forgotCountry = countries.find((country) => country.code === "UZ") || countries[0] || forgotCountry;
       updatePhoneUi(forgotCountryButton, forgotPhone, forgotCountry);
     } catch (error) {
       AuthApp.showToast(error.message, "error");
     }
 
-    loginCountryButton.addEventListener("click", () => {
-      AuthApp.chooseCountry(loginCountry.code, (country) => {
-        loginCountry = country;
-        updatePhoneUi(loginCountryButton, loginPhone, country);
-      });
-    });
     forgotCountryButton.addEventListener("click", () => {
       AuthApp.chooseCountry(forgotCountry.code, (country) => {
         forgotCountry = country;
@@ -118,15 +108,16 @@
 
     document.getElementById("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
+      const login = loginIdentifier.value.trim();
       const password = document.getElementById("loginPassword").value;
-      if (!AuthApp.isPhoneComplete(loginPhone.value, loginCountry)) return AuthApp.showToast(AuthApp.t("common.phoneInvalid"), "error");
+      if (!login) return AuthApp.showToast(AuthApp.t("login.identifier"), "error");
       if (!password) return AuthApp.showToast(AuthApp.t("login.password"), "error");
       const button = document.getElementById("loginSubmit");
       AuthApp.setBusy(button, true, AuthApp.t("login.submit"));
       try {
         const result = await AuthApp.request("/login", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: AuthApp.fullPhone(loginPhone.value, loginCountry), password }),
+          body: JSON.stringify({ login, password }),
         });
         AuthApp.saveSession(result);
         AuthApp.redirectForRole(result.user);

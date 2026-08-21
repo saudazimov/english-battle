@@ -313,12 +313,31 @@ test("register controller preserves outer error log and 500 response", async () 
 
 test("register route preserves path and middleware order", () => {
   const { dependencies } = createHarness();
+  dependencies.publicRegistrationEnabled = true;
   const router = registerRoutes(dependencies);
   const route = router.stack[0].route;
 
   assert.equal(route.path, "/register");
   assert.equal(route.methods.post, true);
-  assert.equal(route.stack[0].handle, requireNormalizedPhone);
-  assert.equal(route.stack[1].handle, dependencies.otpVerifyGate);
-  assert.equal(route.stack.length, 3);
+  assert.equal(route.stack[1].handle, requireNormalizedPhone);
+  assert.equal(route.stack[2].handle, dependencies.otpVerifyGate);
+  assert.equal(route.stack.length, 4);
+});
+
+test("public registration is disabled without deleting the legacy flow", () => {
+  const { dependencies } = createHarness();
+  const router = registerRoutes(dependencies);
+  const route = router.stack[0].route;
+  const response = createResponse();
+  let continued = false;
+
+  route.stack[0].handle({}, response, () => {
+    continued = true;
+  });
+
+  assert.equal(continued, false);
+  assert.equal(response.statusCode, 403);
+  assert.deepEqual(response.body, {
+    error: "Ochiq ro'yxatdan o'tish vaqtincha yopilgan",
+  });
 });

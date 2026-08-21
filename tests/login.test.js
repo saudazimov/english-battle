@@ -1,6 +1,5 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { requireNormalizedPhone } = require("../src/middleware/requireNormalizedPhone");
 const { createLoginService } = require("../src/services/loginService");
 const { createLoginController } = require("../src/controllers/loginController");
 const loginRoutes = require("../src/routes/loginRoutes");
@@ -66,7 +65,7 @@ test("login preserves missing-user failure tracking and SQL", async () => {
     password: "Password1",
   }), { status: "invalid-credentials" });
   assert.deepEqual(calls, [
-    ["query", "SELECT * FROM users WHERE phone = $1", ["+998901234567"]],
+    ["query", "SELECT * FROM users WHERE phone = $1 OR LOWER(username) = LOWER($1) LIMIT 1", ["+998901234567"]],
     ["key"],
     ["fail", "login", "phone|ip", 8, 15 * 60 * 1000],
   ]);
@@ -147,7 +146,7 @@ test("login preserves successful cleanup and token creation order", async () => 
     password: "Password1",
   }), { status: "authenticated", token: "jwt-token", user: foundUser });
   assert.deepEqual(calls, [
-    ["query", "SELECT * FROM users WHERE phone = $1", [foundUser.phone]],
+    ["query", "SELECT * FROM users WHERE phone = $1 OR LOWER(username) = LOWER($1) LIMIT 1", [foundUser.phone]],
     ["compare", "Password1", "hashed-password"],
     ["key"],
     ["ok", "login", "phone|ip"],
@@ -170,7 +169,7 @@ test("login controller preserves validation and public user response", async () 
     invalidResponse
   );
   assert.equal(invalidResponse.statusCode, 400);
-  assert.deepEqual(invalidResponse.body, { error: "Telefon va parolni kiriting" });
+  assert.deepEqual(invalidResponse.body, { error: "Login va parolni kiriting" });
 
   const foundUser = user({ private_field: "hidden" });
   const successController = createLoginController({
@@ -232,7 +231,7 @@ test("login controller preserves error logging", async () => {
   assert.deepEqual(logs, [["Login xatosi:", "database unavailable"]]);
 });
 
-test("login route preserves path and gate middleware order", () => {
+test("login route preserves path, legacy normalization, and gate order", () => {
   function loginGate(req, res, next) { next(); }
   const router = loginRoutes({
     pool: {},
@@ -247,7 +246,26 @@ test("login route preserves path and gate middleware order", () => {
 
   assert.equal(route.path, "/login");
   assert.equal(route.methods.post, true);
-  assert.equal(route.stack[0].handle, requireNormalizedPhone);
+  let loginNextCalled = false;
+  route.stack[0].handle({ body: { login: "IL-7K3M-482Q" } }, {}, () => { loginNextCalled = true; });
+  assert.equal(loginNextCalled, true);
   assert.equal(route.stack[1].handle, loginGate);
   assert.equal(route.stack.length, 3);
+});
+
+test("login accepts an admin-generated username case-insensitively", async () => {
+  const foundUser = user({ username: "il-7k3m-482q", phone: null });
+  const calls = [];
+  const service = createLoginService({
+    pool: { async query(sql, params) { calls.push([sql, params]); return { rows: [foundUser] }; } },
+    bcrypt: { async compare() { return true; } },
+    noteFail: assert.fail,
+    noteOk() {},
+    phoneIpKey() { return "login|ip"; },
+    signToken() { return "student-token"; },
+  });
+
+  const outcome = await service.login({ req: {}, login: "IL-7K3M-482Q", password: "Password7a" });
+  assert.equal(outcome.status, "authenticated");
+  assert.deepEqual(calls[0][1], ["IL-7K3M-482Q"]);
 });
