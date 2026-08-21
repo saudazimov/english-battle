@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title data-i18n="smartboard.metaTitle">Grammar Arena — IlmLiga</title>
+  <style>
+    :root { --bg:#060a15; --panel:#0e162b; --panel2:#121d37; --line:rgba(118,148,236,.24); --text:#f3f6ff; --muted:#9aa9cf; --blue:#5b8cff; --purple:#a855f7; --cyan:#38e1ff; --green:#34d399; --red:#fb7185; --gold:#fbbf24; }
+    * { box-sizing:border-box; }
+    html, body { margin:0; min-height:100%; background:var(--bg); color:var(--text); font-family:"Segoe UI",system-ui,sans-serif; overscroll-behavior:none; }
+    body { min-height:100vh; background:radial-gradient(900px 500px at 0 0,rgba(91,140,255,.16),transparent 60%),radial-gradient(800px 500px at 100% 100%,rgba(168,85,247,.14),transparent 62%),var(--bg); }
+    button,input { font:inherit; }
+    button { -webkit-tap-highlight-color:transparent; }
+    [hidden] { display:none !important; }
+    .shell { min-height:100vh; padding:18px; }
+    .top { max-width:1480px; margin:0 auto 16px; display:flex; align-items:center; gap:14px; }
+    .brand { display:flex; align-items:center; gap:12px; min-width:0; flex:1; }
+    .brand-mark { width:48px; height:48px; border-radius:15px; display:grid; place-items:center; font-size:24px; font-weight:900; background:linear-gradient(135deg,var(--blue),var(--purple)); box-shadow:0 12px 35px rgba(91,140,255,.28); }
+    .brand h1 { margin:0; font-size:24px; line-height:1.1; }
+    .brand p { margin:4px 0 0; color:var(--muted); font-size:13px; }
+    .top-actions { display:flex; gap:9px; }
+    .ghost { min-height:42px; padding:0 14px; border:1px solid var(--line); border-radius:12px; color:var(--text); background:rgba(14,22,43,.72); cursor:pointer; font-weight:700; }
+    .ghost:hover { border-color:rgba(91,140,255,.55); background:rgba(91,140,255,.1); }
+    .setup { max-width:1160px; margin:28px auto 0; }
+    .notice { margin-bottom:16px; padding:13px 16px; border:1px solid rgba(56,225,255,.25); border-radius:14px; color:#bfefff; background:rgba(56,225,255,.07); font-size:13px; line-height:1.5; }
+    .setup-card { border:1px solid var(--line); border-radius:22px; padding:28px; background:linear-gradient(180deg,rgba(17,27,52,.97),rgba(10,16,33,.97)); box-shadow:0 28px 80px rgba(0,0,0,.35); }
+    .names { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .field label,.option-label { display:block; margin-bottom:10px; color:var(--muted); font-size:12px; font-weight:800; letter-spacing:.65px; text-transform:uppercase; }
+    .field input { width:100%; height:54px; padding:0 16px; border:1px solid var(--line); border-radius:14px; outline:none; color:var(--text); background:rgba(5,10,23,.72); font-size:17px; font-weight:700; }
+    .field input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(91,140,255,.12); }
+    .setup-grid { display:grid; grid-template-columns:1.1fr .9fr .9fr; gap:18px; margin-top:24px; }
+    .choice-row { display:grid; gap:8px; }
+    .levels { grid-template-columns:repeat(6,1fr); }
+    .counts,.durations { grid-template-columns:repeat(2,1fr); }
+    .choice { min-height:46px; border:1px solid var(--line); border-radius:12px; color:var(--muted); background:rgba(5,10,23,.68); cursor:pointer; font-weight:800; }
+    .choice.active { color:white; border-color:var(--blue); background:linear-gradient(135deg,rgba(91,140,255,.25),rgba(168,85,247,.18)); box-shadow:0 0 0 3px rgba(91,140,255,.09); }
+    .touch-check { margin-top:24px; padding:17px; border:1px solid var(--line); border-radius:16px; background:rgba(5,10,23,.42); }
+    .touch-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:12px; }
+    .touch-head strong { display:block; }
+    .touch-head span { display:block; margin-top:4px; color:var(--muted); font-size:12px; }
+    .touch-status { color:var(--gold); font-size:12px; font-weight:800; white-space:nowrap; }
+    .touch-status.ready { color:var(--green); }
+    .touch-pads { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .touch-pad { height:58px; border:1px dashed rgba(91,140,255,.55); border-radius:13px; display:grid; place-items:center; color:#c9d4f4; background:rgba(91,140,255,.07); font-weight:800; touch-action:none; user-select:none; }
+    .touch-pad.pressed { border-color:var(--green); color:var(--green); background:rgba(52,211,153,.12); }
+    .start { width:100%; min-height:58px; margin-top:20px; border:0; border-radius:15px; color:white; background:linear-gradient(135deg,var(--blue),var(--purple)); cursor:pointer; font-size:17px; font-weight:900; box-shadow:0 16px 38px rgba(91,140,255,.25); }
+    .start:disabled { cursor:wait; filter:saturate(.4); opacity:.72; }
+    .setup-error { min-height:20px; margin-top:12px; color:var(--red); text-align:center; font-weight:700; }
+    .arena { max-width:1800px; height:calc(100vh - 94px); min-height:620px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:14px; position:relative; }
+    .lane { min-width:0; border:1px solid var(--line); border-radius:24px; padding:24px; display:flex; flex-direction:column; overflow:hidden; background:linear-gradient(180deg,rgba(14,22,43,.97),rgba(8,13,28,.98)); }
+    .lane.left { box-shadow:inset 0 4px 0 var(--cyan); }
+    .lane.right { box-shadow:inset 0 4px 0 var(--purple); }
+    .lane-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .player-name { max-width:65%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:25px; font-weight:900; }
+    .score { font-size:14px; color:var(--muted); }
+    .score strong { margin-left:6px; color:var(--gold); font-size:29px; }
+    .progress-track { height:7px; margin:15px 0 22px; border-radius:999px; background:#050a17; overflow:hidden; }
+    .progress-fill { height:100%; width:0; border-radius:inherit; background:linear-gradient(90deg,var(--cyan),var(--blue)); transition:width .2s; }
+    .right .progress-fill { background:linear-gradient(90deg,var(--purple),#ec4899); }
+    .question-count { color:var(--muted); font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.7px; }
+    .lane-body { min-height:0; flex:1; display:flex; flex-direction:column; }
+    .question { min-height:92px; margin:12px 0 18px; display:flex; align-items:center; font-size:clamp(20px,2vw,30px); font-weight:850; line-height:1.35; }
+    .answers { display:grid; grid-template-columns:1fr 1fr; gap:12px; flex:1; align-content:stretch; }
+    .answer { min-height:88px; padding:15px; border:1px solid var(--line); border-radius:16px; color:var(--text); background:rgba(18,29,55,.72); cursor:pointer; text-align:left; display:flex; align-items:center; gap:13px; font-size:clamp(15px,1.45vw,20px); font-weight:750; touch-action:manipulation; user-select:none; transition:transform .1s,border-color .1s,background .1s; }
+    .answer:active { transform:scale(.985); }
+    .answer-letter { width:38px; height:38px; flex:0 0 auto; border-radius:12px; display:grid; place-items:center; background:rgba(91,140,255,.15); color:#aac3ff; font-weight:900; }
+    .answer.correct { border-color:var(--green); background:rgba(52,211,153,.18); }
+    .answer.wrong { border-color:var(--red); background:rgba(251,113,133,.18); }
+    .error-hunter-mode .brand-mark { background:linear-gradient(135deg,var(--red),var(--gold)); }
+    .hunter-question { min-height:132px; display:block; }
+    .hunter-instruction { margin-bottom:12px; color:var(--gold); font-size:13px; font-weight:850; letter-spacing:.25px; }
+    .hunter-sentence { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+    .hunter-token { min-height:45px; padding:8px 11px; border:1px solid rgba(118,148,236,.28); border-radius:11px; color:var(--text); background:rgba(18,29,55,.82); cursor:pointer; font-size:clamp(16px,1.55vw,22px); font-weight:800; touch-action:manipulation; }
+    .hunter-token:disabled { opacity:1; cursor:default; }
+    .hunter-token.missed { border-color:var(--red); background:rgba(251,113,133,.16); }
+    .hunter-token.found,.hunter-token.actual-error { border-color:var(--gold); color:var(--gold); background:rgba(251,191,36,.14); box-shadow:0 0 0 3px rgba(251,191,36,.08); }
+    .match-master-mode .brand-mark { background:linear-gradient(135deg,var(--green),var(--cyan)); }
+    .match-instruction { margin:12px 0 14px; color:var(--cyan); font-size:14px; font-weight:850; text-align:center; }
+    .match-board { min-height:0; flex:1; display:grid; grid-template-columns:1.35fr .85fr; gap:12px; }
+    .match-column { min-height:0; display:grid; grid-auto-rows:1fr; gap:10px; }
+    .match-card { min-height:64px; padding:12px 14px; border:1px solid var(--line); border-radius:14px; color:var(--text); background:rgba(18,29,55,.74); cursor:pointer; text-align:left; font-weight:780; line-height:1.3; touch-action:manipulation; transition:transform .1s,border-color .1s,background .1s; }
+    .match-card:active { transform:scale(.985); }
+    .match-card.selected { border-color:var(--cyan); color:var(--cyan); background:rgba(56,225,255,.13); box-shadow:0 0 0 3px rgba(56,225,255,.08); }
+    .match-answer { border-color:rgba(52,211,153,.28); color:#bdfbe4; text-align:center; }
+    .match-feedback { min-height:24px; margin-top:10px; text-align:center; font-size:13px; font-weight:900; }
+    .match-feedback.matched { color:var(--green); }
+    .match-feedback.notMatched { color:var(--red); }
+    .match-feedback.selectSentence { color:var(--gold); }
+    .lane-complete { flex:1; display:grid; place-items:center; text-align:center; color:var(--green); font-size:24px; font-weight:900; }
+    .timer { position:absolute; z-index:4; top:-78px; left:50%; transform:translateX(-50%); min-width:104px; padding:10px 16px; border:1px solid rgba(251,191,36,.4); border-radius:999px; text-align:center; color:var(--gold); background:#090f20; font-size:23px; font-weight:900; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+    .timer.danger { color:var(--red); border-color:rgba(251,113,133,.5); }
+    .results { max-width:920px; margin:45px auto 0; padding:34px; border:1px solid var(--line); border-radius:24px; text-align:center; background:linear-gradient(180deg,rgba(17,27,52,.98),rgba(9,15,31,.98)); box-shadow:0 30px 90px rgba(0,0,0,.4); }
+    .trophy { width:74px; height:74px; margin:0 auto 16px; border-radius:22px; display:grid; place-items:center; color:#171006; background:linear-gradient(135deg,var(--gold),#fde68a); font-size:34px; }
+    .results h2 { margin:0; font-size:30px; }
+    .winner { margin:8px 0 24px; color:var(--cyan); font-size:21px; font-weight:900; }
+    .result-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .result-player { padding:22px; border:1px solid var(--line); border-radius:17px; background:rgba(5,10,23,.5); }
+    .result-player h3 { margin:0 0 16px; font-size:21px; }
+    .metrics { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+    .metric { padding:13px; border-radius:12px; background:rgba(18,29,55,.78); color:var(--muted); font-size:12px; }
+    .metric strong { display:block; margin-bottom:4px; color:var(--text); font-size:24px; }
+    .result-actions { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:22px; }
+    .result-actions button { min-height:52px; border-radius:14px; cursor:pointer; font-weight:850; }
+    .new-game { border:0; color:white; background:linear-gradient(135deg,var(--blue),var(--purple)); }
+    .back-game { border:1px solid var(--line); color:var(--text); background:rgba(18,29,55,.72); }
+    @media (max-width:900px) { .shell{padding:12px}.top{align-items:flex-start}.brand p{display:none}.top-actions{flex-wrap:wrap;justify-content:flex-end}.setup-grid{grid-template-columns:1fr}.arena{height:auto;min-height:0;grid-template-columns:1fr}.lane{min-height:620px}.timer{position:fixed;top:8px}.levels{grid-template-columns:repeat(3,1fr)} }
+    @media (max-width:620px) { .names,.result-grid,.result-actions{grid-template-columns:1fr}.setup-card{padding:18px}.brand h1{font-size:19px}.ghost{padding:0 10px}.answers{grid-template-columns:1fr}.answer{min-height:70px}.touch-head{display:block}.touch-status{margin-top:8px}.lane{padding:18px;min-height:650px} }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand">
+        <div class="brand-mark">IL</div>
+        <div><h1 data-i18n="smartboard.title">Grammar Arena</h1><p data-i18n="smartboard.subtitle">Smart doskada ikki o‘quvchi uchun bir ekranli grammatika dueli</p></div>
+      </div>
+      <div class="top-actions">
+        <button class="ghost" type="button" id="fullscreenBtn" data-i18n="smartboard.fullscreen">To‘liq ekran</button>
+        <button class="ghost" type="button" id="backBtn" data-i18n="smartboard.backPractice">Practice sahifasiga qaytish</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="setup" id="setupScreen">
+        <div class="notice" data-i18n="smartboard.temporaryNotice">Ismlar va natijalar faqat shu brauzer oynasida ishlatiladi. Bazaga hech narsa yozilmaydi.</div>
+        <div class="setup-card">
+          <div class="names">
+            <div class="field"><label for="leftName" data-i18n="smartboard.player1">Chap o‘yinchi</label><input id="leftName" maxlength="30" autocomplete="off" data-i18n-placeholder="smartboard.player1Placeholder" placeholder="1-o‘quvchi ismi"></div>
+            <div class="field"><label for="rightName" data-i18n="smartboard.player2">O‘ng o‘yinchi</label><input id="rightName" maxlength="30" autocomplete="off" data-i18n-placeholder="smartboard.player2Placeholder" placeholder="2-o‘quvchi ismi"></div>
+          </div>
+          <div class="setup-grid">
+            <div><span class="option-label" data-i18n="smartboard.level">Daraja (CEFR)</span><div class="choice-row levels" id="levelChoices"><button class="choice active" data-value="A1">A1</button><button class="choice" data-value="A2">A2</button><button class="choice" data-value="B1">B1</button><button class="choice" data-value="B2">B2</button><button class="choice" data-value="C1">C1</button><button class="choice" data-value="C2">C2</button></div></div>
+            <div><span class="option-label" data-i18n="smartboard.questionCount">Har bir o‘yinchiga savollar</span><div class="choice-row counts" id="countChoices"><button class="choice" data-value="5">5</button><button class="choice active" data-value="10">10</button><button class="choice" data-value="15">15</button><button class="choice" data-value="20">20</button></div></div>
+            <div><span class="option-label" data-i18n="smartboard.duration">O‘yin vaqti</span><div class="choice-row durations" id="durationChoices"><button class="choice" data-value="60">60s</button><button class="choice active" data-value="90">90s</button><button class="choice" data-value="120">120s</button><button class="choice" data-value="180">180s</button></div></div>
+          </div>
+          <div class="touch-check">
+            <div class="touch-head"><div><strong data-i18n="smartboard.touchTest">Multi-touch tekshiruvi</strong><span data-i18n="smartboard.touchHelp">Ikkala maydonni bir vaqtda bosing.</span></div><div class="touch-status" id="touchStatus" data-i18n="smartboard.touchLimited">Ikki maydonni bir vaqtda bosing</div></div>
+            <div class="touch-pads"><div class="touch-pad" data-side="left" data-i18n="smartboard.touchLeft">Chap maydon</div><div class="touch-pad" data-side="right" data-i18n="smartboard.touchRight">O‘ng maydon</div></div>
+          </div>
+          <button class="start" id="startBtn" type="button" data-i18n="smartboard.start">Arena boshlash</button>
+          <div class="setup-error" id="setupError" role="alert"></div>
+        </div>
+      </section>
+
+      <section class="arena" id="arenaScreen" hidden>
+        <div class="timer" id="timer">01:30</div>
+        <article class="lane left" data-player="0"><div class="lane-head"><div class="player-name"></div><div class="score"><span data-i18n="smartboard.score">Hisob</span><strong>0</strong></div></div><div class="progress-track"><div class="progress-fill"></div></div><div class="lane-body"></div></article>
+        <article class="lane right" data-player="1"><div class="lane-head"><div class="player-name"></div><div class="score"><span data-i18n="smartboard.score">Hisob</span><strong>0</strong></div></div><div class="progress-track"><div class="progress-fill"></div></div><div class="lane-body"></div></article>
+      </section>
+
+      <section class="results" id="resultScreen" hidden>
+        <div class="trophy">★</div><h2 data-i18n="smartboard.resultTitle">Arena yakunlandi</h2><div class="winner" id="winnerText"></div><div class="result-grid" id="resultGrid"></div>
+        <div class="result-actions"><button class="new-game" id="newGameBtn" data-i18n="smartboard.newGame">Yangi o‘yin</button><button class="back-game" id="resultBackBtn" data-i18n="smartboard.toPractice">Practice sahifasi</button></div>
+      </section>
+    </main>
+  </div>
+  <script src="/api.js"></script>
+  <script src="/i18n.js"></script>
+  <script src="/smartboard-game.js"></script>
+</body>
+</html>
