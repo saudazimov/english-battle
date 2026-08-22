@@ -489,7 +489,7 @@ test("HTTP startup preserves listen, recovery and shutdown signal order", async 
     port: 3450,
     pool,
     recoverActiveBattles: async () => order.push(["recover"]),
-    environment: { NODE_ENV: "development" },
+    environment: { NODE_ENV: "development", SMS_ENABLED: "false" },
     processRef: {
       on(event, handler) {
         order.push(["on", event]);
@@ -520,10 +520,6 @@ test("HTTP startup preserves listen, recovery and shutdown signal order", async 
   assert.deepEqual(order.at(-1), ["recover"]);
   assert.deepEqual(logCalls, [
     ["log", "Server ishga tushdi: http://localhost:3000"],
-    [
-      "warn",
-      "⚠️  DIQQAT: SMS kredensiali yo'q — DEV rejim (OTP konsolga chiqadi). Production'da .env to'ldiring.",
-    ],
   ]);
 
   handlers.SIGTERM();

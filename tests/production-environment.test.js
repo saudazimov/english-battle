@@ -24,6 +24,7 @@ function validProductionEnvironment(overrides = {}) {
     SCHOOL_INVITE_PEPPER: "school-pepper-unique-0123456789-ab",
     ADMIN_PASSWORD: "admin-password-unique-2026",
     ADMIN_TOTP_SECRET: "JBSWY3DPEHPK3PXP",
+    SMS_ENABLED: "true",
     ESKIZ_EMAIL: "sms@ilmliga.uz",
     ESKIZ_PASSWORD: "eskiz-provider-password",
     METRICS_TOKEN: "metrics-token-unique-0123456789-abcdef",
@@ -91,6 +92,19 @@ test("Payme is optional but partial configuration is rejected", () => {
     PAYME_KEY: "",
   }));
   assert.ok(errors.includes("PAYME_KEY Payme sozlanganda majburiy"));
+});
+
+test("disabled SMS does not require Eskiz credentials", () => {
+  const disabled = validProductionEnvironment({
+    SMS_ENABLED: "false",
+    ESKIZ_EMAIL: "",
+    ESKIZ_PASSWORD: "",
+  });
+  assert.deepEqual(collectProductionEnvironmentErrors(disabled), []);
+
+  const enabled = collectProductionEnvironmentErrors({ ...disabled, SMS_ENABLED: "true" });
+  assert.ok(enabled.includes("ESKIZ_EMAIL SMS yoqilganda majburiy"));
+  assert.ok(enabled.includes("ESKIZ_PASSWORD SMS yoqilganda majburiy"));
 });
 
 test("enabled production AI requires explicit pricing and a persistent hard limit", () => {

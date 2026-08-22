@@ -46,6 +46,19 @@ test("SMS service preserves credential-free development output", async () => {
   ]);
 });
 
+test("disabled production SMS rejects without exposing OTP", async () => {
+  const harness = createHarness({
+    environment: { NODE_ENV: "production", SMS_ENABLED: "false" },
+  });
+
+  await assert.rejects(harness.sendSms("998901234567", "123456"), {
+    code: "SMS_DISABLED",
+    message: "SMS xizmati vaqtincha o'chirilgan",
+  });
+  assert.deepEqual(harness.fetchCalls, []);
+  assert.deepEqual(harness.logs, []);
+});
+
 test("SMS service preserves login, send request, and token cache", async () => {
   const harness = createHarness({
     environment: { ESKIZ_EMAIL: "user@example.com", ESKIZ_PASSWORD: "secret" },
