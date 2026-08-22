@@ -6,7 +6,6 @@ const REQUIRED_FIELDS = [
   "CLIENT_ORIGIN", "DB_USER", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME", "DB_SSL",
   "JWT_SECRET", "PARENT_CODE_PEPPER", "SCHOOL_INVITE_PEPPER",
   "ADMIN_PASSWORD", "ADMIN_TOTP_SECRET",
-  "ESKIZ_EMAIL", "ESKIZ_PASSWORD",
   "METRICS_TOKEN",
 ];
 
@@ -74,6 +73,19 @@ function validatePaymentConfiguration(environment, errors) {
   if (!providerKey) errors.push("PAYME_KEY Payme sozlanganda majburiy");
 }
 
+function validateSmsConfiguration(environment, errors) {
+  const configured = valueOf(environment, "SMS_ENABLED");
+  if (configured && !/^(true|false)$/i.test(configured)) {
+    errors.push("SMS_ENABLED true yoki false bo'lishi kerak");
+    return;
+  }
+  if (configured.toLowerCase() !== "true") return;
+
+  for (const key of ["ESKIZ_EMAIL", "ESKIZ_PASSWORD"]) {
+    if (!valueOf(environment, key)) errors.push(`${key} SMS yoqilganda majburiy`);
+  }
+}
+
 function collectProductionEnvironmentErrors(environment = process.env) {
   if (valueOf(environment, "NODE_ENV") !== "production") return [];
   const errors = [];
@@ -116,6 +128,7 @@ function collectProductionEnvironmentErrors(environment = process.env) {
   const totpSecret = valueOf(environment, "ADMIN_TOTP_SECRET");
   if (totpSecret && !/^[A-Z2-7]+=*$/i.test(totpSecret)) errors.push("ADMIN_TOTP_SECRET Base32 formatida bo'lishi kerak");
   errors.push(...collectDatabaseConfigurationErrors(environment));
+  validateSmsConfiguration(environment, errors);
   validatePaymentConfiguration(environment, errors);
   validateAiConfiguration(environment, errors);
   return [...new Set(errors)];

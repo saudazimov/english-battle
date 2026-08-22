@@ -233,7 +233,8 @@ function startHttpServer({
   let startupActive = true;
   const listen = () => server.listen(port, async () => {
     appLogger.log("Server ishga tushdi: http://localhost:3000");
-    if (!environment.ESKIZ_EMAIL || !environment.ESKIZ_PASSWORD) {
+    const smsEnabled = String(environment.SMS_ENABLED || "").toLowerCase() === "true";
+    if (smsEnabled && (!environment.ESKIZ_EMAIL || !environment.ESKIZ_PASSWORD)) {
       appLogger.warn(
         "⚠️  DIQQAT: SMS kredensiali yo'q — DEV rejim (OTP konsolga chiqadi). Production'da .env to'ldiring."
       );

@@ -43,6 +43,15 @@ function createSmsService({
     const to = String(phone).replace(/\D/g, "");
     const message = `IlmLiga: tasdiqlash kodingiz ${code}. Kodni hech kimga bermang.`;
 
+    const explicitlyDisabled = String(environment.SMS_ENABLED || "").toLowerCase() === "false";
+    const productionWithoutCredentials = environment.NODE_ENV === "production"
+      && (!environment.ESKIZ_EMAIL || !environment.ESKIZ_PASSWORD);
+    if (explicitlyDisabled || productionWithoutCredentials) {
+      const error = new Error("SMS xizmati vaqtincha o'chirilgan");
+      error.code = "SMS_DISABLED";
+      throw error;
+    }
+
     if (!environment.ESKIZ_EMAIL || !environment.ESKIZ_PASSWORD) {
       logger.log("========================================");
       logger.log("📱 SMS (DEV rejim — Eskiz kredensiali yo'q)");
