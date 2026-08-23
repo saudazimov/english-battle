@@ -152,6 +152,7 @@
   <script src="/api.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/i18n.js"></script>
+  <script src="/question-options.js"></script>
   <script>
     function roomT(key, params) {
       return window.IlmLigaI18n ? window.IlmLigaI18n.t(key, params) : key;
@@ -261,10 +262,11 @@
 
       const optionsDiv = document.getElementById("options");
       optionsDiv.innerHTML = "";
-      ["A","B","C","D"].forEach(letter => {
+      const displayLetters = ["A", "B", "C", "D"];
+      IlmLigaQuestionOptions.orderKeys(q, examSessionId).forEach((letter, optionIndex) => {
         const btn = document.createElement("button");
         btn.className = "opt" + (userAnswers[q.id] === letter ? " selected" : "");
-        btn.innerHTML = '<span class="opt-radio"></span><span class="opt-letter">' + letter + '</span><span>' + escapeHtml(q["option_" + letter.toLowerCase()] || "") + '</span>';
+        btn.innerHTML = '<span class="opt-radio"></span><span class="opt-letter">' + displayLetters[optionIndex] + '</span><span>' + escapeHtml(q["option_" + letter.toLowerCase()] || "") + '</span>';
         btn.onclick = () => selectAnswer(q.id, letter, btn);
         optionsDiv.appendChild(btn);
       });

@@ -114,6 +114,7 @@
   <script src="/vendor/lucide.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/i18n.js"></script>
+  <script src="/question-options.js"></script>
   <script src="/tournament-battle-i18n.js"></script>
   <script>
     function tbT(key, params) {
@@ -277,11 +278,13 @@
         '<div class="tb-qnum">' + tbT("questionNumber", { current: qIndex + 1 }) + '</div>' +
         '<div class="tb-qtext">' + esc(q.question_text) + '</div>' +
         '<div class="tb-options" id="optionsBox">';
-      ['a', 'b', 'c', 'd'].forEach(function (letter) {
+      var displayLetters = ['A', 'B', 'C', 'D'];
+      IlmLigaQuestionOptions.orderKeys(q, matchId).forEach(function (optionKey, optionIndex) {
+        var letter = optionKey.toLowerCase();
         var optText = q['option_' + letter];
         if (optText == null || optText === '') return;
         html += '<div class="tb-option" data-letter="' + letter + '" onclick="answerQuestion(\'' + q.id + '\', \'' + letter + '\')">' +
-          '<div class="tb-option-letter">' + letter.toUpperCase() + '</div>' +
+          '<div class="tb-option-letter">' + displayLetters[optionIndex] + '</div>' +
           '<div>' + esc(optText) + '</div>' +
         '</div>';
       });
