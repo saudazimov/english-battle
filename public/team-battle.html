@@ -440,6 +440,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/i18n.js"></script>
+  <script src="/question-options.js"></script>
   <script src="/team-battle-i18n.js"></script>
   <script>
     var token = localStorage.getItem("token");
@@ -768,12 +769,13 @@
       document.getElementById("btQText").textContent = q.question_text;
       var box = document.getElementById("btAnswers");
       box.innerHTML = "";
-      ["A", "B", "C", "D"].forEach(function (letter) {
+      var displayLetters = ["A", "B", "C", "D"];
+      IlmLigaQuestionOptions.orderKeys(q, roomId).forEach(function (letter, optionIndex) {
         var text = q["option_" + letter.toLowerCase()] || "";
         var btn = document.createElement("button");
         btn.className = "bt-answer";
         btn.setAttribute("data-letter", letter);
-        btn.innerHTML = '<div class="bt-answer-letter">' + letter + '</div><div class="bt-answer-text">' + esc(text) + '</div>';
+        btn.innerHTML = '<div class="bt-answer-letter">' + displayLetters[optionIndex] + '</div><div class="bt-answer-text">' + esc(text) + '</div>';
         btn.onclick = function () { selectAnswer(letter, q); };
         box.appendChild(btn);
       });

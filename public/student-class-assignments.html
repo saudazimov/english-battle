@@ -455,6 +455,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/api.js"></script>
   <script src="/i18n.js"></script>
+  <script src="/question-options.js"></script>
   <script src="/sidebar.js"></script>
   <script>
     function assignmentsT(key, params) {
@@ -827,7 +828,7 @@
     }
 
     // ===== Quiz =====
-    var quiz = { id:null, title:"", questions:[], answers:{}, idx:0 };
+    var quiz = { id:null, attemptKey:null, title:"", questions:[], answers:{}, idx:0 };
 
     async function openAssignment(id) {
       try {
@@ -835,7 +836,7 @@
         var data = await res.json();
         if (!res.ok) { alert(data.error || assignmentsT("studentAssignments.openError")); return; }
         if (data.locked) { showResultFromReview(data); return; }
-        quiz = { id: id, title: (data.assignment && data.assignment.title) || assignmentsT("studentAssignments.assignmentFallback"), questions: data.questions || [], answers: {}, idx: 0 };
+        quiz = { id: id, attemptKey: (data.submission && data.submission.id) || id, title: (data.assignment && data.assignment.title) || assignmentsT("studentAssignments.assignmentFallback"), questions: data.questions || [], answers: {}, idx: 0 };
         startQuiz();
       } catch (e) { alert(assignmentsT("studentAssignments.networkUnavailable")); }
     }
@@ -856,10 +857,14 @@
       document.getElementById("quizBar").style.width = (quiz.idx / quiz.questions.length * 100) + "%";
       document.getElementById("qText").textContent = q.question_text;
       var sel = quiz.answers[q.assignment_question_id];
-      document.getElementById("qOptions").innerHTML = q.options.map(function(o){
+      var optionMap = {};
+      q.options.forEach(function(option) { optionMap[String(option.key).toUpperCase()] = option; });
+      var displayLetters = ["A", "B", "C", "D"];
+      document.getElementById("qOptions").innerHTML = IlmLigaQuestionOptions.orderKeys(q, quiz.attemptKey).map(function(key, optionIndex){
+        var o = optionMap[key];
         var on = sel === o.key;
         return '<button class="opt'+(on?" selected":"")+'" onclick="pick('+q.assignment_question_id+",'"+o.key+"')\">" +
-          '<span class="opt-letter">'+o.key+'</span>' +
+          '<span class="opt-letter">'+displayLetters[optionIndex]+'</span>' +
           '<span class="opt-radio"></span>' +
           '<span>'+esc(o.text)+'</span>' +
         '</button>';

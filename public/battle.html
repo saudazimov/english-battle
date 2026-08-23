@@ -1005,6 +1005,7 @@
   <script src="/vendor/lucide.min.js"></script>
   <script src="/leagues.js"></script>
   <script src="/i18n.js"></script>
+  <script src="/question-options.js"></script>
   <script src="/battle-i18n.js"></script>
   <script>
     const userData = localStorage.getItem("user");
@@ -1976,11 +1977,12 @@
 
       const optionsDiv = document.getElementById("options");
       optionsDiv.innerHTML = "";
-      ["A","B","C","D"].forEach(letter => {
+      const displayLetters = ["A", "B", "C", "D"];
+      IlmLigaQuestionOptions.orderKeys(q, currentRoom).forEach((letter, optionIndex) => {
         const btn = document.createElement("button");
         btn.className = "opt";
         btn.setAttribute("data-letter", letter);
-        btn.innerHTML = '<span class="opt-letter">' + letter + '</span><span>' + escapeHtml(q["option_" + letter.toLowerCase()] || "") + '</span>';
+        btn.innerHTML = '<span class="opt-letter">' + displayLetters[optionIndex] + '</span><span>' + escapeHtml(q["option_" + letter.toLowerCase()] || "") + '</span>';
         btn.onclick = () => answer(letter);
         optionsDiv.appendChild(btn);
       });
