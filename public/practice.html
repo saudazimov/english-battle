@@ -129,8 +129,9 @@
     .pr-question { font-size: 25px; font-weight: 700; line-height: 1.4; margin-bottom: 28px; }
 
     .pr-answers { display: flex; flex-direction: column; gap: 11px; }
-    .pr-answer { display: flex; align-items: center; gap: 16px; padding: 19px 22px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.15s; text-align: left; width: 100%; color: var(--text); font-family: inherit; }
-    .pr-answer:hover:not(:disabled) { border-color: var(--accent); background: rgba(91,140,255,0.05); }
+    .pr-answer { display: flex; align-items: center; gap: 16px; padding: 19px 22px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.15s; text-align: left; width: 100%; color: var(--text); font-family: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    .pr-answer:focus:not(:focus-visible) { outline: none; }
+    @media (hover: hover) and (pointer: fine) { .pr-answer:hover:not(:disabled) { border-color: var(--accent); background: rgba(91,140,255,0.05); } }
     .pr-answer:disabled { cursor: default; }
     .pr-answer-letter { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--border); }
     .pr-answer-text { flex: 1; font-size: 17px; }

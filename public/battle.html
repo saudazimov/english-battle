@@ -116,8 +116,9 @@
 
     /* Options */
     .br-options { display: flex; flex-direction: column; gap: 11px; }
-    .opt { display: flex; align-items: center; gap: 15px; width: 100%; text-align: left; padding: 16px 20px; background: rgba(12,18,40,0.75); border: 1px solid rgba(100,120,255,0.22); border-radius: 13px; color: var(--text); font-size: 16px; cursor: pointer; transition: border-color 0.18s, background 0.18s, transform 0.18s; font-family: inherit; }
-    .opt:hover:not(:disabled) { border-color: var(--accent); background: rgba(91,140,255,0.08); transform: translateX(3px); }
+    .opt { display: flex; align-items: center; gap: 15px; width: 100%; text-align: left; padding: 16px 20px; background: rgba(12,18,40,0.75); border: 1px solid rgba(100,120,255,0.22); border-radius: 13px; color: var(--text); font-size: 16px; cursor: pointer; transition: border-color 0.18s, background 0.18s, transform 0.18s; font-family: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    .opt:focus:not(:focus-visible) { outline: none; }
+    @media (hover: hover) and (pointer: fine) { .opt:hover:not(:disabled) { border-color: var(--accent); background: rgba(91,140,255,0.08); transform: translateX(3px); } }
     .opt:disabled { cursor: default; opacity: 0.85; }
     .opt-letter { width: 37px; height: 37px; border-radius: 10px; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-weight: 800; font-size: 15px; color: #fff; }
     .opt.selected { border-color: var(--cyan); background: rgba(56,225,255,0.1); }
