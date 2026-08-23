@@ -50,8 +50,9 @@
     .q-skill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; background: rgba(91,140,255,0.15); border-radius: 20px; font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 18px; text-transform: capitalize; }
     .q-skill i { width: 13px; height: 13px; }
     .q-text { font-size: 22px; font-weight: 600; line-height: 1.4; margin-bottom: 28px; }
-    .opt { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; margin: 12px 0; padding: 18px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; color: var(--text); font-size: 16px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-    .opt:hover { border-color: var(--border-bright); transform: translateX(4px); }
+    .opt { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; margin: 12px 0; padding: 18px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; color: var(--text); font-size: 16px; cursor: pointer; transition: all 0.2s; font-family: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    .opt:focus:not(:focus-visible) { outline: none; }
+    @media (hover: hover) and (pointer: fine) { .opt:hover { border-color: var(--border-bright); transform: translateX(4px); } }
     .opt.selected { background: rgba(91,140,255,0.15); border-color: var(--accent); }
     .opt-radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-bright); flex-shrink: 0; display: grid; place-items: center; transition: all 0.2s; }
     .opt.selected .opt-radio { border-color: var(--accent); }

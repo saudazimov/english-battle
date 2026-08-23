@@ -83,8 +83,9 @@
     .quiz-bar { height:8px;border-radius:999px;background:var(--panel-2);overflow:hidden;margin-bottom:26px; }
     .quiz-bar > span { display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .3s; }
     .q-text { font-size:22px;font-weight:600;line-height:1.4;margin-bottom:28px; }
-    .opt { display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:12px 0;padding:18px 20px;background:var(--panel);border:1px solid var(--border);border-radius:14px;color:var(--text);font-size:16px;cursor:pointer;transition:all .2s;font-family:inherit; }
-    .opt:hover { border-color:var(--border-bright);transform:translateX(4px); }
+    .opt { display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:12px 0;padding:18px 20px;background:var(--panel);border:1px solid var(--border);border-radius:14px;color:var(--text);font-size:16px;cursor:pointer;transition:all .2s;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation; }
+    .opt:focus:not(:focus-visible) { outline:none; }
+    @media (hover:hover) and (pointer:fine) { .opt:hover { border-color:var(--border-bright);transform:translateX(4px); } }
     .opt.selected { background:rgba(91,140,255,.15);border-color:var(--accent); }
     .opt-radio { width:22px;height:22px;border-radius:50%;border:2px solid var(--border-bright);flex-shrink:0;display:grid;place-items:center;transition:all .2s; }
     .opt.selected .opt-radio { border-color:var(--accent); }
