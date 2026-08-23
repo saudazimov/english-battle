@@ -341,3 +341,20 @@ test("universal profile modal renders real mutual friends", () => {
   assert.match(profileModal, /onclick="openProfileModal\('/);
   assert.doesNotMatch(profileModal, /Umumiy do\\'stlar tez kunda/);
 });
+
+test("public profile modals use the same phone-sized responsive layout", () => {
+  const publicRoot = path.join(__dirname, "..", "public");
+  const friends = fs.readFileSync(path.join(publicRoot, "friends.html"), "utf8");
+  const profileModal = fs.readFileSync(
+    path.join(publicRoot, "profile-modal.js"),
+    "utf8"
+  );
+
+  for (const surface of [friends, profileModal]) {
+    assert.match(surface, /max-width:\s*640px/);
+    assert.match(surface, /min-height:\s*100dvh/);
+    assert.match(surface, /grid-template-columns:\s*72px minmax\(0,\s*1fr\)/);
+    assert.match(surface, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+    assert.match(surface, /position:\s*sticky/);
+  }
+});
