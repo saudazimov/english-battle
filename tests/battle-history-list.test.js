@@ -48,7 +48,7 @@ function createHarness({ rows = [{ opponent_name: "Opponent" }], queryError } = 
   return { calls, controller };
 }
 
-test("battle history list preserves authenticated user ID, SQL, and response", async () => {
+test("battle history list uses the opened profile ID, SQL, and response", async () => {
   const rows = [{ opponent_name: "Opponent", outcome: "win" }];
   const harness = createHarness({ rows });
   const response = createResponse();
@@ -58,7 +58,7 @@ test("battle history list preserves authenticated user ID, SQL, and response", a
     response
   );
 
-  assert.deepEqual(harness.calls, [["query", historySql, [42]]]);
+  assert.deepEqual(harness.calls, [["query", historySql, ["999"]]]);
   assert.deepEqual(response.body, { history: rows });
 });
 

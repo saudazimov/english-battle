@@ -214,6 +214,9 @@ test("favorite mode is rendered by every public profile surface", () => {
   assert.match(profile, /data\.stats\.favorite_mode_label/);
   assert.match(friends, /fEsc\(favoriteMode\)/);
   assert.match(profileModal, /fpEsc\(favoriteMode\)/);
+  assert.doesNotMatch(profile, /about-v soon-badge" id="abFavoriteMode"/);
+  assert.doesNotMatch(friends, /fp-av soon-badge[^\n]+fEsc\(favoriteMode\)/);
+  assert.doesNotMatch(profileModal, /fp-av soon-badge[^\n]+fpEsc\(favoriteMode\)/);
 });
 
 test("profile achievement summary uses live profile statistics", () => {
