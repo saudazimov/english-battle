@@ -362,7 +362,7 @@ test("public profile modals use the same phone-sized responsive layout", () => {
   }
 });
 
-test("public profile about sections do not render a rounded decorative shell", () => {
+test("public profile about sections render clean, unclipped detail rows", () => {
   const publicRoot = path.join(__dirname, "..", "public");
   const friends = fs.readFileSync(path.join(publicRoot, "friends.html"), "utf8");
   const profileModal = fs.readFileSync(
@@ -375,5 +375,10 @@ test("public profile about sections do not render a rounded decorative shell", (
       surface,
       /#fpAbout\.fp-block\s*\{[^}]*background:\s*transparent[^}]*border:\s*0[^}]*border-radius:\s*0/
     );
+    assert.match(
+      surface,
+      /\.fp-ar\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*16px\s+95px\s+minmax\(0,\s*1fr\)/
+    );
+    assert.match(surface, /\.fp-av\s*\{[^}]*padding-inline-start:\s*2px/);
   }
 });
