@@ -221,6 +221,7 @@ async function failProductionStartup({ error, pool, processRef, logger }) {
 
 function startHttpServer({
   server,
+  io,
   port,
   pool,
   recoverActiveBattles,
@@ -244,7 +245,7 @@ function startHttpServer({
   });
   if (environment.NODE_ENV !== "production") listen();
 
-  const gracefulShutdown = gracefulShutdownFactory({ server, pool, logger: appLogger });
+  const gracefulShutdown = gracefulShutdownFactory({ server, io, pool, logger: appLogger });
   const stopServer = (signal, exitCode = 0) => {
     startupActive = false;
     return gracefulShutdown(signal, exitCode);

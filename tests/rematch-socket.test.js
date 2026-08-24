@@ -161,6 +161,7 @@ test("rematch request preserves SQL, normalization, timer, map, and emit", async
   });
 
   const request = harness.pendingRematches.get("target-socket:socket-1");
+  const rematchQuery = harness.calls[0][1];
   assert.deepEqual(request, {
     fromSocketId: "socket-1",
     fromUserId: "5",
@@ -170,7 +171,9 @@ test("rematch request preserves SQL, normalization, timer, map, and emit", async
     lengthKey: "standard",
     expiresAt: 61000,
   });
-  assert.match(harness.calls[0][1], /^SELECT u\.first_name, u\.last_name/);
+  assert.match(rematchQuery, /^SELECT u\.first_name, u\.last_name/);
+  assert.match(rematchQuery, /bh\.played_at > NOW\(\) - INTERVAL '2 hours'/);
+  assert.doesNotMatch(rematchQuery, /bh\.created_at/);
   assert.deepEqual(harness.calls[0][2], [5, 7]);
   assert.deepEqual(harness.calls.slice(1), [
     ["strip", "Ali Valiyev", 60],
