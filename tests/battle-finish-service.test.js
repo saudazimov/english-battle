@@ -233,6 +233,32 @@ test("preserves ranked draw streak, XP, and school points", async () => {
   assert.ok(harness.calls.filter((call) => call[0] === "emit").every((call) => call[3].outcome === "draw"));
 });
 
+test("does not reward a ranked battle abandoned by both players", async () => {
+  const currentBattle = battle({
+    players: {
+      a: { userId: 1, name: "Ali", score: 2, disconnected: true },
+      b: { userId: 2, name: "Vali", score: 2, disconnected: true },
+    },
+  });
+  const harness = createHarness({ currentBattle });
+
+  await harness.finishBattle("room_1");
+
+  const updates = harness.calls.filter(
+    (call) => call[0] === "query" && call[1].startsWith("UPDATE users SET")
+  );
+  assert.deepEqual(updates.map((call) => call[2]), [[0, 0, 0, 1], [0, 0, 0, 2]]);
+  assert.equal(harness.calls.some((call) => call[0] === "schoolPoints"), false);
+
+  const payloads = harness.calls
+    .filter((call) => call[0] === "emit")
+    .map((call) => call[3]);
+  assert.ok(payloads.every((payload) => payload.outcome === "draw"));
+  assert.ok(payloads.every((payload) => payload.xp_earned === 0));
+  assert.ok(payloads.every((payload) => payload.coins_earned === 0));
+  assert.ok(payloads.every((payload) => payload.rating_change === 0));
+});
+
 test("preserves per-player DB/profile fallback and session-error cleanup boundary", async () => {
   const fallback = createHarness({ resultErrorForUser: 1, profileErrorForUser: 2 });
   await fallback.finishBattle("room_1");

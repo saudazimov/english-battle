@@ -8,7 +8,17 @@ function findWinnerId(playerIds, players) {
   return null;
 }
 
-function resultForPlayer(winnerId, playerId, isCasual, format) {
+function resultForPlayer(winnerId, playerId, isCasual, format, isAbandoned = false) {
+  if (isAbandoned) {
+    return {
+      outcome: "draw",
+      ratingDelta: 0,
+      xpEarned: 0,
+      coinsEarned: 0,
+      rewardsEligible: false,
+    };
+  }
+
   let outcome = "draw";
   let ratingDelta = 0;
   if (winnerId === playerId) {
@@ -24,7 +34,13 @@ function resultForPlayer(winnerId, playerId, isCasual, format) {
   if (outcome === "win") xpEarned = format.xp;
   else if (outcome === "draw") xpEarned = Math.round(format.xp / 2);
   else xpEarned = Math.max(1, Math.round(format.xp / 4));
-  return { outcome, ratingDelta, xpEarned, coinsEarned: format.coins };
+  return {
+    outcome,
+    ratingDelta,
+    xpEarned,
+    coinsEarned: format.coins,
+    rewardsEligible: true,
+  };
 }
 
 async function savePlayerResult({
@@ -37,6 +53,7 @@ async function savePlayerResult({
   ratingDelta,
   xpEarned,
   coinsEarned,
+  rewardsEligible,
   isCasual,
   getLeagueName,
   updateQuestProgress,
@@ -107,7 +124,7 @@ async function savePlayerResult({
       correctAnswers: player.score,
       xpEarned,
     });
-    if (!isCasual) {
+    if (!isCasual && rewardsEligible) {
       const schoolPoints = outcome === "win" ? 10 : (outcome === "draw" ? 5 : 0);
       if (schoolPoints > 0) {
         await awardSchoolPoints(player.userId, schoolPoints, "ranked_" + outcome);
@@ -154,6 +171,9 @@ function createBattleFinishService({
     if (!battle) return;
     const playerIds = Object.keys(battle.players);
     const winnerId = findWinnerId(playerIds, battle.players);
+    const isAbandoned = playerIds.length === 2 && playerIds.every(
+      (playerId) => battle.players[playerId].disconnected === true
+    );
 
     for (const playerId of playerIds) {
       const player = battle.players[playerId];
@@ -164,7 +184,8 @@ function createBattleFinishService({
         winnerId,
         playerId,
         isCasual,
-        lengthConfig(battle.lengthKey)
+        lengthConfig(battle.lengthKey),
+        isAbandoned
       );
       const updatedUser = await savePlayerResult({
         pool,
