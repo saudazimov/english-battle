@@ -980,6 +980,7 @@
       try {
         const res = await authFetch("/profile/" + userId);
         const data = await res.json();
+        if (String(fpUserId) !== String(userId)) return;
         renderFpCard(data);
         renderFpAbout(data);
         renderFpAch();
@@ -1042,7 +1043,7 @@
           '<div class="fp-ar"><i data-lucide="building-2"></i><span class="fp-ak">' + friendsT("friends.school") + '</span><span class="fp-av">' + fEsc(u.school || "—") + '</span></div>' +
           '<div class="fp-ar"><i data-lucide="map-pin"></i><span class="fp-ak">' + friendsT("friends.region") + '</span><span class="fp-av">' + fEsc((u.region || "—") + (u.district ? ", " + u.district : "")) + '</span></div>' +
           '<div class="fp-ar"><i data-lucide="calendar"></i><span class="fp-ak">' + friendsT("friends.joined") + '</span><span class="fp-av">' + joined + '</span></div>' +
-          '<div class="fp-ar"><i data-lucide="star"></i><span class="fp-ak">' + friendsT("friends.favoriteMode") + '</span><span class="fp-av soon-badge">' + fEsc(favoriteMode) + '</span></div>' +
+          '<div class="fp-ar"><i data-lucide="star"></i><span class="fp-ak">' + friendsT("friends.favoriteMode") + '</span><span class="fp-av">' + fEsc(favoriteMode) + '</span></div>' +
         '</div>';
       lucide.createIcons();
     }
@@ -1087,6 +1088,7 @@
       try {
         const res = await authFetch("/history/" + userId);
         const data = await res.json();
+        if (String(fpUserId) !== String(userId)) return;
         const battles = data.battles || data.history || [];
         const list = document.getElementById("fpHistList");
         if (battles.length === 0) {
