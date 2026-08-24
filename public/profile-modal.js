@@ -55,6 +55,7 @@
     '.fp-block{padding:20px 22px;background:rgba(0,0,0,0.15);border:1px solid var(--border);border-radius:16px;}' +
     '.fp-block-title{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:700;margin-bottom:16px;}' +
     '.fp-block-title i{width:18px;height:18px;color:var(--accent);}' +
+    '#fpAbout.fp-block{padding-left:0;padding-right:0;background:transparent;border:0;border-radius:0;}' +
     '.fp-about-rows{display:flex;flex-direction:column;gap:14px;}' +
     '.fp-ar{display:flex;align-items:center;gap:10px;font-size:14px;}' +
     '.fp-ar i{width:16px;height:16px;color:var(--text-dim);flex-shrink:0;}' +
