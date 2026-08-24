@@ -2,7 +2,7 @@ function createBattleHistoryListController({ pool, logger = console }) {
   return {
     async list(req, res) {
       try {
-        const userId = req.user.id;
+        const userId = req.params.userId;
         const result = await pool.query(
           `SELECT bh.opponent_name, bh.my_score, bh.opponent_score, bh.outcome,
                   bh.xp_earned, bh.rating_change, bh.played_at, bh.cefr_level,
