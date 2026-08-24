@@ -361,3 +361,19 @@ test("public profile modals use the same phone-sized responsive layout", () => {
     assert.match(surface, /position:\s*sticky/);
   }
 });
+
+test("public profile about sections do not render a rounded decorative shell", () => {
+  const publicRoot = path.join(__dirname, "..", "public");
+  const friends = fs.readFileSync(path.join(publicRoot, "friends.html"), "utf8");
+  const profileModal = fs.readFileSync(
+    path.join(publicRoot, "profile-modal.js"),
+    "utf8"
+  );
+
+  for (const surface of [friends, profileModal]) {
+    assert.match(
+      surface,
+      /#fpAbout\.fp-block\s*\{[^}]*background:\s*transparent[^}]*border:\s*0[^}]*border-radius:\s*0/
+    );
+  }
+});
