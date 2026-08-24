@@ -1,5 +1,6 @@
 function createGracefulShutdownService({
   server,
+  io,
   pool,
   logger = console,
   setTimeoutFn = setTimeout,
@@ -23,6 +24,15 @@ function createGracefulShutdownService({
       exit(1);
     }, 10000);
     forceTimer.unref();
+
+    try {
+      if (io && typeof io.disconnectSockets === "function") {
+        io.disconnectSockets(true);
+        logger.log("[Shutdown] Socket.IO ulanishlari yopildi.");
+      }
+    } catch (error) {
+      logger.error("[Shutdown] Socket.IO ulanishlarini yopish xatosi:", error.message);
+    }
 
     server.close(async (err) => {
       if (err) logger.error("[Shutdown] server.close xatosi:", err.message);

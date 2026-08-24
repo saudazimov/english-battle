@@ -922,6 +922,7 @@ registerSocketConnection({
 
 startHttpServer({
   server,
+  io,
   port: PORT,
   pool,
   recoverActiveBattles,

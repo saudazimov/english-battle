@@ -477,6 +477,7 @@ test("HTTP startup preserves listen, recovery and shutdown signal order", async 
     },
   };
   const pool = {};
+  const io = {};
   const gracefulShutdown = (signal) => gracefulSignals.push(signal);
   const logger = {
     log: (...args) => logCalls.push(["log", ...args]),
@@ -486,6 +487,7 @@ test("HTTP startup preserves listen, recovery and shutdown signal order", async 
 
   const returned = startHttpServer({
     server,
+    io,
     port: 3450,
     pool,
     recoverActiveBattles: async () => order.push(["recover"]),
@@ -509,7 +511,7 @@ test("HTTP startup preserves listen, recovery and shutdown signal order", async 
   assert.equal(typeof returned, "function");
   assert.deepEqual(order, [
     ["listen", 3450],
-    ["graceful-factory", { server, pool, logger }],
+    ["graceful-factory", { server, io, pool, logger }],
     ["on", "uncaughtException"],
     ["on", "unhandledRejection"],
     ["on", "SIGTERM"],
