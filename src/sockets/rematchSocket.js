@@ -69,7 +69,7 @@ function createRequestRematchHandler({
          WHERE u.id=$1 AND EXISTS (
            SELECT 1 FROM battle_history bh
            WHERE bh.user_id=$1 AND bh.opponent_id=$2
-             AND bh.created_at > NOW() - INTERVAL '2 hours'
+             AND bh.played_at > NOW() - INTERVAL '2 hours'
          )`,
         [myUserId, opponentId]
       );
