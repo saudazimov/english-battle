@@ -293,10 +293,10 @@
       background: transparent; border: 0; border-radius: 0;
     }
     .fp-about-rows { display: flex; flex-direction: column; gap: 14px; }
-    .fp-ar { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+    .fp-ar { display: grid; grid-template-columns: 16px 95px minmax(0, 1fr); align-items: center; gap: 10px; font-size: 14px; }
     .fp-ar i { width: 16px; height: 16px; color: var(--text-dim); flex-shrink: 0; }
-    .fp-ak { color: var(--text-dim); width: 95px; flex-shrink: 0; }
-    .fp-av { font-weight: 600; }
+    .fp-ak { color: var(--text-dim); }
+    .fp-av { min-width: 0; padding-inline-start: 2px; font-weight: 600; overflow-wrap: anywhere; }
 
     /* Achievements */
     .fp-ach-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
@@ -404,9 +404,7 @@
       }
       .fp-block { min-width: 0; padding: 16px; }
       .fp-block-title { font-size: 15px; margin-bottom: 13px; }
-      .fp-ar { align-items: flex-start; font-size: 13px; }
-      .fp-ak { width: 82px; }
-      .fp-av { min-width: 0; overflow-wrap: anywhere; }
+      .fp-ar { grid-template-columns: 16px 82px minmax(0, 1fr); align-items: flex-start; font-size: 13px; }
       .fp-ach-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
       .fp-ach-ic { width: 48px; height: 48px; }
       .fp-hist-head, .fp-hist-row {
