@@ -449,8 +449,8 @@ img, svg, video, canvas {
   [class*="-ava "],
   [class$="-avatar"],
   [class*="-avatar "],
-  [class$="-av"],
-  [class*="-av "],
+  [class$="-av"]:not(.fp-av),
+  [class*="-av "]:not(.fp-av),
   [class$="-pic"],
   [class*="-pic "],
   [class~="avatar-big"]
@@ -461,14 +461,21 @@ img, svg, video, canvas {
   isolation: isolate;
 }
 
+/* Friend profile "About" values are text, not avatar containers. */
+.fp-av {
+  overflow: visible;
+  border-radius: 0 !important;
+  isolation: auto;
+}
+
 :is(
   [class~="ava"],
   [class$="-ava"],
   [class*="-ava "],
   [class$="-avatar"],
   [class*="-avatar "],
-  [class$="-av"],
-  [class*="-av "],
+  [class$="-av"]:not(.fp-av),
+  [class*="-av "]:not(.fp-av),
   [class$="-pic"],
   [class*="-pic "],
   [class~="avatar-big"]
