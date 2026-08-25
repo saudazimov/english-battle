@@ -11,10 +11,15 @@ test("shared styles apply Telegram-like center crop to profile pictures", () => 
   assert.match(responsiveCss, /\[class\$="-avatar"\]/);
   assert.match(responsiveCss, /\[class\$="-ava"\]/);
   assert.match(responsiveCss, /\[class\*="-ava "\]/);
-  assert.match(responsiveCss, /\[class\$="-av"\]/);
+  assert.match(responsiveCss, /\[class\$="-av"\]:not\(\.fp-av\)/);
+  assert.match(responsiveCss, /\[class\*="-av "\]:not\(\.fp-av\)/);
   assert.match(responsiveCss, /> img \{[\s\S]*?position: absolute !important;[\s\S]*?inset: 0 !important;/);
   assert.match(responsiveCss, /> img \{[\s\S]*?object-fit: cover !important;[\s\S]*?object-position: 50% 50% !important;/);
   assert.match(responsiveCss, /> img \{[\s\S]*?clip-path: circle\(50% at 50% 50%\);[\s\S]*?transform: scale\(1\.06\);/);
+});
+
+test("shared avatar styles do not clip friend profile about values", () => {
+  assert.match(responsiveCss, /\.fp-av\s*\{[\s\S]*?overflow:\s*visible;[\s\S]*?border-radius:\s*0\s*!important;/);
 });
 
 test("profile picture pages load the shared avatar styles", () => {
