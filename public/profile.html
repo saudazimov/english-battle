@@ -521,7 +521,7 @@
             <span><span data-i18n="profile.league">League</span> <b class="pc-league" id="pcLeague">🥈 Silver</b></span>
           </div>
           <div class="pc-stats">
-            <div class="pc-stat"><i data-lucide="trophy" style="color:var(--gold);"></i><div><div class="pc-stat-l" data-i18n="profile.rating">Rating</div><div class="pc-stat-v" id="pcRating">1000</div></div></div>
+            <div class="pc-stat"><i data-lucide="trophy" style="color:var(--gold);"></i><div><div class="pc-stat-l" data-i18n="profile.rating">Rating</div><div class="pc-stat-v" id="pcRating">500</div></div></div>
             <div class="pc-stat"><i data-lucide="target" style="color:var(--green);"></i><div><div class="pc-stat-l" data-i18n="profile.winRate">Win Rate</div><div class="pc-stat-v pc-green" id="pcWinRate">0%</div></div></div>
             <div class="pc-stat"><i data-lucide="flame" style="color:var(--gold);"></i><div><div class="pc-stat-l" data-i18n="profile.winStreak">Win Streak</div><div class="pc-stat-v pc-gold" id="pcStreak">0</div></div></div>
             <div class="pc-stat"><i data-lucide="building-2" style="color:var(--cyan);"></i><div><div class="pc-stat-l" data-i18n="profile.schoolTeam">School / Team</div><div class="pc-stat-v" id="pcSchool" style="font-size:15px;">—</div></div></div>
@@ -685,7 +685,7 @@
           <div class="rank-medal" id="rankMedal">🥈</div>
           <div>
             <div class="rank-name" id="rankName">Silver</div>
-            <div class="rank-rp"><i data-lucide="trophy" style="width:14px;height:14px;color:var(--gold);"></i> <span id="rankRP">1000</span> RP</div>
+            <div class="rank-rp"><i data-lucide="trophy" style="width:14px;height:14px;color:var(--gold);"></i> <span id="rankRP">500</span> RP</div>
           </div>
         </div>
         <div class="rank-bar"><div class="rank-bar-fill" id="rankBarFill" style="width:40%;"></div></div>
@@ -707,9 +707,8 @@
       <div class="card rb-card">
         <div class="rb-head"><span id="nlpTitle" data-i18n="profile.nextLevel">Keyingi daraja</span><button type="button" class="rb-info-btn" id="cefrProgressInfoButton" aria-label="CEFR daraja progressi haqida ma'lumot" data-i18n-aria-label="profile.cefrInfoAria" aria-controls="rankInfoModal" aria-expanded="false"><i data-lucide="info" class="rb-info"></i></button></div>
         <div class="nlp-pct" id="nlpPct">—</div>
-        <div class="nlp-msg" data-i18n="profile.nextLevelText">Imtihon topshirib, keyingi darajaga o'ting!</div>
+        <div class="nlp-msg" id="nlpMessage" data-i18n="profile.nextLevelText">Ranked janglarda RP to'plab, keyingi darajaga o'ting!</div>
         <div class="rank-bar" style="margin-top:12px;"><div class="rank-bar-fill" id="nlpBar" style="width:0%; background:linear-gradient(90deg,var(--green),#10b981);"></div></div>
-        <button class="btn nlp-btn" onclick="window.location.href='/exam.html'"><i data-lucide="book-open" style="width:16px;height:16px;"></i> Ultimate Exam</button>
       </div>
 
       <!-- Personal Records -->
@@ -792,6 +791,11 @@
     // ===== PROFIL MA'LUMOTI =====
     function cefrLabel(level) { return profileT("profile.cefr." + String(level || "A1").toLowerCase()); }
     const nextCefrLevels = { A1: "A2", A2: "B1", B1: "B2", B2: "C1", C1: "C2", C2: null };
+    function normalizeProfileRating(value) {
+      const hasValue = value !== null && value !== undefined && value !== "";
+      const rating = Number(value);
+      return hasValue && Number.isFinite(rating) ? Math.max(0, Math.round(rating)) : 500;
+    }
     function getLeagueInfo(rating) {
       if (rating >= 2000) return "👑 Grandmaster";
       if (rating >= 1800) return "🔱 Master";
@@ -923,8 +927,9 @@
           document.getElementById("pcName").textContent = u.first_name + " " + u.last_name;
           document.getElementById("pcCefr").textContent = u.cefr_level || "A1";
           document.getElementById("pcCefrLabel").textContent = cefrLabel(u.cefr_level || "A1");
-          document.getElementById("pcLeague").innerHTML = leagueFull(u.rating || 1000);
-          document.getElementById("pcRating").textContent = u.rating || 1000;
+          const profileRating = normalizeProfileRating(u.rating);
+          document.getElementById("pcLeague").innerHTML = leagueFull(profileRating);
+          document.getElementById("pcRating").textContent = profileRating;
         }
         if (data.stats) {
           document.getElementById("pcWinRate").textContent = data.stats.win_rate + "%";
@@ -949,12 +954,12 @@
           document.getElementById("abBio").textContent = data.user.bio || profileT("profile.defaultBio");
           document.getElementById("abFavoriteMode").textContent = data.stats.favorite_mode_label || profileT("profile.noGamesYet");
           // Highest Rank (joriy liga)
-            document.getElementById("bsRank").innerHTML = leagueFull(data.user.rating || 1000);
+            document.getElementById("bsRank").innerHTML = leagueFull(normalizeProfileRating(data.user.rating));
 
           // Rank, CEFR, Next Level - endpoint ma'lumotidan (boshqa odam uchun ham to'g'ri)
-          setupRank(data.user.rating || 1000);
+          setupRank(normalizeProfileRating(data.user.rating));
           renderCefrTrackFor(data.user.cefr_level || "A1");
-          setupNextLevel(data.user.cefr_level || "A1");
+          setupNextLevel(data.user.cefr_level || "A1", data.progression);
           lucide.createIcons();
         }
         renderAchievements(data.user || {}, data.stats || {});
@@ -1067,14 +1072,72 @@
         currentRankDetails = { rating: r, current: cur, next: null, progress: 100 };
       }
     }
-    setupRank(Number(document.getElementById("rankRP").textContent) || 1000);
+    setupRank(normalizeProfileRating(document.getElementById("rankRP").textContent));
 
     // Next Level (CEFR keyingi daraja)
-    function setupNextLevel(current) {
-      const nxt = nextCefrLevels[current];
-      document.getElementById("nlpTitle").textContent = nxt ? profileT("profile.levelProgress", { current, next: nxt }) : profileT("profile.highestLevel");
-      document.getElementById("nlpPct").textContent = nxt ? profileT("profile.exam") : "C2 🎉";
-      document.getElementById("nlpBar").style.width = nxt ? "30%" : "100%";
+    function setupNextLevel(current, progression) {
+      const safeCurrent = nextCefrLevels[current] !== undefined ? current : "A1";
+      const details = progression && typeof progression === "object" ? progression : null;
+      const displayCurrent = details && details.current_level ? details.current_level : safeCurrent;
+      const nxt = details ? details.next_level : nextCefrLevels[safeCurrent];
+      const message = document.getElementById("nlpMessage");
+
+      document.getElementById("nlpTitle").textContent = nxt
+        ? profileT("profile.levelProgress", { current: displayCurrent, next: nxt })
+        : profileT("profile.highestLevel");
+
+      if (!nxt || (details && details.highest_level)) {
+        document.getElementById("nlpPct").textContent = "C2";
+        document.getElementById("nlpBar").style.width = "100%";
+        message.textContent = profileT("profile.cefrHighestReached");
+        return;
+      }
+
+      if (!details) {
+        document.getElementById("nlpPct").textContent = "0%";
+        document.getElementById("nlpBar").style.width = "0%";
+        message.textContent = profileT("profile.nextLevelText");
+        return;
+      }
+
+      const progress = Math.max(0, Math.min(100, Number(details.progress_percent) || 0));
+      const remaining = Math.max(0, Number(details.remaining_rating) || 0);
+      document.getElementById("nlpPct").textContent = progress + "%";
+      document.getElementById("nlpBar").style.width = progress + "%";
+      message.textContent = remaining > 0
+        ? profileT("profile.cefrRpRemaining", { remaining, target: details.target_rating })
+        : profileT("profile.cefrRpReady");
+    }
+
+    function getCefrProgressDialogData() {
+      const details = profileData && profileData.progression && typeof profileData.progression === "object"
+        ? profileData.progression
+        : null;
+      const fallbackCurrent = document.getElementById("pcCefr").textContent || "A1";
+      const current = details && details.current_level ? details.current_level : fallbackCurrent;
+      const next = details ? details.next_level : nextCefrLevels[current];
+      const hasBand = details && Number.isFinite(Number(details.band_min));
+      const bandValue = hasBand
+        ? (details.band_max == null ? details.band_min + "+ RP" : details.band_min + "–" + details.band_max + " RP")
+        : "—";
+      const targetValue = next && details && details.target_rating != null
+        ? details.target_rating + " RP"
+        : (next ? "—" : profileT("profile.completed"));
+      const remainingValue = next && details && details.remaining_rating != null
+        ? details.remaining_rating + " RP"
+        : (next ? "—" : "0 RP");
+
+      return {
+        primary: current,
+        secondary: next || profileT("profile.c2Completed"),
+        scopes: [
+          { icon: "book-open", name: profileT("profile.currentStage"), description: cefrLabel(current), value: current },
+          { icon: "bar-chart-3", name: profileT("profile.cefrRpBand"), description: profileT("profile.cefrRpBandDesc"), value: bandValue },
+          { icon: "arrow-up-right", name: profileT("profile.cefrNextBoundary"), description: next ? profileT("profile.cefrNextBoundaryDesc", { level: next }) : profileT("profile.highestCefr"), value: targetValue },
+          { icon: "target", name: profileT("profile.remainingRating"), description: next ? profileT("profile.cefrRemainingDesc", { level: next }) : profileT("profile.allCefrCompleted"), value: remainingValue },
+          { icon: "route", name: profileT("profile.levelPath"), description: profileT("profile.cefrSequence"), value: "A1 → C2" },
+        ],
+      };
     }
 
     // Personal Records (haqiqiy)
@@ -1436,20 +1499,7 @@
       secondaryLabel: function () { return profileT("profile.nextLevel"); },
       detailType: "scopes",
       hideFooter: true,
-      getData: function () {
-        const current = document.getElementById("pcCefr").textContent || "A1";
-        const next = nextCefrLevels[current];
-        return {
-          primary: current,
-          secondary: next || profileT("profile.c2Completed"),
-          scopes: [
-            { icon: "book-open", name: profileT("profile.currentStage"), description: cefrLabel(current), value: current },
-            { icon: "arrow-up-right", name: profileT("profile.nextStage"), description: next ? cefrLabel(next) : profileT("profile.highestCefr"), value: next || "C2" },
-            { icon: "clipboard-check", name: profileT("profile.transitionMethod"), description: profileT(next ? "profile.passLevelExam" : "profile.allCefrCompleted"), value: next ? "Ultimate Exam" : profileT("profile.completed") },
-            { icon: "route", name: profileT("profile.levelPath"), description: profileT("profile.cefrSequence"), value: "A1 → C2" },
-          ],
-        };
-      },
+      getData: getCefrProgressDialogData,
     });
 
     window.addEventListener("ilmliga:languagechange", function () {
@@ -1467,8 +1517,8 @@
         document.getElementById("abBio").textContent = profileUser.bio || profileT("profile.defaultBio");
         document.getElementById("abFavoriteMode").textContent = stats.favorite_mode_label || profileT("profile.noGamesYet");
         renderCefrTrackFor(profileUser.cefr_level || "A1");
-        setupRank(profileUser.rating || 1000);
-        setupNextLevel(profileUser.cefr_level || "A1");
+        setupRank(normalizeProfileRating(profileUser.rating));
+        setupNextLevel(profileUser.cefr_level || "A1", profileData && profileData.progression);
         renderAchievements(profileUser, stats);
         renderAchievementSummary(profileUser, stats);
       }

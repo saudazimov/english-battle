@@ -1143,6 +1143,16 @@ test("profile page localizes dynamic UI without changing profile APIs", () => {
   assert.match(page, /toLocaleDateString\(profileLocale\(\)/);
   assert.match(page, /ilmliga:languagechange/);
   assert.match(page, /rerenderAIForLanguage\(\)/);
+  assert.doesNotMatch(page, /const cefrRatingBands = \{/);
+  assert.match(page, /setupNextLevel\(data\.user\.cefr_level \|\| "A1", data\.progression\)/);
+  assert.match(page, /profileT\("profile\.cefrRpRemaining", \{ remaining, target: details\.target_rating \}\)/);
+  assert.match(page, /setupNextLevel\(profileUser\.cefr_level \|\| "A1", profileData && profileData\.progression\)/);
+  assert.match(page, /function getCefrProgressDialogData\(\)/);
+  assert.match(page, /profileData && profileData\.progression/);
+  assert.match(page, /details\.band_min \+ "–" \+ details\.band_max \+ " RP"/);
+  assert.match(page, /details\.target_rating \+ " RP"/);
+  assert.match(page, /details\.remaining_rating \+ " RP"/);
+  assert.match(page, /getData: getCefrProgressDialogData/);
   assert.match(editor, /function editorT\(key, params\)/);
   assert.match(editor, /data-i18n-placeholder="profile\.bioPlaceholder"/);
   assert.match(editor, /ilmliga:languagechange/);

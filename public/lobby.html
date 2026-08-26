@@ -745,7 +745,7 @@
           <div class="pc-stats">
             <div class="pc-stat">
               <i data-lucide="trophy" class="pc-stat-ic" style="color:var(--gold);"></i>
-              <div><div class="pc-stat-label" data-i18n="lobby.rating">Reyting</div><div class="pc-stat-val" id="pcRating">1000</div></div>
+              <div><div class="pc-stat-label" data-i18n="lobby.rating">Reyting</div><div class="pc-stat-val" id="pcRating">500</div></div>
             </div>
             <div class="pc-stat">
               <i data-lucide="target" class="pc-stat-ic" style="color:var(--green);"></i>
@@ -862,7 +862,7 @@
           <div class="rank-medal" id="rankMedal">💠</div>
           <div>
             <div class="rank-name" id="rankName">Silver</div>
-            <div class="rank-rp"><i data-lucide="trophy" style="width:14px;height:14px;color:var(--gold);"></i> <span id="rankRP">1000</span> RP</div>
+            <div class="rank-rp"><i data-lucide="trophy" style="width:14px;height:14px;color:var(--gold);"></i> <span id="rankRP">500</span> RP</div>
           </div>
         </div>
         <div class="rank-bar"><div class="rank-bar-fill" id="rankBarFill" style="width:40%;"></div></div>
@@ -978,6 +978,12 @@
       return lobbyT(cefrLabelKeys[level] || "lobby.cefrA1");
     }
 
+    function lobbyRating(value, fallback) {
+      const parsed = Number(value);
+      if (value !== null && value !== undefined && value !== "" && Number.isFinite(parsed)) return parsed;
+      return fallback === undefined ? 500 : fallback;
+    }
+
     // Liga nomi (faqat matn)
     function leagueName(rating) {
       if (rating >= 2000) return lobbyT("lobby.rankGrandmaster");
@@ -1006,56 +1012,56 @@
     document.getElementById("pcName").textContent = user.first_name + " " + user.last_name;
     document.getElementById("pcCefr").textContent = user.cefr_level || "A1";
     document.getElementById("pcCefrLabel").textContent = cefrLabel(user.cefr_level);
-    document.getElementById("pcLeague").innerHTML = leagueFull(user.rating || 1000);
-    document.getElementById("pcRating").textContent = user.rating || 1000;
+    document.getElementById("pcLeague").innerHTML = leagueFull(lobbyRating(user.rating));
+    document.getElementById("pcRating").textContent = lobbyRating(user.rating);
+
+    function applyLobbyUser(fresh, stats) {
+      if (!fresh) return;
+      const freshRating = lobbyRating(fresh.rating, lobbyRating(user.rating));
+      const freshCefr = fresh.cefr_level || user.cefr_level || "A1";
+      const firstName = fresh.first_name || user.first_name || "";
+      const lastName = fresh.last_name !== undefined && fresh.last_name !== null
+        ? fresh.last_name
+        : (user.last_name || "");
+      const freshPicture = fresh.profile_picture !== undefined ? fresh.profile_picture : user.profile_picture;
+
+      document.getElementById("pcRating").textContent = freshRating;
+      document.getElementById("pcLeague").innerHTML = leagueFull(freshRating);
+      document.getElementById("pcCefr").textContent = freshCefr;
+      document.getElementById("pcCefrLabel").textContent = cefrLabel(freshCefr);
+      document.getElementById("pcName").textContent = (firstName + " " + lastName).trim();
+      document.getElementById("pcStreak").textContent = fresh.win_streak || 0;
+
+      const winRate = stats && typeof stats.win_rate === "number" ? stats.win_rate : fresh.win_rate;
+      if (typeof winRate === "number") document.getElementById("pcWinRate").textContent = winRate + "%";
+
+      document.getElementById("pcAvatar").innerHTML = avatarHTML(firstName, freshPicture);
+      const topAvatar = document.getElementById("topAva");
+      if (topAvatar) topAvatar.innerHTML = avatarHTML(firstName, freshPicture);
+
+      Object.assign(user, fresh, {
+        rating: freshRating,
+        cefr_level: freshCefr,
+        first_name: firstName,
+        last_name: lastName,
+        profile_picture: freshPicture,
+      });
+      if (typeof winRate === "number") user.win_rate = winRate;
+      localStorage.setItem("user", JSON.stringify(user));
+      lucide.createIcons();
+    }
+
+    window.addEventListener("userRefreshed", function (event) {
+      applyLobbyUser(event.detail);
+      updateFindPanel();
+      setupRank();
+    });
 
     // Win rate, streak, rating - profil endpoint'dan (eng yangi, bazadan)
     authFetch("/profile/" + user.id)
       .then(r => r.json())
       .then(data => {
-        if (data.stats) document.getElementById("pcWinRate").textContent = data.stats.win_rate + "%";
-        if (data.user) {
-          // Rating va liga — bazadagi eng yangi qiymat (battle'dan keyin ham to'g'ri)
-          const freshRating = data.user.rating != null ? data.user.rating : (user.rating || 1000);
-          document.getElementById("pcRating").textContent = freshRating;
-          document.getElementById("pcLeague").innerHTML = leagueFull(freshRating);
-          document.getElementById("pcStreak").textContent = data.user.win_streak || 0;
-
-          // CEFR daraja — bazadan eng yangi (Ultimate Exam'dan keyin A1->A2 ko'tarilsa, darhol to'g'ri ko'rinadi)
-          if (data.user.cefr_level) {
-            document.getElementById("pcCefr").textContent = data.user.cefr_level;
-            document.getElementById("pcCefrLabel").textContent = cefrLabel(data.user.cefr_level);
-          }
-
-          // Ism-familya — bazadan eng yangi (profil tahrirlansa to'g'ri ko'rinadi)
-          if (data.user.first_name) {
-            document.getElementById("pcName").textContent =
-              data.user.first_name + " " + (data.user.last_name || "");
-          }
-
-          // localStorage'ni bazadagi eng yangi qiymatlar bilan to'liq sync qilamiz
-          // (keyingi sahifalar ham to'g'ri ma'lumot ko'rsatishi uchun)
-          let changed = false;
-          if (data.user.rating != null && data.user.rating !== user.rating) { user.rating = data.user.rating; changed = true; }
-          if (data.user.cefr_level && data.user.cefr_level !== user.cefr_level) { user.cefr_level = data.user.cefr_level; changed = true; }
-          if (data.user.first_name && data.user.first_name !== user.first_name) { user.first_name = data.user.first_name; changed = true; }
-          if (data.user.last_name && data.user.last_name !== user.last_name) { user.last_name = data.user.last_name; changed = true; }
-          if (changed) localStorage.setItem("user", JSON.stringify(user));
-        }
-        // Profil rasmini bazadan eng yangi holatda olamiz (localStorage eski bo'lsa ham)
-        if (data.user) {
-          var freshPic = data.user.profile_picture;
-          // Avatarlarni yangilaymiz (hero + topbar)
-          var heroAva = document.getElementById("pcAvatar");
-          var topAva = document.getElementById("topAva");
-          if (heroAva) heroAva.innerHTML = avatarHTML(data.user.first_name || user.first_name, freshPic);
-          if (topAva) topAva.innerHTML = avatarHTML(data.user.first_name || user.first_name, freshPic);
-          // localStorage'ni ham yangilab qo'yamiz (keyingi sahifalar uchun)
-          if (freshPic && freshPic !== user.profile_picture) {
-            user.profile_picture = freshPic;
-            localStorage.setItem("user", JSON.stringify(user));
-          }
-        }
+        applyLobbyUser(data.user, data.stats);
       })
       .catch(() => {});
 
@@ -1114,7 +1120,7 @@
       document.getElementById("fiLevel").textContent = user.cefr_level || "A1";
 
       // Rating Range: faqat ratingli rejimlarda ko'rsatamiz
-      const r = user.rating || 1000;
+      const r = lobbyRating(user.rating);
       const rangeEl = document.getElementById("fiRange");
       if (cfg.rating) {
         rangeEl.textContent = (r - 100) + " - " + (r + 100);
@@ -1382,7 +1388,7 @@
     // ===== O'NG PANEL =====
     // Current Rank
     function setupRank() {
-      const r = user.rating || 1000;
+      const r = lobbyRating(user.rating);
       const ic = (n, c) => '<i data-lucide="' + n + '" style="width:100%;height:100%;color:' + c + ';"></i>';
       const leagues = [
         { nameKey: "lobby.rankBronze", min: 0, max: 999, icon: ic("shield", "#cd7f32") },
@@ -1842,7 +1848,7 @@
       document.getElementById("pcName").textContent =
         ((user.first_name || "") + " " + (user.last_name || "")).trim() || lobbyT("lobby.player");
       document.getElementById("pcCefrLabel").textContent = cefrLabel(user.cefr_level || "A1");
-      document.getElementById("pcLeague").innerHTML = leagueFull(Number(user.rating) || 1000);
+      document.getElementById("pcLeague").innerHTML = leagueFull(lobbyRating(user.rating));
       updateFindPanel();
       setupRank();
       if (document.getElementById("lengthModal").classList.contains("show")) openLengthModal();

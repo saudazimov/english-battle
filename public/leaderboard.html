@@ -302,7 +302,7 @@
           <div class="yr-medal" id="yrMedal">🥈</div>
           <div>
             <div class="yr-league" id="yrLeague">Silver</div>
-            <div class="yr-points"><i data-lucide="trophy" style="width:14px;height:14px;color:var(--gold);"></i> <span id="yrPoints">1000</span> <span data-i18n="leaderboard.points">ball</span></div>
+            <div class="yr-points"><i data-lucide="trophy" style="width:14px;height:14px;color:var(--gold);"></i> <span id="yrPoints">500</span> <span data-i18n="leaderboard.points">ball</span></div>
           </div>
         </div>
         <div class="yr-rows">
@@ -395,6 +395,12 @@
     // Liga: ikon + nom birga
     function leagueFull(rating) {
       return leagueIcon(rating) + ' ' + leagueName(rating);
+    }
+
+    function leaderboardRating(value, fallback) {
+      const parsed = Number(value);
+      if (value !== null && value !== undefined && value !== "" && Number.isFinite(parsed)) return parsed;
+      return fallback === undefined ? 500 : fallback;
     }
 
     let allPlayers = [];
@@ -495,10 +501,18 @@
     // refreshUser() bazadan yangi rating olganda — "Your Rankings" panelini yangilaymiz
     window.addEventListener("userRefreshed", function (e) {
       const fresh = e.detail || JSON.parse(localStorage.getItem("user") || "{}");
-      user.rating = fresh.rating;
-      user.school = fresh.school;
+      const freshRating = leaderboardRating(fresh.rating, leaderboardRating(user.rating));
+      const rankingChanged = freshRating !== leaderboardRating(user.rating)
+        || (fresh.cefr_level && fresh.cefr_level !== user.cefr_level)
+        || (fresh.school !== undefined && fresh.school !== user.school);
+      user.rating = freshRating;
+      if (fresh.cefr_level) user.cefr_level = fresh.cefr_level;
+      if (fresh.school !== undefined) user.school = fresh.school;
       setupYourRankings(); // liga, ball, medal eng yangi rating bilan qayta chiziladi
-      loadMyRanks(); // rating o'zgardi — har qamrov o'rni ham yangilanadi
+      if (rankingChanged) {
+        loadLeaderboard(); // ro'yxatdagi RP, CEFR va o'rinni ham serverdan yangilaydi
+        loadMyRanks(); // rating o'zgardi — har qamrov o'rni ham yangilanadi
+      }
     });
 
     function lbRowEl(p) {
@@ -571,8 +585,8 @@
     function setupYourRankings() {
       const myInList = allPlayers.find(p => p.id === user.id);
       const myRating = (myInList && myInList.rating != null)
-        ? myInList.rating
-        : (user.rating || 1000);
+        ? leaderboardRating(myInList.rating)
+        : leaderboardRating(user.rating);
 
       document.getElementById("yrLeague").textContent = leagueName(myRating);
       document.getElementById("yrMedal").innerHTML = leagueIcon(myRating);

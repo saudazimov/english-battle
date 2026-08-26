@@ -245,7 +245,6 @@ function renderSidebar(activePage) {
     { id: "battle", icon: "swords", label: sbT("nav.battle", "Battle"), href: "/lobby.html", ready: true },
     { id: "practice", icon: "dumbbell", label: sbT("nav.practice", "Practice"), href: "/practice.html", ready: true }, // Sprint 2A: ochildi
     { id: "myclasses", icon: "book-open", label: sbT("nav.classes", "Sinflarim"), href: "/student-classes.html", ready: true },
-    { id: "exam", icon: "graduation-cap", label: sbT("nav.exam", "Daraja imtihoni"), href: "/exam.html", ready: true },
     { id: "ranking", icon: "trophy", label: sbT("nav.ranking", "Ranking"), href: "/leaderboard.html", ready: true },
     { id: "tournaments", icon: "swords", label: sbT("nav.tournaments", "Turnirlar"), href: "/student-tournaments.html", ready: true },
     { id: "friends", icon: "users", label: sbT("nav.friends", "Do‘stlar"), href: "/friends.html", ready: true },

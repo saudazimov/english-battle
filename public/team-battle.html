@@ -441,6 +441,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/i18n.js"></script>
+  <script src="/rating-ui.js"></script>
   <script src="/question-options.js"></script>
   <script src="/team-battle-i18n.js"></script>
   <script>
@@ -449,17 +450,21 @@
     var user = {};
     try { user = JSON.parse(localStorage.getItem("user") || "{}"); } catch (e) {}
 
-    // RASM TUZATISH: foydalanuvchi rasmini serverdan yangilaymiz (localStorage'da eski/bo'sh bo'lishi mumkin)
-    (async function refreshMyProfilePicture() {
+    // Profil qiymatlarini serverdan yangilaymiz (localStorage eskirgan bo'lishi mumkin).
+    var profileRefreshPromise = (async function refreshMyProfile() {
       try {
         var res = await fetch("/profile/" + user.id, { headers: { "Authorization": "Bearer " + token } });
         if (!res.ok) return;
         var d = await res.json();
-        if (d.user && d.user.profile_picture) {
-          user.profile_picture = d.user.profile_picture;
+        if (d.user) {
+          user.rating = IlmLigaRating.normalize(d.user.rating, user.rating);
+          if (d.user.cefr_level) user.cefr_level = d.user.cefr_level;
+          if (d.user.profile_picture !== undefined) user.profile_picture = d.user.profile_picture;
           try {
             var stored = JSON.parse(localStorage.getItem("user") || "{}");
-            stored.profile_picture = d.user.profile_picture;
+            stored.rating = user.rating;
+            stored.cefr_level = user.cefr_level;
+            stored.profile_picture = user.profile_picture;
             localStorage.setItem("user", JSON.stringify(stored));
           } catch (e) {}
         }
@@ -566,7 +571,8 @@
     document.getElementById("mmNeeded").textContent = needed;
 
     // ===== MATCHMAKING =====
-    socket.on("connect", function () {
+    socket.on("connect", async function () {
+      await profileRefreshPromise;
       socket.emit("registerUser", user.id);
 
       var activeRoom = sessionStorage.getItem("teamBattleActiveRoom");
@@ -614,7 +620,7 @@
         document.getElementById("mmTitle").textContent = "Party yig'ilmoqda...";
         document.getElementById("mmSub").textContent = "Jamoadoshlaringiz kutilmoqda";
       } else {
-        socket.emit("findTeamMatch", { userId: user.id, name: user.first_name || "O'yinchi", level: user.cefr_level || "A1", rating: user.rating || 1000, lengthKey: "standard", teamMode: teamMode, profile_picture: user.profile_picture || null });
+        socket.emit("findTeamMatch", { userId: user.id, name: user.first_name || "O'yinchi", level: user.cefr_level || "A1", rating: IlmLigaRating.normalize(user.rating), lengthKey: "standard", teamMode: teamMode, profile_picture: user.profile_picture || null });
       }
       startSearchTimer(initialElapsedMs);
     }
@@ -751,7 +757,7 @@
             '<span class="' + dotClass + '"></span></div>' +
           '<div class="bt-pl-mid">' +
             '<div class="bt-pl-namerow"><span class="bt-pl-name">' + esc(p.name) + nameExtra + '</span>' +
-              '<span class="bt-pl-rating"><svg class="bolt-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg> ' + (p.rating || 1000) + '</span></div>' +
+              '<span class="bt-pl-rating"><svg class="bolt-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg> ' + IlmLigaRating.normalize(p.rating) + '</span></div>' +
             '<div class="bt-pl-proglabel">' + ord + ' Player Progress</div>' +
             '<div class="bt-pl-progbar"><div class="bt-pl-progfill" style="width:' + pct + '%"></div></div>' +
           '</div>' +
@@ -1037,7 +1043,7 @@
 
     // Liga progress bari (1v1 bilan bir xil)
     function renderLeagueProgress(data) {
-      var rating = (data.updated_user && data.updated_user.rating) || user.rating || 1000;
+      var rating = IlmLigaRating.normalize(data.updated_user && data.updated_user.rating, user.rating);
       var leagues = [
         { name: "Bronze", min: 0, max: 999, icon: "shield", color: "#cd7f32" },
         { name: "Silver", min: 1000, max: 1199, icon: "shield", color: "#cbd5e1" },
@@ -1137,7 +1143,7 @@
       partyId = null;
       searchStartedAt = Date.now();
       persistTeamSearchState();
-      socket.emit("findTeamMatch", { userId: user.id, name: user.first_name || "O'yinchi", level: user.cefr_level || "A1", rating: user.rating || 1000, lengthKey: "standard", teamMode: teamMode, profile_picture: user.profile_picture || null });
+      socket.emit("findTeamMatch", { userId: user.id, name: user.first_name || "O'yinchi", level: user.cefr_level || "A1", rating: IlmLigaRating.normalize(user.rating), lengthKey: "standard", teamMode: teamMode, profile_picture: user.profile_picture || null });
       document.getElementById("mmTitle").textContent = "Raqib jamoa qidirilmoqda...";
       document.getElementById("mmSub").textContent = "Party tarqaldi — tasodifiy jamoa qidirilmoqda";
     });

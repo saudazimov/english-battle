@@ -208,6 +208,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/i18n.js"></script>
+  <script src="/rating-ui.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/rank-info-dialog.js"></script>
   <script src="/profile-modal.js"></script>
@@ -311,7 +312,7 @@
     window.addEventListener("userRefreshed", function (e) {
       // localStorage'dan yangilangan user'ni qayta o'qiymiz
       const fresh = e.detail || JSON.parse(localStorage.getItem("user") || "{}");
-      user.rating = fresh.rating;
+      user.rating = IlmLigaRating.normalize(fresh.rating, user.rating);
       user.win_streak = fresh.win_streak;
       user.current_streak = fresh.current_streak;
       renderOverview(); // panel yangi qiymatlar bilan qayta chiziladi
@@ -369,7 +370,7 @@
     }
 
     function renderOverview() {
-      let wins = 0, losses = 0, bestRp = user.rating || 1000;
+      let wins = 0, losses = 0, bestRp = IlmLigaRating.normalize(user.rating);
       allHistory.forEach(h => {
         if (h.outcome === "win") wins++;
         else if (h.outcome === "lose") losses++;
@@ -380,7 +381,7 @@
       document.getElementById("ovWins").textContent = wins;
       document.getElementById("ovLosses").textContent = losses;
       document.getElementById("ovWinRate").textContent = winRate + "%";
-      document.getElementById("ovBest").textContent = user.rating || 1000;
+      document.getElementById("ovBest").textContent = bestRp;
       document.getElementById("ovStreak").textContent = user.win_streak || 0;
     }
 
@@ -434,7 +435,7 @@
       const delta = document.getElementById("performanceDelta");
       const current = document.getElementById("performanceCurrentRating");
       const recent = allHistory.slice(0, 12);
-      const currentRating = Number(user.rating) || 1000;
+      const currentRating = IlmLigaRating.normalize(user.rating);
 
       current.textContent = currentRating + " RP";
       count.textContent = recent.length;

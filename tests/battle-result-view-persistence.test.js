@@ -30,6 +30,16 @@ test("refresh restores the saved room without starting matchmaking", () => {
   );
 });
 
+test("rated result renders server-provided RP and CEFR progression after live finish and refresh", () => {
+  assert.match(battleHtml, /id="ratingResult"/);
+  assert.match(battleHtml, /function readRatingProgression\(data\)/);
+  assert.match(battleHtml, /progression\.rated !== true/);
+  assert.match(battleHtml, /renderRatingResult\(data\)/);
+  assert.match(battleHtml, /var restoredProgression = r\.is_rated \?/);
+  assert.match(battleHtml, /rating_before: r\.rating_before/);
+  assert.match(battleHtml, /cefr_after: r\.current_cefr_level \|\| r\.cefr_level/);
+});
+
 test("result and review navigation keep the exact visible screen", () => {
   assert.match(battleHtml, /persistBattleResultView\("result",\s*0\);\s*showScreen\("resultScreen"\);/);
   assert.match(
