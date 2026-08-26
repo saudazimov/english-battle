@@ -1401,6 +1401,17 @@
           <div><label>Maktab</label><input id="studentSchool" placeholder="42-son maktab"></div>
           <div><label>Sinf</label><input id="studentClassName" placeholder="7-A"></div>
         </div>
+        <div style="margin-bottom:14px;">
+          <label>Boshlang‘ich daraja</label>
+          <select id="studentCefrLevel" aria-label="O‘quvchining boshlang‘ich CEFR darajasi">
+            <option value="A1">A1 — Beginner (500 RP)</option>
+            <option value="A2">A2 — Elementary (600 RP)</option>
+            <option value="B1">B1 — Intermediate (900 RP)</option>
+            <option value="B2">B2 — Upper-Intermediate (1200 RP)</option>
+            <option value="C1">C1 — Advanced (1500 RP)</option>
+            <option value="C2">C2 — Proficiency (1800 RP)</option>
+          </select>
+        </div>
         <button class="modal-btn" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;" onclick="createSingleStudent()">Bitta o‘quvchi yaratish</button>
 
         <div style="height:1px;background:var(--border);margin:22px 0;"></div>
@@ -1408,7 +1419,7 @@
         <div class="imp-drop" onclick="document.getElementById('studentXlsxFile').click()">
           <i data-lucide="file-spreadsheet" class="ico-lg" style="margin:0 auto 10px;color:var(--green);"></i>
           <div style="font-weight:600;margin-bottom:4px;">Excel faylni tanlang (.xlsx yoki .xls)</div>
-          <div style="font-size:12.5px;color:var(--text-faint);">Ustunlar: ism, familiya, maktab, sinf</div>
+          <div style="font-size:12.5px;color:var(--text-faint);">Ustunlar: ism, familiya, maktab, sinf, daraja</div>
         </div>
         <input type="file" id="studentXlsxFile" accept=".xlsx,.xls" style="display:none;" onchange="handleStudentXlsx(this.files[0])">
         <div style="margin-top:10px;font-size:12px;color:var(--text-faint);">
@@ -3560,6 +3571,7 @@
       ["studentFirstName", "studentLastName", "studentSchool", "studentClassName"].forEach(function (id) {
         document.getElementById(id).value = "";
       });
+      document.getElementById("studentCefrLevel").value = "A1";
       document.getElementById("studentProvisionModal").classList.add("show");
       icons();
     }
@@ -3582,6 +3594,7 @@
         last_name: document.getElementById("studentLastName").value.trim(),
         school: document.getElementById("studentSchool").value.trim(),
         class_name: document.getElementById("studentClassName").value.trim(),
+        cefr_level: document.getElementById("studentCefrLevel").value,
       };
       await provisionStudentRows([row]);
     }
@@ -3630,9 +3643,9 @@
       result.style.display = "block";
       result.innerHTML = '<div style="padding:12px 14px;margin-bottom:14px;border:1px solid #f59e0b;border-radius:12px;color:#fbbf24;font-size:13px;">' +
         '<b>Muhim:</b> parollar faqat hozir ko‘rsatiladi. Excel faylni yuklab olib, xavfsiz saqlang.</div>' +
-        '<div class="imp-table-wrap"><table class="imp-table"><thead><tr><th>O‘quvchi</th><th>Maktab / sinf</th><th>Login</th><th>Vaqtinchalik parol</th></tr></thead><tbody>' +
+        '<div class="imp-table-wrap"><table class="imp-table"><thead><tr><th>O‘quvchi</th><th>Maktab / sinf</th><th>Daraja / RP</th><th>Login</th><th>Vaqtinchalik parol</th></tr></thead><tbody>' +
         credentials.map(function (item) {
-          return '<tr><td>' + esc(item.firstName + " " + item.lastName) + '</td><td>' + esc(item.school + " / " + item.className) + '</td><td><b>' + esc(item.login) + '</b></td><td><b>' + esc(item.password) + '</b></td></tr>';
+          return '<tr><td>' + esc(item.firstName + " " + item.lastName) + '</td><td>' + esc(item.school + " / " + item.className) + '</td><td><b>' + esc(item.cefrLevel || "A1") + '</b> / ' + esc(item.rating || 500) + ' RP</td><td><b>' + esc(item.login) + '</b></td><td><b>' + esc(item.password) + '</b></td></tr>';
         }).join("") + '</tbody></table></div>';
       document.getElementById("studentProvisionDownload").style.display = credentials.length ? "inline-flex" : "none";
     }
@@ -3640,10 +3653,10 @@
     function downloadStudentTemplate() {
       if (typeof XLSX === "undefined") return studentProvisionError("Excel kutubxonasi yuklanmadi");
       var sheet = XLSX.utils.aoa_to_sheet([
-        ["ism", "familiya", "maktab", "sinf"],
-        ["Ali", "Valiyev", "42-son maktab", "7-A"],
+        ["ism", "familiya", "maktab", "sinf", "daraja"],
+        ["Ali", "Valiyev", "42-son maktab", "7-A", "A1"],
       ]);
-      sheet["!cols"] = [{ wch: 18 }, { wch: 22 }, { wch: 28 }, { wch: 12 }];
+      sheet["!cols"] = [{ wch: 18 }, { wch: 22 }, { wch: 28 }, { wch: 12 }, { wch: 12 }];
       var workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, sheet, "Oquvchilar");
       XLSX.writeFile(workbook, "oquvchilar_namuna.xlsx");
@@ -3657,12 +3670,14 @@
           familiya: item.lastName,
           maktab: item.school,
           sinf: item.className,
+          daraja: item.cefrLevel || "A1",
+          boshlangich_rp: item.rating || 500,
           login: item.login,
           parol: item.password,
         };
       });
       var sheet = XLSX.utils.json_to_sheet(rows);
-      sheet["!cols"] = [{ wch: 18 }, { wch: 22 }, { wch: 28 }, { wch: 12 }, { wch: 18 }, { wch: 18 }];
+      sheet["!cols"] = [{ wch: 18 }, { wch: 22 }, { wch: 28 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 18 }, { wch: 18 }];
       var workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, sheet, "Login-parollar");
       XLSX.writeFile(workbook, "oquvchilar_login_parollar.xlsx");
@@ -3680,6 +3695,8 @@
           lastName: data.student.last_name,
           school: data.student.school || "—",
           className: data.student.class_name || "—",
+          cefrLevel: data.student.cefr_level || "A1",
+          rating: data.student.rating || 500,
           login: data.student.username,
           password: data.password,
         }]);

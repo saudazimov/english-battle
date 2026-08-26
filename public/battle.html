@@ -398,6 +398,13 @@
     .lp-bar { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; }
     .lp-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 4px; transition: width 0.8s ease; width: 0; }
     .lp-rp { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+    .rating-result { max-width: 440px; margin: 0 auto 16px; padding: 14px 18px; background: rgba(91,140,255,0.08); border: 1px solid rgba(91,140,255,0.3); border-radius: 14px; }
+    .rating-result-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 14px; }
+    .rating-result-row + .rating-result-row { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(139,151,192,0.16); }
+    .rating-result-label { color: var(--text-dim); }
+    .rating-result-value { color: var(--text); font-weight: 800; text-align: right; }
+    .rating-result-value.up { color: var(--green); }
+    .rating-result-value.down { color: var(--red); }
 
     /* ===== MATCHMAKING DIZAYNI ===== */
     .mm-card { padding: 32px 44px; text-align: center; max-width: 1080px; margin: 0 auto; }
@@ -769,7 +776,7 @@
               <div class="br-pname" id="myName">Siz</div>
               <div class="br-pscore-row">
                 <span class="br-pscore me" id="myScore">0</span>
-                <span class="br-prating"><i data-lucide="zap"></i> <span id="myRatingBr">1000</span></span>
+                <span class="br-prating"><i data-lucide="zap"></i> <span id="myRatingBr">500</span></span>
               </div>
             </div>
           </div>
@@ -789,7 +796,7 @@
             <div class="br-pcard-info">
               <div class="br-pname" id="oppName">Raqib</div>
               <div class="br-pscore-row">
-                <span class="br-prating"><i data-lucide="zap"></i> <span id="oppRatingBr">1000</span></span>
+                <span class="br-prating"><i data-lucide="zap"></i> <span id="oppRatingBr">500</span></span>
                 <span class="br-pscore opp" id="oppScore">0</span>
               </div>
             </div>
@@ -896,6 +903,16 @@
         </div>
         <div id="leagueBannerSlot"></div>
         <div class="xp-earned" id="xpEarned"><i data-lucide="zap"></i> +0 XP</div>
+        <div class="rating-result" id="ratingResult" style="display:none;">
+          <div class="rating-result-row">
+            <span class="rating-result-label">Reyting</span>
+            <span class="rating-result-value" id="ratingResultRp"></span>
+          </div>
+          <div class="rating-result-row">
+            <span class="rating-result-label">CEFR daraja</span>
+            <span class="rating-result-value" id="ratingResultCefr"></span>
+          </div>
+        </div>
         <div class="league-prog" id="leagueProg" style="display:none;">
           <div class="lp-top">
             <div class="lp-cur" id="lpCur"></div>
@@ -1006,6 +1023,7 @@
   <script src="/vendor/lucide.min.js"></script>
   <script src="/leagues.js"></script>
   <script src="/i18n.js"></script>
+  <script src="/rating-ui.js"></script>
   <script src="/question-options.js"></script>
   <script src="/battle-i18n.js"></script>
   <script>
@@ -1047,7 +1065,7 @@
       if (rpEl) rpEl.style.display = isCasualMode ? "none" : "";
 
       // Rating oralig'i (±100) — casual'da "—"
-      var r = myRating || user.rating || 1000;
+      var r = IlmLigaRating.normalize(myRating, user.rating);
       var rEl = document.getElementById("mmRange");
       if (rEl) rEl.textContent = isCasualMode ? "—" : ((r - 100) + "–" + (r + 100));
     }
@@ -1280,38 +1298,40 @@
     }
 
     // "Siz" kartasini real ma'lumot bilan to'ldirish (ism, rasm, rating)
-    (function fillMyCard() {
+    function fillMyCard() {
       var nameEl = document.getElementById("mmMeNameSearch");
       var avaEl = document.getElementById("mmMeAvaSearch");
       var ratingEl = document.getElementById("mmMeRatingSearch");
       var handleEl = document.getElementById("mmMeHandleSearch");
       var fullName = ((user.first_name || "") + " " + (user.last_name || "")).trim() || "Siz";
-      var myRating = user.rating || 1000;
+      var myRating = IlmLigaRating.normalize(user.rating);
       if (nameEl) nameEl.textContent = fullName;
       if (avaEl) avaEl.innerHTML = avatarHTML(user.first_name, user.profile_picture);
       if (ratingEl) ratingEl.textContent = myRating;
       // "EduPlayer" o'rniga — o'yinchining rank/ligasi (Bronze, Silver, ... Grandmaster)
       if (handleEl) handleEl.textContent = leagueFromRating(myRating);
-    })();
+    }
+    fillMyCard();
 
-    // RASM TUZATISH: foydalanuvchi rasmini serverdan yangilaymiz (localStorage'da eski/bo'sh bo'lishi mumkin)
-    (async function refreshMyProfilePicture() {
+    // Profil qiymatlarini serverdan yangilaymiz (localStorage eskirgan bo'lishi mumkin).
+    const profileRefreshPromise = (async function refreshMyProfile() {
       try {
         var token = localStorage.getItem("token");
         var res = await fetch("/profile/" + user.id, { headers: { "Authorization": "Bearer " + token } });
         if (!res.ok) return;
         var d = await res.json();
-        if (d.user && d.user.profile_picture) {
-          // localStorage va joriy user obyektini yangilaymiz
-          user.profile_picture = d.user.profile_picture;
+        if (d.user) {
+          user.rating = IlmLigaRating.normalize(d.user.rating, user.rating);
+          if (d.user.cefr_level) user.cefr_level = d.user.cefr_level;
+          if (d.user.profile_picture !== undefined) user.profile_picture = d.user.profile_picture;
           try {
             var stored = JSON.parse(localStorage.getItem("user") || "{}");
-            stored.profile_picture = d.user.profile_picture;
+            stored.rating = user.rating;
+            stored.cefr_level = user.cefr_level;
+            stored.profile_picture = user.profile_picture;
             localStorage.setItem("user", JSON.stringify(stored));
           } catch (e) {}
-          // Matchmaking kartasidagi rasmni yangilaymiz
-          var avaEl2 = document.getElementById("mmMeAvaSearch");
-          if (avaEl2) avaEl2.innerHTML = avatarHTML(user.first_name, user.profile_picture);
+          fillMyCard();
         }
       } catch (e) {}
     })();
@@ -1360,7 +1380,8 @@
     const friendRoom = urlParams.get("room");
     const savedBattleData = sessionStorage.getItem("battleData");
 
-    socket.on("connect", () => {
+    socket.on("connect", async () => {
+      await profileRefreshPromise;
       socket.emit("registerUser", user.id);
 
       // F5'dan keyin tugagan jang natijasini DB'dan tiklaymiz; yangi matchmaking boshlamaymiz.
@@ -1389,7 +1410,7 @@
 
       // Qidirish ekranidagi level va rating oralig'ini to'ldiramiz
       const myLevel = user.cefr_level || "A1";
-      const myRating = user.rating || 1000;
+      const myRating = IlmLigaRating.normalize(user.rating);
       const elLvl = document.getElementById("mmMyLevel");
       const elRange = document.getElementById("mmRange");
       if (elLvl) elLvl.textContent = myLevel;
@@ -1406,7 +1427,9 @@
         var fData = savedBattleData ? JSON.parse(savedBattleData) : null;
         var fOppName = fData && fData.opponent ? (fData.opponent.name || "Do'st") : "Do'st";
         var fOppPic = fData && fData.opponent ? fData.opponent.profile_picture : null;
-        var fOppRating = fData && fData.opponent ? (fData.opponent.rating || (user.rating || 1000)) : (user.rating || 1000);
+        var fOppRating = fData && fData.opponent
+          ? IlmLigaRating.normalize(fData.opponent.rating, user.rating)
+          : IlmLigaRating.normalize(user.rating);
         var fOppLevel = fData && fData.opponent ? (fData.opponent.level || user.cefr_level || "A1") : (user.cefr_level || "A1");
         // A odam: "Do'stingiz qabul qildi!" / B odam: "Jang boshlanmoqda!"
         var fMsg = fData ? (fData.message || "") : "";
@@ -1524,7 +1547,7 @@
 
       const oppName = data.opponent.name || "Raqib";
       const oppPicture = data.opponent.profile_picture || null;
-      const oppRating = data.opponent.rating || (user.rating || 1000);
+      const oppRating = IlmLigaRating.normalize(data.opponent.rating, user.rating);
       const oppLevel = data.opponent.level || user.cefr_level || "A1";
 
       // Jang ekrani uchun ham raqib ma'lumotini oldindan to'ldiramiz
@@ -1640,9 +1663,9 @@
       if (data.level) levelGlobal = data.level;
       document.getElementById("myName").textContent = user.first_name;
       document.getElementById("myAva").innerHTML = avatarHTML(user.first_name, data.myPicture || user.profile_picture);
-      var myRb = document.getElementById("myRatingBr"); if (myRb) myRb.textContent = user.rating || 1000;
+      var myRb = document.getElementById("myRatingBr"); if (myRb) myRb.textContent = IlmLigaRating.normalize(user.rating);
       if (data.opponentName) document.getElementById("oppName").textContent = data.opponentName;
-      var oppRb = document.getElementById("oppRatingBr"); if (oppRb) oppRb.textContent = data.opponentRating || (user.rating || 1000);
+      var oppRb = document.getElementById("oppRatingBr"); if (oppRb) oppRb.textContent = IlmLigaRating.normalize(data.opponentRating, user.rating);
       if (data.opponentPicture !== undefined) {
         document.getElementById("oppAva").innerHTML = avatarHTML(data.opponentName || "Raqib", data.opponentPicture);
       }
@@ -1850,6 +1873,29 @@
           else if (r.rating_change < 0) ratingText = " · " + r.rating_change + " reyting";
         }
         document.getElementById("xpEarned").innerHTML = '<i data-lucide="zap"></i> +' + r.xp_earned + " XP" + ratingText;
+
+        var restoredProgression = r.is_rated ? {
+          rated: true,
+          rating_before: r.rating_before,
+          rating_after: r.rating_after,
+          rating_change: r.rating_change,
+          cefr_before: r.cefr_level,
+          cefr_after: r.current_cefr_level || r.cefr_level,
+        } : null;
+        var restoredResultData = {
+          rating_progression: restoredProgression,
+          updated_user: r.rating_after == null ? null : {
+            rating: r.rating_after,
+            cefr_level: r.current_cefr_level || r.cefr_level,
+          },
+        };
+        renderRatingResult(restoredResultData);
+        var restoredLeagueBox = document.getElementById("leagueProg");
+        if (restoredProgression) {
+          renderLeagueProgress(restoredResultData);
+        } else if (restoredLeagueBox) {
+          restoredLeagueBox.style.display = "none";
+        }
 
         var title = document.getElementById("resultTitle");
         var ic = document.getElementById("resultIc");
@@ -2160,6 +2206,7 @@
         else if (data.rating_change < 0) ratingText = " · " + data.rating_change + " reyting";
       }
       document.getElementById("xpEarned").innerHTML = '<i data-lucide="zap"></i> +' + data.xp_earned + " XP" + ratingText;
+      var ratedProgression = renderRatingResult(data);
 
       // Casual belgisi — XP badge bilan bitta flex qatorda (aynan teng balandlik)
       var casualBadgeEl = document.getElementById("casualBadge");
@@ -2197,7 +2244,7 @@
         ic.className = "result-ic draw"; ic.innerHTML = '<i data-lucide="handshake"></i>';
       }
       // Liga progressi faqat ranked'da (casual reytingga ta'sir qilmaydi)
-      if (isCasualResult) {
+      if (isCasualResult || !ratedProgression) {
         var lpBox = document.getElementById("leagueProg");
         if (lpBox) lpBox.style.display = "none";
       } else {
@@ -2236,8 +2283,51 @@
       // Shunda guardBattle yangi intentni ko'rib, yangi 1v1 matchmaking boshlaydi
       window.location.href = "/battle.html";
     }
+    function readRatingProgression(data) {
+      var progression = data && data.rating_progression;
+      if (!progression || progression.rated !== true) return null;
+      var before = Number(progression.rating_before);
+      var after = Number(progression.rating_after);
+      if (!Number.isFinite(before) || !Number.isFinite(after)) return null;
+      return {
+        ratingBefore: before,
+        ratingAfter: after,
+        ratingChange: Number(progression.rating_change) || (after - before),
+        cefrBefore: progression.cefr_before || null,
+        cefrAfter: progression.cefr_after || null,
+      };
+    }
+
+    function renderRatingResult(data) {
+      var progression = readRatingProgression(data);
+      var box = document.getElementById("ratingResult");
+      if (!box) return progression;
+      if (!progression) {
+        box.style.display = "none";
+        return null;
+      }
+
+      var delta = progression.ratingChange;
+      var deltaText = delta > 0 ? " (+" + delta + ")" : (delta < 0 ? " (" + delta + ")" : "");
+      var rp = document.getElementById("ratingResultRp");
+      rp.textContent = progression.ratingBefore + " → " + progression.ratingAfter + deltaText;
+      rp.className = "rating-result-value" + (delta > 0 ? " up" : (delta < 0 ? " down" : ""));
+
+      var cefr = document.getElementById("ratingResultCefr");
+      var cefrChanged = progression.cefrBefore && progression.cefrAfter
+        && progression.cefrBefore !== progression.cefrAfter;
+      cefr.textContent = cefrChanged
+        ? progression.cefrBefore + " → " + progression.cefrAfter
+        : (progression.cefrAfter || progression.cefrBefore || "—");
+      cefr.className = "rating-result-value" + (cefrChanged
+        ? (progression.ratingAfter > progression.ratingBefore ? " up" : " down")
+        : "");
+      box.style.display = "block";
+      return progression;
+    }
+
     function renderLeagueProgress(data) {
-      const rating = (data.updated_user && data.updated_user.rating) || user.rating || 1000;
+      const rating = IlmLigaRating.normalize(data.updated_user && data.updated_user.rating, user.rating);
       const leagues = [
         { name: "Bronze", min: 0, max: 999, icon: "shield", color: "#cd7f32" },
         { name: "Silver", min: 1000, max: 1199, icon: "shield", color: "#cbd5e1" },

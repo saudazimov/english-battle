@@ -182,6 +182,13 @@
   });
 
   // ===== Yordamchilar =====
+  function fpRating(value, fallback) {
+    var hasValue = value !== null && value !== undefined && value !== "";
+    var rating = Number(value);
+    if (hasValue && Number.isFinite(rating)) return Math.max(0, Math.round(rating));
+    return fallback === undefined ? 500 : fallback;
+  }
+
   function fpLeague(rating) {
     var ic = function (name, color) { return '<i data-lucide="' + name + '" style="width:16px;height:16px;color:' + color + ';vertical-align:-3px;"></i>'; };
     if (rating >= 2000) return { name: "Grandmaster", medal: "\ud83d\udc51", icon: ic("crown", "#fbbf24") };
@@ -238,7 +245,8 @@
   function renderFpCard(data) {
     var u = data.user || {};
     var s = data.stats || {};
-    var lg = fpLeague(u.rating || 1000);
+    var rating = fpRating(u.rating);
+    var lg = fpLeague(rating);
     var name = (u.first_name || "") + " " + (u.last_name || "");
     var fs = data.friendStatus || "none";
 
@@ -273,7 +281,7 @@
           '<span>League <b style="color:var(--cyan);">' + lg.icon + ' ' + lg.name + '</b></span>' +
         '</div>' +
         '<div class="fpc-stats">' +
-          '<div class="fpc-stat"><i data-lucide="trophy" style="color:var(--gold);"></i><div><div class="fpc-sl">Rating</div><div class="fpc-sv">' + (u.rating || 1000) + '</div></div></div>' +
+          '<div class="fpc-stat"><i data-lucide="trophy" style="color:var(--gold);"></i><div><div class="fpc-sl">Rating</div><div class="fpc-sv">' + rating + '</div></div></div>' +
           '<div class="fpc-stat"><i data-lucide="target" style="color:var(--green);"></i><div><div class="fpc-sl">Win Rate</div><div class="fpc-sv" style="color:var(--green);">' + (s.win_rate || 0) + '%</div></div></div>' +
           '<div class="fpc-stat"><i data-lucide="flame" style="color:var(--gold);"></i><div><div class="fpc-sl">Win Streak</div><div class="fpc-sv" style="color:var(--gold);">' + (u.current_streak || 0) + '</div></div></div>' +
           '<div class="fpc-stat"><i data-lucide="swords" style="color:var(--accent-2);"></i><div><div class="fpc-sl">Total Battles</div><div class="fpc-sv">' + (s.total_battles || 0) + '</div></div></div>' +
@@ -483,7 +491,7 @@
   function renderFpStats(data) {
     var u = data.user || {};
     var s = data.stats || {};
-    var lg = fpLeague(u.rating || 1000);
+    var lg = fpLeague(fpRating(u.rating));
     document.getElementById("fpStats").className = "fp-block";
     document.getElementById("fpStats").innerHTML =
       '<div class="fp-block-title"><i data-lucide="bar-chart-3"></i> Battle Stats</div>' +
@@ -534,7 +542,7 @@
 
   function renderFpSide(data) {
     var u = data.user || {};
-    var rating = u.rating || 1000;
+    var rating = fpRating(u.rating);
     var lg = fpLeague(rating);
 
     var leagues = [
@@ -564,8 +572,13 @@
     var cefrOrder = ["A1", "A2", "B1", "B2", "C1", "C2"];
     var cur = u.cefr_level || "A1";
     var cIdx = cefrOrder.indexOf(cur);
-    var cProg = Math.round(((cIdx + 1) / cefrOrder.length) * 100);
-    var nextCefr = cIdx < 5 ? cefrOrder[cIdx + 1] : "C2";
+    if (cIdx < 0) cIdx = 0;
+    var progression = data.progression && typeof data.progression === "object" ? data.progression : {};
+    var rawProgress = Number(progression.progress_percent);
+    var cProg = Number.isFinite(rawProgress)
+      ? Math.max(0, Math.min(100, Math.round(rawProgress)))
+      : 0;
+    var nextCefr = progression.next_level || (cIdx < 5 ? cefrOrder[cIdx + 1] : "C2");
     document.getElementById("fpCefr").className = "fp-block";
     document.getElementById("fpCefr").innerHTML =
       '<div class="fp-block-title"><i data-lucide="book-open"></i> CEFR Progression</div>' +
@@ -589,8 +602,7 @@
         var friendId = Number.parseInt(friend.id, 10);
         if (!Number.isSafeInteger(friendId) || friendId <= 0) return;
         var friendName = ((friend.first_name || "") + " " + (friend.last_name || "")).trim() || "Foydalanuvchi";
-        var friendRating = Number(friend.rating);
-        if (!Number.isFinite(friendRating)) friendRating = 1000;
+        var friendRating = fpRating(friend.rating);
         mutualHtml +=
           '<button type="button" class="fp-mutual-item" onclick="openProfileModal(' + friendId + ')">' +
             '<span class="fp-mutual-ava">' + avatarHTML(friend.first_name, friend.profile_picture) + '</span>' +
