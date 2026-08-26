@@ -1,3 +1,5 @@
+const { getCefrProgression } = require("../utils/ratingProgression");
+
 async function getFriendStatus(pool, viewerId, userId) {
   if (String(viewerId) === String(userId)) {
     return "self";
@@ -127,6 +129,10 @@ function createUserPublicProfileService({ pool }) {
 
       return {
         user: user,
+        progression: getCefrProgression({
+          rating: user.rating,
+          currentLevel: user.cefr_level,
+        }),
         friendStatus: friendStatus,
         mutual_friends: mutualFriends,
         mutual_count: mutualCount,

@@ -8,7 +8,7 @@ const {
 const createBattleResultRoutes = require("../src/routes/battleResultRoutes");
 
 const resultSql =
-  "SELECT bh.opponent_name, bh.opponent_id, bh.my_score, bh.opponent_score, bh.outcome, bh.xp_earned, bh.rating_change, bh.cefr_level, bh.mode, bh.total_questions, bh.played_at, opp.profile_picture AS opponent_picture, opp.rating AS opponent_rating, me.profile_picture AS my_picture FROM battle_history bh LEFT JOIN users opp ON opp.id = bh.opponent_id LEFT JOIN users me ON me.id = bh.user_id WHERE bh.room_id = $1 AND bh.user_id = $2 LIMIT 1";
+  "SELECT bh.opponent_name, bh.opponent_id, bh.my_score, bh.opponent_score, bh.outcome, bh.xp_earned, bh.rating_change, bh.cefr_level, bh.mode, bh.total_questions, bh.played_at, bh.is_rated, bh.rating_before, bh.rating_after, opp.profile_picture AS opponent_picture, opp.rating AS opponent_rating, me.profile_picture AS my_picture, me.cefr_level AS current_cefr_level FROM battle_history bh LEFT JOIN users opp ON opp.id = bh.opponent_id LEFT JOIN users me ON me.id = bh.user_id WHERE bh.room_id = $1 AND bh.user_id = $2 LIMIT 1";
 const answersSql =
   "SELECT ba.question_id, ba.q_order, ba.selected_option AS your_answer, ba.correct_option AS correct_answer, ba.is_correct, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.explanation FROM battle_answers ba JOIN questions q ON q.id = ba.question_id WHERE ba.room_id = $1 AND ba.user_id = $2 ORDER BY ba.q_order ASC";
 

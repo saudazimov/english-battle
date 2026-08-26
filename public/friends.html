@@ -812,6 +812,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/vendor/lucide.min.js"></script>
   <script src="/i18n.js"></script>
+  <script src="/rating-ui.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/rank-info-dialog.js"></script>
   <script>
@@ -838,6 +839,13 @@
       const language = window.IlmLigaI18n ? window.IlmLigaI18n.getLanguage() : "uz";
       return language === "ru" ? "ru-RU" : (language === "en" ? "en-GB" : "uz-UZ");
     }
+
+    window.addEventListener("userRefreshed", function (event) {
+      const fresh = event.detail || {};
+      user.rating = IlmLigaRating.normalize(fresh.rating, user.rating);
+      if (fresh.cefr_level) user.cefr_level = fresh.cefr_level;
+      loadRightbar();
+    });
 
     // ===== SOCKET.IO (real-time) =====
     const socket = io({ auth: { token: localStorage.getItem("token") } });
@@ -998,7 +1006,8 @@
     function renderFpCard(data) {
       const u = data.user || {};
       const s = data.stats || {};
-      const lg = fpLeague(u.rating || 1000);
+      const rating = IlmLigaRating.normalize(u.rating);
+      const lg = fpLeague(rating);
       const name = (u.first_name || "") + " " + (u.last_name || "");
       const username = u.username ? "@" + u.username : "";
 
@@ -1014,7 +1023,7 @@
             '<span>' + friendsT("friends.league") + ' <b style="color:var(--cyan);">' + lg.icon + ' ' + lg.name + '</b></span>' +
           '</div>' +
           '<div class="fpc-stats">' +
-            '<div class="fpc-stat"><i data-lucide="trophy" style="color:var(--gold);"></i><div><div class="fpc-sl">' + friendsT("friends.rating") + '</div><div class="fpc-sv">' + (u.rating || 1000) + '</div></div></div>' +
+            '<div class="fpc-stat"><i data-lucide="trophy" style="color:var(--gold);"></i><div><div class="fpc-sl">' + friendsT("friends.rating") + '</div><div class="fpc-sv">' + rating + '</div></div></div>' +
             '<div class="fpc-stat"><i data-lucide="target" style="color:var(--green);"></i><div><div class="fpc-sl">' + friendsT("friends.winRate") + '</div><div class="fpc-sv" style="color:var(--green);">' + (s.win_rate || 0) + '%</div></div></div>' +
             '<div class="fpc-stat"><i data-lucide="flame" style="color:var(--gold);"></i><div><div class="fpc-sl">' + friendsT("friends.winStreak") + '</div><div class="fpc-sv" style="color:var(--gold);">' + (u.current_streak || 0) + '</div></div></div>' +
             '<div class="fpc-stat"><i data-lucide="swords" style="color:var(--accent-2);"></i><div><div class="fpc-sl">' + friendsT("friends.totalBattles") + '</div><div class="fpc-sv">' + (s.total_battles || 0) + '</div></div></div>' +
@@ -1067,7 +1076,7 @@
     function renderFpStats(data) {
       const u = data.user || {};
       const s = data.stats || {};
-      const lg = fpLeague(u.rating || 1000);
+      const lg = fpLeague(IlmLigaRating.normalize(u.rating));
       document.getElementById("fpStats").className = "fp-block";
       document.getElementById("fpStats").innerHTML =
         '<div class="fp-block-title"><i data-lucide="bar-chart-3"></i> ' + friendsT("friends.battleStats") + '</div>' +
@@ -1125,7 +1134,7 @@
 
     function renderFpSide(data) {
       const u = data.user || {};
-      const rating = u.rating || 1000;
+      const rating = IlmLigaRating.normalize(u.rating);
       const lg = fpLeague(rating);
 
       // Current Rank (keyingi liga uchun progress)
@@ -1156,9 +1165,11 @@
       // CEFR Progression
       const cefrOrder = ["A1", "A2", "B1", "B2", "C1", "C2"];
       const cur = u.cefr_level || "A1";
-      const cIdx = cefrOrder.indexOf(cur);
-      const cProg = Math.round(((cIdx + 1) / cefrOrder.length) * 100);
-      const nextCefr = cIdx < 5 ? cefrOrder[cIdx + 1] : "C2";
+      const cIdx = Math.max(0, cefrOrder.indexOf(cur));
+      const progression = data.progression && typeof data.progression === "object" ? data.progression : {};
+      const rawProgress = Number(progression.progress_percent);
+      const cProg = Number.isFinite(rawProgress) ? Math.max(0, Math.min(100, Math.round(rawProgress))) : 0;
+      const nextCefr = progression.next_level || (cIdx < 5 ? cefrOrder[cIdx + 1] : "C2");
       document.getElementById("fpCefr").className = "fp-block";
       document.getElementById("fpCefr").innerHTML =
         '<div class="fp-block-title"><i data-lucide="book-open"></i> ' + friendsT("friends.cefrProgression") + '</div>' +
@@ -1182,7 +1193,7 @@
             '<div class="fp-mutual-item" onclick="viewProfile(' + m.id + ')">' +
               '<div class="fp-mutual-ava">' + mutualAvatar(m.first_name, m.profile_picture) + '</div>' +
               '<div class="fp-mutual-name">' + fEsc(mName) + '</div>' +
-              '<div class="fp-mutual-rp">' + (m.rating || 1000) + '</div>' +
+              '<div class="fp-mutual-rp">' + IlmLigaRating.normalize(m.rating) + '</div>' +
             '</div>';
         });
         mutualHtml += '</div>';
@@ -1534,7 +1545,7 @@
         } catch (e) {}
 
         // Top Friends Leaderboard (do'stlar + o'zingiz, rating bo'yicha)
-        const all = [...friends, { id: user.id, first_name: user.first_name, last_name: user.last_name, rating: user.rating || 1000, isMe: true }];
+        const all = [...friends, { id: user.id, first_name: user.first_name, last_name: user.last_name, rating: IlmLigaRating.normalize(user.rating), isMe: true }];
         all.sort((a, b) => b.rating - a.rating);
 
         const tf = document.getElementById("topFriends");

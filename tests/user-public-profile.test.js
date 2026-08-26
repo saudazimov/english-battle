@@ -111,6 +111,18 @@ test("public profile preserves queries, mapping, and friend privacy", async () =
   assert.equal(profile.user.district, "Chilonzor");
   assert.equal(profile.mutual_count, 10);
   assert.deepEqual(profile.mutual_friends, mutualRows.slice(0, 8));
+  assert.deepEqual(profile.progression, {
+    current_level: "B1",
+    rating: 1200,
+    band_min: 900,
+    band_max: 1199,
+    next_level: "B2",
+    target_rating: 1200,
+    remaining_rating: 0,
+    progress_percent: 100,
+    rating_threshold_reached: true,
+    highest_level: false,
+  });
   assert.deepEqual(profile.stats, {
     total_battles: 4,
     wins: 3,
@@ -273,6 +285,19 @@ test("profile CEFR progress info uses the shared accessible dialog", () => {
   assert.match(profile, /value: "A1 → C2"/);
 });
 
+test("profile CEFR progress renders server-provided progression metadata", () => {
+  const profile = fs.readFileSync(
+    path.join(__dirname, "..", "public", "profile.html"),
+    "utf8"
+  );
+
+  assert.doesNotMatch(profile, /const cefrRatingBands =/);
+  assert.match(profile, /setupNextLevel\(data\.user\.cefr_level \|\| "A1", data\.progression\)/);
+  assert.match(profile, /details\.progress_percent/);
+  assert.match(profile, /details\.remaining_rating/);
+  assert.match(profile, /target: details\.target_rating/);
+});
+
 test("profile current rank info uses live setupRank details", () => {
   const profile = fs.readFileSync(
     path.join(__dirname, "..", "public", "profile.html"),
@@ -286,7 +311,7 @@ test("profile current rank info uses live setupRank details", () => {
   assert.match(profile, /id="profileRankInfoButton"[^>]+aria-controls="rankInfoModal"/);
   assert.match(profile, /let currentRankDetails = null/);
   assert.match(profile, /currentRankDetails = \{ rating: r, current: cur, next: next, progress: prog \}/);
-  assert.match(profile, /setupRank\(Number\(document\.getElementById\("rankRP"\)\.textContent\) \|\| 1000\)/);
+  assert.match(profile, /setupRank\(normalizeProfileRating\(document\.getElementById\("rankRP"\)\.textContent\)\)/);
   assert.match(profile, /triggerId: "profileRankInfoButton"/);
   assert.match(profile, /Math\.max\(0, next\.min - rating\)/);
   assert.match(profile, /footerHref: "\/leaderboard\.html"/);

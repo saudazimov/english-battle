@@ -8,10 +8,12 @@ function createBattleResultController({ pool, logger = console }) {
         const bh = await pool.query(
           `SELECT bh.opponent_name, bh.opponent_id, bh.my_score, bh.opponent_score, bh.outcome,
                   bh.xp_earned, bh.rating_change, bh.cefr_level, bh.mode,
-                  bh.total_questions, bh.played_at,
+                  bh.total_questions, bh.played_at, bh.is_rated,
+                  bh.rating_before, bh.rating_after,
                   opp.profile_picture AS opponent_picture,
                   opp.rating AS opponent_rating,
-                  me.profile_picture AS my_picture
+                  me.profile_picture AS my_picture,
+                  me.cefr_level AS current_cefr_level
            FROM battle_history bh
            LEFT JOIN users opp ON opp.id = bh.opponent_id
            LEFT JOIN users me ON me.id = bh.user_id
