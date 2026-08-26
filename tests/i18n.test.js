@@ -210,11 +210,15 @@ test("shared sidebar loads and uses the centralized i18n module", () => {
   assert.match(sidebar, /ilmliga:languagechange/);
   assert.match(sidebar, /script\.src = "\/language-switcher\.js\?v=13"/);
   assert.match(sidebar, /IlmLigaLanguageSwitcher\.mount/);
-  assert.match(sidebar, /sidebar-foot[\s\S]*logo-mark-new\.svg/);
-  assert.match(sidebar, /sidebar-foot[\s\S]*width:42px;height:42px/);
+  assert.match(sidebar, /sidebar-foot[\s\S]*student-school-logo/);
+  assert.match(sidebar, /src="\/images\/wonderkids-school-logo\.png"/);
+  assert.match(sidebar, /sbT\("student\.schoolBrand", "Wonderkids' School"\)/);
+  assert.match(sidebar, /sbT\("student\.schoolMotto", "Natija uchun tizimli tayyorgarlik\."\)/);
   assert.doesNotMatch(sidebar, /sbT\("student\.openRanking"/);
   assert.match(appCss, /@media \(min-width:\s*901px\) and \(max-height:\s*780px\)/);
-  assert.match(appCss, /\.sidebar-foot \.mascot-box img\s*\{[^}]*width:\s*36px\s*!important;[^}]*height:\s*36px\s*!important;/s);
+  assert.match(appCss, /\.sidebar-foot \.student-school-logo\s*\{[^}]*width:\s*50px;[^}]*height:\s*50px;/s);
+  assert.match(appCss, /\.student-school-logo\s*\{[^}]*object-fit:\s*contain;/s);
+  assert.match(appCss, /\.sidebar-foot \.student-school-motto\s*\{/);
 });
 
 test("shared language switcher provides local flags and an accessible custom menu", () => {
