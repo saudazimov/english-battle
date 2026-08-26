@@ -289,8 +289,11 @@ function renderSidebar(activePage) {
     '</div></div>' +
     '<nav class="nav">' + navHtml + '</nav>' +
     '<div class="sidebar-foot"><div class="mascot-box">' +
-      '<img src="/images/brand/logo-mark-new.svg" alt="IlmLiga" style="width:42px;height:42px;display:block;object-fit:contain;margin:0 auto;filter:drop-shadow(0 5px 12px rgba(37,99,235,0.32));" onerror="this.onerror=null;this.src=\'/images/brand/logo-icon.png\';">' +
-      '<div style="margin-top:6px;">' + sbT("student.promo", "Battle va o‘rganish orqali eng yuqori o‘ringa chiqing!") + '</div>' +
+      '<div class="student-school-brand" aria-label="' + sbT("student.schoolBrand", "Wonderkids' School") + '">' +
+        '<img class="student-school-logo" src="/images/wonderkids-school-logo.png" alt="" aria-hidden="true">' +
+        '<div class="student-school-name">' + sbT("student.schoolBrand", "Wonderkids' School") + '</div>' +
+      '</div>' +
+      '<div class="student-school-motto">' + sbT("student.schoolMotto", "Natija uchun tizimli tayyorgarlik.") + '</div>' +
     '</div></div>';
 
   const sidebar = document.querySelector(".sidebar");
